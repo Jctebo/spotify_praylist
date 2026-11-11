@@ -1125,7 +1125,11 @@ export default {
         // Exactly one episode kind registers through this route;
         // any other id refuses 400 (widening it is a later
         // release's Scope, §2 Concern 3). The upsert replaces
-        // whole: a re-generated episode heals its day. The job's
+        // whole: a re-generated episode heals its day. (The
+        // conflict target names block too: migration 0011
+        // widened the key to (date, episode_id, block); block is
+        // this route's constant, so the replaced row is the
+        // same single (date, episode) row.) The job's
         // success test is sizeBytes equal to the MP3's byte size
         // on disk.
         const episodeId = request.headers.get("x-episode-id") ?? "";
@@ -1147,7 +1151,7 @@ export default {
         await env.DB.prepare(
           `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at)
            VALUES (?, 'the-ai-signal', ?, 'The AI Signal', 1, ?, ?, ?, 'present', ?)
-           ON CONFLICT(date, episode_id) DO UPDATE SET title = excluded.title, duration_s = excluded.duration_s,
+           ON CONFLICT(date, episode_id, block) DO UPDATE SET title = excluded.title, duration_s = excluded.duration_s,
              r2_key = excluded.r2_key, size_bytes = excluded.size_bytes, audio_state = excluded.audio_state, pushed_at = excluded.pushed_at`,
         ).bind(epDate, epTitle, epDuration, epKey, epBody.byteLength, nowISO()).run();
         return json({ ok: true, date: epDate, episodeId, sizeBytes: epBody.byteLength });
