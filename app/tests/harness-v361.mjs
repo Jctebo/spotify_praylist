@@ -138,8 +138,11 @@ async function waitUp(base) {
 // draw is re-pointed to below. Text classes at the intention
 // ROW's full width (v343 calibrated at the 25% panel; the row is
 // ~4x wider, so the classes are re-aimed): T_LONG ~4 lines
-// (clamped, ellipsis stands), T_EXACT2 exactly 2 lines (nothing
-// hidden, no ellipsis), T_SHORT 1 line.
+// (clamped, ellipsis stands), T_EXACT2 exactly 2 lines (under
+// v361's two-line clamp: nothing hidden, no ellipsis — v363
+// SUPERSEDES: the clamp is ONE line (D1), so T_EXACT2 now
+// clamps at one line WITH its ellipsis armed; see the L3 leg),
+// T_SHORT 1 line.
 const T_LONG = "For the repose of the soul of Margaret Ann Thibeaux, and for her whole family in their grief, and for all the faithful departed of our parish";
 const T_EXACT2 = "For our son Dylan, for his exams and his game this week";
 const T_SHORT = "For Ana.";
@@ -581,8 +584,15 @@ async function main() {
     ok(!!col3.intro && !col3.intro.expanded && col3.intro.textSH > col3.intro.textCH + 1 && col3.intro.btnAria === "false",
       "L3 a second click collapses the row back under the clamp (aria-expanded false)");
     const mp3 = await rowInfo("morning-prayer");
-    ok(!!mp3.intro && mp3.intro.text === T_EXACT2 && !mp3.intro.btnStands && mp3.intro.textSH === mp3.intro.textCH && mp3.intro.textCH >= 40,
-      `L3 the exact-two-line text (morning prayer) stands NO ellipsis — nothing is hidden (textSH=${mp3.intro && mp3.intro.textSH}, textCH=${mp3.intro && mp3.intro.textCH})`);
+    // v363 SUPERSESSION (D1, named per Plan §2.7): the v361
+    // premise below is RETIRED — the intention clamp is ONE
+    // line now, so the exact-two-line text clamps at one line
+    // and its ellipsis STANDS (the second line sits behind the
+    // ⋯, one tap away under D3-A — John's approved trim, named
+    // in v363 §1.5/§2.5). The v361 form of this leg asserted
+    // !btnStands && textSH === textCH && textCH >= 40.
+    ok(!!mp3.intro && mp3.intro.text === T_EXACT2 && mp3.intro.btnStands && mp3.intro.textSH > mp3.intro.textCH + 1 && mp3.intro.textCH > 0 && mp3.intro.textCH < 40,
+      `L3 [v363 supersession: one-line clamp] the exact-two-line text (morning prayer) clamps at ONE line with its ellipsis armed (textSH=${mp3.intro && mp3.intro.textSH}, textCH=${mp3.intro && mp3.intro.textCH})`);
     await ev(() => window.openBlockPage("Night"));
     await sleep(400);
     ok(await waitIntro("daily-reflection"), "setup: the reflection pair stands on the Night page");

@@ -503,12 +503,19 @@ async function main() {
     const sheet3 = await ev(() => !!document.querySelector(".readsheet"));
     await ev(() => { const c = document.querySelector("[data-readclose]"); if (c) c.click(); });
     ok(rd3 === "clicked" && sheet3, "L3: Read opens the reading sheet");
+    // v363 SUPERSESSION (D4, named per Plan §2.7): the probe's
+    // .notavail element is RETIRED by v363 — the not-available
+    // signal folds into the unavailable card's meta line and
+    // the card takes the .row/.trow form. The leg now finds an
+    // unavailable track by that folded meta on a .card.trow
+    // carrying no [data-playkey] (nothing to play) — the same
+    // intro-free unavailable form, in its v363 shape.
     let unavail3 = "";
     for (const b of payloadBlocks) {
-      const r = await ev((blk) => { window.openBlockPage(blk); return !!document.querySelector(".notavail"); }, b);
+      const r = await ev((blk) => { window.openBlockPage(blk); return Array.from(document.querySelectorAll(".card.trow")).some((c) => { const m = c.querySelector(".meta"); return m && m.textContent.includes("Not available") && !c.querySelector("[data-playkey]"); }); }, b);
       if (r) { unavail3 = b; break; }
     }
-    ok(!!unavail3, `L3: an unavailable track shows its standing intro-free form (first found on ${unavail3 || "none"})`);
+    ok(!!unavail3, `L3 [v363 supersession: .notavail retired, the fold stands in the meta]: an unavailable track shows its standing intro-free form (first found on ${unavail3 || "none"})`);
     await ev(() => window.goListenHome());
 
     // ---- L4 · play paths -------------------------------------------
