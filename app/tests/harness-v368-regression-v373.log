@@ -1,0 +1,47 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - H1 migration: 0016 file present in this tree
+ok 3 - H1a settings row: 26 rows stand pre-0016; the INSERT plants 'the-ai-signal' exactly as §2.1.1 (rows0=26, row={"source_key":"the-ai-signal","name":"The AI Signal","family":"own","block":"The AI Signal","day_rule":"daily","sort_order":1,"enabled":1,"slot_id":null,"role":"primary","updated_at":"2026-11-11T04:00:00.000Z"})
+ok 4 - H1b draw item: 35 -> 36 items DESPITE the standing same-name Evening activity (the kind-scoped guard fires); the new item stands as §2.1.2; the activity is untouched (items=35->36, item={"id":43,"block":"The AI Signal","name":"The AI Signal","sub":"","kind":"prayer","color":"gold","opening_prayer":"","closing_prayer":"","enabled":1,"sort":1}, activity={"block":"Evening","kind":"activity"})
+ok 5 - H1c meta: version 4 -> 5 (the relative increment, exactly +1)
+ok 6 - H1d second application: both guarded INSERTs match zero rows (settings=27, items=36); the meta increment is the standing unconditional form
+ok 7 - H1e held override (settings): John's own pre-existing 'the-ai-signal' row stands untouched and unduplicated (row={"block":"Evening","sort_order":5}); the draw item still plants (count=1)
+ok 8 - H1f held override (item): a same-name PRAYER item of John's own blocks the INSERT and stands alone (rows=[{"block":"Evening"}]); the settings row still plants (count=1)
+ok 9 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 10 - fixture: the presented day's draw stands (status=200)
+ok 11 - fixture: the served /app.js parses (vm.Script)
+ok 12 - H2 shell: 9 blocks, The AI Signal LAST; caption "the day's episode"; NO Spotify route; label falls back to the block name; version reads the bumped 5 (blocks=["Morning","Midmorning","Midday","Afternoon","Evening","Night","Mass and Homilies","Novenas","The AI Signal"], version=5)
+ok 13 - H3a descriptor absent: no registration stands — the block's tracks [] and trackCount 0 (trackCount=0)
+ok 14 - H4a module: the payload's LAST block is 'The AI Signal' with exactly ONE devotion (the new prayer item) carrying its pre-drawn long intention; counts 36 devotions / 22 prayers / 14 activities; the Evening activity of the same name stands apart (drawn="For the repose of the soul of ", counts=36/22/14)
+ok 15 - H4b module: due=false for The AI Signal at the live hour 7; currentBlock reads "Morning", never The AI Signal
+ok 16 - H4c derivation: BLOCK_START['The AI Signal']=24 in source; the shipped max-start derivation at every hour 0-23 never returns The AI Signal and equals the eight-block derivation at every hour (starts={"Morning":0,"Midmorning":9,"Midday":12,"Afternoon":15,"Evening":18,"Night":21,"Mass and Homilies":24,"Novenas":9,"The AI Signal":24})
+ok 17 - H4d item order: under the shipped CASE (…WHEN 'The AI Signal' THEN 8), the new item sorts after every Novenas item and LAST overall (index=35 of 36)
+ok 18 - H5 pairing contract: Worker INTRO_PAIRING['the-ai-signal'] === helper SLOT_PAIRING['the-ai-signal'] === 'The AI Signal'; the shell introTexts carries 'the-ai-signal' with the NEW item's drawn text — the name-keyed map takes the LAST block's item, not the Evening activity's (worker=The AI Signal, helper=The AI Signal, text="For the repose of the soul of ")
+ok 19 - settings surface: the served client carries The AI Signal in its settings block lists; the door settings read shows the row under its own block, version 5 (row={"sourceKey":"the-ai-signal","name":"The AI Signal","family":"own","block":"The AI Signal","dayRule":"daily","sortOrder":1,"enabled":1,"slotId":null,"role":"primary"})
+ok 20 - pristine app up for the settings/shell comparison
+ok 21 - settings comparison: every settings row except 'the-ai-signal' is identical candidate vs pristine; version stands exactly +1 (candidate=5, pristine=4); the shell carries exactly one more block
+ok 22 - H9a door: no agent token -> 403 (status=403)
+ok 23 - H9b door: a wrong X-Episode-Id -> 400, the route registers exactly one episode kind (status=400)
+ok 24 - H9c door: malformed date / empty title / non-numeric duration each -> 400 (statuses=400/400/400)
+ok 25 - H9d door happy path: 200 with {ok, sizeBytes = the body's byte length} (status=200, sizeBytes=12348, tone=12348)
+ok 26 - H9e door read-back: the row stands present with the spec'd r2_key, size, title, block, duration (row={"date":"2026-11-11","episode_id":"the-ai-signal","title":"The AI Signal","block":"The AI Signal","sort":1,"duration_s":388,"r2_key":"episodes/2026-11-11/the-ai-signal.mp3","size_bytes":12348,"audio_state":"present","pushed_at":"2026-11-11T13:34:19.425Z","text_state":"missing","text_r2_key":"","kind":"episode","source":"","stream_url":""})
+ok 27 - H9f door re-POST: the same date replaces whole — one row stands, size updated (rows=1, size=120390)
+ok 28 - H9g audio route: GET serves the uploaded bytes exactly (status=200, bytes=120390)
+ok 29 - H9h audio route: a Range request answers 206 with a correct Content-Range (status=206, range=bytes 0-99/120390)
+ok 30 - H9i door: a past-dated registration (the Ship smoke shape) lands 200 and stands inert (status=200)
+ok 31 - H3b descriptor present: the presented day's registration fills the block with the §2.2.7 descriptor + trackCount 1 — keyed to the PRESENTED day (yesterday's registration never presents) (desc={"episodeId":"the-ai-signal","title":"The AI Signal","block":"The AI Signal","kind":"episode","durationS":30,"sizeBytes":120390,"streamUrl":"/api/player/audio/2026-11-11/the-ai-signal","state":"present"})
+ok 32 - H3c descriptor gate: a row standing NOT 'present' fills nothing — tracks [] + trackCount 0
+ok 33 - H10 generation: pairing_for('the-ai-signal') = 'The AI Signal'; APP_PRESENTED = ['the-ai-signal'] is appended to the presented set before eligibility with the report title set; publish_intentions' guid form yields intentions-intro-the-ai-signal-<date> with audio only (py=["The AI Signal","['the-ai-signal']","The AI Signal"])
+ok 34 - missing-state instance up (0016 applied, NO episode registration)
+ok 35 - H7a missing state: no registration — the episode row stands named-missing ('Not available' folded into its meta), exactly 76px, and NO intention row stands (no track, no pair); the block's descriptors carry the missing episode alone (cards=[{"id":"the-ai-signal","h":76,"meta":"Not available in the app yet","title":"The AI Signal"}], descs=["the-ai-signal"], errors=0)
+ok 36 - H6a pair form @360px: the block page renders [intention row, episode row] in that order; titles exactly "Prayer Intention: The AI Signal" / "The AI Signal"; both rows exactly 76px (cards=[{"id":"intro:the-ai-signal","h":76,"title":"Prayer Intention: The AI Signal"},{"id":"the-ai-signal","h":76,"title":"The AI Signal"}])
+ok 37 - H6b clamp: the intention text stands clamped to ONE line at rest (rendered=24px, full=190px — the long drawn text overflows, so the ellipsis arms)
+ok 38 - H6c pair form @640px: both rows still exactly 76px (cards=[{"id":"intro:the-ai-signal","h":76,"title":"Prayer Intention: The AI Signal"},{"id":"the-ai-signal","h":76,"title":"The AI Signal"}])
+ok 39 - H6d expand: tapping the ellipsis grows ONLY the intention row (to 236.4px); the episode row holds exactly 76px
+ok 40 - H6e collapse: the intention row returns to exactly 76px (cards=[{"id":"intro:the-ai-signal","h":76,"title":"Prayer Intention: The AI Signal"},{"id":"the-ai-signal","h":76,"title":"The AI Signal"}])
+ok 41 - H6f pair play: the intention row's play button selects the pair, intro first (queue=["intro:the-ai-signal","the-ai-signal"])
+ok 42 - H7b Play All: the block's Play All builds exactly [intro, episode] — the block's end is the queue's end (queue=["intro:the-ai-signal","the-ai-signal"])
+ok 43 - H7c snapshot: the v355 record carries the pair as ordinary descriptors under today's date (snap=["intro:the-ai-signal","the-ai-signal"])
+ok 44 - H7d restore: after reload the queue restores as the pair, standing at its head (queue=["intro:the-ai-signal","the-ai-signal"], current=intro:the-ai-signal)
+ok 45 - browser: no page errors across the present-instance legs (errors=[])
+ok 46 - H7e played state: playing the pair through marks the episode played under the bare id keyed to the PRESENTED day (opn-played-v344['the-ai-signal']['2026-11-11']); the card's played dot stands ON (dot="played-dot on", errors=0)
+# harness-v368: 46/46 ok

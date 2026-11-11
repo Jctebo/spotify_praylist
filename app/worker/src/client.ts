@@ -105,7 +105,11 @@ function post(path, body) { return api(path, { method: 'POST', headers: { 'Conte
    else \u2014 no localStorage, no sessionStorage. Closing the app or
    reloading the page ends it; one PIN entry restores the session.
    pinStateCache holds the last /api/pin/state read so a tab render
-   with no PIN set never pays a second fetch. */
+   with no PIN set never pays a second fetch.
+   v373: v356 decision 6 is reversed for the two gated tabs —
+   with no PIN set they no longer open on that cached state; the
+   set-a-PIN prompt stands in their place (D1-B), and a failed
+   state read fails closed (see gatedTabRender). */
 var pinToken = null;
 var pinStateCache = null;
 var pinGateCtx = null;
@@ -115,17 +119,22 @@ function fetchPinState() {
   return api('/api/pin/state').then(function (st) { pinStateCache = st; return st; });
 }
 // The gate stands in the two gated renders (\u00a72.6.2): with a token
-// standing, or no PIN set, the render proceeds exactly as before
-// this release; otherwise the PIN gate screen stands in its place
-// and NO gated fetch is issued at all.
+// standing the render proceeds exactly as before; with a PIN set
+// and no token the PIN gate screen stands in its place and NO
+// gated fetch is issued at all. With NO PIN set the tabs no
+// longer open (v373, reversing v356 decision 6 — D1-B): the
+// set-a-PIN prompt stands in the render's place and the tab stays
+// locked until a PIN is set, and a failed state read fails
+// closed to the same prompt's unreadable variant.
 function gatedTabRender(tab, contentFn) {
   if (pinToken) { contentFn(); return; }
-  if (pinStateCache && !pinStateCache.pinSet) { contentFn(); return; }
+  if (pinStateCache && !pinStateCache.pinSet) { renderPinSetupPrompt(tab, contentFn, {}); return; }
   view.innerHTML = '<p class="meta">Loading...</p>';
   fetchPinState().then(function (st) {
-    if (!st.pinSet || pinToken) { contentFn(); return; }
+    if (!st.pinSet) { renderPinSetupPrompt(tab, contentFn, {}); return; }
+    if (pinToken) { contentFn(); return; }
     renderPinGate(tab, contentFn, {});
-  }).catch(function () { contentFn(); });
+  }).catch(function () { renderPinSetupPrompt(tab, contentFn, { unreadable: true }); });
 }
 function pinGateTitles(tab) {
   if (tab === 'examination') return { screen: 'Tonight&rsquo;s examination', lock: 'Examination of Conscience is protected by your PIN' };
@@ -161,6 +170,32 @@ function renderPinGate(tab, contentFn, opts) {
   if (opts && opts.expired) setPinMsg('Session expired \u2014 enter your PIN.', false);
   var retry = (pinStateCache && pinStateCache.retryAfterSeconds) || (opts && opts.retryAfterSeconds) || 0;
   if (retry > 0) startPinWait(retry);
+}
+// The no-PIN prompt (v373, D1-B): with no PIN set this stands in
+// the gated tab in place of the content — the tab stays locked
+// until a PIN is set, and the ONLY way forward is the Set a PIN
+// button (the standing set sheet) or Settings. There is no
+// dismiss, close, or skip control, and contentFn is never
+// called. The unreadable variant is the fail-closed shape for a
+// failed /api/pin/state read: the same lock, with a Try again
+// that re-invokes the gate.
+function renderPinSetupPrompt(tab, contentFn, opts) {
+  var titles = pinGateTitles(tab);
+  var unreadable = !!(opts && opts.unreadable);
+  var html = '<h1 class="screen">' + titles.screen + '</h1>';
+  html += '<div class="card pingate"><div class="lockline">' + (unreadable
+    ? 'The PIN state could not be read &mdash; this tab stays locked until it can be checked.'
+    : 'No PIN is set yet &mdash; this tab stays locked until you set a PIN.') + '</div>';
+  html += unreadable
+    ? '<button class="btn gold" id="pin-setup-retry">Try again</button>'
+    : '<button class="btn gold" id="pin-setup-open">Set a PIN</button>';
+  html += '</div>';
+  view.innerHTML = html;
+  if (unreadable) {
+    document.getElementById('pin-setup-retry').addEventListener('click', function () { gatedTabRender(tab, contentFn); });
+  } else {
+    document.getElementById('pin-setup-open').addEventListener('click', function () { openPinSetSheet('set'); });
+  }
 }
 function paintPinDots() {
   var dots = document.getElementById('pindots');
@@ -1574,7 +1609,10 @@ function paintSettings() {
    source-mapping rows. With no PIN set nothing anywhere else in
    the app mentions the PIN (decision 6). Change and Remove ride
    on the unlock token, so locked they are not offered \u2014 the
-   recovery path stands on the gate itself. */
+   recovery path stands on the gate itself. v373 note: decision
+   6's rule that nothing outside this section mentions the PIN
+   with none set is reversed for the two gated tabs \u2014 with no
+   PIN set they stand locked behind the set-a-PIN prompt (D1-B). */
 function fillPinSection() {
   var host = document.getElementById('pin-section');
   if (!host) return;
@@ -1583,7 +1621,7 @@ function fillPinSection() {
     if (!host2) return;
     var html = '<h2 class="sectionhead pinsection">CONFESSION PIN</h2>';
     if (!st.pinSet) {
-      html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">No PIN is set. Confession and Examination open without a PIN.</p><button class="btn gold" id="pin-set-open">Set a PIN</button></div>';
+      html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">No PIN is set. Confession and Examination stay locked until you set one.</p><button class="btn gold" id="pin-set-open">Set a PIN</button></div>';
       host2.innerHTML = html;
       document.getElementById('pin-set-open').addEventListener('click', function () { openPinSetSheet('set'); });
     } else if (pinToken) {
@@ -1591,7 +1629,7 @@ function fillPinSection() {
       host2.innerHTML = html;
       document.getElementById('pin-change-open').addEventListener('click', function () { openPinSetSheet('change'); });
       document.getElementById('pin-remove').addEventListener('click', function () {
-        if (!confirm('Remove the PIN? Confession and Examination will open without it.')) return;
+        if (!confirm('Remove the PIN? Confession and Examination will stay locked until a new PIN is set.')) return;
         post('/api/pin/remove', {}).then(function () { pinToken = null; pinStateCache = { pinSet: false, retryAfterSeconds: 0 }; renderSettings(); })
           .catch(function (e) { if (!pinRefusalGate('settings', renderSettings, e)) alert(e.message); });
       });
