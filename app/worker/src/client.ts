@@ -3034,7 +3034,7 @@ function ownResolveFeed(day, needed) {
   };
   var consumeItem = function (xml) {
     var items = [];
-    try { items = extParseFeed('<rss version="2.0"><channel>' + xml + '</channel></rss>'); } catch (e) { return false; }
+    try { items = extParseFeed('<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md"><channel>' + xml + '</channel></rss>'); } catch (e) { return false; }
     var it = items[0];
     if (!it || !it.url) return false;
     var pubDate = ownChicagoDateStr(it.pubMs);
