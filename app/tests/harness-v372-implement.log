@@ -1,0 +1,21 @@
+ok 1 - S1 hero markup order in openNowPlaying: #np-meta -> #np-intention -> #np-litday
+ok 2 - S2 #np-intention stands always in the hero markup, starting hidden and empty
+ok 3 - S3 .np-intention rule stands in ui.ts
+ok 4 - S4 .np-intention rule is exactly the Plan Step 3 rule
+ok 5 - S5 D4-A: the rule carries NO line-clamp, max-height, or overflow restriction
+ok 6 - S6 SW pin ora-pro-nobis-v372-1 stands; the v371 pin is gone
+ok 7 - S7 D3-A: updateDock source carries no intention element, text, or lookup
+ok 8 - S8 the intention sync stands after the np-preview early return and directly after the #np-litday sync
+ok 9 - S9 source rule order stands: intro track reads its own intentionText; other tracks read introForTrack; the label is set as one string in the paired branch only
+ok 10 - S10 tracked diff vs the v371 base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 11 - (a) own prayer: Now Playing shows the paired intention under the exact label, element shown
+ok 12 - (a) hero DOM order stands #np-title -> #np-meta -> #np-intention -> #np-litday
+ok 13 - (b) Bible in a Year external: the line shows that slot's drawn text under the same label
+ok 14 - (c) novena track: the line shows the shared Novenas draw
+ok 15 - (d) intro track playing: the line shows its own intentionText under the label
+ok 16 - (e) The AI Signal episode: the line shows its own item's draw
+ok 17 - (f) no-intention track: element hidden and emptied; no 'Prayer Intention:' label string anywhere in the sheet
+ok 18 - (g) track change paired -> unpaired -> paired: the line follows state.current on every updateNowPlaying
+ok 19 - (h) long intention renders in full: text entire, no clamp, overflow visible, height wraps past two lines (got 142px)
+ok 20 - (i) dock after updateDock: no intention element and no intention text; title/meta painting unchanged
+# harness-v372: 20/20 passed

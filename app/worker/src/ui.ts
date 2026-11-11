@@ -211,6 +211,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-hero .np-title { color:var(--bar-fg); font-size:24px; }
 .np-hero .np-meta { color:var(--bar-sub); }
 .np-litday { font-size:13px; letter-spacing:.4px; color:var(--bar-sub); text-align:center; margin-top:2px; }
+.np-intention { font-size:14px; line-height:1.45; letter-spacing:.2px; color:var(--bar-sub); text-align:center; margin-top:6px; }
 .np-hero .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
 .np-preview .np-hero .npq-heading { color:var(--bar-fg); }
 .np-preview .np-hero #np-queue-pos { color:var(--bar-sub); }
@@ -321,7 +322,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v371-1";
+var CACHE = "ora-pro-nobis-v372-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

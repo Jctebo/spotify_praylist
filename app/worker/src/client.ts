@@ -2196,6 +2196,7 @@ function openNowPlaying() {
     + '<div class="np-art"><img src="/logo.png" alt="Ora Pro Nobis logo"></div>'
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
+    + '<div class="np-intention" id="np-intention" style="display:none"></div>'
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
@@ -2251,6 +2252,14 @@ function updateNowPlaying() {
   if (!meta) meta = state.dateLabel || '';
   sheet.querySelector('#np-meta').textContent = meta;
   var litEl = sheet.querySelector('#np-litday'); if (litEl) { var ln = (state.liturgical && state.liturgical.name) || ''; if (litEl.textContent !== ln) litEl.textContent = ln; }
+  var intEl = sheet.querySelector('#np-intention');
+  if (intEl) {
+    var intText = null;
+    if (cur.kind === 'intention') intText = cur.intentionText || null;
+    else { var intIntro = introForTrack(cur); intText = intIntro ? (intIntro.text || null) : null; }
+    if (intText) { intEl.textContent = 'Prayer Intention: ' + intText; intEl.style.display = ''; }
+    else { intEl.textContent = ''; intEl.style.display = 'none'; }
+  }
   sheet.querySelector('#np-play').innerHTML = audioEl.paused ? '&#9654;' : '&#10073;&#10073;';
   sheet.querySelector('#np-prev').disabled = !state.queue.length || state.queueIdx <= 0;
   sheet.querySelector('#np-next').disabled = !state.queue.length;
