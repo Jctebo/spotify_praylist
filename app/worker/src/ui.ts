@@ -83,6 +83,28 @@ body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:#6d6353; font-size:15px; margin:0 0 12px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 10px; }
+/* v363 §2.1/§2.2: the uniform row height — every track row
+   stands at exactly 76px. The fixed height lands on the
+   dedicated .trow class at the row emit sites only, NEVER on
+   bare .card (the PIN gate, Settings cards, forms, the
+   Continue card keep their natural heights). 76px border-box
+   = 1px border + 10px padding + 54px content box + 10px
+   padding + 1px border; rows thin the standing card's
+   vertical padding from 12px to 10px (rows only). The
+   overflow:hidden guard means a row can never stand taller;
+   harness-v363 measures scrollHeight <= clientHeight on every
+   fixture so clipped content fails the gate instead of
+   shipping silently (the v343 lesson). */
+.card.trow { height:76px; padding:10px 14px; overflow:hidden; }
+.card.trow .grow { min-width:0; }
+.card.trow h3 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card.trow .meta { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card.trow .spot { margin-top:0; }
+/* v363 §2.3: the trailing cluster — the Read control over the
+   Spotify link, standing inside .row after .grow and before
+   the played dot (an own unavailable row carries it as the
+   row's last element; no dot stands there). */
+.trow-tail { flex:none; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
 /* v344 §2.5: the played marker — a quiet state dot. The button
    box holds the 44px one-hand target (Principle 3); the visible
    circle is 12px, drawn as an ::after so the box itself stays
@@ -121,23 +143,35 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .playbtn { width:42px; height:42px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-ink); font-size:16px; cursor:pointer; flex:none; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent); }
-.notavail { font-size:14px; color:#8a4b2a; margin-top:4px; }
+/* v363 §2.3: the .notavail rule retires with its last row use —
+   the not-available signal folds into the row's meta line. */
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
 /* Intention rows (v361, replacing the v338 combined row and
    v343's uniform 136px form): the intention intro stands as its
-   OWN standard .card — no fixed height anywhere in the form;
-   every row stands at its natural content height. The intention
-   text stands as the row's second line under the standing
-   two-line clamp; overflow sits behind the ellipsis (⋯), which
-   stands only when the text is actually clamped (armed by
-   measurement in the client). An expanded row's text unclamps
-   in place. Retired with the combined row (v361 §2.6): the
-   136px .card.intro-row rule, the 25% .intention-panel rule,
-   .intention-label, .panel-foot, and the combined expanded
-   rules. */
+   OWN standard .card. The intention text stands as the row's
+   second line under its clamp; overflow sits behind the
+   ellipsis (⋯), which stands only when the text is actually
+   clamped (armed by measurement in the client). An expanded
+   row's text unclamps in place. Retired with the combined row
+   (v361 §2.6): the 136px .card.intro-row rule, the 25%
+   .intention-panel rule, .intention-label, .panel-foot, and
+   the combined expanded rules.
+   v363 §2.5 (D1 + D3-A): the row stands at the uniform 76px
+   (.trow, above), so the clamp is ONE line and the text's
+   standing margin-bottom is zeroed — the collapsed stack
+   (title + one text line, 49px) fits the 54px content box.
+   The ⋯ is a flex child of the row in the trailing band
+   (fixed 30x44, display:none until armed) — it adds width,
+   never a line. An expanded row releases the fixed height
+   (height:auto, overflow:visible) and collapses back to
+   exactly 76px. */
 .intention-text { line-height:1.4; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card.intention-row .intention-text { -webkit-line-clamp:1; margin-bottom:0; }
 .ellipsis-btn { display:none; background:none; border:none; font-family:inherit; font-size:14px; line-height:1; color:#6d6353; cursor:pointer; padding:4px 2px; }
 .ellipsis-btn.stands { display:inline-block; }
+.card.intention-row .ellipsis-btn { flex:none; width:30px; height:44px; display:none; padding:0; align-items:center; justify-content:center; }
+.card.intention-row .ellipsis-btn.stands { display:flex; }
+.card.intention-row.expanded { height:auto; overflow:visible; }
 .card.intention-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible; }
 .playbtn.small { width:30px; height:30px; font-size:12px; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
@@ -200,13 +234,19 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-controls { justify-content:center; flex-wrap:wrap; }
 .npq-head { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .npq-heading { font-size:18px; letter-spacing:1.5px; color:var(--navy); }
-.npq-row { display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; font-family:inherit; font-size:17px; color:var(--ink); cursor:pointer; min-height:44px; }
+.npq-row { display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; font-family:inherit; font-size:17px; color:var(--ink); cursor:pointer; height:76px; overflow:hidden; }
 .npq-row:disabled { opacity:.55; cursor:default; }
 .npq-row.playing { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
 .npq-row.npq-intro .npq-title { color:#6d6353; font-size:15px; }
 .npq-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
 .npq-title { color:var(--navy); }
-.npq-meta { font-size:14px; }
+/* v363 §2.6: queue rows stand at the same uniform 76px on
+   their own frame (the standing min-height:44px is superseded
+   by the fixed height and is out); title and meta ellipsize
+   to one line (D2), and the preview's "Starts here" folds
+   into the meta line in the client (no third line stands). */
+.npq-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.npq-meta { font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .npq-dot.played-dot { flex:0 0 12px; width:12px; height:12px; margin:0; padding:0; cursor:default; }
 .npq-start { border-color:var(--accent); }
 /* Confession PIN (v356): the gate, the pad, the recovery sheet.
@@ -281,7 +321,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v361-1";
+var CACHE = "ora-pro-nobis-v363-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

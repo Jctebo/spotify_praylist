@@ -816,6 +816,12 @@ function renderQueueList() {
     if (desc.block) metaParts.push(esc(desc.block));
     if (!isIntro && desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
     if (!desc.available) metaParts.push('Not available');
+    // v363 §2.6: the preview's start row folds "Starts here"
+    // into its meta line (after the block and duration parts)
+    // — the separate third-line span retires; a third line
+    // cannot stand inside the uniform 76px. The .npq-start
+    // accent border stays as the row's second signal.
+    if (isStart) metaParts.push('Starts here');
     var dot = '';
     if (!isIntro) {
       var on = dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false;
@@ -824,7 +830,6 @@ function renderQueueList() {
     return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isIntro ? ' npq-intro' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
       + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
       + (metaParts.length ? '<span class="meta npq-meta">' + metaParts.join(' \u00b7 ') + '</span>' : '')
-      + (isStart ? '<span class="meta npq-starthere">Starts here</span>' : '')
       + '</span>' + dot + '</button>';
   }).join('');
   box.querySelectorAll('[data-npq-index]').forEach(function (btn) {
@@ -1769,7 +1774,11 @@ function readButton(t, key) {
   // v318 T9: the Read control. A track with no text carries NO Read
   // control — the plain not-available line stands in its place
   // (readLine below), never a dead button.
-  return '<div style="margin-top:6px"><button class="btn ghost small" data-read="' + esc(key) + '">Read</button></div>';
+  // v363 §2.3: the button stands BARE in the row's trailing
+  // cluster (.trow-tail) — the standing margin-top wrapper div
+  // retires. Same data-read attribute, same [data-read] wiring,
+  // same openRead target; the reader itself does not change.
+  return '<button class="btn ghost small" data-read="' + esc(key) + '">Read</button>';
 }
 function prayerIntentionTitle(t, intro) {
   // v361 §2.1: the intention row's title — "Prayer Intention: " +
@@ -1817,13 +1826,19 @@ function intentionRowCard(t, intro) {
   // to the prayer), no "Intention" label line (Decision 1: the
   // title alone carries the distinction), no Read control, no
   // Spotify link, no meta line beyond the text itself.
+  // v363 §2.5: the card carries .trow (the uniform 76px, D1);
+  // the ⋯ leaves .grow's block flow (where it cost its own
+  // line) and stands as a flex child of the row after .grow —
+  // the fixed 30x44 trailing box. armEllipsis still finds it
+  // inside the card element; wireExpand and the expanded
+  // round trip (exactly 76px on collapse) are untouched.
   var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
-  return '<div class="card intention-row' + (expanded ? ' expanded' : '') + '" data-card="intro:' + esc(t.episodeId) + '"><div class="row">'
+  return '<div class="card intention-row trow' + (expanded ? ' expanded' : '') + '" data-card="intro:' + esc(t.episodeId) + '"><div class="row">'
     + '<button class="playbtn" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button>'
     + '<div class="grow"><h3>' + esc(prayerIntentionTitle(t, intro)) + '</h3>'
-    + '<div class="intention-text">' + esc(intro.text) + '</div>'
+    + '<div class="intention-text">' + esc(intro.text) + '</div></div>'
     + '<button class="ellipsis-btn' + (expanded ? ' stands' : '') + '" data-expand="' + esc(t.episodeId) + '" aria-label="Show the full intention" aria-expanded="' + (expanded ? 'true' : 'false') + '">&#8943;</button>'
-    + '</div></div></div>';
+    + '</div></div>';
 }
 function introForTrack(t) {
   // v343 §2.5(1): the intro for a track, descriptor-first.
@@ -2051,7 +2066,7 @@ function trackCard(t) {
     // element, after the .grow column, for both families alike.
     // v361 §2.3: the prayer card itself is always the plain card;
     // a standing intro prepends its own intention row card.
-    var card = '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
+    var card = '<div class="card trow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
     return intro ? intentionRowCard(t, intro) + card : card;
   };
   if (t.kind === 'external') {
@@ -2062,7 +2077,12 @@ function trackCard(t) {
     if (t.available) {
       return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div>');
     }
-    return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available today</div></div>';
+    // v363 §2.2/§2.3: the unavailable card takes the .row form
+    // and the .trow height; "Not available today" folds into
+    // the meta line after the duration (omitted when none
+    // stands, as today). No tail stands — an external carries
+    // neither a Read control nor a Spotify link.
+    return '<div class="card trow" data-card="' + esc(key) + '"><div class="row"><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' \u00b7 ' : '') + 'Not available today</div></div></div></div>';
   }
   if (t.available) {
     // v344 gate correction (harness-v343 clip guard, leg 20's
@@ -2074,14 +2094,39 @@ function trackCard(t) {
     // the row's least informative words) gives way to the pinned
     // line: meta = "Plays here" + duration + the §2.7 span, two
     // lines, content 128px. Non-novena metas are byte-identical.
+    // v363 §2.4 SUPERSEDES the composition order on novena rows:
+    // under D2's one-line ellipsis the span — standing at the
+    // END of the line — would be the first thing clipped,
+    // silently undoing the v344 protection; the span moves
+    // BEFORE the duration so the duration tail clips first.
+    // Non-novena composition is unchanged. v363 §2.3: the
+    // no-text fold appends to the meta (" · Not available in
+    // the app yet"), and the Read control + Spotify link leave
+    // .grow for the .trow-tail cluster after it (the played
+    // dot follows the cluster — wrap appends it last, v344
+    // chrome untouched). Read stands over the Spotify link.
     var novSpan = novenaSpanHtml(t);
-    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here' + (novSpan ? '' : ' · episode file') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + novSpan + '</div>'
-      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
-      + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div>');
+    var noText = !(t.hasText && t.textUrl);
+    var meta = 'Plays here'
+      + (novSpan ? novSpan + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') : ' · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : ''))
+      + (noText ? ' · Not available in the app yet' : '');
+    var tail = (!noText || t.spotifyUrl)
+      ? '<div class="trow-tail">' + (!noText ? readButton(t, key) : '')
+        + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>'
+      : '';
+    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div></div>' + tail);
   }
-  return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available in the app yet</div>'
-    + (t.hasText && t.textUrl ? readButton(t, key) : '')
-    + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>';
+  // v363 §2.2/§2.3: the own unavailable card takes the .row form
+  // and the .trow height; "Not available in the app yet" folds
+  // into the meta after the duration (omitted when none stands,
+  // as today); the Read control and Spotify link stand in the
+  // .trow-tail cluster as the row's last element (no played
+  // dot stands on an unavailable branch — the standing rule).
+  var tailU = ((t.hasText && t.textUrl) || t.spotifyUrl)
+    ? '<div class="trow-tail">' + (t.hasText && t.textUrl ? readButton(t, key) : '')
+      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>'
+    : '';
+  return '<div class="card trow" data-card="' + esc(key) + '"><div class="row"><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div>' + tailU + '</div></div>';
 }
 function openRead(t) {
   // v318 T9: the reading view — the episode's full text within the
@@ -2483,10 +2528,10 @@ function extDiscardCaches() {
   if ('caches' in window) { caches.delete('opn-ext-audio-v1').catch(function () {}); }
 }
 function extDownloadingCard(slot) {
-  return '<div class="card" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Downloading&hellip;</div></div>';
+  return '<div class="card trow" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Downloading&hellip;</div></div>';
 }
 function extPlaceholderCard(slot) {
-  return '<div class="card" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Loading&hellip;</div></div>';
+  return '<div class="card trow" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Loading&hellip;</div></div>';
 }
 function extSlotTrack(slot, st) {
   return {
@@ -2744,7 +2789,7 @@ function ownSlotTrack(row, meta, date) {
   };
 }
 function ownPlaceholderCard(row) {
-  return '<div class="card" data-card="' + esc(row.episodeId) + '"><h3>' + esc(row.title) + '</h3><div class="meta">Loading&hellip;</div></div>';
+  return '<div class="card trow" data-card="' + esc(row.episodeId) + '"><h3>' + esc(row.title) + '</h3><div class="meta">Loading&hellip;</div></div>';
 }
 function ownSwapRow(row, day) {
   // Selection is by the row's own identity (data-own-row), never
