@@ -1,0 +1,19 @@
+ok 1 - S1 updateBlockCounts rewritten whole: it tallies state.dayDescs per descriptor block — the own+ext standing-list arithmetic and the novenas special case (its code patterns) are gone
+ok 2 - S2 paintBlockPage: updateBlockCounts(day) stands at the end, after appendBlockSettingsCards (site 1 — the defect fix)
+ok 3 - S3 external settle: rebuild → extSwapCard → updateBlockCounts, in that order (site 2)
+ok 4 - S4 intentions landing: updateBlockCounts(day) stands after the leg's extRebuildDescs and before paintContinue (site 3)
+ok 5 - S5 day build: extRebuildDescs now runs BEFORE updateBlockCounts (site 4 — the order fix)
+ok 6 - S6 own settles keep their standing rebuild-then-count order unchanged; paintListenHome carries NO count call (per Plan)
+ok 7 - S7 SW pin ora-pro-nobis-v374-1 stands; the v373 pin is gone
+ok 8 - S8 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+ok 9 - L7 committed range 33f629a..HEAD, harness files excluded, is exactly client.ts + ui.ts (committed: app/tests/harness-v374.mjs, app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 10 - L1 paint after settlement (the reported defect): the Midmorning page header reads 4 tracks = its 4 listed rows (2 intention rows + Exegesis + Midmorning Prayer) — header=4, rows=4
+ok 11 - L2 live as settles land: the open Midmorning page reads 2 at paint (two loading slots) and holds 2 through both settles, header = listed rows at every step (2/2 → 2/2 → 2/2)
+ok 12 - L2 the intentions landing grows the open page's count by the two intention rows, without a repaint — header=4, rows=4
+ok 13 - L3 Home card and block page agree for every block (home {"Morning":2,"Midmorning":4,"Novenas":6,"The AI Signal":2} vs pages {"Morning":2,"Midmorning":4,"Novenas":6,"The AI Signal":2})
+ok 14 - L4 Novenas counts its listed tracks: 3 novenas × (intention + track) = 6, by the general rule — header=6, rows=6
+ok 15 - L6 The AI Signal = 2 (intention + episode) via the general computation only — header=2, rows=2
+ok 16 - L5 the descriptor list carries exactly one descriptor per missing track and NO orphan intention descriptor, though both intros stand in the map (descs=[{"block":"Morning","kind":"","available":false},{"block":"Midday","kind":"","available":false}])
+ok 17 - L5 a missing own track and a missing external each count exactly 1 on their block pages — Morning 1/1, Midday 1/1
+ok 18 - browser: zero page errors
+# harness-v374: 18/18 passed
