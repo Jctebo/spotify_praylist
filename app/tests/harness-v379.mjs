@@ -111,7 +111,7 @@ try {
 ok(bundles, "S9 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client");
 ok(CLIENT.includes("oraSpeechStart") && CLIENT.includes("oraSpeechEnd") && CLIENT.includes("oraSpeechError") &&
    extractFn(CLIENT, "speakIntro").indexOf("nativeSpeechPlugin()") >= 0 &&
-   extractFn(CLIENT, "speakIntro").indexOf("nativeSpeechPlugin()") < extractFn(CLIENT, "speakIntro").indexOf("speechSupported()") &&
+   extractFn(CLIENT, "speakIntro").indexOf("nativeSpeechPlugin()") < extractFn(CLIENT, "speakIntro").indexOf("if (!speechSupported())") &&
    extractFn(CLIENT, "nativeSpeechPlugin").includes("cap.Plugins.OraDayBridge") &&
    extractFn(CLIENT, "nativeSpeechPlugin").includes("typeof p.speakText !== 'function'"),
   "S10 v379 native route: speakIntro consults the bridge BEFORE the web support check; the plugin guard requires speakText; the three oraSpeech* events are wired");
@@ -134,7 +134,7 @@ const PAGE_SRC = [
   "markPlaying", "markSkipped",
   "setMediaSessionFor", "setPlaybackState", "reassertMediaSession", "updatePositionState",
   "speechSupported", "setupSpeech", "pickEnUsVoice", "clearSpeechTimers", "stopSpoken", "speakIntro", "finishSpoken", "pauseSpoken", "resumeSpoken", "startSpokenDesc", "transportPlaying", "pauseTransport",
-  "nativeSpeechPlugin", "setupNativeSpeech", "speechCancel", "armSpeechTimers",
+  "nativeSpeechPlugin", "setupNativeSpeech", "speechCancel", "armSpeechTimers", "pushDaySnapshot",
   "startDesc", "playTrack", "tapPlay", "resumeCurrent", "queueLiveDesc",
   "unplayedOnly", "queueBuild", "sectionQueueFrom", "startQueue", "advanceQueue", "jumpQueueTo",
   "standRestoredQueue",
