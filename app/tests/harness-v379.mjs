@@ -134,7 +134,7 @@ const PAGE_SRC = [
   "markPlaying", "markSkipped",
   "setMediaSessionFor", "setPlaybackState", "reassertMediaSession", "updatePositionState",
   "speechSupported", "setupSpeech", "pickEnUsVoice", "clearSpeechTimers", "stopSpoken", "speakIntro", "finishSpoken", "pauseSpoken", "resumeSpoken", "startSpokenDesc", "transportPlaying", "pauseTransport",
-  "nativeSpeechPlugin", "setupNativeSpeech", "speechCancel", "armSpeechTimers", "pushDaySnapshot",
+  "nativeSpeechPlugin", "setupNativeSpeech", "speechCancel", "armSpeechTimers", "pushDaySnapshot", "oraBridgePlugin", "oraInShell", "pushNativeState", "nativeStatePayload",
   "startDesc", "playTrack", "tapPlay", "resumeCurrent", "queueLiveDesc",
   "unplayedOnly", "queueBuild", "sectionQueueFrom", "startQueue", "advanceQueue", "jumpQueueTo",
   "standRestoredQueue",
