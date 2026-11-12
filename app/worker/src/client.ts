@@ -1,12 +1,13 @@
-// Ora Pro Nobis app client. Four tabs: Prayers (the player) ·
-// Intentions (the pool) · Examination · Confession. No checklist
+// Ora Pro Nobis app client. Five tabs: Prayers (the player) ·
+// Podcasts (listening progress, v381) · Intentions (the pool) ·
+// Examination · Confession. No checklist
 // anywhere: no check-offs, no done states, no counters on prayers
 // or examination questions (Amendments 8-9).
 export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '' };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -544,6 +545,14 @@ function markCompleted(desc) {
   // or percentage test stands anywhere in the mark path.
   if (!desc || desc.kind === 'intention') return;
   if (!desc.episodeId || desc.episodeId.indexOf('intro:') === 0) return;
+  // v381 §2.4: a Podcasts-series track reaching this seam (the
+  // ended event is the test, exactly as for every other track)
+  // writes its listening mark with source 'auto' through the
+  // podcasts route — fire-and-forget, the writePlayedQuiet
+  // posture; a failed write leaves the entry unmarked at next
+  // open. A series track carries no day-played record: the
+  // podcasts store is its record.
+  if (desc.kind === 'podcast' && desc.seriesKey) { writePodMarkQuiet(desc.seriesKey, 'auto'); return; }
   var d = presentedDateStr();
   if (!d) return;
   writePlayed(desc.episodeId, d, 'played', desc.block);
@@ -1791,6 +1800,7 @@ function setTab(tab) {
   state.tab = tab;
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
   if (tab === 'prayers') renderPrayers();
+  else if (tab === 'podcasts') renderPodcasts();
   else if (tab === 'intentions') renderIntentions();
   else if (tab === 'examination') renderExamination();
   else if (tab === 'confession') renderConfession();
@@ -1807,6 +1817,117 @@ document.getElementById('dock').addEventListener('click', function (ev) {
 });
 window.addEventListener('resize', measureBars);
 measureBars();
+
+/* ---------------- Podcasts (v381) ----------------
+   The listening-progress section (Plan §2.5): a fifth tab whose
+   state lives server-side (the §2.2 routes) — the series card,
+   the current-episode card (current = the first unlistened
+   entry, derived server-side per §2.3), and the full episode
+   list in sequence order. Marks live ONLY here: the Prayers tab
+   never reads this store (§2.5's no-checklist coexistence). */
+function podDesc(e) {
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0 };
+}
+function writePodMarkQuiet(seqKey, source) {
+  // §2.4: the auto-mark write is fire-and-forget from the
+  // completion seam (the writePlayedQuiet precedent); a failed
+  // write leaves the entry unmarked at next open — no retry queue.
+  post('/api/player/podcasts/mark', { series: 'catechism-in-a-year', seqKey: seqKey, source: source }).catch(function () {});
+  if (state.podcasts && state.podcasts.entries) {
+    state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); } });
+    var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
+    state.podcasts.listenedCount = state.podcasts.entries.length - left.length;
+    state.podcasts.currentKey = left.length ? left[0].key : null;
+  }
+}
+function renderPodcasts() {
+  view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
+  api('/api/player/podcasts').then(function (res) {
+    state.podcasts = res;
+    if (state.tab === 'podcasts') paintPodcasts();
+  }).catch(function (e) {
+    if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
+  });
+}
+function paintPodcasts() {
+  var res = state.podcasts;
+  if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
+  var html = '<h1 class="screen">Podcasts</h1>';
+  if (!res.available) {
+    // §2.1/L9: with no snapshot and the feed unreachable the
+    // series stands unavailable — the section's one error surface.
+    html += '<div class="card"><h3>' + esc(res.title || 'Catechism in a Year') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    view.innerHTML = html;
+    return;
+  }
+  var cur = null;
+  res.entries.forEach(function (e) { if (e.key === res.currentKey) cur = e; });
+  html += '<div class="card"><h3>' + esc(res.title) + '</h3><div class="meta">'
+    + res.listenedCount + ' of ' + res.total + ' listened'
+    + (cur ? ' · Current: ' + esc(cur.label) : ' · Complete') + '</div></div>';
+  if (cur) {
+    html += '<div class="card"><div class="meta">Current episode</div><div class="row">'
+      + '<button class="playbtn" data-podplay="' + esc(cur.key) + '">&#9654;</button>'
+      + '<div class="grow"><h3>' + esc(cur.title) + '</h3><div class="meta">' + esc(cur.label) + (cur.durationS ? ' · ' + fmtDur(cur.durationS) : '') + '</div></div>'
+      + '</div></div>';
+  }
+  res.entries.forEach(function (e) {
+    html += '<div class="card trow" data-podrow="' + esc(e.key) + '"><div class="row">'
+      + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
+      + '<div class="grow"><h3>' + esc(e.title) + '</h3><div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</div></div>'
+      + '<div class="podmark-wrap"><button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + (e.listened && e.listenDate ? '<div class="podmark-date">' + esc(e.listenDate) + '</div>' : '')
+      + '</div></div></div>';
+  });
+  view.innerHTML = html;
+  view.querySelectorAll('[data-podplay]').forEach(function (b) {
+    b.addEventListener('click', function () { playPodFrom(b.getAttribute('data-podplay')); });
+  });
+  view.querySelectorAll('[data-podmark]').forEach(function (b) {
+    b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
+  });
+  // §2.5: the list opens scrolled to the current entry.
+  if (res.currentKey) {
+    var el = view.querySelector('[data-podrow="' + res.currentKey + '"]');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+  }
+}
+function playPodFrom(key) {
+  // §2.5: play queues the sequence from the tapped entry forward
+  // through the standing queue machinery.
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var idx = -1;
+  res.entries.forEach(function (e, i) { if (e.key === key) idx = i; });
+  if (idx < 0) return;
+  var descs = res.entries.slice(idx).map(podDesc).filter(function (d) { return d.available; });
+  if (!descs.length) return;
+  startQueue(descs, true);
+}
+function podToggleMark(key) {
+  // §2.4: one tap marks (source 'manual' — the catch-up path for
+  // episodes heard in another player); one tap on a listened row
+  // unmarks. No confirm dialog (the standing posture for
+  // reversible acts).
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var entry = null;
+  res.entries.forEach(function (e) { if (e.key === key) entry = e; });
+  if (!entry) return;
+  var wasListened = !!entry.listened;
+  var call = wasListened
+    ? post('/api/player/podcasts/unmark', { series: res.series, seqKey: key })
+    : post('/api/player/podcasts/mark', { series: res.series, seqKey: key, source: 'manual' });
+  call.then(function () {
+    entry.listened = !wasListened;
+    entry.source = wasListened ? null : 'manual';
+    entry.listenDate = wasListened ? null : todayChicago();
+    var left = res.entries.filter(function (e) { return !e.listened; });
+    res.listenedCount = res.entries.length - left.length;
+    res.currentKey = left.length ? left[0].key : null;
+    if (state.tab === 'podcasts') paintPodcasts();
+  }).catch(function () {});
+}
 
 /* ---------------- Settings (v328) ----------------
    The source-mapping screen, reached by the brand-bar gear (it

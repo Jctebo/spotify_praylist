@@ -41,6 +41,10 @@ export interface Env {
   EXT_TVMASS_FEED_URL?: string;
   EXT_FRMIKE_FEED_URL?: string;
   EXT_BARRON_FEED_URL?: string;
+  // v381 harness seam, same rule: a fixture-feed override for the
+  // Podcasts section's Catechism in a Year sequence build.
+  // Production leaves it unset; the pinned feed URL below governs.
+  EXT_CIY_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -1047,6 +1051,189 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
   return { settingsVersion: settings.version, slots };
 }
 
+// ---- Podcasts section (v381) --------------------------------------
+// Plan §2: a listening-progress section. The sequence is a derived,
+// ordered list the Worker builds from the series' own feed (the
+// v350 courier precedent — §2.6) and snapshots into D1; progress
+// is per-user server state (podcast_listens, migration 0017); the
+// current episode is DERIVED at read time as the first unlistened
+// entry — never stored, never date-gated (§2.3).
+const POD_CIY_FEED_URL = "https://feeds.fireside.fm/catechisminayear/rss";
+const POD_SERIES = "catechism-in-a-year";
+const POD_SERIES_TITLE = "Catechism in a Year";
+const POD_SNAPSHOT_MAX_AGE_MS = 24 * 3600 * 1000;
+
+interface PodEntry { key: string; kind: "day" | "bonus" | "special"; day: number | null; label: string; title: string; url: string; durationS: number; edition: number }
+interface PodBuild { entries: PodEntry[]; collapses: number }
+
+function podStripEditionSuffix(title: string): string {
+  return title.replace(/\s*\((?:19|20)\d{2}\)\s*$/, "").trim();
+}
+function podBonusSlug(title: string): string {
+  // §2.1: the slug from the normalized bonus title — the three
+  // known contents key as cozzens · cavins · pray; any later bonus
+  // content keys from its own first words.
+  const t = title.toLowerCase();
+  if (t.includes("cozzens")) return "cozzens";
+  if (t.includes("cavins")) return "cavins";
+  if (t.includes("pray")) return "pray";
+  const words = t.replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 4);
+  return words.join("-") || "bonus";
+}
+
+// The pure sequence build (§2.1). Items arrive in feed order.
+// Returns the canonical entries — days by number, each supplied
+// by the newest edition carrying it; bonuses anchored after the
+// latest day published before them in their newest carrying
+// edition; the Day 366 special last; the pre-launch trailer and
+// any other non-day, non-BONUS item excluded.
+function podBuildSequence(items: ExtFeedItem[]): PodBuild {
+  let collapses = 0;
+  const dayGroups = new Map<string, ExtFeedItem[]>(); // "edition|day" -> items in feed order
+  const bonusItems: { it: ExtFeedItem; edition: number; slug: string }[] = [];
+  for (const it of items) {
+    if (!it.url || it.pubMs == null) continue;
+    const edition = new Date(it.pubMs).getUTCFullYear();
+    const dm = /^Day\s+(\d+)\s*:/i.exec(it.title);
+    if (dm) {
+      const k = edition + "|" + Number(dm[1]);
+      const g = dayGroups.get(k);
+      if (g) g.push(it); else dayGroups.set(k, [it]);
+      continue;
+    }
+    if (/^BONUS\s*:/i.test(it.title)) {
+      bonusItems.push({ it, edition, slug: podBonusSlug(podStripEditionSuffix(it.title.replace(/^BONUS\s*:\s*/i, ""))) });
+      continue;
+    }
+    // Everything else — the "Introducing…" trailer named in §2.1
+    // and any other non-day, non-bonus item — stands outside the
+    // sequence.
+  }
+  // Per-(edition, day) winner (§2.1's duplicate rule): items whose
+  // (pubDate, duration) match collapse to one (first in feed order
+  // kept, the rest counted); if distinct items remain, the latest
+  // pubDate supplies.
+  const winner = new Map<string, ExtFeedItem>(); // "edition|day"
+  for (const [k, g] of dayGroups) {
+    const seen = new Set<string>();
+    const distinct: ExtFeedItem[] = [];
+    for (const it of g) {
+      const sig = String(it.pubMs) + "|" + it.durationS;
+      if (seen.has(sig)) { collapses++; continue; }
+      seen.add(sig); distinct.push(it);
+    }
+    let w = distinct[0];
+    for (const it of distinct) if ((it.pubMs ?? 0) > (w.pubMs ?? 0)) w = it;
+    winner.set(k, w);
+  }
+  // Supplier per day: the newest edition carrying the day (§2.1's
+  // edition supply rule). A rebuild may change only these supplier
+  // fields — never order, never keys, never marks.
+  const daySupplier = new Map<number, { it: ExtFeedItem; edition: number }>();
+  for (const [k, it] of winner) {
+    const [ed, day] = k.split("|").map(Number);
+    const cur = daySupplier.get(day);
+    if (!cur || ed > cur.edition) daySupplier.set(day, { it, edition: ed });
+  }
+  type Sortable = { entry: PodEntry; sortDay: number; sortRank: number; sortPub: number };
+  const out: Sortable[] = [];
+  for (const [day, sup] of daySupplier) {
+    const special = day === 366;
+    out.push({
+      entry: {
+        key: "ciy:day-" + day, kind: special ? "special" : "day", day,
+        label: special ? "Day 366 — Special" : "Day " + day,
+        title: podStripEditionSuffix(sup.it.title.replace(/^Day\s+\d+\s*:\s*/i, "")),
+        url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
+      },
+      sortDay: day, sortRank: 0, sortPub: 0,
+    });
+  }
+  // Bonuses (§2.1's anchor rule): per content, the newest edition
+  // carrying it supplies; the anchor is the latest day published
+  // before the bonus within that edition (0 = the sequence head).
+  const bonusBySlug = new Map<string, { it: ExtFeedItem; edition: number }>();
+  for (const b of bonusItems) {
+    const cur = bonusBySlug.get(b.slug);
+    if (!cur || b.edition > cur.edition || (b.edition === cur.edition && (b.it.pubMs ?? 0) > (cur.it.pubMs ?? 0))) {
+      bonusBySlug.set(b.slug, { it: b.it, edition: b.edition });
+    }
+  }
+  for (const [slug, sup] of bonusBySlug) {
+    let anchor = 0;
+    for (const [k, it] of winner) {
+      const [ed, day] = k.split("|").map(Number);
+      if (ed === sup.edition && (it.pubMs ?? 0) <= (sup.it.pubMs ?? 0) && day > anchor && day !== 366) anchor = day;
+    }
+    out.push({
+      entry: {
+        key: "ciy:bonus-" + slug, kind: "bonus", day: null, label: "Bonus",
+        title: podStripEditionSuffix(sup.it.title.replace(/^BONUS\s*:\s*/i, "")),
+        url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
+      },
+      sortDay: anchor, sortRank: 1, sortPub: sup.it.pubMs ?? 0,
+    });
+  }
+  out.sort((a, b) => (a.sortDay - b.sortDay) || (a.sortRank - b.sortRank) || (a.sortPub - b.sortPub));
+  return { entries: out.map((s) => s.entry), collapses };
+}
+
+interface PodSnapshot { entries: PodEntry[]; collapses: number; builtAt: string }
+async function podReadSnapshot(env: Env): Promise<PodSnapshot | null> {
+  const row = await env.DB.prepare("SELECT payload FROM podcast_sequences WHERE series=?").bind(POD_SERIES).first<{ payload: string }>();
+  if (!row) return null;
+  try {
+    const p = JSON.parse(row.payload) as PodSnapshot;
+    if (!Array.isArray(p.entries) || typeof p.builtAt !== "string") return null;
+    return p;
+  } catch { return null; }
+}
+// The read path is the refresh path (§2.1): a snapshot missing or
+// older than 24 hours rebuilds before answering; a failed rebuild
+// serves the standing snapshot; with no snapshot at all the
+// sequence is unavailable (leg L9's one error surface).
+async function podSequence(env: Env): Promise<{ snap: PodSnapshot; stale: boolean } | null> {
+  const snap = await podReadSnapshot(env);
+  if (snap && Date.now() - Date.parse(snap.builtAt) < POD_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
+  try {
+    const items = await extFetchFeedItems(env.EXT_CIY_FEED_URL || POD_CIY_FEED_URL);
+    const build = podBuildSequence(items);
+    if (!build.entries.length) throw new Error("podcast sequence build produced no entries");
+    const builtAt = nowISO();
+    const payload = JSON.stringify({ entries: build.entries, collapses: build.collapses, builtAt });
+    await env.DB.prepare(
+      `INSERT INTO podcast_sequences (series, payload, built_at) VALUES (?, ?, ?)
+       ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+    ).bind(POD_SERIES, payload, builtAt).run();
+    return { snap: { entries: build.entries, collapses: build.collapses, builtAt }, stale: false };
+  } catch {
+    if (snap) return { snap, stale: true };
+    return null;
+  }
+}
+
+async function podPayload(env: Env): Promise<unknown> {
+  const seq = await podSequence(env);
+  const r = await env.DB.prepare("SELECT seq_key, listened_at, listen_date, source FROM podcast_listens WHERE series=?")
+    .bind(POD_SERIES).all<{ seq_key: string; listened_at: string; listen_date: string; source: string }>();
+  const listens = new Map((r.results ?? []).map((x) => [x.seq_key, x]));
+  if (!seq) {
+    return { ok: true, series: POD_SERIES, title: POD_SERIES_TITLE, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false };
+  }
+  const entries = seq.snap.entries.map((e) => {
+    const l = listens.get(e.key);
+    return { ...e, listened: !!l, listenDate: l ? l.listen_date : null, listenedAt: l ? l.listened_at : null, source: l ? l.source : null };
+  });
+  // §2.3: current = the lowest-position entry with no listen row.
+  const current = entries.find((e) => !e.listened);
+  return {
+    ok: true, series: POD_SERIES, title: POD_SERIES_TITLE, available: true,
+    entries, currentKey: current ? current.key : null,
+    listenedCount: entries.filter((e) => e.listened).length, total: entries.length,
+    builtAt: seq.snap.builtAt, stale: seq.stale, collapses: seq.snap.collapses,
+  };
+}
+
 // ---- Router ----------------------------------------------------------------
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -1155,6 +1342,13 @@ export default {
              r2_key = excluded.r2_key, size_bytes = excluded.size_bytes, audio_state = excluded.audio_state, pushed_at = excluded.pushed_at`,
         ).bind(epDate, epTitle, epDuration, epKey, epBody.byteLength, nowISO()).run();
         return json({ ok: true, date: epDate, episodeId, sizeBytes: epBody.byteLength });
+      }
+      if (seg[2] === "podcasts" && seg[3] === "progress" && request.method === "GET") {
+        // v381 §2.2: the door's read-only progress read (mirrors
+        // GET /api/agent/player/day) so Review/Ship can verify
+        // progress state. NO agent write route exists — marks are
+        // John's acts, session-only.
+        return json(await podPayload(env));
       }
       return err(404, "unknown agent route");
     }
@@ -1285,6 +1479,37 @@ export default {
           // along as storedDay — a production fact, never the
           // selection.
           return json(await playerDayPayload(env));
+        }
+        if (seg[2] === "podcasts" && request.method === "GET") {
+          // v381 §2.2: the Podcasts tab's one read — the sequence
+          // with each entry's listened state, the derived current
+          // key (§2.3), and counts.
+          return json(await podPayload(env));
+        }
+        if (seg[2] === "podcasts" && seg[3] === "mark" && request.method === "POST") {
+          // v381 §2.2/§2.4: a mark is John's act (session-only).
+          // Idempotent: INSERT OR IGNORE — the first mark stands
+          // (its date and source are the history).
+          const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string; source?: string };
+          if (String(body.series ?? "") !== POD_SERIES) return err(400, "unknown series");
+          if (!["auto", "manual"].includes(body.source ?? "")) return err(400, "source must be auto or manual");
+          const seqKey = String(body.seqKey ?? "");
+          const seq = await podSequence(env);
+          if (!seq || !seq.snap.entries.some((e) => e.key === seqKey)) return err(400, "unknown seqKey");
+          await env.DB.prepare(
+            "INSERT OR IGNORE INTO podcast_listens (series, seq_key, listened_at, listen_date, source) VALUES (?, ?, ?, ?, ?)",
+          ).bind(POD_SERIES, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
+          return json({ ok: true });
+        }
+        if (seg[2] === "podcasts" && seg[3] === "unmark" && request.method === "POST") {
+          // v381 §2.2: unmark deletes the row (a progress record,
+          // not an audit log); unmarking an unmarked entry is a
+          // no-op.
+          const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string };
+          if (String(body.series ?? "") !== POD_SERIES) return err(400, "unknown series");
+          await env.DB.prepare("DELETE FROM podcast_listens WHERE series=? AND seq_key=?")
+            .bind(POD_SERIES, String(body.seqKey ?? "")).run();
+          return json({ ok: true });
         }
         if (seg[2] === "audio" && request.method === "GET") {
           // Episode audio from the app store, with Range passthrough

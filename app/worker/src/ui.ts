@@ -31,6 +31,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <div id="dock" class="dock hidden"><img class="dockthumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-autoplay" class="docknext dockauto" aria-label="Autoplay">Autoplay On</button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabicon">&#10022;</span><span>Prayers</span></button>
+  <button data-tab="podcasts" class="tab"><span class="tabicon">&#9835;</span><span>Podcasts</span></button>
   <button data-tab="intentions" class="tab"><span class="tabicon">&#9829;</span><span>Intentions</span></button>
   <button data-tab="examination" class="tab"><span class="tabicon">&#9790;</span><span>Examination</span></button>
   <button data-tab="confession" class="tab"><span class="tabicon">&#10013;</span><span>Confession</span></button>
@@ -141,6 +142,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .chipbtn.playing { background:var(--navy); color:var(--cream); }
 .chipbtn.missing { opacity:.55; border-style:dashed; }
 .playbtn { width:42px; height:42px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-ink); font-size:16px; cursor:pointer; flex:none; }
+.podmark { flex:none; min-width:44px; min-height:44px; border-radius:50%; border:1px solid var(--line, #ccc); background:transparent; color:var(--ink); font-size:15px; cursor:pointer; padding:4px 8px; }
+.podmark.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.podmark-wrap { flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.podmark-date { font-size:11px; color:var(--muted, #777); white-space:nowrap; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent); }
 /* v363 §2.3: the .notavail rule retires with its last row use —
@@ -322,7 +327,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v379-1";
+var CACHE = "ora-pro-nobis-v381-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
