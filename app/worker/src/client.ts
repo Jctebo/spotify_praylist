@@ -2999,6 +2999,82 @@ function blockInsertCards(day, standing) {
   });
   refreshPlayedChrome();
 }
+/* ---------------- v359 OraDayBridge snapshot ----------------
+   Route B's payload path (Plan §2.4): the native Android shell's
+   media service cannot read the day the way this client does —
+   the track list is built here, on the device, inside John's
+   Access session (v334's model), and no server payload carries
+   it. At the end of every descriptor rebuild the client hands
+   the native side a snapshot of the resolved day through the
+   OraDayBridge Capacitor plugin; the media service serves the
+   snapshot to Android Auto. Guarded and inert everywhere else:
+   with no Capacitor present the call is a no-op and the day
+   builds byte-identically, and the call is fire-and-forget — it
+   can never fail the day build. mediaUri values are computed
+   from PRE-BLOB source fields only: a blob: URL is WebView-local
+   and meaningless to native code, so one never enters the
+   snapshot. */
+function oraSnapshotTrack(d, date) {
+  var origin = location.origin;
+  if (d.kind === 'intention') {
+    // The intro's pre-blob source is the intentions feed's record
+    // (state.introRec — applyRec copies it into day.intros, whose
+    // streamUrl later swaps to a blob; the record keeps the feed
+    // enclosure). Intention audio stands on the public audio
+    // host, which refuses direct reads; the native form is the
+    // standing session-gated feed-audio pass-through the client
+    // itself downloads through (Range honored, §2.5's class).
+    var pid = String(d.episodeId || '').slice(6);
+    var rec = state.introRec && state.introRec.intros && state.introRec.intros[pid];
+    var pre = rec && rec.streamUrl ? String(rec.streamUrl) : '';
+    if (!pre || pre.indexOf('blob:') === 0) return null;
+    return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'intention', durationS: 0,
+      mediaUri: origin + '/api/player/feed-audio?url=' + encodeURIComponent(pre), needsAuth: true };
+  }
+  var st = state.extSlots && state.extSlots[d.episodeId];
+  if (st) {
+    var slot = (state.extStanding || []).filter(function (s) { return s.slotId === d.episodeId; })[0];
+    if (slot && slot.download === 'passthrough') {
+      // The passthrough class (Gospel Exegesis): the enclosure
+      // chain sends no CORS header, so the client itself plays
+      // this slot through the Worker pass-through — the native
+      // side uses the same standing route (§2.5's courier class).
+      return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
+        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId), needsAuth: true };
+    }
+    var pre2 = st.enclosureUrl || (st.streamUrl && String(st.streamUrl).indexOf('blob:') !== 0 ? String(st.streamUrl) : '');
+    if (!pre2) return null;
+    var onOrigin = pre2.indexOf(origin + '/') === 0 || pre2.charAt(0) === '/';
+    return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
+      mediaUri: pre2.charAt(0) === '/' ? origin + pre2 : pre2, needsAuth: onOrigin };
+  }
+  // Own episode: the standing session-gated Range route (§2.5),
+  // keyed by the presented day and the episode id — the native
+  // equivalent of the descriptor, independent of download state.
+  return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'episode', durationS: d.durationS || 0,
+    mediaUri: origin + '/api/player/audio/' + encodeURIComponent(date) + '/' + encodeURIComponent(d.episodeId), needsAuth: true };
+}
+function oraDaySnapshot() {
+  var date = state.presentedDay || state.storedDay || null;
+  if (!date) return null;
+  var tracks = [];
+  (state.dayDescs || []).forEach(function (d) {
+    if (!d || !d.available) return;
+    var t = oraSnapshotTrack(d, date);
+    if (t) tracks.push(t);
+  });
+  return { presentedDay: date, dateLabel: state.dateLabel || '', generatedAt: new Date().toISOString(), tracks: tracks };
+}
+function pushDaySnapshot() {
+  try {
+    var cap = window.Capacitor;
+    if (!cap || !cap.Plugins || !cap.Plugins.OraDayBridge) return;
+    var snap = oraDaySnapshot();
+    if (!snap) return;
+    var p = cap.Plugins.OraDayBridge.setDaySnapshot({ snapshot: JSON.stringify(snap) });
+    if (p && p.catch) p.catch(function () {});
+  } catch (e) { /* the bridge can never fail the day build */ }
+}
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -3047,6 +3123,7 @@ function extRebuildDescs(day) {
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
+  pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -4008,6 +4085,7 @@ function renderPrayers() {
     // and the day's descriptors for its play/pause control.
     state.dayDescs = allDescs;
     refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
+    pushDaySnapshot(); // v359 §2.4: the initial build hands the native side the day shell's own tracks
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
