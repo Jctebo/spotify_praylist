@@ -1,0 +1,21 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+ok 5 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v377-1'
+ok 6 - A0 leg validity: no Capacitor global in the plain browser page (typeof=undefined)
+ok 7 - A1 absent plugin: the day builds identically (descs=44, presented=2026-11-11)
+ok 8 - A2 browser face intact: web MediaSession metadata written outside the shell (title="Morning Prayer")
+ok 9 - A3 absent plugin: no page errors (errors=[])
+ok 10 - B1 snapshot v2: queueIds + currentIndex ride the snapshot (queueIds=["intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","ext-bible-in-a-year","intro:marian-antiphon-angelus","marian-antiphon-angelus"], currentIndex=1)
+ok 11 - B2 play: a state push reports morning-prayer playing
+ok 12 - B3 push field set (B1): {"kind":"episode","qi":1,"qc":10}
+ok 13 - B4 B6: web MediaSession untouched in the shell (metadata=null, playbackState=none)
+ok 14 - B5 command channel: the transportCommand listener stands registered
+ok 15 - B6 pause command: the app pauses and the ack push reports playing=false
+ok 16 - B7 play command: resumeCurrent resumes and the ack push reports playing=true
+ok 17 - B8 next command: the queue advances (index 1 -> 2, track=intro:ext-morning-prayer)
+ok 18 - B9 stop command: the standing transport clears and a stopped push lands
+ok 19 - B10 spoken push: kind=spoken estimated=true title="Prayer Intention: Daily Rosary" durationS=30
+ok 20 - B11 stubbed plugin: no page errors (errors=[])
+# harness-v377: 20/20 ok
