@@ -1,0 +1,47 @@
+PASS S1 day builds two descriptors (prayers only)
+PASS S2 intentionText stamped on the prayer; unpaired prayer carries none
+PASS S3 no spoken descriptor, no intro: ids anywhere in the build
+PASS T1a step active with the PRAYER's id from the first instant
+PASS T1b spoken script is exactly the standing intro script
+PASS T1c element carries no src during the step
+PASS T1d on the end signal the element loads that prayer's URL
+PASS T2a four pairs run continuously, speech-end to audio start inside one start each
+PASS T2b every transition carries its step; the queue holds prayers only throughout
+PASS T3a system cancel (interrupted, no canceller) completes the step; the prayer plays inside the start bound, not the cap
+PASS T3b native Error under the live id completes the step; the prayer plays
+PASS T3c no start event: the prayer plays at the 3 s start bound
+PASS T3d hung utterance: the prayer plays at the total cap (30-90 s band), never past it
+PASS T3e no speech transport: the prayer plays at once
+PASS T3f hidden at the start: speech skipped, the prayer plays at once
+PASS T4a a fresh store reads ON (default)
+PASS T4b OFF: a paired prayer starts with no step, audio at once
+PASS T4c OFF: the player line is absent, not blank (emptied + display:none)
+PASS T4d the dock + Now Playing switches stay in sync through flips
+PASS T4e ON: the line restores from the current prayer's intentionText
+PASS T4f a mid-queue flip takes effect on the next prayer with no reload
+PASS T4g the store survives a reload
+PASS T4h a fresh store in a new context reads ON
+PASS T5a seek during a speech step is inert
+PASS T5b next during a step lands on the next prayer, which runs its own start
+PASS T5c the departed speech is token-dead: its late end event starts nothing
+PASS T5d previous mid-audio re-runs the landed prayer's own start sequence
+PASS T5e pause during a step: the unit stands paused pre-audio (nothing loaded)
+PASS T5f resume re-speaks from the start, then loads the audio
+PASS T6a autoplay OFF stops at a single play's end (the standing stop: current clears), with no step started
+PASS T6b a chain across a block boundary carries the boundary prayer's step
+PASS T6c a Play All queue's end is the day's end: empty tail, clean stop (queue clears, no step started)
+PASS T7a every block list's card count equals its prayer count; no intention rows anywhere
+PASS T7b the queue list shows prayers only and its position counts prayers
+PASS T7c Now Playing never titles an intention
+PASS T7d search by a drawn intention's text finds its prayer
+PASS T7e a completed speech step alone marks nothing; played marking lands on the prayer alone
+PASS T8a a pre-v384 snapshot's intro: entries restore as passed over: no speech from a snapshot, no stall, prayers in order
+PASS T8b the advance-time dead-entry rule resolves an intro entry to its paired prayer only
+PASS T9a with the bridge present the hook reads the native route, id discipline live
+PASS T9b the step completes on oraSpeechEnd under the live id; exact script over the bridge
+PASS T9c the bridge contract's surface (methods + event names) is unchanged
+PASS T9d in a plain browser the hook reads the web route and the step completes on onend
+PASS S9a SW pin ora-pro-nobis-v384-1 stands in ui.ts
+PASS S9b extraction complete: no unresolved units (openGuideEditor excluded by name: guide-editor sheet, not a v384 surface)
+PASS S9c the candidate bundles clean (esbuild over index.ts)
+== harness-v384: 46/46 legs green, 0 failures ==

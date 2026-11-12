@@ -1,0 +1,15 @@
+not ok 1 - S1 buildIntroMap: entries build from introTexts only — text + spoken flag, NO streamUrl (D2); the 'novenas' key is skipped (prefix rule at the read seam)
+ok 2 - S2 renderPrayers: day.intros = buildIntroMap(day) stands BEFORE the first expandDescs build (rows at first paint)
+ok 3 - S3 step 3: ownFetchIntro is DELETED whole (definition + call sites); ownBuildIntentions assigns NO day.intros anywhere — the feed-failure catch clears segments only; the late-map completion leg (rebuild + swap) is gone
+file:///home/hatch/workspace/.worktrees/v384/app/tests/harness-v379.mjs:62
+  if (at < 0) throw new Error("extract: function not found: " + name);
+                    ^
+
+Error: extract: function not found: introDescFor
+    at extractFn (file:///home/hatch/workspace/.worktrees/v384/app/tests/harness-v379.mjs:62:21)
+    at file:///home/hatch/workspace/.worktrees/v384/app/tests/harness-v379.mjs:86:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.22.1

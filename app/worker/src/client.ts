@@ -7,7 +7,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -481,13 +481,12 @@ function presentedDateStr() {
 }
 function refreshRepeatIds() {
   // v360 §2.2: the day's REPEAT SET — the episode ids carried by
-  // more than one prayer descriptor in state.dayDescs (intention
-  // intros excluded: never a played-state subject; availability
-  // does not matter, so the set is stable while slots settle).
-  // Recomputed wherever state.dayDescs is rebuilt.
+  // more than one prayer descriptor in state.dayDescs
+  // (availability does not matter, so the set is stable while
+  // slots settle). Recomputed wherever state.dayDescs is rebuilt.
   var counts = {};
   (state.dayDescs || []).forEach(function (x) {
-    if (!x || x.kind === 'intention' || !x.episodeId) return;
+    if (!x || !x.episodeId) return;
     counts[x.episodeId] = (counts[x.episodeId] || 0) + 1;
   });
   var set = {};
@@ -539,11 +538,13 @@ function writePlayedQuiet(episodeId, dateStr, via, block) {
 }
 function markCompleted(desc) {
   // §2.3: the ONLY completion writer, called once at the top of
-  // the ended handler. The intro descriptor never marks (twenty
-  // seconds of intention is not the prayer — the pair shares the
-  // PRAYER's record). The rule is the event itself: no duration
-  // or percentage test stands anywhere in the mark path.
-  if (!desc || desc.kind === 'intention') return;
+  // the ended handler. Speech never marks (twenty seconds of
+  // intention is not the prayer — the prayer is the unit and
+  // marks by its own audio end). The rule is the event itself:
+  // no duration or percentage test stands anywhere in the mark
+  // path. The intro: guard below stands as defense only — no
+  // descriptor carries that form under the v384 model.
+  if (!desc) return;
   if (!desc.episodeId || desc.episodeId.indexOf('intro:') === 0) return;
   // v381 §2.4: a Podcasts-series track reaching this seam (the
   // ended event is the test, exactly as for every other track)
@@ -603,25 +604,36 @@ function updatePositionState() {
     navigator.mediaSession.setPositionState({ duration: d, playbackRate: audioEl.playbackRate || 1, position: Math.min(audioEl.currentTime || 0, d) });
   } catch (e) {}
 }
-/* ---------------- Spoken intros (v375) ----------------
-   On-device TTS for intention intros (D2: TTS ALWAYS — the app
+/* ---------------- Spoken intentions (v375; the step form, v384) --------
+   On-device TTS for intentions (v375 D2: TTS ALWAYS — the app
    ignores feed intro audio entirely; every paired intention is
-   spoken by the phone's own engine). An utterance is page-
-   context speech, NOT media playback: it cannot be promised
-   with the screen locked (D5: foreground-only, instant
-   pass-over otherwise), pause on Android Chrome is effectively
-   cancel (resume = re-speak from the start), and cancel() fires
-   error interrupted/canceled, never end — those two kinds are a
-   clean stop here, never a failure. Every spoken intro carries
-   a two-bound watchdog so the queue NEVER waits on speech: a
-   failed utterance delays its prayer by at most the start
-   bound, a hung one never past the total cap (§1 acceptance 4).
-   The token guards every handler and timer: the canceller owns
-   the next move, and a killed utterance's late events die with
-   its token. Intention texts ride only the signed-in payload
-   and speech is on-device — no text leaves the phone. */
+   spoken by the phone's own engine). v384 §2.2/§2.4: the spoken
+   DESCRIPTOR retires — the drawn text rides on the prayer
+   descriptor itself (its intentionText field, stamped at the
+   expandDescs seam), and the speech is a STEP INSIDE the
+   prayer's start (startDesc): the prayer is the queue entry,
+   the current, and the played-record unit from the unit's
+   first instant, and the step's completion runs that start's
+   deferred audio-load. An utterance is page-context speech,
+   NOT media playback: it cannot be promised with the screen
+   locked (D5: foreground-only — the step is simply skipped
+   otherwise, §2.3 step 3(c)), pause on Android Chrome is
+   effectively cancel (resume = re-speak from the start), and
+   cancel() fires error interrupted/canceled, never end.
+   v384 §2.4 (the C2 rule): EVERY error kind under the LIVE
+   token completes the step — inside a unit there is no
+   canceller to own the next move, the unit owns it; a cancel a
+   superseding action issued arrives under a token that action
+   already bumped and dies on the check before it can complete
+   anything. Every utterance carries a two-bound watchdog so a
+   prayer NEVER waits on speech past its bounds: a failed
+   utterance delays its prayer by at most the start bound, a
+   hung one never past the total cap. The token guards every
+   handler and timer, and a killed utterance's late events die
+   with its token. Intention texts ride only the signed-in
+   payload and speech is on-device — no text leaves the phone. */
 var SPEECH_START_MS = 3000;
-var speech = { token: 0, active: false, paused: false, desc: null, voices: [], native: false, nativeId: null, nativeToken: 0 };
+var speech = { token: 0, active: false, paused: false, desc: null, voices: [], native: false, nativeId: null, nativeToken: 0, onDone: null };
 var speechTimers = { start: null, cap: null };
 function speechSupported() { return typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined'; }
 /* ---------------- Native speech (v379) ----------------
@@ -735,11 +747,15 @@ function stopSpoken() {
   clearSpeechTimers();
   if (speech.active) speechCancel();
   speech.active = false; speech.paused = false; speech.desc = null;
-  speech.native = false; speech.nativeId = null;
+  speech.native = false; speech.nativeId = null; speech.onDone = null;
 }
-function speakIntro(desc) {
+function speakIntro(desc, onDone) {
   var token = ++speech.token;
   speech.active = true; speech.paused = false; speech.desc = desc;
+  // v384 §2.4: the step's completion, bound to this speech
+  // token — finishSpeechStep runs it exactly once, on whichever
+  // funnel exit arrives first under the live token.
+  speech.onDone = typeof onDone === 'function' ? onDone : null;
   // §1 acceptance 3: the words are exactly the standing intro
   // script — the same words the feed intro audio speaks.
   var text = 'This prayer is for ' + (desc.intentionText || '');
@@ -772,103 +788,112 @@ function speakIntro(desc) {
   u.onstart = function () { if (token !== speech.token) return; if (speechTimers.start) { clearTimeout(speechTimers.start); speechTimers.start = null; } };
   u.onend = function () { if (token === speech.token) finishSpoken(token); };
   u.onerror = function (ev) {
+    // v384 §2.4 (the C2 rule change): EVERY kind under the live
+    // token completes the step — interrupted/canceled included.
+    // Inside a unit there is no canceller to own the next move;
+    // a system-initiated cancel (visibility change, another app
+    // taking audio, the browser killing the utterance) left the
+    // queue standing on the spoken entry until the total cap —
+    // exactly "it pauses when it gets to an intention." A cancel
+    // a superseding action issued arrives under a token that
+    // action already bumped, and dies on the token check above.
     if (token !== speech.token) return;
-    var kind = ev && ev.error;
-    if (kind === 'interrupted' || kind === 'canceled') return; // cancel()'s own echo — a clean stop; the canceller owns the next move
-    finishSpoken(token); // any other kind, incl. not-allowed (no user activation): pass over silently
+    finishSpoken(token);
   };
   armSpeechTimers(token, text);
   try { speechSynthesis.speak(u); } catch (e) { finishSpoken(token); }
 }
 function finishSpoken(token) {
-  // The spoken end funnel: the audio 'ended' handler's mirror
-  // with exactly two standing rules subtracted — NO played mark
-  // (an intro never marks; the pair shares the PRAYER's record)
-  // and NO sleep 'track' divert (the pair is the unit — the
-  // prayer's end is the track end). Natural end AND watchdog
-  // pass-over take this same path.
+  // v384 §2.4: the completion mechanism — the funnel's end no
+  // longer advances a queue (there is no spoken entry to advance
+  // out of). Every exit converges here under the live token:
+  // web onend · web onerror of ALL kinds under the live token
+  // (the C2 rule) · native End/Error under the live id ·
+  // speakText rejection · utterance construction failure · no
+  // transport at all · the 3 s start bound · the 30–90 s total
+  // cap (the last two arrive through armSpeechTimers). The
+  // first arrival bumps the token — exactly-once by the
+  // standing discipline — and runs the step's bound completion:
+  // this start's deferred audio-load step. NO played mark
+  // stands here (speech never marks; the prayer is the unit and
+  // its audio end is its track end) and NO sleep 'track' divert
+  // (the prayer's end is the track end). A superseded step's
+  // completion was dropped by stopSpoken before this can run,
+  // so a completion can only ever fire for the start that owns
+  // the live token.
   if (token !== speech.token) return;
   speech.token++;
   clearSpeechTimers();
   speech.active = false; speech.paused = false;
   speech.native = false; speech.nativeId = null;
-  var spokenDesc = speech.desc; speech.desc = null;
-  if (state.queue.length) {
-    if (advanceQueue(1)) return;
-    // The queue stands exhausted (advanceQueue has cleared to
-    // the standing stop): autoplay ON chains forward, exactly
-    // as the ended handler does. The spoken descriptor stands
-    // in the fresh build at its pair's head, so the chain's
-    // tail from it is the prayer onward — a single-played
-    // intro chains into its own prayer (the pair behavior).
-    if (autoplayOn()) chainForward(spokenDesc);
-    return;
-  }
-  if (autoplayOn() && spokenDesc && chainForward(spokenDesc)) return;
-  state.current = null; setPlaybackState('none'); markPlaying(null);
-  updateDock();
-  pushNativeState(true); // v377 B2: the standing stop ends the face
+  speech.desc = null;
+  var done = speech.onDone; speech.onDone = null;
+  if (done) done();
 }
 function pauseSpoken() {
   // The Android rule (§1 evidence (c)): pause() is effectively
   // unsupported in Chrome — pause = cancel; resume re-speaks
   // from the start (intros run ~10–25s; there is no
   // mid-utterance resume on this platform).
+  // v384 §2.3: the pause lands INSIDE the unit — the prayer
+  // stands current, paused BEFORE its audio (position 0,
+  // nothing loaded); the step's completion is dropped, never
+  // run (the unit is not starting its audio while paused).
+  // speech.desc stands — resume re-runs the start step.
   speech.token++;
   clearSpeechTimers();
   speechCancel();
-  speech.active = false; speech.paused = true; // desc stands — resume re-speaks it
+  speech.active = false; speech.paused = true; speech.onDone = null; // desc stands — resume re-speaks it
   setPlaybackState('paused');
   updateDock();
 }
 function resumeSpoken() {
+  // v384 §2.3: resume re-runs the start step — re-speak from the
+  // start, then the audio-load on completion (speakStep binds a
+  // fresh completion to the new token). Never an element play()
+  // on an unloaded element.
   var desc = speech.desc || state.current;
   if (!desc) return;
   fadeRestore(); // the standing resume discipline (startDesc's restore point (3) analogue)
   setPlaybackState('playing');
   updateDock();
-  speakIntro(desc);
+  speakStep(desc);
 }
-function startSpokenDesc(desc) {
-  // §2 step 5: the spoken start — startDesc's bookkeeping with
-  // the audio element NEVER touched: no src, no play(), so
-  // handleAudioError can never see a spoken entry and
-  // queueStartPos reads 0 for it by construction.
-  fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
-  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-    // D5 foreground gate: backgrounded or locked, the intro
-    // passes over AT ONCE and the prayer plays — the queue
-    // never waits for the foreground. Inside a queue the
-    // advance is this same cheap check per step (bounded by
-    // the queue's length); standing alone, the standing
-    // stop-clear.
-    if (state.queue.length) { advanceQueue(1); return; }
-    state.current = null; setPlaybackState('none'); markPlaying(null); updateDock();
-    return;
-  }
-  state.current = desc;
-  state.lastStartAt = Date.now();
-  // The MediaSession title reads the recomputed intention title
-  // (the one-line seam: a shallow copy titled for the session;
-  // setMediaSessionFor itself is untouched).
-  setMediaSessionFor(Object.assign({}, desc, { title: prayerIntentionTitleForDesc(desc) }));
-  setPlaybackState('playing');
-  markPlaying(desc.episodeId);
-  updateDock();
-  saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2 parity: the track-change funnel
-  speakIntro(desc);
-  pushNativeState(false); // v377 B2: the spoken start states the face
+function speakStep(desc) {
+  // v384 §2.3 step 4: the speech step inside the prayer's start.
+  // The completion is bound to THIS start: when the funnel ends
+  // (any exit, exactly once), the start's audio-load step runs —
+  // unless the start has been superseded (a newer start owns
+  // state.current) or the unit was paused mid-step (the pause
+  // rule: the audio does not start under a paused unit; a
+  // flowing completion never sees speech.paused, because a
+  // pause bumps the token and drops the completion first).
+  speakIntro(desc, function () {
+    if (state.current !== desc) return; // superseded — the newer start owns the element
+    loadDescAudio(desc);
+  });
+  pushNativeState(false); // the face re-push: the unit stands in its speech phase
+}
+function inSpeechPhase() {
+  // v384 §2.3: the unit's speech phase — a current unit whose
+  // start step is speaking (active) or stands paused mid-step
+  // (paused). The standing cur.spoken seams re-key on this.
+  return !!state.current && (speech.active || speech.paused) && speech.desc === state.current;
 }
 /* Transport predicates (§2 step 7 — designed once, the central
    problem): every play/pause decision reads these, never
    audioEl.paused alone, so a spoken current toggles and glyphs
    correctly at every call site. */
 function transportPlaying() {
-  if (state.current && state.current.spoken) return speech.active && !speech.paused;
+  // v384 §2.3: the phase predicate — a current unit in its
+  // speech phase reads playing from the speech state (the v375
+  // step-7 pattern, re-keyed from desc.spoken to the phase);
+  // every other current reads the element.
+  if (inSpeechPhase()) return speech.active && !speech.paused;
   return !audioEl.paused;
 }
 function pauseTransport() {
-  if (state.current && state.current.spoken) { pauseSpoken(); pushNativeState(false); return; }
+  if (inSpeechPhase()) { pauseSpoken(); pushNativeState(false); return; }
   audioEl.pause();
   pushNativeState(false); // v377 B2: pause is a push trigger
 }
@@ -880,29 +905,52 @@ window.__opnSpeech = {
   state: function () { return { active: speech.active, paused: speech.paused, descId: speech.desc ? speech.desc.episodeId : null, voices: (speech.voices || []).length, native: !!speech.native, nativeId: speech.nativeId }; },
   pick: function () { var v = pickEnUsVoice(); return v ? { lang: v.lang, name: v.name || '', isDefault: !!v.default } : null; },
 };
-function startDesc(desc) {
-  // v375 §2 step 5: a new start supersedes any speaking entry —
-  // speech leaves through stopSpoken, the one exit point; a
-  // spoken descriptor branches to the speech transport.
-  if (speech.active || speech.paused) stopSpoken();
-  if (desc && desc.spoken) { startSpokenDesc(desc); return; }
-  fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
-  state.current = desc;
-  state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
-  setMediaSessionFor(desc);
+function loadDescAudio(desc) {
+  // v384 §2.3 step 6: the audio-load step — today's startDesc
+  // tail, split out so the speech step can defer it to the
+  // funnel's completion (bound to this start in speakStep) or
+  // startDesc can run it inline at once. Byte-for-byte in
+  // behavior: src, rate re-assert, play(), the state pushes.
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
   audioEl.play().catch(function () {});
   setPlaybackState('playing');
+  pushNativeState(false); // v377 B2: track change / play
+}
+function startDesc(desc) {
+  // v384 §2.3: the start sequence. A new start supersedes any
+  // live speech — speech leaves through stopSpoken, the one
+  // exit point, token first, so a departed unit's speech and
+  // its completion can never fire into this start. Bookkeeping
+  // stands on the PRAYER from the unit's first instant (the
+  // session names the prayer — never an intention), then the
+  // speech-step decision: (a) the descriptor carries a drawn
+  // intentionText, (b) the intentions toggle reads ON at this
+  // instant (never cached), (c) the D5 foreground gate passes.
+  // All three hold → the speech step runs and the audio-load
+  // defers to its completion; any leg fails → the audio-load
+  // runs at once, inline — no timer armed, no gap inserted.
+  if (speech.active || speech.paused) stopSpoken();
+  fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
+  state.current = desc;
+  state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
+  setMediaSessionFor(desc);
+  setPlaybackState('playing');
   markPlaying(desc.episodeId);
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
-  pushNativeState(false); // v377 B2: track change / play
+  if (desc && desc.intentionText && intentionsOn()
+    && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    speakStep(desc);
+    return;
+  }
+  loadDescAudio(desc);
 }
 function playTrack(desc) {
-  // v375 §2 step 5: the guard admits the spoken form (text, no
-  // URL); the toggle reads the transport predicates (§2 step 7).
-  if (!desc || !desc.available || (!desc.url && !desc.spoken)) return;
+  // The guard admits available descriptors with a URL (v384:
+  // the spoken form is retired — every queue entry is a prayer
+  // with audio); the toggle reads the transport predicates.
+  if (!desc || !desc.available || !desc.url) return;
   if (state.current && state.current.episodeId === desc.episodeId && transportPlaying()) { pauseTransport(); return; }
   state.queue = []; state.queueIdx = -1;
   clearRestoredQueue(); // v355 §2.5: a single play retires any restored queue with the queue it clears
@@ -918,11 +966,10 @@ function tapPlay(d) {
   // (§2.1), never in the render-time snapshot.
   if (!d) return;
   var key = d.episodeId || '';
-  var prayerId = key.indexOf('intro:') === 0 ? key.slice(6) : key;
-  // §2.5(2): the same-unit toggle, at the granularity of the pair
-  // — tapping the prayer card while its intro plays pauses, and
-  // tapping the intention row's button while the prayer plays pauses.
-  if (state.current && transportPlaying() && (state.current.episodeId === prayerId || state.current.episodeId === 'intro:' + prayerId)) { pauseTransport(); return; }
+  // v384 §2.2: the same-unit toggle at the granularity of the
+  // prayer alone — the pair is the unit, so tapping the prayer
+  // card while its intention speaks (or its audio plays) pauses.
+  if (state.current && transportPlaying() && state.current.episodeId === key) { pauseTransport(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
   // §2.7: a card in no block (the FROM TODAY'S PODCAST group)
@@ -939,11 +986,12 @@ function resumeCurrent() {
   // queue and startDesc reloads src — either would drop the
   // standing queue and restart the track at a system resume).
   if (!state.current) { setPlaybackState('none'); return; }
-  // v375 §2 step 7: a spoken current resumes through the speech
-  // transport — re-speak from the start (the Android rule); the
-  // queue and position are untouched, exactly as the element
-  // path below preserves them.
-  if (state.current.spoken) {
+  // v384 §2.3: a current standing in its speech phase resumes
+  // through the speech step — re-speak from the start (the
+  // Android rule), then the audio-load on completion; the queue
+  // and position are untouched, exactly as the element path
+  // below preserves them.
+  if (inSpeechPhase()) {
     if (speech.active && !speech.paused) { reassertMediaSession(); return; }
     resumeSpoken();
     pushNativeState(false); // v377 B2
@@ -964,6 +1012,21 @@ function resumeCurrent() {
     audioEl.play().catch(function () {});
   }
   pushNativeState(false); // v377 B2: play is a push trigger
+}
+function queueLiveDescV384(d) {
+  // v384 §2.3 (the restore edge) + §2.2: a pre-v384 record entry
+  // — an intro:-prefixed id, or a descriptor carrying the
+  // retired spoken form — is DEAD: it passes over exactly as an
+  // unavailable entry passes over, and is never started or
+  // spoken from. queueLiveDesc below applies this rule at its
+  // head, so every advance-time and restore-time read of a
+  // stale entry answers dead. The rule is identity-only: a live
+  // prayer's descriptor is untouched.
+  if (!d) return true;
+  var id = d.episodeId || '';
+  if (id.indexOf('intro:') === 0) return true;
+  if (d.spoken || d.kind === 'intention') return true;
+  return false;
 }
 function queueLiveDesc(d) {
   // v338 defect fix (John's report, 2026-11-09 11:17 CT — a block's
@@ -992,6 +1055,20 @@ function queueLiveDesc(d) {
   // fresh descriptor (blob URL once landed) substitutes; a fresh
   // descriptor standing unavailable (settled missing) passes over.
   if (!d) return null;
+  if (queueLiveDescV384(d)) {
+    // v384 §2.3: a dead pre-v384 entry resolves only against
+    // the fresh build by (episodeId, block) — the paired prayer
+    // ITSELF, never the snapshot's spoken form. No fresh match
+    // (the day build carries no such prayer) reads dead, as an
+    // unavailable entry reads.
+    var fresh = state.dayDescs || [];
+    for (var fi = 0; fi < fresh.length; fi++) {
+      if (fresh[fi].episodeId === d.episodeId && (fresh[fi].block || '') === (d.block || '')) {
+        return fresh[fi].available ? fresh[fi] : null;
+      }
+    }
+    return null;
+  }
   var isExt = d.kind === 'external' || !!(state.extSlots && state.extSlots[d.episodeId]);
   if (!isExt) {
     var descs = state.dayDescs || [];
@@ -1014,26 +1091,20 @@ function unplayedOnly(descs) {
   // v344 §2.4: the played filter — build time, at the two queue
   // call sites only. Descriptors are never mutated and expandDescs
   // is untouched; the filter selects from the standing build.
-  // Grouping: an intro descriptor belongs to the prayer descriptor
-  // that follows it — a played prayer takes its intro out with it
-  // (no orphan intro). Availability is NOT this function's
-  // question: unavailable descriptors pass through untouched and
-  // queueLiveDesc answers for them at advance time, exactly as
-  // before — the filter answers "played?", queueLiveDesc answers
-  // "available now?", and neither does the other's job. A played
-  // slot still downloading at tap time is excluded here, so no
-  // advance can ever start it.
+  // v384 §2.2: the pendingIntro grouping retires with the spoken
+  // descriptor — the drawn text rides ON the prayer descriptor
+  // (its intentionText field), so a played prayer's text dies
+  // with its own descriptor and the filter is a plain played
+  // filter; behavior for prayers is identical. Availability is
+  // NOT this function's question: unavailable descriptors pass
+  // through untouched and queueLiveDesc answers for them at
+  // advance time, exactly as before — the filter answers
+  // "played?", queueLiveDesc answers "available now?", and
+  // neither does the other's job. A played slot still downloading
+  // at tap time is excluded here, so no advance can ever start it.
   var d = presentedDateStr();
   if (!d) return descs.slice();
-  var out = [];
-  var pendingIntro = null;
-  descs.forEach(function (x) {
-    if (x.kind === 'intention') { pendingIntro = x; return; }
-    if (isPlayed(x.episodeId, d, x.block)) { pendingIntro = null; return; }
-    if (pendingIntro) { out.push(pendingIntro); pendingIntro = null; }
-    out.push(x);
-  });
-  return out;
+  return descs.filter(function (x) { return !isPlayed(x.episodeId, d, x.block); });
 }
 function queueBuild(descs) {
   // §2.4's fallback, at the same build-time seam: the filtered
@@ -1050,21 +1121,22 @@ function queueBuild(descs) {
   return descs;
 }
 function sectionQueueFrom(all, tappedId) {
-  // v351 §2.1: the card tap's build. The tapped pair heads the
+  // v351 §2.1: the card tap's build. The tapped prayer heads the
   // queue UNFILTERED (§2.3 — John's tap wins, even on a played
-  // prayer; the intro rides with it, the pair traveling by the
-  // PRAYER's played state exactly as unplayedOnly groups it);
-  // the tail is the block's descriptors AFTER the tapped prayer
-  // through unplayedOnly (§2.4) — queueBuild is NOT used, so its
-  // full-replay fallback never applies here: the head guarantees
-  // a playable unit, and an all-played remainder correctly
-  // yields the tapped unit alone.
-  // Returns: the queue · [] when the pair cannot be resolved in
-  // the fresh list or the prayer stands unavailable (a no-op,
+  // prayer); the tail is the block's descriptors AFTER the
+  // tapped prayer through unplayedOnly (§2.4) — queueBuild is
+  // NOT used, so its full-replay fallback never applies here:
+  // the head guarantees a playable unit, and an all-played
+  // remainder correctly yields the tapped unit alone.
+  // v384 §2.2: the head-pair logic retires — the head is the
+  // prayer alone (the pair is the unit; the intention rides on
+  // the prayer descriptor as its intentionText field).
+  // Returns: the queue · [] when the prayer cannot be resolved
+  // in the fresh list or the prayer stands unavailable (a no-op,
   // §2.1(2) — the standing guard) · null when the prayer belongs
   // to no block (§2.7's boundary — the caller falls back to
   // playTrack's single play).
-  var prayerId = tappedId.indexOf('intro:') === 0 ? tappedId.slice(6) : tappedId;
+  var prayerId = tappedId;
   var prayer = null;
   for (var i = 0; i < all.length; i++) { if (all[i].episodeId === prayerId) { prayer = all[i]; break; } }
   if (!prayer || !prayer.available) return [];
@@ -1072,10 +1144,7 @@ function sectionQueueFrom(all, tappedId) {
   var section = all.filter(function (x) { return x.block === prayer.block; });
   var idx = section.indexOf(prayer);
   if (idx < 0) return [];
-  var head = [prayer];
-  var prev = idx > 0 ? section[idx - 1] : null;
-  if (prev && prev.kind === 'intention' && prev.episodeId === 'intro:' + prayerId) head = [prev, prayer];
-  return head.concat(unplayedOnly(section.slice(idx + 1)));
+  return [prayer].concat(unplayedOnly(section.slice(idx + 1)));
 }
 function startQueue(descs, force) {
   if (!descs.length) return;
@@ -1150,17 +1219,14 @@ function renderQueueList() {
   if (posEl) posEl.textContent = preview ? (arr.length + ' items remaining') : ('Track ' + (state.queueIdx + 1) + ' of ' + arr.length);
   var dstr = presentedDateStr();
   box.innerHTML = arr.map(function (desc, i) {
-    var isIntro = desc.kind === 'intention';
+    // v384 §2.6: the queue holds prayers only — no intro rows,
+    // no intro branches; every row is a prayer row.
     var isPlaying = !preview && i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId;
     var isStart = !!preview && i === state.queuePreviewIdx;
     var title = desc.title || '';
-    // v361 §2.5: an intro row carries the same title its block
-    // row carries — §2.1's helper in its descriptor form; the
-    // v347 'Intention — ' prefix rule retires.
-    if (isIntro) title = prayerIntentionTitleForDesc(desc);
     var metaParts = [];
     if (desc.block) metaParts.push(esc(desc.block));
-    if (!isIntro && desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
+    if (desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
     if (!desc.available) metaParts.push('Not available');
     // v363 §2.6: the preview's start row folds "Starts here"
     // into its meta line (after the block and duration parts)
@@ -1168,12 +1234,9 @@ function renderQueueList() {
     // cannot stand inside the uniform 76px. The .npq-start
     // accent border stays as the row's second signal.
     if (isStart) metaParts.push('Starts here');
-    var dot = '';
-    if (!isIntro) {
-      var on = dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false;
-      dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
-    }
-    return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isIntro ? ' npq-intro' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
+    var on = dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false;
+    var dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
+    return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
       + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
       + (metaParts.length ? '<span class="meta npq-meta">' + metaParts.join(' \u00b7 ') + '</span>' : '')
       + '</span>' + dot + '</button>';
@@ -1224,14 +1287,14 @@ function buildContinueQueue() {
   var resumeRec = readResume();
   if (resumeRec && resumeRec.date !== state.storedDay) resumeRec = null;
   if (resumeRec) {
-    var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
+    var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
     var d = presentedDateStr();
     var firstUnplayed = null;
     prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d, x.block)) && !firstUnplayed) firstUnplayed = x; });
     var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
     if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
       for (var i = 0; i < build.length; i++) {
-        if (build[i].kind !== 'intention' && build[i].episodeId === resumeDesc.episodeId) { carryIdx = i; break; }
+        if (build[i].episodeId === resumeDesc.episodeId) { carryIdx = i; break; }
       }
     }
   }
@@ -1345,19 +1408,15 @@ function standRestoredQueue(day) {
   setMediaSessionFor(chosen.desc);
   state.pendingResume = position > 0 ? { episodeId: chosen.desc.episodeId, positionS: position } : null;
   setPlaybackState('paused');
-  if (chosen.desc.spoken) {
-    // v375 §2 step 8 checkpoint: a spoken current skips the
-    // element leg — no src, no load, no position exists to
-    // stand at. It stands as current, unstarted, paused
-    // (speech.active false → transportPlaying() false → the
-    // paused glyphs are correct with no further change); a
-    // resume re-speaks it from the start through
-    // resumeCurrent's spoken branch.
-    state.pendingResume = null;
-  } else {
-    audioEl.src = chosen.desc.url;
-    audioEl.load();
-  }
+  // v384: the restore edge — a chosen current restored from a
+  // pre-v384 record carrying an intro: entry was re-pointed at
+  // its prayer at re-resolution (the survivors hold the PRAYER's
+  // descriptor, never a spoken form), so the element leg stands
+  // unconditionally: the prayer stands loaded, paused, at its
+  // stored position; a resume plays the prayer (and speech does
+  // not resume — the v355 foreground discipline, §2.3 step 2).
+  audioEl.src = chosen.desc.url;
+  audioEl.load();
   markPlaying(chosen.desc.episodeId);
   updateDock();
   renderQueueList();
@@ -1413,10 +1472,42 @@ function syncAutoplayToggles() {
   var st = document.getElementById('set-autoplay');
   if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 }
+/* ---------------- Intentions toggle (v384) ----------------
+   §2.5 / §1 D2+D3 (approved): a device-local preference in the
+   autoplay pattern in every particular. It governs the PLAYER
+   only: ON — each paired intention is spoken inside its
+   prayer's start and the Now Playing line stands; OFF — no
+   intention is spoken before any prayer and no intention shows
+   anywhere on the player. The Intentions TAB (the pool manager)
+   is untouched in both states. Read fresh at the two decision
+   points only (the speech-step decision in startDesc and the
+   Now Playing line's render) — never cached at page load, so a
+   flip between two prayers of one standing queue takes effect
+   on the next prayer reached, with no reload. */
+var INTENTIONS_KEY = 'opn-intentions-v384';
+function intentionsOn() {
+  try { return localStorage.getItem(INTENTIONS_KEY) !== 'off'; } catch (e) { return true; }
+}
+function setIntentions(on) {
+  try { localStorage.setItem(INTENTIONS_KEY, on ? 'on' : 'off'); } catch (e) {}
+  syncIntentionsToggles();
+  updateDock(); // the Now Playing line re-renders under the new store at once
+}
+function syncIntentionsToggles() {
+  var on = intentionsOn();
+  var label = on ? 'Intentions On' : 'Intentions Off';
+  var d = document.getElementById('dock-intentions');
+  if (d) { d.textContent = label; d.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  var np = document.getElementById('np-intentions');
+  if (np) { np.textContent = label; np.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  var st = document.getElementById('set-intentions');
+  if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+}
 function chainForward(fromDesc) {
   // The chain: the fresh whole-day build past the ended track,
   // filtered by the standing queue-build discipline (unplayedOnly
-  // — a played prayer and its intro pass over together), started
+  // — the played filter; a played prayer's text dies with its own
+  // descriptor under v384), started
   // as a fresh queue. The ended track is located by (episodeId,
   // block) — the v360 occurrence discipline — so a repeated
   // episode chains from its own daypart. A Play All queue already
@@ -1586,6 +1677,7 @@ function updateDock() {
   document.getElementById('dock-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
   document.getElementById('dock-next').disabled = !state.queue.length;
   syncAutoplayToggles(); // v358: the dock toggle's label follows the store
+  syncIntentionsToggles(); // v384 §2.5: the dock intentions switch follows the store
   dock.classList.remove('hidden');
   document.body.classList.add('dock-on');
   measureBars();
@@ -1643,12 +1735,14 @@ function fireTimedStop() {
   // the timer adds no save of its own) · disarm · fade restore · label.
   // §2.3 idle edge: already paused or nothing loaded — disarm only,
   // no pause call, no resume write; the fade restore still runs.
-  // v375 §2 step 6: a minutes expiry CAN land mid-utterance
-  // (sleepTick also runs on the standing 1s interval, not only
-  // on audio timeupdate) — speech is the thing to stop; the
-  // element reads paused throughout an utterance and would
-  // otherwise leave the voice talking past the stop.
-  if (speech.active) pauseSpoken();
+  // v384 §2.3 (C5's surface): a minutes expiry CAN land inside a
+  // speech phase (sleepTick also runs on the standing 1s
+  // interval, not only on audio timeupdate) — the phase's pause
+  // rule applies (cancel the utterance, the unit stands paused
+  // before its audio); the element reads paused throughout the
+  // phase and would otherwise leave the voice talking past the
+  // stop.
+  if (inSpeechPhase()) pauseSpoken();
   else if (!audioEl.paused && state.current) audioEl.pause();
   disarmSleep();
   fadeRestore();
@@ -1811,8 +1905,9 @@ document.querySelectorAll('#tabbar .tab').forEach(function (b) {
 document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
 document.getElementById('dock-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
+document.getElementById('dock-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
 document.getElementById('dock').addEventListener('click', function (ev) {
-  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-autoplay'))) return;
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-autoplay') || ev.target.closest('#dock-intentions'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
@@ -1989,6 +2084,16 @@ function paintSettings() {
     + '<div class="setname">Autoplay</div>'
     + '<div class="meta">Keep playing through the day when a queue ends. Off restores the stop at the end of a block.</div>'
     + '<div class="setcontrols"><button class="settoggle' + (autoplayOn() ? ' on' : '') + '" id="set-autoplay" aria-pressed="' + (autoplayOn() ? 'true' : 'false') + '">' + (autoplayOn() ? 'On' : 'Off') + '</button></div>'
+    + '</div>'
+    // v384 §2.5: the intentions switch — its own Settings switch
+    // in the standing Playback section (NOT a row of the v328
+    // source-mapping table, §2.7). Device-local, default ON;
+    // governs the player only (speech + the Now Playing line),
+    // never the Intentions tab.
+    + '<div class="setrow">'
+    + '<div class="setname">Intentions</div>'
+    + '<div class="meta">Speak each prayer&rsquo;s intention before it plays, and show it on the player. Off silences the spoken intention and hides it on the player; the Intentions tab is unchanged either way.</div>'
+    + '<div class="setcontrols"><button class="settoggle' + (intentionsOn() ? ' on' : '') + '" id="set-intentions" aria-pressed="' + (intentionsOn() ? 'true' : 'false') + '">' + (intentionsOn() ? 'On' : 'Off') + '</button></div>'
     + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
@@ -2046,6 +2151,8 @@ function paintSettings() {
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
+  var inBtn = document.getElementById('set-intentions');
+  if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); paintSettings(); });
   fillPinSection();
 }
 /* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
@@ -2222,31 +2329,47 @@ function openIntentionEditor(it) {
 }
 
 /* ---------------- Prayers (the player) ---------------- */
-function trackDesc(t) {
+function trackDesc(t, day) {
   // v336 P6: source + durationS ride along additively — the one seam
   // both queue builds flow through, so Now Playing's meta line and
   // seek bar see them on every family's descriptor alike.
-  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0 };
+  // v384 §2.2 ( move 1): the drawn intention text is stamped onto
+  // the prayer descriptor itself as its intentionText field,
+  // resolved here at the seam by the standing introTextFor (the
+  // introTexts map + the novena prefix rule, unchanged). The
+  // availability rule carries verbatim from the retired
+  // expandDescs pairing: an unavailable prayer carries NO text —
+  // no orphan speech for an absent prayer. A descriptor built
+  // without its day (queueLiveDesc's external rebuild, search
+  // rows) resolves no text here; the start step always reads the
+  // live day-build descriptor's field, never a render-time one.
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0 };
+  if (d.available && day) {
+    var text = introTextFor(t, day);
+    if (text) d.intentionText = text;
+  }
+  return d;
 }
 function buildIntroMap(day) {
   // v375 §2 step 1: the intros map builds from the payload's
   // drawn TEXT (introTexts), synchronously at day load — every
   // paired id the payload carries (the 21 INTRO_PAIRING ids:
   // 5 own, 15 external incl. the Mass and Homilies slots, The
-  // AI Signal — D1, all classes) stands an entry BEFORE the
-  // first descriptor build, so intention rows stand at first
-  // paint, not at feed landing. Under D2 (TTS ALWAYS) an entry
-  // is text only — spoken form, no streamUrl; the intentions
-  // feed's audio is never joined (and the feed keeps publishing
-  // untouched, D3). The 'novenas' key is NOT an entry: novena
-  // track ids are feed-born and unenumerable here — step 2's
-  // read seam applies the prefix rule, exactly as the retired
-  // feed join did.
+  // AI Signal — D1, all classes) stands resolved BEFORE the
+  // first descriptor build, so a paired prayer's intentionText
+  // stands at first build, not at feed landing (v384: the map
+  // now feeds the descriptor field through introTextFor, not a
+  // descriptor of its own). Under D2 (TTS ALWAYS) an entry is
+  // text only; the intentions feed's audio is never joined (and
+  // the feed keeps publishing untouched, D3). The 'novenas' key
+  // is NOT an entry: novena track ids are feed-born and
+  // unenumerable here — introTextFor's read seam applies the
+  // prefix rule, exactly as the retired feed join did.
   var texts = (day && day.introTexts) || {};
   var map = {};
   Object.keys(texts).forEach(function (id) {
     if (id === 'novenas') return;
-    if (texts[id]) map[id] = { text: texts[id], spoken: true };
+    if (texts[id]) map[id] = { text: texts[id] };
   });
   return map;
 }
@@ -2264,35 +2387,18 @@ function introTextFor(t, day) {
   }
   return null;
 }
-function introDescFor(t, day) {
-  // v375 §2 step 2: the intro descriptor in its SPOKEN form —
-  // under D2 no feed audio is ever joined, so the descriptor
-  // carries the drawn text and NO url; the start path speaks it
-  // on-device (the speech transport). title carries the
-  // PRAYER's own title, so every raw-title read (dock,
-  // MediaSession) lands on the standing prayerIntentionTitle
-  // fallback chain (the queue list and row titles recompute
-  // through prayerIntentionTitleForDesc regardless). durationS
-  // 0 stands: an utterance has no duration to fabricate.
-  // hasText is never set: no Read control stands on an intro
-  // (§2.7(7)).
-  var text = introTextFor(t, day);
-  if (!text) return null;
-  return { episodeId: 'intro:' + t.episodeId, kind: 'intention', title: t.title || '', url: null, spoken: true, available: true, block: t._block || '', source: '', durationS: 0, intentionText: text };
-}
 function expandDescs(t, day) {
   // v338 §2.3(2)/(3): THE one expansion seam — both descriptor
   // builds (renderPrayers' initial build and extRebuildDescs) emit
   // prayer descriptors through here, and no other call site may
-  // emit one without it. An intro descriptor stands IMMEDIATELY
-  // before its prayer's descriptor iff the intros map carries the
-  // track AND the prayer's descriptor is available — an unavailable
-  // prayer takes its intro with it: no orphan intro ever speaks
-  // for an absent prayer (both families, one rule).
-  var d = trackDesc(t);
-  if (!d.available) return [d];
-  var intro = introDescFor(t, day);
-  return intro ? [intro, d] : [d];
+  // emit one without it.
+  // v384 §2.2 ( move 1): the seam stops emitting the spoken
+  // descriptor (introDescFor retires with it). It returns the
+  // prayer's descriptor ALONE, with the drawn text stamped onto
+  // it as its intentionText field at the trackDesc seam (§2.2's
+  // stamping point — the availability rule stands there: an
+  // unavailable prayer carries no text, no orphans).
+  return [trackDesc(t, day)];
 }
 function readButton(t, key) {
   // v318 T9: the Read control. A track with no text carries NO Read
@@ -2304,81 +2410,20 @@ function readButton(t, key) {
   // same openRead target; the reader itself does not change.
   return '<button class="btn ghost small" data-read="' + esc(key) + '">Read</button>';
 }
-function prayerIntentionTitle(t, intro) {
-  // v361 §2.1: the intention row's title — "Prayer Intention: " +
-  // the PRAYER's name (John's specified form: the title itself is
-  // the distinction). The name is the prayer track's own title —
-  // the track standing at the render seam, for BOTH families
-  // alike (the Bible in a Year slot's t.title is its matched
-  // episode title by render time). Fallback chain, in order,
-  // never a fabricated name: t.title → the intro's own title
-  // (intro.title, the feed item's title as the payload carries
-  // it) → the bare "Prayer Intention" with no suffix.
-  var name = (t && t.title) || (intro && intro.title) || '';
-  return name ? 'Prayer Intention: ' + name : 'Prayer Intention';
-}
-function prayerIntentionTitleForDesc(desc) {
-  // v361 §2.1/§2.5: the descriptor form of the helper, for the
-  // queue — the intro descriptor's prayer is resolved from
-  // state.dayDescs by stripping the intro: prefix; the same
-  // fallback chain applies (prayer descriptor title → the intro
-  // descriptor's own title → the bare "Prayer Intention").
-  var pid = desc && desc.episodeId && desc.episodeId.indexOf('intro:') === 0 ? desc.episodeId.slice('intro:'.length) : null;
-  var p = pid ? (state.dayDescs || []).filter(function (x) { return x.episodeId === pid; })[0] : null;
-  var name = (p && p.title) || (desc && desc.title) || '';
-  return name ? 'Prayer Intention: ' + name : 'Prayer Intention';
-}
-function intentionRowCard(t, intro) {
-  // v361 §2.2: the intention intro as its OWN standard card — the
-  // v338/v343 combined row's panel half, promoted to a full row
-  // (v361 retires intentionPanelHtml and the 25/75 split). Form:
-  // the standard .playbtn (NOT the panel's small variant —
-  // uniform form is the point) carrying data-playkey=
-  // "intro:<episodeId>", wired exactly as every row button wires,
-  // so v351 decision 5 stands untouched: the button selects the
-  // pair (intro, then its prayer), exactly as the panel's button
-  // did. Then a .grow column: the <h3> title from §2.1's helper,
-  // and the intention TEXT (the very words the intro speaks) as
-  // the row's second line — the standing .intention-text element
-  // under its two-line clamp, with the ⋯ ellipsis button after
-  // it under the standing rule (a rendered measurement arms it —
-  // armEllipsis, re-pointed to this row in §2.4; an expanded
-  // row's button always stands as the collapse control; the
-  // expand state is per-row and session-only, state.expandedIntros,
-  // re-rendered in expanded form when its id stands in the set).
-  // No played dot (the v347 queue precedent: played state belongs
-  // to the prayer), no "Intention" label line (Decision 1: the
-  // title alone carries the distinction), no Read control, no
-  // Spotify link, no meta line beyond the text itself.
-  // v363 §2.5: the card carries .trow (the uniform 76px, D1);
-  // the ⋯ leaves .grow's block flow (where it cost its own
-  // line) and stands as a flex child of the row after .grow —
-  // the fixed 30x44 trailing box. armEllipsis still finds it
-  // inside the card element; wireExpand and the expanded
-  // round trip (exactly 76px on collapse) are untouched.
-  var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
-  return '<div class="card intention-row trow' + (expanded ? ' expanded' : '') + '" data-card="intro:' + esc(t.episodeId) + '"><div class="row">'
-    + '<button class="playbtn" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button>'
-    + '<div class="grow"><h3>' + esc(prayerIntentionTitle(t, intro)) + '</h3>'
-    + '<div class="intention-text">' + esc(intro.text) + '</div></div>'
-    + '<button class="ellipsis-btn' + (expanded ? ' stands' : '') + '" data-expand="' + esc(t.episodeId) + '" aria-label="Show the full intention" aria-expanded="' + (expanded ? 'true' : 'false') + '">&#8943;</button>'
-    + '</div></div>';
-}
 function introForTrack(t) {
-  // v343 §2.5(1): the intro for a track, descriptor-first.
-  // The intro descriptor standing in state.dayDescs (built by
-  // expandDescs at every rebuild, carrying intentionText) is the
-  // freshest source — a card rendered from it no longer depends on
-  // the open-time payload snapshot. Fallback (named): the standing
-  // map read on state.dayPayload — it covers the initial own-track build and any
-  // instant before a rebuild has run (v375: the map's entries
-  // are text-only — the streamUrl field retires under D2; its
-  // readers take text/title only). Availability stays the
-  // caller's standing rule: expandDescs emits no intro descriptor
-  // for an unavailable prayer, and trackCard asks only for
-  // available tracks — no available prayer, no intro row, both ways.
+  // v384 §2.5/§2.6: the intro read re-points to the descriptor's
+  // own field — the prayer descriptor standing in
+  // state.dayDescs carries intentionText (stamped at the
+  // expandDescs seam), so a reader holding the prayer descriptor
+  // (Now Playing, the native face) reads it directly. This
+  // fallback serves readers holding a bare track (render-time
+  // shapes): the descriptor in the day build first, then the
+  // standing map read on state.dayPayload (text-only since
+  // v375), then the novena prefix rule. Availability stays the
+  // caller's standing rule: an unavailable prayer carries no
+  // text (the seam's rule), so no available prayer, no text.
   if (!t || !t.episodeId) return null;
-  var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === 'intro:' + t.episodeId; })[0];
+  var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === t.episodeId; })[0];
   if (d && d.intentionText) return { text: d.intentionText, title: d.title };
   var map = state.dayPayload && state.dayPayload.intros;
   var intro = map ? map[t.episodeId] : null;
@@ -2392,11 +2437,10 @@ function introForTrack(t) {
   return null;
 }
 function armEllipsis(cardEl) {
-  // v343 §2.4: the ellipsis stands iff the intention text is
-  // actually clamped — the rendered-height comparison
-  // (scrollHeight > clientHeight + 1), never a length derivation.
-  // The exact-fit two-line text reads equal and stands no ellipsis
-  // (nothing is hidden). An expanded row's button always stands.
+  // v384: the intention row retires (§2.2) — no .intention-row is
+  // ever rendered, so this v343 measurement arm stands inert by
+  // construction (its class guard never matches). Kept as the
+  // standing helper shape; the render paths that called it stand.
   if (!cardEl || !cardEl.classList || !cardEl.classList.contains('intention-row')) return;
   var btn = cardEl.querySelector('.ellipsis-btn');
   var txt = cardEl.querySelector('.intention-text');
@@ -2408,10 +2452,9 @@ function armAllEllipses() {
   view.querySelectorAll('.card.intention-row').forEach(armEllipsis);
 }
 function wireExpand(root) {
-  // v343 §2.4: the expand control is wired at the same render
-  // paths that wire [data-playkey] (initial build, insert, swap),
-  // beside that wiring. Per-element and idempotent — the
-  // data-expand-wired flag guards the listener against re-arming.
+  // v384: no [data-expand] control is rendered anywhere (the
+  // intention row carried the only one) — the wiring pass stands
+  // and finds nothing, exactly as its idempotent shape allows.
   (root || view).querySelectorAll('[data-expand]').forEach(function (btn) {
     if (btn.getAttribute('data-expand-wired')) return;
     btn.setAttribute('data-expand-wired', '1');
@@ -2421,8 +2464,6 @@ function wireExpand(root) {
       if (!card || !id) return;
       var on = card.classList.toggle('expanded');
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
-      if (!state.expandedIntros) state.expandedIntros = {};
-      if (on) state.expandedIntros[id] = true; else delete state.expandedIntros[id];
       armEllipsis(card);
     });
   });
@@ -2490,12 +2531,13 @@ function novenaSpanHtml(t) {
 }
 function blockPlayedCounts(block) {
   // The block's available PRAYER descriptors from the standing
-  // day build (intros excluded — they are not separate prayers;
-  // unavailable excluded — nothing to play, nothing to mark).
+  // day build (unavailable excluded — nothing to play, nothing
+  // to mark; every descriptor in the build is a prayer under
+  // v384, so no kind exclusion stands).
   var d = presentedDateStr();
   var total = 0, played = 0;
   (state.dayDescs || []).forEach(function (x) {
-    if (x.kind === 'intention' || !x.available || x.block !== block) return;
+    if (!x.available || x.block !== block) return;
     total++;
     if (d && isPlayed(x.episodeId, d, x.block)) played++;
   });
@@ -2561,7 +2603,7 @@ function wirePlayed(root) {
       var c = blockPlayedCounts(block);
       var unmark = c.total > 0 && c.played === c.total;
       (state.dayDescs || []).forEach(function (x) {
-        if (x.kind === 'intention' || !x.available || x.block !== block) return;
+        if (!x.available || x.block !== block) return;
         // Unavailable tracks are never written, either way; one
         // tap writes the block's whole available set.
         if (unmark) { if (isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, null, x.block); }
@@ -2573,33 +2615,18 @@ function wirePlayed(root) {
 }
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
-  // v338 §2.7(1)/(5), as REPLACED by v361 §2.3: an intro stands
-  // for this track iff the intros map carries it AND the track is
-  // available — consulted UNIFORMLY by track id from the day
-  // payload in state, for both families (own tracks and external
-  // slots render through this one seam). Where v338 fused the
-  // intro INTO this card as a 25% panel (uniformed at 136px by
-  // v343), v361 renders it as its OWN standard card standing
-  // immediately before the prayer card: wrap returns
-  // intentionRowCard + the plain prayer card, two sibling cards
-  // from the one call, so every list caller that joins trackCard
-  // output emits the pair with zero caller changes. No intro
-  // standing → the return is byte-identical to today's plain
-  // card; an unavailable prayer renders its standing unavailable
-  // card, intro-free (the unavailable branches never carried an
-  // intro and do not change).
-  // v343 §2.5(1): the lookup runs through introForTrack —
-  // descriptor-first, the payload map as its named fallback.
-  var intro = t.available ? introForTrack(t) : null;
+  // v384 §2.2/§2.6: the intention ROW retires — trackCard returns
+  // the prayer card alone, always (the drawn intention now rides
+  // on the prayer descriptor as intentionText and is spoken
+  // inside the prayer's start; nothing renders it as a row).
+  // Before v384 (v361 §2.3), an available paired track returned
+  // intentionRowCard + the prayer card as two sibling cards.
   var wrap = function (rowInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
     // NO marker) — the played dot stands as the prayer row's last
     // element, after the .grow column, for both families alike.
-    // v361 §2.3: the prayer card itself is always the plain card;
-    // a standing intro prepends its own intention row card.
-    var card = '<div class="card trow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
-    return intro ? intentionRowCard(t, intro) + card : card;
+    return '<div class="card trow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
   };
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
@@ -2733,7 +2760,7 @@ function openNowPlaying() {
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
-    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-autoplay">Autoplay On</button><button class="btn ghost" id="np-read">Read</button></div>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-autoplay">Autoplay On</button><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue"></div>'
     + '</div>';
@@ -2745,6 +2772,7 @@ function openNowPlaying() {
   sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
   sheet.querySelector('#np-sleep').addEventListener('click', function () { openSleepSheet(); });
   sheet.querySelector('#np-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
+  sheet.querySelector('#np-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
     var t = state.current && state.readTracks[state.current.episodeId];
     if (t && t.hasText && t.textUrl) openRead(t); // stacks over this sheet; closing Read returns here
@@ -2786,9 +2814,15 @@ function updateNowPlaying() {
   var litEl = sheet.querySelector('#np-litday'); if (litEl) { var ln = (state.liturgical && state.liturgical.name) || ''; if (litEl.textContent !== ln) litEl.textContent = ln; }
   var intEl = sheet.querySelector('#np-intention');
   if (intEl) {
-    var intText = null;
-    if (cur.kind === 'intention') intText = cur.intentionText || null;
-    else { var intIntro = introForTrack(cur); intText = intIntro ? (intIntro.text || null) : null; }
+    // v384 §2.5: the line reads the current prayer's own
+    // intentionText field, gated by the toggle store read at
+    // render time. ON with a text → the v372 line's exact string
+    // and place (hero, under the block/source line, above the
+    // liturgical day line); OFF or no text → emptied AND
+    // display:none — absent, not blank. The render runs at the
+    // start's bookkeeping, so the line already stands during
+    // the speech phase and while the prayer plays.
+    var intText = intentionsOn() ? (cur.intentionText || null) : null;
     if (intText) { intEl.textContent = 'Prayer Intention: ' + intText; intEl.style.display = ''; }
     else { intEl.textContent = ''; intEl.style.display = 'none'; }
   }
@@ -2798,6 +2832,7 @@ function updateNowPlaying() {
   sheet.querySelector('#np-speed').textContent = state.rate + '×';
   sheet.querySelector('#np-sleep').textContent = sleepLabel();
   syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
+  syncIntentionsToggles(); // v384 §2.5: the intentions switches follow the store at every render
   var rt = state.readTracks[cur.episodeId];
   sheet.querySelector('#np-read').style.display = (rt && rt.hasText && rt.textUrl) ? '' : 'none';
   updateNpSeek();
@@ -3087,20 +3122,16 @@ function extSwapCard(slot) {
   if (!old || !st) return;
   var tmp = document.createElement('div');
   tmp.innerHTML = st.state === 'downloading' ? extDownloadingCard(slot) : (st.state === 'loading' ? extPlaceholderCard(slot) : trackCard(extSlotTrack(slot, st)));
-  // v361 §2.4: the fragment can carry TWO nodes — the intention
-  // row + the prayer card, when an intro stands (one node when
-  // none does; the placeholder and downloading cards stand
-  // single, unchanged). Take ALL of the fragment's children and
-  // replace the old card with them in order, so the intention
-  // row lands immediately before the prayer card and the pair
-  // replaces atomically.
-  // The pair replaces atomically on REPEATED swaps too: a
-  // standing intention row for THIS slot (the old card's
-  // immediately preceding sibling) is part of the pair being
-  // replaced and is removed with it — otherwise a second swap
-  // (the settle swap, then the intros-landing completion leg,
-  // in either order) would strand the first swap's intention
-  // row and the slot would stand with two.
+  // v384: the fragment carries ONE node — the prayer card alone
+  // (the intention row retired with the spoken-descriptor model;
+  // v361 §2.4's two-node pair rule is superseded). Take ALL of
+  // the fragment's children and replace the old card with them
+  // in order, as the standing swap discipline reads.
+  // A pre-v384 page standing in the DOM across the swap (never
+  // in production, where the client reloads whole) could carry
+  // a standing intention row for THIS slot as the old card's
+  // immediately preceding sibling — it is removed with the card,
+  // so no retired row can strand.
   var prevIntro = null;
   var prev = old.previousElementSibling;
   if (prev && prev.classList && prev.classList.contains('intention-row') && prev.getAttribute('data-card') === 'intro:' + slot.slotId) prevIntro = prev;
@@ -3110,10 +3141,8 @@ function extSwapCard(slot) {
   old.remove();
   if (prevIntro) prevIntro.remove();
   nodes.forEach(function (fresh) {
-    // v338 §2.7(5), as carried by v361 §2.4: a settled slot can
-    // carry TWO play buttons (the intention row's + the prayer's
-    // own, now standing on sibling cards) — wire each by its OWN
-    // data-playkey against the descriptor list.
+    // A settled slot carries ONE play button (the prayer's own)
+    // — wired by its data-playkey against the descriptor list.
     fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
       b.addEventListener('click', function () {
         var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
@@ -3196,11 +3225,9 @@ function blockInsertCards(day, standing) {
         var st2 = state.extSlots[slot.slotId];
         var tmp2 = document.createElement('div');
         tmp2.innerHTML = st2 && st2.state === 'present' ? trackCard(extSlotTrack(slot, st2)) : extPlaceholderCard(slot);
-        // v361 §2.4 (the extSwapCard rule, applied here at
-        // Implement): a present slot's trackCard can return the
-        // pair — take ALL of the fragment's children, in order,
-        // never firstChild alone (which would strand the prayer
-        // card, or the intention row, in the fragment).
+        // The fragment carries the prayer card alone under v384
+        // (v361 §2.4's pair rule superseded) — take ALL of its
+        // children, in order, never firstChild alone.
         var nodes2 = [];
         while (tmp2.firstChild) nodes2.push(tmp2.removeChild(tmp2.firstChild));
         nodes2.forEach(function (el2) {
@@ -3237,21 +3264,11 @@ function blockInsertCards(day, standing) {
    snapshot. */
 function oraSnapshotTrack(d, date) {
   var origin = location.origin;
-  if (d.kind === 'intention') {
-    // The intro's pre-blob source is the intentions feed's record
-    // (state.introRec — applyRec copies it into day.intros, whose
-    // streamUrl later swaps to a blob; the record keeps the feed
-    // enclosure). Intention audio stands on the public audio
-    // host, which refuses direct reads; the native form is the
-    // standing session-gated feed-audio pass-through the client
-    // itself downloads through (Range honored, §2.5's class).
-    var pid = String(d.episodeId || '').slice(6);
-    var rec = state.introRec && state.introRec.intros && state.introRec.intros[pid];
-    var pre = rec && rec.streamUrl ? String(rec.streamUrl) : '';
-    if (!pre || pre.indexOf('blob:') === 0) return null;
-    return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'intention', durationS: 0,
-      mediaUri: origin + '/api/player/feed-audio?url=' + encodeURIComponent(pre), needsAuth: true };
-  }
+  // v384 §2.2: the intention snapshot branch retires with the
+  // spoken descriptor — the day build carries no intention
+  // entries, so the native snapshot (the car's day) holds
+  // prayers only, exactly as the queue does. (Before v384 an
+  // intro descriptor emitted a feed-audio pass-through entry.)
   var st = state.extSlots && state.extSlots[d.episodeId];
   if (st) {
     var slot = (state.extStanding || []).filter(function (s) { return s.slotId === d.episodeId; })[0];
@@ -3333,16 +3350,19 @@ function nativeStatePayload(stopped) {
       queueIndex: state.queueIdx, queueCount: state.queue.length, queueIds: queueIds, rate: state.rate || 1, ts: Date.now() };
   }
   var playing = transportPlaying();
-  // B1 title: the row title the app shows — intention rows in
-  // the v361 form; subtitle: the v372 pairing (the playing
-  // prayer's intention text; a spoken intro's own text).
-  var title = cur.kind === 'intention' ? prayerIntentionTitleForDesc(cur) : (cur.title || '');
+  // B1 title: the row title the app shows (always the prayer's
+  // own under v384); subtitle: the v372 pairing — the playing
+  // prayer's intention text, read from its descriptor field.
+  var title = cur.title || '';
   var subtitle = '';
-  if (cur.kind === 'intention') subtitle = cur.intentionText || '';
-  else { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
-  var kind = cur.spoken ? 'spoken' : (cur.kind || 'episode');
+  { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
+  // v384 §2.2: the face's kind re-keys on the unit's speech
+  // phase — during the step the kind reads 'spoken' (the B1
+  // spoken-honesty position rule below), otherwise the
+  // descriptor's own kind; no descriptor carries a spoken form.
+  var kind = inSpeechPhase() ? 'spoken' : (cur.kind || 'episode');
   var pos = 0, dur = 0, estimated = false;
-  if (cur.spoken) {
+  if (inSpeechPhase()) {
     // B1 spoken honesty: position = elapsed speech time,
     // duration = the v375 watchdog estimate, marked estimated.
     var script = 'This prayer is for ' + (cur.intentionText || '');
@@ -3379,20 +3399,24 @@ function bridgeDuck(on) {
   // B3 duck/unduck: the web engine's gain to 0.2 / restored.
   // The fade system's base is the standing volume; speech has
   // no per-utterance gain where the engine allows none — a
-  // spoken current is a no-op here (B3's own words).
+  // current in its speech phase is a no-op here (B3's own
+  // words; v384 re-key: the phase, not a spoken descriptor).
   bridgeDucked = !!on;
-  if (state.current && state.current.spoken) return;
+  if (inSpeechPhase()) return;
   try { audioEl.volume = on ? (fade.base || 1) * 0.2 : (fade.base || 1); } catch (e) {}
 }
 function bridgePrevious() {
   // B3 previous: restart the track if > 3 s in, else the
-  // previous queue entry.
-  if (state.current && !state.current.spoken && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
+  // previous queue entry. v384 re-key: the > 3 s restart leg
+  // reads the phase — inside a speech phase there is no element
+  // position to restart from, so previous advances the queue.
+  if (state.current && !inSpeechPhase() && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
   if (state.queue.length) advanceQueue(-1);
 }
 function bridgeStop() {
   // B3 stop: stop playback and clear the standing transport —
-  // the queue-exhausted clear's shape, on command.
+  // the queue-exhausted clear's shape, on command. (stopSpoken
+  // also drops a live step's completion — the unit is ending.)
   if (speech.active || speech.paused) stopSpoken();
   try { audioEl.pause(); } catch (e) {}
   state.queue = []; state.queueIdx = -1; state.current = null;
@@ -3409,7 +3433,11 @@ function handleTransportCommand(ev) {
   else if (cmd === 'next') { if (state.queue.length) advanceQueue(1); }
   else if (cmd === 'previous') bridgePrevious();
   else if (cmd === 'seekTo') {
-    if (state.current && !state.current.spoken && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
+    // v384 §2.3: seek during the speech phase is INERT (the
+    // element holds nothing) — the bridge handler's early-return
+    // re-keys to the phase; after the audio-load, seek is the
+    // standing element behavior.
+    if (state.current && !inSpeechPhase() && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
   }
   else if (cmd === 'stop') { bridgeStop(); return; }
   else return;
@@ -3605,9 +3633,10 @@ function updateBlockCounts(day) {
   // v374 §2: the count's source of truth is state.dayDescs — the
   // expanded descriptor list the app itself plays, searches, and
   // queues from. A block's count is the number of descriptors
-  // carrying its name (intention descriptors included: their rows
-  // are listed tracks of the block; a settled-missing track stands
-  // as exactly one descriptor; loading placeholders emit none).
+  // carrying its name (v384: every descriptor is a prayer — the
+  // intention descriptors whose rows v374 counted as listed
+  // tracks no longer stand; a settled-missing track stands as
+  // exactly one descriptor; loading placeholders emit none).
   // The old own+ext standing-list arithmetic (with its novenas
   // special case) is replaced whole by this one tally.
   var counts = {};
@@ -3640,7 +3669,7 @@ function paintContinue() {
   // simply not reached while the flag stands.
   if (state.restoredQueue) { slot.innerHTML = ''; return; }
   var d = presentedDateStr();
-  var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
+  var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
   var playedN = 0, firstUnplayed = null;
   prayers.forEach(function (x) {
     if (d && isPlayed(x.episodeId, d, x.block)) playedN++;
@@ -4606,15 +4635,14 @@ function homeBodyHtml(day) {
 function searchResultsHtml(day, q) {
   // §2.6.2: the closed corpus — the presented day only: block
   // labels + captions, track titles across blocks + the episodes
-  // group, and the intro descriptors' intention texts.
+  // group, and the prayers' intention texts.
+  // v384 §2.6: the introHit indirection retires — the intention
+  // text rides on the prayer descriptor itself, so the hit reads
+  // prayer descriptors' intentionText directly.
   var blocks = (day.blocks || []).filter(function (b) {
     return (b.label || '').toLowerCase().indexOf(q) >= 0
       || (b.block || '').toLowerCase().indexOf(q) >= 0
       || (b.caption || '').toLowerCase().indexOf(q) >= 0;
-  });
-  var introHit = {};
-  (state.dayDescs || []).forEach(function (d) {
-    if (d.kind === 'intention' && d.intentionText && d.intentionText.toLowerCase().indexOf(q) >= 0) introHit[d.episodeId.slice(6)] = true;
   });
   // Track hits read the RESOLVED descriptor list — the presented
   // day as it stands on its pages (payload tracks, the episodes
@@ -4622,7 +4650,7 @@ function searchResultsHtml(day, q) {
   // the raw payload alone: the Daily Rosary stands on the Morning
   // page through its settings card, and a search that cannot find
   // it has not searched the day.
-  var hits = (state.dayDescs || []).filter(function (d) { return d.kind !== 'intention' && ((d.title || '').toLowerCase().indexOf(q) >= 0 || !!introHit[d.episodeId]); });
+  var hits = (state.dayDescs || []).filter(function (d) { return (d.title || '').toLowerCase().indexOf(q) >= 0 || (d.intentionText && d.intentionText.toLowerCase().indexOf(q) >= 0); });
   if (!blocks.length && !hits.length) return '<p class="meta" style="margin-top:14px">Nothing in today&rsquo;s prayers matches.</p>';
   var html = '';
   if (blocks.length) html += '<h2 class="sectionhead">BLOCKS</h2><div class="blockgrid">' + blocks.map(function (b) { return blockCardHtml(b); }).join('') + '</div>';
@@ -4703,9 +4731,8 @@ function appendBlockSettingsCards(day, b) {
       if (st2 && st2.state === 'downloading') tmp2.innerHTML = extDownloadingCard(slot);
       else if (st2 && st2.state !== 'loading') tmp2.innerHTML = trackCard(extSlotTrack(slot, st2));
       else tmp2.innerHTML = extPlaceholderCard(slot);
-      // v361 §2.4 (the same rule): append ALL of the fragment's
-      // children — a settled slot with a standing intro appends
-      // its intention row AND its prayer card, in order.
+      // Append ALL of the fragment's children (the prayer card
+      // alone under v384; v361 §2.4's pair rule superseded).
       while (tmp2.firstChild) view.appendChild(tmp2.removeChild(tmp2.firstChild));
     }
   });
