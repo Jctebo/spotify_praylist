@@ -590,8 +590,6 @@ function reassertMediaSession() {
   if (!state.current) { setPlaybackState('none'); return; }
   setMediaSessionFor(state.current);
   registerMediaHandlers();
-  // v375 §2 step 7: a spoken current declares from the speech
-  // transport; transportPlaying() reads the element otherwise.
   setPlaybackState(transportPlaying() ? 'playing' : 'paused');
   updatePositionState();
 }
@@ -604,313 +602,38 @@ function updatePositionState() {
     navigator.mediaSession.setPositionState({ duration: d, playbackRate: audioEl.playbackRate || 1, position: Math.min(audioEl.currentTime || 0, d) });
   } catch (e) {}
 }
-/* ---------------- Spoken intentions (v375; the step form, v384) --------
-   On-device TTS for intentions (v375 D2: TTS ALWAYS — the app
-   ignores feed intro audio entirely; every paired intention is
-   spoken by the phone's own engine). v384 §2.2/§2.4: the spoken
-   DESCRIPTOR retires — the drawn text rides on the prayer
-   descriptor itself (its intentionText field, stamped at the
-   expandDescs seam), and the speech is a STEP INSIDE the
-   prayer's start (startDesc): the prayer is the queue entry,
-   the current, and the played-record unit from the unit's
-   first instant, and the step's completion runs that start's
-   deferred audio-load. An utterance is page-context speech,
-   NOT media playback: it cannot be promised with the screen
-   locked (D5: foreground-only — the step is simply skipped
-   otherwise, §2.3 step 3(c)), pause on Android Chrome is
-   effectively cancel (resume = re-speak from the start), and
-   cancel() fires error interrupted/canceled, never end.
-   v384 §2.4 (the C2 rule): EVERY error kind under the LIVE
-   token completes the step — inside a unit there is no
-   canceller to own the next move, the unit owns it; a cancel a
-   superseding action issued arrives under a token that action
-   already bumped and dies on the check before it can complete
-   anything. Every utterance carries a two-bound watchdog so a
-   prayer NEVER waits on speech past its bounds: a failed
-   utterance delays its prayer by at most the start bound, a
-   hung one never past the total cap. The token guards every
-   handler and timer, and a killed utterance's late events die
-   with its token. Intention texts ride only the signed-in
-   payload and speech is on-device — no text leaves the phone. */
-var SPEECH_START_MS = 3000;
-var speech = { token: 0, active: false, paused: false, desc: null, voices: [], native: false, nativeId: null, nativeToken: 0, onDone: null };
-var speechTimers = { start: null, cap: null };
-function speechSupported() { return typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined'; }
-/* ---------------- Native speech (v379) ----------------
-   The fix for "intentions don't play in the Android app": the
-   WebView ships no working speechSynthesis of its own — inside
-   the shell every web utterance dies silently (no start event,
-   or the API absent entirely) and the watchdog below passes
-   over it, by design, every time. Inside the shell the speech
-   therefore rides the v359 bridge to the DEVICE TTS engine —
-   the engine Chrome's speechSynthesis is backed by — through
-   the plugin's speakText/stopSpeech methods and its
-   oraSpeechStart/End/Error events. The funnel, the script,
-   the token discipline, and the watchdogs are unchanged; only
-   the transport differs. Browsers never see the plugin and
-   keep the web path, untouched. */
-function nativeSpeechPlugin() {
-  try {
-    var cap = window.Capacitor;
-    if (!cap || !cap.Plugins || !cap.Plugins.OraDayBridge) return null;
-    var p = cap.Plugins.OraDayBridge;
-    if (typeof p.speakText !== 'function' || typeof p.addListener !== 'function') return null;
-    return p;
-  } catch (e) { return null; }
-}
-var nativeSpeechReady = false;
-function setupNativeSpeech() {
-  if (nativeSpeechReady) return;
-  var p = nativeSpeechPlugin();
-  if (!p) return;
-  nativeSpeechReady = true;
-  // One listener set for the page's life. Every event carries
-  // the utterance id, and the id names the token that assigned
-  // it — a killed utterance's late events die on the id check,
-  // the token discipline in another dress.
-  var on = function (name, fn) { try { p.addListener(name, fn); } catch (e) {} };
-  on('oraSpeechStart', function (ev) {
-    if (!ev || ev.id !== speech.nativeId) return;
-    if (speechTimers.start) { clearTimeout(speechTimers.start); speechTimers.start = null; }
-  });
-  on('oraSpeechEnd', function (ev) {
-    if (!ev || ev.id !== speech.nativeId) return;
-    finishSpoken(speech.nativeToken);
-  });
-  on('oraSpeechError', function (ev) {
-    if (!ev || ev.id !== speech.nativeId) return;
-    // A stopSpeech echo arrives under a dead id (the canceller
-    // bumped the token first) and never reaches this line. A
-    // live-id error — engine unavailable included — passes
-    // over, the standing silent contract.
-    finishSpoken(speech.nativeToken);
-  });
-}
-function speechCancel() {
-  // The one cancel both transports answer to.
-  if (speech.native) {
-    var p = nativeSpeechPlugin();
-    if (p && typeof p.stopSpeech === 'function') { try { p.stopSpeech(); } catch (e) {} }
-    return;
-  }
-  try { speechSynthesis.cancel(); } catch (e) {}
-}
-function armSpeechTimers(token, text) {
-  // The two-bound watchdog, transport-blind: a failed
-  // utterance delays its prayer by at most the start bound,
-  // a hung one never past the total cap.
-  clearSpeechTimers();
-  speechTimers.start = setTimeout(function () {
-    if (token !== speech.token) return;
-    speechCancel();
-    finishSpoken(token);
-  }, SPEECH_START_MS);
-  var capMs = Math.min(90000, Math.max(30000, text.length * 90)); // ~11 chars/sec at rate 1, floored 30s, ceiling 90s
-  speechTimers.cap = setTimeout(function () {
-    if (token !== speech.token) return;
-    speechCancel();
-    finishSpoken(token);
-  }, capMs);
-}
-function setupSpeech() {
-  if (!speechSupported()) return;
-  var load = function () { try { speech.voices = speechSynthesis.getVoices() || []; } catch (e) {} };
-  load(); // empty on first call; the list arrives async (MDN pattern)
-  try { speechSynthesis.addEventListener('voiceschanged', load); }
-  catch (e) { try { speechSynthesis.onvoiceschanged = load; } catch (e2) {} }
-}
-function pickEnUsVoice() {
-  // D6: the app picks the best en-US voice. On Android Chrome
-  // the list entries are LOCALES, and lang comes back with an
-  // underscore (en_US) — normalize before comparing. A
-  // default-flagged en-US wins; else the first en-US; else the
-  // first en*; else null — the utterance still carries lang
-  // 'en-US', so a null pick lands on the engine's en-US voice.
-  var norm = function (v) { return String((v && v.lang) || '').replace(/_/g, '-').toLowerCase(); };
-  var list = speech.voices || [];
-  var us = list.filter(function (v) { return norm(v) === 'en-us'; });
-  for (var i = 0; i < us.length; i++) if (us[i].default) return us[i];
-  if (us.length) return us[0];
-  var en = list.filter(function (v) { return norm(v).indexOf('en') === 0; });
-  return en.length ? en[0] : null;
-}
-function clearSpeechTimers() {
-  if (speechTimers.start) { clearTimeout(speechTimers.start); speechTimers.start = null; }
-  if (speechTimers.cap) { clearTimeout(speechTimers.cap); speechTimers.cap = null; }
-}
-function stopSpoken() {
-  // The one exit every superseding start passes through (skip,
-  // jump, tap-replace, chain — all leave speech here, at the
-  // head of startDesc): token bump first, so the killed
-  // utterance's synthetic events no-op, then cancel.
-  speech.token++;
-  clearSpeechTimers();
-  if (speech.active) speechCancel();
-  speech.active = false; speech.paused = false; speech.desc = null;
-  speech.native = false; speech.nativeId = null; speech.onDone = null;
-}
-function speakIntro(desc, onDone) {
-  var token = ++speech.token;
-  speech.active = true; speech.paused = false; speech.desc = desc;
-  // v384 §2.4: the step's completion, bound to this speech
-  // token — finishSpeechStep runs it exactly once, on whichever
-  // funnel exit arrives first under the live token.
-  speech.onDone = typeof onDone === 'function' ? onDone : null;
-  // §1 acceptance 3: the words are exactly the standing intro
-  // script — the same words the feed intro audio speaks.
-  var text = 'This prayer is for ' + (desc.intentionText || '');
-  // v379: shell present → the native transport speaks (the web
-  // API has no engine behind it in the WebView). The route is
-  // chosen before the web support check on purpose: the shell
-  // is exactly the context where speechSupported() may read
-  // false or read true over a dead engine.
-  var plugin = nativeSpeechPlugin();
-  if (plugin) {
-    speech.native = true;
-    speech.nativeId = 'opn-' + token;
-    speech.nativeToken = token;
-    setupNativeSpeech();
-    armSpeechTimers(token, text);
-    try {
-      var pr = plugin.speakText({ text: text, utteranceId: speech.nativeId });
-      if (pr && typeof pr.catch === 'function') pr.catch(function () { finishSpoken(token); });
-    } catch (e) { finishSpoken(token); }
-    return;
-  }
-  speech.native = false; speech.nativeId = null;
-  if (!speechSupported()) { finishSpoken(token); return; }
-  var u;
-  try { u = new SpeechSynthesisUtterance(text); } catch (e) { finishSpoken(token); return; }
-  var voice = pickEnUsVoice();
-  if (voice) { try { u.voice = voice; } catch (e) {} }
-  try { u.lang = 'en-US'; } catch (e) {}
-  u.rate = 1; u.pitch = 1; // engine defaults — the app speed preference governs the audio element only (§1 D6 evidence)
-  u.onstart = function () { if (token !== speech.token) return; if (speechTimers.start) { clearTimeout(speechTimers.start); speechTimers.start = null; } };
-  u.onend = function () { if (token === speech.token) finishSpoken(token); };
-  u.onerror = function (ev) {
-    // v384 §2.4 (the C2 rule change): EVERY kind under the live
-    // token completes the step — interrupted/canceled included.
-    // Inside a unit there is no canceller to own the next move;
-    // a system-initiated cancel (visibility change, another app
-    // taking audio, the browser killing the utterance) left the
-    // queue standing on the spoken entry until the total cap —
-    // exactly "it pauses when it gets to an intention." A cancel
-    // a superseding action issued arrives under a token that
-    // action already bumped, and dies on the token check above.
-    if (token !== speech.token) return;
-    finishSpoken(token);
-  };
-  armSpeechTimers(token, text);
-  try { speechSynthesis.speak(u); } catch (e) { finishSpoken(token); }
-}
-function finishSpoken(token) {
-  // v384 §2.4: the completion mechanism — the funnel's end no
-  // longer advances a queue (there is no spoken entry to advance
-  // out of). Every exit converges here under the live token:
-  // web onend · web onerror of ALL kinds under the live token
-  // (the C2 rule) · native End/Error under the live id ·
-  // speakText rejection · utterance construction failure · no
-  // transport at all · the 3 s start bound · the 30–90 s total
-  // cap (the last two arrive through armSpeechTimers). The
-  // first arrival bumps the token — exactly-once by the
-  // standing discipline — and runs the step's bound completion:
-  // this start's deferred audio-load step. NO played mark
-  // stands here (speech never marks; the prayer is the unit and
-  // its audio end is its track end) and NO sleep 'track' divert
-  // (the prayer's end is the track end). A superseded step's
-  // completion was dropped by stopSpoken before this can run,
-  // so a completion can only ever fire for the start that owns
-  // the live token.
-  if (token !== speech.token) return;
-  speech.token++;
-  clearSpeechTimers();
-  speech.active = false; speech.paused = false;
-  speech.native = false; speech.nativeId = null;
-  speech.desc = null;
-  var done = speech.onDone; speech.onDone = null;
-  if (done) done();
-}
-function pauseSpoken() {
-  // The Android rule (§1 evidence (c)): pause() is effectively
-  // unsupported in Chrome — pause = cancel; resume re-speaks
-  // from the start (intros run ~10–25s; there is no
-  // mid-utterance resume on this platform).
-  // v384 §2.3: the pause lands INSIDE the unit — the prayer
-  // stands current, paused BEFORE its audio (position 0,
-  // nothing loaded); the step's completion is dropped, never
-  // run (the unit is not starting its audio while paused).
-  // speech.desc stands — resume re-runs the start step.
-  speech.token++;
-  clearSpeechTimers();
-  speechCancel();
-  speech.active = false; speech.paused = true; speech.onDone = null; // desc stands — resume re-speaks it
-  setPlaybackState('paused');
-  updateDock();
-}
-function resumeSpoken() {
-  // v384 §2.3: resume re-runs the start step — re-speak from the
-  // start, then the audio-load on completion (speakStep binds a
-  // fresh completion to the new token). Never an element play()
-  // on an unloaded element.
-  var desc = speech.desc || state.current;
-  if (!desc) return;
-  fadeRestore(); // the standing resume discipline (startDesc's restore point (3) analogue)
-  setPlaybackState('playing');
-  updateDock();
-  speakStep(desc);
-}
-function speakStep(desc) {
-  // v384 §2.3 step 4: the speech step inside the prayer's start.
-  // The completion is bound to THIS start: when the funnel ends
-  // (any exit, exactly once), the start's audio-load step runs —
-  // unless the start has been superseded (a newer start owns
-  // state.current) or the unit was paused mid-step (the pause
-  // rule: the audio does not start under a paused unit; a
-  // flowing completion never sees speech.paused, because a
-  // pause bumps the token and drops the completion first).
-  speakIntro(desc, function () {
-    if (state.current !== desc) return; // superseded — the newer start owns the element
-    loadDescAudio(desc);
-  });
-  pushNativeState(false); // the face re-push: the unit stands in its speech phase
-}
-function inSpeechPhase() {
-  // v384 §2.3: the unit's speech phase — a current unit whose
-  // start step is speaking (active) or stands paused mid-step
-  // (paused). The standing cur.spoken seams re-key on this.
-  return !!state.current && (speech.active || speech.paused) && speech.desc === state.current;
-}
+/* ---------------- Intentions, written only (v388) --------
+   v388 §2.2 (D2 as approved): the speech machinery is REMOVED
+   — the funnel, both transports (Web Speech + the native
+   bridge speech route), the watchdogs, the state, and the
+   harness hook all stood only to serve the intention speech
+   step inside a prayer's start, and the step is retired:
+   no intention is spoken on any route, ever. The APK bridge
+   plugin stands untouched (its speakText/stopSpeech methods
+   simply go unused). What intentions remain is written: the
+   drawn text rides the prayer descriptor (intentionText) and
+   shows on the playing screen, in the prayer's row, and on
+   the native face — gated by the showing toggle (§2.3).
+   v384's pause-at-intentions fix is preserved by construction:
+   with no step there is no deferral and no boundary to strand
+   at — every start runs its audio load inline, at once. */
 /* Transport predicates (§2 step 7 — designed once, the central
    problem): every play/pause decision reads these, never
-   audioEl.paused alone, so a spoken current toggles and glyphs
-   correctly at every call site. */
+   audioEl.paused alone. v388: the element is the only transport
+   there is — the predicates read it alone. */
 function transportPlaying() {
-  // v384 §2.3: the phase predicate — a current unit in its
-  // speech phase reads playing from the speech state (the v375
-  // step-7 pattern, re-keyed from desc.spoken to the phase);
-  // every other current reads the element.
-  if (inSpeechPhase()) return speech.active && !speech.paused;
   return !audioEl.paused;
 }
 function pauseTransport() {
-  if (inSpeechPhase()) { pauseSpoken(); pushNativeState(false); return; }
   audioEl.pause();
   pushNativeState(false); // v377 B2: pause is a push trigger
 }
-// Harness hook (the __opnSleep / __opnMediaHandlers precedent):
-// the watchdog bounds + the speech state + the voice pick, read
-// by the gate — the legs assert against these, never re-derived.
-window.__opnSpeech = {
-  startMs: SPEECH_START_MS,
-  state: function () { return { active: speech.active, paused: speech.paused, descId: speech.desc ? speech.desc.episodeId : null, voices: (speech.voices || []).length, native: !!speech.native, nativeId: speech.nativeId }; },
-  pick: function () { var v = pickEnUsVoice(); return v ? { lang: v.lang, name: v.name || '', isDefault: !!v.default } : null; },
-};
 function loadDescAudio(desc) {
-  // v384 §2.3 step 6: the audio-load step — today's startDesc
-  // tail, split out so the speech step can defer it to the
-  // funnel's completion (bound to this start in speakStep) or
-  // startDesc can run it inline at once. Byte-for-byte in
-  // behavior: src, rate re-assert, play(), the state pushes.
+  // The audio-load step — startDesc's tail, split out at v384.
+  // v388: it is the WHOLE start tail now — no step stands
+  // before it and nothing defers it; startDesc runs it inline
+  // on every start. Byte-for-byte in behavior: src, rate
+  // re-assert, play(), the state pushes.
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
   audioEl.play().catch(function () {});
@@ -918,19 +641,12 @@ function loadDescAudio(desc) {
   pushNativeState(false); // v377 B2: track change / play
 }
 function startDesc(desc) {
-  // v384 §2.3: the start sequence. A new start supersedes any
-  // live speech — speech leaves through stopSpoken, the one
-  // exit point, token first, so a departed unit's speech and
-  // its completion can never fire into this start. Bookkeeping
+  // v388 §2.2: the start sequence, written-only. Bookkeeping
   // stands on the PRAYER from the unit's first instant (the
-  // session names the prayer — never an intention), then the
-  // speech-step decision: (a) the descriptor carries a drawn
-  // intentionText, (b) the intentions toggle reads ON at this
-  // instant (never cached), (c) the D5 foreground gate passes.
-  // All three hold → the speech step runs and the audio-load
-  // defers to its completion; any leg fails → the audio-load
-  // runs at once, inline — no timer armed, no gap inserted.
-  if (speech.active || speech.paused) stopSpoken();
+  // session names the prayer — never an intention), exactly as
+  // v384 made it; then the audio load runs INLINE, at once —
+  // there is no speech step, no deferral, and no toggle read
+  // on any start path. A start never waits on anything.
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
@@ -939,11 +655,6 @@ function startDesc(desc) {
   markPlaying(desc.episodeId);
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
-  if (desc && desc.intentionText && intentionsOn()
-    && typeof document !== 'undefined' && document.visibilityState === 'visible') {
-    speakStep(desc);
-    return;
-  }
   loadDescAudio(desc);
 }
 function playTrack(desc) {
@@ -968,7 +679,7 @@ function tapPlay(d) {
   var key = d.episodeId || '';
   // v384 §2.2: the same-unit toggle at the granularity of the
   // prayer alone — the pair is the unit, so tapping the prayer
-  // card while its intention speaks (or its audio plays) pauses.
+  // card while its audio plays pauses it.
   if (state.current && transportPlaying() && state.current.episodeId === key) { pauseTransport(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
@@ -985,18 +696,9 @@ function resumeCurrent() {
   // routes through playTrack/startDesc (playTrack clears the
   // queue and startDesc reloads src — either would drop the
   // standing queue and restart the track at a system resume).
+  // v388: the element resume stands for every current — the
+  // speech-phase resume leg retires with the machinery.
   if (!state.current) { setPlaybackState('none'); return; }
-  // v384 §2.3: a current standing in its speech phase resumes
-  // through the speech step — re-speak from the start (the
-  // Android rule), then the audio-load on completion; the queue
-  // and position are untouched, exactly as the element path
-  // below preserves them.
-  if (inSpeechPhase()) {
-    if (speech.active && !speech.paused) { reassertMediaSession(); return; }
-    resumeSpoken();
-    pushNativeState(false); // v377 B2
-    return;
-  }
   if (!audioEl.paused) { reassertMediaSession(); return; }
   fadeRestore(); // v320 §2.6 restore point (3) stands: exactly one fade restore per system resume
   reassertMediaSession();
@@ -1084,7 +786,7 @@ function queueLiveDesc(d) {
   if (!st || st.state !== 'present') return null;
   var slot = (state.extStanding || []).filter(function (s) { return s.slotId === d.episodeId; })[0];
   if (!slot) return null;
-  var live = trackDesc(extSlotTrack(slot, st));
+  var live = trackDesc(extSlotTrack(slot, st), state.dayPayload); // v388 §2.5 (D4): the rebuild passes the live day — the one day-less call; the rebuilt descriptor carries its drawn intentionText
   return live.available ? live : null;
 }
 function unplayedOnly(descs) {
@@ -1413,8 +1115,7 @@ function standRestoredQueue(day) {
   // its prayer at re-resolution (the survivors hold the PRAYER's
   // descriptor, never a spoken form), so the element leg stands
   // unconditionally: the prayer stands loaded, paused, at its
-  // stored position; a resume plays the prayer (and speech does
-  // not resume — the v355 foreground discipline, §2.3 step 2).
+  // stored position; a resume plays the prayer.
   audioEl.src = chosen.desc.url;
   audioEl.load();
   markPlaying(chosen.desc.episodeId);
@@ -1472,18 +1173,21 @@ function syncAutoplayToggles() {
   var st = document.getElementById('set-autoplay');
   if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 }
-/* ---------------- Intentions toggle (v384) ----------------
-   §2.5 / §1 D2+D3 (approved): a device-local preference in the
-   autoplay pattern in every particular. It governs the PLAYER
-   only: ON — each paired intention is spoken inside its
-   prayer's start and the Now Playing line stands; OFF — no
-   intention is spoken before any prayer and no intention shows
-   anywhere on the player. The Intentions TAB (the pool manager)
-   is untouched in both states. Read fresh at the two decision
-   points only (the speech-step decision in startDesc and the
-   Now Playing line's render) — never cached at page load, so a
-   flip between two prayers of one standing queue takes effect
-   on the next prayer reached, with no reload. */
+/* ---------------- Intentions toggle (v384; re-roled v388) ----------------
+   A device-local preference in the autoplay pattern in every
+   particular. v388 §2.3 (D1 as approved — repurposed, not
+   retired): the SAME store key stands, and the switch now
+   governs SHOWING ONLY — the written intention line on the
+   playing screen, in each prayer's row, and on the native
+   face. Nothing is spoken in either position, so no stored
+   value can bring speech back; a stored 'off' reads OFF
+   (lines hidden — the visible outcome v384's OFF already
+   chose for the line) and 'on' or no value reads shown.
+   The Intentions TAB (the pool manager) is untouched in both
+   states. Read fresh at the three showing decision points
+   (the hero render, the row paint, the native payload) —
+   never cached at page load, and a flip re-renders what
+   stands (setIntentions below), with no reload. */
 var INTENTIONS_KEY = 'opn-intentions-v384';
 function intentionsOn() {
   try { return localStorage.getItem(INTENTIONS_KEY) !== 'off'; } catch (e) { return true; }
@@ -1492,6 +1196,13 @@ function setIntentions(on) {
   try { localStorage.setItem(INTENTIONS_KEY, on ? 'on' : 'off'); } catch (e) {}
   syncIntentionsToggles();
   updateDock(); // the Now Playing line re-renders under the new store at once
+  // v388 §2.3: a flip re-renders what stands — the Now Playing
+  // sheet directly when it stands, the Prayers view when it
+  // stands (its rows gain/lose the written line), and a native
+  // push so the face's subtitle follows at once.
+  updateNowPlaying();
+  if (state.dayPayload && state.tab === 'prayers') paintPrayersView(state.dayPayload);
+  pushNativeState(false);
 }
 function syncIntentionsToggles() {
   var on = intentionsOn();
@@ -1735,15 +1446,9 @@ function fireTimedStop() {
   // the timer adds no save of its own) · disarm · fade restore · label.
   // §2.3 idle edge: already paused or nothing loaded — disarm only,
   // no pause call, no resume write; the fade restore still runs.
-  // v384 §2.3 (C5's surface): a minutes expiry CAN land inside a
-  // speech phase (sleepTick also runs on the standing 1s
-  // interval, not only on audio timeupdate) — the phase's pause
-  // rule applies (cancel the utterance, the unit stands paused
-  // before its audio); the element reads paused throughout the
-  // phase and would otherwise leave the voice talking past the
-  // stop.
-  if (inSpeechPhase()) pauseSpoken();
-  else if (!audioEl.paused && state.current) audioEl.pause();
+  // v388: the element pause stands alone — no speech phase
+  // exists for an expiry to land inside.
+  if (!audioEl.paused && state.current) audioEl.pause();
   disarmSleep();
   fadeRestore();
   updateSleepLabel();
@@ -1860,7 +1565,7 @@ setInterval(sleepTick, 1000);
 // the harness hook's target) never drifts across a re-assert.
 var mediaHandlers = {
   play: function () { resumeCurrent(); }, // v346 §2.4: the app's resume seam (carries the v320 §2.6 restore point (3) fade restore)
-  pause: function () { pauseTransport(); }, // v375 §2 step 7: a lock-screen pause stops speech too
+  pause: function () { pauseTransport(); },
   previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
   nexttrack: function () { if (state.queue.length) advanceQueue(1); },
   seekto: function (details) {
@@ -2087,12 +1792,12 @@ function paintSettings() {
     + '</div>'
     // v384 §2.5: the intentions switch — its own Settings switch
     // in the standing Playback section (NOT a row of the v328
-    // source-mapping table, §2.7). Device-local, default ON;
-    // governs the player only (speech + the Now Playing line),
-    // never the Intentions tab.
+    // source-mapping table, §2.7). Device-local, default ON.
+    // v388 §2.3: re-roled to showing only (the copy states the
+    // new model); never the Intentions tab.
     + '<div class="setrow">'
     + '<div class="setname">Intentions</div>'
-    + '<div class="meta">Speak each prayer&rsquo;s intention before it plays, and show it on the player. Off silences the spoken intention and hides it on the player; the Intentions tab is unchanged either way.</div>'
+    + '<div class="meta">Show each prayer&rsquo;s intention in writing — on the playing screen, in each prayer&rsquo;s row, and on the lock screen and car display. Nothing is spoken in either position. Off hides the written intention in those places; the Intentions tab is unchanged either way.</div>'
     + '<div class="setcontrols"><button class="settoggle' + (intentionsOn() ? ' on' : '') + '" id="set-intentions" aria-pressed="' + (intentionsOn() ? 'true' : 'false') + '">' + (intentionsOn() ? 'On' : 'Off') + '</button></div>'
     + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
@@ -2616,11 +2321,24 @@ function wirePlayed(root) {
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
   // v384 §2.2/§2.6: the intention ROW retires — trackCard returns
-  // the prayer card alone, always (the drawn intention now rides
-  // on the prayer descriptor as intentionText and is spoken
-  // inside the prayer's start; nothing renders it as a row).
-  // Before v384 (v361 §2.3), an available paired track returned
-  // intentionRowCard + the prayer card as two sibling cards.
+  // the prayer card alone, always. Before v384 (v361 §2.3), an
+  // available paired track returned intentionRowCard + the
+  // prayer card as two sibling cards.
+  // v388 §2.4: the WRITTEN line comes to the rows — for an
+  // AVAILABLE track whose drawn text resolves (the standing
+  // introForTrack read), the card gains the line INSIDE the
+  // card, under the meta, in the standing .intention-text form:
+  // "Prayer Intention: " + the text. NOT the v361 sibling row —
+  // no second card, no play control. The toggle reads at paint
+  // (OFF renders no line); an unavailable prayer carries no
+  // line (the trackDesc stamping rule, applied at the row);
+  // unpaired tracks resolve no text. A paired row grows past
+  // the v363 uniform 76px by the line's height, as planned.
+  var intLine = '';
+  if (t.available && intentionsOn()) {
+    var intIntro = introForTrack(t);
+    if (intIntro && intIntro.text) intLine = '<div class="intention-text">Prayer Intention: ' + esc(intIntro.text) + '</div>';
+  }
   var wrap = function (rowInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
@@ -2634,7 +2352,7 @@ function trackCard(t) {
     // externals carry no text (the payload's hasText is false), and a
     // present external carries no not-available line.
     if (t.available) {
-      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div>');
+      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>' + intLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -2673,7 +2391,7 @@ function trackCard(t) {
       ? '<div class="trow-tail">' + (!noText ? readButton(t, key) : '')
         + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>'
       : '';
-    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div></div>' + tail);
+    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>' + tail);
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -3339,7 +3057,6 @@ function oraBridgePlugin() {
   } catch (e) { return null; }
 }
 function oraInShell() { return !!oraBridgePlugin(); }
-var bridgeSpoken = { id: null, since: 0 };
 function nativeStatePayload(stopped) {
   var queueIds = (state.queue || []).map(function (d) { return d.episodeId; });
   var cur = state.current;
@@ -3353,28 +3070,19 @@ function nativeStatePayload(stopped) {
   // B1 title: the row title the app shows (always the prayer's
   // own under v384); subtitle: the v372 pairing — the playing
   // prayer's intention text, read from its descriptor field.
+  // v388 §2.3: the subtitle comes under the showing toggle —
+  // OFF pushes an empty subtitle.
   var title = cur.title || '';
   var subtitle = '';
-  { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
-  // v384 §2.2: the face's kind re-keys on the unit's speech
-  // phase — during the step the kind reads 'spoken' (the B1
-  // spoken-honesty position rule below), otherwise the
-  // descriptor's own kind; no descriptor carries a spoken form.
-  var kind = inSpeechPhase() ? 'spoken' : (cur.kind || 'episode');
-  var pos = 0, dur = 0, estimated = false;
-  if (inSpeechPhase()) {
-    // B1 spoken honesty: position = elapsed speech time,
-    // duration = the v375 watchdog estimate, marked estimated.
-    var script = 'This prayer is for ' + (cur.intentionText || '');
-    dur = Math.min(90, Math.max(30, script.length * 0.09));
-    estimated = true;
-    if (bridgeSpoken.id !== cur.episodeId) { bridgeSpoken.id = cur.episodeId; bridgeSpoken.since = Date.now(); }
-    pos = Math.min(dur, Math.max(0, (Date.now() - bridgeSpoken.since) / 1000));
-    if (!playing && !speech.active && !speech.paused) { bridgeSpoken.id = null; }
-  } else {
-    pos = audioEl.currentTime || 0;
-    dur = cur.durationS || (isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : 0) || 0;
-  }
+  if (intentionsOn()) { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
+  // v388 §2.2: the face's kind is the descriptor's own at all
+  // times and position/duration are the element's — the
+  // 'spoken' kind and the estimated-position block retire
+  // with the speech machinery.
+  var kind = cur.kind || 'episode';
+  var pos = audioEl.currentTime || 0;
+  var dur = cur.durationS || (isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : 0) || 0;
+  var estimated = false;
   return { engine: 'web', trackId: cur.episodeId || '', kind: kind, title: title, subtitle: subtitle,
     block: cur.block || '', dateLabel: state.dateLabel || '', playing: playing, stopped: false,
     positionS: pos, durationS: dur, estimated: estimated,
@@ -3397,27 +3105,20 @@ function pushNativeState(stopped) {
 var bridgeDucked = false;
 function bridgeDuck(on) {
   // B3 duck/unduck: the web engine's gain to 0.2 / restored.
-  // The fade system's base is the standing volume; speech has
-  // no per-utterance gain where the engine allows none — a
-  // current in its speech phase is a no-op here (B3's own
-  // words; v384 re-key: the phase, not a spoken descriptor).
+  // The fade system's base is the standing volume. v388: duck
+  // always applies — no speech phase stands to exempt.
   bridgeDucked = !!on;
-  if (inSpeechPhase()) return;
   try { audioEl.volume = on ? (fade.base || 1) * 0.2 : (fade.base || 1); } catch (e) {}
 }
 function bridgePrevious() {
   // B3 previous: restart the track if > 3 s in, else the
-  // previous queue entry. v384 re-key: the > 3 s restart leg
-  // reads the phase — inside a speech phase there is no element
-  // position to restart from, so previous advances the queue.
-  if (state.current && !inSpeechPhase() && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
+  // previous queue entry — the rule reads the element.
+  if (state.current && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
   if (state.queue.length) advanceQueue(-1);
 }
 function bridgeStop() {
   // B3 stop: stop playback and clear the standing transport —
-  // the queue-exhausted clear's shape, on command. (stopSpoken
-  // also drops a live step's completion — the unit is ending.)
-  if (speech.active || speech.paused) stopSpoken();
+  // the queue-exhausted clear's shape, on command.
   try { audioEl.pause(); } catch (e) {}
   state.queue = []; state.queueIdx = -1; state.current = null;
   setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
@@ -3433,11 +3134,9 @@ function handleTransportCommand(ev) {
   else if (cmd === 'next') { if (state.queue.length) advanceQueue(1); }
   else if (cmd === 'previous') bridgePrevious();
   else if (cmd === 'seekTo') {
-    // v384 §2.3: seek during the speech phase is INERT (the
-    // element holds nothing) — the bridge handler's early-return
-    // re-keys to the phase; after the audio-load, seek is the
-    // standing element behavior.
-    if (state.current && !inSpeechPhase() && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
+    // Seek is the standing element behavior (v388: no speech
+    // phase stands to make it inert).
+    if (state.current && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
   }
   else if (cmd === 'stop') { bridgeStop(); return; }
   else return;
@@ -3910,9 +3609,9 @@ function ownSettlePresent(day, row, metas) {
       ownRegisterReadTracks();
       extRebuildDescs(day);
     });
-    // v375 §2 step 3: no intro download is kicked here — under
-    // D2 the paired intro is spoken on-device from the text
-    // that already stands in day.intros (ownFetchIntro retires).
+    // v375 §2 step 3: no intro download is kicked here — the
+    // paired intention is written-only (v388), read from the
+    // text that already stands in day.intros.
   });
 }
 function ownSettleMissing(day, row) {
@@ -4902,7 +4601,6 @@ function openGuideEditor(guide) {
 
 setupMediaSession();
 setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
-setupSpeech(); // v375 §2 step 4: the voice cache warms at boot, beside the media session
 setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 `;
