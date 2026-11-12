@@ -549,6 +549,7 @@ function markCompleted(desc) {
   writePlayed(desc.episodeId, d, 'played', desc.block);
 }
 function setMediaSessionFor(desc) {
+  if (oraInShell()) return; // v377 B6: in the shell the native session is the face
   if (!('mediaSession' in navigator)) return;
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -569,10 +570,12 @@ function setMediaSessionFor(desc) {
    and the session's own play handler resuming through the app's
    path without disturbing the queue (resumeCurrent, below). */
 function setPlaybackState(v) {
+  if (oraInShell()) return; // v377 B6
   if (!('mediaSession' in navigator)) return;
   try { navigator.mediaSession.playbackState = v; } catch (e) {}
 }
 function reassertMediaSession() {
+  if (oraInShell()) return; // v377 B6
   if (!('mediaSession' in navigator)) return;
   if (!state.current) { setPlaybackState('none'); return; }
   setMediaSessionFor(state.current);
@@ -583,6 +586,7 @@ function reassertMediaSession() {
   updatePositionState();
 }
 function updatePositionState() {
+  if (oraInShell()) return; // v377 B6
   if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
   var d = audioEl.duration;
   if (!isFinite(d) || d <= 0) return;
@@ -708,6 +712,7 @@ function finishSpoken(token) {
   if (autoplayOn() && spokenDesc && chainForward(spokenDesc)) return;
   state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
+  pushNativeState(true); // v377 B2: the standing stop ends the face
 }
 function pauseSpoken() {
   // The Android rule (§1 evidence (c)): pause() is effectively
@@ -757,6 +762,7 @@ function startSpokenDesc(desc) {
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2 parity: the track-change funnel
   speakIntro(desc);
+  pushNativeState(false); // v377 B2: the spoken start states the face
 }
 /* Transport predicates (§2 step 7 — designed once, the central
    problem): every play/pause decision reads these, never
@@ -767,8 +773,9 @@ function transportPlaying() {
   return !audioEl.paused;
 }
 function pauseTransport() {
-  if (state.current && state.current.spoken) { pauseSpoken(); return; }
+  if (state.current && state.current.spoken) { pauseSpoken(); pushNativeState(false); return; }
   audioEl.pause();
+  pushNativeState(false); // v377 B2: pause is a push trigger
 }
 // Harness hook (the __opnSleep / __opnMediaHandlers precedent):
 // the watchdog bounds + the speech state + the voice pick, read
@@ -795,6 +802,7 @@ function startDesc(desc) {
   markPlaying(desc.episodeId);
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
+  pushNativeState(false); // v377 B2: track change / play
 }
 function playTrack(desc) {
   // v375 §2 step 5: the guard admits the spoken form (text, no
@@ -843,6 +851,7 @@ function resumeCurrent() {
   if (state.current.spoken) {
     if (speech.active && !speech.paused) { reassertMediaSession(); return; }
     resumeSpoken();
+    pushNativeState(false); // v377 B2
     return;
   }
   if (!audioEl.paused) { reassertMediaSession(); return; }
@@ -859,6 +868,7 @@ function resumeCurrent() {
     audioEl.playbackRate = state.rate;
     audioEl.play().catch(function () {});
   }
+  pushNativeState(false); // v377 B2: play is a push trigger
 }
 function queueLiveDesc(d) {
   // v338 defect fix (John's report, 2026-11-09 11:17 CT — a block's
@@ -1005,7 +1015,7 @@ function advanceQueue(dir) {
     startDesc(live);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); }
   return false;
 }
 function jumpQueueTo(i) {
@@ -1399,8 +1409,9 @@ audioEl.addEventListener('error', function () {
   handleAudioError();
 });
 audioEl.addEventListener('pause', function () { saveResume(); saveQueueSnapshot(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
-audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); });
+audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); pushNativeState(false); });
 audioEl.addEventListener('pause', function () { updateDock(); });
+audioEl.addEventListener('pause', function () { pushNativeState(false); }); // v377 B2: any element pause states the face
 audioEl.addEventListener('pause', function () {
   // v346: the pause event declares the paused session (playbackState
   // 'paused' while a current stands, else 'none') and re-files it —
@@ -1430,6 +1441,7 @@ audioEl.addEventListener('timeupdate', function () {
   if (now - lastQueueSave > 5000) { lastQueueSave = now; saveQueueSnapshot(); }
 });
 audioEl.addEventListener('seeked', updatePositionState);
+audioEl.addEventListener('seeked', function () { pushNativeState(false); }); // v377 B2: seek is a push trigger
 
 /* ---------------- Docked player (v326) ----------------
    A shell-level mini-player: one element in SHELL_HTML above the
@@ -1671,12 +1683,14 @@ var mediaHandlers = {
   seekbackward: function (details) { audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) - ((details && details.seekOffset) || 10)); },
 };
 function registerMediaHandlers() {
+  if (oraInShell()) return; // v377 B6: no web action handlers in the shell — transport arrives over the bridge
   if (!('mediaSession' in navigator)) return;
   Object.keys(mediaHandlers).forEach(function (a) {
     try { navigator.mediaSession.setActionHandler(a, mediaHandlers[a]); } catch (e) {}
   });
 }
 function setupMediaSession() {
+  if (oraInShell()) return; // v377 B6
   if (!('mediaSession' in navigator)) return;
   registerMediaHandlers();
   setPlaybackState('none');
@@ -3063,7 +3077,12 @@ function oraDaySnapshot() {
     var t = oraSnapshotTrack(d, date);
     if (t) tracks.push(t);
   });
-  return { presentedDay: date, dateLabel: state.dateLabel || '', generatedAt: new Date().toISOString(), tracks: tracks };
+  return { presentedDay: date, dateLabel: state.dateLabel || '', generatedAt: new Date().toISOString(), tracks: tracks,
+    // v377 §2.6 snapshot v2: the standing queue order + index, so
+    // a car-side queue and the phone's queue are the same list.
+    // v1 readers ignore both fields; live state never rides the
+    // snapshot (it crosses on the B1 channel only).
+    queueIds: (state.queue || []).map(function (d) { return d.episodeId; }), currentIndex: state.queueIdx };
 }
 function pushDaySnapshot() {
   try {
@@ -3075,6 +3094,130 @@ function pushDaySnapshot() {
     if (p && p.catch) p.catch(function () {});
   } catch (e) { /* the bridge can never fail the day build */ }
 }
+/* ---------------- v377 two-way bridge: the registered face ----------------
+   The native shell's media session (OraLibraryService) is the
+   app's registered player on the phone (Plan §2.1): this client
+   stays the audio engine and pushes its state over the same
+   OraDayBridge plugin (B1), and the session's transport —
+   notification, lock screen, headset, media panel, the car —
+   comes back as transportCommand plugin events, executed
+   through the app's OWN transport functions (B3), never by
+   poking the audio element. Guarded exactly like the snapshot:
+   no plugin, no pushes, and the browser path is unchanged —
+   including the web MediaSession, which inside the shell is
+   NOT written (B6: one face only). Every push is
+   fire-and-forget; the bridge can never fail playback. */
+function oraBridgePlugin() {
+  try {
+    var cap = window.Capacitor;
+    if (!cap || !cap.Plugins || !cap.Plugins.OraDayBridge) return null;
+    return cap.Plugins.OraDayBridge;
+  } catch (e) { return null; }
+}
+function oraInShell() { return !!oraBridgePlugin(); }
+var bridgeSpoken = { id: null, since: 0 };
+function nativeStatePayload(stopped) {
+  var queueIds = (state.queue || []).map(function (d) { return d.episodeId; });
+  var cur = state.current;
+  if (!cur) {
+    if (!stopped) return null;
+    return { engine: 'web', trackId: '', kind: '', title: '', subtitle: '', block: '', dateLabel: state.dateLabel || '',
+      playing: false, stopped: true, positionS: 0, durationS: 0, estimated: false,
+      queueIndex: state.queueIdx, queueCount: state.queue.length, queueIds: queueIds, rate: state.rate || 1, ts: Date.now() };
+  }
+  var playing = transportPlaying();
+  // B1 title: the row title the app shows — intention rows in
+  // the v361 form; subtitle: the v372 pairing (the playing
+  // prayer's intention text; a spoken intro's own text).
+  var title = cur.kind === 'intention' ? prayerIntentionTitleForDesc(cur) : (cur.title || '');
+  var subtitle = '';
+  if (cur.kind === 'intention') subtitle = cur.intentionText || '';
+  else { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
+  var kind = cur.spoken ? 'spoken' : (cur.kind || 'episode');
+  var pos = 0, dur = 0, estimated = false;
+  if (cur.spoken) {
+    // B1 spoken honesty: position = elapsed speech time,
+    // duration = the v375 watchdog estimate, marked estimated.
+    var script = 'This prayer is for ' + (cur.intentionText || '');
+    dur = Math.min(90, Math.max(30, script.length * 0.09));
+    estimated = true;
+    if (bridgeSpoken.id !== cur.episodeId) { bridgeSpoken.id = cur.episodeId; bridgeSpoken.since = Date.now(); }
+    pos = Math.min(dur, Math.max(0, (Date.now() - bridgeSpoken.since) / 1000));
+    if (!playing && !speech.active && !speech.paused) { bridgeSpoken.id = null; }
+  } else {
+    pos = audioEl.currentTime || 0;
+    dur = cur.durationS || (isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : 0) || 0;
+  }
+  return { engine: 'web', trackId: cur.episodeId || '', kind: kind, title: title, subtitle: subtitle,
+    block: cur.block || '', dateLabel: state.dateLabel || '', playing: playing, stopped: false,
+    positionS: pos, durationS: dur, estimated: estimated,
+    queueIndex: state.queueIdx, queueCount: state.queue.length, queueIds: queueIds,
+    rate: audioEl.playbackRate || state.rate || 1, ts: Date.now() };
+}
+function pushNativeState(stopped) {
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.setPlaybackState) return;
+    var payload = nativeStatePayload(stopped);
+    if (!payload) return;
+    var r = p.setPlaybackState({ state: JSON.stringify(payload) });
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) { /* the bridge can never fail playback */ }
+}
+/* B3 commands, executed through the app's own transport. After
+   a state-bearing command the client pushes fresh state — the
+   push IS the ack (B4). */
+var bridgeDucked = false;
+function bridgeDuck(on) {
+  // B3 duck/unduck: the web engine's gain to 0.2 / restored.
+  // The fade system's base is the standing volume; speech has
+  // no per-utterance gain where the engine allows none — a
+  // spoken current is a no-op here (B3's own words).
+  bridgeDucked = !!on;
+  if (state.current && state.current.spoken) return;
+  try { audioEl.volume = on ? (fade.base || 1) * 0.2 : (fade.base || 1); } catch (e) {}
+}
+function bridgePrevious() {
+  // B3 previous: restart the track if > 3 s in, else the
+  // previous queue entry.
+  if (state.current && !state.current.spoken && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
+  if (state.queue.length) advanceQueue(-1);
+}
+function bridgeStop() {
+  // B3 stop: stop playback and clear the standing transport —
+  // the queue-exhausted clear's shape, on command.
+  if (speech.active || speech.paused) stopSpoken();
+  try { audioEl.pause(); } catch (e) {}
+  state.queue = []; state.queueIdx = -1; state.current = null;
+  setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
+  pushNativeState(true);
+}
+function handleTransportCommand(ev) {
+  var cmd = ev && ev.command;
+  if (!cmd) return;
+  if (cmd === 'duck') { bridgeDuck(true); return; }
+  if (cmd === 'unduck') { bridgeDuck(false); return; }
+  if (cmd === 'play') resumeCurrent();
+  else if (cmd === 'pause') pauseTransport();
+  else if (cmd === 'next') { if (state.queue.length) advanceQueue(1); }
+  else if (cmd === 'previous') bridgePrevious();
+  else if (cmd === 'seekTo') {
+    if (state.current && !state.current.spoken && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
+  }
+  else if (cmd === 'stop') { bridgeStop(); return; }
+  else return;
+  pushNativeState(false);
+}
+function setupBridgeCommands() {
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.addListener) return;
+    p.addListener('transportCommand', handleTransportCommand);
+  } catch (e) { /* no listener, no commands — the face still reports state */ }
+}
+/* B2/B5: the 5 s tick — position refresh and the page's
+   heartbeat in one. Pushes only while a current stands. */
+setInterval(function () { if (state.current) pushNativeState(false); }, 5000);
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -4524,6 +4667,7 @@ function openGuideEditor(guide) {
 }
 
 setupMediaSession();
+setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
 setupSpeech(); // v375 §2 step 4: the voice cache warms at boot, beside the media session
 setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
