@@ -612,9 +612,85 @@ function updatePositionState() {
    its token. Intention texts ride only the signed-in payload
    and speech is on-device — no text leaves the phone. */
 var SPEECH_START_MS = 3000;
-var speech = { token: 0, active: false, paused: false, desc: null, voices: [] };
+var speech = { token: 0, active: false, paused: false, desc: null, voices: [], native: false, nativeId: null, nativeToken: 0 };
 var speechTimers = { start: null, cap: null };
 function speechSupported() { return typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined'; }
+/* ---------------- Native speech (v379) ----------------
+   The fix for "intentions don't play in the Android app": the
+   WebView ships no working speechSynthesis of its own — inside
+   the shell every web utterance dies silently (no start event,
+   or the API absent entirely) and the watchdog below passes
+   over it, by design, every time. Inside the shell the speech
+   therefore rides the v359 bridge to the DEVICE TTS engine —
+   the engine Chrome's speechSynthesis is backed by — through
+   the plugin's speakText/stopSpeech methods and its
+   oraSpeechStart/End/Error events. The funnel, the script,
+   the token discipline, and the watchdogs are unchanged; only
+   the transport differs. Browsers never see the plugin and
+   keep the web path, untouched. */
+function nativeSpeechPlugin() {
+  try {
+    var cap = window.Capacitor;
+    if (!cap || !cap.Plugins || !cap.Plugins.OraDayBridge) return null;
+    var p = cap.Plugins.OraDayBridge;
+    if (typeof p.speakText !== 'function' || typeof p.addListener !== 'function') return null;
+    return p;
+  } catch (e) { return null; }
+}
+var nativeSpeechReady = false;
+function setupNativeSpeech() {
+  if (nativeSpeechReady) return;
+  var p = nativeSpeechPlugin();
+  if (!p) return;
+  nativeSpeechReady = true;
+  // One listener set for the page's life. Every event carries
+  // the utterance id, and the id names the token that assigned
+  // it — a killed utterance's late events die on the id check,
+  // the token discipline in another dress.
+  var on = function (name, fn) { try { p.addListener(name, fn); } catch (e) {} };
+  on('oraSpeechStart', function (ev) {
+    if (!ev || ev.id !== speech.nativeId) return;
+    if (speechTimers.start) { clearTimeout(speechTimers.start); speechTimers.start = null; }
+  });
+  on('oraSpeechEnd', function (ev) {
+    if (!ev || ev.id !== speech.nativeId) return;
+    finishSpoken(speech.nativeToken);
+  });
+  on('oraSpeechError', function (ev) {
+    if (!ev || ev.id !== speech.nativeId) return;
+    // A stopSpeech echo arrives under a dead id (the canceller
+    // bumped the token first) and never reaches this line. A
+    // live-id error — engine unavailable included — passes
+    // over, the standing silent contract.
+    finishSpoken(speech.nativeToken);
+  });
+}
+function speechCancel() {
+  // The one cancel both transports answer to.
+  if (speech.native) {
+    var p = nativeSpeechPlugin();
+    if (p && typeof p.stopSpeech === 'function') { try { p.stopSpeech(); } catch (e) {} }
+    return;
+  }
+  try { speechSynthesis.cancel(); } catch (e) {}
+}
+function armSpeechTimers(token, text) {
+  // The two-bound watchdog, transport-blind: a failed
+  // utterance delays its prayer by at most the start bound,
+  // a hung one never past the total cap.
+  clearSpeechTimers();
+  speechTimers.start = setTimeout(function () {
+    if (token !== speech.token) return;
+    speechCancel();
+    finishSpoken(token);
+  }, SPEECH_START_MS);
+  var capMs = Math.min(90000, Math.max(30000, text.length * 90)); // ~11 chars/sec at rate 1, floored 30s, ceiling 90s
+  speechTimers.cap = setTimeout(function () {
+    if (token !== speech.token) return;
+    speechCancel();
+    finishSpoken(token);
+  }, capMs);
+}
 function setupSpeech() {
   if (!speechSupported()) return;
   var load = function () { try { speech.voices = speechSynthesis.getVoices() || []; } catch (e) {} };
@@ -648,16 +724,36 @@ function stopSpoken() {
   // utterance's synthetic events no-op, then cancel.
   speech.token++;
   clearSpeechTimers();
-  if (speech.active) { try { speechSynthesis.cancel(); } catch (e) {} }
+  if (speech.active) speechCancel();
   speech.active = false; speech.paused = false; speech.desc = null;
+  speech.native = false; speech.nativeId = null;
 }
 function speakIntro(desc) {
-  if (!speechSupported()) { finishSpoken(speech.token); return; }
   var token = ++speech.token;
   speech.active = true; speech.paused = false; speech.desc = desc;
   // §1 acceptance 3: the words are exactly the standing intro
   // script — the same words the feed intro audio speaks.
   var text = 'This prayer is for ' + (desc.intentionText || '');
+  // v379: shell present → the native transport speaks (the web
+  // API has no engine behind it in the WebView). The route is
+  // chosen before the web support check on purpose: the shell
+  // is exactly the context where speechSupported() may read
+  // false or read true over a dead engine.
+  var plugin = nativeSpeechPlugin();
+  if (plugin) {
+    speech.native = true;
+    speech.nativeId = 'opn-' + token;
+    speech.nativeToken = token;
+    setupNativeSpeech();
+    armSpeechTimers(token, text);
+    try {
+      var pr = plugin.speakText({ text: text, utteranceId: speech.nativeId });
+      if (pr && typeof pr.catch === 'function') pr.catch(function () { finishSpoken(token); });
+    } catch (e) { finishSpoken(token); }
+    return;
+  }
+  speech.native = false; speech.nativeId = null;
+  if (!speechSupported()) { finishSpoken(token); return; }
   var u;
   try { u = new SpeechSynthesisUtterance(text); } catch (e) { finishSpoken(token); return; }
   var voice = pickEnUsVoice();
@@ -672,18 +768,7 @@ function speakIntro(desc) {
     if (kind === 'interrupted' || kind === 'canceled') return; // cancel()'s own echo — a clean stop; the canceller owns the next move
     finishSpoken(token); // any other kind, incl. not-allowed (no user activation): pass over silently
   };
-  clearSpeechTimers();
-  speechTimers.start = setTimeout(function () {
-    if (token !== speech.token) return;
-    try { speechSynthesis.cancel(); } catch (e) {}
-    finishSpoken(token);
-  }, SPEECH_START_MS);
-  var capMs = Math.min(90000, Math.max(30000, text.length * 90)); // ~11 chars/sec at rate 1, floored 30s, ceiling 90s
-  speechTimers.cap = setTimeout(function () {
-    if (token !== speech.token) return;
-    try { speechSynthesis.cancel(); } catch (e) {}
-    finishSpoken(token);
-  }, capMs);
+  armSpeechTimers(token, text);
   try { speechSynthesis.speak(u); } catch (e) { finishSpoken(token); }
 }
 function finishSpoken(token) {
@@ -697,6 +782,7 @@ function finishSpoken(token) {
   speech.token++;
   clearSpeechTimers();
   speech.active = false; speech.paused = false;
+  speech.native = false; speech.nativeId = null;
   var spokenDesc = speech.desc; speech.desc = null;
   if (state.queue.length) {
     if (advanceQueue(1)) return;
@@ -721,7 +807,7 @@ function pauseSpoken() {
   // mid-utterance resume on this platform).
   speech.token++;
   clearSpeechTimers();
-  try { speechSynthesis.cancel(); } catch (e) {}
+  speechCancel();
   speech.active = false; speech.paused = true; // desc stands — resume re-speaks it
   setPlaybackState('paused');
   updateDock();
@@ -782,7 +868,7 @@ function pauseTransport() {
 // by the gate — the legs assert against these, never re-derived.
 window.__opnSpeech = {
   startMs: SPEECH_START_MS,
-  state: function () { return { active: speech.active, paused: speech.paused, descId: speech.desc ? speech.desc.episodeId : null, voices: (speech.voices || []).length }; },
+  state: function () { return { active: speech.active, paused: speech.paused, descId: speech.desc ? speech.desc.episodeId : null, voices: (speech.voices || []).length, native: !!speech.native, nativeId: speech.nativeId }; },
   pick: function () { var v = pickEnUsVoice(); return v ? { lang: v.lang, name: v.name || '', isDefault: !!v.default } : null; },
 };
 function startDesc(desc) {
