@@ -127,7 +127,7 @@ ok(JSON.stringify(scope) === JSON.stringify(["app/worker/src/client.ts", "app/wo
 const PAGE_SRC = [
   (CLIENT.match(/var BS_CH = [^\n]+/) || [""])[0],
   lineOf("var QUEUE_KEY"), lineOf("var PLAYED_KEY"), lineOf("var AUTOPLAY_KEY"),
-  lineOf("var SPEECH_START_MS"), lineOf("var speech = {"), lineOf("var speechTimers = {"), lineOf("var fade = {"), lineOf("var npScrubbing"),
+  lineOf("var SPEECH_START_MS"), lineOf("var speech = {"), lineOf("var speechTimers = {"), lineOf("var fade = {"), lineOf("var npScrubbing"), lineOf("var nativeSpeechReady"),
   "esc", "fmtDur",
   "readPlayed", "playedMap", "presentedDateStr", "refreshRepeatIds", "playedKey", "isPlayed", "writePlayedQuiet", "writePlayed", "markCompleted",
   "queueStartPos", "saveQueueSnapshot", "removeQueueSnapshot", "readQueueSnapshot", "clearRestoredQueue",
