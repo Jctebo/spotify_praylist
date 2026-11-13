@@ -1260,7 +1260,7 @@ async function podSequence(env: Env, def: PodSeriesDef): Promise<{ snap: PodSnap
   }
 }
 
-interface PodEntryState extends PodEntry { listened: boolean; listenDate: string | null; listenedAt: string | null; source: string | null }
+interface PodEntryState extends PodEntry { listened: boolean; listenDate: string | null; listenedAt: string | null; source: string | null; positionS: number | null }
 interface PodPayload {
   ok: boolean; series: string; title: string; available: boolean;
   entries: PodEntryState[]; currentKey: string | null;
@@ -1272,12 +1272,20 @@ async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
   const r = await env.DB.prepare("SELECT seq_key, listened_at, listen_date, source FROM podcast_listens WHERE series=?")
     .bind(def.key).all<{ seq_key: string; listened_at: string; listen_date: string; source: string }>();
   const listens = new Map((r.results ?? []).map((x) => [x.seq_key, x]));
+  // v395 §2.4: the positions fold — the sibling table read beside
+  // the listens. positionS surfaces ONLY for unlistened entries,
+  // so even a stray row could never paint a position over a
+  // check; counts and the derivation below read the listens
+  // alone, exactly as before.
+  const pr = await env.DB.prepare("SELECT seq_key, position_s FROM podcast_positions WHERE series=?")
+    .bind(def.key).all<{ seq_key: string; position_s: number }>();
+  const positions = new Map((pr.results ?? []).map((x) => [x.seq_key, x.position_s]));
   if (!seq) {
     return { ok: true, series: def.key, title: def.title, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false };
   }
   const entries = seq.snap.entries.map((e) => {
     const l = listens.get(e.key);
-    return { ...e, listened: !!l, listenDate: l ? l.listen_date : null, listenedAt: l ? l.listened_at : null, source: l ? l.source : null };
+    return { ...e, listened: !!l, listenDate: l ? l.listen_date : null, listenedAt: l ? l.listened_at : null, source: l ? l.source : null, positionS: l ? null : (positions.get(e.key) ?? null) };
   });
   // §2.3, as amended 2026-11-12 (option A, §2.10): current = the
   // lowest-position unlistened DAY entry (kind "day", or "special"
@@ -1708,6 +1716,14 @@ export default {
           await env.DB.prepare(
             "INSERT OR IGNORE INTO podcast_listens (series, seq_key, listened_at, listen_date, source) VALUES (?, ?, ?, ?, ?)",
           ).bind(markDef.key, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
+          // v395 §2.5 (D5): clearing rides the mark route itself —
+          // both sources flow through this one handler, so the
+          // auto-mark on 'ended' clears by construction. The
+          // listens write stands first, the position delete
+          // second; no percentage test stands anywhere in this
+          // path (the standing law).
+          await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
+            .bind(markDef.key, seqKey).run();
           return json({ ok: true });
         }
         if (seg[2] === "podcasts" && seg[3] === "unmark" && request.method === "POST") {
@@ -1721,6 +1737,55 @@ export default {
           if (!unmarkDef) return err(400, "unknown series");
           await env.DB.prepare("DELETE FROM podcast_listens WHERE series=? AND seq_key=?")
             .bind(unmarkDef.key, String(body.seqKey ?? "")).run();
+          // v395 §2.5 (D5): unmark wipes the episode's whole
+          // progress record — the sibling position row deletes
+          // beside the listen row, in the same act.
+          await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
+            .bind(unmarkDef.key, String(body.seqKey ?? "")).run();
+          return json({ ok: true });
+        }
+        if (seg[2] === "podcasts" && seg[3] === "position" && request.method === "POST") {
+          // v395 §2.3: the position save — John's act, session-only
+          // like the marks; the agent door gains no position
+          // surface. Validation stands in the mark route's exact
+          // order: the series against the registry, the seqKey
+          // against that series' snapshot. The position clamps to
+          // the SNAPSHOT entry's own duration — the server trusts
+          // its snapshot for duration, never the client's claim;
+          // an entry with no standing duration stores the position
+          // as sent (§1's named case: the position still saves and
+          // resume still lands on the saved second). A save naming
+          // a LISTENED episode stores nothing and still answers ok
+          // — a stale client tick can never resurrect a position
+          // over a finished episode. A save whose clamped position
+          // is 0 deletes any standing row instead of storing a zero
+          // row: zero is "not started," and the row's absence is
+          // that same fact. The write is an upsert; newest arrival
+          // wins (the marks' last-writer-wins posture).
+          const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string; positionS?: number; durationS?: number };
+          const posDef = podSeriesDef(String(body.series ?? ""));
+          if (!posDef) return err(400, "unknown series");
+          const posSeqKey = String(body.seqKey ?? "");
+          const posSeq = await podSequence(env, posDef);
+          const posEntry = posSeq ? posSeq.snap.entries.find((e) => e.key === posSeqKey) : undefined;
+          if (!posEntry) return err(400, "unknown seqKey");
+          const posListen = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=? AND seq_key=?")
+            .bind(posDef.key, posSeqKey).first<{ seq_key: string }>();
+          if (posListen) return json({ ok: true });
+          let posVal = Math.floor(Number(body.positionS ?? 0));
+          if (!Number.isFinite(posVal) || posVal < 0) posVal = 0;
+          if (posEntry.durationS > 0 && posVal > posEntry.durationS) posVal = posEntry.durationS;
+          if (posVal === 0) {
+            await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
+              .bind(posDef.key, posSeqKey).run();
+            return json({ ok: true });
+          }
+          let posDur = posEntry.durationS > 0 ? posEntry.durationS : Math.floor(Number(body.durationS ?? 0));
+          if (!Number.isFinite(posDur) || posDur < 0) posDur = 0;
+          await env.DB.prepare(
+            `INSERT INTO podcast_positions (series, seq_key, position_s, duration_s, updated_at) VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT(series, seq_key) DO UPDATE SET position_s=excluded.position_s, duration_s=excluded.duration_s, updated_at=excluded.updated_at`,
+          ).bind(posDef.key, posSeqKey, posVal, posDur, nowISO()).run();
           return json({ ok: true });
         }
         if (seg[2] === "audio" && request.method === "GET") {
