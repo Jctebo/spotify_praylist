@@ -2284,6 +2284,21 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.applyStatus[ai])) + '</div></div>';
     }
   }
+  /* v401 §2.3: the changer run lines — the additive
+     'changerRun' key in the same payload, pre-rendered
+     natively (the changer's last run: its time, the path it
+     took, how many images it saw, and why it skipped when
+     it did — or the never-ran line when no run stands).
+     Rendered in the identical setrow/meta shape as the
+     apply status lines, directly after them: the two
+     changer instruments stand together (last apply, last
+     run). An absent key (the old shell, which carries no
+     such key) or an empty list renders nothing. */
+  if (s.changerRun && s.changerRun.length) {
+    for (var ci = 0; ci < s.changerRun.length; ci++) {
+      html += '<div class="setrow"><div class="meta">' + esc(String(s.changerRun[ci])) + '</div></div>';
+    }
+  }
   /* v399 §2.5: the section's one action — Sync now, in the
      OFFLINE precedent's form, appended after the notices as
      the section's last rows. The button renders ONLY when
