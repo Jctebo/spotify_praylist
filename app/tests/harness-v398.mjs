@@ -6,8 +6,15 @@
 // bridge plugin: the applyStatus block renders in the notices'
 // identical setrow/meta shape directly after them (absence-
 // tolerant — a payload without the key paints byte-identical to
-// the BASE client at 86223a5, the v398 branch's base, read from
-// git), and the notices render itself is byte-unchanged.
+// the BASE client, read from git), and the notices render
+// itself is byte-unchanged.
+// v405 fixture amendment (count held): the BASE is re-pointed
+// to 2f415b58, the v404 ship tree — the previous release's
+// client (v401 re-pointed this base the same way) — and the
+// byte-identity leg strips the v405 Picture fit row, the one
+// unconditional paint addition (§2.3: it renders standing at
+// Fit even when the payload carries no fitMode), asserting it
+// is exactly one row inside the same leg.
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
@@ -18,7 +25,7 @@ const APP = path.dirname(fileURLToPath(import.meta.url)) + "/..";
 const WT = path.resolve(APP, "..");
 if (!WT.includes(".worktrees")) { console.error("HARD GUARD: harness-v398 runs only inside a release worktree"); process.exit(2); }
 const CLIENT = fs.readFileSync(path.join(APP, "worker/src/client.ts"), "utf8");
-const BASE_CLIENT = execFileSync("git", ["-C", WT, "show", "86223a5:app/worker/src/client.ts"], { encoding: "utf8" });
+const BASE_CLIENT = execFileSync("git", ["-C", WT, "show", "2f415b58:app/worker/src/client.ts"], { encoding: "utf8" });
 
 let n = 0, fails = 0;
 const ok = (cond, name) => { n++; if (!cond) fails++; console.log(`${cond ? "ok" : "not ok"} ${n} - ${name}`); };
@@ -112,7 +119,15 @@ const main = async () => {
     wNew.sandbox.paintWallpaperControls(payload);
     const wBase = makeWorld(BASE_CLIENT);
     wBase.sandbox.paintWallpaperControls(payload);
-    ok(wNew.el("set-wallpaper").innerHTML === wBase.el("set-wallpaper").innerHTML,
+    // v405 amendment (see the header): strip the one fit row
+    // from the new paint; the remainder is byte-identical.
+    const newHtml = wNew.el("set-wallpaper").innerHTML;
+    const fitStart = newHtml.indexOf('<div class="setrow"><div class="setname">Picture fit</div>');
+    const fitTail = '</select></div></div>';
+    const fitEnd = fitStart < 0 ? -1 : newHtml.indexOf(fitTail, fitStart) + fitTail.length;
+    const stripped = fitStart < 0 ? newHtml : newHtml.slice(0, fitStart) + newHtml.slice(fitEnd);
+    ok(fitStart >= 0 && newHtml.indexOf("Picture fit", fitEnd) < 0
+      && stripped === wBase.el("set-wallpaper").innerHTML,
       "W398-10b: payload without applyStatus paints byte-identical to the base client (notices render byte-unchanged)");
   }
   // W398-10c: an empty list renders nothing extra — the paint

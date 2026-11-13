@@ -2252,6 +2252,27 @@ function paintWallpaperControls(s) {
   if (!s.lockOn && !s.homeOn) {
     html += '<div class="setrow"><div class="meta">Both screens are off. New images still file; the background stands still by the switches&rsquo; setting.</div></div>';
   }
+  /* v405 §2.3: the Picture fit row — directly after the two
+     surface toggle rows and their both-off note, before the
+     Phone folder row. The section's closed-set control form
+     (the roots <select> pattern): the standing mode's
+     caption as the meta line, the two plain labels verbatim.
+     The value reads s.fitMode === 'fill' ? 'fill' : 'fit' —
+     an absent key (the old shell's payload) renders Fit,
+     mirroring the native default. A change writes through
+     the standing helper and repaints from the resolved
+     payload; the client fires no poke and no sync (the
+     re-apply trigger is native, §2.4). */
+  var fitMode = s.fitMode === 'fill' ? 'fill' : 'fit';
+  var fitCaption = fitMode === 'fill'
+    ? 'The picture fills the whole screen. The top is kept, so the title stays; the bottom is trimmed.'
+    : 'The whole picture shows, title and all. The side edges are filled with a soft blur of the picture itself.';
+  html += '<div class="setrow"><div class="setname">Picture fit</div>'
+    + '<div class="meta">' + fitCaption + '</div>'
+    + '<div class="setcontrols"><select id="set-wp-fit">'
+    + '<option value="fit"' + (fitMode === 'fit' ? ' selected' : '') + '>Fit the whole picture</option>'
+    + '<option value="fill"' + (fitMode === 'fill' ? ' selected' : '') + '>Fill the screen</option>'
+    + '</select></div></div>';
   html += '<div class="setrow"><div class="setname">Phone folder</div>'
     + '<div class="meta">' + esc(s.phoneRoot + '/Phone') + '<br>' + esc(paths.phoneSaints || '') + '<br>' + esc(paths.phoneMonthly || '') + '</div>'
     + '<div class="setcontrols"><select id="set-wp-phone-root">' + wallpaperRootOptions(s.offeredRoots, s.phoneRoot) + '</select></div></div>';
@@ -2342,6 +2363,8 @@ function paintWallpaperControls(s) {
   if (phoneSel) phoneSel.addEventListener('change', function (ev) { wallpaperWrite({ phoneRoot: ev.target.value }); });
   var watchSel = document.getElementById('set-wp-watch-root');
   if (watchSel) watchSel.addEventListener('change', function (ev) { wallpaperWrite({ watchRoot: ev.target.value }); });
+  var fitSel = document.getElementById('set-wp-fit');
+  if (fitSel) fitSel.addEventListener('change', function (ev) { wallpaperWrite({ fitMode: ev.target.value }); });
   var syncBtn = document.getElementById('set-wp-sync');
   if (syncBtn) syncBtn.addEventListener('click', function () { wallpaperSyncNow(); });
 }
