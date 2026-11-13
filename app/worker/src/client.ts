@@ -647,6 +647,28 @@ function startDesc(desc) {
   // v384 made it; then the audio load runs INLINE, at once —
   // there is no speech step, no deferral, and no toggle read
   // on any start path. A start never waits on anything.
+  // v395 §2.6/§2.8: the podcast position seams ride this funnel.
+  // Skip-away first, while the outgoing track and its position
+  // still stand; then the incoming podcast track's resume — its
+  // saved position (the descriptor's podPositionS, from the open
+  // payload) enters the standing pendingResume seam, so the
+  // loadedmetadata seek and queueStartPos serve it exactly as
+  // they serve the day queue's carries: no new seek code. The
+  // seam keys on episodeId; a podcast descriptor's episodeId is
+  // its series-prefixed sequence key (ciy:/biy:/riy:), unique
+  // per episode across series. A listened podcast starts at 0
+  // through the same path (its podPositionS is null — any
+  // same-episode residue clears; §2.8). The save tick's marker
+  // resets at every track change.
+  podPositionSkipAway(desc);
+  if (desc.kind === 'podcast') {
+    state.pendingResume = desc.podPositionS > 0
+      ? { episodeId: desc.episodeId, positionS: desc.podPositionS }
+      : (state.pendingResume && state.pendingResume.episodeId === desc.episodeId ? null : state.pendingResume);
+    podPosSentKey = desc.podSeries + '/' + desc.seriesKey; podPosSentVal = -1;
+  } else {
+    podPosSentKey = null; podPosSentVal = -1;
+  }
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
@@ -1327,16 +1349,17 @@ audioEl.addEventListener('pause', function () {
   setPlaybackState(state.current ? 'paused' : 'none');
   reassertMediaSession();
 });
+audioEl.addEventListener('pause', function () { podPositionSaveCurrent(); }); // v395 §2.6: a podcast pause is a position save event
 document.addEventListener('visibilitychange', function () {
   // v355 §2.2 trigger 5: the freeze that precedes a discard is a
   // last-chance snapshot write (the v346 re-assert below is
   // untouched — the hook rides the same event, on the way out).
-  if (document.visibilityState === 'hidden') saveQueueSnapshot();
+  if (document.visibilityState === 'hidden') { saveQueueSnapshot(); podPositionSaveCurrent(); } // v395 §2.6: a hide is a position save event
   // v346: return to the foreground (including a freeze/thaw) re-files
   // the session — metadata, handlers, state, position.
   if (document.visibilityState === 'visible') reassertMediaSession();
 });
-window.addEventListener('pagehide', function () { saveQueueSnapshot(); }); // v355 §2.2 trigger 5: the discard moment itself
+window.addEventListener('pagehide', function () { saveQueueSnapshot(); podPositionSaveCurrent(); }); // v355 §2.2 trigger 5: the discard moment itself · v395 §2.6: the close save rides the same moment
 var lastResumeSave = 0;
 var lastQueueSave = 0;
 audioEl.addEventListener('timeupdate', function () {
@@ -1347,6 +1370,7 @@ audioEl.addEventListener('timeupdate', function () {
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
   if (now - lastQueueSave > 5000) { lastQueueSave = now; saveQueueSnapshot(); }
+  if (now - podPosLastTick > 15000) { podPosLastTick = now; podPositionTick(); } // v395 §2.6: the 15 s position tick
 });
 audioEl.addEventListener('seeked', updatePositionState);
 audioEl.addEventListener('seeked', function () { pushNativeState(false); }); // v377 B2: seek is a push trigger
@@ -1643,7 +1667,11 @@ function podDesc(e) {
   // v390 §2.7: the descriptor gains the series (the open
   // payload's key) beside the standing fields, so the completion
   // seam can mark the playing episode's OWN series.
-  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0 };
+  // v395 §2.8: the descriptor also carries the entry's saved
+  // position (podPositionS) — the server value from the open
+  // payload, null for listened and untouched entries — so every
+  // start the queue reaches can hand it to the resume seam.
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null };
 }
 function podCurrentKey(entries) {
   // v390 §2.10 (option A amendment, 2026-11-12): the in-memory
@@ -1675,8 +1703,14 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
   post('/api/player/podcasts/mark', { series: seriesKey, seqKey: seqKey, source: source }).catch(function () {
     podMarkEnqueue({ op: 'mark', series: seriesKey, seqKey: seqKey, source: source, queuedAt: new Date().toISOString() });
   });
+  // v395 §2.9: the mark clears the position in the same act —
+  // the pending slot entry dies with the mark (the server's
+  // route deletes the row; the slot never disagrees), and the
+  // in-memory flip below nulls the entry's positionS beside the
+  // listened flip, so the bar vanishes with the check.
+  podPosSlotDrop(seriesKey, seqKey);
   if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.entries) {
-    state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); } });
+    state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); e.positionS = null; } });
     var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
     state.podcasts.listenedCount = state.podcasts.entries.length - left.length;
     state.podcasts.currentKey = podCurrentKey(state.podcasts.entries);
@@ -1771,7 +1805,15 @@ function paintPodcasts() {
       + '<button class="chipbtn" data-poddl="' + esc(e.key) + '">Get</button>'
       + '<div class="podmark-wrap"><button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
       + (e.listened && e.listenDate ? '<div class="podmark-date">' + esc(e.listenDate) + '</div>' : '')
-      + '</div></div></div>';
+      + '</div></div>'
+      // v395 §2.9 (D4): the partway bar — one element at the
+      // row's bottom edge, width = position / duration, inside
+      // the uniform 76px row (the .podbar rule in ui.ts): no
+      // height, no text, no new line. A partway entry with no
+      // duration renders no bar — the fraction cannot render
+      // (§1's named case); its position still saves and resumes.
+      + (!e.listened && e.positionS > 0 && e.durationS > 0 ? '<div class="podbar"><i style="width:' + (Math.round(1000 * e.positionS / e.durationS) / 10) + '%"></i></div>' : '')
+      + '</div>';
   });
   view.innerHTML = html;
   view.querySelectorAll('[data-podplay]').forEach(function (b) {
@@ -1822,6 +1864,12 @@ function podToggleMark(key) {
   entry.listened = !wasListened;
   entry.source = wasListened ? null : 'manual';
   entry.listenDate = wasListened ? null : todayChicago();
+  // v395 §2.9 (D5): the toggle clears the position in memory in
+  // both directions — a mark clears it, an unmark wipes the
+  // record whole — and the pending slot entry dies with it; the
+  // routes do the same server-side in the same act.
+  entry.positionS = null;
+  podPosSlotDrop(res.series, key);
   var left = res.entries.filter(function (e) { return !e.listened; });
   res.listenedCount = res.entries.length - left.length;
   res.currentKey = podCurrentKey(res.entries);
@@ -1834,6 +1882,161 @@ function podToggleMark(key) {
       ? { op: 'unmark', series: res.series, seqKey: key, queuedAt: new Date().toISOString() }
       : { op: 'mark', series: res.series, seqKey: key, source: 'manual', queuedAt: new Date().toISOString() });
   });
+}
+
+/* ---------------- Podcast position memory (v395) ----------------
+   The per-episode half, held server-side in podcast_positions
+   (migration 0019) beside the listens — a row's PRESENCE there
+   never reads as a listen anywhere (§2.1). The client saves
+   (D2: the 15 s movement-gated tick + pause · hide · close ·
+   skip-away), resumes through the standing pendingResume seam
+   (D3 — hooked in startDesc), and shows the bar (D4 — paint in
+   paintPodcasts). Clearing rides the mark routes (D5): the
+   in-memory legs stand in writePodMarkQuiet and podToggleMark.
+   Saves are page-driven only — podcasts have no native/car
+   surface (§1's boundary), and a hard-killed page leaves the
+   last save standing. */
+var PODPOS_KEY = 'opn-podpos-pending-v1';
+var podPosSentKey = null; // series + '/' + seqKey the tick marker names
+var podPosSentVal = -1;   // the last value sent for that episode
+var podPosLastTick = 0;   // the timeupdate throttle for the 15 s tick
+function podPosSlotRead() { try { var m = JSON.parse(localStorage.getItem(PODPOS_KEY) || '{}'); return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {}; } catch (e) { return {}; } }
+function podPosSlotWrite(map) { try { localStorage.setItem(PODPOS_KEY, JSON.stringify(map)); } catch (e) {} }
+function podPosSlotSet(series, seqKey, positionS, durationS) {
+  // §2.7: one JSON object keyed series + '/' + seqKey — a failed
+  // save OVERWRITES the episode's entry (newest wins). There is
+  // no array and no FIFO: positions supersede each other, so the
+  // mark queue's FIFO is the wrong shape here and is not reused.
+  var map = podPosSlotRead();
+  map[series + '/' + seqKey] = { positionS: positionS, durationS: durationS };
+  podPosSlotWrite(map);
+}
+function podPosSlotDrop(series, seqKey) {
+  var map = podPosSlotRead();
+  var k = series + '/' + seqKey;
+  if (map[k]) { delete map[k]; podPosSlotWrite(map); }
+}
+function writePodPositionQuiet(series, seqKey, positionS, durationS) {
+  // §2.6/§2.7: the position write — fire-and-forget in
+  // writePodMarkQuiet's posture, over the coalesced slot. The
+  // slot is written SYNCHRONOUSLY before the post: a page that
+  // dies mid-flight (the pagehide save is the standing case)
+  // leaves the newest value standing for the drain, never
+  // nothing. A successful post removes the entry again — only
+  // when the slot still holds THIS value, so an older save's
+  // success never drops a newer save's entry. A failed post
+  // simply leaves the entry standing.
+  var pos = Math.floor(Number(positionS) || 0);
+  if (!(pos > 0)) pos = 0;
+  var dur = Math.floor(Number(durationS) || 0);
+  if (!(dur > 0)) dur = 0;
+  // The in-memory leg: the open payload's bar tracks without a
+  // refetch (only when the open payload is this series — the
+  // writePodMarkQuiet mutation rule).
+  if (state.podcasts && state.podcasts.series === series && state.podcasts.entries) {
+    state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) e.positionS = pos > 0 ? pos : null; });
+  }
+  // The tick marker: the last value sent for the current track.
+  if (state.current && state.current.kind === 'podcast' && state.current.podSeries === series && state.current.seriesKey === seqKey) {
+    podPosSentKey = series + '/' + seqKey; podPosSentVal = pos;
+  }
+  podPosSlotSet(series, seqKey, pos, dur);
+  post('/api/player/podcasts/position', { series: series, seqKey: seqKey, positionS: pos, durationS: dur }).then(function () {
+    var map = podPosSlotRead();
+    var k = series + '/' + seqKey;
+    if (map[k] && map[k].positionS === pos && map[k].durationS === dur) { delete map[k]; podPosSlotWrite(map); }
+  }).catch(function () { /* the slot entry stands — the drain's business */ });
+}
+function podPositionTick() {
+  // §2.6: the tick's attempt — fires only while a podcast track
+  // is current and playing, and only when the position has moved
+  // >= 5 s since the last value sent for this episode. The
+  // marker resets at every track change (startDesc), so a fresh
+  // track's first tick measures from unsent. No writes while
+  // paused — the pause save is the paused state's only write.
+  var cur = state.current;
+  if (!cur || cur.kind !== 'podcast' || !cur.podSeries || !cur.seriesKey) return;
+  if (audioEl.paused || audioEl.ended) return;
+  var pos = Math.floor(audioEl.currentTime || 0);
+  var key = cur.podSeries + '/' + cur.seriesKey;
+  var last = (podPosSentKey === key) ? podPosSentVal : -1;
+  if (Math.abs(pos - last) < 5) return;
+  writePodPositionQuiet(cur.podSeries, cur.seriesKey, pos, cur.durationS || 0);
+}
+function podPositionSaveCurrent() {
+  // §2.6: the event saves — pause · visibility hide · pagehide.
+  // Each bypasses the movement gate; each is the last word
+  // before its moment passes. Two guards: the ENDED path never
+  // saves (it marks, and the mark route clears — a save landing
+  // after that delete could resurrect a row), and a position of
+  // 0 is "not started" — nothing stands to save (which also
+  // keeps a src-swap pause artifact from reading the incoming
+  // track's zero).
+  var cur = state.current;
+  if (!cur || cur.kind !== 'podcast' || !cur.podSeries || !cur.seriesKey) return;
+  if (audioEl.ended) return;
+  // At the element's exact end the episode is finished in
+  // substance: a pause event can precede 'ended' in the end
+  // sequence, and no save may race the mark that follows. (A
+  // save-suppression guard at the media's own end — not a
+  // percentage test; the mark path's law stands untouched.)
+  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
+  var pos = Math.floor(audioEl.currentTime || 0);
+  if (!(pos > 0)) return;
+  writePodPositionQuiet(cur.podSeries, cur.seriesKey, pos, cur.durationS || 0);
+}
+function podPositionSkipAway(nextDesc) {
+  // §2.6: skip-away — the queue advances away from a podcast
+  // track without 'ended' (next/previous tap, a tap on another
+  // track, a queue replacement). Called at the head of
+  // startDesc, while state.current still names the OUTGOING
+  // track and the element still holds its position: the save
+  // fires for the outgoing track, at its position in the moment
+  // of leaving, before the incoming track's start logic runs.
+  // The ended path never saves — when the element stands ended,
+  // the mark (fired at the top of the ended handler, before any
+  // advance) is the outgoing track's whole story.
+  var out = state.current;
+  if (!out || out.kind !== 'podcast' || !out.podSeries || !out.seriesKey) return;
+  if (nextDesc && nextDesc.episodeId === out.episodeId) return;
+  if (audioEl.ended) return;
+  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return; // the end is the mark's moment, as in podPositionSaveCurrent
+  var pos = Math.floor(audioEl.currentTime || 0);
+  if (!(pos > 0)) return;
+  writePodPositionQuiet(out.podSeries, out.seriesKey, pos, out.durationS || 0);
+}
+var podPosDraining = false;
+function drainPodPositions() {
+  // §2.7: the coalesced drain — at app open and on 'online', the
+  // mark queue's two standing drain moments (wired beside its
+  // calls). Each pending entry posts once through the position
+  // route; success removes it (only when the slot still holds
+  // the drained value); failure leaves the whole remainder
+  // standing for the next drain. The drain is bounded by the
+  // count of partway episodes, never by listening time.
+  // Downloaded episodes save the same way (P10): a downloaded
+  // episode plays through the same element over its cache-first
+  // URL, so its saves fire identically and its offline saves
+  // coalesce into this same slot. Settings "Clear offline
+  // downloads" never touches the slot or the server positions —
+  // positions are progress records, the marks' kin, not
+  // downloads.
+  if (podPosDraining) return;
+  if (!Object.keys(podPosSlotRead()).length) return;
+  podPosDraining = true;
+  var step = function () {
+    var map = podPosSlotRead();
+    var keys = Object.keys(map);
+    if (!keys.length) { podPosDraining = false; return; }
+    var k = keys[0], v = map[k];
+    var slash = k.indexOf('/');
+    post('/api/player/podcasts/position', { series: k.slice(0, slash), seqKey: k.slice(slash + 1), positionS: v.positionS, durationS: v.durationS }).then(function () {
+      var now = podPosSlotRead();
+      if (now[k] && now[k].positionS === v.positionS && now[k].durationS === v.durationS) { delete now[k]; podPosSlotWrite(now); }
+      step();
+    }).catch(function () { podPosDraining = false; });
+  };
+  step();
 }
 
 /* ---------------- Settings (v328) ----------------
@@ -4343,7 +4546,7 @@ function buildDayFromPayload(day, snap) {
     // v344 §2.6: the played chrome's standing pass at render end
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
-    if (snap) drainPodMarkQueue();
+    if (snap) { drainPodMarkQueue(); drainPodPositions(); } // v395 §2.7: the position drain rides the mark drain's open moment
 }
 
 /* ---------------- Offline for the plane (v392) ----------------
@@ -4679,6 +4882,7 @@ function offlineCompleteness(manual) {
 }
 function offlineOnOnlineOpen(day) {
   drainPodMarkQueue();
+  drainPodPositions(); // v395 §2.7: beside the mark queue's drain, same moment
   // D2: the automatic leg — at every online open, deferred so
   // the day's own resolution leads.
   offlinePassTimer = setTimeout(function () { offlinePassTimer = null; offlineCompleteness(false); }, 4000);
@@ -4811,7 +5015,7 @@ function drainPodMarkQueue() {
   };
   step();
 }
-window.addEventListener('online', function () { drainPodMarkQueue(); });
+window.addEventListener('online', function () { drainPodMarkQueue(); drainPodPositions(); }); // v395 §2.7: the position drain shares the mark drain's online moment
 
 /* ---------------- Listen home ⇄ block pages (v353) ----------------
    The Prayers tab's two paints over the standing whole-day state.

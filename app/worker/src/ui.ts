@@ -96,7 +96,14 @@ h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:nor
    harness-v363 measures scrollHeight <= clientHeight on every
    fixture so clipped content fails the gate instead of
    shipping silently (the v343 lesson). */
-.card.trow { height:76px; padding:10px 14px; overflow:hidden; }
+.card.trow { height:76px; padding:10px 14px; overflow:hidden; position:relative; }
+/* v395 §2.9: the Podcasts partway bar — the dockprogress form
+   at a podcast row's bottom edge, inside the uniform 76px row:
+   absolute against the row (position:relative above), 3px, the
+   accent fill at position / duration width. The row gains no
+   height, no text, no new line. */
+.podbar { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(22,40,63,.14); }
+.podbar i { display:block; height:100%; background:var(--accent); }
 .card.trow .grow { min-width:0; }
 .card.trow h3 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card.trow .meta { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -327,7 +334,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v392-1";
+var CACHE = "ora-pro-nobis-v395-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
