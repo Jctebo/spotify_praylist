@@ -655,6 +655,17 @@ function startDesc(desc) {
   markPlaying(desc.episodeId);
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
+  // v392 W4: a podcast descriptor resolves cache-first — the
+  // downloaded blob when one stands under its pod: key, the
+  // enclosure stream exactly as before when none does.
+  if (desc.kind === 'podcast' && 'caches' in window) {
+    var podKey = offlinePodKey(desc.podSeries, desc.episodeId);
+    caches.open('opn-ext-audio-v1').then(function (c) { return c.match(podKey); })
+      .then(function (resp) { return resp ? resp.blob() : null; })
+      .catch(function () { return null; })
+      .then(function (blob) { if (blob) desc.url = URL.createObjectURL(blob); loadDescAudio(desc); });
+    return;
+  }
   loadDescAudio(desc);
 }
 function playTrack(desc) {
@@ -1651,15 +1662,19 @@ function podCurrentKey(entries) {
 }
 function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
-  // completion seam (the writePlayedQuiet precedent); a failed
-  // write leaves the entry unmarked at next open — no retry queue.
+  // completion seam (the writePlayedQuiet precedent).
+  // v392 W7: a failed write now ENQUEUES (opn-podmark-queue-v1)
+  // and drains at the next open / online event — replay is safe
+  // against the idempotent mark routes.
   // v390 §2.7: generalized off the v381 literal — the write posts
   // the descriptor's own series. Its in-memory leg mutates the
   // open payload ONLY when the open payload is that series: a
   // Bible episode completing while the Catechism page stands
   // open writes its Bible row server-side (the record) and
   // leaves the open page's counts to its next open.
-  post('/api/player/podcasts/mark', { series: seriesKey, seqKey: seqKey, source: source }).catch(function () {});
+  post('/api/player/podcasts/mark', { series: seriesKey, seqKey: seqKey, source: source }).catch(function () {
+    podMarkEnqueue({ op: 'mark', series: seriesKey, seqKey: seqKey, source: source, queuedAt: new Date().toISOString() });
+  });
   if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.entries) {
     state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); } });
     var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
@@ -1689,6 +1704,7 @@ function paintPodcastsIndex() {
   var res = state.podcastsIndex;
   if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
   var html = '<h1 class="screen">Podcasts</h1>';
+  html += offlineLineHtml('pod-offline-btn');
   res.seriesList.forEach(function (s) {
     html += '<div class="card" data-podseries="' + esc(s.series) + '"><h3>' + esc(s.title) + '</h3>';
     if (!s.available) {
@@ -1700,6 +1716,8 @@ function paintPodcastsIndex() {
     html += '</div>';
   });
   view.innerHTML = html;
+  wireOfflineButtons();
+  paintOfflineLine();
   view.querySelectorAll('[data-podseries]').forEach(function (c) {
     c.addEventListener('click', function () { openPodSeries(c.getAttribute('data-podseries')); });
   });
@@ -1726,6 +1744,7 @@ function paintPodcasts() {
   // the index, so the counts the marks just changed stand
   // correct.
   html += '<div class="backrow"><button class="backbtn" data-podback>&lsaquo; All series</button></div>';
+  html += offlineLineHtml('pod-offline-btn');
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
     // series stands unavailable — the section's one error surface.
@@ -1749,6 +1768,7 @@ function paintPodcasts() {
     html += '<div class="card trow" data-podrow="' + esc(e.key) + '"><div class="row">'
       + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
       + '<div class="grow"><h3>' + esc(e.title) + '</h3><div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</div></div>'
+      + '<button class="chipbtn" data-poddl="' + esc(e.key) + '">Get</button>'
       + '<div class="podmark-wrap"><button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
       + (e.listened && e.listenDate ? '<div class="podmark-date">' + esc(e.listenDate) + '</div>' : '')
       + '</div></div></div>';
@@ -1760,6 +1780,12 @@ function paintPodcasts() {
   view.querySelectorAll('[data-podmark]').forEach(function (b) {
     b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
   });
+  view.querySelectorAll('[data-poddl]').forEach(function (b) {
+    b.addEventListener('click', function () { podDlTap(b.getAttribute('data-poddl')); });
+  });
+  wireOfflineButtons();
+  paintOfflineLine();
+  refreshPodDlStates();
   wirePodBack();
   // §2.5: the list opens scrolled to the current entry.
   if (res.currentKey) {
@@ -1790,18 +1816,24 @@ function podToggleMark(key) {
   res.entries.forEach(function (e) { if (e.key === key) entry = e; });
   if (!entry) return;
   var wasListened = !!entry.listened;
+  // v392 W7: the in-memory state updates immediately (the
+  // standing behavior for the auto-mark); a failed post enqueues
+  // for replay instead of silently dropping the toggle.
+  entry.listened = !wasListened;
+  entry.source = wasListened ? null : 'manual';
+  entry.listenDate = wasListened ? null : todayChicago();
+  var left = res.entries.filter(function (e) { return !e.listened; });
+  res.listenedCount = res.entries.length - left.length;
+  res.currentKey = podCurrentKey(res.entries);
+  if (state.tab === 'podcasts') paintPodcasts();
   var call = wasListened
     ? post('/api/player/podcasts/unmark', { series: res.series, seqKey: key })
     : post('/api/player/podcasts/mark', { series: res.series, seqKey: key, source: 'manual' });
-  call.then(function () {
-    entry.listened = !wasListened;
-    entry.source = wasListened ? null : 'manual';
-    entry.listenDate = wasListened ? null : todayChicago();
-    var left = res.entries.filter(function (e) { return !e.listened; });
-    res.listenedCount = res.entries.length - left.length;
-    res.currentKey = podCurrentKey(res.entries);
-    if (state.tab === 'podcasts') paintPodcasts();
-  }).catch(function () {});
+  call.catch(function () {
+    podMarkEnqueue(wasListened
+      ? { op: 'unmark', series: res.series, seqKey: key, queuedAt: new Date().toISOString() }
+      : { op: 'mark', series: res.series, seqKey: key, source: 'manual', queuedAt: new Date().toISOString() });
+  });
 }
 
 /* ---------------- Settings (v328) ----------------
@@ -1875,6 +1907,14 @@ function paintSettings() {
     + '<div class="meta">Show each prayer&rsquo;s intention in writing — on the playing screen, in each prayer&rsquo;s row, and on the lock screen and car display. Nothing is spoken in either position. Off hides the written intention in those places; the Intentions tab is unchanged either way.</div>'
     + '<div class="setcontrols"><button class="settoggle' + (intentionsOn() ? ' on' : '') + '" id="set-intentions" aria-pressed="' + (intentionsOn() ? 'true' : 'false') + '">' + (intentionsOn() ? 'On' : 'Off') + '</button></div>'
     + '</div></div>';
+  // v392 W6: the offline store's one hand clear — empties both
+  // stores (web + native, through the bridge) in one tap; the
+  // next online open refills the automatic set.
+  html += '<h2 class="sectionhead">OFFLINE</h2><div class="liblist"><div class="setrow">'
+    + '<div class="setname">Offline downloads</div>'
+    + '<div class="meta" id="set-offline-counts"></div>'
+    + '<div class="setcontrols"><button class="btn ghost" id="set-clear-offline">Clear offline downloads</button></div>'
+    + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
   if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
@@ -1933,6 +1973,10 @@ function paintSettings() {
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
   if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); paintSettings(); });
+  var clrBtn = document.getElementById('set-clear-offline');
+  if (clrBtn) clrBtn.addEventListener('click', function () { offlineClearAll(); });
+  var offCounts = document.getElementById('set-offline-counts');
+  if (offCounts) offCounts.textContent = offlineLineText();
   fillPinSection();
 }
 /* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
@@ -2894,7 +2938,10 @@ function extCacheWrite(rec) {
 }
 function extDiscardCaches() {
   try { localStorage.removeItem('opn-ext-cache-v1'); } catch (e) {}
-  if ('caches' in window) { caches.delete('opn-ext-audio-v1').catch(function () {}); }
+  // v392 W6: record-only now — the wholesale audio-store delete
+  // was the one-day design retiring with the rolling window; the
+  // store's entries are day-keyed and leave by keyed eviction
+  // (offlineEvict), never by a blanket delete at a day change.
 }
 function extDownloadingCard(slot) {
   return '<div class="card trow" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Downloading&hellip;</div></div>';
@@ -3672,7 +3719,7 @@ function ownSettlePresent(day, row, metas) {
   metas.forEach(function (m) {
     if (seen[m.episodeId]) return;
     seen[m.episodeId] = true;
-    ownFetchAudio(m.episodeId, m.enclosureUrl, function (objUrl) {
+    ownFetchAudio(offlineDayKey(day.presentedDay || day.date, m.episodeId), m.enclosureUrl, function (objUrl) {
       if (!objUrl) return;
       (state.ownStanding || []).forEach(function (r2) {
         var st2 = state.ownSlots[r2.sourceKey];
@@ -3796,7 +3843,7 @@ function resolveAiSignal(day, settings, shellDesc) {
     state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
   }
 }
-function resolveExternals(day) {
+function resolveExternals(day, settingsOverride, snapshotRec) {
   // v337 §2.4: resolution keys on the PRESENTED day (the payload's
   // presentedDay; its date field carries the same day). storedDay
   // is the produced fact and no longer keys any consumption path.
@@ -3807,7 +3854,13 @@ function resolveExternals(day) {
   var aiShellDesc = claimAiSignalShell(day);
   state.extSlots = {};
   state.extStanding = [];
-  api('/api/player/source-settings').then(function (settings) {
+  // v392 W3: the settings-dependent build stands extracted as
+  // buildWithSettings — the online path feeds it the settings
+  // read; the offline path feeds it the day snapshot's stored
+  // settings (+ its externals record), so ONE build serves both
+  // and no second renderer exists.
+  var buildWithSettings = function (settings) {
+    state.offlineSettings = settings;
     var wd = extWeekdayMon0(date);
     var prim = {}, fb = {};
     (settings.sources || []).forEach(function (s) {
@@ -3841,6 +3894,9 @@ function resolveExternals(day) {
     resolveAiSignal(day, settings, aiShellDesc);
     // Day cache: valid only for this date AND this settings version.
     var cache = extCacheRead();
+    // v392 W3: on the snapshot path the snapshot's externals
+    // record stands when the live record does not cover the day.
+    if ((!cache || cache.date !== date) && snapshotRec && snapshotRec.date === date && snapshotRec.slots) cache = snapshotRec;
     var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
     if (cache && !cacheValid) { extDiscardCaches(); cache = null; }
     var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {} };
@@ -3937,6 +3993,9 @@ function resolveExternals(day) {
       if (state.introRec) rec.intentions = state.introRec;
       rec.savedAt = new Date().toISOString();
       extCacheWrite(rec);
+      // v392 W2: the same record rides the day snapshot (payload
+      // + settings + this externals record, one act per write).
+      offlineSnapshotWrite(date, rec);
     };
     state.ownWriteCache = writeCache;
     var settle = function (slot, st) {
@@ -3979,7 +4038,7 @@ function resolveExternals(day) {
         }).then(function (blob) {
           var put = ('caches' in window)
             ? caches.open('opn-ext-audio-v1').then(function (c) {
-                return c.put(slot.slotId, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+                return c.put(offlineDayKey(date, slot.slotId), new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
               }).catch(function () {})
             : Promise.resolve();
           return put.then(function () { return blob; });
@@ -4011,7 +4070,7 @@ function resolveExternals(day) {
       // (the download path is independent of the read).
       var done = false;
       var fallback = setTimeout(function () { if (!done) { done = true; extDownload(slot, meta); } }, 3000);
-      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(slot.slotId); }).then(function (resp) {
+      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(date, slot.slotId)); }).then(function (resp) {
         if (done) return;
         if (!resp) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
         resp.blob().then(function (blob) {
@@ -4194,7 +4253,9 @@ function resolveExternals(day) {
         });
       }).catch(function () { /* the slots stand named missing */ });
     });
-  }).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ });
+  };
+  if (settingsOverride) { try { buildWithSettings(settingsOverride); } catch (e) {} }
+  else { api('/api/player/source-settings').then(buildWithSettings).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ }); }
 }
 function extMatchBibleDayN(dateStr) {
   var p = dateStr.split('-').map(Number);
@@ -4204,7 +4265,10 @@ function extMatchBibleDayN(dateStr) {
 
 function renderPrayers() {
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
-  api('/api/player/day').then(function (day) {
+  api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); })
+    .catch(function (e) { offlineDayFallback(e); });
+}
+function buildDayFromPayload(day, snap) {
     // v342 §2.5: the shell carries no storedDay — the resume key
     // is the PRESENTED day (the same day key v337 set).
     state.storedDay = day.presentedDay || day.date || null;
@@ -4218,6 +4282,10 @@ function renderPrayers() {
     // v338 §2.7(5): trackCard consults the day payload's intros map
     // from state, uniformly for both families.
     state.dayPayload = day;
+    // v392 W2: a pristine clone for the offline snapshot, taken
+    // before the resolution pass mutates the payload (the AI
+    // Signal claim empties its block list in place).
+    if (!snap) { try { state.offlineDayClone = JSON.parse(JSON.stringify(day)); } catch (e) { state.offlineDayClone = null; } }
     // v375 §2 step 1: the intros map builds from introTexts NOW,
     // synchronously, before the first expandDescs build directly
     // below — intention rows stand at first paint. (The v342
@@ -4259,12 +4327,457 @@ function renderPrayers() {
     bootQueueSnapshot();
     // v334: externals resolve at open, in place, after the day has
     // rendered — the resolve never blocks the day's own episodes.
-    resolveExternals(day);
+    // v392 W3: the snapshot path feeds the build its stored
+    // settings + externals record (zero /api/ calls); the online
+    // path resolves as standing and then runs the offline open
+    // hook (eviction + the completeness pass + mark drain).
+    if (snap) resolveExternals(day, snap.settings, snap.extRec);
+    else { resolveExternals(day); offlineOnOnlineOpen(day); }
     // v344 §2.6: the played chrome's standing pass at render end
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
-  }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+    if (snap) drainPodMarkQueue();
 }
+
+/* ---------------- Offline for the plane (v392) ----------------
+   The offline set (Plan §2, legs W2–W7): on-device day snapshots
+   in Cache Storage (opn-offline-meta-v1: payload + settings +
+   the externals record, per day), the day's audio in the
+   standing store (opn-ext-audio-v1) under DAY-KEYED entries, the
+   podcast automatic set (current + next 2 per series) plus
+   UNCAPPED by-hand downloads under POD-KEYED entries, a rolling
+   today+tomorrow window with keyed eviction, a FIFO mark queue,
+   and a counts-only readiness line. Key forms are PATH forms
+   ('day/<date>/<id>', 'pod/<series>/<key>') — the Cache API
+   rejects scheme-like keys (the standing 'intro/<id>' precedent
+   in ownFetchAudio); the namespaces are §2's day:/pod: forms in
+   their cache-safe rendering. Pre-v392 bare keys are abandoned
+   in place, never deleted wholesale (W6). */
+function offlineDayKey(date, id) { return 'day/' + date + '/' + id; }
+function offlinePodKey(series, key) { return 'pod/' + series + '/' + key; }
+function offlineShiftDate(dateStr, days) {
+  var p = dateStr.split('-').map(Number);
+  var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2] + days, 12));
+  function z(n) { return (n < 10 ? '0' : '') + n; }
+  return dt.getUTCFullYear() + '-' + z(dt.getUTCMonth() + 1) + '-' + z(dt.getUTCDate());
+}
+function offlineIndexRead() {
+  try { return JSON.parse(localStorage.getItem('opn-offline-index-v1') || 'null') || { days: {}, pods: { autoHave: 0, autoTotal: 0 } }; }
+  catch (e) { return { days: {}, pods: { autoHave: 0, autoTotal: 0 } }; }
+}
+function offlineIndexWrite(idx) { try { localStorage.setItem('opn-offline-index-v1', JSON.stringify(idx)); } catch (e) {} }
+function offlineSnapshotStore(date, day, settings, extRec) {
+  if (!('caches' in window) || !day || !settings) return Promise.resolve();
+  var snap = { date: date, savedAt: new Date().toISOString(), day: day, settings: settings, extRec: extRec || null };
+  return caches.open('opn-offline-meta-v1').then(function (c) {
+    return c.put('day/' + date, new Response(JSON.stringify(snap), { headers: { 'Content-Type': 'application/json' } }));
+  }).then(function () {
+    var idx = offlineIndexRead();
+    if (!idx.days[date]) idx.days[date] = { have: 0, total: 0 };
+    idx.days[date].settingsVersion = settings.version;
+    offlineIndexWrite(idx);
+  }).catch(function () {});
+}
+function offlineSnapshotWrite(date, extRec) {
+  // W2's write act (the writeCache hook): the pristine payload
+  // clone + the settings this build read + the externals record.
+  return offlineSnapshotStore(date, state.offlineDayClone || state.dayPayload, state.offlineSettings, extRec);
+}
+function offlineSnapshotRead(date) {
+  if (!('caches' in window)) return Promise.resolve(null);
+  return caches.open('opn-offline-meta-v1').then(function (c) { return c.match('day/' + date); })
+    .then(function (r) { return r ? r.json() : null; }).catch(function () { return null; });
+}
+function offlineDayFallback(e) {
+  // W3: the day read failed (offline) — build from today's
+  // snapshot through the SAME build, or stand the standing error
+  // when no snapshot exists (a phone that never opened online).
+  var today = todayChicago();
+  offlineSnapshotRead(today).then(function (snap) {
+    if (snap && snap.day && snap.settings) { buildDayFromPayload(snap.day, snap); return; }
+    view.innerHTML = '<p class="err">' + esc(e.message) + '</p>';
+  });
+}
+function offlineAudioCache() { return ('caches' in window) ? caches.open('opn-ext-audio-v1') : Promise.resolve(null); }
+function offlineCacheHas(cache, key) { return cache ? cache.match(key).then(function (r) { return !!r; }) : Promise.resolve(false); }
+function offlinePutBlob(cache, key, blob) {
+  if (!cache || !blob) return Promise.resolve(false);
+  return cache.put(key, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } })).then(function () { return true; }).catch(function () { return false; });
+}
+function offlineFetchBlob(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }); }
+function offlineFetchItemAudio(item) {
+  // Each family through its standing route (W3): own + the AI
+  // Signal's store route + podcast enclosures direct with the
+  // feed-audio pass-through as the CORS fallback; externals keep
+  // the A1 two-route shape (direct first unless the passthrough
+  // class or Sing the Hours; the other route retries).
+  if (item.kind === 'own') return offlineFetchBlob('/api/player/feed-audio?url=' + encodeURIComponent(item.enclosureUrl));
+  if (item.kind === 'ai') return offlineFetchBlob(item.enclosureUrl);
+  if (item.kind === 'pod') return offlineFetchBlob(item.enclosureUrl).catch(function () { return offlineFetchBlob('/api/player/feed-audio?url=' + encodeURIComponent(item.enclosureUrl)); });
+  var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(item.date) + '&slot=' + encodeURIComponent(item.id);
+  if (item.download === 'passthrough') return offlineFetchBlob(passthrough);
+  var first = item.source === 'Sing the Hours' ? passthrough : item.enclosureUrl;
+  var second = item.source === 'Sing the Hours' ? item.enclosureUrl : passthrough;
+  return offlineFetchBlob(first).catch(function () { return offlineFetchBlob(second); });
+}
+function offlineEnumerateToday(date) {
+  var items = [];
+  (state.ownStanding || []).forEach(function (row) {
+    var st = state.ownSlots[row.sourceKey];
+    if (!st || st.state !== 'present') return;
+    (st.tracks || []).forEach(function (t) {
+      if (row.shellResolved) { if (t.streamUrl) items.push({ kind: 'ai', date: date, id: t.episodeId, enclosureUrl: t.streamUrl, key: offlineDayKey(date, t.episodeId) }); }
+      else if (t.enclosureUrl) items.push({ kind: 'own', date: date, id: t.episodeId, enclosureUrl: t.enclosureUrl, key: offlineDayKey(date, t.episodeId) });
+    });
+  });
+  (state.extStanding || []).forEach(function (slot) {
+    var st = state.extSlots[slot.slotId];
+    if (!st || st.state !== 'present' || !st.enclosureUrl) return;
+    items.push({ kind: 'ext', date: date, id: slot.slotId, enclosureUrl: st.enclosureUrl, source: st.source, download: slot.download, key: offlineDayKey(date, slot.slotId) });
+  });
+  var seen = {}, out = [];
+  items.forEach(function (it) { if (!seen[it.key]) { seen[it.key] = 1; out.push(it); } });
+  return out;
+}
+function offlineTomorrowOwn(settings, tomorrow, extRec) {
+  var rows = (settings.sources || []).filter(function (s) { return s.family === 'own' && OWN_ROW_EPISODE[s.sourceKey] && s.enabled === 1 && s.block; });
+  if (!rows.length) return Promise.resolve([]);
+  return extFetchText(OWN_FEED_URL).then(function (text) {
+    var feedItems = extParseFeed(text);
+    var out = [];
+    rows.forEach(function (row) {
+      var epId = OWN_ROW_EPISODE[row.sourceKey];
+      var matches = [];
+      feedItems.forEach(function (it) {
+        if (!it.url || ownChicagoDateStr(it.pubMs) !== tomorrow) return;
+        var stem = ownStemOf(it.url);
+        if (ownDateInStem(stem) !== tomorrow) return;
+        var fam = ownFamilyOfStem(stem);
+        if (!fam || fam.episodeId !== epId) return;
+        matches.push({ episodeId: epId, title: ownFeedTitle(it.title), enclosureUrl: it.url, durationS: it.durationS || 0, sizeBytes: it.length || 0 });
+      });
+      if (!matches.length) return;
+      if (epId === 'novenas') {
+        extRec.own[row.sourceKey] = { items: matches.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes }; }) };
+      } else {
+        var m0 = matches[0];
+        extRec.own[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes };
+      }
+      matches.forEach(function (m) { out.push({ kind: 'own', date: tomorrow, id: m.episodeId, enclosureUrl: m.enclosureUrl, title: m.title, block: row.block, durationS: m.durationS, key: offlineDayKey(tomorrow, m.episodeId) }); });
+    });
+    return out;
+  }).catch(function () { return []; });
+}
+function offlineTomorrowBuild(tomorrow) {
+  var settings = state.offlineSettings;
+  if (!settings) return Promise.resolve(null);
+  return api('/api/player/day?date=' + encodeURIComponent(tomorrow)).then(function (day) {
+    var extRec = { date: tomorrow, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {}, own: {}, intentions: null };
+    var items = [];
+    (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) {
+      if (t.episodeId) items.push({ kind: 'ai', date: tomorrow, id: t.episodeId, enclosureUrl: t.streamUrl, title: t.title, block: b.block, durationS: t.durationS || 0, key: offlineDayKey(tomorrow, t.episodeId) });
+    }); });
+    var wd = extWeekdayMon0(tomorrow);
+    var prim = {};
+    (settings.sources || []).forEach(function (s) { if (s.family === 'external' && s.slotId && s.role !== 'fallback') prim[s.slotId] = s; });
+    var bySlot = {};
+    EXT_SLOTS.forEach(function (s) {
+      var row = prim[s.slotId];
+      if (!row || row.enabled !== 1 || !extDayRulePasses(row.dayRule || 'daily', wd)) return;
+      bySlot[s.slotId] = { slotId: s.slotId, title: s.title, block: row.block || 'Morning', source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, download: s.download || null, courier: s.courier || null, token: !!EXT_TOKENS[s.slotId] };
+    });
+    var jobs = [];
+    var hasCourier = Object.keys(bySlot).some(function (k) { return bySlot[k].token || bySlot[k].courier; });
+    if (hasCourier) {
+      jobs.push(api('/api/player/externals/live?date=' + encodeURIComponent(tomorrow)).then(function (res) {
+        (res.slots || []).forEach(function (e) {
+          if (!e || e.state !== 'present' || !e.streamUrl) return;
+          var def = bySlot[e.slotId];
+          if (!def) return;
+          var title = e.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(tomorrow)) : e.title;
+          var source = def.courier ? def.source : 'Divine Office';
+          extRec.slots[e.slotId] = { state: 'present', title: title, streamUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: source };
+          items.push({ kind: 'ext', date: tomorrow, id: e.slotId, enclosureUrl: e.streamUrl, source: source, download: def.download, title: title, block: def.block, durationS: e.durationSec || 0, key: offlineDayKey(tomorrow, e.slotId) });
+        });
+      }).catch(function () {}));
+    }
+    [['ext-saint-of-the-day', extMatchSaint], ['ext-daily-tv-mass', extMatchTvMass]].forEach(function (pair) {
+      var def = bySlot[pair[0]];
+      if (!def || !def.feedUrl) return;
+      jobs.push(extFetchText(def.feedUrl).then(function (text) {
+        var it = pair[1](extParseFeed(text), tomorrow);
+        if (!it) return;
+        extRec.slots[pair[0]] = { state: 'present', title: it.title || def.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: def.source };
+        items.push({ kind: 'ext', date: tomorrow, id: pair[0], enclosureUrl: it.url, source: def.source, download: def.download, title: extRec.slots[pair[0]].title, block: def.block, durationS: it.durationS || 0, key: offlineDayKey(tomorrow, pair[0]) });
+      }).catch(function () {}));
+    });
+    jobs.push(offlineTomorrowOwn(settings, tomorrow, extRec).then(function (ownItems) { ownItems.forEach(function (it) { items.push(it); }); }));
+    return Promise.all(jobs).then(function () {
+      var stored = offlineSnapshotStore(tomorrow, day, settings, extRec);
+      var origin = location.origin;
+      var tracks = items.map(function (it) {
+        if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + '/api/player/audio/' + encodeURIComponent(tomorrow) + '/' + encodeURIComponent(it.id), needsAuth: true };
+        if (it.kind === 'ai') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + (it.enclosureUrl || ''), needsAuth: true };
+        return { id: it.id, block: it.block || '', title: it.title || '', kind: 'external', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false };
+      });
+      var snap = { presentedDay: tomorrow, dateLabel: day.dateLabel || '', generatedAt: new Date().toISOString(), tracks: tracks, queueIds: [], currentIndex: -1 };
+      return stored.then(function () { return { items: items, snap: snap }; });
+    });
+  }).catch(function () { return null; });
+}
+function offlinePodcastAutoSet() {
+  // W4/D5: per series, the current entry (the day-first
+  // derivation) + the next 2 — the AUTOMATIC set. By-hand
+  // downloads stand outside it, uncapped (podDlTap).
+  return api('/api/player/podcasts').then(function (idx) {
+    var keys = (idx.seriesList || []).map(function (s) { return s.series; });
+    return Promise.all(keys.map(function (k) {
+      return api('/api/player/podcasts?series=' + encodeURIComponent(k)).then(function (res) { return { series: k, res: res }; }).catch(function () { return null; });
+    })).then(function (all) {
+      var items = [];
+      all.forEach(function (a) {
+        if (!a || !a.res || !a.res.entries) return;
+        var cur = podCurrentKey(a.res.entries);
+        var i = -1;
+        a.res.entries.forEach(function (e, j) { if (e.key === cur) i = j; });
+        if (i < 0) return;
+        a.res.entries.slice(i, i + 3).forEach(function (e) { if (e.url) items.push({ kind: 'pod', series: a.series, id: e.key, enclosureUrl: e.url, key: offlinePodKey(a.series, e.key) }); });
+      });
+      return items;
+    });
+  }).catch(function () { return []; });
+}
+function offlineDownloadItems(items) {
+  return offlineAudioCache().then(function (cache) {
+    var chain = Promise.resolve(), have = 0;
+    items.forEach(function (it) {
+      chain = chain.then(function () {
+        return offlineCacheHas(cache, it.key).then(function (has) {
+          if (has) { have++; return; }
+          return offlineFetchItemAudio(it).then(function (blob) { return offlinePutBlob(cache, it.key, blob); })
+            .then(function (okPut) { if (okPut) have++; }).catch(function () {});
+        });
+      });
+    });
+    return chain.then(function () { return { have: have, total: items.length }; });
+  });
+}
+function offlineEvict(autoPodKeys) {
+  // W6: day sets dated before yesterday leave both stores;
+  // automatic podcast keys outside the current automatic set
+  // leave — registered by-hand keys NEVER leave here.
+  if (!('caches' in window)) return Promise.resolve();
+  var yday = offlineShiftDate(todayChicago(), -1);
+  var manual = podManualRead();
+  var keepPod = {};
+  if (autoPodKeys) autoPodKeys.forEach(function (k) { keepPod[k] = 1; });
+  Object.keys(manual).forEach(function (k) { keepPod[k] = 1; });
+  var sweep = function (store, isMeta) {
+    return caches.open(store).then(function (cache) {
+      return cache.keys().then(function (reqs) {
+        var dels = [];
+        reqs.forEach(function (rq) {
+          var tail = rq.url.slice(location.origin.length + 1);
+          var m = /^day\/(\d{4}-\d{2}-\d{2})(\/|$)/.exec(tail);
+          if (m && m[1] < yday) { dels.push(cache.delete(rq)); return; }
+          if (!isMeta && autoPodKeys && tail.indexOf('pod/') === 0 && !keepPod[tail]) dels.push(cache.delete(rq));
+        });
+        return Promise.all(dels);
+      });
+    }).catch(function () {});
+  };
+  var idx = offlineIndexRead(), changed = false;
+  Object.keys(idx.days || {}).forEach(function (d) { if (d < yday) { delete idx.days[d]; changed = true; } });
+  if (changed) offlineIndexWrite(idx);
+  return Promise.all([sweep('opn-ext-audio-v1', false), sweep('opn-offline-meta-v1', true)]);
+}
+function offlineWaitSettled(n) {
+  var pending = false;
+  (state.ownStanding || []).forEach(function (row) { var st = state.ownSlots[row.sourceKey]; if (st && st.state === 'loading') pending = true; });
+  Object.keys(state.extSlots || {}).forEach(function (k) { var st = state.extSlots[k]; if (st && (st.state === 'loading' || st.state === 'downloading')) pending = true; });
+  if (!pending || n >= 30) return Promise.resolve();
+  return new Promise(function (res) { setTimeout(res, 1000); }).then(function () { return offlineWaitSettled(n + 1); });
+}
+var offlinePassRunning = false;
+function offlineCompleteness(manual) {
+  // W3's pass: today (from the settled build), tomorrow (the
+  // dated route + the standing resolutions), the podcast
+  // automatic set — then keyed eviction against the fresh set,
+  // the readiness repaint, and the native ensureOffline call
+  // (N4: the same open drives the car store's pass).
+  if (offlinePassRunning) return Promise.resolve();
+  offlinePassRunning = true;
+  var today = todayChicago(), tomorrow = offlineShiftDate(today, 1);
+  var finish = function () {
+    offlinePassRunning = false;
+    paintOfflineLine();
+    var p = oraBridgePlugin();
+    if (p && p.ensureOffline) { try { var r = p.ensureOffline(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  };
+  return offlineEvict(null).then(function () {
+    return offlineWaitSettled(0).then(function () {
+      return offlineDownloadItems(offlineEnumerateToday(today)).then(function (r1) {
+        var idx = offlineIndexRead();
+        idx.days[today] = { have: r1.have, total: r1.total, settingsVersion: (state.offlineSettings || {}).version };
+        offlineIndexWrite(idx);
+        paintOfflineLine();
+        return offlineTomorrowBuild(tomorrow).then(function (tb) {
+          var jobs = Promise.resolve();
+          if (tb) {
+            jobs = offlineDownloadItems(tb.items).then(function (r2) {
+              var idx2 = offlineIndexRead();
+              idx2.days[tomorrow] = { have: r2.have, total: r2.total, settingsVersion: (state.offlineSettings || {}).version };
+              offlineIndexWrite(idx2);
+              paintOfflineLine();
+              offlinePushSnapshotObject(tb.snap);
+            });
+          }
+          return jobs.then(function () {
+            return offlinePodcastAutoSet().then(function (podItems) {
+              var autoKeys = podItems.map(function (it) { return it.key; });
+              return offlineDownloadItems(podItems).then(function (r3) {
+                var idx3 = offlineIndexRead();
+                idx3.pods = { autoHave: r3.have, autoTotal: r3.total };
+                offlineIndexWrite(idx3);
+                return offlineEvict(autoKeys);
+              });
+            });
+          });
+        });
+      });
+    });
+  }).then(finish, finish);
+}
+function offlineOnOnlineOpen(day) {
+  drainPodMarkQueue();
+  // D2: the automatic leg — at every online open, deferred so
+  // the day's own resolution leads.
+  setTimeout(function () { offlineCompleteness(false); }, 4000);
+}
+function offlinePushSnapshotObject(snap) {
+  try {
+    var plugin = oraBridgePlugin();
+    if (!plugin || !plugin.setDaySnapshot || !snap) return;
+    var p = plugin.setDaySnapshot({ snapshot: JSON.stringify(snap) });
+    if (p && p.catch) p.catch(function () {});
+  } catch (e) { /* the bridge can never fail the build */ }
+}
+function offlineClearAll() {
+  // W6: Settings' one-tap clear — both web stores emptied and
+  // the native store cleared through the bridge in the same tap.
+  var jobs = [];
+  if ('caches' in window) { jobs.push(caches.delete('opn-ext-audio-v1')); jobs.push(caches.delete('opn-offline-meta-v1')); }
+  try { localStorage.removeItem('opn-offline-index-v1'); localStorage.removeItem('opn-pod-manual-v1'); } catch (e) {}
+  var p = oraBridgePlugin();
+  if (p && p.clearOfflineAudio) { try { var r = p.clearOfflineAudio(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  return Promise.all(jobs).then(function () {
+    paintOfflineLine();
+    var el = document.getElementById('set-offline-counts');
+    if (el) el.textContent = offlineLineText();
+  });
+}
+/* W5: the readiness line — counts only, from standing state. */
+function offlineLineText() {
+  var idx = offlineIndexRead();
+  var today = todayChicago(), tomorrow = offlineShiftDate(today, 1);
+  var d1 = idx.days[today], d2 = idx.days[tomorrow];
+  var manualCount = Object.keys(podManualRead()).length;
+  return 'On this phone: today\u2019s prayers ' + (d1 ? d1.have + '/' + d1.total : '0/0')
+    + ' \u00b7 podcasts ' + (idx.pods ? idx.pods.autoHave + '/' + idx.pods.autoTotal : '0/0') + (manualCount ? ' + ' + manualCount + ' by hand' : '')
+    + ' \u00b7 tomorrow\u2019s prayers ' + (d2 ? d2.have + '/' + d2.total : '0/0');
+}
+function offlineLineHtml(btnId) {
+  return '<div class="card"><div class="meta" id="offline-line-text">' + esc(offlineLineText()) + '</div>'
+    + '<div class="row" style="margin-top:8px"><button class="btn ghost small" id="' + btnId + '">Download for offline</button></div></div>';
+}
+function paintOfflineLine() { var el = document.getElementById('offline-line-text'); if (el) el.textContent = offlineLineText(); }
+function wireOfflineButtons() {
+  ['offline-dl-btn', 'pod-offline-btn'].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function () { offlineCompleteness(true); });
+  });
+}
+/* W4: by-hand podcast downloads — uncapped, registry-protected. */
+function podManualRead() { try { return JSON.parse(localStorage.getItem('opn-pod-manual-v1') || '{}') || {}; } catch (e) { return {}; } }
+function podManualWrite(m) { try { localStorage.setItem('opn-pod-manual-v1', JSON.stringify(m)); } catch (e) {} }
+var podDlBusy = {};
+function podDlTap(key) {
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var entry = null;
+  res.entries.forEach(function (e) { if (e.key === key) entry = e; });
+  if (!entry || !entry.url) return;
+  var pk = offlinePodKey(res.series, key);
+  offlineAudioCache().then(function (cache) {
+    if (!cache) return;
+    return cache.match(pk).then(function (r) {
+      var manual = podManualRead();
+      if (r && manual[pk]) {
+        // a hand episode's remove: bytes + registry in one act
+        return cache.delete(pk).then(function () {
+          var m2 = podManualRead(); delete m2[pk]; podManualWrite(m2);
+          refreshPodDlStates(); paintOfflineLine();
+        });
+      }
+      if (r || podDlBusy[pk]) return;
+      podDlBusy[pk] = 1;
+      refreshPodDlStates();
+      return offlineFetchItemAudio({ kind: 'pod', enclosureUrl: entry.url }).then(function (blob) {
+        return offlinePutBlob(cache, pk, blob).then(function (okPut) {
+          if (okPut) {
+            var m3 = podManualRead();
+            m3[pk] = { series: res.series, key: key, title: entry.title, sizeBytes: blob.size, addedAt: new Date().toISOString() };
+            podManualWrite(m3);
+          }
+        });
+      }).catch(function () {}).then(function () { delete podDlBusy[pk]; refreshPodDlStates(); paintOfflineLine(); });
+    });
+  });
+}
+function refreshPodDlStates() {
+  var btns = view.querySelectorAll('[data-poddl]');
+  if (!btns.length || !state.podcasts) return;
+  var res = state.podcasts;
+  var manual = podManualRead();
+  offlineAudioCache().then(function (cache) {
+    if (!cache) return;
+    return cache.keys().then(function (reqs) {
+      var standing = {};
+      reqs.forEach(function (rq) { standing[rq.url] = 1; });
+      btns.forEach(function (b) {
+        var pk = offlinePodKey(res.series, b.getAttribute('data-poddl'));
+        var isStanding = !!standing[new URL(pk, location.href).href];
+        if (podDlBusy[pk]) { b.textContent = 'Downloading\u2026'; b.disabled = true; }
+        else if (isStanding && manual[pk]) { b.textContent = 'On phone \u00b7 Remove'; b.disabled = false; }
+        else if (isStanding) { b.textContent = 'On phone'; b.disabled = true; }
+        else { b.textContent = 'Get'; b.disabled = false; }
+      });
+    });
+  });
+}
+/* W7: the podcast mark queue — FIFO, replay-safe (the mark
+   routes are idempotent), drained at open and on 'online'. */
+function podMarkQueueRead() { try { return JSON.parse(localStorage.getItem('opn-podmark-queue-v1') || '[]') || []; } catch (e) { return []; } }
+function podMarkQueueWrite(q) { try { localStorage.setItem('opn-podmark-queue-v1', JSON.stringify(q)); } catch (e) {} }
+function podMarkEnqueue(op) { var q = podMarkQueueRead(); q.push(op); podMarkQueueWrite(q); }
+var podMarkDraining = false;
+function drainPodMarkQueue() {
+  if (podMarkDraining) return;
+  if (!podMarkQueueRead().length) return;
+  podMarkDraining = true;
+  var step = function () {
+    var cur = podMarkQueueRead();
+    if (!cur.length) { podMarkDraining = false; return; }
+    var op = cur[0];
+    var call = op.op === 'unmark'
+      ? post('/api/player/podcasts/unmark', { series: op.series, seqKey: op.seqKey })
+      : post('/api/player/podcasts/mark', { series: op.series, seqKey: op.seqKey, source: op.source || 'auto' });
+    call.then(function () { var q2 = podMarkQueueRead(); q2.shift(); podMarkQueueWrite(q2); step(); })
+      .catch(function () { podMarkDraining = false; });
+  };
+  step();
+}
+window.addEventListener('online', function () { drainPodMarkQueue(); });
 
 /* ---------------- Listen home ⇄ block pages (v353) ----------------
    The Prayers tab's two paints over the standing whole-day state.
@@ -4333,6 +4846,8 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
   });
+  wireOfflineButtons();
+  paintOfflineLine();
   // v343 §2.4: the expand wiring + arm pass ride every paint.
   wireExpand(view);
   armAllEllipses();
@@ -4363,6 +4878,8 @@ function episodesCardHtml(day) {
 function paintListenHome(day) {
   var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
+  // v392 W5: the offline readiness line + the download button.
+  html += offlineLineHtml('offline-dl-btn');
   // §2.6.1: the search pill — typing re-paints the results region
   // in place (the field itself never re-renders, so focus and the
   // query stand); clearing restores the standing home body.

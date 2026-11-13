@@ -327,7 +327,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v390-1";
+var CACHE = "ora-pro-nobis-v392-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -339,7 +339,9 @@ self.addEventListener("activate", function (e) {
     // cache invalidation and must survive activation — deleting it
     // here raced the at-open downloads and wiped landed audio
     // (harness-v334 leg 11, rework 2026-11-09).
-    return Promise.all(keys.filter(function (k) { return k !== CACHE && k !== "opn-ext-audio-v1"; }).map(function (k) { return caches.delete(k); }));
+    // v392 W8: the offline snapshot store (opn-offline-meta-v1)
+    // survives activation on the same rule as the audio store.
+    return Promise.all(keys.filter(function (k) { return k !== CACHE && k !== "opn-ext-audio-v1" && k !== "opn-offline-meta-v1"; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
 self.addEventListener("fetch", function (e) {

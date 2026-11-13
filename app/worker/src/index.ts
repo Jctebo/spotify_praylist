@@ -300,6 +300,14 @@ function chicagoDateOf(d: Date): string {
   for (const part of parts) p[part.type] = part.value;
   return `${p.year}-${p.month}-${p.day}`;
 }
+// v392 W1: shift a YYYY-MM-DD day by whole days (UTC noon anchor,
+// DST-free) — the dated day route's today/tomorrow arithmetic.
+function chicagoShiftDate(date: string, days: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days, 12));
+  const yy = dt.getUTCFullYear(), mm = String(dt.getUTCMonth() + 1).padStart(2, "0"), dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
 function prayerDateLabel(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d, 12));
@@ -566,7 +574,7 @@ async function playerIntroTexts(
 // resolution results). player_episodes is not read here at all —
 // v368 §2.2.7's ONE bounded exception stands below: the "The AI
 // Signal" block only, whose episode resolves from no feed.
-async function playerDayPayload(env: Env) {
+async function playerDayPayload(env: Env, dateOverride?: string) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
   const srcRows = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all<{
@@ -576,7 +584,10 @@ async function playerDayPayload(env: Env) {
   // v337 §2.1: the PRESENTED day is the Chicago calendar day — the
   // app presents today; production (date+2) stays a production
   // fact in the nightly report, never a payload field.
-  const presented = prayerChicagoNow().date;
+  // v392 W1: an override (the session route validates it to
+  // Chicago today or tomorrow) presents THAT day throughout —
+  // intro texts, the AI Signal store read, presentedDay.
+  const presented = dateOverride ?? prayerChicagoNow().date;
   const settings = await sourceSettingsPayload(env);
   const introTexts = await playerIntroTexts(env, presented);
   // v368 §2.2.7: the ONE bounded exception to the shell's
@@ -1551,9 +1562,19 @@ export default {
       if (seg[0] === "api" && seg[1] === "player") {
         if (seg[2] === "day" && request.method === "GET") {
           // v337 §2.1(5): serves the PRESENTED (Chicago calendar)
-          // day; any ?date= remains ignored. The produced day rides
-          // along as storedDay — a production fact, never the
-          // selection.
+          // day. v392 W1: a ?date= naming Chicago today or
+          // tomorrow presents that day (the offline build fetches
+          // tomorrow's shell during today's online hours); any
+          // other value answers 400. Absent the parameter the
+          // payload is byte-identical to the standing shape.
+          const dateParam = url.searchParams.get("date");
+          if (dateParam !== null) {
+            const today = prayerChicagoNow().date;
+            if (dateParam !== today && dateParam !== chicagoShiftDate(today, 1)) {
+              return err(400, "date must be today or tomorrow");
+            }
+            return json(await playerDayPayload(env, dateParam));
+          }
           return json(await playerDayPayload(env));
         }
         if (seg[2] === "podcasts" && request.method === "GET") {
