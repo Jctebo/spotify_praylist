@@ -1634,6 +1634,21 @@ function podDesc(e) {
   // seam can mark the playing episode's OWN series.
   return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0 };
 }
+function podCurrentKey(entries) {
+  // v390 §2.10 (option A amendment, 2026-11-12): the in-memory
+  // mirror of the Worker's derivation — current is the first
+  // unlistened DAY entry (kind 'day' or 'special' — the Day 366
+  // special is a day); a bonus is current only when no unlistened
+  // day entry stands.
+  var day = null, bonus = null;
+  entries.forEach(function (e) {
+    if (e.listened) return;
+    if (e.kind === 'bonus') { if (!bonus) bonus = e; }
+    else if (!day) day = e;
+  });
+  var cur = day || bonus;
+  return cur ? cur.key : null;
+}
 function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
   // completion seam (the writePlayedQuiet precedent); a failed
@@ -1649,7 +1664,7 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
     state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); } });
     var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
     state.podcasts.listenedCount = state.podcasts.entries.length - left.length;
-    state.podcasts.currentKey = left.length ? left[0].key : null;
+    state.podcasts.currentKey = podCurrentKey(state.podcasts.entries);
   }
 }
 function renderPodcasts() {
@@ -1784,7 +1799,7 @@ function podToggleMark(key) {
     entry.listenDate = wasListened ? null : todayChicago();
     var left = res.entries.filter(function (e) { return !e.listened; });
     res.listenedCount = res.entries.length - left.length;
-    res.currentKey = left.length ? left[0].key : null;
+    res.currentKey = podCurrentKey(res.entries);
     if (state.tab === 'podcasts') paintPodcasts();
   }).catch(function () {});
 }

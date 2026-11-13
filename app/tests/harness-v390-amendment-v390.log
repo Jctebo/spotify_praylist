@@ -1,0 +1,31 @@
+ok 1 - app up on local wrangler (LOCAL_DEV), D1 through 0018 (the amended seed's store)
+ok 2 - A1: the Bible fixture's bonus anchors after Day 3 — it stands BEFORE the Day 4 frontier (the live if-you-feel-like shape)
+ok 3 - A1: the Rosary fixture's two bonuses stand at the sequence head, before Day 1 (the live head shape)
+ok 4 - A1: the Catechism fixture opens its LIST with the 'Pray with Fr. Mike' bonus, then Day 1 (the live head shape)
+ok 5 - A2: empty Bible derives current Day 1
+ok 6 - A2: empty Rosary derives current riy:day-1 — the two head bonuses stand unlistened and do NOT become current (§2.10b; John's word: Day 1, not started)
+ok 7 - A2: empty Catechism derives current ciy:day-1 — the head bonus still opens the list and stands playable/markable, but no longer derives as current (§2.10c — the stated change from v381)
+ok 8 - A2: the series index paints the same day-first currents (one derivation, both surfaces)
+ok 9 - A3: the days-only seed inserts (the pre-amendment set, for contrast)
+ok 10 - A3: with days 1-3 seeded and the mid bonus UNLISTENED before the frontier, current is biy:day-4 — the day-first rule alone carries it
+ok 11 - A4: the amended seed set = days 1-3 + the one bonus standing before the frontier (the formula §2.10a fixes for Ship)
+ok 12 - A4: the amended seed inserts its 4 rows (fixture scale of 316), all source 'seed' by read-back
+ok 13 - A4: post-seed Bible reads 4 listened · current biy:day-4 (fixture scale of 316 · biy:day-316)
+ok 14 - A4: the amended seed re-run inserts 0 (INSERT OR IGNORE — the count stands)
+ok 15 - A5: Catechism Day 1 marked → current is Day 2 (the unlistened head bonus is skipped while days remain)
+ok 16 - A5: with every day listened, current falls back to the first unlistened bonus — a bonus is current ONLY when no unlistened day stands
+ok 17 - A5: a fully listened series derives current null (complete — the standing terminal state)
+ok 18 - A5: Rosary marks {1,2,4} → current is Day 3 (the gap is never skipped, head bonuses aside)
+ok 19 - A6: podCurrentKey unit cases — head bonus skipped · gap bonus skipped · bonus fallback when no day stands · the Day 366 special counts as a day · complete derives null
+ok 20 - A6: writePodMarkQuiet's in-memory recompute is day-first (marking Day 1 derives Day 2, not the mid bonus)
+ok 21 - A6: podToggleMark's recompute is day-first (the second client site mirrors the Worker)
+ok 22 - A7: live instance up (real Fireside feeds through the standing seams, empty store)
+ok 23 - A7: the LIVE Bible sequence builds at total 372 (§2.2/§4 confirmed at this seating)
+ok 24 - A7: exactly ONE bonus stands before Day 316 on the live sequence — biy:bonus-if-you-feel-like (§4's proof, re-derived)
+ok 25 - A7: the amended seed set over the live sequence is exactly 316 keys (Days 1-315 + the one pre-frontier bonus)
+ok 26 - A7: the amended seed inserts 316 rows against the live-built snapshot (chunked ≤50, source 'seed')
+ok 27 - A7: POST-SEED READ-BACK (corrected, §2.10d) — Bible stands at 316 of 372 listened · currentKey biy:day-316
+ok 28 - A7: the amended seed re-run inserts 0 (the count stands at 316)
+ok 29 - A7: LIVE Rosary — total 371 · two head bonuses stand first, unlistened · currentKey riy:day-1 from the empty store (the corrected read-back, §2.10d)
+ok 30 - A7: LIVE Catechism — the 'Pray with Fr. Mike' bonus opens the list unlistened, and the amended derivation names ciy:day-1 as current (§2.10c proven on the live sequence)
+# harness-v390-amendment: 30/30 legs ok

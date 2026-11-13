@@ -1,0 +1,78 @@
+ok 1 - app up on local wrangler (LOCAL_DEV harness mode), D1 through 0017
+ok 2 - migration evidence stands: two Catechism marks in the pre-0018 store
+ok 3 - L7: before 0018, a 'seed' row is refused by the 0017 CHECK — the widening is required, not decorative
+ok 4 - L8: before 0018 the settings carry the Bible in a Year row in Morning
+ok 5 - L8: before 0018, Morning's standing primaries are the six in the standing order (§2.6), Bible fifth
+ok 6 - L8: before 0018, the externals live payload carries the Bible slot (present or named-missing)
+ok 7 - L8: before 0018, the pass-through gate passes the slot (its 404 is the no-episode form, not the settings form)
+ok 8 - migration 0018 file stands in the migrations dir
+ok 9 - L7/§2.4: 0018's rebuild passes every standing row through untouched (count + full-content hash identical)
+ok 10 - §2.4: 0018 bumps the settings meta version exactly once (the retirement is a settings write)
+ok 11 - L8: after 0018, no Bible row stands in the stored settings set
+ok 12 - L7: the seed statement inserts its rows under the widened check (3 at fixture scale — counted by read-back; local D1's meta carries no changes count)
+ok 13 - L7: every seeded row carries source 'seed' and the ship date as its listen date — the history reads honestly
+ok 14 - L7: the seed statement re-run inserts 0 (INSERT OR IGNORE — the store's count stands at 5: 2 Catechism + 3 seeded, idempotent, §2.5's third read-back leg)
+ok 15 - L7: the widened check still rejects a fourth source value
+ok 16 - L8: after 0018, the externals live payload carries NO Bible slot — present or missing, no card stands
+ok 17 - L8: Morning's standing primaries are the five, in the standing order minus Bible (§2.6) — no replacement
+ok 18 - L8: the externals audio pass-through for the retired slot answers the settings 404
+ok 19 - L8: a source-settings PUT over the smaller stored set answers 200 (the smaller set is the whole set now)
+ok 20 - L8: a PUT body re-adding the bible-in-a-year key answers 400 — no settings write can resurrect the slot
+ok 21 - L1: the no-param read answers the series index — the three series in registry order
+ok 22 - L1: the Catechism index entry carries its counts + current label from its own payload internals
+ok 23 - L1: the Bible index entry — 3 of 7 listened (the fixture seed), current Day 4 with its label
+ok 24 - L1: the Rosary index entry — unmarked, current Day 1
+ok 25 - L1: a ?series= read returns the standing per-series payload shape, byte-for-byte the v381 field set
+ok 26 - L1: the series payload names its own series + title
+ok 27 - L1: the agent door's no-param progress read mirrors the index
+ok 28 - L1: the door's ?series= read mirrors that series' payload
+ok 29 - L1: an unknown series on the read answers 400
+ok 30 - L1: an unknown series on the mark answers 400
+ok 31 - L1: an unknown series on the unmark answers 400
+ok 32 - L1/§2.3: source 'seed' never passes the mark route (the whitelist is auto/manual only)
+ok 33 - L1: one series' outage darkens only its own index card — the others stand available
+ok 34 - L1: the feed's return rebuilds Rosary's snapshot and the series stands again
+ok 35 - L2: the Catechism fixture builds byte-identical keys, order, and entry fields to the v381 expectation — the generalization does not move Catechism (its standing marks ride through)
+ok 36 - L2: the Bible fixture builds biy: keys in day order with both bonuses anchored after Day 5
+ok 37 - L2: Bible edition supply — Days 1-3 play the newest (2026) edition, Days 4-5 the 2025 edition past its reach
+ok 38 - L2: the Bible feed's non-day, non-BONUS item stands outside the sequence
+ok 39 - L2: the Rosary fixture builds riy: keys — days in order, the bonus anchored at its pub position after Day 4
+ok 40 - L2: Rosary edition supply — newest edition supplies Days 1-2, the 2025 run supplies 3-4 (the union is complete)
+ok 41 - L2: the 'Phase 5 Bonus:' title form (no BONUS: prefix) stands outside the Rosary sequence — the standing rule as-is
+ok 42 - L3: BOTH Cavins-titled Bible bonus contents stand as two entries under the generic slugger — the shortcut table would have collapsed them to one and lost a content
+ok 43 - L3: Catechism's three known contents still key cozzens · cavins · pray — the shortcut table stands for Catechism only (its standing marks key on them)
+ok 44 - L5: empty Rosary → current is riy:day-1 (no seed — John's word: not started)
+ok 45 - L5: the fixture-scale seeded Bible (days 1-3 of 7) derives current Day 4 — the §2.5 derivation at fixture scale (production: 315 of 372 → biy:day-316)
+ok 46 - L5: Rosary marks {1,2,4} → current is Day 3 (the gap is never skipped), per series independently
+ok 47 - L5: Rosary's marks never move Bible's derivation
+ok 48 - L4: a session mark on Bible answers 200
+ok 49 - L4: the door read mirrors the Bible mark (listened + today's date + source manual)
+ok 50 - L4: first-mark-stands holds per series (a later auto re-mark changes nothing)
+ok 51 - L4: no agent write route exists (the door refuses the mark POST)
+ok 52 - L4: a mark validates the seqKey against THAT series' snapshot (a Bible key under Rosary is refused 400)
+ok 53 - L4: a mark in one series writes nothing in another (Bible's count stands at 4 across a Rosary mark)
+ok 54 - L4: unmark deletes the row under its own series — the entry reads unlistened with no date
+ok 55 - L6: a Bible descriptor reaching the seam posts series 'bible-in-a-year', source 'auto' — the playing episode's own series
+ok 56 - L6: the in-memory leg mutates the open payload when it is the playing series
+ok 57 - L6: a Bible completion under an open Catechism page writes its Bible row server-side and leaves the open page's counts untouched
+ok 58 - L6: a Catechism descriptor still posts Catechism (and no day-played record — v381's rule carried)
+ok 59 - L6: the 'catechism-in-a-year' literal is deleted from writePodMarkQuiet — the write carries the descriptor's series
+ok 60 - L6: podDesc stamps the descriptor with the open payload's series (podSeries)
+ok 61 - L9: the tab order stands — Prayers · Podcasts · Intentions · Examination · Confession
+ok 62 - L9: the Podcasts tab opens on the series level — three cards in registry order
+ok 63 - L9: the Bible card paints its counts + current line from the one index read (4 of 7 · Current: Day 4)
+ok 64 - L9: the Rosary card paints its own counts (2 of 5 after the L4/L5 marks · Current: Day 3)
+ok 65 - L9: no episode rows stand at the series level — episodes live one level in
+ok 66 - L9: the series page carries the back row at its top
+ok 67 - L9: the series page is today's presentation inside — series card + current-episode card + the full list
+ok 68 - L10: no written intention line stands on any Podcasts row (guard, read off the live series page)
+ok 69 - L9: a mark tap on the series page posts that series and repaints its counts (5 of 7)
+ok 70 - L9: the mark stands server-side under Bible (5 listened; current advances past Day 4)
+ok 71 - L9: back returns to the index with FRESH counts — the marks just made stand correct
+ok 72 - L9: re-entering the tab stands at the series level — an open series does not survive a tab switch
+ok 73 - L10: pristine (pre-v390, v388 tree) app up — on the candidate's full migration set (0018 stands under the old build, §2.9)
+ok 74 - L10: the candidate Prayers view renders (non-trivial length)
+ok 75 - L10: the Prayers tab rendered from the same fixture day is byte-identical to the pre-v390 build — no Podcasts state, no lost Morning entry beyond the retired row both share
+ok 76 - statics: the SW pin advances to ora-pro-nobis-v390-1 in ui.ts
+ok 77 - statics: the candidate Worker bundles clean (esbuild over index.ts)
+# harness-v390: 77/77 legs ok

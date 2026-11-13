@@ -1268,8 +1268,12 @@ async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
     const l = listens.get(e.key);
     return { ...e, listened: !!l, listenDate: l ? l.listen_date : null, listenedAt: l ? l.listened_at : null, source: l ? l.source : null };
   });
-  // §2.3: current = the lowest-position entry with no listen row.
-  const current = entries.find((e) => !e.listened);
+  // §2.3, as amended 2026-11-12 (option A, §2.10): current = the
+  // lowest-position unlistened DAY entry (kind "day", or "special"
+  // — the Day 366 special is a day); a bonus becomes current only
+  // when no unlistened day entry stands. Bonuses list, play, and
+  // mark exactly as before — the rule governs derivation only.
+  const current = entries.find((e) => !e.listened && e.kind !== "bonus") ?? entries.find((e) => !e.listened);
   return {
     ok: true, series: def.key, title: def.title, available: true,
     entries, currentKey: current ? current.key : null,

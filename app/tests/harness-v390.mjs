@@ -419,14 +419,14 @@ try {
   browser = await chromium.launch({ executablePath: CHROME, args: ["--no-sandbox"] });
   const page = await browser.newPage();
   await page.goto("about:blank");
-  const seam = await page.evaluate(({ mc, wpm }) => {
+  const seam = await page.evaluate(({ mc, wpm, pck }) => {
     const calls = { played: [], post: [] };
     const state = { podcasts: null };
     const presentedDateStr = () => "2026-11-12";
     const writePlayed = (...a) => calls.played.push(a);
     const post = (...a) => { calls.post.push(JSON.parse(JSON.stringify(a))); return Promise.resolve({}); };
     const todayChicago = () => "2026-11-12";
-    eval(mc); eval(wpm);
+    eval(pck); eval(mc); eval(wpm);
     const biyPayload = { series: "bible-in-a-year", entries: [{ key: "biy:day-3", listened: false, source: null, listenDate: null }], listenedCount: 0, currentKey: "biy:day-3" };
     const ciyPayload = { series: "catechism-in-a-year", entries: [{ key: "ciy:day-2", listened: false, source: null, listenDate: null }], listenedCount: 0, currentKey: "ciy:day-2" };
     // 1) a Bible descriptor completes while the Bible page stands open
@@ -443,7 +443,7 @@ try {
     markCompleted({ kind: "podcast", seriesKey: "ciy:day-2", podSeries: "catechism-in-a-year", episodeId: "ciy:day-2" });
     const t3 = { post: calls.post.slice(), ciy: JSON.parse(JSON.stringify(ciyPayload)), played: calls.played.length };
     return { t1, t2, t3 };
-  }, { mc: extractFn(CLIENT, "markCompleted"), wpm: extractFn(CLIENT, "writePodMarkQuiet") });
+  }, { mc: extractFn(CLIENT, "markCompleted"), wpm: extractFn(CLIENT, "writePodMarkQuiet"), pck: extractFn(CLIENT, "podCurrentKey") });
   ok(seam.t1.post.length === 1 && seam.t1.post[0][0] === "/api/player/podcasts/mark"
     && seam.t1.post[0][1].series === "bible-in-a-year" && seam.t1.post[0][1].seqKey === "biy:day-3" && seam.t1.post[0][1].source === "auto",
     "L6: a Bible descriptor reaching the seam posts series 'bible-in-a-year', source 'auto' — the playing episode's own series");
