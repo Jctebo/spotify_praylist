@@ -2271,6 +2271,24 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.notices[ni])) + '</div></div>';
     }
   }
+  /* v399 §2.5: the section's one action — Sync now, in the
+     OFFLINE precedent's form, appended after the notices as
+     the section's last rows. The button renders ONLY when
+     the shell carries the new bridge method: a shell without
+     it renders the section byte-for-byte as before (the
+     guarded posture). The status line stands directly under
+     the button row, in the notices' meta form, rendered from
+     the payload's lastSync at every paint — the persisted
+     value restores it on a plain section open, and no
+     client-side copy of the result exists. */
+  var wp = wallpaperBridge();
+  if (wp && typeof wp.syncWallpaperNow === 'function') {
+    html += '<div class="setrow"><div class="setname">Sync</div>'
+      + '<div class="setcontrols"><button class="btn ghost" id="set-wp-sync">Sync now</button></div></div>';
+  }
+  if (s.lastSync) {
+    html += '<div class="setrow"><div class="meta">' + esc(wallpaperSyncLine(s.lastSync)) + '</div></div>';
+  }
   host.innerHTML = html;
   var lockBtn = document.getElementById('set-wp-lock');
   if (lockBtn) lockBtn.addEventListener('click', function () { wallpaperWrite({ lockOn: !s.lockOn }); });
@@ -2280,6 +2298,8 @@ function paintWallpaperControls(s) {
   if (phoneSel) phoneSel.addEventListener('change', function (ev) { wallpaperWrite({ phoneRoot: ev.target.value }); });
   var watchSel = document.getElementById('set-wp-watch-root');
   if (watchSel) watchSel.addEventListener('change', function (ev) { wallpaperWrite({ watchRoot: ev.target.value }); });
+  var syncBtn = document.getElementById('set-wp-sync');
+  if (syncBtn) syncBtn.addEventListener('click', function () { wallpaperSyncNow(); });
 }
 function wallpaperWrite(patch) {
   var p = wallpaperBridge();
@@ -2287,6 +2307,52 @@ function wallpaperWrite(patch) {
   var r;
   try { r = p.setWallpaperSettings(patch); } catch (e) { return; }
   if (r && r.then) r.then(function (payload) { paintWallpaperControls(payload); }).catch(function () {});
+}
+/* v399 §2.5: the status line's copy — the four pinned forms,
+   composed from the payload's lastSync alone (time is
+   device-local h:mm AM/PM from the epoch-ms the native side
+   stamped at completion; the already-running answer ran no
+   pass and carries no time). */
+function wallpaperSyncTime(ms) {
+  var d = new Date(ms || 0);
+  var h = d.getHours();
+  var min = d.getMinutes();
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return h + ':' + (min < 10 ? '0' : '') + min + ' ' + ampm;
+}
+function wallpaperSyncLine(ls) {
+  if (!ls || !ls.outcome) return '';
+  if (ls.outcome === 'alreadyRunning') return 'A sync is already running.';
+  var t = wallpaperSyncTime(ls.at);
+  if (ls.outcome === 'updated') {
+    var n = ls.changed || 0;
+    return 'Synced ' + t + ' \u2014 ' + n + (n === 1 ? ' image' : ' images') + ' filed or removed.';
+  }
+  if (ls.outcome === 'upToDate') return 'Synced ' + t + ' \u2014 already up to date.';
+  if (ls.outcome === 'failed') return 'Sync at ' + t + ' did not complete. The standing checks keep running and will catch up.';
+  return '';
+}
+/* v399 §2.5: the tap — the live button takes its running
+   state (disabled, "Syncing\u2026"; a tap cannot stack, and
+   the native guard is the second wall behind it), the call
+   runs, and the resolve repaints the whole section from the
+   answer payload, notices and line riding the one answer.
+   A rejection restores the section through the standing get.
+   The running state needs no restore code: the repaint
+   rebuilds the section HTML, button included. */
+function wallpaperSyncNow() {
+  var p = wallpaperBridge();
+  if (!p || typeof p.syncWallpaperNow !== 'function') { paintWallpaperUnavailable(); return; }
+  var btn = document.getElementById('set-wp-sync');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing\u2026'; }
+  var r;
+  try { r = p.syncWallpaperNow(); } catch (e) { fillWallpaperSection(); return; }
+  if (r && r.then) {
+    r.then(function (payload) { paintWallpaperControls(payload); })
+      .catch(function () { fillWallpaperSection(); });
+  } else { fillWallpaperSection(); }
 }
 /* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
    A standalone section at the end of Settings, apart from the
