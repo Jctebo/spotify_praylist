@@ -1,0 +1,49 @@
+ok 1 - app up on local wrangler (LOCAL_DEV harness mode), D1 through 0018
+ok 2 - fixture progress stands: 3 seeded Bible rows + 1 manual Catechism mark
+ok 3 - P5: before 0019, no podcast_positions table stands
+ok 4 - P5: migration 0019 file stands in the migrations dir
+ok 5 - P5: 0019 creates podcast_positions with the pinned columns and the (series, seq_key) primary key
+ok 6 - P5: podcast_listens schema and rows are byte-identical after 0019 applies on the 0018 tree
+ok 7 - P3: baseline — the fixture-seeded Bible stands at 3 listened, current Day 4 (production's 316/372 shape at fixture scale)
+ok 8 - positions stand on three unlistened entries across the three series
+ok 9 - P3: the series index payload shape is byte-unchanged — positions never reach the cards
+ok 10 - P3: with positions standing on unlistened entries, listenedCount and currentKey are identical to the no-positions payload in every series — the option-A derivation untouched
+ok 11 - P1: an unknown series on the position route answers 400
+ok 12 - P1: an unknown seqKey answers 400
+ok 13 - P1: the seqKey validates against THAT series' snapshot (a Catechism key under Rosary is refused 400)
+ok 14 - P1: a position past the snapshot's duration clamps to it (99999 -> 720, the snapshot's own duration stored — the client's claim is never trusted)
+ok 15 - P1: a save over a listened episode stores nothing and still answers ok — no resurrection over a finished episode
+ok 16 - P1: a zero-position save deletes the standing row instead of storing a zero row
+ok 17 - P1: no agent-door position surface exists (the door refuses the POST)
+ok 18 - fixture: riy:day-5 carries no duration (the no-duration case stands in the fixture)
+ok 19 - P1: an entry with no standing duration still saves its position as sent (§1's named case — resume lands on the saved second)
+ok 20 - P2: a partway unlistened entry carries its positionS
+ok 21 - P2: a listened entry carries no position (null — the fold reads positions only for unlistened entries)
+ok 22 - P2: an untouched entry carries null
+ok 23 - P2: the no-duration partway entry carries its positionS in the payload (its row will render no bar — P8)
+ok 24 - P4: POST mark (source auto — the ended path's own call) deletes the position row in the same act
+ok 25 - P4: the auto-marked entry reads listened with no position standing over it
+ok 26 - P4: POST mark (source manual) deletes the position row in the same act
+ok 27 - P4: POST unmark deletes the position row — the episode's whole progress record is wiped
+ok 28 - P7: playPodFrom's descriptors carry each entry's saved position (partway 300 · untouched null · near-end 690)
+ok 29 - P7: the tapped partway entry starts at its position through the seam (pendingResume set, queueStartPos returns it)
+ok 30 - P7: a partway entry reached later in the queue resumes at its OWN position — and a >=95% position (690/720) resumes partway, never marked (no percentage test anywhere)
+ok 31 - P7: an untouched entry and a listened entry both start at 0 through the same path
+ok 32 - P6: the tick fires a save for the current podcast track at its position
+ok 33 - P6: the tick writes only on >= 5 s of movement since the last sent value (103 holds, 106 fires)
+ok 34 - P6: no tick writes while paused; the pause event save writes once, at the paused position
+ok 35 - P6: the ended path never saves — and a save at the element's exact end is suppressed (the mark's moment is never raced)
+ok 36 - P6: skip-away writes the OUTGOING track's position in the moment of leaving
+ok 37 - P6: skip-away never fires for a same-episode restart or across an ended track
+ok 38 - P9: two failed saves for one episode leave exactly ONE pending value — the newest (50 superseded by 80); a second episode's failed save stands independently in the same slot
+ok 39 - P9: the drain at open sends each pending entry once — the newest only — and the slot stands empty after
+ok 40 - P10: a downloaded (cache-first/blob-URL) episode's save is byte-identical in shape and value to a streamed episode's — parity by construction
+ok 41 - P8: a partway row renders the bar at position / duration width (360/720 = 50%)
+ok 42 - P8: the bar stands inside the uniform 76 px row — no height gained
+ok 43 - P8: an untouched row and a listened row render no bar
+ok 44 - P8: the mark chip on a partway row is byte-unchanged from an untouched row's
+ok 45 - P8: the Current-episode card's face is unchanged (no bar stands on it)
+ok 46 - P8: a partway entry with no duration renders no bar (the fraction cannot render — the honest row is a plain row)
+ok 47 - statics: the SW pin advances to ora-pro-nobis-v395-1 in ui.ts
+ok 48 - statics: the candidate Worker bundles clean (esbuild over index.ts)
+# harness-v395: 48/48 legs ok
