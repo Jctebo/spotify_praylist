@@ -1704,8 +1704,15 @@ export default {
           // resolvable day.
           const date = url.searchParams.get("date") ?? "";
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          // v392 W1/W3: the window widens to Chicago today or
+          // tomorrow — the offline completeness pass resolves
+          // tomorrow's externals during today's online hours so
+          // tomorrow's set can stand on the phone before its day
+          // (D3). Consumption still presents only today; this is
+          // a download-ahead read, gated exactly as the W1 day
+          // route. Any other date answers 400.
           const presented = prayerChicagoNow().date;
-          if (date !== presented) return err(400, `date ${date} is not the presented day ${presented}`);
+          if (date !== presented && date !== chicagoShiftDate(presented, 1)) return err(400, `date ${date} is not the presented day ${presented} or its tomorrow`);
           const payload = await externalsLivePayload(env, date);
           return new Response(JSON.stringify({ ok: true, date, ...payload }), {
             status: 200,
@@ -1725,9 +1732,11 @@ export default {
           const slotId = url.searchParams.get("slot") ?? "";
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           if (!(slotId in EXTERNAL_SLOTS)) return err(400, "unknown external slot");
-          // v337 §2.4: the presented-day gate, as on the live route.
+          // v392 W1/W3: the today-or-tomorrow window, as on the
+          // live route — tomorrow's pass-through downloads ride
+          // the same download-ahead read (D3).
           const presented = prayerChicagoNow().date;
-          if (date !== presented) return err(400, `date ${date} is not the presented day ${presented}`);
+          if (date !== presented && date !== chicagoShiftDate(presented, 1)) return err(400, `date ${date} is not the presented day ${presented} or its tomorrow`);
           const settings = await sourceSettingsPayload(env);
           const [yy, mm, dd] = date.split("-").map(Number);
           const wdMon0 = (new Date(Date.UTC(yy, mm - 1, dd)).getUTCDay() + 6) % 7;

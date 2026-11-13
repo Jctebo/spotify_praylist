@@ -4154,7 +4154,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // confirms is left to the cache restore; a cached slot the
     // courier contradicts is re-settled from the courier's word.
     var courierP;
-    if (courierSlots.some(uncached)) {
+    if (snapshotRec) {
+      // v392 W3: the offline build stands from the snapshot
+      // record alone — a courier slot the record does not carry
+      // stands named missing and the live read never fires
+      // (zero /api/ calls on the offline path).
+      courierSlots.forEach(function (slot) { if (uncached(slot)) settle(slot, missingSt(slot, slot.courier ? slot.source : 'Divine Office')); });
+      courierP = Promise.resolve();
+    } else if (courierSlots.some(uncached)) {
       courierP = api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
         var byId = {};
         (res.slots || []).forEach(function (e) { byId[e.slotId] = e; });
@@ -4404,7 +4411,15 @@ function offlinePutBlob(cache, key, blob) {
   if (!cache || !blob) return Promise.resolve(false);
   return cache.put(key, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } })).then(function () { return true; }).catch(function () { return false; });
 }
-function offlineFetchBlob(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }); }
+function offlineFetchBlob(url) {
+  // Per-item timeout: a stalled connection (a captive portal, a
+  // dead tunnel) must count the item missing and let the pass
+  // finish — never stall the whole set behind one fetch (W3:
+  // a failed item stays missing, counted, retried next pass).
+  var ctl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function () { try { ctl.abort(); } catch (e) {} }, 60000) : null;
+  return fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }).then(function (b) { if (timer) clearTimeout(timer); return b; }, function (e) { if (timer) clearTimeout(timer); throw e; });
+}
 function offlineFetchItemAudio(item) {
   // Each family through its standing route (W3): own + the AI
   // Signal's store route + podcast enclosures direct with the
@@ -4547,14 +4562,18 @@ function offlinePodcastAutoSet() {
     });
   }).catch(function () { return []; });
 }
-function offlineDownloadItems(items) {
+function offlineDownloadItems(items, epoch) {
   return offlineAudioCache().then(function (cache) {
     var chain = Promise.resolve(), have = 0;
     items.forEach(function (it) {
       chain = chain.then(function () {
+        // A clear (epoch bump) mid-pass stops the tail: no
+        // further fetches, and a fetch already in flight never
+        // puts — the clear wins over the pass (W6).
+        if (epoch != null && epoch !== offlineEpoch) return;
         return offlineCacheHas(cache, it.key).then(function (has) {
           if (has) { have++; return; }
-          return offlineFetchItemAudio(it).then(function (blob) { return offlinePutBlob(cache, it.key, blob); })
+          return offlineFetchItemAudio(it).then(function (blob) { if (epoch != null && epoch !== offlineEpoch) return false; return offlinePutBlob(cache, it.key, blob); })
             .then(function (okPut) { if (okPut) have++; }).catch(function () {});
         });
       });
@@ -4599,6 +4618,8 @@ function offlineWaitSettled(n) {
   return new Promise(function (res) { setTimeout(res, 1000); }).then(function () { return offlineWaitSettled(n + 1); });
 }
 var offlinePassRunning = false;
+var offlineEpoch = 0;
+var offlinePassTimer = null;
 function offlineCompleteness(manual) {
   // W3's pass: today (from the settled build), tomorrow (the
   // dated route + the standing resolutions), the podcast
@@ -4607,16 +4628,21 @@ function offlineCompleteness(manual) {
   // (N4: the same open drives the car store's pass).
   if (offlinePassRunning) return Promise.resolve();
   offlinePassRunning = true;
+  var epoch = offlineEpoch;
+  var stale = function () { return epoch !== offlineEpoch; };
   var today = todayChicago(), tomorrow = offlineShiftDate(today, 1);
   var finish = function () {
     offlinePassRunning = false;
+    if (stale()) return;
     paintOfflineLine();
     var p = oraBridgePlugin();
     if (p && p.ensureOffline) { try { var r = p.ensureOffline(); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
   };
   return offlineEvict(null).then(function () {
     return offlineWaitSettled(0).then(function () {
-      return offlineDownloadItems(offlineEnumerateToday(today)).then(function (r1) {
+      if (stale()) throw new Error('offline pass superseded by a clear');
+      return offlineDownloadItems(offlineEnumerateToday(today), epoch).then(function (r1) {
+        if (stale()) throw new Error('offline pass superseded by a clear');
         var idx = offlineIndexRead();
         idx.days[today] = { have: r1.have, total: r1.total, settingsVersion: (state.offlineSettings || {}).version };
         offlineIndexWrite(idx);
@@ -4624,7 +4650,8 @@ function offlineCompleteness(manual) {
         return offlineTomorrowBuild(tomorrow).then(function (tb) {
           var jobs = Promise.resolve();
           if (tb) {
-            jobs = offlineDownloadItems(tb.items).then(function (r2) {
+            jobs = offlineDownloadItems(tb.items, epoch).then(function (r2) {
+              if (stale()) throw new Error('offline pass superseded by a clear');
               var idx2 = offlineIndexRead();
               idx2.days[tomorrow] = { have: r2.have, total: r2.total, settingsVersion: (state.offlineSettings || {}).version };
               offlineIndexWrite(idx2);
@@ -4635,7 +4662,8 @@ function offlineCompleteness(manual) {
           return jobs.then(function () {
             return offlinePodcastAutoSet().then(function (podItems) {
               var autoKeys = podItems.map(function (it) { return it.key; });
-              return offlineDownloadItems(podItems).then(function (r3) {
+              return offlineDownloadItems(podItems, epoch).then(function (r3) {
+                if (stale()) throw new Error('offline pass superseded by a clear');
                 var idx3 = offlineIndexRead();
                 idx3.pods = { autoHave: r3.have, autoTotal: r3.total };
                 offlineIndexWrite(idx3);
@@ -4652,7 +4680,7 @@ function offlineOnOnlineOpen(day) {
   drainPodMarkQueue();
   // D2: the automatic leg — at every online open, deferred so
   // the day's own resolution leads.
-  setTimeout(function () { offlineCompleteness(false); }, 4000);
+  offlinePassTimer = setTimeout(function () { offlinePassTimer = null; offlineCompleteness(false); }, 4000);
 }
 function offlinePushSnapshotObject(snap) {
   try {
@@ -4665,6 +4693,11 @@ function offlinePushSnapshotObject(snap) {
 function offlineClearAll() {
   // W6: Settings' one-tap clear — both web stores emptied and
   // the native store cleared through the bridge in the same tap.
+  // The epoch bump + timer cancel land FIRST, synchronously:
+  // a completeness pass in flight or scheduled stops putting
+  // and never re-fills behind the clear.
+  offlineEpoch++;
+  if (offlinePassTimer) { clearTimeout(offlinePassTimer); offlinePassTimer = null; }
   var jobs = [];
   if ('caches' in window) { jobs.push(caches.delete('opn-ext-audio-v1')); jobs.push(caches.delete('opn-offline-meta-v1')); }
   try { localStorage.removeItem('opn-offline-index-v1'); localStorage.removeItem('opn-pod-manual-v1'); } catch (e) {}
