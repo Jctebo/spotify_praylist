@@ -45,6 +45,12 @@ export interface Env {
   // Podcasts section's Catechism in a Year sequence build.
   // Production leaves it unset; the pinned feed URL below governs.
   EXT_CIY_FEED_URL?: string;
+  // v390 harness seam, same rule: a fixture-feed override for the
+  // Podcasts section's Rosary in a Year sequence build (the Bible
+  // series rides the standing EXT_BIAY_FEED_URL seam above — one
+  // seam per feed). Production leaves it unset; the pinned feed
+  // URL below governs.
+  EXT_RIY_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -1059,9 +1065,29 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
 // current episode is DERIVED at read time as the first unlistened
 // entry — never stored, never date-gated (§2.3).
 const POD_CIY_FEED_URL = "https://feeds.fireside.fm/catechisminayear/rss";
-const POD_SERIES = "catechism-in-a-year";
-const POD_SERIES_TITLE = "Catechism in a Year";
+const EXT_RIY_FEED_URL = "https://feeds.fireside.fm/rosaryinayear/rss";
 const POD_SNAPSHOT_MAX_AGE_MS = 24 * 3600 * 1000;
+
+// v390 §2.1: the series registry — v381's single-series constants
+// generalized. Each entry carries the series key, the display
+// title, the entry-key prefix, the feed (an env seam over a
+// pinned constant, the estate's standing form — the Bible series
+// rides EXT_BIAY_FEED_URL, the same var the Morning matcher legs
+// read: one seam per feed), and the bonus-slug mode (§2.2's slug
+// seam: Catechism's shortcut table is load-bearing for its
+// standing marks; the other series use the generic slugger).
+interface PodSeriesDef {
+  key: string; title: string; prefix: string; slugMode: "shortcuts" | "generic";
+  feedUrl: (env: Env) => string;
+}
+const POD_SERIES_LIST: PodSeriesDef[] = [
+  { key: "catechism-in-a-year", title: "Catechism in a Year", prefix: "ciy", slugMode: "shortcuts", feedUrl: (env) => env.EXT_CIY_FEED_URL || POD_CIY_FEED_URL },
+  { key: "bible-in-a-year", title: "Bible in a Year", prefix: "biy", slugMode: "generic", feedUrl: (env) => env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL },
+  { key: "rosary-in-a-year", title: "The Rosary in a Year", prefix: "riy", slugMode: "generic", feedUrl: (env) => env.EXT_RIY_FEED_URL || EXT_RIY_FEED_URL },
+];
+function podSeriesDef(key: string): PodSeriesDef | null {
+  return POD_SERIES_LIST.find((d) => d.key === key) ?? null;
+}
 
 interface PodEntry { key: string; kind: "day" | "bonus" | "special"; day: number | null; label: string; title: string; url: string; durationS: number; edition: number }
 interface PodBuild { entries: PodEntry[]; collapses: number }
@@ -1069,14 +1095,23 @@ interface PodBuild { entries: PodEntry[]; collapses: number }
 function podStripEditionSuffix(title: string): string {
   return title.replace(/\s*\((?:19|20)\d{2}\)\s*$/, "").trim();
 }
-function podBonusSlug(title: string): string {
+function podBonusSlug(title: string, slugMode: "shortcuts" | "generic"): string {
   // §2.1: the slug from the normalized bonus title — the three
   // known contents key as cozzens · cavins · pray; any later bonus
   // content keys from its own first words.
+  // v390 §2.2 (the slug seam): the shortcut table is CATECHISM
+  // knowledge — its keys are load-bearing (standing marks key on
+  // them), so Catechism keeps it. Run over the Bible feed it
+  // collapses distinct Cavins contents onto one key and loses
+  // one; Bible and Rosary therefore use the generic slugger (the
+  // standing fallback: the first four words of the normalized
+  // title), under which every distinct content stands.
   const t = title.toLowerCase();
-  if (t.includes("cozzens")) return "cozzens";
-  if (t.includes("cavins")) return "cavins";
-  if (t.includes("pray")) return "pray";
+  if (slugMode === "shortcuts") {
+    if (t.includes("cozzens")) return "cozzens";
+    if (t.includes("cavins")) return "cavins";
+    if (t.includes("pray")) return "pray";
+  }
   const words = t.replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 4);
   return words.join("-") || "bonus";
 }
@@ -1087,7 +1122,7 @@ function podBonusSlug(title: string): string {
 // latest day published before them in their newest carrying
 // edition; the Day 366 special last; the pre-launch trailer and
 // any other non-day, non-BONUS item excluded.
-function podBuildSequence(items: ExtFeedItem[]): PodBuild {
+function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef): PodBuild {
   let collapses = 0;
   const dayGroups = new Map<string, ExtFeedItem[]>(); // "edition|day" -> items in feed order
   const bonusItems: { it: ExtFeedItem; edition: number; slug: string }[] = [];
@@ -1102,7 +1137,7 @@ function podBuildSequence(items: ExtFeedItem[]): PodBuild {
       continue;
     }
     if (/^BONUS\s*:/i.test(it.title)) {
-      bonusItems.push({ it, edition, slug: podBonusSlug(podStripEditionSuffix(it.title.replace(/^BONUS\s*:\s*/i, ""))) });
+      bonusItems.push({ it, edition, slug: podBonusSlug(podStripEditionSuffix(it.title.replace(/^BONUS\s*:\s*/i, "")), def.slugMode) });
       continue;
     }
     // Everything else — the "Introducing…" trailer named in §2.1
@@ -1141,7 +1176,7 @@ function podBuildSequence(items: ExtFeedItem[]): PodBuild {
     const special = day === 366;
     out.push({
       entry: {
-        key: "ciy:day-" + day, kind: special ? "special" : "day", day,
+        key: def.prefix + ":day-" + day, kind: special ? "special" : "day", day,
         label: special ? "Day 366 — Special" : "Day " + day,
         title: podStripEditionSuffix(sup.it.title.replace(/^Day\s+\d+\s*:\s*/i, "")),
         url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
@@ -1167,7 +1202,7 @@ function podBuildSequence(items: ExtFeedItem[]): PodBuild {
     }
     out.push({
       entry: {
-        key: "ciy:bonus-" + slug, kind: "bonus", day: null, label: "Bonus",
+        key: def.prefix + ":bonus-" + slug, kind: "bonus", day: null, label: "Bonus",
         title: podStripEditionSuffix(sup.it.title.replace(/^BONUS\s*:\s*/i, "")),
         url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
       },
@@ -1179,8 +1214,8 @@ function podBuildSequence(items: ExtFeedItem[]): PodBuild {
 }
 
 interface PodSnapshot { entries: PodEntry[]; collapses: number; builtAt: string }
-async function podReadSnapshot(env: Env): Promise<PodSnapshot | null> {
-  const row = await env.DB.prepare("SELECT payload FROM podcast_sequences WHERE series=?").bind(POD_SERIES).first<{ payload: string }>();
+async function podReadSnapshot(env: Env, def: PodSeriesDef): Promise<PodSnapshot | null> {
+  const row = await env.DB.prepare("SELECT payload FROM podcast_sequences WHERE series=?").bind(def.key).first<{ payload: string }>();
   if (!row) return null;
   try {
     const p = JSON.parse(row.payload) as PodSnapshot;
@@ -1191,20 +1226,22 @@ async function podReadSnapshot(env: Env): Promise<PodSnapshot | null> {
 // The read path is the refresh path (§2.1): a snapshot missing or
 // older than 24 hours rebuilds before answering; a failed rebuild
 // serves the standing snapshot; with no snapshot at all the
-// sequence is unavailable (leg L9's one error surface).
-async function podSequence(env: Env): Promise<{ snap: PodSnapshot; stale: boolean } | null> {
-  const snap = await podReadSnapshot(env);
+// sequence is unavailable (leg L9's one error surface). v390
+// §2.1: the refresh runs per series — one series' outage never
+// darkens the others.
+async function podSequence(env: Env, def: PodSeriesDef): Promise<{ snap: PodSnapshot; stale: boolean } | null> {
+  const snap = await podReadSnapshot(env, def);
   if (snap && Date.now() - Date.parse(snap.builtAt) < POD_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
   try {
-    const items = await extFetchFeedItems(env.EXT_CIY_FEED_URL || POD_CIY_FEED_URL);
-    const build = podBuildSequence(items);
+    const items = await extFetchFeedItems(def.feedUrl(env));
+    const build = podBuildSequence(items, def);
     if (!build.entries.length) throw new Error("podcast sequence build produced no entries");
     const builtAt = nowISO();
     const payload = JSON.stringify({ entries: build.entries, collapses: build.collapses, builtAt });
     await env.DB.prepare(
       `INSERT INTO podcast_sequences (series, payload, built_at) VALUES (?, ?, ?)
        ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
-    ).bind(POD_SERIES, payload, builtAt).run();
+    ).bind(def.key, payload, builtAt).run();
     return { snap: { entries: build.entries, collapses: build.collapses, builtAt }, stale: false };
   } catch {
     if (snap) return { snap, stale: true };
@@ -1212,13 +1249,20 @@ async function podSequence(env: Env): Promise<{ snap: PodSnapshot; stale: boolea
   }
 }
 
-async function podPayload(env: Env): Promise<unknown> {
-  const seq = await podSequence(env);
+interface PodEntryState extends PodEntry { listened: boolean; listenDate: string | null; listenedAt: string | null; source: string | null }
+interface PodPayload {
+  ok: boolean; series: string; title: string; available: boolean;
+  entries: PodEntryState[]; currentKey: string | null;
+  listenedCount: number; total: number;
+  builtAt: string | null; stale: boolean; collapses?: number;
+}
+async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
+  const seq = await podSequence(env, def);
   const r = await env.DB.prepare("SELECT seq_key, listened_at, listen_date, source FROM podcast_listens WHERE series=?")
-    .bind(POD_SERIES).all<{ seq_key: string; listened_at: string; listen_date: string; source: string }>();
+    .bind(def.key).all<{ seq_key: string; listened_at: string; listen_date: string; source: string }>();
   const listens = new Map((r.results ?? []).map((x) => [x.seq_key, x]));
   if (!seq) {
-    return { ok: true, series: POD_SERIES, title: POD_SERIES_TITLE, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false };
+    return { ok: true, series: def.key, title: def.title, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false };
   }
   const entries = seq.snap.entries.map((e) => {
     const l = listens.get(e.key);
@@ -1227,11 +1271,32 @@ async function podPayload(env: Env): Promise<unknown> {
   // §2.3: current = the lowest-position entry with no listen row.
   const current = entries.find((e) => !e.listened);
   return {
-    ok: true, series: POD_SERIES, title: POD_SERIES_TITLE, available: true,
+    ok: true, series: def.key, title: def.title, available: true,
     entries, currentKey: current ? current.key : null,
     listenedCount: entries.filter((e) => e.listened).length, total: entries.length,
     builtAt: seq.snap.builtAt, stale: seq.stale, collapses: seq.snap.collapses,
   };
+}
+
+// v390 §2.3: the series index read — one entry per registry
+// series, in registry order, each built by that series'
+// podPayload internals (its counts and derivation), so the
+// index and the series pages can never disagree. currentLabel
+// is the current entry's label (e.g. "Day 316") so the card
+// paints from this one read; null when the series is complete
+// or unavailable.
+async function podIndexPayload(env: Env): Promise<unknown> {
+  const seriesList = [];
+  for (const def of POD_SERIES_LIST) {
+    const p = await podPayload(env, def);
+    const current = p.currentKey ? p.entries.find((e) => e.key === p.currentKey) : undefined;
+    seriesList.push({
+      series: def.key, title: def.title, available: p.available,
+      listenedCount: p.listenedCount, total: p.total,
+      currentKey: p.currentKey, currentLabel: current ? current.label : null,
+    });
+  }
+  return { ok: true, seriesList };
 }
 
 // ---- Router ----------------------------------------------------------------
@@ -1348,7 +1413,14 @@ export default {
         // GET /api/agent/player/day) so Review/Ship can verify
         // progress state. NO agent write route exists — marks are
         // John's acts, session-only.
-        return json(await podPayload(env));
+        // v390 §2.3: mirrors the session reads — no ?series gives
+        // the index payload; ?series=<key> gives that series'
+        // payload; an unknown series answers 400.
+        const doorSeries = url.searchParams.get("series");
+        if (doorSeries === null) return json(await podIndexPayload(env));
+        const doorDef = podSeriesDef(doorSeries);
+        if (!doorDef) return err(400, "unknown series");
+        return json(await podPayload(env, doorDef));
       }
       return err(404, "unknown agent route");
     }
@@ -1481,34 +1553,51 @@ export default {
           return json(await playerDayPayload(env));
         }
         if (seg[2] === "podcasts" && request.method === "GET") {
-          // v381 §2.2: the Podcasts tab's one read — the sequence
+          // v381 §2.2: the Podcasts tab's read — the sequence
           // with each entry's listened state, the derived current
           // key (§2.3), and counts.
-          return json(await podPayload(env));
+          // v390 §2.3: no ?series answers the series INDEX (the
+          // tab's entry read); ?series=<key> answers that series'
+          // payload in the standing shape; an unknown series
+          // answers 400.
+          const readSeries = url.searchParams.get("series");
+          if (readSeries === null) return json(await podIndexPayload(env));
+          const readDef = podSeriesDef(readSeries);
+          if (!readDef) return err(400, "unknown series");
+          return json(await podPayload(env, readDef));
         }
         if (seg[2] === "podcasts" && seg[3] === "mark" && request.method === "POST") {
           // v381 §2.2/§2.4: a mark is John's act (session-only).
           // Idempotent: INSERT OR IGNORE — the first mark stands
           // (its date and source are the history).
+          // v390 §2.3: the series is validated against the
+          // registry (any of the three; anything else 400), the
+          // source whitelist stays auto/manual only (seed never
+          // passes this route — §2.5), and the seqKey validates
+          // against THAT series' snapshot.
           const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string; source?: string };
-          if (String(body.series ?? "") !== POD_SERIES) return err(400, "unknown series");
+          const markDef = podSeriesDef(String(body.series ?? ""));
+          if (!markDef) return err(400, "unknown series");
           if (!["auto", "manual"].includes(body.source ?? "")) return err(400, "source must be auto or manual");
           const seqKey = String(body.seqKey ?? "");
-          const seq = await podSequence(env);
+          const seq = await podSequence(env, markDef);
           if (!seq || !seq.snap.entries.some((e) => e.key === seqKey)) return err(400, "unknown seqKey");
           await env.DB.prepare(
             "INSERT OR IGNORE INTO podcast_listens (series, seq_key, listened_at, listen_date, source) VALUES (?, ?, ?, ?, ?)",
-          ).bind(POD_SERIES, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
+          ).bind(markDef.key, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
           return json({ ok: true });
         }
         if (seg[2] === "podcasts" && seg[3] === "unmark" && request.method === "POST") {
           // v381 §2.2: unmark deletes the row (a progress record,
           // not an audit log); unmarking an unmarked entry is a
           // no-op.
+          // v390 §2.3: the series validates against the registry,
+          // and the delete binds the named series.
           const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string };
-          if (String(body.series ?? "") !== POD_SERIES) return err(400, "unknown series");
+          const unmarkDef = podSeriesDef(String(body.series ?? ""));
+          if (!unmarkDef) return err(400, "unknown series");
           await env.DB.prepare("DELETE FROM podcast_listens WHERE series=? AND seq_key=?")
-            .bind(POD_SERIES, String(body.seqKey ?? "")).run();
+            .bind(unmarkDef.key, String(body.seqKey ?? "")).run();
           return json({ ok: true });
         }
         if (seg[2] === "audio" && request.method === "GET") {

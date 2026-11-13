@@ -7,7 +7,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -553,7 +553,7 @@ function markCompleted(desc) {
   // posture; a failed write leaves the entry unmarked at next
   // open. A series track carries no day-played record: the
   // podcasts store is its record.
-  if (desc.kind === 'podcast' && desc.seriesKey) { writePodMarkQuiet(desc.seriesKey, 'auto'); return; }
+  if (desc.kind === 'podcast' && desc.seriesKey) { writePodMarkQuiet(desc.seriesKey, desc.podSeries, 'auto'); return; }
   var d = presentedDateStr();
   if (!d) return;
   writePlayed(desc.episodeId, d, 'played', desc.block);
@@ -1624,16 +1624,28 @@ measureBars();
    the current-episode card (current = the first unlistened
    entry, derived server-side per §2.3), and the full episode
    list in sequence order. Marks live ONLY here: the Prayers tab
-   never reads this store (§2.5's no-checklist coexistence). */
+   never reads this store (§2.5's no-checklist coexistence).
+   v390 §2.7: the tab enters at a SERIES LEVEL (three series —
+   Catechism · Bible · Rosary); a card opens the series page,
+   which is the v381 presentation below plus a back row. */
 function podDesc(e) {
-  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0 };
+  // v390 §2.7: the descriptor gains the series (the open
+  // payload's key) beside the standing fields, so the completion
+  // seam can mark the playing episode's OWN series.
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0 };
 }
-function writePodMarkQuiet(seqKey, source) {
+function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
   // completion seam (the writePlayedQuiet precedent); a failed
   // write leaves the entry unmarked at next open — no retry queue.
-  post('/api/player/podcasts/mark', { series: 'catechism-in-a-year', seqKey: seqKey, source: source }).catch(function () {});
-  if (state.podcasts && state.podcasts.entries) {
+  // v390 §2.7: generalized off the v381 literal — the write posts
+  // the descriptor's own series. Its in-memory leg mutates the
+  // open payload ONLY when the open payload is that series: a
+  // Bible episode completing while the Catechism page stands
+  // open writes its Bible row server-side (the record) and
+  // leaves the open page's counts to its next open.
+  post('/api/player/podcasts/mark', { series: seriesKey, seqKey: seqKey, source: source }).catch(function () {});
+  if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.entries) {
     state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); } });
     var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
     state.podcasts.listenedCount = state.podcasts.entries.length - left.length;
@@ -1641,23 +1653,70 @@ function writePodMarkQuiet(seqKey, source) {
   }
 }
 function renderPodcasts() {
+  // v390 §2.7: the tab ALWAYS enters at the series level — an
+  // open series does not survive a tab switch. state.podcasts
+  // may still hold the last series payload (the auto-mark's
+  // mutation rule reads it), but nothing paints it until a card
+  // is tapped.
   view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
   api('/api/player/podcasts').then(function (res) {
+    state.podcastsIndex = res;
+    if (state.tab === 'podcasts') paintPodcastsIndex();
+  }).catch(function (e) {
+    if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
+  });
+}
+function paintPodcastsIndex() {
+  // v390 §2.7: the series level — one card per series in
+  // registry order (title · counts · current line), the whole
+  // card tappable. An unavailable series shows its unavailable
+  // line on its own card.
+  var res = state.podcastsIndex;
+  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
+  var html = '<h1 class="screen">Podcasts</h1>';
+  res.seriesList.forEach(function (s) {
+    html += '<div class="card" data-podseries="' + esc(s.series) + '"><h3>' + esc(s.title) + '</h3>';
+    if (!s.available) {
+      html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
+    } else {
+      html += '<div class="meta">' + s.listenedCount + ' of ' + s.total + ' listened'
+        + (s.currentLabel ? ' · Current: ' + esc(s.currentLabel) : ' · Complete') + '</div>';
+    }
+    html += '</div>';
+  });
+  view.innerHTML = html;
+  view.querySelectorAll('[data-podseries]').forEach(function (c) {
+    c.addEventListener('click', function () { openPodSeries(c.getAttribute('data-podseries')); });
+  });
+}
+function openPodSeries(key) {
+  view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
+  api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     if (state.tab === 'podcasts') paintPodcasts();
   }).catch(function (e) {
     if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
   });
 }
+function wirePodBack() {
+  var b = view.querySelector('[data-podback]');
+  if (b) b.addEventListener('click', function () { renderPodcasts(); });
+}
 function paintPodcasts() {
   var res = state.podcasts;
   if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
   var html = '<h1 class="screen">Podcasts</h1>';
+  // v390 §2.7: the back row stands at the top of the series page
+  // (the app's standing backrow/backbtn dress) — back re-reads
+  // the index, so the counts the marks just changed stand
+  // correct.
+  html += '<div class="backrow"><button class="backbtn" data-podback>&lsaquo; All series</button></div>';
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
     // series stands unavailable — the section's one error surface.
     html += '<div class="card"><h3>' + esc(res.title || 'Catechism in a Year') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
     view.innerHTML = html;
+    wirePodBack();
     return;
   }
   var cur = null;
@@ -1686,6 +1745,7 @@ function paintPodcasts() {
   view.querySelectorAll('[data-podmark]').forEach(function (b) {
     b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
   });
+  wirePodBack();
   // §2.5: the list opens scrolled to the current entry.
   if (res.currentKey) {
     var el = view.querySelector('[data-podrow="' + res.currentKey + '"]');
