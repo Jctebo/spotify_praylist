@@ -4373,7 +4373,8 @@ function offlineIndexRead() {
   catch (e) { return { days: {}, pods: { autoHave: 0, autoTotal: 0 } }; }
 }
 function offlineIndexWrite(idx) { try { localStorage.setItem('opn-offline-index-v1', JSON.stringify(idx)); } catch (e) {} }
-function offlineSnapshotStore(date, day, settings, extRec) {
+function offlineSnapshotStore(date, day, settings, extRec, epoch) {
+  if (epoch != null && epoch !== offlineEpoch) return Promise.resolve();
   if (!('caches' in window) || !day || !settings) return Promise.resolve();
   var snap = { date: date, savedAt: new Date().toISOString(), day: day, settings: settings, extRec: extRec || null };
   return caches.open('opn-offline-meta-v1').then(function (c) {
@@ -4483,7 +4484,7 @@ function offlineTomorrowOwn(settings, tomorrow, extRec) {
     return out;
   }).catch(function () { return []; });
 }
-function offlineTomorrowBuild(tomorrow) {
+function offlineTomorrowBuild(tomorrow, epoch) {
   var settings = state.offlineSettings;
   if (!settings) return Promise.resolve(null);
   return api('/api/player/day?date=' + encodeURIComponent(tomorrow)).then(function (day) {
@@ -4528,7 +4529,7 @@ function offlineTomorrowBuild(tomorrow) {
     });
     jobs.push(offlineTomorrowOwn(settings, tomorrow, extRec).then(function (ownItems) { ownItems.forEach(function (it) { items.push(it); }); }));
     return Promise.all(jobs).then(function () {
-      var stored = offlineSnapshotStore(tomorrow, day, settings, extRec);
+      var stored = offlineSnapshotStore(tomorrow, day, settings, extRec, epoch);
       var origin = location.origin;
       var tracks = items.map(function (it) {
         if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + '/api/player/audio/' + encodeURIComponent(tomorrow) + '/' + encodeURIComponent(it.id), needsAuth: true };
@@ -4647,7 +4648,7 @@ function offlineCompleteness(manual) {
         idx.days[today] = { have: r1.have, total: r1.total, settingsVersion: (state.offlineSettings || {}).version };
         offlineIndexWrite(idx);
         paintOfflineLine();
-        return offlineTomorrowBuild(tomorrow).then(function (tb) {
+        return offlineTomorrowBuild(tomorrow, epoch).then(function (tb) {
           var jobs = Promise.resolve();
           if (tb) {
             jobs = offlineDownloadItems(tb.items, epoch).then(function (r2) {
