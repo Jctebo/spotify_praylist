@@ -96,11 +96,19 @@ def trash(file_id: str) -> None:
 
 
 def read_drive_manifest(tmpdir: Path) -> tuple[dict[str, Any], str | None]:
-    """The accumulating manifest as it stands in Drive, plus its file id."""
+    """The accumulating manifest as it stands in Drive, plus its file id.
+
+    Read through stdout, NOT download_bytes: the Drive CLI prints a
+    .json file's content to stdout and writes an EMPTY file to
+    --output (it treats JSON as a readable document; JPEG bytes do
+    land in the output file, which is why the image path works)."""
     for f in list_children(FOLDERS["manifests"]):
         if f["name"] == MANIFEST_NAME:
-            raw = download_bytes(f["id"], tmpdir)
-            return json.loads(raw.decode("utf-8")), f["id"]
+            manifest = drive("files", "get", "--params",
+                             json.dumps({"fileId": f["id"], "alt": "media"}))
+            if not isinstance(manifest, dict) or not isinstance(manifest.get("entries"), list):
+                raise RuntimeError("shuffle-manifest.json in Drive is not the expected shape")
+            return manifest, f["id"]
     return {"version": 1, "updated": None, "entries": []}, None
 
 
