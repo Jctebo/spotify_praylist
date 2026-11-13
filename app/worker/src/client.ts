@@ -736,7 +736,11 @@ function resumeCurrent() {
   fadeRestore(); // v320 §2.6 restore point (3) stands: exactly one fade restore per system resume
   reassertMediaSession();
   if (audioEl.currentSrc && !audioEl.ended) {
-    audioEl.play().catch(function () {});
+    // v397 §2.9: the resume outcome is REPORTED, not swallowed
+    // — a rejection becomes the resumeFailed fact on the next
+    // push, so the face's latch can act on evidence instead of
+    // silence. A resolution clears a standing unreported flag.
+    audioEl.play().then(function () { resumeFailedPending = false; }, function () { noteResumeFailed(); });
   } else {
     // The element holds nothing for the standing track (e.g. the
     // sleep-hold head, loaded on a preload="none" element): load
@@ -744,7 +748,7 @@ function resumeCurrent() {
     // The queue and queueIdx are not touched.
     audioEl.src = state.current.url;
     audioEl.playbackRate = state.rate;
-    audioEl.play().catch(function () {});
+    audioEl.play().then(function () { resumeFailedPending = false; }, function () { noteResumeFailed(); });
   }
   pushNativeState(false); // v377 B2: play is a push trigger
 }
@@ -3510,11 +3514,16 @@ function nativeStatePayload(stopped) {
   var pos = audioEl.currentTime || 0;
   var dur = cur.durationS || (isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : 0) || 0;
   var estimated = false;
-  return { engine: 'web', trackId: cur.episodeId || '', kind: kind, title: title, subtitle: subtitle,
+  var payload = { engine: 'web', trackId: cur.episodeId || '', kind: kind, title: title, subtitle: subtitle,
     block: cur.block || '', dateLabel: state.dateLabel || '', playing: playing, stopped: false,
     positionS: pos, durationS: dur, estimated: estimated,
     queueIndex: state.queueIdx, queueCount: state.queue.length, queueIds: queueIds,
     rate: audioEl.playbackRate || state.rate || 1, ts: Date.now() };
+  // v397 §2.9: the failure fact rides only while it stands —
+  // the key is omitted otherwise, so every non-failure push
+  // keeps its standing byte shape.
+  if (resumeFailedPending) payload.resumeFailed = true;
+  return payload;
 }
 function pushNativeState(stopped) {
   try {
@@ -3523,8 +3532,23 @@ function pushNativeState(stopped) {
     var payload = nativeStatePayload(stopped);
     if (!payload) return;
     var r = p.setPlaybackState({ state: JSON.stringify(payload) });
+    // v397 §2.9: one-shot consumption — a payload that carried
+    // the fact has been handed to the bridge, so the flag
+    // clears. If the hand-off itself throws before the call is
+    // issued, the catch below leaves the flag standing for the
+    // next push; a report lost past this point degrades to
+    // today's silence, never worse.
+    if (payload.resumeFailed) resumeFailedPending = false;
     if (r && r.catch) r.catch(function () {});
   } catch (e) { /* the bridge can never fail playback */ }
+}
+/* v397 §2.9: a rejected resume play() is reported on the
+   standing push channel at once — it does not wait for the
+   5 s interval push. */
+var resumeFailedPending = false;
+function noteResumeFailed() {
+  resumeFailedPending = true;
+  pushNativeState(false);
 }
 /* B3 commands, executed through the app's own transport. After
    a state-bearing command the client pushes fresh state — the
