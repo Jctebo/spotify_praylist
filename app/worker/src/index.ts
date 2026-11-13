@@ -1314,6 +1314,63 @@ async function podIndexPayload(env: Env): Promise<unknown> {
   return { ok: true, seriesList };
 }
 
+// ---- Wallpaper library (v386 §2.3) -----------------------------------
+// The accumulating shuffle collection's backend shelf. Production
+// stocks image files + one manifest under the R2 prefix wallpaper/
+// in the standing AUDIO bucket (B1: no new bucket, no new binding,
+// no D1 migration). The manifest shape is §2.2 P2's — the SAME shape
+// the Drive library of record carries — so a manifest entry means
+// the same thing on both shelves: { name, slug, date, variant, kind,
+// sha256, bytes }, identity (name, variant), append-only, a changed
+// hash replacing its entry. The phone's wallpaper component reads
+// the B3 session surface; production writes through the B2 door
+// route. No web delta (B4): nothing here touches client.ts / ui.ts.
+interface WallpaperEntry {
+  name: string; slug: string; date: string;
+  variant: "phone" | "watch"; kind: "saint" | "monthly";
+  sha256: string; bytes: number;
+}
+interface WallpaperManifest { version: 1; updated: string | null; entries: WallpaperEntry[] }
+
+const WALLPAPER_MANIFEST_KEY = "wallpaper/manifest.json";
+const WALLPAPER_NAME_RE = /^([a-z0-9]+(?:-[a-z0-9]+)*)__(\d{4}-\d{2}-\d{2}|\d{4}-\d{2})\.jpg$/;
+
+function wallpaperKey(variant: string, name: string): string {
+  return `wallpaper/${variant}/${name}`;
+}
+
+// Validate a (name, variant, kind) triple against the production
+// naming contract (§1: "<slug>__<YYYY-MM-DD>.jpg" for a saint set,
+// "<slug>__<YYYY-MM>.jpg" for a monthly devotion; the variant is
+// carried by the field, never the name). Returns the parsed entry
+// fields or null — an unparseable name is never taken into a
+// storage key (B3's rule, applied on the write side too).
+function wallpaperParse(name: string, variant: string, kind: string):
+  { slug: string; date: string; variant: "phone" | "watch"; kind: "saint" | "monthly" } | null {
+  if (variant !== "phone" && variant !== "watch") return null;
+  if (kind !== "saint" && kind !== "monthly") return null;
+  const m = WALLPAPER_NAME_RE.exec(name);
+  if (!m) return null;
+  const isDaily = m[2].length === 10;
+  if (kind === "saint" && !isDaily) return null;
+  if (kind === "monthly" && isDaily) return null;
+  return { slug: m[1], date: m[2], variant, kind };
+}
+
+async function wallpaperManifestRead(env: Env): Promise<WallpaperManifest> {
+  const obj = await env.AUDIO.get(WALLPAPER_MANIFEST_KEY);
+  if (!obj) return { version: 1, updated: null, entries: [] };
+  const parsed = await obj.json().catch(() => null) as WallpaperManifest | null;
+  if (!parsed || !Array.isArray(parsed.entries)) return { version: 1, updated: null, entries: [] };
+  return { version: 1, updated: parsed.updated ?? null, entries: parsed.entries };
+}
+
+async function wallpaperManifestWrite(env: Env, manifest: WallpaperManifest): Promise<void> {
+  await env.AUDIO.put(WALLPAPER_MANIFEST_KEY, JSON.stringify(manifest), {
+    httpMetadata: { contentType: "application/json" },
+  });
+}
+
 // ---- Router ----------------------------------------------------------------
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -1436,6 +1493,47 @@ export default {
         const doorDef = podSeriesDef(doorSeries);
         if (!doorDef) return err(400, "unknown series");
         return json(await podPayload(env, doorDef));
+      }
+      if (seg[2] === "wallpaper" && seg[3] === "stock" && request.method === "POST") {
+        // v386 §2.3 B2: the production stocking route (the v368
+        // episode pattern — raw bytes in, verified before anything
+        // is stored). Query fields name the image; the body's
+        // SHA-256 and length must match them or the call is refused
+        // and NOTHING is stored. On a match the R2 object is
+        // written and the entry upserted into wallpaper/manifest.json
+        // in the same request. A repeat of the same
+        // (name, variant, sha256) changes nothing (P3 idempotence).
+        const wName = url.searchParams.get("name") ?? "";
+        const wVariant = url.searchParams.get("variant") ?? "";
+        const wKind = url.searchParams.get("kind") ?? "";
+        const wSha = (url.searchParams.get("sha256") ?? "").toLowerCase();
+        const parsed = wallpaperParse(wName, wVariant, wKind);
+        if (!parsed) return err(400, "name, variant and kind must match the wallpaper naming contract");
+        if (!/^[0-9a-f]{64}$/.test(wSha)) return err(400, "sha256 must be 64 hex chars");
+        const wBody = await request.arrayBuffer();
+        if (wBody.byteLength < 1 || wBody.byteLength > 25 * 1024 * 1024) return err(400, "image size out of range");
+        const digest = await crypto.subtle.digest("SHA-256", wBody);
+        const actualSha = bytesToHex(new Uint8Array(digest));
+        if (actualSha !== wSha) return err(400, "sha256 mismatch — nothing stored");
+        const manifest = await wallpaperManifestRead(env);
+        const existing = manifest.entries.find((e) => e.name === wName && e.variant === parsed.variant);
+        if (existing && existing.sha256 === wSha && existing.bytes === wBody.byteLength) {
+          return json({ ok: true, unchanged: true, entry: existing });
+        }
+        await env.AUDIO.put(wallpaperKey(parsed.variant, wName), wBody, {
+          httpMetadata: { contentType: "image/jpeg" },
+        });
+        const entry: WallpaperEntry = {
+          name: wName, slug: parsed.slug, date: parsed.date,
+          variant: parsed.variant, kind: parsed.kind,
+          sha256: wSha, bytes: wBody.byteLength,
+        };
+        manifest.entries = manifest.entries.filter((e) => !(e.name === wName && e.variant === parsed.variant));
+        manifest.entries.push(entry);
+        manifest.entries.sort((a, b) => (a.variant + "/" + a.name).localeCompare(b.variant + "/" + b.name));
+        manifest.updated = nowISO();
+        await wallpaperManifestWrite(env, manifest);
+        return json({ ok: true, unchanged: false, entry });
       }
       return err(404, "unknown agent route");
     }
@@ -1899,6 +1997,32 @@ export default {
           return json({ ok: true, version: meta?.version ?? 0 });
         }
         return err(404, "unknown player route");
+      }
+
+      if (seg[0] === "api" && seg[1] === "wallpaper") {
+        // v386 §2.3 B3 — John's session surface ONLY (the agent
+        // door does not read these; a door-token request carries no
+        // Access email header and johnOnly has already refused it).
+        // Names are validated against the manifest before any
+        // storage key is formed — no request segment reaches a key
+        // unvalidated.
+        if (seg[2] === "manifest" && !seg[3] && request.method === "GET") {
+          return json(await wallpaperManifestRead(env));
+        }
+        if (seg[2] === "file" && seg[3] && seg[4] && !seg[5] && request.method === "GET") {
+          const variant = seg[3];
+          const name = seg[4];
+          if (variant !== "phone" && variant !== "watch") return err(404, "unknown variant");
+          const manifest = await wallpaperManifestRead(env);
+          const entry = manifest.entries.find((e) => e.name === name && e.variant === variant);
+          if (!entry) return err(404, "unknown wallpaper file");
+          const obj = await env.AUDIO.get(wallpaperKey(variant, name));
+          if (!obj) return err(404, "wallpaper file missing");
+          return new Response(obj.body, {
+            headers: { "content-type": "image/jpeg", "cache-control": "private, max-age=2592000" },
+          });
+        }
+        return err(404, "unknown wallpaper route");
       }
 
       if (seg[0] === "api" && seg[1] === "pin") {

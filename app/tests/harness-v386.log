@@ -1,0 +1,24 @@
+ok - app up on local wrangler (LOCAL_DEV harness mode)
+ok - W11: session manifest read on an empty shelf returns the empty accumulating manifest
+ok - W10: door POST of a fixture JPEG stores it (200, changed)
+ok - W10: the stored entry carries the §2.2 P2 shape (name, slug, date, variant, kind, sha256, bytes)
+ok - W10: a sha256 field that does not match the body is refused (400)
+ok - W10: the refused POST stored nothing (file read 404s)
+ok - W10: the refused POST left no manifest entry
+ok - W10: a repeat POST of the same (name, variant, sha256) changes nothing
+ok - W10: the manifest still holds exactly one entry for the repeated stock
+ok - W10: a changed hash on a standing (name, variant) replaces its entry (re-delivery)
+ok - W10: the replaced entry serves the new bytes
+ok - W10: a monthly-stamped name filed as kind=saint is refused (naming contract)
+ok - W10: an unknown variant is refused
+ok - W10: the stock route refuses a request without the door token (403)
+ok - W11: session manifest read returns the accumulated manifest
+ok - W11: session file read returns the exact filed bytes as image/jpeg
+ok - W11: an unknown name 404s
+ok - W11: an unknown variant 404s
+ok - W11: the read surface is session-only — a door token with a non-John identity is refused (403)
+ok - GAP: the phone monthly entry for 2027-07 Precious Blood stocks clean
+ok - GAP: the manifest carries the phone monthly entry and NO watch twin (the Jul 2027 watch gap stands, no placeholder)
+ok - GAP: the watch read for the gap month 404s — absence, not an error state
+
+harness-v386: 22/22 legs ok
