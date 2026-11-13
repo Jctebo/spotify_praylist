@@ -4578,7 +4578,7 @@ function offlineEvict(autoPodKeys) {
         var dels = [];
         reqs.forEach(function (rq) {
           var tail = rq.url.slice(location.origin.length + 1);
-          var m = /^day\/(\d{4}-\d{2}-\d{2})(\/|$)/.exec(tail);
+          var m = /^day\\/(\\d{4}-\\d{2}-\\d{2})(\\/|$)/.exec(tail);
           if (m && m[1] < yday) { dels.push(cache.delete(rq)); return; }
           if (!isMeta && autoPodKeys && tail.indexOf('pod/') === 0 && !keepPod[tail]) dels.push(cache.delete(rq));
         });
