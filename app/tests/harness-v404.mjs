@@ -41,10 +41,9 @@ function standingPayload(extra) {
     phoneRoot: "Pictures/Ora Pro Nobis", watchRoot: "Pictures/Ora Pro Nobis",
     offeredRoots: ["Pictures/Ora Pro Nobis", "Pictures/Wallpapers", "DCIM/Wallpapers", "Download/Wallpapers"],
     paths: {
-      phoneSaints: "Pictures/Ora Pro Nobis/Phone/Saints",
-      phoneMonthly: "Pictures/Ora Pro Nobis/Phone/Monthly Devotion",
-      watchSaints: "Pictures/Ora Pro Nobis/Watch/Saints",
-      watchMonthly: "Pictures/Ora Pro Nobis/Watch/Monthly Devotion",
+      // v406 fixture amend: the flat pair (the legs stand).
+      phone: "Pictures/Ora Pro Nobis/Phone",
+      watch: "Pictures/Ora Pro Nobis/Watch",
     },
     notices: [],
   }, extra || {});

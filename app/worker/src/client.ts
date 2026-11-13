@@ -2273,11 +2273,16 @@ function paintWallpaperControls(s) {
     + '<option value="fit"' + (fitMode === 'fit' ? ' selected' : '') + '>Fit the whole picture</option>'
     + '<option value="fill"' + (fitMode === 'fill' ? ' selected' : '') + '>Fill the screen</option>'
     + '</select></div></div>';
+  /* v406 §2.6: each folder row's meta is ONE flat path line
+     — the payload's paths pair, with a root-based fallback
+     for a <= 1.0.26 shell's four-key payload (its subfolder
+     lines are simply not rendered). No Saints or Monthly
+     Devotion text renders anywhere in the section. */
   html += '<div class="setrow"><div class="setname">Phone folder</div>'
-    + '<div class="meta">' + esc(s.phoneRoot + '/Phone') + '<br>' + esc(paths.phoneSaints || '') + '<br>' + esc(paths.phoneMonthly || '') + '</div>'
+    + '<div class="meta">' + esc(paths.phone || (s.phoneRoot + '/Phone')) + '</div>'
     + '<div class="setcontrols"><select id="set-wp-phone-root">' + wallpaperRootOptions(s.offeredRoots, s.phoneRoot) + '</select></div></div>';
   html += '<div class="setrow"><div class="setname">Watch folder</div>'
-    + '<div class="meta">' + esc(s.watchRoot + '/Watch') + '<br>' + esc(paths.watchSaints || '') + '<br>' + esc(paths.watchMonthly || '') + '</div>'
+    + '<div class="meta">' + esc(paths.watch || (s.watchRoot + '/Watch')) + '</div>'
     + '<div class="setcontrols"><select id="set-wp-watch-root">' + wallpaperRootOptions(s.offeredRoots, s.watchRoot) + '</select></div></div>';
   /* v396 §2.6: the failure/gap notice lines — the additive
      'notices' key in the same payload, computed natively from
@@ -2393,6 +2398,15 @@ function wallpaperSyncLine(ls, ss) {
   if (!ls || !ls.outcome) return '';
   if (ls.outcome === 'alreadyRunning') return 'A sync is already running.';
   var t = wallpaperSyncTime(ls.at);
+  /* v406 §2.6: the missing form — precedence over every
+     outcome form (a no-change pass with a missing entry
+     still stamps upToDate and still renders the truth). */
+  if (ls.missing && ls.missing.length) {
+    if (ls.missing.length === 1) {
+      return 'Synced ' + t + ' \u2014 ' + ls.missing[0] + ' is not on your phone.';
+    }
+    return 'Synced ' + t + ' \u2014 ' + ls.missing[0] + ' and ' + (ls.missing.length - 1) + ' more are not on your phone.';
+  }
   if (ls.outcome === 'updated') {
     /* v404 §2.5: the count form — when the record carries its
        filed/removed counts (every record written by the new

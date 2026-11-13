@@ -29,6 +29,13 @@ const BASE_CLIENT = execFileSync("git", ["-C", WT, "show", "2f415b58:app/worker/
 
 let n = 0, fails = 0;
 const ok = (cond, name) => { n++; if (!cond) fails++; console.log(`${cond ? "ok" : "not ok"} ${n} - ${name}`); };
+// v406 amend (named in v406 §3 per Plan §2.8): the base-client
+// byte-identity legs predate the folder flattening — the two
+// folder rows are v406's deliberate change, so the comparison
+// strips exactly those two rows from both paints and asserts
+// byte-identity over everything else.
+const stripFolderRows = (html) => html.replace(/<div class="setrow"><div class="setname">(?:Phone|Watch) folder<\/div>[\s\S]*?<\/select><\/div><\/div>/g, "");
+
 
 // ---- verbatim extraction (balanced braces from the def line) --
 function extractFn(src, name) {
@@ -122,15 +129,16 @@ const main = async () => {
     wNew.sandbox.paintWallpaperControls(payload);
     const wBase = makeWorld(BASE_CLIENT);
     wBase.sandbox.paintWallpaperControls(payload);
-    // v405 amendment (see the header): strip the one fit row
-    // from the new paint; the remainder is byte-identical.
+    // v405+v406 composed amendment: strip the one fit row from
+    // the new paint and the two folder rows from both paints (the
+    // v406 stripFolderRows helper above); the remainder is byte-identical.
     const newHtml = wNew.el("set-wallpaper").innerHTML;
     const fitStart = newHtml.indexOf('<div class="setrow"><div class="setname">Picture fit</div>');
     const fitTail = '</select></div></div>';
     const fitEnd = fitStart < 0 ? -1 : newHtml.indexOf(fitTail, fitStart) + fitTail.length;
     const stripped = fitStart < 0 ? newHtml : newHtml.slice(0, fitStart) + newHtml.slice(fitEnd);
     ok(fitStart >= 0 && newHtml.indexOf("Picture fit", fitEnd) < 0
-      && stripped === wBase.el("set-wallpaper").innerHTML,
+      && stripFolderRows(stripped) === stripFolderRows(wBase.el("set-wallpaper").innerHTML),
       "W401-7b: payload without changerRun paints byte-identical to the base client");
   }
   // W401-7c: an empty list renders nothing extra — the paint
