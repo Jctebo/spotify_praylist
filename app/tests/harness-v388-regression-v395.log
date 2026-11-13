@@ -1,0 +1,40 @@
+PASS T2a no speech symbol or reference stands in client.ts
+PASS T2b startDesc holds no speech branch and no toggle read; the audio load runs inline
+PASS T2c the client never calls the bridge speech method (the APK plugin stands, unused)
+PASS T2d SW pin ora-pro-nobis-v395-1 stands in ui.ts (pin copy: the standing pin on the v392 tree)
+PASS T2e extraction complete: no unresolved units (openGuideEditor + offlineEvict excluded by name, standing)
+PASS T1-ona every start (own · novena · external) loads its audio inline, in the same start
+PASS T1-onb zero utterance constructions, zero web speaks, zero bridge speech calls — toggle ON
+PASS T1-onc the speech harness hook is gone
+PASS T1-offa every start (own · novena · external) loads its audio inline, in the same start
+PASS T1-offb zero utterance constructions, zero web speaks, zero bridge speech calls — toggle OFF
+PASS T1-offc the speech harness hook is gone
+PASS T3a no stored value and stored 'on' both read shown (the key stands)
+PASS T3b the hero line stands for the playing paired prayer
+PASS T3c the block-page row carries the line INSIDE the card, in the .intention-text form — not the v361 sibling row
+PASS T3d an available external's row carries its line the same way
+PASS T3e a novena row carries the Novenas draw by the prefix rule
+PASS T3f a search render carries the line on its rows too (the one seam)
+PASS T3g the native payload: subtitle = the text, kind is the descriptor's own, never estimated
+PASS T4a a stored 'off' reads OFF under the new model (the key stands, semantics flipped to showing)
+PASS T4b OFF: the hero line is emptied + display:none
+PASS T4c OFF: row lines are absent
+PASS T4d OFF: the native subtitle is empty
+PASS T5a queue advance onto the settled external slot starts it
+PASS T5b the rebuilt descriptor carries its drawn text (D4: the rebuild passes the live day) — the hero line stands on the advance path
+PASS T5c no speech at the external boundary
+PASS T5d own-track advance regression: the next prayer carries its text as before
+PASS T6a four paired prayers run back-to-back with no step, no gap, no stranded start
+PASS T6b no speech at any boundary
+PASS T7a a flip to OFF re-paints the standing block page: the row lines vanish with no reload
+PASS T7b the flip pushes the face at once: subtitle empties OFF, restores ON
+PASS T7c a flip back to ON restores the row lines on the standing page
+PASS T7d a flip to OFF empties + hides the standing hero line at once
+PASS T7e a flip back to ON restores the hero line
+PASS T8a an unpaired available track carries no line
+PASS T8b an unavailable paired track carries no line and no stamped text (no orphans)
+PASS T8c an unpaired podcast-group row carries no line
+PASS T8d a toggle flip never re-paints over the Intentions tab
+PASS T8e the Intentions tab render reads no toggle (static, the standing rule in both models)
+PASS S9 the candidate bundles clean (esbuild over index.ts)
+== harness-v388: 39/39 legs green, 0 failures ==
