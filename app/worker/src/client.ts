@@ -2300,7 +2300,21 @@ function paintWallpaperControls(s) {
       + '<div class="setcontrols"><button class="btn ghost" id="set-wp-sync">Sync now</button></div></div>';
   }
   if (s.lastSync) {
-    html += '<div class="setrow"><div class="meta">' + esc(wallpaperSyncLine(s.lastSync)) + '</div></div>';
+    html += '<div class="setrow"><div class="meta">' + esc(wallpaperSyncLine(s.lastSync, s.saintStatus)) + '</div></div>';
+  }
+  /* v400 §2.5: the saint row — the additive 'saintStatus'
+     key in the same payload (today's saint, named, and her
+     standing, written natively by the sync pass itself after
+     every completed pass). Rendered directly after the
+     lastSync line row — or, when lastSync is null, where
+     that row would stand (directly after the Sync button
+     row). An absent key (the old shell) or a null value (no
+     completed pass on the new build yet) renders nothing. */
+  if (s.saintStatus) {
+    var saintLine = wallpaperSaintLine(s.saintStatus);
+    if (saintLine) {
+      html += '<div class="setrow"><div class="meta">' + esc(saintLine) + '</div></div>';
+    }
   }
   host.innerHTML = html;
   var lockBtn = document.getElementById('set-wp-lock');
@@ -2335,7 +2349,7 @@ function wallpaperSyncTime(ms) {
   if (h === 0) h = 12;
   return h + ':' + (min < 10 ? '0' : '') + min + ' ' + ampm;
 }
-function wallpaperSyncLine(ls) {
+function wallpaperSyncLine(ls, ss) {
   if (!ls || !ls.outcome) return '';
   if (ls.outcome === 'alreadyRunning') return 'A sync is already running.';
   var t = wallpaperSyncTime(ls.at);
@@ -2343,8 +2357,41 @@ function wallpaperSyncLine(ls) {
     var n = ls.changed || 0;
     return 'Synced ' + t + ' \u2014 ' + n + (n === 1 ? ' image' : ' images') + ' filed or removed.';
   }
-  if (ls.outcome === 'upToDate') return 'Synced ' + t + ' \u2014 already up to date.';
+  if (ls.outcome === 'upToDate') {
+    /* v400 §2.5: the composition rule — "up to date" may not
+       stand alone over a missing saint. When the payload's
+       saintStatus stands and its standing is not one of the
+       filed family, the absence form renders instead; in
+       every other case (a filed-family standing, or no
+       saintStatus at all) the shipped form stands. The
+       outcome value and the changed count are untouched —
+       this is a render rule over the line, exactly where
+       v399 placed the line's copy. */
+    if (ss && ss.standing && ss.standing !== 'filed' && ss.standing !== 'filedThisPass' && ss.standing !== 'refiledThisPass') {
+      if (ss.standing === 'notStocked') return 'Synced ' + t + ' \u2014 no saint image for today is on your phone.';
+      return 'Synced ' + t + ' \u2014 ' + (ss.name || '') + ' is not on your phone.';
+    }
+    return 'Synced ' + t + ' \u2014 already up to date.';
+  }
   if (ls.outcome === 'failed') return 'Sync at ' + t + ' did not complete. The standing checks keep running and will catch up.';
+  return '';
+}
+/* v400 §2.5: the saint line's copy — the seven pinned forms,
+   composed from the payload's saintStatus alone (the name
+   and cause arrive pre-derived from the native pass; the
+   line never prints a file name where the saint's name
+   belongs). No client state: the payload is the only source,
+   at tap time and at open time alike. */
+function wallpaperSaintLine(ss) {
+  if (!ss || !ss.standing) return '';
+  var name = ss.name || '';
+  if (ss.standing === 'filed') return 'Today\u2019s saint: ' + name + ' \u2014 on your phone.';
+  if (ss.standing === 'filedThisPass') return 'Today\u2019s saint: ' + name + ' \u2014 filed at the last check and on your phone.';
+  if (ss.standing === 'refiledThisPass') return 'Today\u2019s saint: ' + name + ' \u2014 re-filed at the last check and on your phone.';
+  if (ss.standing === 'writtenOff') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone. The app read the image as removed by you and will not re-file it.';
+  if (ss.standing === 'failed') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone. The last filing attempt failed (' + (ss.cause || '') + ') \u2014 the app keeps retrying at the next check.';
+  if (ss.standing === 'notOnPhone') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone.';
+  if (ss.standing === 'notStocked') return 'No saint image for today stands in the library yet.';
   return '';
 }
 /* v399 §2.5: the tap — the live button takes its running
