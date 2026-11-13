@@ -2118,6 +2118,16 @@ function paintSettings() {
     + '<div class="meta" id="set-offline-counts"></div>'
     + '<div class="setcontrols"><button class="btn ghost" id="set-clear-offline">Clear offline downloads</button></div>'
     + '</div></div>';
+  // v394 §2.4: the WALLPAPER section — device-local, in the
+  // standing position after OFFLINE. The static paint renders
+  // the section shell in a loading state; fillWallpaperSection
+  // (below) reads the values through the bridge after paint and
+  // repaints the rows from native truth. The values live in the
+  // native opn_wallpaper store — there is no web-side copy.
+  html += '<h2 class="sectionhead">WALLPAPER</h2><div class="liblist" id="set-wallpaper"><div class="setrow">'
+    + '<div class="setname">Wallpaper</div>'
+    + '<div class="meta">Loading...</div>'
+    + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
   if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
@@ -2180,7 +2190,86 @@ function paintSettings() {
   if (clrBtn) clrBtn.addEventListener('click', function () { offlineClearAll(); });
   var offCounts = document.getElementById('set-offline-counts');
   if (offCounts) offCounts.textContent = offlineLineText();
+  fillWallpaperSection();
   fillPinSection();
+}
+/* ---------------- Settings \u2014 WALLPAPER section (v394 \u00a72.4) ----------------
+   The wallpaper controls: two surface switches (lock \u00b7 home)
+   and the two folder roots (phone \u00b7 watch), in the standing
+   device-local pattern \u2014 immediate writes through the bridge,
+   no ride on the mapping Save. The values live in the native
+   opn_wallpaper store (the changer reads them at unlock with
+   no page alive); the bridge is the only road to them, so the
+   method-presence guard IS the shell test: no bridge, or a
+   rejected get, renders the unavailable note and wires no
+   controls. Every write repaints from the set call's resolved
+   payload \u2014 the section never displays a value native did not
+   confirm. */
+function wallpaperBridge() {
+  var p = oraBridgePlugin();
+  if (!p || !p.getWallpaperSettings || !p.setWallpaperSettings) return null;
+  return p;
+}
+function fillWallpaperSection() {
+  var host = document.getElementById('set-wallpaper');
+  if (!host) return;
+  var p = wallpaperBridge();
+  if (!p) { paintWallpaperUnavailable(); return; }
+  var r;
+  try { r = p.getWallpaperSettings(); } catch (e) { paintWallpaperUnavailable(); return; }
+  if (!r || !r.then) { paintWallpaperUnavailable(); return; }
+  r.then(function (payload) { paintWallpaperControls(payload); })
+    .catch(function () { paintWallpaperUnavailable(); });
+}
+function paintWallpaperUnavailable() {
+  var host = document.getElementById('set-wallpaper');
+  if (!host) return;
+  host.innerHTML = '<div class="setrow"><div class="setname">Wallpaper</div>'
+    + '<div class="meta">Wallpaper controls live in the app on your phone.</div></div>';
+}
+function wallpaperToggleRow(label, meta, on, id) {
+  return '<div class="setrow"><div class="setname">' + label + '</div>'
+    + '<div class="meta">' + meta + '</div>'
+    + '<div class="setcontrols"><button class="settoggle' + (on ? ' on' : '') + '" id="' + id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (on ? 'On' : 'Off') + '</button></div></div>';
+}
+function wallpaperRootOptions(roots, current) {
+  return (roots || []).map(function (r) {
+    return '<option value="' + esc(r) + '"' + (r === current ? ' selected' : '') + '>' + esc(r) + '</option>';
+  }).join('');
+}
+function paintWallpaperControls(s) {
+  var host = document.getElementById('set-wallpaper');
+  if (!host) return;
+  if (!s || !s.paths) { paintWallpaperUnavailable(); return; }
+  var paths = s.paths;
+  var html = '';
+  html += wallpaperToggleRow('Lock screen', 'A new image on the lock screen at each unlock.', !!s.lockOn, 'set-wp-lock');
+  html += wallpaperToggleRow('Home screen', 'A new image on the home screen at each unlock \u2014 the same image as the lock screen.', !!s.homeOn, 'set-wp-home');
+  if (!s.lockOn && !s.homeOn) {
+    html += '<div class="setrow"><div class="meta">Both screens are off. New images still file; the background stands still by the switches&rsquo; setting.</div></div>';
+  }
+  html += '<div class="setrow"><div class="setname">Phone folder</div>'
+    + '<div class="meta">' + esc(s.phoneRoot + '/Phone') + '<br>' + esc(paths.phoneSaints || '') + '<br>' + esc(paths.phoneMonthly || '') + '</div>'
+    + '<div class="setcontrols"><select id="set-wp-phone-root">' + wallpaperRootOptions(s.offeredRoots, s.phoneRoot) + '</select></div></div>';
+  html += '<div class="setrow"><div class="setname">Watch folder</div>'
+    + '<div class="meta">' + esc(s.watchRoot + '/Watch') + '<br>' + esc(paths.watchSaints || '') + '<br>' + esc(paths.watchMonthly || '') + '</div>'
+    + '<div class="setcontrols"><select id="set-wp-watch-root">' + wallpaperRootOptions(s.offeredRoots, s.watchRoot) + '</select></div></div>';
+  host.innerHTML = html;
+  var lockBtn = document.getElementById('set-wp-lock');
+  if (lockBtn) lockBtn.addEventListener('click', function () { wallpaperWrite({ lockOn: !s.lockOn }); });
+  var homeBtn = document.getElementById('set-wp-home');
+  if (homeBtn) homeBtn.addEventListener('click', function () { wallpaperWrite({ homeOn: !s.homeOn }); });
+  var phoneSel = document.getElementById('set-wp-phone-root');
+  if (phoneSel) phoneSel.addEventListener('change', function (ev) { wallpaperWrite({ phoneRoot: ev.target.value }); });
+  var watchSel = document.getElementById('set-wp-watch-root');
+  if (watchSel) watchSel.addEventListener('change', function (ev) { wallpaperWrite({ watchRoot: ev.target.value }); });
+}
+function wallpaperWrite(patch) {
+  var p = wallpaperBridge();
+  if (!p) { paintWallpaperUnavailable(); return; }
+  var r;
+  try { r = p.setWallpaperSettings(patch); } catch (e) { return; }
+  if (r && r.then) r.then(function (payload) { paintWallpaperControls(payload); }).catch(function () {});
 }
 /* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
    A standalone section at the end of Settings, apart from the
