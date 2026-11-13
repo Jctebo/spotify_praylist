@@ -2254,6 +2254,19 @@ function paintWallpaperControls(s) {
   html += '<div class="setrow"><div class="setname">Watch folder</div>'
     + '<div class="meta">' + esc(s.watchRoot + '/Watch') + '<br>' + esc(paths.watchSaints || '') + '<br>' + esc(paths.watchMonthly || '') + '</div>'
     + '<div class="setcontrols"><select id="set-wp-watch-root">' + wallpaperRootOptions(s.offeredRoots, s.watchRoot) + '</select></div></div>';
+  /* v396 §2.6: the failure/gap notice lines — the additive
+     'notices' key in the same payload, computed natively from
+     the delivered store (a qualifying image that failed to
+     file · a day/month with nothing stocked). Plain lines
+     under the folder rows, exactly as sent, plain text through
+     esc; an absent key (the standing shell, which carries no
+     such key) or an empty list renders nothing. No control
+     rides on them and nothing else in the section changes. */
+  if (s.notices && s.notices.length) {
+    for (var ni = 0; ni < s.notices.length; ni++) {
+      html += '<div class="setrow"><div class="meta">' + esc(String(s.notices[ni])) + '</div></div>';
+    }
+  }
   host.innerHTML = html;
   var lockBtn = document.getElementById('set-wp-lock');
   if (lockBtn) lockBtn.addEventListener('click', function () { wallpaperWrite({ lockOn: !s.lockOn }); });
