@@ -1,0 +1,16 @@
+PASS S1 day builds two descriptors (prayers only)
+PASS S2 intentionText stamped on the prayer; unpaired prayer carries none
+PASS S3 no spoken descriptor, no intro: ids anywhere in the build
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.evaluate: TypeError: Cannot read properties of undefined (reading 'state')
+    at eval (eval at evaluate (:370:30), <anonymous>:7:47)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /home/hatch/workspace/.worktrees/v384/app/tests/harness-v384.mjs:272:24 {
+  log: []
+}
+
+Node.js v24.22.1

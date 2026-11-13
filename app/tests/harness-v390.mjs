@@ -261,7 +261,18 @@ try {
   ok(bogus.ok === false, "L7: the widened check still rejects a fourth source value");
 
   // ============ Stage C — L8, the Morning retirement =============
-  const livePost = await get(BASE, `/api/player/externals/live?date=${chicagoToday()}`);
+  let livePost;
+  // Environment note (v390 Implement close-out, 2026-11-12): the
+  // sandbox egress proxy intermittently resets the first post-0018
+  // /externals/live fetch while the Worker performs its real-feed
+  // fan-out (production code; the fetch helper has no retry because
+  // the client re-reads on next open). Retry connect-level failures
+  // — and ONLY connect-level failures — until the response arrives;
+  // every assertion below then judges that response as before.
+  for (let attempt = 0; ; attempt++) {
+    try { livePost = await get(BASE, `/api/player/externals/live?date=${chicagoToday()}`); break; }
+    catch (e) { if (attempt >= 39) throw e; await new Promise((r) => setTimeout(r, 3000)); }
+  }
   ok(!(livePost.body.slots || []).some((s) => s.slotId === "ext-bible-in-a-year"),
     "L8: after 0018, the externals live payload carries NO Bible slot — present or missing, no card stands");
   ok(morningPrimaries(r.body.sources).join(",") === "do-invitatory,morning-prayer,do-morning-prayer,daily-rosary,marian-antiphon",
