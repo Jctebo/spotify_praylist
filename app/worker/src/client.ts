@@ -2271,43 +2271,6 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.notices[ni])) + '</div></div>';
     }
   }
-  /* v403 §2.2: the restore rows — the additive 'removedEntries'
-     key in the same payload (the written-off entries, identity
-     only, in record order — the structured form of the removed
-     notice lines above, derived natively from the same records,
-     so the button set and the line set are the same set by
-     construction). One row per entry in the v399 Sync row's
-     elements: the file name in a meta line and a ghost Restore
-     button in setcontrols. The rows render ONLY when the shell
-     carries the new bridge method — the guarded posture, read
-     locally in this block exactly as the Sync row reads its own:
-     a shell without restoreWallpaperRemoved renders the section
-     byte-for-byte as before. An absent key or an empty list
-     renders nothing. The identity never rides an attribute: the
-     listeners bind by id after the paint, each closing over its
-     own entry (below). */
-  var rwp = wallpaperBridge();
-  var restoreEntries = (s.removedEntries && rwp && typeof rwp.restoreWallpaperRemoved === 'function') ? s.removedEntries : null;
-  if (restoreEntries && restoreEntries.length) {
-    for (var ri = 0; ri < restoreEntries.length; ri++) {
-      html += '<div class="setrow"><div class="meta">' + esc(String(restoreEntries[ri].name)) + '</div>'
-        + '<div class="setcontrols"><button class="btn ghost" id="set-wp-restore-' + ri + '">Restore</button></div></div>';
-    }
-  }
-  /* v403 §2.2: the restore outcome line — directly after the
-     rows' position, in the notices' setrow/meta form, rendered
-     whenever the payload carries restoreOutcome (the key rides
-     restore answers only — §2.5 — so no plain open can render
-     a stale line), independently of whether any rows stand:
-     after a restored answer the entries are gone and the line
-     still confirms the tap landed. The name is the tapped
-     file's, held in the one tap-scoped variable. */
-  if (s.restoreOutcome) {
-    var restoreLine = wallpaperRestoreLine(s.restoreOutcome, wallpaperLastRestoreName);
-    if (restoreLine) {
-      html += '<div class="setrow"><div class="meta">' + esc(restoreLine) + '</div></div>';
-    }
-  }
   /* v398 §2.9: the apply status lines — the additive
      'applyStatus' key in the same payload, pre-rendered
      natively from the per-surface apply record (lock first,
@@ -2336,7 +2299,9 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.changerRun[ci])) + '</div></div>';
     }
   }
-  /* v399 §2.5: the section's one action — Sync now, in the
+  /* v399 §2.5: the section's one action — Sync all (v404
+     §2.5: the label names what the button does: one tap runs
+     the full convergence, removals included), in the
      OFFLINE precedent's form, appended after the notices as
      the section's last rows. The button renders ONLY when
      the shell carries the new bridge method: a shell without
@@ -2349,7 +2314,7 @@ function paintWallpaperControls(s) {
   var wp = wallpaperBridge();
   if (wp && typeof wp.syncWallpaperNow === 'function') {
     html += '<div class="setrow"><div class="setname">Sync</div>'
-      + '<div class="setcontrols"><button class="btn ghost" id="set-wp-sync">Sync now</button></div></div>';
+      + '<div class="setcontrols"><button class="btn ghost" id="set-wp-sync">Sync all</button></div></div>';
   }
   if (s.lastSync) {
     html += '<div class="setrow"><div class="meta">' + esc(wallpaperSyncLine(s.lastSync, s.saintStatus)) + '</div></div>';
@@ -2379,19 +2344,6 @@ function paintWallpaperControls(s) {
   if (watchSel) watchSel.addEventListener('change', function (ev) { wallpaperWrite({ watchRoot: ev.target.value }); });
   var syncBtn = document.getElementById('set-wp-sync');
   if (syncBtn) syncBtn.addEventListener('click', function () { wallpaperSyncNow(); });
-  /* v403 §2.2: the restore listeners — bound by id in record
-     order, each closing over its own entry, so the bridge
-     receives exactly the tapped entry's {variant, name} and
-     no other entry's; one entry's tap touches no other
-     entry's button. */
-  if (restoreEntries && restoreEntries.length) {
-    for (var rbi = 0; rbi < restoreEntries.length; rbi++) {
-      (function (entry, id) {
-        var rBtn = document.getElementById(id);
-        if (rBtn) rBtn.addEventListener('click', function () { wallpaperRestoreRemoved(entry, rBtn); });
-      })(restoreEntries[rbi], 'set-wp-restore-' + rbi);
-    }
-  }
 }
 function wallpaperWrite(patch) {
   var p = wallpaperBridge();
@@ -2419,29 +2371,34 @@ function wallpaperSyncLine(ls, ss) {
   if (ls.outcome === 'alreadyRunning') return 'A sync is already running.';
   var t = wallpaperSyncTime(ls.at);
   if (ls.outcome === 'updated') {
+    /* v404 §2.5: the count form — when the record carries its
+       filed/removed counts (every record written by the new
+       native build), the line names them; a legacy record
+       without counts renders the standing v399 changed form.
+       The counts are the line's whole story now: convergence
+       counts a removal-only pass as UPDATED through the
+       standing fold, so this form is where a morning cleanup
+       shows. */
+    if (typeof ls.filed === 'number' && typeof ls.removed === 'number') {
+      return 'Synced ' + t + ' \u2014 filed ' + ls.filed + ', removed ' + ls.removed + '.';
+    }
     var n = ls.changed || 0;
     return 'Synced ' + t + ' \u2014 ' + n + (n === 1 ? ' image' : ' images') + ' filed or removed.';
   }
   if (ls.outcome === 'upToDate') {
-    /* v400 §2.5: the composition rule — "up to date" may not
-       stand alone over a missing saint. When the payload's
-       saintStatus stands and its standing is not one of the
-       filed family, the absence form renders instead; in
-       every other case (a filed-family standing, or no
-       saintStatus at all) the shipped form stands. The
-       outcome value and the changed count are untouched —
-       this is a render rule over the line, exactly where
-       v399 placed the line's copy. */
-    if (ss && ss.standing && ss.standing !== 'filed' && ss.standing !== 'filedThisPass' && ss.standing !== 'refiledThisPass') {
-      if (ss.standing === 'notStocked') return 'Synced ' + t + ' \u2014 no saint image for today is on your phone.';
-      return 'Synced ' + t + ' \u2014 ' + (ss.name || '') + ' is not on your phone.';
-    }
+    /* v404 §2.5: up to date is unconditional — the v401
+       downlevel-saint suppression is deleted with the
+       condition that made it necessary (under convergence
+       the missing saint is re-filed by the pass itself; the
+       saint line below carries her standing separately). */
     return 'Synced ' + t + ' \u2014 already up to date.';
   }
   if (ls.outcome === 'failed') return 'Sync at ' + t + ' did not complete. The standing checks keep running and will catch up.';
   return '';
 }
-/* v400 §2.5: the saint line's copy — the seven pinned forms,
+/* v400 §2.5: the saint line's copy — the six pinned forms
+   (v404 §2.5: the writtenOff form is deleted with the state
+   it named),
    composed from the payload's saintStatus alone (the name
    and cause arrive pre-derived from the native pass; the
    line never prints a file name where the saint's name
@@ -2453,7 +2410,6 @@ function wallpaperSaintLine(ss) {
   if (ss.standing === 'filed') return 'Today\u2019s saint: ' + name + ' \u2014 on your phone.';
   if (ss.standing === 'filedThisPass') return 'Today\u2019s saint: ' + name + ' \u2014 filed at the last check and on your phone.';
   if (ss.standing === 'refiledThisPass') return 'Today\u2019s saint: ' + name + ' \u2014 re-filed at the last check and on your phone.';
-  if (ss.standing === 'writtenOff') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone. The app read the image as removed by you and will not re-file it.';
   if (ss.standing === 'failed') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone. The last filing attempt failed (' + (ss.cause || '') + ') \u2014 the app keeps retrying at the next check.';
   if (ss.standing === 'notOnPhone') return 'Today\u2019s saint: ' + name + ' \u2014 not on your phone.';
   if (ss.standing === 'notStocked') return 'No saint image for today stands in the library yet.';
@@ -2474,57 +2430,6 @@ function wallpaperSyncNow() {
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing\u2026'; }
   var r;
   try { r = p.syncWallpaperNow(); } catch (e) { fillWallpaperSection(); return; }
-  if (r && r.then) {
-    r.then(function (payload) { paintWallpaperControls(payload); })
-      .catch(function () { fillWallpaperSection(); });
-  } else { fillWallpaperSection(); }
-}
-/* v403 §2.2: the tapped entry's name for the outcome line —
-   the one tap-scoped module variable: the tap handler stores
-   it immediately before the call; the composer reads it at
-   the answer paint. It is never persisted, and it is inert on
-   every paint whose payload carries no restoreOutcome (the
-   key rides restore answers only — §2.5 — so no plain open
-   can render a stale line). */
-var wallpaperLastRestoreName = '';
-/* v403 §2.2: the restore outcome line's copy — the seven
-   pinned forms (§1.4 step 7), composed from the answer's
-   wire value alone: wallpaperSyncLine's role, client copy
-   over a wire value. The failed:<cause> form splits the
-   wire value at its first ':'; the cause is the suffix,
-   verbatim. An absent key, an empty value, or an
-   unrecognized value composes '' (nothing renders). */
-function wallpaperRestoreLine(outcome, name) {
-  if (!outcome) return '';
-  var n = name || '';
-  if (outcome === 'restored') return 'Restored ' + n + ' \u2014 it is back on your phone.';
-  if (outcome === 'alreadyRunning') return 'A sync is already running. Try the restore again in a moment.';
-  if (outcome === 'notRemoved') return 'That image does not stand as removed \u2014 nothing to restore.';
-  if (outcome === 'notInLibrary') return n + ' is no longer in the library, so it cannot be restored.';
-  if (outcome === 'notInSet') return n + ' is not in today\u2019s set, so it is not restored \u2014 the next check would remove it again.';
-  if (outcome === 'libraryUnread') return 'The library could not be read just now, so nothing was changed.';
-  if (outcome.indexOf('failed:') === 0) return 'The restore did not file ' + n + ' (' + outcome.substring(7) + '). It still stands as removed.';
-  return '';
-}
-/* v403 §2.2: the tap — mirrors wallpaperSyncNow exactly:
-   the tapped button takes its running state (disabled,
-   "Restoring\u2026"; a tap cannot stack, and the native
-   guard is the second wall behind it), the tapped entry's
-   name is stored for the outcome line immediately before
-   the call, the call runs with exactly that entry's
-   {variant, name}, and the resolve repaints the whole
-   section from the answer payload (rows, notices, saint
-   line, and outcome line riding the one answer). A
-   rejection repaints through the standing get. The running
-   state needs no restore code: the repaint rebuilds the
-   section HTML, button included. */
-function wallpaperRestoreRemoved(entry, btn) {
-  var p = wallpaperBridge();
-  if (!p || typeof p.restoreWallpaperRemoved !== 'function') { paintWallpaperUnavailable(); return; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Restoring\u2026'; }
-  wallpaperLastRestoreName = entry.name;
-  var r;
-  try { r = p.restoreWallpaperRemoved({ variant: entry.variant, name: entry.name }); } catch (e) { fillWallpaperSection(); return; }
   if (r && r.then) {
     r.then(function (payload) { paintWallpaperControls(payload); })
       .catch(function () { fillWallpaperSection(); });
