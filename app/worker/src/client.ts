@@ -2271,6 +2271,19 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.notices[ni])) + '</div></div>';
     }
   }
+  /* v398 §2.9: the apply status lines — the additive
+     'applyStatus' key in the same payload, pre-rendered
+     natively from the per-surface apply record (lock first,
+     home second: the last attempt's image, its time, and
+     what the system reports). Rendered in the identical
+     setrow/meta shape as the notices, directly after them;
+     an absent key (the old shell, which carries no such
+     key) or an empty list renders nothing. */
+  if (s.applyStatus && s.applyStatus.length) {
+    for (var ai = 0; ai < s.applyStatus.length; ai++) {
+      html += '<div class="setrow"><div class="meta">' + esc(String(s.applyStatus[ai])) + '</div></div>';
+    }
+  }
   /* v399 §2.5: the section's one action — Sync now, in the
      OFFLINE precedent's form, appended after the notices as
      the section's last rows. The button renders ONLY when
