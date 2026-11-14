@@ -50,12 +50,21 @@ export const APP_CSS = `
      accent-bearing surfaces read var(--accent)/var(--accent-ink);
      new bar-family surfaces read the --bar-* set. */
   --accent:var(--gold); --accent-ink:#ffffff;
+  /* v411 §2.7: the text-gold token — brand gold's hue deepened
+     until it clears 4.5:1 as TEXT on both standing grounds
+     (4.65:1 on cream, 4.97:1 on card). --accent-text is the
+     seam every accent-colored WORD reads: gold themes point
+     it at the text gold; the four liturgical themes point it
+     at their own accent, which already clears the line.
+     Bright --gold stands untouched for discs, rules, borders,
+     and fills. */
+  --gold-text:#866B2E; --accent-text:var(--gold-text);
   --bar-bg:#16283f; --bar-solid:#16283f; --bar-fg:#e9d9ae; --bar-sub:#b9c4d4; }
 [data-lit="white"] { --bar-bg:linear-gradient(135deg, #f3e9cf, #faf5ec); --bar-solid:#f3e9cf; --bar-fg:#16283f; --bar-sub:#6d6353; --accent:#a8863a; --accent-ink:#ffffff; }
-[data-lit="red"] { --bar-bg:linear-gradient(135deg, #5d1616, #7d2121); --bar-solid:#5d1616; --bar-fg:#f6e8d8; --bar-sub:#dfb9a8; --accent:#9e2b25; --accent-ink:#ffffff; }
-[data-lit="green"] { --bar-bg:linear-gradient(135deg, #173a22, #1f4d2e); --bar-solid:#173a22; --bar-fg:#e9d9ae; --bar-sub:#b7cdb9; --accent:#2e7d46; --accent-ink:#ffffff; }
-[data-lit="violet"] { --bar-bg:linear-gradient(135deg, #2c1e40, #3d2a56); --bar-solid:#2c1e40; --bar-fg:#e9d9ae; --bar-sub:#c4b6dd; --accent:#6a4a9e; --accent-ink:#ffffff; }
-[data-lit="rose"] { --bar-bg:linear-gradient(135deg, #6d3441, #8a4453); --bar-solid:#6d3441; --bar-fg:#f9e9e4; --bar-sub:#eed3d7; --accent:#a34a5f; --accent-ink:#ffffff; }
+[data-lit="red"] { --bar-bg:linear-gradient(135deg, #5d1616, #7d2121); --bar-solid:#5d1616; --bar-fg:#f6e8d8; --bar-sub:#dfb9a8; --accent:#9e2b25; --accent-ink:#ffffff; --accent-text:var(--accent); }
+[data-lit="green"] { --bar-bg:linear-gradient(135deg, #173a22, #1f4d2e); --bar-solid:#173a22; --bar-fg:#e9d9ae; --bar-sub:#b7cdb9; --accent:#2e7d46; --accent-ink:#ffffff; --accent-text:var(--accent); }
+[data-lit="violet"] { --bar-bg:linear-gradient(135deg, #2c1e40, #3d2a56); --bar-solid:#2c1e40; --bar-fg:#e9d9ae; --bar-sub:#c4b6dd; --accent:#6a4a9e; --accent-ink:#ffffff; --accent-text:var(--accent); }
+[data-lit="rose"] { --bar-bg:linear-gradient(135deg, #6d3441, #8a4453); --bar-solid:#6d3441; --bar-fg:#f9e9e4; --bar-sub:#eed3d7; --accent:#a34a5f; --accent-ink:#ffffff; --accent-text:var(--accent); }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); font-family: Georgia, 'Times New Roman', serif; font-size:17px; }
 .brandbar { position: sticky; top:0; z-index: 30; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 14px; }
@@ -141,7 +150,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .stat { flex:1; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 2px; }
 .stat b { display:block; font-size:19px; color:var(--navy); font-weight:normal; }
 .stat span { font-size:13px; letter-spacing:.5px; text-transform:uppercase; color:#6d6353; }
-.pri { font-size:13px; letter-spacing:1px; padding:2px 7px; border-radius:20px; border:1px solid var(--accent); color:var(--accent); white-space:nowrap; }
+.pri { font-size:13px; letter-spacing:1px; padding:2px 7px; border-radius:20px; border:1px solid var(--accent); color:var(--accent-text); white-space:nowrap; }
 .pri.H { background:var(--accent); color:var(--accent-ink); }
 .audiobar { display:flex; flex-wrap:wrap; gap:6px; }
 .chipbtn { font-family:inherit; font-size:14px; border:1px solid var(--line); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; }
@@ -151,9 +160,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .podmark { flex:none; min-width:44px; min-height:44px; border-radius:50%; border:1px solid var(--line, #ccc); background:transparent; color:var(--ink); font-size:15px; cursor:pointer; padding:4px 8px; }
 .podmark.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 .podmark-wrap { flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; }
-.podmark-date { font-size:11px; color:var(--muted, #777); white-space:nowrap; }
+.podmark-date { font-size:13px; color:#6d6353; white-space:nowrap; }
 .playbtn.playing { background:var(--navy); }
-.spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent); }
+.spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent-text); }
 /* v363 §2.3: the .notavail rule retires with its last row use —
    the not-available signal folds into the row's meta line. */
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
@@ -184,7 +193,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .card.intention-row .ellipsis-btn.stands { display:flex; }
 .card.intention-row.expanded { height:auto; overflow:visible; }
 .card.intention-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible; }
-.playbtn.small { width:30px; height:30px; font-size:12px; }
+/* v411 §2.5: the small play disc at the 44px floor — the
+   button box grows to 44px and the visible 30px disc is drawn
+   centered as an ::after (the played-dot construction adapted
+   to a filled disc); the glyph rides above the disc. Navy
+   under .playing, mirroring .playbtn.playing. */
+.playbtn.small { position:relative; z-index:0; width:44px; height:44px; font-size:12px; background:transparent; }
+.playbtn.small::after { content:''; position:absolute; z-index:-1; left:7px; top:7px; width:30px; height:30px; border-radius:50%; background:var(--accent); }
+.playbtn.small.playing::after { background:var(--navy); }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
 .chip { font-family:inherit; font-size:14px; padding:6px 11px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; }
 .chip.active { background:var(--navy); color:var(--cream); border-color:var(--navy); }
@@ -207,9 +223,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .sheet .inner { max-width:640px; margin:0 auto; }
 .daynav { display:flex; align-items:center; gap:10px; margin:0 0 6px; }
 .daynav .dlabel { flex:1; text-align:center; font-size:16px; color:var(--navy); }
-.count { font-size:14px; color:var(--accent); }
+.count { font-size:14px; color:var(--accent-text); }
 .err { color:#8a2a2a; font-size:15px; }
-.about { margin-top:22px; font-size:14px; color:#8b8172; line-height:1.6; }
+.about { margin-top:22px; font-size:14px; color:#6d6353; line-height:1.6; }
 .gearbtn { margin-left:auto; background:none; border:none; color:var(--bar-fg); font-size:22px; line-height:1; cursor:pointer; padding:8px 6px; flex:none; }
 .setrow { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; }
 .setrow .setname { font-size:17px; color:var(--navy); }
@@ -217,7 +233,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .setcontrols select { width:auto; flex:1; min-width:110px; }
 .setcontrols .mvbtn { font-family:inherit; font-size:15px; border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 10px; cursor:pointer; flex:none; }
 .setcontrols .mvbtn:disabled { opacity:.35; cursor:default; }
-.settoggle { font-family:inherit; font-size:14px; border:1px solid var(--accent); color:var(--accent); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; flex:none; white-space:nowrap; }
+.settoggle { font-family:inherit; font-size:14px; border:1px solid var(--accent); color:var(--accent-text); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; flex:none; white-space:nowrap; }
 .settoggle.on { background:var(--accent); color:var(--accent-ink); }
 /* Now Playing (v336) */
 /* v354 §2.1/§2.2/§2.7: the clone form — a liturgical-gradient hero
@@ -323,6 +339,32 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .stats { gap:0; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
 .stat { background:none; border:none; border-radius:0; }
 .stat + .stat { border-left:1px solid var(--line); }
+/* v411 §2.3: the back button's cream-ground variant — navy
+   text (13.72:1 on cream), taken at the Podcasts series-page
+   paint site only. The dark-ground dress stands untouched. */
+.backbtn.cream { color:var(--navy); }
+/* v411 §2.5: ONE 44px floor — no tappable element under 44px
+   in its tap dimension, on the class families, never
+   per-element patches. Visible shapes grow only where
+   padding alone cannot carry the target; where a fixed
+   construction stands (the 76px track row, the remove link's
+   line), the standing negative-margin / padding construction
+   carries the hit box without moving a glyph. */
+.chip { min-height:44px; display:inline-flex; align-items:center; }
+.chipbtn { min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+.settoggle { min-height:44px; }
+button.btn.small { min-height:44px; }
+.card.trow .trow-tail .btn.small { margin-top:-7px; margin-bottom:-7px; }
+.setcontrols .mvbtn { min-height:44px; min-width:44px; }
+.backbtn { min-height:44px; }
+.segtoggle button { min-height:44px; }
+#set-wallpaper .btn, #set-wallpaper select { min-height:44px; }
+[data-del-entry] { display:inline-block; padding:15px 8px; margin:-15px -8px; }
+/* v411 §2.6: the forms standard's inline line — one slot
+   under the field, in the standing meta grey; it reserves no
+   height while empty. */
+.fieldnote { font-size:14px; color:#6d6353; margin:6px 0 0; }
+.fieldnote:empty { display:none; }
 
 
 `;

@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null };
+var state = { tab: 'prayers', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -1715,6 +1715,89 @@ function armSideScrollRestore(tab, side) {
   }
   attempt();
 }
+/* ---------------- Place-keeping (v411 §2.4) ----------------
+   ONE place store, generalized from v410's side machinery —
+   not a second system. placeScroll IS v410's sideScroll map
+   (the same object, the same side keys), widened with the
+   'settings' screen key; Podcasts keeps its scroll inside
+   its return record (state.podcastsReturn). placeText holds
+   in-progress field text by element id, harvested generically
+   — no per-form list. Retention is the page session: module
+   state only, nothing persisted. capturePlace() runs at the
+   head of every full-view repaint entry (setTab, switchSide,
+   renderSettings) while the outgoing screen still stands;
+   armPlaceRestore(key) rides v410's one observer pattern —
+   when the Loading marker leaves the view it refills the
+   harvested text and sets the scroll. placeSkip marks a field
+   whose save just succeeded: capture drops its entry instead
+   of storing it, so a saved draft is never resurrected
+   (§2.10 leg 2.2e). */
+var placeScroll = sideScroll;
+var placeText = {};
+var placeSkip = {};
+var podLevel = 'index';
+function placeScreenKey() {
+  if (state.tab === 'prayers' || state.tab === 'conscience') return state.tab + ':' + tabSideNow[state.tab];
+  return state.tab;
+}
+function capturePlace() {
+  if (state.tab === 'podcasts') {
+    state.podcastsReturn = {
+      level: podLevel,
+      series: (podLevel === 'series' && state.podcasts) ? state.podcasts.series : null,
+      scroll: window.scrollY || 0,
+    };
+  } else if (state.tab) {
+    placeScroll[placeScreenKey()] = window.scrollY || 0;
+  }
+  realView.querySelectorAll('textarea, input, select').forEach(function (el) {
+    if (!el.id) return;
+    if (!(el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.type === 'text' || el.type === 'search')) return;
+    if (placeSkip[el.id]) { delete placeText[el.id]; delete placeSkip[el.id]; return; }
+    placeText[el.id] = el.value;
+  });
+}
+function restorePlaceText() {
+  Object.keys(placeText).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = placeText[id];
+  });
+}
+function armPlaceRestore(key) {
+  var target = placeScroll[key];
+  var done = false;
+  var obs = null;
+  function attempt() {
+    if (done) return;
+    if (realView.innerHTML.indexOf('Loading...') >= 0) return;
+    done = true;
+    if (obs) obs.disconnect();
+    restorePlaceText();
+    if (typeof target === 'number') window.scrollTo(0, target);
+  }
+  if (typeof MutationObserver !== 'undefined') {
+    obs = new MutationObserver(attempt);
+    obs.observe(realView, { childList: true, subtree: true });
+  }
+  attempt();
+}
+function armPodScroll(y) {
+  var done = false;
+  var obs = null;
+  function attempt() {
+    if (done) return;
+    if (realView.innerHTML.indexOf('Loading...') >= 0) return;
+    done = true;
+    if (obs) obs.disconnect();
+    window.scrollTo(0, y || 0);
+  }
+  if (typeof MutationObserver !== 'undefined') {
+    obs = new MutationObserver(attempt);
+    obs.observe(realView, { childList: true, subtree: true });
+  }
+  attempt();
+}
+
 function paintTabSide(tab, side) {
   if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
   else if (side === 'confession') renderConfessionContent();
@@ -1722,11 +1805,13 @@ function paintTabSide(tab, side) {
 }
 function switchSide(tab, side) {
   if (!document.getElementById('sidehost')) return;
+  capturePlace(); // v411 §2.4: harvest the outgoing side before it repaints
   recordSideScroll(tab);
   writeTabSide(tab, side);
   document.querySelectorAll('#sidetoggle [data-side]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-side') === side); });
   paintTabSide(tab, side);
   armSideScrollRestore(tab, side);
+  armPlaceRestore(tab + ':' + side); // v411 §2.12: the same store value + the text refill
 }
 function paintMergedContainer(tab) {
   var side = readTabSide(tab);
@@ -1735,9 +1820,11 @@ function paintMergedContainer(tab) {
   enterSideHost();
   paintTabSide(tab, side);
   armSideScrollRestore(tab, side);
+  armPlaceRestore(tab + ':' + side);
 }
 
 function setTab(tab) {
+  capturePlace(); // v411 §2.4: harvest the outgoing screen before the dispatch repaints
   recordSideScroll(state.tab);
   view = realView;
   state.tab = tab;
@@ -1825,11 +1912,38 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
   }
 }
 function renderPodcasts() {
-  // v390 §2.7: the tab ALWAYS enters at the series level — an
-  // open series does not survive a tab switch. state.podcasts
-  // may still hold the last series payload (the auto-mark's
-  // mutation rule reads it), but nothing paints it until a card
-  // is tapped.
+  // v390 §2.7: the tab enters at the series level — the first
+  // open of a session still lands there. v411 §2.4 (the §1.3
+  // override, scoped to exactly this): a session return record
+  // (state.podcastsReturn, written by capturePlace whenever
+  // the screen is left or the level changes) restores an
+  // in-session return to the level left — the series page
+  // paints at once from the standing payload (the auto-mark's
+  // mutation rule reads that same object; no copy is kept),
+  // its scroll restores, AND the standing re-read still runs:
+  // the fresh payload repaints in place with the recorded
+  // scroll re-applied. If the payload no longer matches the
+  // record, the record follows the payload — paint what
+  // stands, scroll best-effort.
+  var rec = state.podcastsReturn;
+  if (rec && rec.level === 'series' && rec.series && state.podcasts && state.podcasts.series === rec.series) {
+    paintPodcasts();
+    armPodScroll(rec.scroll);
+    api('/api/player/podcasts?series=' + encodeURIComponent(rec.series)).then(function (res) {
+      state.podcasts = res;
+      if (state.tab === 'podcasts' && podLevel === 'series' && state.podcastsReturn === rec) { paintPodcasts(); armPodScroll(rec.scroll); }
+    }).catch(function () {});
+    return;
+  }
+  if (rec && rec.level === 'index' && state.podcastsIndex) {
+    paintPodcastsIndex();
+    armPodScroll(rec.scroll);
+    api('/api/player/podcasts').then(function (res) {
+      state.podcastsIndex = res;
+      if (state.tab === 'podcasts' && podLevel === 'index' && state.podcastsReturn === rec) { paintPodcastsIndex(); armPodScroll(rec.scroll); }
+    }).catch(function () {});
+    return;
+  }
   view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
   api('/api/player/podcasts').then(function (res) {
     state.podcastsIndex = res;
@@ -1843,6 +1957,7 @@ function paintPodcastsIndex() {
   // registry order (title · counts · current line), the whole
   // card tappable. An unavailable series shows its unavailable
   // line on its own card.
+  podLevel = 'index';
   var res = state.podcastsIndex;
   if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
   var html = '<h1 class="screen">Podcasts</h1>';
@@ -1875,17 +1990,28 @@ function openPodSeries(key) {
 }
 function wirePodBack() {
   var b = view.querySelector('[data-podback]');
-  if (b) b.addEventListener('click', function () { renderPodcasts(); });
+  if (b) b.addEventListener('click', function () {
+    // v411 §2.4: backing out clears the return record —
+    // renderPodcasts then paints the index from its standing
+    // payload (the record is what a TAB return reads, never
+    // the back button).
+    state.podcastsReturn = null;
+    renderPodcasts();
+  });
 }
 function paintPodcasts() {
   var res = state.podcasts;
   if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
+  podLevel = 'series';
   var html = '<h1 class="screen">Podcasts</h1>';
   // v390 §2.7: the back row stands at the top of the series page
   // (the app's standing backrow/backbtn dress) — back re-reads
   // the index, so the counts the marks just changed stand
   // correct.
-  html += '<div class="backrow"><button class="backbtn" data-podback>&lsaquo; All series</button></div>';
+  // v411 §2.3: the series page stands on plain cream, so its
+  // back button takes the cream variant (navy text); the two
+  // block-page sites keep the dark-ground dress.
+  html += '<div class="backrow"><button class="backbtn cream" data-podback>&lsaquo; All series</button></div>';
   html += offlineLineHtml('pod-offline-btn');
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -2184,6 +2310,7 @@ function settingsSections() {
   return out;
 }
 function renderSettings() {
+  capturePlace(); // v411 §2.4: harvest the outgoing screen before Settings paints
   recordSideScroll(state.tab);
   view = realView; // v410: Settings paints the full view, never a side host
   state.tab = 'settings';
@@ -2277,33 +2404,62 @@ function paintSettings() {
   view.querySelectorAll('[data-setkey]').forEach(function (el) {
     var key = el.getAttribute('data-setkey');
     var row = settingsRows.filter(function (r) { return r.sourceKey === key; })[0];
+    // v411 §2.4: the state flips paint their own row, never the
+    // page — the toggle flips its own class/label in place, the
+    // selects keep the value they show, and the arrows swap
+    // their two row elements and recompute the section's
+    // disabled states in place. paintSettings() stands only on
+    // its named paths (the open paint, the PIN fills, the
+    // mapping Save result), each wrapped by capture/restore.
     el.querySelector('[data-setact="toggle"]').addEventListener('click', function () {
       row.enabled = row.enabled ? 0 : 1;
       settingsRebuildOrder();
-      paintSettings();
+      var b = el.querySelector('[data-setact="toggle"]');
+      b.classList.toggle('on', !!row.enabled);
+      b.textContent = row.enabled ? 'On' : 'Off';
     });
     el.querySelector('[data-setfield="block"]').addEventListener('change', function (ev) {
       row.block = ev.target.value;
       settingsRebuildOrder();
-      paintSettings();
     });
     el.querySelector('[data-setfield="dayRule"]').addEventListener('change', function (ev) {
       row.dayRule = ev.target.value;
     });
-    el.querySelector('[data-setact="up"]').addEventListener('click', function () { settingsMove(row, -1); });
-    el.querySelector('[data-setact="down"]').addEventListener('click', function () { settingsMove(row, 1); });
+    el.querySelector('[data-setact="up"]').addEventListener('click', function () { settingsMoveDom(el, row, -1); });
+    el.querySelector('[data-setact="down"]').addEventListener('click', function () { settingsMoveDom(el, row, 1); });
   });
   document.getElementById('set-save').addEventListener('click', saveSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
-  if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); paintSettings(); });
+  if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); });
   var clrBtn = document.getElementById('set-clear-offline');
   if (clrBtn) clrBtn.addEventListener('click', function () { offlineClearAll(); });
   var offCounts = document.getElementById('set-offline-counts');
   if (offCounts) offCounts.textContent = offlineLineText();
   fillPinSection();
+  armPlaceRestore('settings'); // v411 §2.4: a legitimate full repaint never moves the page
+}
+function settingsMoveDom(el, row, dir) {
+  // v411 §2.4: the arrows' in-place half — settingsMove swaps
+  // the rows in the standing array (and no longer repaints);
+  // here the two row elements swap in the DOM and the whole
+  // section's arrow disabled states recompute in place.
+  var list = el.parentElement;
+  if (!list) return;
+  var rows = Array.prototype.slice.call(list.querySelectorAll('[data-setkey]'));
+  var i = rows.indexOf(el);
+  var j = i + dir;
+  if (j < 0 || j >= rows.length) return;
+  settingsMove(row, dir);
+  if (dir < 0) list.insertBefore(el, rows[j]); else list.insertBefore(rows[j], el);
+  var now = list.querySelectorAll('[data-setkey]');
+  now.forEach(function (r, idx) {
+    var up = r.querySelector('[data-setact="up"]'), dn = r.querySelector('[data-setact="down"]');
+    if (up) up.disabled = idx === 0;
+    if (dn) dn.disabled = idx === now.length - 1;
+  });
 }
 /* ---------------- Settings \u2014 WALLPAPER section (v394 \u00a72.4) ----------------
    The wallpaper controls: two surface switches (lock \u00b7 home)
@@ -2684,6 +2840,8 @@ function settingsRebuildOrder() {
   settingsRows = out;
 }
 function settingsMove(row, dir) {
+  // v411 §2.4: the array swap only — the repaint retires; the
+  // wiring's settingsMoveDom carries the visible half in place.
   var secs = settingsSections();
   var list = secs[settingsSectionOf(row)];
   var i = list.indexOf(row);
@@ -2693,7 +2851,6 @@ function settingsMove(row, dir) {
   var out = [];
   SET_SECTIONS.forEach(function (s) { secs[s].forEach(function (r) { out.push(r); }); });
   settingsRows = out;
-  paintSettings();
 }
 function saveSettings() {
   var errEl = document.getElementById('set-err');
@@ -2712,6 +2869,27 @@ function saveSettings() {
     .catch(function (e) { if (errEl) errEl.textContent = e.message; });
 }
 document.getElementById('gearbtn').addEventListener('click', renderSettings);
+
+/* ---------------- Forms that answer (v411 §2.6) ----------------
+   One standard on every empty submit: an inline line under
+   the field, in the app's plain voice — silence is the only
+   wrong answer. Each form paints an empty .fieldnote slot
+   under its field at build time (id 'fn-' + the field's id);
+   fieldNote() writes the line, and an input listener on the
+   field clears its own slot. NO form uses a disabled-until-
+   text substitute; the one disabled state in this standard
+   is the editor sheets' in-flight save guard (§2.6, 4.3). */
+function fieldNote(slotId, msg) {
+  var el = document.getElementById(slotId);
+  if (el) el.textContent = msg || '';
+}
+function wireFieldNotes() {
+  realView.querySelectorAll('textarea, input, select').forEach(function (el) {
+    if (!el.id) return;
+    if (!document.getElementById('fn-' + el.id)) return;
+    el.addEventListener('input', function () { fieldNote('fn-' + el.id, ''); });
+  });
+}
 
 /* ---------------- Intentions (the pool) ---------------- */
 function intentionRow(it) {
@@ -2736,6 +2914,13 @@ function renderIntentions() {
     // item/intention listing below stands untouched (§2.9(2)).
     var html = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>';
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
+    // v411 §2.6 (4.1): the add card stands at the head of the
+    // surface, directly under the counts strip — the tab's
+    // primary act no longer sits below every standing
+    // intention. The groups stand second and lose nothing;
+    // the card's ids and wireIntentions stand unchanged. The
+    // fn-new-text slot (§2.6, 4.2) stands under the field.
+    html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><p class="fieldnote" id="fn-new-text"></p><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention only adds it — it first enters a draw at the next nightly fill.</p></div>';
     [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
       var rows = active.filter(function (i) { return i.priority === g[0]; });
       html += '<h2 class="sectionhead">' + g[1].toUpperCase() + '</h2>';
@@ -2744,7 +2929,6 @@ function renderIntentions() {
     if (retired.length) {
       html += '<h2 class="sectionhead">RETIRED</h2><div class="liblist">' + retired.map(intentionRow).join('') + '</div>';
     }
-    html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention only adds it — it first enters a draw at the next nightly fill.</p></div>';
     html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool and does not stage the day.</p>';
     view.innerHTML = html;
     wireIntentions(intentions);
@@ -2754,17 +2938,27 @@ function wireIntentions(intentions) {
   var add = document.getElementById('new-add');
   if (add) add.addEventListener('click', function () {
     var text = document.getElementById('new-text').value.trim();
-    if (!text) return;
-    post('/api/prayer/intentions', { text: text, priority: document.getElementById('new-pri').value }).then(renderIntentions);
+    if (!text) { fieldNote('fn-new-text', 'Write the intention first.'); return; }
+    post('/api/prayer/intentions', { text: text, priority: document.getElementById('new-pri').value }).then(function () {
+      // v411 §2.4/§2.10 (2.2e): the saved field's draft drops —
+      // capturePlace skips it — while the side's place stands.
+      placeSkip['new-text'] = true; placeSkip['new-pri'] = true;
+      capturePlace();
+      renderIntentions();
+      armPlaceRestore('prayers:intentions');
+    });
   });
+  wireFieldNotes();
   view.querySelectorAll('[data-act]').forEach(function (b) {
     b.addEventListener('click', function () {
       var id = Number(b.getAttribute('data-id')); var act = b.getAttribute('data-act');
       var it = intentions.filter(function (i) { return i.id === id; })[0];
+      // v411 §2.4: the repaint keeps the side's place — capture
+      // runs while the standing DOM (draft + scroll) still holds.
       if (act === 'edit') openIntentionEditor(it);
-      else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(renderIntentions);
-      else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(renderIntentions);
-      else if (act === 'del') { if (confirm('Delete this intention and all its draws?')) api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(renderIntentions); }
+      else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
+      else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
+      else if (act === 'del') { if (confirm('Delete this intention and all its draws?')) api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); }); }
     });
   });
 }
@@ -2774,12 +2968,18 @@ function openIntentionEditor(it) {
     + '<label class="f">Text</label><input type="text" id="ed-text" value="' + esc(it.text) + '">'
     + '<label class="f">Priority</label><select id="ed-pri"><option value="H"' + (it.priority === 'H' ? ' selected' : '') + '>High</option><option value="M"' + (it.priority === 'M' ? ' selected' : '') + '>Medium</option><option value="L"' + (it.priority === 'L' ? ' selected' : '') + '>Low</option></select>'
     + '<p class="meta" style="margin-top:12px">Status: ' + esc(it.status) + ' · Created: ' + esc((it.created_at || '').slice(0, 10)) + ' · Drawn ' + (it.drawnCount || 0) + ' times' + (it.lastDrawn ? ' · last drawn ' + it.lastDrawn : '') + '</p>'
-    + '<div style="margin-top:14px"><button class="btn gold" id="ed-save">Save</button></div></div>';
+    + '<p class="fieldnote" id="ed-note"></p><div style="margin-top:14px"><button class="btn gold" id="ed-save">Save</button></div></div>';
   document.body.appendChild(sheet);
   sheet.querySelector('#ed-close').addEventListener('click', function () { sheet.remove(); });
   sheet.querySelector('#ed-save').addEventListener('click', function () {
+    // v411 §2.6 (4.3): the failure branch — the button disables
+    // while the write is in flight; a refusal leaves the sheet
+    // open, the text intact, and says so in the one line.
+    var btn = sheet.querySelector('#ed-save');
+    btn.disabled = true;
     api('/api/prayer/intentions/' + it.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: sheet.querySelector('#ed-text').value, priority: sheet.querySelector('#ed-pri').value }) })
-      .then(function () { sheet.remove(); renderIntentions(); });
+      .then(function () { sheet.remove(); capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); })
+      .catch(function () { btn.disabled = false; sheet.querySelector('#ed-note').textContent = 'That did not save. Your text is still here \u2014 try again.'; });
   });
 }
 
@@ -5764,8 +5964,8 @@ function renderExaminationContent() {
         return '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
       }).join('');
     }
-    html += '<div class="card"><h3>Add your own — ' + esc(state.examCat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
-    html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
+    html += '<div class="card"><h3>Add your own — ' + esc(state.examCat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
+    html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
     if (!closed) html += '<button class="btn" id="run-close" style="width:100%">Close tonight&rsquo;s examination</button>';
     else html += '<p class="meta">Tonight&rsquo;s run is closed. Its entries stand in Confession preparation.</p>';
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
@@ -5777,7 +5977,7 @@ function entriesHtml(list) { return (list || []).map(entryHtml).join(''); }
 function entryHtml(e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>'; }
 function entryFieldHtml(p, closed) {
   if (closed) return '';
-  return '<div class="entryform hidden" id="ef-' + p.id + '"><textarea id="et-' + p.id + '" placeholder="In your own words..."></textarea><div style="margin-top:6px"><button class="btn gold small" data-save-entry="' + p.id + '">Save entry</button></div></div>';
+  return '<div class="entryform hidden" id="ef-' + p.id + '"><textarea id="et-' + p.id + '" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-et-' + p.id + '"></p><div style="margin-top:6px"><button class="btn gold small" data-save-entry="' + p.id + '">Save entry</button></div></div>';
 }
 function wireExamination(data) {
   var run = data.run;
@@ -5797,21 +5997,34 @@ function wireExamination(data) {
   view.querySelectorAll('[data-save-entry]').forEach(function (b) {
     b.addEventListener('click', function () {
       var pid = Number(b.getAttribute('data-save-entry'));
-      var text = document.getElementById('et-' + pid).value.trim(); if (!text) return;
+      var text = document.getElementById('et-' + pid).value.trim();
+      if (!text) { fieldNote('fn-et-' + pid, 'Write the entry first.'); return; }
       var prompt = (data.prompts || []).filter(function (p) { return p.id === pid; })[0];
-      post('/api/exam/entries', { runId: run.id, promptId: pid, category: prompt.category, text: text }).then(renderExamination);
+      post('/api/exam/entries', { runId: run.id, promptId: pid, category: prompt.category, text: text }).then(function () {
+        placeSkip['et-' + pid] = true; // v411 §2.10 (2.2e): the saved draft drops at the switchSide capture
+        renderExamination();
+      });
     });
   });
   var ca = document.getElementById('custom-add');
   if (ca) ca.addEventListener('click', function () {
-    var text = document.getElementById('custom-text').value.trim(); if (!text) return;
-    post('/api/exam/entries', { runId: run.id, promptId: null, category: state.examCat, text: text }).then(renderExamination);
+    var text = document.getElementById('custom-text').value.trim();
+    if (!text) { fieldNote('fn-custom-text', 'Write the entry first.'); return; }
+    post('/api/exam/entries', { runId: run.id, promptId: null, category: state.examCat, text: text }).then(function () {
+      placeSkip['custom-text'] = true;
+      renderExamination();
+    });
   });
   var fa = document.getElementById('free-add');
   if (fa) fa.addEventListener('click', function () {
-    var text = document.getElementById('free-text').value.trim(); if (!text) return;
-    post('/api/exam/entries', { runId: run.id, promptId: null, category: 'Anything else', text: text }).then(renderExamination);
+    var text = document.getElementById('free-text').value.trim();
+    if (!text) { fieldNote('fn-free-text', 'Write the entry first.'); return; }
+    post('/api/exam/entries', { runId: run.id, promptId: null, category: 'Anything else', text: text }).then(function () {
+      placeSkip['free-text'] = true;
+      renderExamination();
+    });
   });
+  wireFieldNotes();
   view.querySelectorAll('[data-del-entry]').forEach(function (a) {
     a.addEventListener('click', function (ev) { ev.preventDefault(); api('/api/exam/entries/' + a.getAttribute('data-del-entry'), { method: 'DELETE' }).then(renderExamination); });
   });
@@ -5825,12 +6038,18 @@ function openPromptsEditor(prompts) {
   var rows = prompts.map(function (p) {
     return '<label class="f">' + esc(p.category) + '</label><textarea data-prompt-edit="' + p.id + '">' + esc(p.text) + '</textarea>';
   }).join('');
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Examination prompts</h1><button class="btn ghost" id="pe-close">Close</button></div><p class="meta">Seeded verbatim from Lasance, My Prayer Book (1908). Edit any prompt in your own words; the seed source stays on the record.</p>' + rows + '<div style="margin-top:14px"><button class="btn gold" id="pe-save">Save prompts</button></div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Examination prompts</h1><button class="btn ghost" id="pe-close">Close</button></div><p class="meta">Seeded verbatim from Lasance, My Prayer Book (1908). Edit any prompt in your own words; the seed source stays on the record.</p>' + rows + '<p class="fieldnote" id="pe-note"></p><div style="margin-top:14px"><button class="btn gold" id="pe-save">Save prompts</button></div></div>';
   document.body.appendChild(sheet);
   sheet.querySelector('#pe-close').addEventListener('click', function () { sheet.remove(); });
   sheet.querySelector('#pe-save').addEventListener('click', function () {
+    // v411 §2.6 (4.3): the failure branch, same three parts as
+    // every editor sheet.
+    var btn = sheet.querySelector('#pe-save');
+    btn.disabled = true;
     var updates = []; sheet.querySelectorAll('[data-prompt-edit]').forEach(function (t) { updates.push({ id: Number(t.getAttribute('data-prompt-edit')), text: t.value }); });
-    api('/api/exam/prompts', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompts: updates }) }).then(function () { sheet.remove(); renderExamination(); });
+    api('/api/exam/prompts', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompts: updates }) })
+      .then(function () { sheet.remove(); renderExamination(); })
+      .catch(function () { btn.disabled = false; sheet.querySelector('#pe-note').textContent = 'That did not save. Your text is still here \u2014 try again.'; });
   });
 }
 
@@ -5850,7 +6069,7 @@ function renderConfessionContent() {
     } else if (pen && pen.text && pen.done_at) {
       html += '<div class="card"><p class="meta">The penance from ' + esc(pen.date) + ' is complete.</p></div>';
     } else {
-      html += '<div class="card"><p class="meta">No penance stands open. After your next confession, record the penance here.</p><label class="f">Penance given</label><textarea id="pen-text" placeholder="The penance the priest assigned..."></textarea><div style="margin-top:8px"><button class="btn" id="pen-save">Save penance</button></div></div>';
+      html += '<div class="card"><p class="meta">No penance stands open. After your next confession, record the penance here.</p><label class="f">Penance given</label><textarea id="pen-text" placeholder="The penance the priest assigned..."></textarea><p class="fieldnote" id="fn-pen-text"></p><div style="margin-top:8px"><button class="btn" id="pen-save">Save penance</button></div></div>';
     }
     html += '<h2 class="sectionhead">PREPARATION — SINCE YOUR LAST CONFESSION</h2>';
     var total = 0; (c.prep || []).forEach(function (g) { total += g.entries.length; });
@@ -5868,11 +6087,22 @@ function renderConfessionContent() {
     var pd = document.getElementById('pen-done');
     if (pd) pd.addEventListener('click', function () { post('/api/confession/penance/done', {}).then(renderConfession); });
     var ps = document.getElementById('pen-save');
-    if (ps) ps.addEventListener('click', function () { var t = document.getElementById('pen-text').value.trim(); if (t) post('/api/confession/penance', { text: t }).then(renderConfession); });
+    if (ps) ps.addEventListener('click', function () {
+      var t = document.getElementById('pen-text').value.trim();
+      if (!t) { fieldNote('fn-pen-text', 'Write the penance first.'); return; }
+      post('/api/confession/penance', { text: t }).then(function () {
+        placeSkip['pen-text'] = true; // v411 §2.10 (2.2e)
+        renderConfession();
+      });
+    });
+    wireFieldNotes();
     document.getElementById('cf-made').addEventListener('click', function () {
       var date = document.getElementById('cf-date').value; var note = document.getElementById('cf-note').value.trim();
       if (!date) return;
-      if (confirm('Close the preparation list under a confession on ' + date + '?')) post('/api/confession/made', { date: date, note: note }).then(renderConfession);
+      if (confirm('Close the preparation list under a confession on ' + date + '?')) post('/api/confession/made', { date: date, note: note }).then(function () {
+        placeSkip['cf-note'] = true; // v411 §2.4: the saved note is not a draft to resurrect
+        renderConfession();
+      });
     });
     document.getElementById('cf-gear').addEventListener('click', function () { openGuideEditor(c.guide || []); });
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
@@ -5882,15 +6112,21 @@ function openGuideEditor(guide) {
   var rows = guide.map(function (g) {
     return '<label class="f">Step ' + g.step_no + ' — title</label><input type="text" data-guide-title="' + g.step_no + '" value="' + esc(g.title) + '"><label class="f">Text</label><textarea data-guide-body="' + g.step_no + '">' + esc(g.body) + '</textarea>';
   }).join('');
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Confession guide</h1><button class="btn ghost" id="ge-close">Close</button></div><p class="meta">Seeded from Lasance, My Prayer Book (1908), Devotions for Confession, pp. 353-354. Editable in your own words.</p>' + rows + '<div style="margin-top:14px"><button class="btn gold" id="ge-save">Save guide</button></div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Confession guide</h1><button class="btn ghost" id="ge-close">Close</button></div><p class="meta">Seeded from Lasance, My Prayer Book (1908), Devotions for Confession, pp. 353-354. Editable in your own words.</p>' + rows + '<p class="fieldnote" id="ge-note"></p><div style="margin-top:14px"><button class="btn gold" id="ge-save">Save guide</button></div></div>';
   document.body.appendChild(sheet);
   sheet.querySelector('#ge-close').addEventListener('click', function () { sheet.remove(); });
   sheet.querySelector('#ge-save').addEventListener('click', function () {
+    // v411 §2.6 (4.3): the failure branch, same three parts as
+    // every editor sheet.
+    var btn = sheet.querySelector('#ge-save');
+    btn.disabled = true;
     var steps = []; sheet.querySelectorAll('[data-guide-title]').forEach(function (t) {
       var n = t.getAttribute('data-guide-title');
       steps.push({ step_no: Number(n), title: t.value, body: sheet.querySelector('[data-guide-body="' + n + '"]').value });
     });
-    api('/api/confession/guide', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ steps: steps }) }).then(function () { sheet.remove(); renderConfession(); });
+    api('/api/confession/guide', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ steps: steps }) })
+      .then(function () { sheet.remove(); renderConfession(); })
+      .catch(function () { btn.disabled = false; sheet.querySelector('#ge-note').textContent = 'That did not save. Your text is still here \u2014 try again.'; });
   });
 }
 
