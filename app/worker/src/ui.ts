@@ -31,10 +31,9 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <div id="dock" class="dock hidden"><img class="dockthumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-autoplay" class="docknext dockauto" aria-label="Autoplay">Autoplay On</button><button id="dock-intentions" class="docknext dockauto" aria-label="Intentions" aria-pressed="true">Intentions On</button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabicon">&#10022;</span><span>Prayers</span></button>
+  <button data-tab="conscience" class="tab"><span class="tabicon">&#10013;</span><span>Conscience</span></button>
   <button data-tab="podcasts" class="tab"><span class="tabicon">&#9835;</span><span>Podcasts</span></button>
-  <button data-tab="intentions" class="tab"><span class="tabicon">&#9829;</span><span>Intentions</span></button>
-  <button data-tab="examination" class="tab"><span class="tabicon">&#9790;</span><span>Examination</span></button>
-  <button data-tab="confession" class="tab"><span class="tabicon">&#10013;</span><span>Confession</span></button>
+  <button data-tab="wallpaper" class="tab"><span class="tabicon">&#9635;</span><span>Wallpaper</span></button>
 </nav>
 <script src="/app.js"></script>
 </body>
@@ -192,6 +191,13 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .modes { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; }
 .modes button { flex:1; font-family:inherit; font-size:15px; padding:8px; background:#fff; border:none; cursor:pointer; }
 .modes button.active { background:var(--navy); color:var(--cream); }
+/* v410 §2.3: the merged tabs' segmented toggle — ONE control
+   serving both merged tabs, drawn from the standing tokens
+   (the .modes frame; the current side marked in the
+   .tab.active inset-accent language). */
+.segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); }
+.segtoggle button { flex:1; font-family:inherit; font-size:15px; padding:8px; background:none; border:none; cursor:pointer; color:#6d6353; }
+.segtoggle button.active { color:var(--navy); box-shadow: inset 0 -2px 0 var(--accent); }
 .prompt { cursor:pointer; }
 .prompt .ptext { font-size:17px; line-height:1.45; }
 .entry { border-left:3px solid var(--accent); padding:6px 10px; margin:8px 0 0; background:#fff; font-size:16px; }

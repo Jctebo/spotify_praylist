@@ -1,13 +1,16 @@
-// Ora Pro Nobis app client. Five tabs: Prayers (the player) ·
-// Podcasts (listening progress, v381) · Intentions (the pool) ·
-// Examination · Confession. No checklist
+// Ora Pro Nobis app client. Four tabs (v410): Prayers (the
+// player, with the Intentions pool behind its toggle) ·
+// Conscience (Examination and Confession behind one toggle,
+// under the one PIN gate) · Podcasts (listening progress,
+// v381) · Wallpaper (the wallpaper controls, moved from
+// Settings). No checklist
 // anywhere: no check-offs, no done states, no counters on prayers
 // or examination questions (Amendments 8-9).
 export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null };
+var state = { tab: 'prayers', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -128,6 +131,7 @@ function fetchPinState() {
 // locked until a PIN is set, and a failed state read fails
 // closed to the same prompt's unreadable variant.
 function gatedTabRender(tab, contentFn) {
+  view = realView; // v410: the gate stands in the full view, never inside a side host
   if (pinToken) { contentFn(); return; }
   if (pinStateCache && !pinStateCache.pinSet) { renderPinSetupPrompt(tab, contentFn, {}); return; }
   view.innerHTML = '<p class="meta">Loading...</p>';
@@ -138,8 +142,9 @@ function gatedTabRender(tab, contentFn) {
   }).catch(function () { renderPinSetupPrompt(tab, contentFn, { unreadable: true }); });
 }
 function pinGateTitles(tab) {
-  if (tab === 'examination') return { screen: 'Tonight&rsquo;s examination', lock: 'Examination of Conscience is protected by your PIN' };
-  if (tab === 'confession') return { screen: 'Confession', lock: 'Confession is protected by your PIN' };
+  // v410 §2.5: the per-side entries retire with the per-side
+  // gates; the one merged tab carries the one title pair.
+  if (tab === 'conscience') return { screen: 'Conscience', lock: 'Conscience is protected by your PIN' };
   return { screen: 'Settings', lock: 'This section is protected by your PIN' };
 }
 function renderPinGate(tab, contentFn, opts) {
@@ -324,6 +329,7 @@ function pinRefusalGate(tab, contentFn, e) {
   var had = !!pinToken;
   pinToken = null;
   pinStateCache = null;
+  view = realView; // v410: the re-stood gate replaces the whole tab, side host included
   renderPinGate(tab, contentFn, { expired: had });
   return true;
 }
@@ -1634,14 +1640,112 @@ function setupMediaSession() {
   window.__opnMediaHandlers = mediaHandlers;
 }
 
+/* ---------------- Merged tabs (v410) ----------------
+   Two of the four tabs carry two standing screens behind ONE
+   segmented toggle (John's one-canonical-element rule): the
+   Prayers tab (Prayers | Intentions) and the Conscience tab
+   (Examination | Confession, behind the one PIN gate, §2.5).
+   The container paints the toggle plus a #sidehost region
+   into the view; the side renders then paint into the host —
+   the module view handle points at the host while a
+   container stands and is restored to the real view by every
+   full-screen render (setTab, Settings, the PIN gate). Each
+   toggle remembers its side on the device (D2), in the
+   standing opn-<name>-v<NNN> key pattern, and each side
+   keeps its own scroll position across switches: the switch
+   records window.scrollY for the outgoing side and restores
+   the incoming side's value once its content paint lands
+   (the queue-box capture/restore arithmetic, §2.3). */
+var realView = view;
+var TAB_SIDE_PRAYERS_KEY = 'opn-tabside-prayers-v410';
+var TAB_SIDE_CONSCIENCE_KEY = 'opn-tabside-conscience-v410';
+var tabSideNow = { prayers: 'prayers', conscience: 'examination' };
+var sideScroll = {};
+function tabSideCfg(tab) {
+  if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination'], ['confession', 'Confession']] };
+  return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Prayers'], ['intentions', 'Intentions']] };
+}
+function readTabSide(tab) {
+  var cfg = tabSideCfg(tab);
+  var v = null;
+  try { v = localStorage.getItem(cfg.key); } catch (e) { v = null; }
+  var known = false;
+  cfg.sides.forEach(function (s) { if (s[0] === v) known = true; });
+  tabSideNow[tab] = known ? v : cfg.def;
+  return tabSideNow[tab];
+}
+function writeTabSide(tab, side) {
+  tabSideNow[tab] = side;
+  try { localStorage.setItem(tabSideCfg(tab).key, side); } catch (e) {}
+}
+function paintSideToggle(tab, current) {
+  var cfg = tabSideCfg(tab);
+  return '<div class="segtoggle" id="sidetoggle">' + cfg.sides.map(function (s) {
+    return '<button data-side="' + s[0] + '"' + (s[0] === current ? ' class="active"' : '') + '>' + s[1] + '</button>';
+  }).join('') + '</div>';
+}
+function wireSideToggle(tab) {
+  var t = document.getElementById('sidetoggle');
+  if (!t) return;
+  t.querySelectorAll('[data-side]').forEach(function (b) {
+    b.addEventListener('click', function () { switchSide(tab, b.getAttribute('data-side')); });
+  });
+}
+function enterSideHost() { var h = document.getElementById('sidehost'); if (h) view = h; }
+function recordSideScroll(tab) {
+  if (tab !== 'prayers' && tab !== 'conscience') return;
+  sideScroll[tab + ':' + tabSideNow[tab]] = window.scrollY || 0;
+}
+function armSideScrollRestore(tab, side) {
+  var host = document.getElementById('sidehost');
+  if (!host) return;
+  var target = sideScroll[tab + ':' + side] || 0;
+  var done = false;
+  var obs = null;
+  function attempt() {
+    if (done) return;
+    if (host.innerHTML.indexOf('Loading...') >= 0) return;
+    done = true;
+    if (obs) obs.disconnect();
+    window.scrollTo(0, target);
+  }
+  if (typeof MutationObserver !== 'undefined') {
+    obs = new MutationObserver(attempt);
+    obs.observe(realView, { childList: true, subtree: true });
+  }
+  attempt();
+}
+function paintTabSide(tab, side) {
+  if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
+  else if (side === 'confession') renderConfessionContent();
+  else renderExaminationContent();
+}
+function switchSide(tab, side) {
+  if (!document.getElementById('sidehost')) return;
+  recordSideScroll(tab);
+  writeTabSide(tab, side);
+  document.querySelectorAll('#sidetoggle [data-side]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-side') === side); });
+  paintTabSide(tab, side);
+  armSideScrollRestore(tab, side);
+}
+function paintMergedContainer(tab) {
+  var side = readTabSide(tab);
+  view.innerHTML = paintSideToggle(tab, side) + '<div id="sidehost"></div>';
+  wireSideToggle(tab);
+  enterSideHost();
+  paintTabSide(tab, side);
+  armSideScrollRestore(tab, side);
+}
+
 function setTab(tab) {
+  recordSideScroll(state.tab);
+  view = realView;
   state.tab = tab;
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
   if (tab === 'prayers') renderPrayers();
+  else if (tab === 'conscience') renderConscience();
   else if (tab === 'podcasts') renderPodcasts();
-  else if (tab === 'intentions') renderIntentions();
-  else if (tab === 'examination') renderExamination();
-  else if (tab === 'confession') renderConfession();
+  else if (tab === 'wallpaper') renderWallpaper();
 }
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
   b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
@@ -2080,6 +2184,8 @@ function settingsSections() {
   return out;
 }
 function renderSettings() {
+  recordSideScroll(state.tab);
+  view = realView; // v410: Settings paints the full view, never a side host
   state.tab = 'settings';
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.remove('active'); });
   view.innerHTML = '<h1 class="screen">Settings</h1><p class="sub">Source mapping</p><p class="meta">Loading...</p>';
@@ -2128,9 +2234,12 @@ function paintSettings() {
   // (below) reads the values through the bridge after paint and
   // repaints the rows from native truth. The values live in the
   // native opn_wallpaper store — there is no web-side copy.
-  html += '<h2 class="sectionhead">WALLPAPER</h2><div class="liblist" id="set-wallpaper"><div class="setrow">'
+  // v410 §2.7: the WALLPAPER section retires to a pointer —
+  // the controls' one home is the Wallpaper tab (§2.6); the
+  // section shell and its fill call stand down here.
+  html += '<h2 class="sectionhead">WALLPAPER</h2><div class="liblist"><div class="setrow">'
     + '<div class="setname">Wallpaper</div>'
-    + '<div class="meta">Loading...</div>'
+    + '<div class="meta">Wallpaper controls live in the Wallpaper tab.</div>'
     + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
@@ -2194,7 +2303,6 @@ function paintSettings() {
   if (clrBtn) clrBtn.addEventListener('click', function () { offlineClearAll(); });
   var offCounts = document.getElementById('set-offline-counts');
   if (offCounts) offCounts.textContent = offlineLineText();
-  fillWallpaperSection();
   fillPinSection();
 }
 /* ---------------- Settings \u2014 WALLPAPER section (v394 \u00a72.4) ----------------
@@ -2222,6 +2330,17 @@ function wallpaperBridge() {
   var p = oraBridgePlugin();
   if (!p || !p.getWallpaperSettings || !p.setWallpaperSettings) return null;
   return p;
+}
+/* v410 §2.6: the Wallpaper tab — the standing section shell
+   under its own tab: the same host id, the same fill, the six
+   controls unmodified. On the web (no bridge) the fill paints
+   the standing phone-side note (Flag 3). */
+function renderWallpaper() {
+  view.innerHTML = '<h1 class="screen">Wallpaper</h1><div class="liblist" id="set-wallpaper"><div class="setrow">'
+    + '<div class="setname">Wallpaper</div>'
+    + '<div class="meta">Loading...</div>'
+    + '</div></div>';
+  fillWallpaperSection();
 }
 function fillWallpaperSection() {
   var host = document.getElementById('set-wallpaper');
@@ -4802,7 +4921,12 @@ function extMatchBibleDayN(dateStr) {
   return doy > 365 ? 365 : doy;
 }
 
-function renderPrayers() {
+/* v410 §2.4: renderPrayers is the Prayers TAB container
+   (toggle + side host); the standing body below is the
+   Prayers SIDE render, renamed renderPrayersSide. Its body,
+   fetches, and paint (into the side host) stand unchanged. */
+function renderPrayers() { paintMergedContainer('prayers'); }
+function renderPrayersSide() {
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); })
     .catch(function (e) { offlineDayFallback(e); });
@@ -5596,8 +5720,20 @@ function appendBlockSettingsCards(day, b) {
   });
 }
 
+/* ---------------- Conscience (v410) ----------------
+   The merged tab: ONE gate entry (renderConscience) over the
+   standing machinery, and the container (renderConscienceContent)
+   painting the toggle + side host. The two standing gate
+   wrappers keep their names as SIDE repaints — every
+   in-content caller (chips, mode switches, saves, the two
+   editors) already calls them, and a repaint of the side
+   inside the standing container is what those callers mean
+   now (§2.5). */
+function renderConscience() { gatedTabRender('conscience', renderConscienceContent); }
+function renderConscienceContent() { paintMergedContainer('conscience'); }
+
 /* ---------------- Examination ---------------- */
-function renderExamination() { gatedTabRender('examination', renderExaminationContent); }
+function renderExamination() { switchSide('conscience', 'examination'); }
 function renderExaminationContent() {
   view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1><p class="meta">Loading...</p>';
   api('/api/exam/today').then(function (data) {
@@ -5635,7 +5771,7 @@ function renderExaminationContent() {
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
     wireExamination(data);
-  }).catch(function (e) { if (pinRefusalGate('examination', renderExaminationContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 function entriesHtml(list) { return (list || []).map(entryHtml).join(''); }
 function entryHtml(e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>'; }
@@ -5699,7 +5835,7 @@ function openPromptsEditor(prompts) {
 }
 
 /* ---------------- Confession ---------------- */
-function renderConfession() { gatedTabRender('confession', renderConfessionContent); }
+function renderConfession() { switchSide('conscience', 'confession'); }
 function renderConfessionContent() {
   view.innerHTML = '<h1 class="screen">Confession</h1><p class="meta">Loading...</p>';
   api('/api/confession').then(function (c) {
@@ -5739,7 +5875,7 @@ function renderConfessionContent() {
       if (confirm('Close the preparation list under a confession on ' + date + '?')) post('/api/confession/made', { date: date, note: note }).then(renderConfession);
     });
     document.getElementById('cf-gear').addEventListener('click', function () { openGuideEditor(c.guide || []); });
-  }).catch(function (e) { if (pinRefusalGate('confession', renderConfessionContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 function openGuideEditor(guide) {
   var sheet = document.createElement('div'); sheet.className = 'sheet';
