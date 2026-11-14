@@ -11,6 +11,13 @@ export const APP_JS = `
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
 var state = { tab: 'prayers', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
+/* v419 (G31): the series collapse state — the standing
+   series key + whether its listened-before-current run
+   stands open. Reset at every index paint; stamped at every
+   series paint. podSkipScrollOnce carries the toggle
+   repaint's scroll hold. */
+var podCollapse = { series: null, open: false };
+var podSkipScrollOnce = false;
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -77,17 +84,152 @@ function openSpeedSheet() {
   var old = document.querySelector('.speedsheet');
   if (old) old.remove();
   var sheet = document.createElement('div'); sheet.className = 'sheet speedsheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playback speed</h1><button class="btn ghost" id="sp-close">Close</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playback speed</h1></div>'
     + '<p class="meta">One speed for everything the app plays — the day&rsquo;s prayers, the downloaded shows, and Intentions alike. It is remembered on this device.</p>'
     + '<div class="chips">' + SPEED_SET.map(function (r) { return '<button class="chip' + (r === state.rate ? ' active' : '') + '" data-rate="' + r + '">' + r + '&times;</button>'; }).join('') + '</div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#sp-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
   sheet.querySelectorAll('[data-rate]').forEach(function (b) {
     b.addEventListener('click', function () { setRate(Number(b.getAttribute('data-rate'))); });
   });
 }
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+/* v419 (G13/G14): the drawer mount — every sheet except Now
+   Playing mounts through here. It prepends the grab strip,
+   splits the inner's children into head (the first title row
+   or heading) / body (a scrolling .panelbody) / foot (a
+   trailing run of action buttons, re-dressed in the foot
+   bar), sets the px height from the FIT/TALL class
+   (F-419-1), wires the grab-strip drag (a drag of >=25% of
+   the panel's height dismisses; a short drag snaps back),
+   and wires the scrim tap (a tap on the overlay itself
+   dismisses). Every close path stays sheet.remove(). */
+function mountDrawer(sheet, tall) {
+  sheet.classList.add(tall ? 'drawer-tall' : 'drawer-fit');
+  var inner = sheet.querySelector('.inner');
+  if (!inner) return;
+  var grab = document.createElement('div');
+  grab.className = 'grabstrip';
+  grab.innerHTML = '<span class="grabpill"></span>';
+  inner.insertBefore(grab, inner.firstChild);
+  var kids = Array.prototype.slice.call(inner.children).filter(function (n) { return n !== grab; });
+  var head = null, rest = kids;
+  if (kids.length && (kids[0].classList.contains('row') || /^H[123]$/.test(kids[0].tagName))) { head = kids[0]; rest = kids.slice(1); }
+  var foot = null;
+  if (rest.length) {
+    var last = rest[rest.length - 1];
+    if (last.tagName === 'DIV' && last.children.length >= 1 && last.children.length <= 2 &&
+        Array.prototype.every.call(last.children, function (c) { return c.tagName === 'BUTTON' && c.classList.contains('btn'); })) {
+      foot = last; rest = rest.slice(0, -1);
+    }
+  }
+  var body = document.createElement('div');
+  body.className = 'panelbody';
+  rest.forEach(function (n) { body.appendChild(n); });
+  inner.appendChild(body);
+  if (foot) { foot.classList.add('panelfoot'); foot.style.marginTop = '0'; inner.appendChild(foot); }
+  var applyH = function () {
+    var vh = window.innerHeight;
+    if (tall) { inner.style.height = Math.round(vh * 0.92) + 'px'; inner.style.maxHeight = Math.round(vh * 0.92) + 'px'; }
+    else { inner.style.maxHeight = Math.round(vh * 0.85) + 'px'; }
+  };
+  applyH();
+  var onResize = function () { if (document.body.contains(sheet)) applyH(); else window.removeEventListener('resize', onResize); };
+  window.addEventListener('resize', onResize);
+  sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
+  var dragY = null, dragDy = 0;
+  grab.addEventListener('pointerdown', function (ev) {
+    dragY = ev.clientY; dragDy = 0;
+    var move = function (e2) {
+      if (dragY === null) return;
+      dragDy = Math.max(0, e2.clientY - dragY);
+      inner.style.transform = 'translateY(' + dragDy + 'px)';
+    };
+    var up = function () {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      if (dragY === null) return;
+      var h = inner.offsetHeight || 1;
+      var dismiss = dragDy >= h * 0.25;
+      dragY = null;
+      inner.style.transition = 'transform .22s ease';
+      inner.style.transform = dismiss ? 'translateY(' + h + 'px)' : 'translateY(0)';
+      setTimeout(function () { if (dismiss) sheet.remove(); inner.style.transition = ''; inner.style.transform = ''; }, dismiss ? 230 : 10);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+/* v419 (G16): the Now Playing grab — the NP sheets keep the
+   full-height geometry and gain the handle: a tap on the
+   handle, or a downward drag of >=25% of the viewport,
+   minimizes (the caller's own act); a short drag snaps back. */
+function wireNpGrab(sheet, minimize) {
+  var grab = sheet.querySelector('.np-grab');
+  if (!grab) return;
+  var dragY = null, dragDy = 0;
+  grab.addEventListener('pointerdown', function (ev) {
+    dragY = ev.clientY; dragDy = 0;
+    var move = function (e2) {
+      if (dragY === null) return;
+      dragDy = Math.max(0, e2.clientY - dragY);
+      sheet.style.transform = 'translateY(' + dragDy + 'px)';
+    };
+    var up = function () {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      if (dragY === null) return;
+      var go = dragDy >= window.innerHeight * 0.25;
+      dragY = null;
+      sheet.style.transition = 'transform .22s ease';
+      sheet.style.transform = go ? 'translateY(100%)' : 'translateY(0)';
+      setTimeout(function () { if (go) minimize(); sheet.style.transition = ''; sheet.style.transform = ''; }, go ? 230 : 10);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+  grab.addEventListener('click', function () { minimize(); });
+}
+/* v419 (G23): the one confirm — a FIT drawer naming the act
+   in one sentence, Ghost Cancel + the Commit in the foot
+   bar (the Danger dress where the act is destructive). */
+function openConfirm(opts) {
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet confirmsheet';
+  sheet.innerHTML = '<div class="inner"><p class="confirmline">' + esc(opts.line) + '</p>' +
+    '<div class="row" style="margin-top:6px"><button class="btn ghost grow" data-cfcancel>Cancel</button>' +
+    '<button class="btn ' + (opts.danger ? 'danger' : 'gold') + ' grow" data-cfgo>' + esc(opts.commitLabel) + '</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, false);
+  sheet.querySelector('[data-cfcancel]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-cfgo]').addEventListener('click', function () { sheet.remove(); if (opts.act) opts.act(); });
+}
+/* v419 (G21/F-419-5): the skeletons — a loading paint in the
+   screen's own geometry (blocks in the one deeper surface
+   step, standing still), carrying data-skeleton so the place
+   probes read a loading paint structurally, never by text. */
+function skelHtml(kind) {
+  var bar = function (w) { return '<span class="skelbar" style="width:' + w + '%"></span>'; };
+  var rows = function (n, h) { var s = ''; for (var i = 0; i < n; i++) s += '<div class="skel skelrow" style="height:' + h + 'px"></div>'; return s; };
+  if (kind === 'prayers') return '<div data-skeleton="1"><div class="skel" style="height:30px;width:55%;margin:0 0 12px"></div><div class="skel" style="height:44px;border-radius:999px;margin:0 0 12px"></div><div class="blockgrid">' + rows(6, 118) + '</div></div>';
+  if (kind === 'gate') return '<div data-skeleton="1"><div class="skel" style="height:30px;width:50%;margin:0 0 12px"></div><div class="skel" style="height:180px"></div></div>';
+  if (kind === 'podindex') return '<div data-skeleton="1">' + rows(3, 76) + '</div>';
+  if (kind === 'podseries') return '<div data-skeleton="1"><div class="skel" style="height:120px;margin:0 0 10px"></div>' + bar(60) + rows(5, 76) + '</div>';
+  if (kind === 'settings') return '<div data-skeleton="1">' + rows(3, 96) + '</div>';
+  if (kind === 'intentions') return '<div data-skeleton="1"><div class="skel" style="height:64px;margin:0 0 10px"></div>' + rows(4, 76) + '</div>';
+  if (kind === 'conscience') return '<div data-skeleton="1">' + rows(4, 64) + '</div>';
+  return '<div data-skeleton="1">' + rows(3, 76) + '</div>';
+}
+/* v419 (G30): the examination category chips read short —
+   the ordinal + "Cmdt." form; the full category name stands
+   in the data and the filter (the chip's data-cat keeps it). */
+var CMDT_ORDINALS = { First: '1st', Second: '2nd', Third: '3rd', Fourth: '4th', Fifth: '5th', Sixth: '6th', Seventh: '7th', Eighth: '8th', Ninth: '9th', Tenth: '10th' };
+function catChipLabel(c) {
+  var m = /^(\w+) Commandment/.exec(c || '');
+  if (m && CMDT_ORDINALS[m[1]]) return CMDT_ORDINALS[m[1]] + ' Cmdt.';
+  return c;
+}
 function todayChicago() {
   var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
   var p = {}; parts.forEach(function (x) { p[x.type] = x.value; });
@@ -163,7 +305,7 @@ function gatedTabRender(tab, contentFn) {
   view = realView; // v410: the gate stands in the full view, never inside a side host
   if (pinToken) { contentFn(); return; }
   if (pinStateCache && !pinStateCache.pinSet) { renderPinSetupPrompt(tab, contentFn, {}); return; }
-  view.innerHTML = '<p class="meta">Loading...</p>';
+  view.innerHTML = skelHtml('gate'); // v419 (SK-1): the gate wait paints the gate geometry
   fetchPinState().then(function (st) {
     if (!st.pinSet) { renderPinSetupPrompt(tab, contentFn, {}); return; }
     if (pinToken) { contentFn(); return; }
@@ -183,6 +325,9 @@ function renderPinGate(tab, contentFn, opts) {
   var html = '<h1 class="screen">' + titles.screen + '</h1>';
   html += '<div class="card pingate" id="pingate-card"><div class="lockline">' + titles.lock + '</div>';
   html += '<div class="pindots" id="pindots"></div>';
+  // v419 (G29): the hint line under the dots — the PIN rule,
+  // stated before the first wrong entry.
+  html += '<div class="meta" id="pinhint">Enter your PIN to unlock — 4 to 8 digits.</div>';
   html += '<div class="pinpad" id="pinpad">'
     + ['1','2','3','4','5','6','7','8','9'].map(function (d) { return '<button data-pinkey="' + d + '">' + d + '</button>'; }).join('')
     + '<span class="pinblank"></span><button data-pinkey="0">0</button><button data-pinkey="back" aria-label="Delete last digit">&#9003;</button></div>';
@@ -336,6 +481,7 @@ function showRecoverySheet(code, onDone) {
     + '<div class="recoverycode" id="rec-code-text">' + esc(code) + '</div>'
     + '<div class="row"><button class="btn ghost" id="rec-copy">Copy</button><button class="btn gold" id="rec-done">Done</button></div></div>';
   document.body.appendChild(sheet);
+  mountDrawer(sheet, false); // v419: FIT drawer — Copy + Done land in the foot bar
   sheet.querySelector('#rec-copy').addEventListener('click', function () {
     var btn = sheet.querySelector('#rec-copy');
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1228,13 +1374,15 @@ function openQueuePreview() {
   sheet.className = 'sheet np-sheet np-preview';
   sheet.innerHTML = '<div class="inner">'
     + '<div class="np-hero">'
-    + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
+    + '<div class="np-grab"><span class="grabpill"></span></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '</div>'
-    + '<div id="np-queue"></div>'
+    + '<div id="np-queue" class="liblist"></div>'
     + '</div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#np-min').addEventListener('click', function () { state.previewQueue = null; state.queuePreviewIdx = -1; sheet.remove(); });
+  // v419 (G16): the minimize button retires into the grab — a
+  // tap on the handle, or a drag down, runs the same act.
+  wireNpGrab(sheet, function () { state.previewQueue = null; state.queuePreviewIdx = -1; sheet.remove(); });
   renderQueueList();
 }
 function buildContinueQueue() {
@@ -1899,11 +2047,11 @@ function openSleepSheet() {
     return state.sleep.mode === 'minutes' && state.sleep.presetMin === Number(c.k);
   }
   var sheet = document.createElement('div'); sheet.className = 'sheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Sleep timer</h1><button class="btn ghost" id="sl-close">Close</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Sleep timer</h1></div>'
     + '<p class="meta">Minutes until playback stops — the queue is held, not cleared. End of track stops when the playing track finishes.</p>'
     + '<div class="chips">' + choices.map(function (c) { return '<button class="chip' + (isArmed(c) ? ' active' : '') + '" data-sleep-choice="' + c.k + '">' + c.label + '</button>'; }).join('') + '</div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#sl-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
   sheet.querySelectorAll('[data-sleep-choice]').forEach(function (b) {
     b.addEventListener('click', function () {
       var k = b.getAttribute('data-sleep-choice');
@@ -2036,7 +2184,7 @@ function armSideScrollRestore(tab, side) {
   var obs = null;
   function attempt() {
     if (done) return;
-    if (host.innerHTML.indexOf('Loading...') >= 0) return;
+    if (host.querySelector('[data-skeleton]')) return; // v419: the loading read is structural (the skeleton marker), never text
     done = true;
     if (obs) obs.disconnect();
     window.scrollTo(0, target);
@@ -2059,7 +2207,7 @@ function armSideScrollRestore(tab, side) {
    head of every full-view repaint entry (setTab, switchSide,
    renderSettings) while the outgoing screen still stands;
    armPlaceRestore(key) rides v410's one observer pattern —
-   when the Loading marker leaves the view it refills the
+   when the skeleton marker leaves the view it refills the
    harvested text and sets the scroll. placeSkip marks a field
    whose save just succeeded: capture drops its entry instead
    of storing it, so a saved draft is never resurrected
@@ -2103,7 +2251,7 @@ function armPlaceRestore(key) {
   var obs = null;
   function attempt() {
     if (done) return;
-    if (realView.innerHTML.indexOf('Loading...') >= 0) return;
+    if (realView.querySelector('[data-skeleton]')) return; // v419: the loading read is structural (the skeleton marker), never text
     done = true;
     if (obs) obs.disconnect();
     restorePlaceText();
@@ -2120,7 +2268,7 @@ function armPodScroll(y) {
   var obs = null;
   function attempt() {
     if (done) return;
-    if (realView.innerHTML.indexOf('Loading...') >= 0) return;
+    if (realView.querySelector('[data-skeleton]')) return; // v419: the loading read is structural (the skeleton marker), never text
     done = true;
     if (obs) obs.disconnect();
     window.scrollTo(0, y || 0);
@@ -2298,12 +2446,17 @@ function renderPodcasts() {
     }).catch(function () {});
     return;
   }
-  view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podindex');
   api('/api/player/podcasts').then(function (res) {
     state.podcastsIndex = res;
     if (state.tab === 'podcasts') paintPodcastsIndex();
   }).catch(function (e) {
-    if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
+    // v419 (G22): the authored failure + a Ghost Retry on this
+    // surface's own re-render.
+    if (state.tab === 'podcasts') {
+      view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">Podcasts did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      document.getElementById('pod-retry').addEventListener('click', renderPodcasts);
+    }
   });
 }
 function paintPodcastsIndex() {
@@ -2313,7 +2466,8 @@ function paintPodcastsIndex() {
   // line on its own card.
   podLevel = 'index';
   var res = state.podcastsIndex;
-  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
+  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podindex'); return; }
+  podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
   var html = '<h1 class="screen">Podcasts</h1>';
   html += offlineLineHtml('pod-offline-btn');
   res.seriesList.forEach(function (s) {
@@ -2340,13 +2494,17 @@ function paintPodcastsIndex() {
   });
 }
 function openPodSeries(key) {
-  view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries');
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
     if (state.tab === 'podcasts') paintPodcasts();
   }).catch(function (e) {
-    if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
+    // v419 (G22): the authored failure + a Ghost Retry.
+    if (state.tab === 'podcasts') {
+      view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">Podcasts did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
+    }
   });
 }
 function wirePodBack() {
@@ -2362,17 +2520,16 @@ function wirePodBack() {
 }
 function paintPodcasts() {
   var res = state.podcasts;
-  if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>'; return; }
+  if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '<h1 class="screen">Podcasts</h1>';
   // v390 §2.7: the back row stands at the top of the series page
-  // (the app's standing backrow/backbtn dress) — back re-reads
-  // the index, so the counts the marks just changed stand
-  // correct.
-  // v411 §2.3: the series page stands on plain cream, so its
-  // back button takes the cream variant (navy text); the two
-  // block-page sites keep the dark-ground dress.
-  html += '<div class="backrow"><button class="backbtn cream" data-podback>&lsaquo; All series</button></div>';
+  // — back re-reads the index, so the counts the marks just
+  // changed stand correct.
+  // v419 (G10): the back control is the navy disc on every
+  // page; this row also pins (the frozen back row, §4.1), on
+  // the cream ground.
+  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Podcasts">&lsaquo;</button></div>';
   html += offlineLineHtml('pod-offline-btn');
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -2405,7 +2562,20 @@ function paintPodcasts() {
       + '<div class="grow"><h3>' + esc(cur.title) + '</h3><div class="meta">' + esc(cur.label) + (cur.durationS ? ' · ' + fmtDur(cur.durationS) : '') + '</div></div>'
       + '</div></div>';
   }
-  res.entries.forEach(function (e) {
+  // v419 (G31/F-419-3): the collapse — the entries standing
+  // listened BEFORE the current entry fold into one disclosure
+  // row where the first of them stands; the current entry and
+  // everything after it always stand as rows (a later-listened
+  // entry never folds). Opening renders every row and offers
+  // Hide at the run's end. A series change re-stamps closed.
+  var podSkey = res.series || res.title;
+  if (podCollapse.series !== podSkey) podCollapse = { series: podSkey, open: false };
+  var podCurIdx = -1;
+  res.entries.forEach(function (e, i) { if (e.key === res.currentKey) podCurIdx = i; });
+  var podBoundary = podCurIdx < 0 ? res.entries.length : podCurIdx;
+  var podCollapsed = [];
+  res.entries.forEach(function (e, i) { if (i < podBoundary && e.listened) podCollapsed.push(e); });
+  var podRowString = function (e) {
     // v413 §2.6: the episode rows take the one row form — art ·
     // title · snippet · meta · the cluster (⋮ · share ·
     // downloaded icon · play). The standing Get button retires:
@@ -2417,7 +2587,7 @@ function paintPodcasts() {
     // dissolves) and the listened date leaves the wrap for
     // the meta line in D2's short form (§2.7). The partway
     // bar stands at the row's bottom edge, unmoved.
-    html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
+    return '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
       + podRowArtHtml(e)
       + '<div class="grow"><h3>' + esc(e.title) + '</h3>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
@@ -2440,6 +2610,21 @@ function paintPodcasts() {
       // (§1's named case); its position still saves and resumes.
       + (!e.listened && e.positionS > 0 && e.durationS > 0 ? '<div class="podbar"><i style="width:' + (Math.round(1000 * e.positionS / e.durationS) / 10) + '%"></i></div>' : '')
       + '</div>';
+  };
+  var podCollapseEmitted = false;
+  res.entries.forEach(function (e, i) {
+    var folds = i < podBoundary && e.listened && podCollapsed.length > 0;
+    if (folds && !podCollapse.open) {
+      if (!podCollapseEmitted) {
+        podCollapseEmitted = true;
+        html += '<button class="card podcollapse" data-podcollapse="1"><span class="podchev">\u25ba</span><span class="grow">' + podCollapsed.length + ' earlier episode' + (podCollapsed.length === 1 ? '' : 's') + ' listened</span><span class="meta">Show</span></button>';
+      }
+      return;
+    }
+    html += podRowString(e);
+    if (folds && podCollapse.open && e === podCollapsed[podCollapsed.length - 1]) {
+      html += '<button class="card podcollapse" data-podcollapse="1"><span class="podchev open">\u25ba</span><span class="grow">' + podCollapsed.length + ' earlier episode' + (podCollapsed.length === 1 ? '' : 's') + ' listened</span><span class="meta">Hide</span></button>';
+    }
   });
   view.innerHTML = html;
   view.querySelectorAll('[data-podplay]').forEach(function (b) {
@@ -2449,7 +2634,7 @@ function paintPodcasts() {
     b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
   });
   view.querySelectorAll('[data-podmenu]').forEach(function (b) {
-    b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu')); });
+    b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu'), b); });
   });
   view.querySelectorAll('[data-podshare]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -2461,8 +2646,20 @@ function paintPodcasts() {
   paintOfflineLine();
   refreshPodDlStates();
   wirePodBack();
+  // v419 (G31): the disclosure toggle — the repaint holds
+  // the scroll position (the §2.5 scroll-to-current stands
+  // down for exactly this one repaint).
+  var colBtn = view.querySelector('[data-podcollapse]');
+  if (colBtn) colBtn.addEventListener('click', function () {
+    var y = window.scrollY;
+    podCollapse.open = !podCollapse.open;
+    podSkipScrollOnce = true;
+    paintPodcasts();
+    window.scrollTo(0, y);
+  });
   // §2.5: the list opens scrolled to the current entry.
-  if (res.currentKey) {
+  if (podSkipScrollOnce) { podSkipScrollOnce = false; }
+  else if (res.currentKey) {
     var el = view.querySelector('[data-podrow="' + res.currentKey + '"]');
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
   }
@@ -2746,6 +2943,44 @@ function drainPodPositions() {
    increments the settings version. The Intentions card is not a
    settings row and never appears here (A1.2a). */
 var settingsRows = [];
+/* v419 (G28): the Settings unsaved-changes snapshot — taken
+   at every Settings paint; the count of rows differing from
+   it (plus 1 for a moved order) reads beside the save row. */
+var settingsSnapshot = null;
+function snapshotSettings() {
+  settingsSnapshot = settingsRows.map(function (r) { return { sourceKey: r.sourceKey, block: r.block, dayRule: r.dayRule, enabled: r.enabled }; });
+}
+function settingsOrderDiffers() {
+  if (!settingsSnapshot) return false;
+  var curSecs = {}, snapSecs = {};
+  settingsRows.forEach(function (r) { var s = settingsSectionOf(r); (curSecs[s] = curSecs[s] || []).push(r.sourceKey); });
+  settingsSnapshot.forEach(function (s) { var sec = !s.enabled ? 'Off' : (!s.block ? 'No block' : s.block); (snapSecs[sec] = snapSecs[sec] || []).push(s.sourceKey); });
+  for (var sec in curSecs) {
+    var common = (snapSecs[sec] || []);
+    var cur = curSecs[sec].filter(function (k) { return common.indexOf(k) >= 0; });
+    var snap = common.filter(function (k) { return curSecs[sec].indexOf(k) >= 0; });
+    if (cur.join('|') !== snap.join('|')) return true;
+  }
+  return false;
+}
+function settingsDirtyCount() {
+  if (!settingsSnapshot) return 0;
+  var snap = {};
+  settingsSnapshot.forEach(function (s) { snap[s.sourceKey] = s; });
+  var n = 0;
+  settingsRows.forEach(function (r) {
+    var s = snap[r.sourceKey];
+    if (!s || !!r.enabled !== !!s.enabled || (r.block || '') !== (s.block || '') || r.dayRule !== s.dayRule) n++;
+  });
+  if (settingsOrderDiffers()) n++;
+  return n;
+}
+function refreshUnsaved() {
+  var el = document.getElementById('set-unsaved');
+  if (!el) return;
+  var n = settingsDirtyCount();
+  el.textContent = n === 0 ? '' : (n === 1 ? '1 change not saved' : n + ' changes not saved');
+}
 var settingsVersion = null;
 var settingsNote = '';
 var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal'];
@@ -2776,18 +3011,23 @@ function renderSettings() {
   view = realView; // v410: Settings paints the full view, never a side host
   state.tab = 'settings';
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.remove('active'); });
-  view.innerHTML = '<h1 class="screen">Settings</h1><p class="sub">Source mapping</p><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Settings</h1><p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>' + skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
     settingsVersion = res.version;
     settingsNote = '';
     paintSettings();
   }).catch(function (e) {
-    view.innerHTML = '<h1 class="screen">Settings</h1><p class="err">' + esc(e.message) + '</p>';
+    // v419 (G22): the authored failure — a plain sentence and
+    // a Ghost Retry wired to this surface's own re-render.
+    view.innerHTML = '<h1 class="screen">Settings</h1><p class="err">Settings did not load.</p><p><button class="btn ghost" id="set-retry">Retry</button></p>';
+    document.getElementById('set-retry').addEventListener('click', renderSettings);
   });
 }
 function paintSettings() {
   var html = '<h1 class="screen">Settings</h1>';
+  // v419 (G28): the page sub — what the page holds, in one line.
+  html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
   // v358 §1 Decision 2: the Playback section stands above Source
   // mapping — the autoplay choice lives in the app's standing
   // settings home as well as on the dock and Now Playing. The
@@ -2829,10 +3069,12 @@ function paintSettings() {
     + '<div class="setname">Wallpaper</div>'
     + '<div class="meta">Wallpaper controls live in the Wallpaper tab.</div>'
     + '</div></div>';
-  html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
   if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
   html += '<p class="err" id="set-err"></p>';
+  // v419 (G28): the mapping explanation stands at the mapping
+  // itself — directly above the first mapping section head.
+  html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   var secs = settingsSections();
   SET_SECTIONS.forEach(function (sec) {
     var rows = secs[sec];
@@ -2846,7 +3088,7 @@ function paintSettings() {
         html += '<div class="meta">One antiphon episode is produced each day and stands here, in Morning. The day also carries Midday and Afternoon antiphon prayer slots, which no produced episode fills.</div>';
       }
       html += '<div class="setcontrols">';
-      html += '<button class="settoggle' + (row.enabled ? ' on' : '') + '" data-setact="toggle">' + (row.enabled ? 'On' : 'Off') + '</button>';
+      html += '<button class="settoggle' + (row.enabled ? ' on' : '') + '" data-setact="toggle" aria-pressed="' + (row.enabled ? 'true' : 'false') + '">' + (row.enabled ? 'On' : 'Off') + '</button>';
       html += '<select data-setfield="block">' + [''].concat(SET_BLOCKS).map(function (b) {
         return '<option value="' + esc(b) + '"' + (row.block === b ? ' selected' : '') + '>' + (b || 'No block') + '</option>';
       }).join('') + '</select>';
@@ -2859,7 +3101,7 @@ function paintSettings() {
     });
     html += '</div>';
   });
-  html += '<div class="row" style="margin-top:12px"><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
+  html += '<div class="row" style="margin-top:12px"><span class="meta grow" id="set-unsaved"></span><button class="btn ghost" id="set-reset">Reset</button><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
   html += '<div id="pin-section"></div>';
   view.innerHTML = html;
   view.querySelectorAll('[data-setkey]').forEach(function (el) {
@@ -2877,29 +3119,42 @@ function paintSettings() {
       settingsRebuildOrder();
       var b = el.querySelector('[data-setact="toggle"]');
       b.classList.toggle('on', !!row.enabled);
+      b.setAttribute('aria-pressed', row.enabled ? 'true' : 'false');
       b.textContent = row.enabled ? 'On' : 'Off';
+      refreshUnsaved();
     });
     el.querySelector('[data-setfield="block"]').addEventListener('change', function (ev) {
       row.block = ev.target.value;
       settingsRebuildOrder();
+      refreshUnsaved();
     });
     el.querySelector('[data-setfield="dayRule"]').addEventListener('change', function (ev) {
       row.dayRule = ev.target.value;
+      refreshUnsaved();
     });
     el.querySelector('[data-setact="up"]').addEventListener('click', function () { settingsMoveDom(el, row, -1); });
     el.querySelector('[data-setact="down"]').addEventListener('click', function () { settingsMoveDom(el, row, 1); });
   });
   document.getElementById('set-save').addEventListener('click', saveSettings);
+  // v419 (G28): Reset re-renders from the server — the
+  // standing values return, and the unsaved line clears with
+  // the fresh paint's snapshot.
+  document.getElementById('set-reset').addEventListener('click', renderSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
   if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); });
   var clrBtn = document.getElementById('set-clear-offline');
-  if (clrBtn) clrBtn.addEventListener('click', function () { offlineClearAll(); });
+  if (clrBtn) clrBtn.addEventListener('click', function () {
+    // v419 (G23/F-419-9): the clear gains the one confirm.
+    openConfirm({ line: 'Clear all offline downloads? The next online open downloads the automatic set again.', commitLabel: 'Clear downloads', danger: true, act: function () { offlineClearAll(); } });
+  });
   var offCounts = document.getElementById('set-offline-counts');
   if (offCounts) offCounts.textContent = offlineLineText();
   fillPinSection();
+  snapshotSettings(); // v419 (G28): the paint IS the saved state — the unsaved line starts clean
+  refreshUnsaved();
   armPlaceRestore('settings'); // v411 §2.4: a legitimate full repaint never moves the page
 }
 function settingsMoveDom(el, row, dir) {
@@ -2921,6 +3176,7 @@ function settingsMoveDom(el, row, dir) {
     if (up) up.disabled = idx === 0;
     if (dn) dn.disabled = idx === now.length - 1;
   });
+  refreshUnsaved(); // v419 (G28): a moved order counts once
 }
 /* ---------------- Settings \u2014 WALLPAPER section (v394 \u00a72.4) ----------------
    The wallpaper controls: two surface switches (lock \u00b7 home)
@@ -2953,9 +3209,9 @@ function wallpaperBridge() {
    controls unmodified. On the web (no bridge) the fill paints
    the standing phone-side note (Flag 3). */
 function renderWallpaper() {
-  view.innerHTML = '<h1 class="screen">Wallpaper</h1><div class="liblist" id="set-wallpaper"><div class="setrow">'
+  view.innerHTML = '<h1 class="screen">Wallpaper</h1><div class="liblist" id="set-wallpaper"><div class="setrow" data-skeleton="1">'
     + '<div class="setname">Wallpaper</div>'
-    + '<div class="meta">Loading...</div>'
+    + '<span class="skelbar" style="width:70%"></span><span class="skelbar" style="width:45%"></span>'
     + '</div></div>';
   fillWallpaperSection();
 }
@@ -3375,7 +3631,7 @@ function paintWallpaperPhone() {
   if (!s) return;
   view.innerHTML = '<div id="wp-showing">' + wallpaperShowingHtml(s, wallpaperLiveState(s), null) + '</div>'
     + '<h2 class="sectionhead">Today\u2019s artwork</h2>'
-    + '<div id="wp-carousel-phone"><div class="meta">Loading...</div></div>'
+    + '<div id="wp-carousel-phone"><div class="skel" data-skeleton="1" style="aspect-ratio:4/3"></div><span class="skelbar" style="width:50%"></span></div>'
     + wallpaperFolderHtml('phone')
     + wallpaperControlsHtml(s);
   wireWallpaperControls();
@@ -3391,7 +3647,7 @@ function paintWallpaperWatch() {
   if (!wpPayload) return;
   view.innerHTML = '<div id="wp-instr">' + wallpaperInstructionsHtml() + '</div>'
     + '<h2 class="sectionhead">Today\u2019s artwork \u2014 watch</h2>'
-    + '<div id="wp-carousel-watch"><div class="meta">Loading...</div></div>'
+    + '<div id="wp-carousel-watch"><div class="skel" data-skeleton="1" style="aspect-ratio:4/3"></div><span class="skelbar" style="width:50%"></span></div>'
     + wallpaperFolderHtml('watch');
   wireWallpaperInstructions();
   wireWallpaperFolder('watch');
@@ -3683,9 +3939,13 @@ function fillPinSection() {
       host2.innerHTML = html;
       document.getElementById('pin-change-open').addEventListener('click', function () { openPinSetSheet('change'); });
       document.getElementById('pin-remove').addEventListener('click', function () {
-        if (!confirm('Remove the PIN? Confession and Examination will stay locked until a new PIN is set.')) return;
-        post('/api/pin/remove', {}).then(function () { pinToken = null; pinStateCache = { pinSet: false, retryAfterSeconds: 0 }; renderSettings(); })
-          .catch(function (e) { if (!pinRefusalGate('settings', renderSettings, e)) alert(e.message); });
+        // v419 (G23): the native confirm retires into the one
+        // confirm drawer; a failed remove lands as an authored
+        // line on the standing Settings error slot.
+        openConfirm({ line: 'Remove the PIN? Confession and Examination will stay locked until a new PIN is set.', commitLabel: 'Remove PIN', danger: true, act: function () {
+          post('/api/pin/remove', {}).then(function () { pinToken = null; pinStateCache = { pinSet: false, retryAfterSeconds: 0 }; renderSettings(); })
+            .catch(function (e) { if (!pinRefusalGate('settings', renderSettings, e)) { var se = document.getElementById('set-err'); if (se) se.textContent = 'The PIN was not removed. Try again.'; } });
+        } });
       });
     } else {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set.</p><button class="btn gold" id="pin-enter-open">Enter PIN</button></div>';
@@ -3698,7 +3958,7 @@ function openPinSetSheet(mode) {
   var old = document.querySelector('.pinsetsheet');
   if (old) old.remove();
   var sheet = document.createElement('div'); sheet.className = 'sheet pinsetsheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (mode === 'set' ? 'Set a PIN' : 'Change PIN') + '</h1><button class="btn ghost" id="ps-close">Close</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (mode === 'set' ? 'Set a PIN' : 'Change PIN') + '</h1></div>'
     + '<p class="meta">' + (mode === 'set'
       ? 'The PIN gates Confession and Examination on this device\u2019s signed-in session. When it is set you will be shown a recovery code, once, for the day the PIN is forgotten.'
       : 'Choose the new PIN. A new recovery code is shown once, and every standing unlock ends.') + '</p>'
@@ -3707,7 +3967,7 @@ function openPinSetSheet(mode) {
     + '<p class="pinmsg" id="ps-msg"></p>'
     + '<div style="margin-top:10px"><button class="btn gold" id="ps-save">' + (mode === 'set' ? 'Set PIN' : 'Change PIN') + '</button></div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#ps-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
   sheet.querySelector('#ps-save').addEventListener('click', function () {
     var p1 = sheet.querySelector('#ps-pin1').value.trim();
     var p2 = sheet.querySelector('#ps-pin2').value.trim();
@@ -3792,7 +4052,7 @@ function intentionRow(it) {
   return '<div class="librow"><div class="row"><div class="grow"><div>' + esc(it.text) + '</div><div class="meta">' + hist + '</div></div><span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span></div><div style="margin-top:8px">' + actions + '</div></div>';
 }
 function renderIntentions() {
-  view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>' + skelHtml('intentions');
   var today = todayChicago();
   Promise.all([api('/api/prayer/intentions'), api('/api/prayer/day?date=' + today)]).then(function (res) {
     var intentions = res[0].intentions || [];
@@ -3824,7 +4084,11 @@ function renderIntentions() {
     html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool and does not stage the day.</p>';
     view.innerHTML = html;
     wireIntentions(intentions);
-  }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) {
+    // v419 (G22): the authored failure + a Ghost Retry.
+    view.innerHTML = '<h1 class="screen">Intentions</h1><p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
+    document.getElementById('int-retry').addEventListener('click', renderIntentions);
+  });
 }
 function wireIntentions(intentions) {
   var add = document.getElementById('new-add');
@@ -3850,19 +4114,19 @@ function wireIntentions(intentions) {
       if (act === 'edit') openIntentionEditor(it);
       else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
       else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
-      else if (act === 'del') { if (confirm('Delete this intention and all its draws?')) api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); }); }
+      else if (act === 'del') { openConfirm({ line: 'Delete this intention and all its draws?', commitLabel: 'Delete', danger: true, act: function () { api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); }); } }); }
     });
   });
 }
 function openIntentionEditor(it) {
   var sheet = document.createElement('div'); sheet.className = 'sheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Intention</h1><button class="btn ghost" id="ed-close">Close</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Intention</h1></div>'
     + '<label class="f">Text</label><input type="text" id="ed-text" value="' + esc(it.text) + '">'
     + '<label class="f">Priority</label><select id="ed-pri"><option value="H"' + (it.priority === 'H' ? ' selected' : '') + '>High</option><option value="M"' + (it.priority === 'M' ? ' selected' : '') + '>Medium</option><option value="L"' + (it.priority === 'L' ? ' selected' : '') + '>Low</option></select>'
     + '<p class="meta" style="margin-top:12px">Status: ' + esc(it.status) + ' · Created: ' + esc((it.created_at || '').slice(0, 10)) + ' · Drawn ' + (it.drawnCount || 0) + ' times' + (it.lastDrawn ? ' · last drawn ' + it.lastDrawn : '') + '</p>'
     + '<p class="fieldnote" id="ed-note"></p><div style="margin-top:14px"><button class="btn gold" id="ed-save">Save</button></div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#ed-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, true); // v419: TALL drawer — the header Close retires
   sheet.querySelector('#ed-save').addEventListener('click', function () {
     // v411 §2.6 (4.3): the failure branch — the button disables
     // while the write is in flight; a refusal leaves the sheet
@@ -4172,10 +4436,10 @@ function blockTone(block) { return BLOCK_TONES[block] || 'navy'; }
 /* v417 §2.5 (FD3): the fallback GLYPH table — where no real
    artwork exists the tile carries the block's glyph, never
    a letter or monogram; colors read the standing tones; no
-   Spotify green or branding. The AI Signal stands outside
-   the table: its mark is its real logo (coverTileHtml +
-   rowArtHtml special-case it). An unmapped block takes ✦. */
-var BLOCK_GLYPHS = { 'Morning': '\u2600', 'Midmorning': '\u2726', 'Midday': '\u2756', 'Afternoon': '\u2605', 'Evening': '\u2727', 'Night': '\u263e', 'Mass and Homilies': '\u2020', 'Novenas': '\u271a', '__episodes': '\u266b' };
+   Spotify green or branding. An unmapped block takes ✦.
+   v419 (G11): The AI Signal joins the table with the bolt —
+   its real-logo tile retires (coverTileHtml + rowArtHtml). */
+var BLOCK_GLYPHS = { 'Morning': '\u2600', 'Midmorning': '\u2726', 'Midday': '\u2756', 'Afternoon': '\u2605', 'Evening': '\u2727', 'Night': '\u263e', 'Mass and Homilies': '\u2020', 'Novenas': '\u271a', 'The AI Signal': '\u26a1', '__episodes': '\u266b' };
 function blockGlyphOf(block) { return BLOCK_GLYPHS[block] || '\u2726'; }
 function blockLabelOf(block) {
   var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === block; })[0];
@@ -4183,11 +4447,12 @@ function blockLabelOf(block) {
 }
 function coverTileHtml(block, cls) {
   // v417 §2.5 (FD3): the cover tile's content is the block's
-  // glyph; The AI Signal's cover is its logo image, standing
-  // as the cover image (the .coverimg construction).
-  if (block === 'The AI Signal') {
-    return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><img class="coverimg" src="/logo.png" alt=""></div>';
-  }
+  // glyph. v419 (G11, folded from v418): every block, The AI
+  // Signal included, takes the generic glyph chain — its
+  // real-logo tile retires; no logo tile stands anywhere.
+  // (The brand mark's other uses — the brand bar, the NP hero
+  // fallback, the dock thumb fallback — are not tiles and
+  // stand.)
   return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><span class="blockcover-initial">' + blockGlyphOf(block) + '</span></div>';
 }
 function rowArtHtml(t) {
@@ -4196,11 +4461,10 @@ function rowArtHtml(t) {
   // that fails to load removes itself and the tile beneath
   // stands — never a broken-image glyph.
   // v417 §2.5 (FD3): the tile's content is the block's glyph,
-  // never a letter; The AI Signal's rows carry its logo (the
-  // standing special case, widened to the block's rows);
-  // the bars tile stands in the wrap for the current row
-  // (§2.6).
-  if (t.episodeId === 'the-ai-signal' || (t._block || t.block) === 'The AI Signal') return '<span class="rowartwrap"><img class="rowart" src="/logo.png" alt="">' + barsTileHtml() + '</span>';
+  // never a letter; the bars tile stands in the wrap for the
+  // current row (§2.6). v419 (G11): the AI Signal logo special
+  // case retires — its rows take the generic chain (episode
+  // art → show art → the bolt tile).
   var tile = '<span class="rowart tile tone-' + blockTone(t._block || t.block) + '"><span>' + blockGlyphOf(t._block || t.block) + '</span></span>';
   if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()">' + barsTileHtml() + '</span>';
   return '<span class="rowartwrap">' + tile + barsTileHtml() + '</span>';
@@ -4214,46 +4478,83 @@ function fmtDurLong(s) {
    stay? } — a stay item acts in place and its state line is
    re-read (stateFn); every other item closes the menu, then
    acts. No dead items: a menu carries only wired acts. */
-function openSheetMenu(title, items) {
-  var old = document.querySelector('.menusheet');
-  if (old) old.remove();
-  var sheet = document.createElement('div');
-  sheet.className = 'sheet menusheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + esc(title) + '</h1><button class="btn ghost" data-menuclose="1">Close</button></div>'
+function openSheetMenu(title, items, anchorEl) {
+  // v419 (G15/F-419-2): the working menus render as an
+  // ANCHORED CARD by their control — never a sheet. The card
+  // seats below the anchor when it fits, above when it does
+  // not (the roomier side + internal scroll when neither
+  // fits whole); its right edge aligns the anchor's, clamped
+  // to the 12px margins; its width is the anchor's, floored
+  // at 232px. The invisible tap-catcher beneath dismisses.
+  // The item contract stands (label · state · stay · stateFn
+  // · act; a glyph slot renders only for glyph-carrying
+  // items — F-419-8). With no anchor the card seats at the
+  // bottom above the dock.
+  document.querySelectorAll('.anchmenu, .menucatcher').forEach(function (n) { n.remove(); });
+  var catcher = document.createElement('div');
+  catcher.className = 'menucatcher';
+  var card = document.createElement('div');
+  card.className = 'menusheet anchmenu';
+  card.innerHTML = '<h1 class="screen">' + esc(title) + '</h1>'
     + items.map(function (it, i) {
-      return '<button class="menurow" data-menuitem="' + i + '"><span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
-    }).join('') + '</div>';
-  document.body.appendChild(sheet);
-  sheet.querySelector('[data-menuclose]').addEventListener('click', function () { sheet.remove(); });
-  sheet.querySelectorAll('[data-menuitem]').forEach(function (b) {
+      return '<button class="menurow" data-menuitem="' + i + '">' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
+    }).join('');
+  document.body.appendChild(catcher);
+  document.body.appendChild(card);
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var anchor = anchorEl || (document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null);
+  var ar = anchor ? anchor.getBoundingClientRect() : null;
+  var width = ar ? Math.min(Math.max(232, ar.width), vw - 24) : vw - 24;
+  card.style.width = width + 'px';
+  card.style.visibility = 'hidden';
+  var h = card.offsetHeight;
+  var left, top;
+  if (ar) {
+    left = Math.max(12, Math.min(ar.right - width, vw - width - 12));
+    if (ar.bottom + 6 + h <= vh - 12) top = ar.bottom + 6;
+    else if (ar.top - 6 - h >= 12) top = ar.top - 6 - h;
+    else if (vh - ar.bottom >= ar.top) { top = ar.bottom + 6; card.style.maxHeight = (vh - 12 - top) + 'px'; }
+    else { card.style.maxHeight = (ar.top - 18) + 'px'; top = ar.top - 6 - Math.min(h, ar.top - 18); }
+  } else { left = 12; top = vh - 76 - h; }
+  card.style.left = left + 'px';
+  card.style.top = top + 'px';
+  card.style.visibility = '';
+  var close = function () { catcher.remove(); card.remove(); };
+  catcher.addEventListener('click', close);
+  card.querySelectorAll('[data-menuitem]').forEach(function (b) {
     b.addEventListener('click', function () {
       var i = Number(b.getAttribute('data-menuitem'));
       var it = items[i];
       if (!it || !it.act) return;
       if (it.stay) {
         it.act();
-        var st = sheet.querySelector('[data-menustate="' + i + '"]');
+        var st = card.querySelector('[data-menustate="' + i + '"]');
         if (st && it.stateFn) st.textContent = it.stateFn();
       } else {
-        sheet.remove();
+        close();
         it.act();
       }
     });
   });
-  return sheet;
+  return card;
 }
-function openPlayerMenu() {
+function openPlayerMenu(anchorEl) {
   // §1.4 + FD3: the player-level overflow — exactly Autoplay ·
   // Sleep timer · Playback speed, each a state line opening its
   // standing act/sheet. Transport never enters the menu; the
   // intentions toggle does NOT move (ruling R1).
+  // v419: the menu anchors at its control (the NP ⋮ button).
   openSheetMenu('Playback', [
     { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
     { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
     { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } }
-  ]);
+  ], anchorEl);
 }
-function openDockMenu() {
+function openDockMenu(anchorEl) {
+  // v419 (G15): the dock menu anchors at the dock's own ⋮
+  // button — resolved here so every caller (the dock handler,
+  // a bare call) seats the card at the same control.
+  if (!anchorEl) anchorEl = document.getElementById('dock-menu');
   // v417 §2.8 (D4/FD4): the DOCK's own menu, on the one menu
   // component — a superset of the player overflow, NOT an
   // edit to it (openPlayerMenu above stands as built; §1.3).
@@ -4269,7 +4570,7 @@ function openDockMenu() {
   items.push({ label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } });
   items.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
   items.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
-  openSheetMenu('Playback', items);
+  openSheetMenu('Playback', items, anchorEl);
 }
 /* FD6: ONE share sheet — the episode card at its head, Share…
    only where the platform sheet stands, Copy link always. */
@@ -4295,13 +4596,13 @@ function openShareSheet(o) {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet sharesheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Share</h1><button class="btn ghost" data-shareclose="1">Close</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Share</h1></div>'
     + '<div class="card"><div class="row">' + (o.artHtml || '') + '<div class="grow"><h3>' + esc(o.title) + '</h3><div class="meta">' + esc(o.line) + '</div></div></div></div>'
     + (navigator.share ? '<button class="menurow" data-sharego="1"><span class="grow">Share&hellip;</span></button>' : '')
     + '<button class="menurow" data-sharecopy="1"><span class="grow">Copy link</span></button>'
     + '<p class="fieldnote" data-shareline="1"></p></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('[data-shareclose]').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
   var go = sheet.querySelector('[data-sharego]');
   if (go) go.addEventListener('click', function () {
     sheet.remove();
@@ -4326,13 +4627,13 @@ function shareTrackSheet(t) {
    offered) · Open in Spotify (where a URL stands). The
    Download item stands only while the episode is not already
    on the device — the cache read lands before the menu opens. */
-function openDayRowMenu(t) {
+function openDayRowMenu(t, anchorEl) {
   var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
   var build = function (standing) {
     if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
     var sp = spotifyUrlFor(t);
     if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
-    openSheetMenu(t.title || 'Options', items);
+    openSheetMenu(t.title || 'Options', items, anchorEl);
   };
   if (!t.available || !('caches' in window)) { build(true); return; }
   caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(presentedDateStr(), t.episodeId)); })
@@ -4349,7 +4650,7 @@ function wireRowActs(scope) {
     b.addEventListener('click', function () {
       var key = b.getAttribute('data-rowmenu');
       var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
-      if (t) openDayRowMenu(t);
+      if (t) openDayRowMenu(t, b);
     });
   });
   scope.querySelectorAll('[data-rowshare]').forEach(function (b) {
@@ -4399,11 +4700,11 @@ function openBlockOrderEditor() {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet ordersheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playlist order</h1><button class="btn ghost" data-orderclose="1">Done</button></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playlist order</h1></div>'
     + '<p class="meta">Your own order for the Prayers grid \u2014 kept with your other choices, so it follows you across devices.</p>'
     + '<div data-orderlist="1"></div><p class="fieldnote" data-orderline="1"></p></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('[data-orderclose]').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, true); // v419: TALL drawer \u2014 the header Done retires (moves write through per tap)
   var paintList = function () {
     var list = sheet.querySelector('[data-orderlist]');
     list.innerHTML = order.map(function (name, i) {
@@ -4621,9 +4922,9 @@ function openRead(t) {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet readsheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><button class="playbtn" data-playkey="' + esc(t.episodeId) + '">&#9654;</button><div class="grow"><h1 class="screen">' + esc(t.title) + '</h1><p class="sub">the episode&rsquo;s text</p></div><button class="btn ghost" data-readclose="1">Close</button></div><div class="readtext">Loading...</div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><button class="playbtn" data-playkey="' + esc(t.episodeId) + '">&#9654;</button><div class="grow"><h1 class="screen">' + esc(t.title) + '</h1><p class="sub">the episode&rsquo;s text</p></div></div><div class="readtext" data-skeleton="1"><span class="skelbar" style="width:96%"></span><span class="skelbar" style="width:88%"></span><span class="skelbar" style="width:93%"></span><span class="skelbar" style="width:76%"></span><span class="skelbar" style="width:90%"></span></div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('[data-readclose]').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, true); // v419: TALL drawer — the header Close retires; the text paints as skeleton lines (SK-8)
   sheet.querySelector('[data-playkey]').addEventListener('click', function () {
     var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === t.episodeId; })[0];
     if (d) playTrack(d);
@@ -4672,7 +4973,7 @@ function openNowPlaying() {
   sheet.className = 'sheet np-sheet';
   sheet.innerHTML = '<div class="inner">'
     + '<div class="np-hero">'
-    + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
+    + '<div class="np-grab"><span class="grabpill"></span></div>'
     + '<div class="np-art"><img src="/logo.png" alt="Ora Pro Nobis logo"></div>'
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
@@ -4683,10 +4984,13 @@ function openNowPlaying() {
     + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
-    + '<div id="np-queue"></div>'
+    + '<div id="np-queue" class="liblist"></div>'
     + '</div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#np-min').addEventListener('click', function () { sheet.remove(); });
+  // v419 (G16): the minimize chevron retires into the grab —
+  // a tap on the handle, or a drag down, minimizes (the sheet
+  // removes; playback is never touched).
+  wireNpGrab(sheet, function () { sheet.remove(); });
   sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
   sheet.querySelector('#np-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the one rule
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
@@ -4695,7 +4999,7 @@ function openNowPlaying() {
   // v413 §2.8: speed/sleep/autoplay leave the face — the ⋮
   // entrance opens the ONE player overflow (openPlayerMenu);
   // the intentions toggle keeps its place (ruling R1).
-  sheet.querySelector('#np-menu').addEventListener('click', function () { openPlayerMenu(); });
+  sheet.querySelector('#np-menu').addEventListener('click', function () { openPlayerMenu(this); });
   sheet.querySelector('#np-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
     var t = state.current && state.readTracks[state.current.episodeId];
@@ -4756,7 +5060,13 @@ function updateNowPlaying() {
   syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the intentions switches follow the store at every render
   var rt = state.readTracks[cur.episodeId];
-  sheet.querySelector('#np-read').style.display = (rt && rt.hasText && rt.textUrl) ? '' : 'none';
+  // v419 (G17/F-419-7): the Read slot is HELD, not collapsed —
+  // a textless track leaves the button invisible in its box
+  // (visibility, aria-hidden), so the control row's geometry
+  // never moves between tracks.
+  var readBtn = sheet.querySelector('#np-read');
+  if (rt && rt.hasText && rt.textUrl) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
+  else { readBtn.style.visibility = 'hidden'; readBtn.setAttribute('aria-hidden', 'true'); }
   updateNpSeek();
   renderQueueList();
 }
@@ -5051,7 +5361,7 @@ function extDownloadingCard(slot) {
   return '<div class="card trow" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Downloading&hellip;</div></div>';
 }
 function extPlaceholderCard(slot) {
-  return '<div class="card trow" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Loading&hellip;</div></div>';
+  return '<div class="card trow" data-card="' + esc(slot.slotId) + '" data-skeleton="1"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><span class="skelbar" style="width:55%"></span><span class="skelbar" style="width:35%"></span></div>'; // v419 (SK-9)
 }
 function extSlotTrack(slot, st) {
   return {
@@ -5584,7 +5894,7 @@ function ownSlotTrack(row, meta, date) {
   };
 }
 function ownPlaceholderCard(row) {
-  return '<div class="card trow" data-card="' + esc(row.episodeId) + '"><h3>' + esc(row.title) + '</h3><div class="meta">Loading&hellip;</div></div>';
+  return '<div class="card trow" data-card="' + esc(row.episodeId) + '" data-skeleton="1"><h3>' + esc(row.title) + '</h3><span class="skelbar" style="width:55%"></span><span class="skelbar" style="width:35%"></span></div>'; // v419 (SK-9)
 }
 function ownSwapRow(row, day) {
   // Selection is by the row's own identity (data-own-row), never
@@ -6483,7 +6793,7 @@ function extMatchBibleDayN(dateStr) {
    fetches, and paint (into the side host) stand unchanged. */
 function renderPrayers() { paintMergedContainer('prayers'); }
 function renderPrayersSide() {
-  view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
+  view.innerHTML = skelHtml('prayers'); // v419 (SK-1/G27): the loading paint IS the Prayers geometry (the loaded h1 reads Prayers)
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); })
     .catch(function (e) { offlineDayFallback(e); });
 }
@@ -6615,7 +6925,10 @@ function offlineDayFallback(e) {
   var today = todayChicago();
   offlineSnapshotRead(today).then(function (snap) {
     if (snap && snap.day && snap.settings) { buildDayFromPayload(snap.day, snap); return; }
-    view.innerHTML = '<p class="err">' + esc(e.message) + '</p>';
+    // v419 (G22): the authored failure + a Ghost Retry wired
+    // to this surface's own re-render.
+    view.innerHTML = '<h1 class="screen">Prayers</h1><p class="err">Today&rsquo;s prayers did not load.</p><p><button class="btn ghost" id="day-retry">Retry</button></p>';
+    document.getElementById('day-retry').addEventListener('click', renderPrayersSide);
   });
 }
 function offlineAudioCache() { return ('caches' in window) ? caches.open('opn-ext-audio-v1') : Promise.resolve(null); }
@@ -6986,7 +7299,7 @@ function podDlTap(key) {
    Mark as listened / not listened. State reads podDlStateMap,
    kept fresh by refreshPodDlStates. */
 var podDlStateMap = {};
-function openPodRowMenu(key) {
+function openPodRowMenu(key, anchorEl) {
   var res = state.podcasts;
   if (!res || !res.entries) return;
   var e = res.entries.filter(function (x) { return x.key === key; })[0];
@@ -6996,7 +7309,7 @@ function openPodRowMenu(key) {
   if (e.url && !st.standing) items.push({ label: 'Download', act: function () { podDlTap(key); } });
   else if (e.url && st.standing && st.manual) items.push({ label: 'Remove download', act: function () { podDlTap(key); } });
   items.push({ label: e.listened ? 'Mark as not listened' : 'Mark as listened', act: function () { podToggleMark(key); } });
-  openSheetMenu(e.title, items);
+  openSheetMenu(e.title, items, anchorEl);
 }
 function refreshPodDlStates() {
   // v413 §2.6: the Get button retires — this pass now writes
@@ -7155,7 +7468,7 @@ function episodesCardHtml(day) {
     + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
 }
 function paintListenHome(day) {
-  var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
+  var html = '<h1 class="screen">Prayers</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>'; // v419 (G27): the home heading is the tab's name
   // §2.6.1: the search pill — typing re-paints the results region
   // in place (the field itself never re-renders, so focus and the
   // query stand); clearing restores the standing home body.
@@ -7166,9 +7479,9 @@ function paintListenHome(day) {
   // (ruling R2: sleep's one home is the player overflow); Play
   // All + the offline line stand BELOW the grid.
   html += '<div class="chips" id="home-chips">'
-    + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists">Praylists</button>'
-    + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas">Novenas</button>'
-    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded">Downloaded</button></div>';
+    + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists" aria-pressed="' + (state.homeFilter === 'praylists' ? 'true' : 'false') + '">Praylists</button>'
+    + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas" aria-pressed="' + (state.homeFilter === 'novenas' ? 'true' : 'false') + '">Novenas</button>'
+    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div>';
   html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn">Sort</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
@@ -7272,7 +7585,7 @@ function paintBlockPage(day, block) {
   // large round play button · the action row (Sort · Mark all
   // played · the page ⋮ — Open in Spotify's one home now, R4).
   var html = '<div class="blockpage-head" data-block="' + esc(b.block) + '">'
-    + '<div class="backrow"><button class="backbtn" data-back="' + esc(b.block) + '">&lsaquo; Listen</button></div>'
+    + '<div class="backrow"><button class="backdisc" data-back="' + esc(b.block) + '" aria-label="Back to Prayers">&lsaquo;</button></div>'
     + coverTileHtml(b.block, 'large')
     + '<div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
     + (b.caption ? '<div class="blockpage-desc">' + esc(b.caption) + '</div>' : '')
@@ -7308,7 +7621,7 @@ function paintBlockPage(day, block) {
   if (menuBtn) menuBtn.addEventListener('click', function () {
     var items = [{ label: 'Share', act: function () { if (shBtn) shBtn.click(); } }];
     if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
-    openSheetMenu(b.label || b.block, items);
+    openSheetMenu(b.label || b.block, items, menuBtn);
   });
   appendBlockSettingsCards(day, b);
   // v374 §2 (site 1): the header span stands in the view now —
@@ -7326,7 +7639,7 @@ function paintEpisodesPage(day) {
   var eps = day.episodes || [];
   var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
   var html = '<div class="blockpage-head" data-block="__episodes">'
-    + '<div class="backrow"><button class="backbtn" data-back="__episodes">&lsaquo; Listen</button></div>'
+    + '<div class="backrow"><button class="backdisc" data-back="__episodes" aria-label="Back to Prayers">&lsaquo;</button></div>'
     + '<div class="blockcover tone-teal large"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
     + '<div class="blockpage-title">FROM TODAY&rsquo;S PODCAST</div>'
     + '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
@@ -7390,7 +7703,7 @@ function renderConscienceContent() { paintMergedContainer('conscience'); }
 /* ---------------- Examination ---------------- */
 function renderExamination() { switchSide('conscience', 'examination'); }
 function renderExaminationContent() {
-  view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1>' + skelHtml('conscience');
   api('/api/exam/today').then(function (data) {
     var run = data.run;
     var closed = run && run.state === 'closed';
@@ -7403,8 +7716,8 @@ function renderExaminationContent() {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
     html += '<p class="sub">Begin with gratitude for the day, and a short review of it. Then take the questions as reflection prompts — tap one to write an entry in your own words. What you write flows to Confession preparation.</p>';
     if (data.focusCategory) html += '<p class="meta">Tonight&rsquo;s focus in depth: <b>' + esc(data.focusCategory) + '</b> — the full short form stands every night.</p>';
-    html += '<div class="chips">' + cats.map(function (c) { return '<button class="chip' + (c === state.examCat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c.replace('Commandment ', '')) + '</button>'; }).join('') + '</div>';
-    html += '<div class="modes"><button id="m-quick" class="' + (state.examMode === 'quick' ? 'active' : '') + '">Quick Review</button><button id="m-deep" class="' + (state.examMode === 'deep' ? 'active' : '') + '">Deep Reflection</button></div>';
+    html += '<div class="chips">' + cats.map(function (c) { return '<button class="chip' + (c === state.examCat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(catChipLabel(c)) + '</button>'; }).join('') + '</div>';
+    html += '<div class="segtoggle inflow"><button id="m-quick" class="' + (state.examMode === 'quick' ? 'active' : '') + '">Quick Review</button><button id="m-deep" class="' + (state.examMode === 'deep' ? 'active' : '') + '">Deep Reflection</button></div>'; // v419 (G9): the mode control is the one segmented construction, in flow
     html += '<h2 class="sectionhead">' + esc(state.examCat) + '</h2>';
     var dis = closed ? ' disabled' : '';
     if (state.examMode === 'deep') {
@@ -7426,7 +7739,7 @@ function renderExaminationContent() {
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
     wireExamination(data);
-  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
 function entriesHtml(list) { return (list || []).map(entryHtml).join(''); }
 function entryHtml(e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>'; }
@@ -7484,7 +7797,7 @@ function wireExamination(data) {
     a.addEventListener('click', function (ev) { ev.preventDefault(); api('/api/exam/entries/' + a.getAttribute('data-del-entry'), { method: 'DELETE' }).then(renderExamination); });
   });
   var rc = document.getElementById('run-close');
-  if (rc) rc.addEventListener('click', function () { if (confirm('Close the examination for tonight?')) post('/api/exam/runs/' + run.id + '/close', {}).then(renderExamination); });
+  if (rc) rc.addEventListener('click', function () { openConfirm({ line: 'Close the examination for tonight?', commitLabel: 'Close examination', act: function () { post('/api/exam/runs/' + run.id + '/close', {}).then(renderExamination); } }); });
   var gear = document.getElementById('ex-gear');
   if (gear) gear.addEventListener('click', function () { openPromptsEditor(data.prompts || []); });
 }
@@ -7493,9 +7806,9 @@ function openPromptsEditor(prompts) {
   var rows = prompts.map(function (p) {
     return '<label class="f">' + esc(p.category) + '</label><textarea data-prompt-edit="' + p.id + '">' + esc(p.text) + '</textarea>';
   }).join('');
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Examination prompts</h1><button class="btn ghost" id="pe-close">Close</button></div><p class="meta">Seeded verbatim from Lasance, My Prayer Book (1908). Edit any prompt in your own words; the seed source stays on the record.</p>' + rows + '<p class="fieldnote" id="pe-note"></p><div style="margin-top:14px"><button class="btn gold" id="pe-save">Save prompts</button></div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Examination prompts</h1></div><p class="meta">Seeded verbatim from Lasance, My Prayer Book (1908). Edit any prompt in your own words; the seed source stays on the record.</p>' + rows + '<p class="fieldnote" id="pe-note"></p><div style="margin-top:14px"><button class="btn gold" id="pe-save">Save prompts</button></div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#pe-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, true); // v419: TALL drawer \u2014 the header Close retires
   sheet.querySelector('#pe-save').addEventListener('click', function () {
     // v411 §2.6 (4.3): the failure branch, same three parts as
     // every editor sheet.
@@ -7511,7 +7824,7 @@ function openPromptsEditor(prompts) {
 /* ---------------- Confession ---------------- */
 function renderConfession() { switchSide('conscience', 'confession'); }
 function renderConfessionContent() {
-  view.innerHTML = '<h1 class="screen">Confession</h1><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Confession</h1>' + skelHtml('conscience');
   api('/api/confession').then(function (c) {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Confession</h1><p class="sub">preparation and guide</p></div><button class="btn ghost small" id="cf-gear">Guide</button></div>';
     html += '<div class="card"><h3>' + esc(c.elapsed || '') + '</h3>' + (c.lastConfession ? '<p class="meta">Last confession: ' + esc(c.lastConfession.date) + (c.lastConfession.note ? ' — ' + esc(c.lastConfession.note) : '') + '</p>' : '<p class="meta">No confession recorded yet in this app.</p>') + '</div>';
@@ -7554,22 +7867,22 @@ function renderConfessionContent() {
     document.getElementById('cf-made').addEventListener('click', function () {
       var date = document.getElementById('cf-date').value; var note = document.getElementById('cf-note').value.trim();
       if (!date) return;
-      if (confirm('Close the preparation list under a confession on ' + date + '?')) post('/api/confession/made', { date: date, note: note }).then(function () {
+      openConfirm({ line: 'Close the preparation list under a confession on ' + date + '?', commitLabel: 'Close list', act: function () { post('/api/confession/made', { date: date, note: note }).then(function () {
         placeSkip['cf-note'] = true; // v411 §2.4: the saved note is not a draft to resurrect
         renderConfession();
-      });
+      }); } });
     });
     document.getElementById('cf-gear').addEventListener('click', function () { openGuideEditor(c.guide || []); });
-  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
 function openGuideEditor(guide) {
   var sheet = document.createElement('div'); sheet.className = 'sheet';
   var rows = guide.map(function (g) {
     return '<label class="f">Step ' + g.step_no + ' — title</label><input type="text" data-guide-title="' + g.step_no + '" value="' + esc(g.title) + '"><label class="f">Text</label><textarea data-guide-body="' + g.step_no + '">' + esc(g.body) + '</textarea>';
   }).join('');
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Confession guide</h1><button class="btn ghost" id="ge-close">Close</button></div><p class="meta">Seeded from Lasance, My Prayer Book (1908), Devotions for Confession, pp. 353-354. Editable in your own words.</p>' + rows + '<p class="fieldnote" id="ge-note"></p><div style="margin-top:14px"><button class="btn gold" id="ge-save">Save guide</button></div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Confession guide</h1></div><p class="meta">Seeded from Lasance, My Prayer Book (1908), Devotions for Confession, pp. 353-354. Editable in your own words.</p>' + rows + '<p class="fieldnote" id="ge-note"></p><div style="margin-top:14px"><button class="btn gold" id="ge-save">Save guide</button></div></div>';
   document.body.appendChild(sheet);
-  sheet.querySelector('#ge-close').addEventListener('click', function () { sheet.remove(); });
+  mountDrawer(sheet, true); // v419: TALL drawer \u2014 the header Close retires
   sheet.querySelector('#ge-save').addEventListener('click', function () {
     // v411 §2.6 (4.3): the failure branch, same three parts as
     // every editor sheet.
