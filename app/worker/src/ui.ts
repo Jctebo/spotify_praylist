@@ -211,7 +211,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    serving both merged tabs, drawn from the standing tokens
    (the .modes frame; the current side marked in the
    .tab.active inset-accent language). */
-.segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); }
+/* v414 §2.7 (FD6): the freeze — ONE shared sticky rule for
+   the three segmented toggles (Phone | Watch · Prayers |
+   Intentions · Examination | Confession): the toggle pins
+   directly under the brand bar (already sticky, z-30) while
+   the view's content scrolls beneath it. --brandh is the
+   brand bar's measured height, set by the client at shell
+   paint (the --tabh precedent); the 54px fallback is its
+   standing height. Sticky adds no height and no offset, so
+   a view shorter than the screen stands pixel-identical. */
+.segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); position:sticky; top:var(--brandh, 54px); z-index:25; }
 .segtoggle button { flex:1; font-family:inherit; font-size:15px; padding:8px; background:none; border:none; cursor:pointer; color:#6d6353; }
 .segtoggle button.active { color:var(--navy); box-shadow: inset 0 -2px 0 var(--accent); }
 .prompt { cursor:pointer; }
@@ -365,6 +374,28 @@ button.btn.small { min-height:44px; }
    height while empty. */
 .fieldnote { font-size:14px; color:#6d6353; margin:6px 0 0; }
 .fieldnote:empty { display:none; }
+/* v414: the Wallpaper tab's two views — the showing-now row,
+   the artwork carousel (one component, both views), the
+   off state's intro, and the Watch instructions block. The
+   carousel stage stands on the theme ground (--bar-*); the
+   filed picture shows WHOLE inside it (object-fit: contain)
+   regardless of Picture fit, which governs the engine's
+   screen apply only. Dots are 44px tap targets carrying a
+   10px indicator (the played-dot construction); arrows are
+   44px boxes — the v411 floor covers every new control. */
+.wpshowing { display:flex; gap:12px; align-items:center; }
+.wpshowing img { width:64px; height:64px; object-fit:contain; background:var(--bar-solid); border-radius:8px; flex:none; }
+.wpshowing .wpname { font-size:17px; color:var(--navy); }
+.wpcar { display:flex; align-items:center; gap:6px; margin:0 0 6px; }
+.wpcar-stage { flex:1; height:320px; background-color:var(--bar-solid); background:var(--bar-bg); border-radius:12px; overflow:hidden; }
+.wpcar-stage img { width:100%; height:100%; object-fit:contain; display:block; }
+.wpcar-arrow { flex:none; width:44px; height:44px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--navy); font-family:inherit; font-size:20px; cursor:pointer; }
+.wpcar-title { font-size:17px; color:var(--navy); margin:2px 0 0; }
+.wpcar-dots { display:flex; justify-content:center; margin:0 0 6px; }
+.wpcar-dot { width:44px; height:44px; padding:0; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.wpcar-dot::after { content:''; width:10px; height:10px; border-radius:50%; border:1px solid var(--line); background:transparent; }
+.wpcar-dot.on::after { background:var(--accent); border-color:var(--accent); }
+.wpoff-title { font-size:22px; color:var(--navy); margin:2px 0 8px; font-weight:normal; }
 /* v413: the playlist grammar — cover tiles (four theme tones,
    drawn, no images), row art with the provider-img overlay,
    the re-dressed row form, sheet menus, and the block-page

@@ -1644,6 +1644,10 @@ audioEl.addEventListener('seeked', function () { pushNativeState(false); }); // 
 function measureBars() {
   var tb = document.getElementById('tabbar');
   if (tb) document.documentElement.style.setProperty('--tabh', tb.offsetHeight + 'px');
+  /* v414 §2.7: --brandh — the brand bar's measured height,
+     the sticky toggles' top offset (the --tabh precedent). */
+  var bb = document.querySelector('.brandbar');
+  if (bb) document.documentElement.style.setProperty('--brandh', bb.offsetHeight + 'px');
   var dk = document.getElementById('dock');
   if (dk && state.current) document.documentElement.style.setProperty('--dockh', dk.offsetHeight + 'px');
 }
@@ -1928,10 +1932,17 @@ function setupMediaSession() {
 var realView = view;
 var TAB_SIDE_PRAYERS_KEY = 'opn-tabside-prayers-v410';
 var TAB_SIDE_CONSCIENCE_KEY = 'opn-tabside-conscience-v410';
-var tabSideNow = { prayers: 'prayers', conscience: 'examination' };
+/* v414 §2.5 (FD1): the Wallpaper tab joins the merged-tab
+   family — its own key of the v410 pattern with this
+   release's number in the vNNN slot; first-run default
+   Phone (the mockups draw Phone first, and the Phone view
+   carries the controls block). */
+var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
+var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone' };
 var sideScroll = {};
 function tabSideCfg(tab) {
   if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination'], ['confession', 'Confession']] };
+  if (tab === 'wallpaper') return { key: TAB_SIDE_WALLPAPER_KEY, def: 'phone', sides: [['phone', 'Phone'], ['watch', 'Watch']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Prayers'], ['intentions', 'Intentions']] };
 }
 function readTabSide(tab) {
@@ -2006,7 +2017,9 @@ var placeText = {};
 var placeSkip = {};
 var podLevel = 'index';
 function placeScreenKey() {
-  if (state.tab === 'prayers' || state.tab === 'conscience') return state.tab + ':' + tabSideNow[state.tab];
+  /* v414 §2.8: the Wallpaper tab rides the same entries —
+     its scroll is kept per side, like the merged tabs. */
+  if (state.tab === 'prayers' || state.tab === 'conscience' || state.tab === 'wallpaper') return state.tab + ':' + tabSideNow[state.tab];
   return state.tab;
 }
 function capturePlace() {
@@ -2068,7 +2081,8 @@ function armPodScroll(y) {
 }
 
 function paintTabSide(tab, side) {
-  if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
+  if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
+  else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
   else if (side === 'confession') renderConfessionContent();
   else renderExaminationContent();
 }
@@ -2892,12 +2906,21 @@ function fillWallpaperSection() {
   var r;
   try { r = p.getWallpaperSettings(); } catch (e) { paintWallpaperUnavailable(); return; }
   if (!r || !r.then) { paintWallpaperUnavailable(); return; }
-  r.then(function (payload) { paintWallpaperControls(payload); })
+  r.then(function (payload) {
+    /* v414 §2.6: the tab's entry paint — the remembered
+       side's view or the off state, with the standing
+       place restore armed (scroll + toggle side). */
+    paintWallpaperTab(payload, true);
+  })
     .catch(function () { paintWallpaperUnavailable(); });
 }
 function paintWallpaperUnavailable() {
   var host = document.getElementById('set-wallpaper');
   if (!host) return;
+  /* v414 §2.6: the web fallback keeps the standing wrapped
+     form (the sticky freeze needs no cage-free host when
+     no toggle paints here). */
+  host.className = 'liblist';
   host.innerHTML = '<div class="setrow"><div class="setname">Wallpaper</div>'
     + '<div class="meta">Wallpaper controls live in the app on your phone.</div></div>';
 }
@@ -2906,11 +2929,419 @@ function wallpaperRootOptions(roots, current) {
     return '<option value="' + esc(r) + '"' + (r === current ? ' selected' : '') + '>' + esc(r) + '</option>';
   }).join('');
 }
-function paintWallpaperControls(s) {
+/* v414 §2.3: the live-state read — showing-now and the off
+   state both read the payload's ONE pre-rendered
+   liveWallpaper line, whose three forms are a closed set
+   owned by WallpaperSettings.liveWallpaperLines in this
+   same codebase:
+     1. "Live wallpaper: not on — pick Ora Pro Nobis in the
+        system wallpaper picker."
+     2. "Live wallpaper: on — <drawnName>, drawn <time>;
+        the pictures advance as the screen shows."
+     3. "Live wallpaper: on — no pictures stand in the
+        Phone folder yet."
+   The drawn name is anchored on the wallpaper naming
+   contract (the same __<date>.jpg shape the Worker
+   validates). Guarded posture (the standing rule): an
+   absent key, an empty list, or a line matching no form
+   reads active with no drawn name — the tab renders its
+   views exactly as it does today and NEVER traps John
+   into the off state on an unreadable line. The off state
+   stands only on form 1's positive read (F-414-3). */
+function wallpaperLiveState(s) {
+  var lines = s && s.liveWallpaper;
+  if (!lines || !lines.length) return { active: true, drawnName: null };
+  var line = String(lines[0]);
+  if (line.indexOf('Live wallpaper: not on') === 0) return { active: false, drawnName: null };
+  if (line.indexOf('Live wallpaper: on') === 0) {
+    var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}-\d{2}\.jpg)/);
+    return { active: true, drawnName: m ? m[1] : null };
+  }
+  return { active: true, drawnName: null };
+}
+/* v414: the tab's working state — the resolved payload,
+   the manifest fetch shared by the two views, the sets
+   the fetch qualified, and the carousels' open indexes
+   (session state, so a standing re-render — a sync
+   completing, a fit change — restores the slide John was
+   viewing; §2.4's place-keeping). */
+var wpPayload = null;
+var wpManifestPromise = null;
+var wpSets = {};
+var wpCarIdx = { phone: null, watch: null };
+var wpCarSig = { phone: '', watch: '' };
+/* v414 §2.6 (FD2): the instructions collapse is REMEMBERED
+   — its own key of the house pattern; first-run shown (the
+   block must be discoverable; §1.6 fixes its position, not
+   this). A hide that resets at every entry is a hide that
+   does not work. */
+var WP_INSTR_KEY = 'opn-wallpaper-instructions-v414';
+/* v414 §2.6: the tab's paint, on the resolved payload —
+   off stands alone (§1.7); on paints the frozen toggle +
+   the remembered side's view into the standing host. The
+   liblist wrapper retires for the views: its overflow
+   would cage the toggle's sticky pin (§2.7), and the
+   controls stand as their own cards, as elsewhere. Entry
+   paints (restore) arm the standing place restore; write
+   and sync repaints re-form from native truth in place. */
+function paintWallpaperTab(s, restore) {
   var host = document.getElementById('set-wallpaper');
   if (!host) return;
   if (!s || !s.paths) { paintWallpaperUnavailable(); return; }
-  var paths = s.paths;
+  wpPayload = s;
+  wpManifestPromise = null;
+  host.className = '';
+  if (!wallpaperLiveState(s).active) { paintWallpaperOff(host); return; }
+  var side = readTabSide('wallpaper');
+  host.innerHTML = paintSideToggle('wallpaper', side) + '<div id="sidehost"></div>';
+  wireSideToggle('wallpaper');
+  enterSideHost();
+  paintTabSide('wallpaper', side);
+  if (restore) {
+    armSideScrollRestore('wallpaper', side);
+    armPlaceRestore('wallpaper:' + side);
+  }
+}
+/* v414 §2.6 (FD5): the off paint — the quick intro and the
+   Turn on button ONLY (no toggle, no views, no controls;
+   §1.10 leg 10). Turn on fires the standing picker helper;
+   on return its visibility refresh re-reads the payload
+   and the tab paints the remembered side's view. */
+function paintWallpaperOff(host) {
+  host.innerHTML = '<div class="card">'
+    + '<div class="wpoff-title">Wallpaper is off</div>'
+    + '<p style="margin:0 0 6px;line-height:1.55">The Ora Pro Nobis live wallpaper puts today\u2019s pictures on your home and lock screens.</p>'
+    + '<p style="margin:0 0 6px;line-height:1.55">The picture changes as the day goes, all by itself.</p>'
+    + '<p style="margin:0 0 12px;line-height:1.55">Set it once \u2014 then SYNC ALL keeps the pictures coming.</p>'
+    + '<button class="btn gold" id="wp-turn-on">Turn on</button></div>';
+  var b = document.getElementById('wp-turn-on');
+  if (b) b.addEventListener('click', function () { wallpaperOpenLivePicker(); });
+}
+/* v414 §2.4: one humanizer, used by the slides and the
+   showing-now row and nowhere else new — hyphens to
+   spaces, title-cased, the small words (of · the · and)
+   lower after the first: saint-margaret-of-scotland →
+   "Saint Margaret of Scotland"; the-blessed-virgin-mary →
+   "The Blessed Virgin Mary". */
+function wallpaperTitle(slug) {
+  var words = String(slug || '').split('-').filter(function (w) { return !!w; });
+  return words.map(function (w, i) {
+    if (i > 0 && (w === 'of' || w === 'the' || w === 'and')) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+function wallpaperTitleFromName(name) {
+  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+}
+/* v414 §2.3: the showing-now row — the thumbnail reads the
+   engine's draw record through the standing session file
+   route (the R2 copy of the same picture the sync filed).
+   FD4's fallback: no draw yet → today's first phone
+   picture under the same status line; empty set → the
+   no-pictures line, no thumbnail. While the set is still
+   loading the row carries the status line alone — never
+   blank, never a fabricated picture. */
+function wallpaperShowingHtml(s, live, set) {
+  var status = '<div class="meta">On your home and lock screens now</div>';
+  if (live.drawnName) {
+    return '<div class="card wpshowing"><img src="/api/wallpaper/file/phone/' + esc(live.drawnName) + '" alt="">'
+      + '<div><div class="wpname">' + esc(wallpaperTitleFromName(live.drawnName)) + '</div>' + status + '</div></div>';
+  }
+  if (set && set.length) {
+    return '<div class="card wpshowing"><img src="/api/wallpaper/file/phone/' + esc(set[0].name) + '" alt="">'
+      + '<div><div class="wpname">' + esc(wallpaperTitle(set[0].slug)) + '</div>' + status + '</div></div>';
+  }
+  if (set) {
+    return '<div class="card wpshowing"><div class="meta">No pictures stand in the Phone folder yet.</div></div>';
+  }
+  return '<div class="card wpshowing"><div>' + status + '</div></div>';
+}
+function paintShowingNow(set) {
+  var host = document.getElementById('wp-showing');
+  if (!host || !wpPayload) return;
+  host.innerHTML = wallpaperShowingHtml(wpPayload, wallpaperLiveState(wpPayload), set);
+}
+/* v414 §2.4: today's set, per side — the SAME rule the
+   native sync qualifies by (QualifyingDecision): entries
+   of the side's variant that are (kind saint, dated
+   today) or (kind monthly, dated this month); today is
+   the day payload's presented date, device-local. This is
+   exactly the set SYNC ALL converges the side's folder
+   to, so the carousel shows the folder's contents by
+   construction. Slide order: manifest order, the dailies
+   first, the monthly last — never re-sorted by name. */
+function wallpaperTodaySet(manifest, side) {
+  var today = presentedDateStr();
+  if (!today) return [];
+  var month = today.slice(0, 7);
+  var daily = [];
+  var monthly = [];
+  ((manifest && manifest.entries) || []).forEach(function (e) {
+    if (e.variant !== side) return;
+    if (e.kind === 'saint' && e.date === today) daily.push(e);
+    else if (e.kind === 'monthly' && e.date === month) monthly.push(e);
+  });
+  return daily.concat(monthly);
+}
+/* v414 §2.4: a slide's caption — the title from the
+   humanized slug; the "From: …" line per class:
+   · the saint entry (the daily whose slug begins saint-;
+     when none stands, the first daily): the day payload's
+     liturgical name, or "Today's saint" when none stands
+     (F-414-4);
+   · the monthly entry: "<Month>'s devotion";
+   · every other daily (the Gospel scene, the companion):
+     the title stands alone — the manifest carries no role
+     field, and a guessed "From: Today's Gospel" on the
+     wrong slide is a false caption (F-414-2, FD7's
+     truthful form, both views). */
+function wallpaperCaption(entries, idx) {
+  var e = entries[idx];
+  var title = wallpaperTitle(e.slug);
+  var from = null;
+  if (e.kind === 'monthly') {
+    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var mi = parseInt(String(e.date).slice(5, 7), 10) - 1;
+    from = 'From: ' + (months[mi] || '') + '\u2019s devotion';
+  } else {
+    var saintIdx = -1;
+    var firstDaily = -1;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].kind !== 'saint') continue;
+      if (firstDaily < 0) firstDaily = i;
+      if (saintIdx < 0 && entries[i].slug.indexOf('saint-') === 0) saintIdx = i;
+    }
+    var anchor = saintIdx >= 0 ? saintIdx : firstDaily;
+    if (idx === anchor && anchor >= 0) {
+      var nm = state.liturgical && state.liturgical.name;
+      from = 'From: ' + (nm || 'Today\u2019s saint');
+    }
+  }
+  return { title: title, from: from };
+}
+/* v414 §2.4: the carousel — ONE component, both views:
+   wallpaperCarouselHtml(side, entries, startIndex) +
+   wireWallpaperCarousel(side). The image stands large in
+   the fixed slide area, whole (object-fit: contain in
+   ui.ts) — the carousel never crops, and standing on a
+   slide writes nothing: it does not set, apply, or
+   advance the wallpaper (§1.9). */
+function wallpaperCarouselHtml(side, entries, startIndex) {
+  var e = entries[startIndex];
+  var cap = wallpaperCaption(entries, startIndex);
+  var dots = entries.map(function (x, i) {
+    return '<button class="wpcar-dot' + (i === startIndex ? ' on' : '') + '" data-car-dot="' + i + '" aria-label="Picture ' + (i + 1) + '"></button>';
+  }).join('');
+  return '<div class="wpcar" id="wpcar-' + side + '">'
+    + '<button class="wpcar-arrow" data-car-prev aria-label="Previous picture">\u2039</button>'
+    + '<div class="wpcar-stage" data-car-stage><img id="wpcar-img-' + side + '" src="/api/wallpaper/file/' + side + '/' + esc(e.name) + '" alt=""></div>'
+    + '<button class="wpcar-arrow" data-car-next aria-label="Next picture">\u203a</button></div>'
+    + '<div class="wpcar-title" id="wpcar-title-' + side + '">' + esc(cap.title) + '</div>'
+    + '<div class="meta" id="wpcar-from-' + side + '">' + (cap.from ? esc(cap.from) : '') + '</div>'
+    + '<div class="wpcar-dots">' + dots + '</div>';
+}
+function wireWallpaperCarousel(side) {
+  var root = document.getElementById('wpcar-' + side);
+  if (!root) return;
+  root.querySelector('[data-car-prev]').addEventListener('click', function () { stepWallpaperCarousel(side, -1); });
+  root.querySelector('[data-car-next]').addEventListener('click', function () { stepWallpaperCarousel(side, 1); });
+  var host = document.getElementById('wp-carousel-' + side);
+  if (host) {
+    host.querySelectorAll('[data-car-dot]').forEach(function (d) {
+      d.addEventListener('click', function () { setWallpaperCarousel(side, parseInt(d.getAttribute('data-car-dot'), 10)); });
+    });
+  }
+  var stage = root.querySelector('[data-car-stage]');
+  var tx = null;
+  stage.addEventListener('touchstart', function (ev) { tx = ev.changedTouches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (ev) {
+    if (tx === null) return;
+    var dx = ev.changedTouches[0].clientX - tx;
+    tx = null;
+    if (dx <= -40) stepWallpaperCarousel(side, 1);
+    else if (dx >= 40) stepWallpaperCarousel(side, -1);
+  }, { passive: true });
+}
+function stepWallpaperCarousel(side, delta) {
+  var set = wpSets[side] || [];
+  if (set.length < 2) return;
+  setWallpaperCarousel(side, ((wpCarIdx[side] || 0) + delta + set.length) % set.length);
+}
+function setWallpaperCarousel(side, idx) {
+  var set = wpSets[side] || [];
+  if (!set.length || idx < 0 || idx >= set.length) return;
+  wpCarIdx[side] = idx;
+  var e = set[idx];
+  var img = document.getElementById('wpcar-img-' + side);
+  if (img) img.src = '/api/wallpaper/file/' + side + '/' + e.name;
+  var cap = wallpaperCaption(set, idx);
+  var t = document.getElementById('wpcar-title-' + side);
+  if (t) t.textContent = cap.title;
+  var f = document.getElementById('wpcar-from-' + side);
+  if (f) f.textContent = cap.from || '';
+  var host = document.getElementById('wp-carousel-' + side);
+  if (host) {
+    host.querySelectorAll('[data-car-dot]').forEach(function (d) {
+      d.classList.toggle('on', parseInt(d.getAttribute('data-car-dot'), 10) === idx);
+    });
+  }
+}
+/* v414 §2.4: the set fill — one manifest fetch per tab
+   paint, shared by both views; each side's paint leaves
+   its carousel area in the loading line until the fetch
+   lands. An empty set and a failed load carry DISTINCT
+   truthful lines (§2.8). FD3's starting slide: the Phone
+   carousel opens on the showing-now slide when a drawn
+   name stands, else slide 0; the Watch opens at slide 0
+   (no showing-now exists there). A session index for the
+   same set survives a re-render (§2.4). */
+function paintWallpaperCarousel(side) {
+  var host = document.getElementById('wp-carousel-' + side);
+  if (!host) return;
+  var set = wpSets[side] || [];
+  if (!set.length) {
+    host.innerHTML = '<div class="meta">' + (side === 'phone'
+      ? 'No pictures for today yet \u2014 SYNC ALL brings them.'
+      : 'No watch pictures for today yet.') + '</div>';
+    return;
+  }
+  var sig = set.map(function (e) { return e.name; }).join('|');
+  var idx;
+  if (wpCarIdx[side] !== null && wpCarSig[side] === sig) {
+    idx = Math.min(wpCarIdx[side], set.length - 1);
+  } else if (side === 'phone') {
+    idx = 0;
+    var drawn = wpPayload ? wallpaperLiveState(wpPayload).drawnName : null;
+    if (drawn) {
+      for (var i = 0; i < set.length; i++) { if (set[i].name === drawn) { idx = i; break; } }
+    }
+  } else {
+    idx = 0;
+  }
+  wpCarIdx[side] = idx;
+  wpCarSig[side] = sig;
+  host.innerHTML = wallpaperCarouselHtml(side, set, idx);
+  wireWallpaperCarousel(side);
+}
+function loadWallpaperSet(side) {
+  if (!wpManifestPromise) {
+    wpManifestPromise = fetch('/api/wallpaper/manifest', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('wallpaper manifest ' + r.status);
+        return r.json();
+      });
+  }
+  wpManifestPromise.then(function (manifest) {
+    wpSets[side] = wallpaperTodaySet(manifest, side);
+    paintWallpaperCarousel(side);
+    if (side === 'phone') paintShowingNow(wpSets[side]);
+  }).catch(function () {
+    var host = document.getElementById('wp-carousel-' + side);
+    if (host) host.innerHTML = '<div class="meta">Today\u2019s pictures could not be loaded \u2014 reopen the tab to try again.</div>';
+  });
+}
+/* v414 §2.10: the folder button — renders ONLY when the
+   shell carries the new bridge method (the section's
+   standing guarded posture): this release's shell carries
+   it, so the button stands (§1.10 leg 8); an older shell
+   renders the views without folder buttons rather than
+   with dead ones. */
+function wallpaperFolderHtml(side) {
+  var p = wallpaperBridge();
+  if (!p || typeof p.openWallpaperFolder !== 'function') return '';
+  var label = side === 'phone' ? 'Open phone folder' : 'Open watch folder';
+  return '<div class="setrow"><div class="setcontrols"><button class="btn ghost" id="wp-open-' + side + '">' + label + '</button></div>'
+    + '<div class="fieldnote" id="wp-folder-note-' + side + '"></div></div>';
+}
+function wireWallpaperFolder(side) {
+  var b = document.getElementById('wp-open-' + side);
+  if (b) b.addEventListener('click', function () { wallpaperOpenFolder(side); });
+}
+function wallpaperOpenFolder(side) {
+  var p = wallpaperBridge();
+  if (!p || typeof p.openWallpaperFolder !== 'function') return;
+  var fail = function () {
+    var note = document.getElementById('wp-folder-note-' + side);
+    if (note && wpPayload && wpPayload.paths) {
+      note.textContent = 'That did not open. The folder is at ' + (wpPayload.paths[side] || '') + '.';
+    }
+  };
+  var r;
+  try { r = p.openWallpaperFolder({ variant: side }); } catch (e) { fail(); return; }
+  if (r && r.catch) r.catch(fail);
+}
+/* v414 §2.6: the Watch instructions block — §1.6's four
+   points verbatim in substance, at the top of the Watch
+   view, collapsible with the state REMEMBERED (FD2). The
+   collapsed form is the one-line bar + Show instructions. */
+function wallpaperInstructionsShown() {
+  try { return localStorage.getItem(WP_INSTR_KEY) !== 'hidden'; } catch (e) { return true; }
+}
+function wallpaperInstructionsHtml() {
+  if (!wallpaperInstructionsShown()) {
+    return '<div class="card"><div class="row"><div class="grow">Watch setup instructions</div>'
+      + '<button class="btn ghost" id="wp-instr-show">Show instructions</button></div></div>';
+  }
+  return '<div class="card"><div class="row"><div class="setname grow">Watch setup</div>'
+    + '<button class="btn ghost" id="wp-instr-hide">Hide</button></div>'
+    + '<p style="margin:8px 0 0;line-height:1.55">On the watch, set the face\u2019s image source to the Ora Pro Nobis watch folder.</p>'
+    + '<p style="margin:6px 0 0;line-height:1.55">Keep the time readout in the top zone \u2014 the artwork keeps the top third dark and empty on purpose, so the time stays readable.</p>'
+    + '<p style="margin:6px 0 0;line-height:1.55">The watch advances through the folder itself \u2014 nothing else needs setting.</p>'
+    + '<p style="margin:6px 0 0;line-height:1.55">New pictures arrive when SYNC ALL runs on the phone.</p></div>';
+}
+function wireWallpaperInstructions() {
+  var hide = document.getElementById('wp-instr-hide');
+  if (hide) hide.addEventListener('click', function () { wallpaperSetInstructions(false); });
+  var show = document.getElementById('wp-instr-show');
+  if (show) show.addEventListener('click', function () { wallpaperSetInstructions(true); });
+}
+function wallpaperSetInstructions(shown) {
+  try { localStorage.setItem(WP_INSTR_KEY, shown ? 'shown' : 'hidden'); } catch (e) {}
+  var host = document.getElementById('wp-instr');
+  if (host) {
+    host.innerHTML = wallpaperInstructionsHtml();
+    wireWallpaperInstructions();
+  }
+}
+/* v414 §1.3: the Phone view, top to bottom — showing-now
+   row · "Today's artwork" carousel · Open phone folder ·
+   the standing controls block (§2.6's relocation map:
+   every standing row's home, none dropped). */
+function paintWallpaperPhone() {
+  var s = wpPayload;
+  if (!s) return;
+  view.innerHTML = '<div id="wp-showing">' + wallpaperShowingHtml(s, wallpaperLiveState(s), null) + '</div>'
+    + '<h2 class="sectionhead">Today\u2019s artwork</h2>'
+    + '<div id="wp-carousel-phone"><div class="meta">Loading...</div></div>'
+    + wallpaperFolderHtml('phone')
+    + wallpaperControlsHtml(s);
+  wireWallpaperControls();
+  wireWallpaperFolder('phone');
+  loadWallpaperSet('phone');
+}
+/* v414 §1.8: the Watch view, top to bottom — the
+   instructions block (collapsible, §2.6) · "Today's
+   artwork — watch" carousel · Open watch folder. NO
+   showing-now element stands anywhere on this view
+   (§1.4), and no controls block (§1.8). */
+function paintWallpaperWatch() {
+  if (!wpPayload) return;
+  view.innerHTML = '<div id="wp-instr">' + wallpaperInstructionsHtml() + '</div>'
+    + '<h2 class="sectionhead">Today\u2019s artwork \u2014 watch</h2>'
+    + '<div id="wp-carousel-watch"><div class="meta">Loading...</div></div>'
+    + wallpaperFolderHtml('watch');
+  wireWallpaperInstructions();
+  wireWallpaperFolder('watch');
+  loadWallpaperSet('watch');
+}
+/* v414 §2.6: the controls block — the standing section's
+   rows exactly as they stood (v409's live-wallpaper lines
+   + picker row · v405's fit row · v406's flat folder rows
+   · v396's notices · v399's Sync row + lastSync line ·
+   v400's saint line), in their standing order, homed on
+   the Phone view. The builder returns the rows; the
+   wiring is its twin below. */
+function wallpaperControlsHtml(s) {
   var html = '';
   /* v409 §2.6: the live-wallpaper state lines — the additive
      'liveWallpaper' key in the same payload, pre-rendered
@@ -2966,6 +3397,7 @@ function paintWallpaperControls(s) {
      for a <= 1.0.26 shell's four-key payload (its subfolder
      lines are simply not rendered). No Saints or Monthly
      Devotion text renders anywhere in the section. */
+  var paths = s.paths;
   html += '<div class="setrow"><div class="setname">Phone folder</div>'
     + '<div class="meta">' + esc(paths.phone || (s.phoneRoot + '/Phone')) + '</div>'
     + '<div class="setcontrols"><select id="set-wp-phone-root">' + wallpaperRootOptions(s.offeredRoots, s.phoneRoot) + '</select></div></div>';
@@ -3019,7 +3451,9 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(saintLine) + '</div></div>';
     }
   }
-  host.innerHTML = html;
+  return html;
+}
+function wireWallpaperControls() {
   var liveBtn = document.getElementById('set-wp-live');
   if (liveBtn) liveBtn.addEventListener('click', function () { wallpaperOpenLivePicker(); });
   var phoneSel = document.getElementById('set-wp-phone-root');
@@ -3030,6 +3464,15 @@ function paintWallpaperControls(s) {
   if (fitSel) fitSel.addEventListener('change', function (ev) { wallpaperWrite({ fitMode: ev.target.value }); });
   var syncBtn = document.getElementById('set-wp-sync');
   if (syncBtn) syncBtn.addEventListener('click', function () { wallpaperSyncNow(); });
+}
+/* v414: the standing repaint entry keeps its name and its
+   callers (wallpaperWrite · wallpaperSyncNow) — a write or
+   a sync answer re-forms the whole tab from the fresh
+   payload, the standing posture: the current side's view
+   repaints from native truth, the off state re-reads, and
+   the carousel index survives on its session store. */
+function paintWallpaperControls(s) {
+  paintWallpaperTab(s, false);
 }
 function wallpaperWrite(patch) {
   var p = wallpaperBridge();
