@@ -630,11 +630,28 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
       .bind(presented).all<{ episode_id: string; position_s: number }>();
     dayPositions = Object.fromEntries((dayPosRows.results ?? []).map((r) => [r.episode_id, r.position_s]));
   } catch { dayPositions = {}; }
+  // v413 §2.2: the manual-order fold — the stored arrangement
+  // rides the day payload itself, so it is fresh at every open
+  // with no version check. An absent table (pre-0021 rollback
+  // posture) or an empty one reads as null = contract order.
+  const blockOrder = await playerBlockOrder(env);
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
-    version: settings.version, introTexts, blocks, dayPositions,
+    version: settings.version, introTexts, blocks, dayPositions, blockOrder,
   };
+}
+
+// v413 §2.2: the manual playlist order's read — the stored block
+// names in stored order, or null when no row stands (FD1:
+// absence = the contracts' order). A missing table (pre-0021)
+// reads as null, never an error.
+async function playerBlockOrder(env: Env): Promise<string[] | null> {
+  try {
+    const r = await env.DB.prepare("SELECT block FROM player_block_order ORDER BY sort_order").all<{ block: string }>();
+    const names = (r.results ?? []).map((x) => x.block);
+    return names.length ? names : null;
+  } catch { return null; }
 }
 
 // ---- Examination + Confession -------------------------------------------
@@ -760,7 +777,7 @@ const EXT_DO_SLOTS: { slotId: string; title: string; tokenKey: string }[] = [
   { slotId: "ext-evening-prayer", title: "Evening Prayer", tokenKey: "DO_EVENING" },
   { slotId: "ext-night-prayer", title: "Night Prayer", tokenKey: "DO_NIGHT_ANY" },
 ];
-interface ExtFeedItem { title: string; url: string; length: number; pubMs: number | null; durationS: number }
+interface ExtFeedItem { title: string; url: string; length: number; pubMs: number | null; durationS: number; imageUrl: string | null; descText: string | null }
 function extXmlText(raw: string): string {
   return raw
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -781,6 +798,42 @@ function extParseDuration(raw: string | null): number {
     const v = Number(t);
     return Number.isFinite(v) ? Math.trunc(v) : 0;
   } catch { return 0; }
+}
+// v413 §2.3: the description snippet's text form — tags stripped
+// (a feed description is HTML), entities decoded by the standing
+// extXmlText discipline, whitespace collapsed, truncated at 240
+// chars. The client's two-line clamp trims it further at paint.
+function extStripDesc(raw: string): string {
+  const noTags = raw.replace(/<[^>]*>/g, " ");
+  const t = extXmlText(noTags);
+  return t.length > 240 ? t.slice(0, 240) : t;
+}
+function extItemImage(body: string): string | null {
+  const im = /<itunes:image\b[^>]*?href="([^"]*)"/.exec(body) || /<itunes:image\b[^>]*?href='([^']*)'/.exec(body);
+  return im ? extXmlText(im[1]) || null : null;
+}
+function extItemDesc(body: string): string | null {
+  const sm = /<itunes:summary>([\s\S]*?)<\/itunes:summary>/.exec(body) || /<description>([\s\S]*?)<\/description>/.exec(body);
+  if (!sm) return null;
+  const t = extStripDesc(sm[1]);
+  return t || null;
+}
+// v413 §2.3: the channel head's own art + description, parsed
+// once from the part of the document before the first item —
+// the fallback art for items carrying none, and (for podcasts)
+// the series page's show art + description.
+function extParseChannelHead(xml: string): { channelImageUrl: string | null; channelDesc: string | null } {
+  const cut = xml.indexOf("<item");
+  const head = cut >= 0 ? xml.slice(0, cut) : xml;
+  let channelImageUrl = extItemImage(head);
+  if (!channelImageUrl) {
+    const um = /<image>[\s\S]*?<url>([\s\S]*?)<\/url>/.exec(head);
+    if (um) channelImageUrl = extXmlText(um[1]) || null;
+  }
+  let channelDesc: string | null = null;
+  const dm = /<itunes:summary>([\s\S]*?)<\/itunes:summary>/.exec(head) || /<description>([\s\S]*?)<\/description>/.exec(head);
+  if (dm) channelDesc = extStripDesc(dm[1]) || null;
+  return { channelImageUrl, channelDesc };
 }
 function extParseFeed(xml: string): ExtFeedItem[] {
   if (!/<channel[\s>]/.test(xml) || !/<item[\s>]/.test(xml)) throw new Error("feed parse failed");
@@ -806,6 +859,11 @@ function extParseFeed(xml: string): ExtFeedItem[] {
       url, length,
       pubMs: Number.isFinite(pubMs) ? pubMs : null,
       durationS: extParseDuration(durM ? durM[1] : null),
+      // v413 §2.3: per-item provider art + snippet (D2) — the
+      // item's own image, else null (the channel fallback is
+      // applied by the consumers that hold the head).
+      imageUrl: extItemImage(body),
+      descText: extItemDesc(body),
     });
   }
   return items;
@@ -895,14 +953,25 @@ function extMatchSaint(items: ExtFeedItem[], y: number, mo: number, d: number): 
   return it.title.startsWith(prefix) ? it : null;
 }
 const EXT_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-async function extFetchFeedItems(url: string, userAgent?: string): Promise<ExtFeedItem[]> {
+// v413 §2.3: the full feed read — items PLUS the channel head's
+// art + description. extFetchFeedItems delegates (its standing
+// callers keep the items-only shape); consumers that serve art
+// (the live payload's legs, the podcast sequence build) call
+// this one.
+interface ExtFeedRead { items: ExtFeedItem[]; channelImageUrl: string | null; channelDesc: string | null }
+async function extFetchFeed(url: string, userAgent?: string): Promise<ExtFeedRead> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15000);
   try {
     const res = await fetch(url, { headers: { "user-agent": userAgent || "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
     if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
-    return extParseFeed(await res.text());
+    const xml = await res.text();
+    const head = extParseChannelHead(xml);
+    return { items: extParseFeed(xml), channelImageUrl: head.channelImageUrl, channelDesc: head.channelDesc };
   } finally { clearTimeout(timer); }
+}
+async function extFetchFeedItems(url: string, userAgent?: string): Promise<ExtFeedItem[]> {
+  return (await extFetchFeed(url, userAgent)).items;
 }
 // v339 §2.3: the Mass and Homilies block's sources.
 const EXT_USCCB_FEED_URL = "https://feeds.feedburner.com/usccb/zhqs";
@@ -959,11 +1028,14 @@ async function extCourierSlotsPayload(env: Env, prim: Map<string, SourceSettingR
   return Promise.all(standing.map(async (cs) => {
     const row = prim.get(cs.slotId)!;
     let it: ExtFeedItem | null = null;
+    let channelImageUrl: string | null = null;
     try {
-      it = extMatchCourierSlot(cs, await extFetchFeedItems(cs.feed(env), cs.browserUa ? EXT_BROWSER_UA : undefined), y, mo, d);
+      const feed = await extFetchFeed(cs.feed(env), cs.browserUa ? EXT_BROWSER_UA : undefined);
+      channelImageUrl = feed.channelImageUrl;
+      it = extMatchCourierSlot(cs, feed.items, y, mo, d);
     } catch { it = null; }
     if (!it) return { slotId: cs.slotId, state: "missing", title: cs.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order };
-    return { slotId: cs.slotId, state: "present", title: cs.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order };
+    return { slotId: cs.slotId, state: "present", title: cs.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order, imageUrl: it.imageUrl || channelImageUrl || null, descText: it.descText || null };
   }));
 }
 function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
@@ -1010,9 +1082,10 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     const row = prim.get("ext-gospel-exegesis");
     if (!row || row.enabled !== 1 || !extDayRulePasses(row.day_rule || "daily", weekdayMon0)) return [];
     try {
-      const it = extMatchLatestByDate(await extFetchFeedItems(env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL), y, mo, d);
+      const feed = await extFetchFeed(env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL);
+      const it = extMatchLatestByDate(feed.items, y, mo, d);
       if (!it) return [{ slotId: "ext-gospel-exegesis", state: "missing", title: "Daily Gospel Exegesis", streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
-      return [{ slotId: "ext-gospel-exegesis", state: "present", title: it.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
+      return [{ slotId: "ext-gospel-exegesis", state: "present", title: it.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order, imageUrl: it.imageUrl || feed.channelImageUrl || null, descText: it.descText || null }];
     } catch {
       return [{ slotId: "ext-gospel-exegesis", state: "missing", title: "Daily Gospel Exegesis", streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
     }
@@ -1040,14 +1113,16 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     if (!row || row.enabled !== 1 || !extDayRulePasses(row.day_rule || "daily", weekdayMon0)) return [];
     const missing = { slotId: "ext-bible-in-a-year", state: "missing", title: "Bible in a Year", streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS["ext-bible-in-a-year"], sortOrder: row.sort_order };
     try {
-      const it = extMatchBible(await extFetchFeedItems(env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL), y, mo, d);
+      const feed = await extFetchFeed(env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL);
+      const it = extMatchBible(feed.items, y, mo, d);
       if (!it) return [missing];
-      return [{ slotId: "ext-bible-in-a-year", state: "present", title: it.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS["ext-bible-in-a-year"], sortOrder: row.sort_order }];
+      return [{ slotId: "ext-bible-in-a-year", state: "present", title: it.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS["ext-bible-in-a-year"], sortOrder: row.sort_order, imageUrl: it.imageUrl || feed.channelImageUrl || null, descText: it.descText || null }];
     } catch {
       return [missing];
     }
   })();
   let items: ExtFeedItem[] | null = null;
+  let doChannelImage: string | null = null; // v413 §2.3: the DO channel's art — the slot descriptors' fallback
   let error: string | undefined;
   try {
     const ctl = new AbortController();
@@ -1059,7 +1134,9 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
       });
     } finally { clearTimeout(timer); }
     if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
-    items = extParseFeed(await res.text());
+    const doXml = await res.text();
+    doChannelImage = extParseChannelHead(doXml).channelImageUrl;
+    items = extParseFeed(doXml);
   } catch (e) {
     error = e instanceof Error && e.name === "AbortError" ? "feed fetch timed out" : (e instanceof Error ? e.message : "feed fetch failed");
   }
@@ -1072,7 +1149,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     const it = matches.get(slot.slotId);
     if (!it) return mkMissing(slot);
     const row = prim.get(slot.slotId)!;
-    return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
+    return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order, imageUrl: it.imageUrl || doChannelImage || null, descText: it.descText || null };
   });
   slots.push(...(await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0)) as typeof slots);
   slots.push(...(await exegesisP) as typeof slots);
@@ -1112,7 +1189,7 @@ function podSeriesDef(key: string): PodSeriesDef | null {
   return POD_SERIES_LIST.find((d) => d.key === key) ?? null;
 }
 
-interface PodEntry { key: string; kind: "day" | "bonus" | "special"; day: number | null; label: string; title: string; url: string; durationS: number; edition: number }
+interface PodEntry { key: string; kind: "day" | "bonus" | "special"; day: number | null; label: string; title: string; url: string; durationS: number; edition: number; imageUrl: string | null; descText: string | null }
 interface PodBuild { entries: PodEntry[]; collapses: number }
 
 function podStripEditionSuffix(title: string): string {
@@ -1145,7 +1222,12 @@ function podBonusSlug(title: string, slugMode: "shortcuts" | "generic"): string 
 // latest day published before them in their newest carrying
 // edition; the Day 366 special last; the pre-launch trailer and
 // any other non-day, non-BONUS item excluded.
-function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef): PodBuild {
+// v413 §2.3: the build also receives the feed's channel art —
+// each entry's imageUrl is its item art else the channel's;
+// descText rides from the item. Snapshots built before v413
+// lack both fields on their stored entries (the client treats
+// absence as the fallback until the standing rebuild — F-413-2).
+function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef, channelImageUrl?: string | null): PodBuild {
   let collapses = 0;
   const dayGroups = new Map<string, ExtFeedItem[]>(); // "edition|day" -> items in feed order
   const bonusItems: { it: ExtFeedItem; edition: number; slug: string }[] = [];
@@ -1203,6 +1285,7 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef): PodBuild {
         label: special ? "Day 366 — Special" : "Day " + day,
         title: podStripEditionSuffix(sup.it.title.replace(/^Day\s+\d+\s*:\s*/i, "")),
         url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
+        imageUrl: sup.it.imageUrl || channelImageUrl || null, descText: sup.it.descText || null,
       },
       sortDay: day, sortRank: 0, sortPub: 0,
     });
@@ -1228,6 +1311,7 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef): PodBuild {
         key: def.prefix + ":bonus-" + slug, kind: "bonus", day: null, label: "Bonus",
         title: podStripEditionSuffix(sup.it.title.replace(/^BONUS\s*:\s*/i, "")),
         url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
+        imageUrl: sup.it.imageUrl || channelImageUrl || null, descText: sup.it.descText || null,
       },
       sortDay: anchor, sortRank: 1, sortPub: sup.it.pubMs ?? 0,
     });
@@ -1236,7 +1320,7 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef): PodBuild {
   return { entries: out.map((s) => s.entry), collapses };
 }
 
-interface PodSnapshot { entries: PodEntry[]; collapses: number; builtAt: string }
+interface PodSnapshot { entries: PodEntry[]; collapses: number; builtAt: string; showImageUrl?: string | null; showDesc?: string | null }
 async function podReadSnapshot(env: Env, def: PodSeriesDef): Promise<PodSnapshot | null> {
   const row = await env.DB.prepare("SELECT payload FROM podcast_sequences WHERE series=?").bind(def.key).first<{ payload: string }>();
   if (!row) return null;
@@ -1256,16 +1340,19 @@ async function podSequence(env: Env, def: PodSeriesDef): Promise<{ snap: PodSnap
   const snap = await podReadSnapshot(env, def);
   if (snap && Date.now() - Date.parse(snap.builtAt) < POD_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
   try {
-    const items = await extFetchFeedItems(def.feedUrl(env));
-    const build = podBuildSequence(items, def);
+    const feed = await extFetchFeed(def.feedUrl(env));
+    const build = podBuildSequence(feed.items, def, feed.channelImageUrl);
     if (!build.entries.length) throw new Error("podcast sequence build produced no entries");
     const builtAt = nowISO();
-    const payload = JSON.stringify({ entries: build.entries, collapses: build.collapses, builtAt });
+    // v413 §2.3: the snapshot gains the series' show art +
+    // description fold (the channel head's fields).
+    const snapFull: PodSnapshot = { entries: build.entries, collapses: build.collapses, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
+    const payload = JSON.stringify(snapFull);
     await env.DB.prepare(
       `INSERT INTO podcast_sequences (series, payload, built_at) VALUES (?, ?, ?)
        ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
     ).bind(def.key, payload, builtAt).run();
-    return { snap: { entries: build.entries, collapses: build.collapses, builtAt }, stale: false };
+    return { snap: snapFull, stale: false };
   } catch {
     if (snap) return { snap, stale: true };
     return null;
@@ -1278,6 +1365,7 @@ interface PodPayload {
   entries: PodEntryState[]; currentKey: string | null;
   listenedCount: number; total: number;
   builtAt: string | null; stale: boolean; collapses?: number;
+  showImageUrl: string | null; showDesc: string | null;
 }
 async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
   const seq = await podSequence(env, def);
@@ -1293,7 +1381,7 @@ async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
     .bind(def.key).all<{ seq_key: string; position_s: number }>();
   const positions = new Map((pr.results ?? []).map((x) => [x.seq_key, x.position_s]));
   if (!seq) {
-    return { ok: true, series: def.key, title: def.title, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false };
+    return { ok: true, series: def.key, title: def.title, available: false, entries: [], currentKey: null, listenedCount: 0, total: 0, builtAt: null, stale: false, showImageUrl: null, showDesc: null };
   }
   const entries = seq.snap.entries.map((e) => {
     const l = listens.get(e.key);
@@ -1310,6 +1398,7 @@ async function podPayload(env: Env, def: PodSeriesDef): Promise<PodPayload> {
     entries, currentKey: current ? current.key : null,
     listenedCount: entries.filter((e) => e.listened).length, total: entries.length,
     builtAt: seq.snap.builtAt, stale: seq.stale, collapses: seq.snap.collapses,
+    showImageUrl: seq.snap.showImageUrl ?? null, showDesc: seq.snap.showDesc ?? null,
   };
 }
 
@@ -1329,6 +1418,7 @@ async function podIndexPayload(env: Env): Promise<unknown> {
       series: def.key, title: def.title, available: p.available,
       listenedCount: p.listenedCount, total: p.total,
       currentKey: p.currentKey, currentLabel: current ? current.label : null,
+      showImageUrl: p.showImageUrl, showDesc: p.showDesc,
     });
   }
   return { ok: true, seriesList };
@@ -1455,6 +1545,12 @@ export default {
         // settings + version, read-only. No door write route exists;
         // writes are John's, session-only.
         return json(await sourceSettingsPayload(env));
+      }
+      if (seg[2] === "player" && seg[3] === "block-order" && request.method === "GET") {
+        // v413 §2.2 — the door read of the manual order, read-only
+        // parity with the settings door read. No door write route
+        // exists; the arrangement is John's, session-only.
+        return json({ ok: true, order: await playerBlockOrder(env) });
       }
       if (seg[2] === "player" && seg[3] === "day" && request.method === "GET") {
         // v337 §2.7: the amended step's presented-set read — the
@@ -2056,6 +2152,36 @@ export default {
             if (v) headers[h] = v;
           }
           return new Response(audioRes.body, { status: audioRes.status, headers });
+        }
+        if (seg[2] === "block-order" && request.method === "GET") {
+          // v413 §2.2 — the manual-order read: the identical body
+          // to the door read ({ order: string[] | null }).
+          return json({ ok: true, order: await playerBlockOrder(env) });
+        }
+        if (seg[2] === "block-order" && request.method === "PUT") {
+          // v413 §2.2 — John's arrangement write: validates every
+          // name against PRAYER_BLOCKS, dedupes, and replaces the
+          // table's rows in one batch with sort_order = index.
+          // Every validation is a named 400 that writes nothing.
+          // An empty array clears the arrangement (back to the
+          // contracts' order).
+          const body = await request.json().catch(() => ({})) as { order?: unknown };
+          if (!Array.isArray(body.order)) return err(400, "order required");
+          const names: string[] = [];
+          for (const raw of body.order) {
+            const name = String(raw ?? "");
+            if (!(PRAYER_BLOCKS as readonly string[]).includes(name)) return err(400, `bad block ${name || "(empty)"}`);
+            if (!names.includes(name)) names.push(name);
+          }
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [env.DB.prepare("DELETE FROM player_block_order")];
+          names.forEach((name, i) => {
+            stmts.push(env.DB.prepare(
+              "INSERT INTO player_block_order (block, sort_order, updated_at) VALUES (?, ?, ?)",
+            ).bind(name, i, ts));
+          });
+          await env.DB.batch(stmts);
+          return json({ ok: true, order: await playerBlockOrder(env) });
         }
         if (seg[2] === "source-settings" && request.method === "GET") {
           // v328 §2.2 route 1 — the Settings screen's read: the

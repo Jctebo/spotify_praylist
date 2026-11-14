@@ -1668,7 +1668,10 @@ function updateDock() {
   document.getElementById('dock-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
   document.getElementById('dock-next').disabled = !state.queue.length;
   document.getElementById('dock-prev').disabled = !state.queue.length; // v412 Fix 8: Previous stands while a queue stands (enabled at the head — the rule restarts)
-  document.getElementById('dock-rate').textContent = (state.rate || 1) + '×'; // v412 Fix 13: the cycler's label reads the one global rate
+  // v413 §2.8: the dock thumb is the playing episode's own art
+  // (§2.3's chain), the logo tile its fallback.
+  var dt = document.getElementById('dock-thumb');
+  if (dt) { var dts = cur.imageUrl || '/logo.png'; if (dt.getAttribute('src') !== dts) dt.setAttribute('src', dts); }
   syncAutoplayToggles(); // v358: the dock toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the dock intentions switch follows the store
   dock.classList.remove('hidden');
@@ -2106,11 +2109,14 @@ document.querySelectorAll('#tabbar .tab').forEach(function (b) {
 document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
 document.getElementById('dock-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the dock gains Previous, reading the one rule
-document.getElementById('dock-rate').addEventListener('click', function () { cycleRate(); }); // v412 Fix 13: the dock gains the rate cycler
-document.getElementById('dock-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
+// v413 §2.8: the dock's rate cycler + autoplay toggle retire
+// to the player overflow (cycleRate/setRate stand as the seams
+// the speed sheet reads); the ⋮ entrance opens that one menu.
+// The intentions toggle keeps its dock place (ruling R1).
+document.getElementById('dock-menu').addEventListener('click', function () { openPlayerMenu(); });
 document.getElementById('dock-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
 document.getElementById('dock').addEventListener('click', function (ev) {
-  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-prev') || ev.target.closest('#dock-rate') || ev.target.closest('#dock-autoplay') || ev.target.closest('#dock-intentions'))) return;
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-prev') || ev.target.closest('#dock-menu') || ev.target.closest('#dock-intentions'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
@@ -2126,6 +2132,17 @@ measureBars();
    v390 §2.7: the tab enters at a SERIES LEVEL (three series —
    Catechism · Bible · Rosary); a card opens the series page,
    which is the v381 presentation below plus a back row. */
+function podRowArtHtml(e) {
+  // v413 §2.3/§2.6: a podcast row's art — the episode's own art,
+  // else the series' show art, else a series-initial tile (§2.3's
+  // chain). Referenced, never re-hosted.
+  var s = state.podcasts;
+  var url = e.imageUrl || (s && s.showImageUrl) || null;
+  var letter = ((s && s.title) || 'P').charAt(0).toUpperCase();
+  var tile = '<span class="rowart tile tone-navy"><span>' + esc(letter) + '</span></span>';
+  if (url) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(url) + '" alt="" onerror="this.remove()"></span>';
+  return '<span class="rowartwrap">' + tile + '</span>';
+}
 function podDesc(e) {
   // v390 §2.7: the descriptor gains the series (the open
   // payload's key) beside the standing fields, so the completion
@@ -2134,7 +2151,7 @@ function podDesc(e) {
   // position (podPositionS) — the server value from the open
   // payload, null for listened and untouched entries — so every
   // start the queue reaches can hand it to the resume seam.
-  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null };
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null, imageUrl: e.imageUrl || (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: e.descText || null };
 }
 function podCurrentKey(entries) {
   // v390 §2.10 (option A amendment, 2026-11-12): the in-memory
@@ -2232,14 +2249,20 @@ function paintPodcastsIndex() {
   var html = '<h1 class="screen">Podcasts</h1>';
   html += offlineLineHtml('pod-offline-btn');
   res.seriesList.forEach(function (s) {
-    html += '<div class="card" data-podseries="' + esc(s.series) + '"><h3>' + esc(s.title) + '</h3>';
+    // v413 §2.7: playlist-style entries — the provider's own
+    // show artwork (§2.3's showImageUrl; a series-initial tile
+    // is the fallback), name, the standing progress facts in
+    // the meta position.
+    var tile = '<span class="rowart tile tone-navy"><span>' + esc((s.title || 'P').charAt(0).toUpperCase()) + '</span></span>';
+    var art = '<span class="rowartwrap">' + tile + (s.showImageUrl ? '<img class="rowart" src="' + esc(s.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
+    html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(s.title) + '</h3>';
     if (!s.available) {
       html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
     } else {
       html += '<div class="meta">' + s.listenedCount + ' of ' + s.total + ' listened'
         + (s.currentLabel ? ' · Current: ' + esc(s.currentLabel) : ' · Complete') + '</div>';
     }
-    html += '</div>';
+    html += '</div></div></div>';
   });
   view.innerHTML = html;
   wireOfflineButtons();
@@ -2293,20 +2316,44 @@ function paintPodcasts() {
   }
   var cur = null;
   res.entries.forEach(function (e) { if (e.key === res.currentKey) cur = e; });
-  html += '<div class="card"><h3>' + esc(res.title) + '</h3><div class="meta">'
-    + res.listenedCount + ' of ' + res.total + ' listened'
-    + (cur ? ' · Current: ' + esc(cur.label) : ' · Complete') + '</div></div>';
+  // v413 §2.7: the episode page's head takes the playlist-page
+  // grammar — show cover (large) · series title · description
+  // (the show's own, §2.3) · meta line = the standing progress
+  // facts + total duration (§2.10). The current-episode rule
+  // and the return machinery are untouched.
+  var podDurSum = res.entries.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
+  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">' + esc((res.title || 'P').charAt(0).toUpperCase()) + '</span>'
+    + (res.showImageUrl ? '<img class="coverimg" src="' + esc(res.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
+  html += '<div class="podpage-head">' + showCover
+    + '<h1 class="screen">' + esc(res.title) + '</h1>'
+    + (res.showDesc ? '<p class="sub">' + esc(res.showDesc) + '</p>' : '')
+    + '<div class="meta">' + res.listenedCount + ' of ' + res.total + ' listened'
+    + (podDurSum > 0 ? ' \u00b7 ' + fmtDurLong(podDurSum) : '')
+    + (cur ? ' \u00b7 Current: ' + esc(cur.label) : ' \u00b7 Complete') + '</div></div>';
   if (cur) {
     html += '<div class="card"><div class="meta">Current episode</div><div class="row">'
+      + podRowArtHtml(cur)
       + '<button class="playbtn" data-podplay="' + esc(cur.key) + '">&#9654;</button>'
       + '<div class="grow"><h3>' + esc(cur.title) + '</h3><div class="meta">' + esc(cur.label) + (cur.durationS ? ' · ' + fmtDur(cur.durationS) : '') + '</div></div>'
       + '</div></div>';
   }
   res.entries.forEach(function (e) {
-    html += '<div class="card trow" data-podrow="' + esc(e.key) + '"><div class="row">'
+    // v413 §2.6: the episode rows take the one row form — art ·
+    // title · snippet · meta · the cluster (⋮ · share ·
+    // downloaded icon · play). The standing Get button retires:
+    // download lives in the ⋮ menu (§2.9), state-matched; the
+    // mark control and the partway bar stand unmoved.
+    html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
+      + podRowArtHtml(e)
+      + '<div class="grow"><h3>' + esc(e.title) + '</h3>'
+      + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
+      + '<div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</div></div>'
+      + '<span class="rowcluster">'
+      + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
+      + '<button class="iconbtn" data-podshare="' + esc(e.key) + '" aria-label="Share">\u2197</button>'
+      + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span>'
+      + '</span>'
       + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
-      + '<div class="grow"><h3>' + esc(e.title) + '</h3><div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</div></div>'
-      + '<button class="chipbtn" data-poddl="' + esc(e.key) + '">Get</button>'
       + '<div class="podmark-wrap"><button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
       + (e.listened && e.listenDate ? '<div class="podmark-date">' + esc(e.listenDate) + '</div>' : '')
       + '</div></div>'
@@ -2326,8 +2373,14 @@ function paintPodcasts() {
   view.querySelectorAll('[data-podmark]').forEach(function (b) {
     b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
   });
-  view.querySelectorAll('[data-poddl]').forEach(function (b) {
-    b.addEventListener('click', function () { podDlTap(b.getAttribute('data-poddl')); });
+  view.querySelectorAll('[data-podmenu]').forEach(function (b) {
+    b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu')); });
+  });
+  view.querySelectorAll('[data-podshare]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var e = (res.entries || []).filter(function (x) { return x.key === b.getAttribute('data-podshare'); })[0];
+      if (e) openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' });
+    });
   });
   wireOfflineButtons();
   paintOfflineLine();
@@ -3331,7 +3384,7 @@ function trackDesc(t, day) {
   // without its day (queueLiveDesc's external rebuild, search
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
-  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0 };
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
   if (d.available && day) {
     var text = introTextFor(t, day);
     if (text) d.intentionText = text;
@@ -3601,6 +3654,298 @@ function wirePlayed(root) {
     });
   });
 }
+/* ---------------- v413: the playlist grammar ----------------
+   The Spotify-playlist re-dress (Scope §1, Plan §2): cover
+   tiles, sheet menus (ONE component — the player overflow, the
+   row menus, the page menus are all instances), the share
+   sheet, the manual playlist order, and the grid's download
+   state. Everything renders in the app theme; no playback code
+   stands here. */
+var BLOCK_TONES = { 'Morning': 'navy', 'Midmorning': 'gold', 'Midday': 'teal', 'Afternoon': 'plum', 'Evening': 'navy', 'Night': 'plum', 'Mass and Homilies': 'gold', 'Novenas': 'teal', 'The AI Signal': 'navy' };
+function blockTone(block) { return BLOCK_TONES[block] || 'navy'; }
+function blockLabelOf(block) {
+  var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === block; })[0];
+  return b ? (b.label || b.block) : (block || '');
+}
+function coverTileHtml(block, cls) {
+  var label = blockLabelOf(block) || block || 'Ora Pro Nobis';
+  return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><span class="blockcover-initial">' + esc(label.charAt(0).toUpperCase()) + '</span></div>';
+}
+function rowArtHtml(t) {
+  // §2.3's fallback chain: episode art → show art → theme tile.
+  // Referenced at render (an <img> at the provider URL); a URL
+  // that fails to load removes itself and the tile beneath
+  // stands — never a broken-image glyph.
+  if (t.episodeId === 'the-ai-signal') return '<span class="rowartwrap"><img class="rowart" src="/logo.png" alt=""></span>';
+  var letter = (t.artLetter || (t._block || t.block) || t.title || 'O').charAt(0).toUpperCase();
+  var tile = '<span class="rowart tile tone-' + blockTone(t._block || t.block) + '"><span>' + esc(letter) + '</span></span>';
+  if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()"></span>';
+  return '<span class="rowartwrap">' + tile + '</span>';
+}
+function fmtDurLong(s) {
+  s = Math.max(0, Math.round(Number(s) || 0));
+  var m = Math.floor(s / 60);
+  return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'min' : m + 'min';
+}
+/* ONE menu component (§2.8): items are { label, state?, act,
+   stay? } — a stay item acts in place and its state line is
+   re-read (stateFn); every other item closes the menu, then
+   acts. No dead items: a menu carries only wired acts. */
+function openSheetMenu(title, items) {
+  var old = document.querySelector('.menusheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet menusheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + esc(title) + '</h1><button class="btn ghost" data-menuclose="1">Close</button></div>'
+    + items.map(function (it, i) {
+      return '<button class="menurow" data-menuitem="' + i + '"><span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('[data-menuclose]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelectorAll('[data-menuitem]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var i = Number(b.getAttribute('data-menuitem'));
+      var it = items[i];
+      if (!it || !it.act) return;
+      if (it.stay) {
+        it.act();
+        var st = sheet.querySelector('[data-menustate="' + i + '"]');
+        if (st && it.stateFn) st.textContent = it.stateFn();
+      } else {
+        sheet.remove();
+        it.act();
+      }
+    });
+  });
+  return sheet;
+}
+function openPlayerMenu() {
+  // §1.4 + FD3: the player-level overflow — exactly Autoplay ·
+  // Sleep timer · Playback speed, each a state line opening its
+  // standing act/sheet. Transport never enters the menu; the
+  // intentions toggle does NOT move (ruling R1).
+  openSheetMenu('Playback', [
+    { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
+    { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
+    { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } }
+  ]);
+}
+/* FD6: ONE share sheet — the episode card at its head, Share…
+   only where the platform sheet stands, Copy link always. */
+function spotifyUrlFor(t) {
+  if (!t) return null;
+  if (t.spotifyUrl) return t.spotifyUrl;
+  var blk = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === (t._block || t.block); })[0];
+  return blk && blk.spotifyUrl ? blk.spotifyUrl : null;
+}
+function shareUrlFor(t) {
+  var sp = spotifyUrlFor(t);
+  if (sp) return sp;
+  if (t) {
+    var cand = t.streamUrl || t.enclosureUrl || t.url || null;
+    if (cand && String(cand).indexOf('blob:') !== 0) {
+      return String(cand).indexOf('/api/') === 0 ? location.origin + cand : cand;
+    }
+  }
+  return location.origin + '/';
+}
+function openShareSheet(o) {
+  var old = document.querySelector('.sharesheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet sharesheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Share</h1><button class="btn ghost" data-shareclose="1">Close</button></div>'
+    + '<div class="card"><div class="row">' + (o.artHtml || '') + '<div class="grow"><h3>' + esc(o.title) + '</h3><div class="meta">' + esc(o.line) + '</div></div></div></div>'
+    + (navigator.share ? '<button class="menurow" data-sharego="1"><span class="grow">Share&hellip;</span></button>' : '')
+    + '<button class="menurow" data-sharecopy="1"><span class="grow">Copy link</span></button>'
+    + '<p class="fieldnote" data-shareline="1"></p></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('[data-shareclose]').addEventListener('click', function () { sheet.remove(); });
+  var go = sheet.querySelector('[data-sharego]');
+  if (go) go.addEventListener('click', function () {
+    sheet.remove();
+    try { var p = navigator.share({ title: o.title, text: o.title + ' \u2014 ' + o.line, url: o.url }); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  });
+  sheet.querySelector('[data-sharecopy]').addEventListener('click', function () {
+    var line = sheet.querySelector('[data-shareline]');
+    var done = function (okCopy) { if (line) line.textContent = okCopy ? 'Link copied.' : 'Copy did not work here. The link is: ' + o.url; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(o.url).then(function () { done(true); }, function () { done(false); });
+    else done(false);
+  });
+}
+function shareTrackSheet(t) {
+  openShareSheet({
+    artHtml: rowArtHtml(t), title: t.title || '',
+    line: 'Episode' + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : ''),
+    url: shareUrlFor(t)
+  });
+}
+/* FD7 day-row menu (§2.9): Share · Download (only — a day-set
+   Remove is undone by the v392 convergence, so it is not
+   offered) · Open in Spotify (where a URL stands). The
+   Download item stands only while the episode is not already
+   on the device — the cache read lands before the menu opens. */
+function openDayRowMenu(t) {
+  var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
+  var build = function (standing) {
+    if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
+    var sp = spotifyUrlFor(t);
+    if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+    openSheetMenu(t.title || 'Options', items);
+  };
+  if (!t.available || !('caches' in window)) { build(true); return; }
+  caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(presentedDateStr(), t.episodeId)); })
+    .then(function (r) { build(!!r); }, function () { build(false); });
+}
+function dayRowDownload(t) {
+  var date = presentedDateStr();
+  var items = offlineEnumerateToday(date).filter(function (it) { return it.id === t.episodeId; });
+  if (!items.length) return;
+  offlineDownloadItems(items, null).then(function () { refreshGridDlStates(); paintOfflineLine(); });
+}
+function wireRowActs(scope) {
+  scope.querySelectorAll('[data-rowmenu]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var key = b.getAttribute('data-rowmenu');
+      var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
+      if (t) openDayRowMenu(t);
+    });
+  });
+  scope.querySelectorAll('[data-rowshare]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var key = b.getAttribute('data-rowshare');
+      var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
+      if (t) shareTrackSheet(t);
+    });
+  });
+}
+/* §2.2 / FD1: the manual order — the payload fold first, the
+   device mirror second (a PUT that failed offline still shows
+   the user's order here; the next successful editor move
+   re-syncs the server), the contracts' order last. */
+var BLOCK_ORDER_KEY = 'opn-block-order-v413';
+function blockOrderMirror() {
+  try { var v = JSON.parse(localStorage.getItem(BLOCK_ORDER_KEY) || 'null'); return Array.isArray(v) && v.length ? v : null; } catch (e) { return null; }
+}
+function blockOrderWriteMirror(order) { try { localStorage.setItem(BLOCK_ORDER_KEY, JSON.stringify(order)); } catch (e) {} }
+function effectiveBlockOrder(day) {
+  if (day && day.blockOrder && day.blockOrder.length) return day.blockOrder;
+  return blockOrderMirror();
+}
+function orderedBlocks(day) {
+  var blocks = (day.blocks || []).slice();
+  var order = effectiveBlockOrder(day);
+  if (!order || !order.length) return blocks;
+  var rank = {};
+  order.forEach(function (n, i) { rank[n] = i; });
+  return blocks.map(function (b, i) { return { b: b, i: i }; })
+    .sort(function (a, c) {
+      var ra = rank[a.b.block] != null ? rank[a.b.block] : 1000 + a.i;
+      var rc = rank[c.b.block] != null ? rank[c.b.block] : 1000 + c.i;
+      return ra - rc;
+    })
+    .map(function (x) { return x.b; });
+}
+/* FD5: ONE order editor — 44px move buttons, write-through per
+   move (mirror + PUT). Opened from the grid's sort row and from
+   every block page's Sort act. Episode order inside a block is
+   never editable here (§1.5). */
+function openBlockOrderEditor() {
+  var day = state.dayPayload;
+  if (!day) return;
+  var order = orderedBlocks(day).map(function (b) { return b.block; });
+  var old = document.querySelector('.ordersheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet ordersheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playlist order</h1><button class="btn ghost" data-orderclose="1">Done</button></div>'
+    + '<p class="meta">Your own order for the Prayers grid \u2014 kept with your other choices, so it follows you across devices.</p>'
+    + '<div data-orderlist="1"></div><p class="fieldnote" data-orderline="1"></p></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('[data-orderclose]').addEventListener('click', function () { sheet.remove(); });
+  var paintList = function () {
+    var list = sheet.querySelector('[data-orderlist]');
+    list.innerHTML = order.map(function (name, i) {
+      return '<div class="setrow"><div class="row">' + coverTileHtml(name, 'sm') + '<span class="setname grow">' + esc(blockLabelOf(name) || name) + '</span>'
+        + '<span class="setcontrols"><button class="mvbtn" data-ordup="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Move up">\u2191</button>'
+        + '<button class="mvbtn" data-orddown="' + i + '"' + (i === order.length - 1 ? ' disabled' : '') + ' aria-label="Move down">\u2193</button></span></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-ordup]').forEach(function (b) { b.addEventListener('click', function () { move(Number(b.getAttribute('data-ordup')), -1); }); });
+    list.querySelectorAll('[data-orddown]').forEach(function (b) { b.addEventListener('click', function () { move(Number(b.getAttribute('data-orddown')), 1); }); });
+  };
+  var move = function (i, d) {
+    var j = i + d;
+    if (j < 0 || j >= order.length) return;
+    var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+    blockOrderWriteMirror(order);
+    if (state.dayPayload) state.dayPayload.blockOrder = order.slice();
+    var line = sheet.querySelector('[data-orderline]');
+    if (line) line.textContent = '';
+    paintList();
+    api('/api/player/block-order', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order: order }) })
+      .then(function (r) { if (!r || !r.ok) throw new Error('order save failed'); })
+      .catch(function () { var l2 = sheet.querySelector('[data-orderline]'); if (l2) l2.textContent = 'That did not save. Your order is kept on this device \u2014 try again.'; });
+    if (state.tab === 'prayers' && state.dayPayload) paintPrayersView(state.dayPayload);
+  };
+  paintList();
+}
+/* §2.11: the grid's download state — read from the client's own
+   Cache Storage on every surface (the v392 set stands there on
+   web too). One keys() pass writes the cards' icons, the block
+   pages' toggle state, and the rows' downloaded icons. */
+function refreshGridDlStates() {
+  if (!('caches' in window)) return Promise.resolve();
+  return caches.open('opn-ext-audio-v1').then(function (cache) { return cache.keys(); }).then(function (reqs) {
+    var standing = {};
+    reqs.forEach(function (rq) { standing[rq.url.slice(location.origin.length + 1)] = 1; });
+    var date = presentedDateStr();
+    var byBlock = {};
+    (state.dayDescs || []).forEach(function (d) {
+      if (!d.block || !d.available) return;
+      if (d.kind === 'segment') return; // the Intentions segment is not part of the downloadable day set (offlineEnumerateToday's set governs)
+      byBlock[d.block] = byBlock[d.block] || { total: 0, have: 0 };
+      byBlock[d.block].total++;
+      if (standing[offlineDayKey(date, d.episodeId)]) byBlock[d.block].have++;
+    });
+    state.gridDl = {};
+    Object.keys(byBlock).forEach(function (b) { state.gridDl[b] = byBlock[b].total > 0 && byBlock[b].have >= byBlock[b].total; });
+    view.querySelectorAll('[data-carddl]').forEach(function (el) {
+      el.style.display = state.gridDl[el.getAttribute('data-carddl')] ? '' : 'none';
+    });
+    view.querySelectorAll('[data-blockdl]').forEach(function (btn) {
+      var full = !!state.gridDl[btn.getAttribute('data-blockdl')];
+      btn.textContent = full ? 'On this device' : 'Download all';
+      btn.disabled = full;
+    });
+    view.querySelectorAll('[data-blockdlnote]').forEach(function (note) {
+      var full = !!state.gridDl[note.getAttribute('data-blockdlnote')];
+      note.textContent = full ? 'Downloaded for offline. To remove the day\u2019s downloads, use Clear offline downloads in Settings.' : '';
+    });
+    view.querySelectorAll('[data-rowdl]').forEach(function (el) {
+      el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
+    });
+    // a standing Downloaded filter re-paints the grid under
+    // the fresh state — once per distinct downloaded set, so
+    // the repaint's own refresh cannot loop.
+    var dlKey = Object.keys(state.gridDl).filter(function (k) { return state.gridDl[k]; }).sort().join(',');
+    if (state.homeFilter === 'downloaded' && state._dlKey !== dlKey) {
+      state._dlKey = dlKey;
+      if (state.dayPayload && state.prayersView && state.prayersView.kind === 'home' && state.tab === 'prayers') {
+        var body = document.getElementById('home-body');
+        if (body) { body.innerHTML = homeBodyHtml(state.dayPayload); wirePrayersView(state.dayPayload); paintContinue(); }
+      }
+    }
+  }).catch(function () {});
+}
+function blockDownloadAll(block) {
+  var date = presentedDateStr();
+  var ids = {};
+  (state.dayDescs || []).forEach(function (d) { if (d.block === block && d.available) ids[d.episodeId] = 1; });
+  var items = offlineEnumerateToday(date).filter(function (it) { return ids[it.id]; });
+  if (!items.length) return;
+  offlineDownloadItems(items, null).then(function () { refreshGridDlStates(); paintOfflineLine(); });
+}
+
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
   // v384 §2.2/§2.6: the intention ROW retires — trackCard returns
@@ -3627,22 +3972,42 @@ function trackCard(t) {
     // unavailable cards return their own shapes below and carry
     // NO marker) — the played dot stands as the prayer row's last
     // element, after the .grow column, for both families alike.
-    return '<div class="card trow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
+    // v413 §2.6: the row takes the .prow form — artwork left, the
+    // §1.3 cluster right; the row grows past the v363 uniform
+    // 76px for the snippet line (the re-dress's own geometry).
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
   };
+  // v413 §2.6: the right-side cluster — ⋮ · share · downloaded
+  // icon · the round play button, in the video's order.
+  var cluster = function () {
+    return '<span class="rowcluster">'
+      + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button>'
+      + '<button class="iconbtn" data-rowshare="' + esc(key) + '" aria-label="Share">\u2197</button>'
+      + '<span class="dl-ico" data-rowdl="' + esc(key) + '" style="display:none" title="Downloaded">\u2913</span>'
+      + '</span>'
+      + '<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>';
+  };
+  // v413 §2.6: the two-line snippet — where descText stands
+  // (externals + podcasts); own Ora rows carry none (F-413-1).
+  var snippet = t.descText ? '<div class="snippet">' + esc(t.descText) + '</div>' : '';
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
     // (D5); a miss stands as "Not available today". No Read control —
     // externals carry no text (the payload's hasText is false), and a
     // present external carries no not-available line.
+    // v413 §2.6: the meta takes the video's form — the standing
+    // day word + duration, the source line folded in after.
     if (t.available) {
-      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>' + intLine + '</div>');
+      return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + snippet + '<div class="meta">Today' + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</div>' + intLine + '</div>' + cluster());
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
     // the meta line after the duration (omitted when none
     // stands, as today). No tail stands — an external carries
     // neither a Read control nor a Spotify link.
-    return '<div class="card trow" data-card="' + esc(key) + '"><div class="row"><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' \u00b7 ' : '') + 'Not available today</div></div></div></div>';
+    // v413 §2.6: the unavailable form keeps the art tile and
+    // carries no cluster acts that cannot be honored.
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' \u00b7 ' : '') + 'Not available today</div></div></div></div>';
   }
   if (t.available) {
     // v344 gate correction (harness-v343 clip guard, leg 20's
@@ -3670,11 +4035,11 @@ function trackCard(t) {
     var meta = 'Plays here'
       + (novSpan ? novSpan + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') : ' · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : ''))
       + (noText ? ' · Not available in the app yet' : '');
-    var tail = (!noText || t.spotifyUrl)
-      ? '<div class="trow-tail">' + (!noText ? readButton(t, key) : '')
-        + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>'
-      : '';
-    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>' + tail);
+    // v413 §2.6/R4: the Read control stays in the row's tail (a
+    // content act, not a menu item); the Spotify link leaves
+    // the tail — its one home is now the row ⋮ menu.
+    var tail = !noText ? '<div class="trow-tail">' + readButton(t, key) + '</div>' : '';
+    return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>' + tail + cluster());
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -3682,11 +4047,10 @@ function trackCard(t) {
   // as today); the Read control and Spotify link stand in the
   // .trow-tail cluster as the row's last element (no played
   // dot stands on an unavailable branch — the standing rule).
-  var tailU = ((t.hasText && t.textUrl) || t.spotifyUrl)
-    ? '<div class="trow-tail">' + (t.hasText && t.textUrl ? readButton(t, key) : '')
-      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>'
+  var tailU = (t.hasText && t.textUrl)
+    ? '<div class="trow-tail">' + readButton(t, key) + '</div>'
     : '';
-  return '<div class="card trow" data-card="' + esc(key) + '"><div class="row"><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div>' + tailU + '</div></div>';
+  return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div>' + tailU + '</div></div>';
 }
 function openRead(t) {
   // v318 T9: the reading view — the episode's full text within the
@@ -3761,7 +4125,7 @@ function openNowPlaying() {
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
-    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-autoplay">Autoplay On</button><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button></div>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue"></div>'
     + '</div>';
@@ -3772,9 +4136,10 @@ function openNowPlaying() {
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
   sheet.querySelector('#np-fwd10').addEventListener('click', function () { seekBy(10); }); // v412 Fix 12
   sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
-  sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
-  sheet.querySelector('#np-sleep').addEventListener('click', function () { openSleepSheet(); });
-  sheet.querySelector('#np-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
+  // v413 §2.8: speed/sleep/autoplay leave the face — the ⋮
+  // entrance opens the ONE player overflow (openPlayerMenu);
+  // the intentions toggle keeps its place (ruling R1).
+  sheet.querySelector('#np-menu').addEventListener('click', function () { openPlayerMenu(); });
   sheet.querySelector('#np-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
     var t = state.current && state.readTracks[state.current.episodeId];
@@ -3832,8 +4197,6 @@ function updateNowPlaying() {
   sheet.querySelector('#np-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
   sheet.querySelector('#np-prev').disabled = !state.queue.length; // v412 Fix 8: enabled at the queue head (the rule restarts the track there)
   sheet.querySelector('#np-next').disabled = !state.queue.length;
-  sheet.querySelector('#np-speed').textContent = state.rate + '×';
-  sheet.querySelector('#np-sleep').textContent = sleepLabel();
   syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the intentions switches follow the store at every render
   var rt = state.readTracks[cur.episodeId];
@@ -3988,6 +4351,18 @@ function extWs(t) {
 function extParseFeed(text) {
   var doc = new DOMParser().parseFromString(text, 'text/xml');
   if (doc.querySelector('parsererror')) throw new Error('feed parse failed');
+  // v413 §2.3: the channel head's art — the fallback for items
+  // carrying none (the Worker parser's channel rule, mirrored).
+  var channelImageUrl = null;
+  var chan = doc.getElementsByTagName('channel')[0];
+  if (chan) {
+    var cim = chan.getElementsByTagName('itunes:image')[0];
+    if (cim && cim.getAttribute('href')) channelImageUrl = cim.getAttribute('href');
+    if (!channelImageUrl) {
+      var curl = chan.querySelector('image url');
+      if (curl && curl.textContent.trim()) channelImageUrl = curl.textContent.trim();
+    }
+  }
   var items = [];
   doc.querySelectorAll('item').forEach(function (it) {
     var titleEl = it.querySelector('title');
@@ -3995,12 +4370,19 @@ function extParseFeed(text) {
     var pubEl = it.querySelector('pubDate');
     var durEl = it.getElementsByTagName('itunes:duration')[0] || null;
     var pubMs = pubEl ? Date.parse(pubEl.textContent.trim()) : NaN;
+    // v413 §2.3: per-item provider art + snippet (D2), mirroring
+    // the Worker's parser — item image else the channel's.
+    var imgEl = it.getElementsByTagName('itunes:image')[0];
+    var sumEl = it.getElementsByTagName('itunes:summary')[0] || it.querySelector('description');
+    var descText = sumEl ? extWs(sumEl.textContent) : '';
     items.push({
       title: extWs(titleEl ? titleEl.textContent : ''),
       url: enc ? (enc.getAttribute('url') || '') : '',
       length: enc && (enc.getAttribute('length') || '').trim() !== '' && !isNaN(Number(enc.getAttribute('length'))) ? Number(enc.getAttribute('length')) : 0,
       pubMs: isFinite(pubMs) ? pubMs : null,
-      durationS: extParseDuration(durEl ? durEl.textContent : null)
+      durationS: extParseDuration(durEl ? durEl.textContent : null),
+      imageUrl: (imgEl && imgEl.getAttribute('href')) || channelImageUrl || null,
+      descText: descText ? descText.slice(0, 240) : null
     });
   });
   return items;
@@ -4119,7 +4501,10 @@ function extSlotTrack(slot, st) {
   return {
     episodeId: slot.slotId, title: st.title, kind: 'external', source: st.source,
     available: st.state === 'present', streamUrl: st.state === 'present' ? st.streamUrl : null,
-    durationS: st.durationSec || 0, sizeBytes: st.sizeBytes || 0, hasText: false, textUrl: null, _block: slot.block
+    durationS: st.durationSec || 0, sizeBytes: st.sizeBytes || 0, hasText: false, textUrl: null, _block: slot.block,
+    // v413 §2.3: the provider art + snippet ride the slot state
+    // into the row (referenced, never re-hosted).
+    imageUrl: st.imageUrl || null, descText: st.descText || null
   };
 }
 function extSwapCard(slot) {
@@ -4161,6 +4546,7 @@ function extSwapCard(slot) {
     // v344: the settled card's marker wires here too, and the
     // played chrome re-applies over the swap.
     wirePlayed(fresh);
+    wireRowActs(fresh); // v413 §2.6: the settled card's cluster wires here too
   });
   refreshPlayedChrome();
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
@@ -4225,6 +4611,7 @@ function blockInsertCards(day, standing) {
           wireExpand(el);
           armEllipsis(el);
           wirePlayed(el);
+          wireRowActs(el); // v413 §2.6
         });
       } else {
         var slot = e.ext;
@@ -4247,6 +4634,7 @@ function blockInsertCards(day, standing) {
           wireExpand(el2);
           armEllipsis(el2);
           wirePlayed(el2);
+          wireRowActs(el2); // v413 §2.6
         });
       }
     });
@@ -4679,6 +5067,7 @@ function ownSwapRow(row, day) {
     armEllipsis(el);
     // v344: the re-rendered card wires its marker here too.
     wirePlayed(el);
+    wireRowActs(el); // v413 §2.6
   });
   refreshPlayedChrome();
   olds.forEach(function (o) { o.remove(); });
@@ -4711,6 +5100,19 @@ function updateBlockCounts(day) {
     var b = el.getAttribute('data-bcount');
     var blk = (day.blocks || []).filter(function (x) { return x.block === b; })[0];
     el.textContent = (blk && blk.caption ? blk.caption : '') + ' · ' + (counts[b] || 0) + ' tracks';
+  });
+  // v413 §2.10 (FD4): the block page's meta line rides the same
+  // settlement seam — "<N> episodes · <total duration>", the
+  // total the sum of the block's resolved descriptors'
+  // durations; a block with NO standing duration shows the
+  // count only, never a fabricated total.
+  var durSums = {};
+  (state.dayDescs || []).forEach(function (d) {
+    if (d.block && d.durationS) durSums[d.block] = (durSums[d.block] || 0) + d.durationS;
+  });
+  view.querySelectorAll('[data-bmeta]').forEach(function (el) {
+    var b = el.getAttribute('data-bmeta');
+    el.textContent = (counts[b] || 0) + ' episodes' + (durSums[b] ? ' \u00b7 ' + fmtDurLong(durSums[b]) : '');
   });
 }
 function paintContinue() {
@@ -5194,7 +5596,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
-        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
+        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null };
       } else {
         state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
       }
@@ -5209,7 +5611,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
         if (st && st.state === 'present') {
-          rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.enclosureUrl || st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder };
+          rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.enclosureUrl || st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder, imageUrl: st.imageUrl || null, descText: st.descText || null };
         }
       });
       // v342 §2.3: only PRESENT own items are cached; a missing
@@ -5291,7 +5693,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
       attempt.then(function (blob) {
         var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
-        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null });
       }).catch(function () {
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
       });
@@ -5299,14 +5701,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     var settleMeta = function (slot, meta) {
       var cur = state.extSlots[slot.slotId];
       if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
-      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source };
+      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null };
       extSwapCard(slot);
       extRebuildDescs(day);
       extDownload(slot, meta);
     };
     var extRestoreCached = function (slot) {
       var c = rec.slots[slot.slotId];
-      var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
+      var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null };
       if (!('caches' in window)) { extDownload(slot, meta); return; }
       // A cache read issued in the same moment the service worker
       // is settling a fresh page can stall without ever settling;
@@ -5321,7 +5723,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           if (done) return;
           done = true; clearTimeout(fallback);
           var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
-          settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+          settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null });
         });
       }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownload(slot, meta); } });
     };
@@ -5419,7 +5821,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
             // v350: the Bible entry carries the item's RAW title;
             // the display title is built here by the standing
             // extBibleTitle construction (one title rule).
-            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src });
+            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src, imageUrl: e.imageUrl || null, descText: e.descText || null });
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             settle(slot, missingSt(slot, src));
@@ -5445,7 +5847,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     if (saintSlot && uncached(saintSlot)) {
       extFetchText(saintSlot.feedUrl).then(function (text) {
         var it = extMatchSaint(extParseFeed(text), date);
-        if (it) settleMeta(saintSlot, { title: it.title || saintSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: saintSlot.source });
+        if (it) settleMeta(saintSlot, { title: it.title || saintSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: saintSlot.source, imageUrl: it.imageUrl || null, descText: it.descText || null });
         else settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source });
       }).catch(function () { settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source }); });
     }
@@ -5456,7 +5858,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     if (tvMassSlot && uncached(tvMassSlot)) {
       extFetchText(tvMassSlot.feedUrl).then(function (text) {
         var it = extMatchTvMass(extParseFeed(text), date);
-        if (it) settleMeta(tvMassSlot, { title: it.title || tvMassSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: tvMassSlot.source });
+        if (it) settleMeta(tvMassSlot, { title: it.title || tvMassSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: tvMassSlot.source, imageUrl: it.imageUrl || null, descText: it.descText || null });
         else settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source });
       }).catch(function () { settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source }); });
     }
@@ -5476,7 +5878,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var st = state.extSlots[slot.slotId];
         if (!st || (st.state !== 'loading' && st.state !== 'downloading')) return;
         var c = cachedIds[slot.slotId];
-        if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source });
+        if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null });
         else if (st.state === 'loading') settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
       });
       // v350 long-stop: a download still in flight 75 s after
@@ -5501,7 +5903,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var items = extParseFeed(text);
         need.forEach(function (slot) {
           var it = extMatchSth(items, date, slot.fallbackToken);
-          if (it) settleMeta(slot, { title: slot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours' });
+          if (it) settleMeta(slot, { title: slot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours', imageUrl: it.imageUrl || null, descText: it.descText || null });
         });
       }).catch(function () { /* the slots stand named missing */ });
     });
@@ -6019,9 +6421,29 @@ function podDlTap(key) {
     });
   });
 }
+/* v413 §2.9: the podcast row ⋮ — Share · the state-matched
+   Download / Remove download (the standing podDlTap acts) ·
+   Mark as listened / not listened. State reads podDlStateMap,
+   kept fresh by refreshPodDlStates. */
+var podDlStateMap = {};
+function openPodRowMenu(key) {
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var e = res.entries.filter(function (x) { return x.key === key; })[0];
+  if (!e) return;
+  var st = podDlStateMap[key] || {};
+  var items = [{ label: 'Share', act: function () { openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' }); } }];
+  if (e.url && !st.standing) items.push({ label: 'Download', act: function () { podDlTap(key); } });
+  else if (e.url && st.standing && st.manual) items.push({ label: 'Remove download', act: function () { podDlTap(key); } });
+  items.push({ label: e.listened ? 'Mark as not listened' : 'Mark as listened', act: function () { podToggleMark(key); } });
+  openSheetMenu(e.title, items);
+}
 function refreshPodDlStates() {
-  var btns = view.querySelectorAll('[data-poddl]');
-  if (!btns.length || !state.podcasts) return;
+  // v413 §2.6: the Get button retires — this pass now writes
+  // the rows' downloaded icons + the menu's state map, from
+  // the same cache enumeration as before.
+  var icons = view.querySelectorAll('[data-poddlstate]');
+  if (!state.podcasts) return;
   var res = state.podcasts;
   var manual = podManualRead();
   offlineAudioCache().then(function (cache) {
@@ -6029,13 +6451,13 @@ function refreshPodDlStates() {
     return cache.keys().then(function (reqs) {
       var standing = {};
       reqs.forEach(function (rq) { standing[rq.url] = 1; });
-      btns.forEach(function (b) {
-        var pk = offlinePodKey(res.series, b.getAttribute('data-poddl'));
-        var isStanding = !!standing[new URL(pk, location.href).href];
-        if (podDlBusy[pk]) { b.textContent = 'Downloading\u2026'; b.disabled = true; }
-        else if (isStanding && manual[pk]) { b.textContent = 'On phone \u00b7 Remove'; b.disabled = false; }
-        else if (isStanding) { b.textContent = 'On phone'; b.disabled = true; }
-        else { b.textContent = 'Get'; b.disabled = false; }
+      (res.entries || []).forEach(function (e) {
+        var pk = offlinePodKey(res.series, e.key);
+        podDlStateMap[e.key] = { standing: !!standing[new URL(pk, location.href).href], manual: !!manual[pk], busy: !!podDlBusy[pk] };
+      });
+      icons.forEach(function (el) {
+        var st = podDlStateMap[el.getAttribute('data-poddlstate')] || {};
+        el.style.display = st.standing ? '' : 'none';
       });
     });
   });
@@ -6106,6 +6528,8 @@ function wirePrayersView(day) {
       if (t) openRead(t);
     });
   });
+  wireRowActs(view); // v413 §2.6: the row ⋮ + share wiring rides every Prayers paint
+  refreshGridDlStates(); // v413 §2.11: the downloaded icons follow the cache's word
   view.querySelectorAll('[data-queue]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var blockName = btn.getAttribute('data-queue');
@@ -6145,41 +6569,71 @@ function blockCardHtml(b) {
   // (the --bar-* set), the standing count spans (data-bcount /
   // data-bprayed, written by the standing updaters unchanged),
   // and a play button that queues WITHOUT navigating.
+  // v413 §2.4: the card re-forms to the library grammar — a
+  // square theme cover (per-block tone, gold-serif initial; no
+  // images, no Spotify art), the block's name under it, and the
+  // state line: "Playlist · Ora Pro Nobis" + the downloaded
+  // icon where the block's day set stands downloaded (§2.11)
+  // + the standing count spans, their updaters unchanged.
   var n = b.trackCount != null ? b.trackCount : (b.tracks || []).length;
   return '<div class="blockcard" data-openblock="' + esc(b.block) + '">'
-    + '<div class="blockcard-face"><div class="blockcard-name">' + esc((b.label || b.block).toUpperCase()) + '</div>'
-    + (b.caption ? '<div class="blockcard-cap">' + esc(b.caption) + '</div>' : '') + '</div>'
-    + '<div class="blockcard-meta"><span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + coverTileHtml(b.block, '')
+    + '<div class="blockcard-name2">' + esc(b.label || b.block) + '</div>'
+    + '<div class="blockcard-meta">Playlist \u00b7 Ora Pro Nobis <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span><br><span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' \u00b7 ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
     + '<button class="playbtn blockcard-play" data-queue="' + esc(b.block) + '" aria-label="Play ' + esc(b.label || b.block) + '">&#9654;</button></div>';
 }
 function episodesCardHtml(day) {
   // §2.2.6: the unblocked group stands as one further card in
   // the same grid when the day carries episodes.
+  // v413 §2.4/R3: the card takes the same cover form and stands
+  // AFTER the grid's blocks — it is not a block and stands
+  // outside the manual order.
   return '<div class="blockcard" data-openblock="__episodes">'
-    + '<div class="blockcard-face"><div class="blockcard-name">FROM TODAY&rsquo;S PODCAST</div></div>'
+    + '<div class="blockcover tone-teal"><span class="blockcover-initial">P</span></div>'
+    + '<div class="blockcard-name2">From Today&rsquo;s Podcast</div>'
     + '<div class="blockcard-meta"><span>' + (day.episodes || []).length + ' tracks</span></div>'
     + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
 }
 function paintListenHome(day) {
   var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
-  html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
-  // v392 W5: the offline readiness line + the download button.
-  html += offlineLineHtml('offline-dl-btn');
   // §2.6.1: the search pill — typing re-paints the results region
   // in place (the field itself never re-renders, so focus and the
   // query stand); clearing restores the standing home body.
   html += '<div class="searchpill"><input type="search" id="day-search" placeholder="Search today&rsquo;s prayers" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
+  // v413 §2.4: the library head — filter chips (FD8) + the sort
+  // row (the standing order's truthful name; its Sort button
+  // opens the §2.4 order editor). The home sleep-btn retires
+  // (ruling R2: sleep's one home is the player overflow); Play
+  // All + the offline line stand BELOW the grid.
+  html += '<div class="chips" id="home-chips">'
+    + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists">Praylists</button>'
+    + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas">Novenas</button>'
+    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded">Downloaded</button></div>';
+  html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn">Sort</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
+  // v392 W5: the offline readiness line + the download button.
+  html += offlineLineHtml('offline-dl-btn');
   view.innerHTML = html;
-  // §2.4: the Play All + sleep wiring lives here — both elements
-  // exist only on home.
+  // §2.4: the Play All wiring lives here — the element exists
+  // only on home.
   document.getElementById('play-all').addEventListener('click', function () {
     // v344 §2.4: Play All skips played — the build passes the
     // played filter; a fully-played day plays in full (the
     // fallback stands by construction, never a dead button).
     startQueue(queueBuild(extRebuildDescs(day)));
   });
-  document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
+  document.getElementById('sort-btn').addEventListener('click', openBlockOrderEditor);
+  view.querySelectorAll('[data-homefilter]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var f = chip.getAttribute('data-homefilter');
+      // FD8: one active at a time; tapping the active chip clears it.
+      state.homeFilter = state.homeFilter === f ? null : f;
+      paintListenHome(day);
+      wirePrayersView(day);
+      paintContinue();
+    });
+  });
   var search = document.getElementById('day-search');
   search.addEventListener('input', function () {
     state.searchQuery = search.value;
@@ -6203,8 +6657,16 @@ function homeBodyHtml(day) {
   // FIRST, then the blocks as cards.
   var html = '<div id="continue-slot"></div>';
   html += '<div class="blockgrid">';
-  (day.blocks || []).forEach(function (b) { html += blockCardHtml(b); });
-  if ((day.episodes || []).length) html += episodesCardHtml(day);
+  // v413 §2.2/§2.11: the grid paints in the effective order
+  // (manual order filtered — order and membership underneath
+  // unchanged), and the standing filter chip narrows it: Novenas
+  // isolates its card; Downloaded shows only blocks whose day
+  // set stands fully downloaded (state.gridDl, §2.11's read).
+  var gridBlocks = orderedBlocks(day);
+  if (state.homeFilter === 'novenas') gridBlocks = gridBlocks.filter(function (b) { return b.block === 'Novenas'; });
+  else if (state.homeFilter === 'downloaded') gridBlocks = gridBlocks.filter(function (b) { return state.gridDl && state.gridDl[b.block]; });
+  gridBlocks.forEach(function (b) { html += blockCardHtml(b); });
+  if (!state.homeFilter && (day.episodes || []).length) html += episodesCardHtml(day);
   html += '</div>';
   return html;
 }
@@ -6243,17 +6705,51 @@ function paintBlockPage(day, block) {
   // (the standing data-bcount / data-bprayed spans carry the
   // settled counts), and the Play All row with the standing
   // Mark-all-played + Spotify controls at its end.
+  // v413 §2.5: the head re-forms to Mockup B's order — large
+  // cover · title · description (the standing caption) · owner
+  // row · the §2.10 meta line (data-bmeta, written by the
+  // settlement seam) · download-all toggle + share icon · the
+  // large round play button · the action row (Sort · Mark all
+  // played · the page ⋮ — Open in Spotify's one home now, R4).
   var html = '<div class="blockpage-head" data-block="' + esc(b.block) + '">'
     + '<div class="backrow"><button class="backbtn" data-back="' + esc(b.block) + '">&lsaquo; Listen</button></div>'
+    + coverTileHtml(b.block, 'large')
     + '<div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
-    + '<div class="blockpage-meta">' + esc(day.dateLabel || '') + ' · <span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + (b.caption ? '<div class="blockpage-desc">' + esc(b.caption) + '</div>' : '')
+    + '<div class="blockpage-owner">Ora Pro Nobis</div>'
+    + '<div class="blockpage-meta"><span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + '<div class="blockpage-dlrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
+    + '<button class="iconbtn light" data-blockshare="' + esc(b.block) + '" aria-label="Share this playlist">&#8599;</button></div>'
+    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button><span class="blockpage-playlabel">Play All — ' + esc(b.label || b.block) + '</span><span class="grow"></span>'
-    + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
-    + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button></div></div>';
+    + '<button class="btn ghost small" data-blocksort="1">Sort</button>'
+    + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button>'
+    + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
   view.innerHTML = html;
+  // v413 §2.5: the head's own controls wire here (the page ⋮,
+  // Sort, share, and the download-all toggle — the standing
+  // data-markblock/data-queue acts wire in the standing passes).
+  var dlBtn = view.querySelector('[data-blockdl]');
+  if (dlBtn) dlBtn.addEventListener('click', function () { blockDownloadAll(b.block); });
+  var shBtn = view.querySelector('[data-blockshare]');
+  if (shBtn) shBtn.addEventListener('click', function () {
+    openShareSheet({
+      artHtml: coverTileHtml(b.block, 'sm'), title: b.label || b.block,
+      line: 'Playlist \u00b7 ' + ((state.dayDescs || []).filter(function (d) { return d.block === b.block; }).length || n) + ' episodes',
+      url: b.spotifyUrl || location.origin + '/'
+    });
+  });
+  var sortBtn = view.querySelector('[data-blocksort]');
+  if (sortBtn) sortBtn.addEventListener('click', openBlockOrderEditor);
+  var menuBtn = view.querySelector('[data-blockmenu]');
+  if (menuBtn) menuBtn.addEventListener('click', function () {
+    var items = [{ label: 'Share', act: function () { if (shBtn) shBtn.click(); } }];
+    if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
+    openSheetMenu(b.label || b.block, items);
+  });
   appendBlockSettingsCards(day, b);
   // v374 §2 (site 1): the header span stands in the view now —
   // rewrite it from the current descriptor count, so a block page
@@ -6264,11 +6760,16 @@ function paintBlockPage(day, block) {
 function paintEpisodesPage(day) {
   // §2.3.4: the unblocked group in the same page form — a paint
   // target only: not a block, in no settings list, no data-bcount.
+  // v413 §2.5: the same head form (cover · title · meta · the
+  // big play button), with no Sort and no download-all — not a
+  // block.
   var eps = day.episodes || [];
+  var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
   var html = '<div class="blockpage-head" data-block="__episodes">'
     + '<div class="backrow"><button class="backbtn" data-back="__episodes">&lsaquo; Listen</button></div>'
+    + '<div class="blockcover tone-teal large"><span class="blockcover-initial">P</span></div>'
     + '<div class="blockpage-title">FROM TODAY&rsquo;S PODCAST</div>'
-    + '<div class="blockpage-meta">' + esc(day.dateLabel || '') + ' · ' + eps.length + ' tracks</div>'
+    + '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');
   view.innerHTML = html;
