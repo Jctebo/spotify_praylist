@@ -2941,8 +2941,10 @@ function wallpaperRootOptions(roots, current) {
      3. "Live wallpaper: on — no pictures stand in the
         Phone folder yet."
    The drawn name is anchored on the wallpaper naming
-   contract (the same __<date>.jpg shape the Worker
-   validates). Guarded posture (the standing rule): an
+   contract (the same shapes the Worker validates: a
+   daily's __YYYY-MM-DD.jpg AND the monthly devotion's
+   __YYYY-MM.jpg — R-414-1: the anchor covers both, or a
+   monthly drawn name parses to nothing). Guarded posture (the standing rule): an
    absent key, an empty list, or a line matching no form
    reads active with no drawn name — the tab renders its
    views exactly as it does today and NEVER traps John
@@ -2954,7 +2956,7 @@ function wallpaperLiveState(s) {
   var line = String(lines[0]);
   if (line.indexOf('Live wallpaper: not on') === 0) return { active: false, drawnName: null };
   if (line.indexOf('Live wallpaper: on') === 0) {
-    var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}-\d{2}\.jpg)/);
+    var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
     return { active: true, drawnName: m ? m[1] : null };
   }
   return { active: true, drawnName: null };

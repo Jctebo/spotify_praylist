@@ -159,6 +159,7 @@ await ev(() => {
   window.__wp = {
     payloads: {
       drawn: payload(['Live wallpaper: on \u2014 the-resurrection__2026-11-14.jpg, drawn 9:41 AM; the pictures advance as the screen shows.']),
+      drawnMonthly: payload(['Live wallpaper: on \u2014 holy-souls-in-purgatory__2026-11.jpg, drawn 9:41 AM; the pictures advance as the screen shows.']),
       nodraw: payload(['Live wallpaper: on \u2014 no pictures stand in the Phone folder yet.']),
       off: payload(['Live wallpaper: not on \u2014 pick Ora Pro Nobis in the system wallpaper picker.']),
       nokey: payload(undefined),
@@ -283,6 +284,40 @@ async function paint(current, manifestMode, clearLs) {
   });
   ok(m.fit === 'contain' && m.stageH === 320 && m.shFit === 'contain',
     'L5: the carousel + the showing-now thumbnail render object-fit: contain in the fixed slide area', JSON.stringify(m));
+}
+
+/* ---------------- R-414-1: the monthly devotion drawn (Review §4.1) ---------------- */
+{
+  /* The engine cycles every file in the folder, the monthly devotion
+     included; its name carries the month shape (__YYYY-MM.jpg). The
+     parse must carry it through: row thumbnail + name, and the Phone
+     carousel's FD3 start on the monthly slide (LAST in the set). The
+     carousel session index is reset so the start rule is exercised
+     under the same first-paint conditions as L3. */
+  await ev(() => { wpCarIdx.phone = null; wpCarSig.phone = ''; });
+  await paint('drawnMonthly', 'full', false);
+  const p = await ev(() => wallpaperLiveState(window.__wp.payloads.drawnMonthly));
+  ok(p.active === true && p.drawnName === 'holy-souls-in-purgatory__2026-11.jpg',
+    'R-414-1: a monthly drawn name parses to the drawnName (the anchor covers the __YYYY-MM.jpg shape)', JSON.stringify(p));
+  const r = await ev(() => {
+    var sh = document.getElementById('wp-showing');
+    var img = document.getElementById('wpcar-img-phone');
+    var dots = [...document.querySelectorAll('#wp-carousel-phone [data-car-dot]')];
+    return {
+      shImg: sh ? (sh.querySelector('img') || {}).getAttribute('src') : null,
+      shText: sh ? sh.textContent : '',
+      title: (document.getElementById('wpcar-title-phone') || {}).textContent || '',
+      from: (document.getElementById('wpcar-from-phone') || {}).textContent || '',
+      imgSrc: img ? img.getAttribute('src') : null,
+      dotCount: dots.length,
+      dotOn: dots.findIndex((d) => d.classList.contains('on'))
+    };
+  });
+  ok(r.shImg === '/api/wallpaper/file/phone/holy-souls-in-purgatory__2026-11.jpg' && /Holy Souls In Purgatory/.test(r.shText) && /On your home and lock screens now/.test(r.shText),
+    'R-414-1: showing-now renders the MONTHLY picture when the monthly stands drawn (thumbnail + humanized name + the status line)', JSON.stringify(r));
+  ok(r.dotCount === 3 && r.dotOn === 2 && r.title === 'Holy Souls In Purgatory' && /holy-souls-in-purgatory__2026-11\.jpg/.test(r.imgSrc || '') && r.from === 'From: November\u2019s devotion',
+    'R-414-1/FD3: the Phone carousel opens on the monthly slide (last in manifest order) when the monthly stands drawn', JSON.stringify(r));
+  await paint('drawn', 'full', false);
 }
 
 /* ---------------- L9/L12: the controls block, homed whole ---------------- */
