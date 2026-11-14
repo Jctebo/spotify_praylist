@@ -2208,7 +2208,16 @@ function paintSettings() {
    rejected get, renders the unavailable note and wires no
    controls. Every write repaints from the set call's resolved
    payload \u2014 the section never displays a value native did not
-   confirm. */
+   confirm.
+   v409 §2.6: the two surface switches retire with the
+   setBitmap applies they governed (the system picker, not a
+   toggle, decides lock / home / both for a live wallpaper),
+   and the changer / apply status lines retire with the
+   changer. The section gains the payload's 'liveWallpaper'
+   state lines and one button — "Use the Ora live
+   wallpaper" — wired to the bridge's openLiveWallpaperPicker
+   command. The folder roots, the Picture fit control, the
+   notices, Sync all, and the saint line stand unchanged. */
 function wallpaperBridge() {
   var p = oraBridgePlugin();
   if (!p || !p.getWallpaperSettings || !p.setWallpaperSettings) return null;
@@ -2231,11 +2240,6 @@ function paintWallpaperUnavailable() {
   host.innerHTML = '<div class="setrow"><div class="setname">Wallpaper</div>'
     + '<div class="meta">Wallpaper controls live in the app on your phone.</div></div>';
 }
-function wallpaperToggleRow(label, meta, on, id) {
-  return '<div class="setrow"><div class="setname">' + label + '</div>'
-    + '<div class="meta">' + meta + '</div>'
-    + '<div class="setcontrols"><button class="settoggle' + (on ? ' on' : '') + '" id="' + id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (on ? 'On' : 'Off') + '</button></div></div>';
-}
 function wallpaperRootOptions(roots, current) {
   return (roots || []).map(function (r) {
     return '<option value="' + esc(r) + '"' + (r === current ? ' selected' : '') + '>' + esc(r) + '</option>';
@@ -2247,14 +2251,37 @@ function paintWallpaperControls(s) {
   if (!s || !s.paths) { paintWallpaperUnavailable(); return; }
   var paths = s.paths;
   var html = '';
-  html += wallpaperToggleRow('Lock screen', 'A new image on the lock screen at each unlock.', !!s.lockOn, 'set-wp-lock');
-  html += wallpaperToggleRow('Home screen', 'A new image on the home screen at each unlock \u2014 the same image as the lock screen.', !!s.homeOn, 'set-wp-home');
-  if (!s.lockOn && !s.homeOn) {
-    html += '<div class="setrow"><div class="meta">Both screens are off. New images still file; the background stands still by the switches&rsquo; setting.</div></div>';
+  /* v409 §2.6: the live-wallpaper state lines — the additive
+     'liveWallpaper' key in the same payload, pre-rendered
+     natively (the engine's draw record plus the active
+     verdict: on, with the last drawn picture and its time
+     · on, with no pictures in the Phone folder yet · not
+     on, naming the picker step). Rendered in the identical
+     setrow/meta shape as the notices, at the head of the
+     section where the retired surface toggles stood; an
+     absent key (the old shell, which carries no such key)
+     or an empty list renders nothing. */
+  if (s.liveWallpaper && s.liveWallpaper.length) {
+    for (var li = 0; li < s.liveWallpaper.length; li++) {
+      html += '<div class="setrow"><div class="meta">' + esc(String(s.liveWallpaper[li])) + '</div></div>';
+    }
+  }
+  /* v409 §2.6: the picker action — one button, "Use the
+     Ora live wallpaper", in the Sync row's form, appended
+     directly after the state lines. The button renders ONLY
+     when the shell carries the bridge method (the guarded
+     posture, as Sync all below): it fires the native picker
+     intent through the bridge, and the platform picker
+     itself takes the Set tap. */
+  var wpLive = wallpaperBridge();
+  if (wpLive && typeof wpLive.openLiveWallpaperPicker === 'function') {
+    html += '<div class="setrow"><div class="setname">Live wallpaper</div>'
+      + '<div class="setcontrols"><button class="btn ghost" id="set-wp-live">Use the Ora live wallpaper</button></div></div>';
   }
   /* v405 §2.3: the Picture fit row — directly after the two
      surface toggle rows and their both-off note, before the
-     Phone folder row. The section's closed-set control form
+     Phone folder row. (v409 §2.6: the toggle rows retired;
+     the fit row now follows the live-wallpaper rows.) The section's closed-set control form
      (the roots <select> pattern): the standing mode's
      caption as the meta line, the two plain labels verbatim.
      The value reads s.fitMode === 'fill' ? 'fill' : 'fit' —
@@ -2297,35 +2324,7 @@ function paintWallpaperControls(s) {
       html += '<div class="setrow"><div class="meta">' + esc(String(s.notices[ni])) + '</div></div>';
     }
   }
-  /* v398 §2.9: the apply status lines — the additive
-     'applyStatus' key in the same payload, pre-rendered
-     natively from the per-surface apply record (lock first,
-     home second: the last attempt's image, its time, and
-     what the system reports). Rendered in the identical
-     setrow/meta shape as the notices, directly after them;
-     an absent key (the old shell, which carries no such
-     key) or an empty list renders nothing. */
-  if (s.applyStatus && s.applyStatus.length) {
-    for (var ai = 0; ai < s.applyStatus.length; ai++) {
-      html += '<div class="setrow"><div class="meta">' + esc(String(s.applyStatus[ai])) + '</div></div>';
-    }
-  }
-  /* v401 §2.3: the changer run lines — the additive
-     'changerRun' key in the same payload, pre-rendered
-     natively (the changer's last run: its time, the path it
-     took, how many images it saw, and why it skipped when
-     it did — or the never-ran line when no run stands).
-     Rendered in the identical setrow/meta shape as the
-     apply status lines, directly after them: the two
-     changer instruments stand together (last apply, last
-     run). An absent key (the old shell, which carries no
-     such key) or an empty list renders nothing. */
-  if (s.changerRun && s.changerRun.length) {
-    for (var ci = 0; ci < s.changerRun.length; ci++) {
-      html += '<div class="setrow"><div class="meta">' + esc(String(s.changerRun[ci])) + '</div></div>';
-    }
-  }
-  /* v399 §2.5: the section's one action — Sync all (v404
+  /* v399 §2.5: the section's sync action — Sync all (v404
      §2.5: the label names what the button does: one tap runs
      the full convergence, removals included), in the
      OFFLINE precedent's form, appended after the notices as
@@ -2360,10 +2359,8 @@ function paintWallpaperControls(s) {
     }
   }
   host.innerHTML = html;
-  var lockBtn = document.getElementById('set-wp-lock');
-  if (lockBtn) lockBtn.addEventListener('click', function () { wallpaperWrite({ lockOn: !s.lockOn }); });
-  var homeBtn = document.getElementById('set-wp-home');
-  if (homeBtn) homeBtn.addEventListener('click', function () { wallpaperWrite({ homeOn: !s.homeOn }); });
+  var liveBtn = document.getElementById('set-wp-live');
+  if (liveBtn) liveBtn.addEventListener('click', function () { wallpaperOpenLivePicker(); });
   var phoneSel = document.getElementById('set-wp-phone-root');
   if (phoneSel) phoneSel.addEventListener('change', function (ev) { wallpaperWrite({ phoneRoot: ev.target.value }); });
   var watchSel = document.getElementById('set-wp-watch-root');
@@ -2379,6 +2376,28 @@ function wallpaperWrite(patch) {
   var r;
   try { r = p.setWallpaperSettings(patch); } catch (e) { return; }
   if (r && r.then) r.then(function (payload) { paintWallpaperControls(payload); }).catch(function () {});
+}
+/* v409 §2.6: the picker tap — fire the native picker intent
+   through the bridge (it lands on the Ora wallpaper's
+   preview with its Set action; the bridge resolves as the
+   picker opens, with no payload). After the picker returns
+   the client re-reads the settings — the first show of the
+   page again repaints the section from native truth, so the
+   state line re-renders with the verdict as it then stands.
+   A rejected call drops the watcher and leaves the section
+   as it stands. */
+function wallpaperOpenLivePicker() {
+  var p = wallpaperBridge();
+  if (!p || typeof p.openLiveWallpaperPicker !== 'function') return;
+  var onVis = function () {
+    if (document.hidden) return;
+    document.removeEventListener('visibilitychange', onVis);
+    fillWallpaperSection();
+  };
+  document.addEventListener('visibilitychange', onVis);
+  var r;
+  try { r = p.openLiveWallpaperPicker(); } catch (e) { document.removeEventListener('visibilitychange', onVis); return; }
+  if (r && r.catch) r.catch(function () { document.removeEventListener('visibilitychange', onVis); });
 }
 /* v399 §2.5: the status line's copy — the four pinned forms,
    composed from the payload's lastSync alone (time is
