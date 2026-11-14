@@ -93,6 +93,23 @@ function todayChicago() {
   var p = {}; parts.forEach(function (x) { p[x.type] = x.value; });
   return p.year + '-' + p.month + '-' + p.day;
 }
+var MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function shortDayLabel(s) {
+  // v417 §2.7 (D2): the short day form — 'Nov 14' from an ISO
+  // day; a value already standing in a rendered form passes
+  // through unchanged. No clock time, no year, no weekday.
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+  if (!m) return String(s || '');
+  return MONTHS_SHORT[Number(m[2]) - 1] + ' ' + Number(m[3]);
+}
+function presentedDayWord() {
+  // v417 §2.7 (D2): the presented day's word for row metas —
+  // 'Today' when the presented day is today (Chicago), else
+  // the short form, derived from the day the client holds.
+  var p = presentedDateStr();
+  if (!p) return 'Today';
+  return p === todayChicago() ? 'Today' : shortDayLabel(p);
+}
 function api(path, opts) {
   opts = opts || {};
   // v356 \u00a72.6.1: while an unlock stands, its token rides every
@@ -361,7 +378,39 @@ function markPlaying(id) {
     b.classList.toggle('playing', on);
     if (b.classList.contains('playbtn')) b.innerHTML = on ? '&#10073;&#10073;' : '&#9654;';
   });
+  syncBarsRow(id); // v417 §2.6 (FD7): the bars tile marks the current row
   state.playingUrl = state.current ? state.current.url : null;
+}
+function barsTileHtml() {
+  // v417 §2.6 (FD7): the bars tile's element — stands inside
+  // every row's art wrap, shown only on the current row (the
+  // .barsrow CSS in ui.ts); three bars, the mockup's form.
+  return '<span class="barstile" aria-hidden="true"><i></i><i></i><i></i></span>';
+}
+function syncBarsRow(id) {
+  // v417 §2.6 (FD7): the row class lands on [data-card] and
+  // [data-podrow] alike (podcast rows gain row-level marking
+  // here for the first time). The bars animate only while
+  // the transport plays; under .barspaused they stand
+  // frozen — read from the same predicate at the same
+  // moment the play button's dress is set above, so the
+  // tile can never disagree with it.
+  var live = !!id && transportPlaying();
+  document.querySelectorAll('[data-card], [data-podrow]').forEach(function (row) {
+    var rid = row.getAttribute('data-card') || row.getAttribute('data-podrow');
+    var on = !!id && rid === id;
+    row.classList.toggle('barsrow', on);
+    row.classList.toggle('barspaused', on && !live);
+  });
+}
+function syncBarsPaused() {
+  // v417 §2.6: the transport sync funnel (updateDock, driven
+  // by the element's play/pause events) keeps the frozen
+  // state truthful across a pause/resume that starts no new
+  // track — the same guarantee updateDock's own dock-play
+  // glyph read gives the dock's face.
+  var row = document.querySelector('.barsrow');
+  if (row) row.classList.toggle('barspaused', !transportPlaying());
 }
 function markSkipped(id) {
   var card = document.querySelector('[data-card="' + id + '"]');
@@ -1671,7 +1720,10 @@ function updateDock() {
   document.getElementById('dock-meta').textContent = cur.block || state.dateLabel || '';
   document.getElementById('dock-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
   document.getElementById('dock-next').disabled = !state.queue.length;
-  document.getElementById('dock-prev').disabled = !state.queue.length; // v412 Fix 8: Previous stands while a queue stands (enabled at the head — the rule restarts)
+  // v417 §2.8: the retired face buttons' updateDock writes
+  // leave with their elements (Previous lives in the dock
+  // menu now, standing exactly while a queue stands).
+  syncBarsPaused(); // v417 §2.6: the bars' frozen state follows the transport
   // v413 §2.8: the dock thumb is the playing episode's own art
   // (§2.3's chain), the logo tile its fallback.
   var dt = document.getElementById('dock-thumb');
@@ -2122,15 +2174,15 @@ document.querySelectorAll('#tabbar .tab').forEach(function (b) {
 });
 document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
-document.getElementById('dock-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the dock gains Previous, reading the one rule
-// v413 §2.8: the dock's rate cycler + autoplay toggle retire
-// to the player overflow (cycleRate/setRate stand as the seams
-// the speed sheet reads); the ⋮ entrance opens that one menu.
-// The intentions toggle keeps its dock place (ruling R1).
-document.getElementById('dock-menu').addEventListener('click', function () { openPlayerMenu(); });
-document.getElementById('dock-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
+// v417 §2.8 (D4/FD4): the face carries play + next only —
+// Previous (v412 Fix 8's button) and the intentions toggle
+// retire into the dock's own overflow (openDockMenu); Fix
+// 8's one rule stands as the menu item's act, and the
+// intentions act is unchanged. Their listeners leave with
+// their elements.
+document.getElementById('dock-menu').addEventListener('click', function () { openDockMenu(); });
 document.getElementById('dock').addEventListener('click', function (ev) {
-  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-prev') || ev.target.closest('#dock-menu') || ev.target.closest('#dock-intentions'))) return;
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-menu'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
@@ -2148,14 +2200,16 @@ measureBars();
    which is the v381 presentation below plus a back row. */
 function podRowArtHtml(e) {
   // v413 §2.3/§2.6: a podcast row's art — the episode's own art,
-  // else the series' show art, else a series-initial tile (§2.3's
+  // else the series' show art, else the fallback tile (§2.3's
   // chain). Referenced, never re-hosted.
+  // v417 §2.5 (FD3): the tile's content is the podcast mark
+  // (♫), never the series initial; the bars tile stands in
+  // the wrap for the current row (§2.6).
   var s = state.podcasts;
   var url = e.imageUrl || (s && s.showImageUrl) || null;
-  var letter = ((s && s.title) || 'P').charAt(0).toUpperCase();
-  var tile = '<span class="rowart tile tone-navy"><span>' + esc(letter) + '</span></span>';
-  if (url) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(url) + '" alt="" onerror="this.remove()"></span>';
-  return '<span class="rowartwrap">' + tile + '</span>';
+  var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
+  if (url) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(url) + '" alt="" onerror="this.remove()">' + barsTileHtml() + '</span>';
+  return '<span class="rowartwrap">' + tile + barsTileHtml() + '</span>';
 }
 function podDesc(e) {
   // v390 §2.7: the descriptor gains the series (the open
@@ -2267,7 +2321,7 @@ function paintPodcastsIndex() {
     // show artwork (§2.3's showImageUrl; a series-initial tile
     // is the fallback), name, the standing progress facts in
     // the meta position.
-    var tile = '<span class="rowart tile tone-navy"><span>' + esc((s.title || 'P').charAt(0).toUpperCase()) + '</span></span>';
+    var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (s.showImageUrl ? '<img class="rowart" src="' + esc(s.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
     html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(s.title) + '</h3>';
     if (!s.available) {
@@ -2336,7 +2390,7 @@ function paintPodcasts() {
   // facts + total duration (§2.10). The current-episode rule
   // and the return machinery are untouched.
   var podDurSum = res.entries.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
-  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">' + esc((res.title || 'P').charAt(0).toUpperCase()) + '</span>'
+  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
     + (res.showImageUrl ? '<img class="coverimg" src="' + esc(res.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
   html += '<div class="podpage-head">' + showCover
     + '<h1 class="screen">' + esc(res.title) + '</h1>'
@@ -2357,20 +2411,27 @@ function paintPodcasts() {
     // downloaded icon · play). The standing Get button retires:
     // download lives in the ⋮ menu (§2.9), state-matched; the
     // mark control and the partway bar stand unmoved.
+    // v417 §2.4 (D5/FD5): the row takes the two-line prow form
+    // — words line (art + grow) over the .prow-ctl controls
+    // line; the podmark joins the line after play (its wrap
+    // dissolves) and the listened date leaves the wrap for
+    // the meta line in D2's short form (§2.7). The partway
+    // bar stands at the row's bottom edge, unmoved.
     html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
       + podRowArtHtml(e)
       + '<div class="grow"><h3>' + esc(e.title) + '</h3>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
-      + '<div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</div></div>'
+      + '<div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</div></div>'
+      + '</div>'
+      + '<div class="prow-ctl">'
       + '<span class="rowcluster">'
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '<button class="iconbtn" data-podshare="' + esc(e.key) + '" aria-label="Share">\u2197</button>'
       + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span>'
       + '</span>'
       + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
-      + '<div class="podmark-wrap"><button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
-      + (e.listened && e.listenDate ? '<div class="podmark-date">' + esc(e.listenDate) + '</div>' : '')
-      + '</div></div>'
+      + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + '</div>'
       // v395 §2.9 (D4): the partway bar — one element at the
       // row's bottom edge, width = position / duration, inside
       // the uniform 76px row (the .podbar rule in ui.ts): no
@@ -4108,24 +4169,41 @@ function wirePlayed(root) {
    stands here. */
 var BLOCK_TONES = { 'Morning': 'navy', 'Midmorning': 'gold', 'Midday': 'teal', 'Afternoon': 'plum', 'Evening': 'navy', 'Night': 'plum', 'Mass and Homilies': 'gold', 'Novenas': 'teal', 'The AI Signal': 'navy' };
 function blockTone(block) { return BLOCK_TONES[block] || 'navy'; }
+/* v417 §2.5 (FD3): the fallback GLYPH table — where no real
+   artwork exists the tile carries the block's glyph, never
+   a letter or monogram; colors read the standing tones; no
+   Spotify green or branding. The AI Signal stands outside
+   the table: its mark is its real logo (coverTileHtml +
+   rowArtHtml special-case it). An unmapped block takes ✦. */
+var BLOCK_GLYPHS = { 'Morning': '\u2600', 'Midmorning': '\u2726', 'Midday': '\u2756', 'Afternoon': '\u2605', 'Evening': '\u2727', 'Night': '\u263e', 'Mass and Homilies': '\u2020', 'Novenas': '\u271a', '__episodes': '\u266b' };
+function blockGlyphOf(block) { return BLOCK_GLYPHS[block] || '\u2726'; }
 function blockLabelOf(block) {
   var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === block; })[0];
   return b ? (b.label || b.block) : (block || '');
 }
 function coverTileHtml(block, cls) {
-  var label = blockLabelOf(block) || block || 'Ora Pro Nobis';
-  return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><span class="blockcover-initial">' + esc(label.charAt(0).toUpperCase()) + '</span></div>';
+  // v417 §2.5 (FD3): the cover tile's content is the block's
+  // glyph; The AI Signal's cover is its logo image, standing
+  // as the cover image (the .coverimg construction).
+  if (block === 'The AI Signal') {
+    return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><img class="coverimg" src="/logo.png" alt=""></div>';
+  }
+  return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><span class="blockcover-initial">' + blockGlyphOf(block) + '</span></div>';
 }
 function rowArtHtml(t) {
   // §2.3's fallback chain: episode art → show art → theme tile.
   // Referenced at render (an <img> at the provider URL); a URL
   // that fails to load removes itself and the tile beneath
   // stands — never a broken-image glyph.
-  if (t.episodeId === 'the-ai-signal') return '<span class="rowartwrap"><img class="rowart" src="/logo.png" alt=""></span>';
-  var letter = (t.artLetter || (t._block || t.block) || t.title || 'O').charAt(0).toUpperCase();
-  var tile = '<span class="rowart tile tone-' + blockTone(t._block || t.block) + '"><span>' + esc(letter) + '</span></span>';
-  if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()"></span>';
-  return '<span class="rowartwrap">' + tile + '</span>';
+  // v417 §2.5 (FD3): the tile's content is the block's glyph,
+  // never a letter; The AI Signal's rows carry its logo (the
+  // standing special case, widened to the block's rows);
+  // the bars tile stands in the wrap for the current row
+  // (§2.6).
+  if (t.episodeId === 'the-ai-signal' || (t._block || t.block) === 'The AI Signal') return '<span class="rowartwrap"><img class="rowart" src="/logo.png" alt="">' + barsTileHtml() + '</span>';
+  var tile = '<span class="rowart tile tone-' + blockTone(t._block || t.block) + '"><span>' + blockGlyphOf(t._block || t.block) + '</span></span>';
+  if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()">' + barsTileHtml() + '</span>';
+  return '<span class="rowartwrap">' + tile + barsTileHtml() + '</span>';
 }
 function fmtDurLong(s) {
   s = Math.max(0, Math.round(Number(s) || 0));
@@ -4174,6 +4252,24 @@ function openPlayerMenu() {
     { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
     { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } }
   ]);
+}
+function openDockMenu() {
+  // v417 §2.8 (D4/FD4): the DOCK's own menu, on the one menu
+  // component — a superset of the player overflow, NOT an
+  // edit to it (openPlayerMenu above stands as built; §1.3).
+  // Previous track stands exactly while a queue stands (the
+  // standing face button's enable rule; no dead items) and
+  // acts v412 Fix 8's one rule; Intentions is a stay item
+  // carrying the retired face button's identical act; the
+  // three standing items read the same definitions the
+  // player menu reads.
+  var items = [];
+  if (state.queue.length) items.push({ label: 'Previous track', act: function () { previousWithRule(); } });
+  items.push({ label: 'Intentions', state: intentionsOn() ? 'On' : 'Off', stay: true, stateFn: function () { return intentionsOn() ? 'On' : 'Off'; }, act: function () { setIntentions(!intentionsOn()); } });
+  items.push({ label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } });
+  items.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
+  items.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
+  openSheetMenu('Playback', items);
 }
 /* FD6: ONE share sheet — the episode card at its head, Share…
    only where the platform sheet stands, Copy link always. */
@@ -4412,18 +4508,26 @@ function trackCard(t) {
     var intIntro = introForTrack(t);
     if (intIntro && intIntro.text) intLine = '<div class="intention-text">Prayer Intention: ' + esc(intIntro.text) + '</div>';
   }
-  var wrap = function (rowInner) {
+  var wrap = function (wordsInner, ctlInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
     // NO marker) — the played dot stands as the prayer row's last
-    // element, after the .grow column, for both families alike.
+    // element, for both families alike.
     // v413 §2.6: the row takes the .prow form — artwork left, the
     // §1.3 cluster right; the row grows past the v363 uniform
     // 76px for the snippet line (the re-dress's own geometry).
-    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
+    // v417 §2.4 (D5/FD5): the prow form becomes TWO lines — the
+    // words line (.row: art + .grow, spanning the full width)
+    // over the .prow-ctl controls line at the bottom right:
+    // [Read?] · the cluster · play · the played dot LAST (its
+    // 44px box stands; the prow CSS zeroes its one-line-row
+    // negative margins).
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + wordsInner + '</div>'
+      + '<div class="prow-ctl">' + ctlInner + playedDotHtml(t) + '</div></div>';
   };
   // v413 §2.6: the right-side cluster — ⋮ · share · downloaded
   // icon · the round play button, in the video's order.
+  // v417 §2.4: the cluster stands in the controls line.
   var cluster = function () {
     return '<span class="rowcluster">'
       + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button>'
@@ -4443,7 +4547,10 @@ function trackCard(t) {
     // v413 §2.6: the meta takes the video's form — the standing
     // day word + duration, the source line folded in after.
     if (t.available) {
-      return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + snippet + '<div class="meta">Today' + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</div>' + intLine + '</div>' + cluster());
+      // v417 §2.7 (D2): the meta's day word is the presented
+      // day's own — 'Today' only when the presented day IS
+      // today, the short form otherwise; no clock stands.
+      return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + snippet + '<div class="meta">' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</div>' + intLine + '</div>', cluster());
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -4480,22 +4587,26 @@ function trackCard(t) {
     var meta = 'Plays here'
       + (novSpan ? novSpan + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') : ' · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : ''))
       + (noText ? ' · Not available in the app yet' : '');
-    // v413 §2.6/R4: the Read control stays in the row's tail (a
+    // v413 §2.6/R4: the Read control stays in the row (a
     // content act, not a menu item); the Spotify link leaves
-    // the tail — its one home is now the row ⋮ menu.
-    var tail = !noText ? '<div class="trow-tail">' + readButton(t, key) + '</div>' : '';
-    return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>' + tail + cluster());
+    // the row — its one home is now the row ⋮ menu.
+    // v417 §2.4 (FD5): Read stands FIRST in the controls
+    // line; the .trow-tail wrapper dissolves into the line.
+    var readCtl = !noText ? readButton(t, key) : '';
+    return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>', readCtl + cluster());
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
   // into the meta after the duration (omitted when none stands,
-  // as today); the Read control and Spotify link stand in the
-  // .trow-tail cluster as the row's last element (no played
-  // dot stands on an unavailable branch — the standing rule).
-  var tailU = (t.hasText && t.textUrl)
-    ? '<div class="trow-tail">' + readButton(t, key) + '</div>'
+  // as today) (no played dot stands on an unavailable branch —
+  // the standing rule).
+  // v417 §2.4 (FD5): with text, the Read control stands ALONE
+  // on the controls line; without text, no controls line
+  // stands at all and the words span the full width.
+  var ctlU = (t.hasText && t.textUrl)
+    ? '<div class="prow-ctl">' + readButton(t, key) + '</div>'
     : '';
-  return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div>' + tailU + '</div></div>';
+  return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div></div>' + ctlU + '</div>';
 }
 function openRead(t) {
   // v318 T9: the reading view — the episode's full text within the
@@ -5544,7 +5655,11 @@ function updateBlockCounts(day) {
   view.querySelectorAll('[data-bcount]').forEach(function (el) {
     var b = el.getAttribute('data-bcount');
     var blk = (day.blocks || []).filter(function (x) { return x.block === b; })[0];
-    el.textContent = (blk && blk.caption ? blk.caption : '') + ' · ' + (counts[b] || 0) + ' tracks';
+    // v417 §2.7 (FD6): the updater re-forms to the card's new
+    // state line — the caption segment stands nowhere on the
+    // grid card (it survives as the block page head's
+    // description); the count is the line's tail.
+    el.textContent = (counts[b] || 0) + ' tracks';
   });
   // v413 §2.10 (FD4): the block page's meta line rides the same
   // settlement seam — "<N> episodes · <total duration>", the
@@ -7024,7 +7139,7 @@ function blockCardHtml(b) {
   return '<div class="blockcard" data-openblock="' + esc(b.block) + '">'
     + coverTileHtml(b.block, '')
     + '<div class="blockcard-name2">' + esc(b.label || b.block) + '</div>'
-    + '<div class="blockcard-meta">Playlist \u00b7 Ora Pro Nobis <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span><br><span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' \u00b7 ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + '<div class="blockcard-meta">Playlist \u00b7 Ora Pro Nobis <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span><br><span data-bcount="' + esc(b.block) + '">' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
     + '<button class="playbtn blockcard-play" data-queue="' + esc(b.block) + '" aria-label="Play ' + esc(b.label || b.block) + '">&#9654;</button></div>';
 }
 function episodesCardHtml(day) {
@@ -7034,7 +7149,7 @@ function episodesCardHtml(day) {
   // AFTER the grid's blocks — it is not a block and stands
   // outside the manual order.
   return '<div class="blockcard" data-openblock="__episodes">'
-    + '<div class="blockcover tone-teal"><span class="blockcover-initial">P</span></div>'
+    + '<div class="blockcover tone-teal"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
     + '<div class="blockcard-name2">From Today&rsquo;s Podcast</div>'
     + '<div class="blockcard-meta"><span>' + (day.episodes || []).length + ' tracks</span></div>'
     + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
@@ -7212,7 +7327,7 @@ function paintEpisodesPage(day) {
   var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
   var html = '<div class="blockpage-head" data-block="__episodes">'
     + '<div class="backrow"><button class="backbtn" data-back="__episodes">&lsaquo; Listen</button></div>'
-    + '<div class="blockcover tone-teal large"><span class="blockcover-initial">P</span></div>'
+    + '<div class="blockcover tone-teal large"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
     + '<div class="blockpage-title">FROM TODAY&rsquo;S PODCAST</div>'
     + '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div></div>';

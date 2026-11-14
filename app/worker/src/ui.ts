@@ -28,7 +28,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 </header>
 <main id="view" class="view"></main>
 <audio id="audio" preload="none"></audio>
-<div id="dock" class="dock hidden"><img class="dockthumb" id="dock-thumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-intentions" class="docknext dockauto" aria-label="Intentions" aria-pressed="true">Intentions On</button><button id="dock-prev" class="docknext" aria-label="Previous track">&#9198;</button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><button id="dock-menu" class="docknext" aria-label="Playback options">&#8943;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
+<div id="dock" class="dock hidden"><img class="dockthumb" id="dock-thumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><button id="dock-menu" class="docknext" aria-label="Playback options">&#8943;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabicon">&#10022;</span><span>Prayers</span></button>
   <button data-tab="conscience" class="tab"><span class="tabicon">&#10013;</span><span>Conscience</span></button>
@@ -72,14 +72,14 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .wordmark { font-size:19px; letter-spacing:2.5px; color:var(--bar-fg); }
 .tagline { font-size:13px; letter-spacing:1.2px; text-transform:uppercase; color:var(--bar-sub); margin-top:1px; }
 .litday { font-size:13px; letter-spacing:.4px; margin-top:1px; color:var(--bar-fg); }
-.view { padding: 14px 14px 96px; max-width: 640px; margin: 0 auto; }
+.view { padding: 14px 12px 96px; max-width: 640px; margin: 0 auto; }
 .tabbar { position: fixed; left:0; right:0; bottom:0; z-index: 30; display:flex; background-color:var(--bar-solid); background:var(--bar-bg); padding-bottom: env(safe-area-inset-bottom); }
 .tab { flex:1; background:none; border:none; color:var(--bar-sub); font-family:inherit; font-size:13px; padding:8px 2px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; }
 .tab .tabicon { font-size:19px; line-height:1; }
 .tab.active { color:var(--bar-fg); box-shadow: inset 0 2px 0 var(--accent); }
-.dock { position: fixed; left:10px; right:10px; bottom: calc(var(--tabh, 0px) + 8px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:7px 12px 10px; border:1px solid rgba(250,245,236,.25); border-radius:12px; overflow:hidden; cursor:pointer; }
+.dock { position: fixed; left:10px; right:10px; bottom: calc(var(--tabh, 0px) + 8px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 10px; border:1px solid rgba(250,245,236,.25); border-radius:12px; overflow:hidden; cursor:pointer; }
 [data-lit="white"] .dock { border-color: var(--line); }
-.dockthumb { width:42px; height:42px; border-radius:8px; flex:none; }
+.dockthumb { width:44px; height:44px; border-radius:8px; flex:none; }
 .docktext { flex:1; min-width:0; }
 .docktitle { font-size:17px; color:var(--bar-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .dockmeta { font-size:14px; color:var(--bar-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
@@ -321,12 +321,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    at v361: the combined row retired, and intention rows are
    ordinary standard cards under the geometry that stands.) */
 .sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
-.blockgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 10px; }
+.blockgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 10px; }
 .blockcard { position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; }
 .blockcard-face { background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:12px 12px 10px; min-height:76px; }
 .blockcard-name { font-size:17px; letter-spacing:1.2px; color:var(--bar-fg); }
 .blockcard-cap { font-size:13px; color:var(--bar-sub); margin-top:3px; }
-.blockcard-meta { font-size:13px; color:#6d6353; padding:8px 62px 12px 12px; }
+.blockcard-meta { font-size:13px; color:#6d6353; padding:2px 62px 8px 8px; }
 .blockcard-play { position:absolute; right:10px; bottom:10px; }
 .blockpage-head { margin:-14px -14px 12px; padding:12px 14px 14px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); }
 .backrow { margin:0 0 6px; }
@@ -405,17 +405,18 @@ button.btn.small { min-height:44px; }
 .tone-plum { background:linear-gradient(135deg, #4a2545, #5f3460); }
 .tone-teal { background:linear-gradient(135deg, #173f3a, #1f554e); }
 .blockcover { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
-.blockcard > .blockcover { aspect-ratio:1; border-radius:12px 12px 0 0; }
+.blockcard > .blockcover { height:64px; border-radius:12px 12px 0 0; }
 .blockcover-initial { font-size:44px; color:#e9d9ae; }
+.blockcard > .blockcover .blockcover-initial { font-size:28px; }
 .tone-gold > .blockcover-initial, .rowart.tile.tone-gold { color:#16283f; }
-.blockcover.large { width:180px; height:180px; border-radius:12px; margin:6px 0 10px; }
-.blockcover.large .blockcover-initial { font-size:84px; }
+.blockcover.large { width:120px; height:120px; border-radius:12px; margin:6px 0 10px; }
+.blockcover.large .blockcover-initial { font-size:56px; }
 .blockcover.sm { width:44px; height:44px; flex:none; border-radius:8px; }
 .blockcover.sm .blockcover-initial { font-size:20px; }
 .blockcover .coverimg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.blockcard-name2 { font-size:16px; color:var(--navy); padding:10px 12px 0; }
-.rowartwrap { position:relative; width:48px; height:48px; flex:none; border-radius:8px; overflow:hidden; display:inline-block; }
-.rowartwrap > .rowart { position:absolute; inset:0; width:48px; height:48px; }
+.blockcard-name2 { font-size:16px; color:var(--navy); padding:6px 8px 0; }
+.rowartwrap { position:relative; width:44px; height:44px; flex:none; border-radius:8px; overflow:hidden; display:inline-block; }
+.rowartwrap > .rowart { position:absolute; inset:0; width:44px; height:44px; }
 img.rowart { object-fit:cover; display:block; }
 .rowart.tile { display:flex; align-items:center; justify-content:center; font-size:20px; color:#e9d9ae; }
 .card.trow.prow { height:auto; min-height:76px; overflow:visible; }
@@ -435,6 +436,29 @@ img.rowart { object-fit:cover; display:block; }
 .blockpage-dlnote { margin-top:4px; }
 .podpage-head { margin:0 0 12px; }
 .sortrow { margin:0 0 10px; }
+/* v417 §2.9 (FD8): the polish density on prow rows — tighter
+   padding and row gap; text sizes all stand (D1). §2.4's
+   controls line (.prow-ctl) stands under the words line,
+   right-aligned, ruled off by the standing line color; the
+   played dot's one-line-row negative margins zero in the
+   prow form (its 44px box stands). */
+.card.trow.prow { padding:8px 10px; margin-bottom:8px; }
+.prow-ctl { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
+.card.trow.prow .played-dot { margin:0; }
+/* v417 §2.6 (FD7): the bars tile — stands in the current
+   row's art wrap in place of its art/glyph (tone-navy
+   ground, bars in the theme accent; no Spotify green). The
+   bars animate only while the transport plays; under
+   .barspaused the animation stands paused (frozen bars). */
+.barstile { position:absolute; inset:0; display:none; align-items:center; justify-content:center; gap:2px; background:linear-gradient(135deg, #16283f, #22385a); }
+.barstile i { display:block; width:3px; background:var(--accent); transform-origin:center; animation:opnbars .8s ease-in-out infinite alternate; }
+.barstile i:nth-child(1) { height:9px; animation-delay:-.25s; }
+.barstile i:nth-child(2) { height:16px; animation-delay:-.55s; }
+.barstile i:nth-child(3) { height:12px; animation-delay:-.4s; }
+.barsrow .barstile { display:flex; }
+.barsrow .rowartwrap > .rowart { display:none; }
+.barspaused .barstile i { animation-play-state:paused; }
+@keyframes opnbars { from { transform:scaleY(.4); } to { transform:scaleY(1); } }
 
 
 `;
