@@ -1,0 +1,68 @@
+ok   - C5: the shared .sheet construction stands verbatim — flat, token ground, no overlay/scrim/opacity
+ok   - C5: the .np-hero construction stands verbatim — tokens only, no fill laid over it
+ok   - C3 statics: the standing token values stand (white #f3e9cf · green #173a22 · cream #faf5ec) — read, never redefined
+ok   - statics: the SW pin is untouched at Implement (Ship moves it to v415-1)
+ok   - inventory re-derivation: exactly 13 .sheet constructions stand in the composed tree
+ok   - inventory re-derivation: all 13 sheet constructors stand by name
+ok   - C7 statics: the written intention line stands in the Now Playing construction
+ok   - C6 statics: the one player overflow + the sheet-menu component stand
+note - extraction dropped: offlineEvict
+ok   - C1/before white S1 (20,4) = the token gradient at its position, no grey admixture
+ok   - C1/before white S2 (20,30) = the token gradient at its position, no grey admixture
+ok   - C1/before white S3 (20,100) = the token gradient at its position, no grey admixture
+ok   - C1: S1 stands within rounding of --bar-solid #f3e9cf (the screenshot day’s theme)
+ok   - C1: S4 below the band = the sheet ground --cream #faf5ec exactly
+ok   - C1/C2-hdr: the collapse chevron computes to --bar-fg at full strength; the sheet stands on the fixture episode
+ok   - C6: Now Playing stands as v413 left it — ⋮ entrance + intentions toggle + transport; the retired controls stay retired
+ok   - C6: the player overflow still holds exactly Autoplay · Sleep timer · Playback speed
+ok   - C7: the written intention line stands on the playing screen (written only — no spoken path in this release)
+ok   - C4 white/ep2 S1 (20,4) = the token gradient at its position, no grey admixture
+ok   - C4 white/ep2 S2 (20,30) = the token gradient at its position, no grey admixture
+ok   - C4 white/ep2 S3 (20,100) = the token gradient at its position, no grey admixture
+ok   - C4: the after-state is not episode-bound — the second descriptor renders the same token-exact header zone
+ok   - C3/before green S1 (20,4) = the token gradient at its position, no grey admixture
+ok   - C3/before green S2 (20,30) = the token gradient at its position, no grey admixture
+ok   - C3/before green S3 (20,100) = the token gradient at its position, no grey admixture
+ok   - C3: under green, S1 stands within rounding of green’s --bar-solid #173a22 — the zone follows the theme, no fixed color
+ok   - C3: the chevron computes to green’s --bar-fg #e9d9ae
+ok   - C2: queue preview (Form 1) — hero top samples token-exact under white
+ok   - C2: queue preview — the collapse chevron computes to --bar-fg
+ok   - C2: intention editor stands in the mold
+ok   - C2: intention editor — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: intention editor — its title stands in --navy at full strength
+ok   - C2: intention editor — the ghost Close/Done computes to --navy at full strength
+ok   - C2: examination prompts editor stands in the mold
+ok   - C2: examination prompts editor — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: examination prompts editor — its title stands in --navy at full strength
+ok   - C2: examination prompts editor — the ghost Close/Done computes to --navy at full strength
+ok   - C2: confession guide editor stands in the mold
+ok   - C2: confession guide editor — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: confession guide editor — its title stands in --navy at full strength
+ok   - C2: confession guide editor — the ghost Close/Done computes to --navy at full strength
+ok   - C2: playback speed sheet stands in the mold
+ok   - C2: playback speed sheet — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: playback speed sheet — the ghost Close/Done computes to --navy at full strength
+ok   - C2: sleep timer sheet stands in the mold
+ok   - C2: sleep timer sheet — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: sleep timer sheet — the ghost Close/Done computes to --navy at full strength
+ok   - C2: PIN set sheet stands in the mold
+ok   - C2: PIN set sheet — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: PIN set sheet — its title stands in --navy at full strength
+ok   - C2: PIN set sheet — the ghost Close/Done computes to --navy at full strength
+ok   - C2: sheet menu (via the player overflow) stands in the mold
+ok   - C2: sheet menu (via the player overflow) — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: sheet menu (via the player overflow) — the ghost Close/Done computes to --navy at full strength
+ok   - C2: share sheet stands in the mold
+ok   - C2: share sheet — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: share sheet — its title stands in --navy at full strength
+ok   - C2: share sheet — the ghost Close/Done computes to --navy at full strength
+ok   - C2: playlist order editor stands in the mold
+ok   - C2: playlist order editor — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: playlist order editor — its title stands in --navy at full strength
+ok   - C2: playlist order editor — the ghost Close/Done computes to --navy at full strength
+ok   - C2: Read sheet stands in the mold
+ok   - C2: Read sheet — the header zone’s ground samples --cream at full strength (no dim fill)
+ok   - C2: Read sheet — its title stands in --navy at full strength
+ok   - C2: Read sheet — the ghost Close/Done computes to --navy at full strength
+---
+harness-v415 (before): 65 passed, 0 failed
