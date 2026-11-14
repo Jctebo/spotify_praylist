@@ -58,8 +58,20 @@ function setRate(r) {
   try { localStorage.setItem('opn-speed-v336', String(r)); } catch (e) {}
   updatePositionState();
   updateNowPlaying();
+  var dr = document.getElementById('dock-rate');
+  if (dr) dr.textContent = r + '×'; // v412 Fix 13: a sheet-side change follows on the dock cycler at once
   var ss = document.querySelector('.speedsheet');
   if (ss) ss.querySelectorAll('[data-rate]').forEach(function (b) { b.classList.toggle('active', Number(b.getAttribute('data-rate')) === r); });
+}
+function cycleRate() {
+  // v412 Fix 13: the dock's rate cycler — steps the standing
+  // SPEED_SET in order through the standing setRate seam: one
+  // global rate, persisted under the standing key and applied to
+  // the element exactly as the speed sheet's choice is. No
+  // per-surface rate exists anywhere.
+  var idx = SPEED_SET.indexOf(state.rate || 1);
+  setRate(SPEED_SET[(idx + 1) % SPEED_SET.length]);
+  updateDock(); // the cycler's label follows at once (setRate already repaints Now Playing)
 }
 function openSpeedSheet() {
   var old = document.querySelector('.speedsheet');
@@ -357,6 +369,64 @@ function markSkipped(id) {
   card.style.outline = '2px solid #8a4b2a';
   setTimeout(function () { card.style.outline = ''; }, 2400);
 }
+function flashPassOver(desc) {
+  // v412 (Fixes 2, 3, 7): a pass-over shows WHY on the entry's own
+  // card — the standing skipped flash plus a line that stands
+  // until the card next re-renders. A card that is not painted
+  // (the Podcasts tab's rows carry no [data-card]) degrades to
+  // the flash alone, exactly as markSkipped degrades.
+  if (!desc) return;
+  markSkipped(desc.episodeId);
+  var card = document.querySelector('[data-card="' + desc.episodeId + '"]');
+  if (!card) return;
+  var old = card.querySelector('.passline');
+  if (old) old.remove();
+  var line = document.createElement('div');
+  line.className = 'passline meta';
+  line.textContent = 'Couldn\u2019t play \u2014 passed over';
+  card.appendChild(line);
+}
+function paintWaitLine() {
+  // v412 Fix 7: while the bounded error wait stands, the current
+  // entry's card and the dock carry the retrying line — the wait
+  // is visible instead of silent. Driven off state.errWaitN, the
+  // wait's own counter: painted while a wait stands for the
+  // current entry, cleared everywhere when it resolves (restart,
+  // pass-over, or a fresh start).
+  var cur = state.current;
+  var show = !!cur && (state.errWaitN || 0) > 0;
+  document.querySelectorAll('[data-card]').forEach(function (card) {
+    var line = card.querySelector('.waitline');
+    if (show && card.getAttribute('data-card') === cur.episodeId) {
+      if (!line) { line = document.createElement('div'); line.className = 'waitline meta'; card.appendChild(line); }
+      line.textContent = 'Trouble playing \u2014 retrying';
+    } else if (line) line.remove();
+  });
+  var dt = document.querySelector('.docktext');
+  if (dt) {
+    var dw = dt.querySelector('.waitline');
+    if (show) {
+      if (!dw) { dw = document.createElement('div'); dw.className = 'waitline meta'; dt.appendChild(dw); }
+      dw.textContent = 'Trouble playing \u2014 retrying';
+    } else if (dw) dw.remove();
+  }
+}
+function mintBlobUrl(owner, blob) {
+  // v412 Fix 11: the one mint for blob URLs — the owner's standing
+  // URL is revoked as its replacement is minted, so a descriptor
+  // or slot never holds two live URLs and a replaced one never
+  // leaks. The owner keeps the live URL on its own record
+  // (blobUrl), which is also how replacement finds it.
+  if (!owner) return URL.createObjectURL(blob);
+  if (owner.blobUrl) { try { URL.revokeObjectURL(owner.blobUrl); } catch (e) {} owner.blobUrl = null; }
+  var u = URL.createObjectURL(blob);
+  owner.blobUrl = u;
+  return u;
+}
+var ownBlobOwners = {}; // v412 Fix 11: one mint owner per own-audio cache key
+function ownBlobOwner(cacheKey) { return ownBlobOwners[cacheKey] || (ownBlobOwners[cacheKey] = {}); }
+var extBlobOwners = {}; // v412 Fix 11: one mint owner per external slot
+function extSlotOwner(slot) { return extBlobOwners[slot.slotId] || (extBlobOwners[slot.slotId] = {}); }
 function saveResume() {
   if (!state.current || !state.storedDay) return;
   try {
@@ -396,8 +466,14 @@ function readQueueSnapshot() {
   if (!raw) return null;
   var rec = null;
   try { rec = JSON.parse(raw); } catch (e) { removeQueueSnapshot(); return null; }
-  if (!rec || typeof rec !== 'object' || (rec.v !== 1 && rec.v !== 2) || typeof rec.date !== 'string'
-    || !Array.isArray(rec.ids) || !rec.ids.length) { removeQueueSnapshot(); return null; }
+  if (!rec || typeof rec !== 'object' || (rec.v !== 1 && rec.v !== 2)) { removeQueueSnapshot(); return null; }
+  // v412 Fix 9: the podcast form carries no date — its shape is
+  // series + sequence keys; the day form's shape stands as it was.
+  if (rec.form === 'podcast') {
+    if (typeof rec.series !== 'string' || !rec.series || !Array.isArray(rec.seqKeys) || !rec.seqKeys.length) { removeQueueSnapshot(); return null; }
+    return rec;
+  }
+  if (typeof rec.date !== 'string' || !Array.isArray(rec.ids) || !rec.ids.length) { removeQueueSnapshot(); return null; }
   return rec;
 }
 function queueStartPos(desc) {
@@ -411,6 +487,23 @@ function queueStartPos(desc) {
 function saveQueueSnapshot(posS) {
   try {
     if (!state.queue.length || !state.current) { localStorage.removeItem(QUEUE_KEY); return; }
+    // v412 Fix 9: a podcast queue snapshots in the podcast form —
+    // the series plus the entries' sequence keys, NO date: a
+    // podcast queue is not a day queue and the day turn must not
+    // kill it. Resolution against the series payload happens at
+    // restore (tryStandPodcastRestore); the day form below stands
+    // byte-identical for day queues.
+    var cur0 = state.current;
+    if (cur0.kind === 'podcast' && cur0.podSeries && state.queue.every(function (d) { return d.kind === 'podcast' && d.podSeries === cur0.podSeries; })) {
+      localStorage.setItem(QUEUE_KEY, JSON.stringify({
+        v: 2, form: 'podcast', series: cur0.podSeries,
+        seqKeys: state.queue.map(function (d) { return d.seriesKey; }),
+        idx: state.queueIdx, currentKey: cur0.seriesKey,
+        positionS: (posS !== undefined ? posS : (audioEl.currentTime || 0)),
+        savedAt: new Date().toISOString(),
+      }));
+      return;
+    }
     var date = presentedDateStr();
     if (!date) return;
     localStorage.setItem(QUEUE_KEY, JSON.stringify({
@@ -446,8 +539,55 @@ function bootQueueSnapshot() {
   state.restoreProbe = null;
   var rec = readQueueSnapshot();
   if (!rec) return;
+  // v412 Fix 9: a podcast record sets the podcast probe — no date
+  // check (the day turn does not kill it) and no restoredQueue
+  // flag (Continue is a day surface). The restore itself waits
+  // for the series payload (tryStandPodcastRestore).
+  if (rec.form === 'podcast') { state.podRestoreProbe = rec; return; }
   if (rec.date !== presentedDateStr()) { removeQueueSnapshot(); return; }
   state.restoredQueue = true;
+}
+function tryStandPodcastRestore() {
+  // v412 Fix 9: the podcast restore — runs when a series payload
+  // stands (openPodSeries / the series re-read). The record's
+  // sequence keys resolve against the payload's entries: an entry
+  // the payload no longer carries, or carries without a URL,
+  // drops silently, exactly as a day restore drops a descriptor
+  // the fresh build no longer carries; if NO entry resolves, the
+  // record clears. The restored queue stands PAUSED, loaded not
+  // playing — the day form's posture — at the record's index
+  // among the survivors, its position riding the pendingResume
+  // seam. Nothing is stomped: while any transport stands current,
+  // the probe waits (a fresh play overwrites the record through
+  // the standing save triggers and retires the probe with it).
+  var rec = state.podRestoreProbe;
+  if (!rec || !state.podcasts || state.podcasts.series !== rec.series) return;
+  if (state.current) return;
+  var entries = state.podcasts.entries || [];
+  var byKey = {};
+  entries.forEach(function (e) { byKey[e.key] = e; });
+  var descs = [];
+  var keptIdx = [];
+  rec.seqKeys.forEach(function (k, i) {
+    var e = byKey[k];
+    if (e && e.url) { descs.push(podDesc(e)); keptIdx.push(i); }
+  });
+  if (!descs.length) { removeQueueSnapshot(); state.podRestoreProbe = null; return; }
+  var idx = keptIdx.indexOf(rec.idx);
+  if (idx < 0) idx = 0;
+  state.queue = descs;
+  state.queueIdx = idx;
+  var chosen = descs[idx];
+  state.current = chosen;
+  setMediaSessionFor(chosen);
+  state.pendingResume = rec.positionS > 0 ? { episodeId: chosen.episodeId, positionS: rec.positionS } : null;
+  setPlaybackState('paused');
+  audioEl.src = chosen.url;
+  try { audioEl.load(); } catch (e) {}
+  markPlaying(null);
+  updateDock();
+  renderQueueList();
+  state.podRestoreProbe = null;
 }
 /* ---------------- Played state (v344) ----------------
    Playback memory, not a checklist (the v305 rule stands): the
@@ -642,7 +782,8 @@ function loadDescAudio(desc) {
   // re-assert, play(), the state pushes.
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
-  audioEl.play().catch(function () {});
+  playIntent = true; // v412: a start attempt IS a standing intent to play (the error guard reads it)
+  audioEl.play().catch(function () { onStartRejected(desc); }); // v412 Fix 3: a rejected start is reported + recovered, never swallowed
   setPlaybackState('playing');
   pushNativeState(false); // v377 B2: track change / play
 }
@@ -666,7 +807,15 @@ function startDesc(desc) {
   // through the same path (its podPositionS is null — any
   // same-episode residue clears; §2.8). The save tick's marker
   // resets at every track change.
+  // v412 Fix 11: a replaced descriptor's minted blob URL is
+  // revoked at the moment of replacement — the outgoing track's
+  // URL never outlives its start.
+  if (state.current && state.current !== desc && state.current.blobUrl) {
+    try { URL.revokeObjectURL(state.current.blobUrl); } catch (e) {}
+    state.current.blobUrl = null;
+  }
   podPositionSkipAway(desc);
+  dayPositionSkipAway(desc); // v412 Fix 10: the day mirror of the skip-away save
   if (desc.kind === 'podcast') {
     state.pendingResume = desc.podPositionS > 0
       ? { episodeId: desc.episodeId, positionS: desc.podPositionS }
@@ -674,7 +823,23 @@ function startDesc(desc) {
     podPosSentKey = desc.podSeries + '/' + desc.seriesKey; podPosSentVal = -1;
   } else {
     podPosSentKey = null; podPosSentVal = -1;
+    // v412 Fix 10: the day track's saved position (the payload's
+    // dayPositions fold) enters the standing pendingResume seam —
+    // no new seek code. A carry naming a DIFFERENT episode is
+    // spent (its moment passed at the last start) and clears so
+    // the fold can apply; a carry naming THIS episode (Continue,
+    // the restored queue) stands untouched.
+    if (state.pendingResume && state.pendingResume.episodeId !== desc.episodeId) state.pendingResume = null;
+    if (!state.pendingResume) {
+      var dayPos = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
+      if (dayPos > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) };
+    }
+    dayPosSentKey = desc.episodeId; dayPosSentVal = -1;
   }
+  // v412 Fix 7: an error wait belonging to a previous track ends
+  // at this start — its line clears with the track it named.
+  if (state.errWaitKey && state.errWaitKey.indexOf(desc.episodeId + '@') !== 0) { state.errWaitKey = null; state.errWaitN = 0; }
+  paintWaitLine();
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
@@ -691,7 +856,7 @@ function startDesc(desc) {
     caches.open('opn-ext-audio-v1').then(function (c) { return c.match(podKey); })
       .then(function (resp) { return resp ? resp.blob() : null; })
       .catch(function () { return null; })
-      .then(function (blob) { if (blob) desc.url = URL.createObjectURL(blob); loadDescAudio(desc); });
+      .then(function (blob) { if (blob) desc.url = mintBlobUrl(desc, blob); loadDescAudio(desc); });
     return;
   }
   loadDescAudio(desc);
@@ -703,6 +868,7 @@ function playTrack(desc) {
   if (!desc || !desc.available || !desc.url) return;
   if (state.current && state.current.episodeId === desc.episodeId && transportPlaying()) { pauseTransport(); return; }
   state.queue = []; state.queueIdx = -1;
+  state.podRestoreProbe = null; // v412 Fix 9: a fresh play retires a standing podcast restore probe
   clearRestoredQueue(); // v355 §2.5: a single play retires any restored queue with the queue it clears
   startDesc(desc);
 }
@@ -741,6 +907,7 @@ function resumeCurrent() {
   if (!audioEl.paused) { reassertMediaSession(); return; }
   fadeRestore(); // v320 §2.6 restore point (3) stands: exactly one fade restore per system resume
   reassertMediaSession();
+  playIntent = true; // v412: a resume attempt is a standing intent to play (the error guard reads it)
   if (audioEl.currentSrc && !audioEl.ended) {
     // v397 §2.9: the resume outcome is REPORTED, not swallowed
     // — a rejection becomes the resumeFailed fact on the next
@@ -900,6 +1067,7 @@ function startQueue(descs, force) {
   // instead of pausing it.
   if (!force && state.queue.length && state.queueIdx >= 0 && state.current && transportPlaying()) { pauseTransport(); return; }
   clearRestoredQueue(); // v355 §2.5: a new queue replaces a restored one, flag with it
+  state.podRestoreProbe = null; // v412 Fix 9: a new queue birth retires a standing podcast restore probe
   state.queue = descs.slice();
   var idx = -1;
   for (var i = 0; i < state.queue.length; i++) {
@@ -1289,6 +1457,10 @@ audioEl.addEventListener('ended', function () {
   // transport calls, and a partial play fires no ended event.
   var endedDesc = state.current;
   markCompleted(state.current);
+  // v412 Fix 10: a day track that reaches its end clears its
+  // saved position in the same moment (a position of 0 deletes
+  // the row) — a finished prayer never resumes at its end.
+  if (endedDesc && endedDesc.kind !== 'podcast') writeDayPositionQuiet(endedDesc.episodeId, 0, 0);
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) {
     if (advanceQueue(1)) return;
@@ -1304,6 +1476,56 @@ audioEl.addEventListener('ended', function () {
   state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
 });
+/* v412: the standing intent to play — set at every play attempt
+   (loadDescAudio, resumeCurrent) and at every 'play' event,
+   cleared at every 'pause' event. The error listener's guard
+   reads it: an error with no standing intent (a paused track's
+   deferred load, the sleep hold) never enters recovery — the
+   v358 4-second window's job, done by intent instead of time. */
+var playIntent = false;
+/* v412 Fix 2: the stall watchdog — a mid-track stall (the
+   element stops advancing under a standing intent, short of an
+   error) is detected from the element's own signals: 'waiting' /
+   'stalled' stamp the position; a 1 s tick reads progress. A
+   stamp that stands 8 s without the position advancing 0.25 s
+   is a stall: ONE recovery cycle (re-resolve against the live
+   build and restart on the fresh URL, else reload the standing
+   URL — the error path's seam), and if a second cycle also
+   fails, the entry passes over as a missing entry passes over.
+   Progress (or a 'playing' event) clears the stamp and the
+   cycle count. */
+function stallKeyOf() { return state.current ? state.current.episodeId + '@' + state.queueIdx : ''; }
+function stallNote() {
+  if (!state.current || !playIntent) return;
+  var k = stallKeyOf();
+  if (state.stallKey === k) return;
+  state.stallKey = k; state.stallAt = Date.now(); state.stallPos = audioEl.currentTime || 0; state.stallCycles = 0;
+}
+function stallClear() { state.stallKey = null; state.stallAt = 0; state.stallCycles = 0; }
+function stallTick() {
+  if (!state.stallKey || !state.current) return;
+  if (state.stallKey !== stallKeyOf()) { stallClear(); return; }
+  if ((audioEl.currentTime || 0) > (state.stallPos || 0) + 0.25) { stallClear(); return; }
+  if (Date.now() - (state.stallAt || 0) < 8000) return;
+  if ((state.stallCycles || 0) >= 1) {
+    var cur = state.current;
+    stallClear();
+    flashPassOver(cur);
+    if (state.queue.length) advanceQueue(1);
+    else { try { audioEl.pause(); } catch (e) {} setPlaybackState('paused'); }
+    return;
+  }
+  state.stallCycles = (state.stallCycles || 0) + 1;
+  state.stallAt = Date.now(); state.stallPos = audioEl.currentTime || 0;
+  var cur2 = state.current;
+  var live = queueLiveDesc(cur2);
+  if (live && live.url && live.url !== cur2.url) {
+    if (state.queue.length && state.queue[state.queueIdx]) state.queue[state.queueIdx] = live;
+    startDesc(live);
+  } else {
+    loadDescAudio(cur2);
+  }
+}
 function handleAudioError() {
   // v358 defect fix, second half: a start whose URL cannot play
   // (a refused enclosure read, a torn stream) fires 'error', never
@@ -1323,13 +1545,15 @@ function handleAudioError() {
   if (live && live.url && live.url !== cur.url) {
     if (inQueue) state.queue[state.queueIdx] = live;
     state.errWaitKey = null; state.errWaitN = 0;
+    paintWaitLine(); // v412 Fix 7: the wait resolved — its line clears
     startDesc(live);
     return;
   }
   var key = cur.episodeId + '@' + (inQueue ? state.queueIdx : 'single');
   var tries = state.errWaitKey === key ? (state.errWaitN || 0) + 1 : 1;
   state.errWaitKey = key; state.errWaitN = tries;
-  if (tries <= 20) {
+  paintWaitLine(); // v412 Fix 7: the wait stands — its line shows
+  if (tries <= 4) { // v412 Fix 7: the error wait is bounded at 4 tries (was 20)
     var wantId = cur.episodeId, wantIdx = state.queueIdx;
     setTimeout(function () {
       if (state.current && state.current.episodeId === wantId && state.queueIdx === wantIdx && audioEl.error) handleAudioError();
@@ -1337,19 +1561,28 @@ function handleAudioError() {
     return;
   }
   state.errWaitKey = null; state.errWaitN = 0;
+  paintWaitLine(); // v412 Fix 7: the wait resolved — its line clears
+  flashPassOver(cur); // v412 Fix 7: the pass-over shows why on the entry's card
   if (inQueue) { advanceQueue(1); return; }
   state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
 }
 audioEl.addEventListener('error', function () {
-  // Only a start's own failure belongs here (the window is the
-  // start's, recorded in startDesc); a paused load standing by
-  // (loadResume, the sleep hold) errors outside it and stands.
-  if (!state.current || !state.lastStartAt || Date.now() - state.lastStartAt > 4000) return;
+  // v412 (Fixes 2/3): the standing-intent guard replaces the v358
+  // 4-second window. An error belongs to recovery only while an
+  // intent to play stands — a start attempt or a playing track
+  // that has not been paused since. A paused load standing by
+  // (loadResume, the sleep hold) carries no intent and its error
+  // stands unacted, exactly as the window used to leave it.
+  if (!state.current || !playIntent) return;
   handleAudioError();
 });
+audioEl.addEventListener('waiting', function () { stallNote(); }); // v412 Fix 2
+audioEl.addEventListener('stalled', function () { stallNote(); }); // v412 Fix 2
+audioEl.addEventListener('playing', function () { stallClear(); }); // v412 Fix 2: resumed progress clears the stamp
 audioEl.addEventListener('pause', function () { saveResume(); saveQueueSnapshot(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
-audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); pushNativeState(false); });
+audioEl.addEventListener('play', function () { playIntent = true; state.startRetryKey = null; setPlaybackState('playing'); updateDock(); pushNativeState(false); }); // v412: a play event stands the intent + clears Fix 3's retry key
+audioEl.addEventListener('pause', function () { playIntent = false; }); // v412: any pause ends the standing intent (user pause, sleep stop, track end alike)
 audioEl.addEventListener('pause', function () { updateDock(); });
 audioEl.addEventListener('pause', function () { pushNativeState(false); }); // v377 B2: any element pause states the face
 audioEl.addEventListener('pause', function () {
@@ -1360,16 +1593,17 @@ audioEl.addEventListener('pause', function () {
   reassertMediaSession();
 });
 audioEl.addEventListener('pause', function () { podPositionSaveCurrent(); }); // v395 §2.6: a podcast pause is a position save event
+audioEl.addEventListener('pause', function () { dayPositionSaveCurrent(); }); // v412 Fix 10: a day pause is a position save event (the mirror)
 document.addEventListener('visibilitychange', function () {
   // v355 §2.2 trigger 5: the freeze that precedes a discard is a
   // last-chance snapshot write (the v346 re-assert below is
   // untouched — the hook rides the same event, on the way out).
-  if (document.visibilityState === 'hidden') { saveQueueSnapshot(); podPositionSaveCurrent(); } // v395 §2.6: a hide is a position save event
+  if (document.visibilityState === 'hidden') { saveQueueSnapshot(); podPositionSaveCurrent(); dayPositionSaveCurrent(); } // v395 §2.6 + v412 Fix 10: a hide is a position save event
   // v346: return to the foreground (including a freeze/thaw) re-files
   // the session — metadata, handlers, state, position.
   if (document.visibilityState === 'visible') reassertMediaSession();
 });
-window.addEventListener('pagehide', function () { saveQueueSnapshot(); podPositionSaveCurrent(); }); // v355 §2.2 trigger 5: the discard moment itself · v395 §2.6: the close save rides the same moment
+window.addEventListener('pagehide', function () { saveQueueSnapshot(); podPositionSaveCurrent(); dayPositionSaveCurrent(); }); // v355 §2.2 trigger 5: the discard moment itself · v395 §2.6 + v412 Fix 10: the close save rides the same moment
 var lastResumeSave = 0;
 var lastQueueSave = 0;
 audioEl.addEventListener('timeupdate', function () {
@@ -1381,6 +1615,7 @@ audioEl.addEventListener('timeupdate', function () {
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
   if (now - lastQueueSave > 5000) { lastQueueSave = now; saveQueueSnapshot(); }
   if (now - podPosLastTick > 15000) { podPosLastTick = now; podPositionTick(); } // v395 §2.6: the 15 s position tick
+  if (now - dayPosLastTick > 15000) { dayPosLastTick = now; dayPositionTick(); } // v412 Fix 10: the day mirror tick, same cadence
 });
 audioEl.addEventListener('seeked', updatePositionState);
 audioEl.addEventListener('seeked', function () { pushNativeState(false); }); // v377 B2: seek is a push trigger
@@ -1432,6 +1667,8 @@ function updateDock() {
   document.getElementById('dock-meta').textContent = cur.block || state.dateLabel || '';
   document.getElementById('dock-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
   document.getElementById('dock-next').disabled = !state.queue.length;
+  document.getElementById('dock-prev').disabled = !state.queue.length; // v412 Fix 8: Previous stands while a queue stands (enabled at the head — the rule restarts)
+  document.getElementById('dock-rate').textContent = (state.rate || 1) + '×'; // v412 Fix 13: the cycler's label reads the one global rate
   syncAutoplayToggles(); // v358: the dock toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the dock intentions switch follows the store
   dock.classList.remove('hidden');
@@ -1475,17 +1712,45 @@ function updateSleepLabel() {
   var nb = document.getElementById('np-sleep');
   if (nb) nb.textContent = sleepLabel();
 }
+function nativeSleepArm(epochMs) {
+  // v412 Fix 14 (page side): a minutes arm ALSO stands natively —
+  // the shell's service holds the deadline across a page kill and
+  // stops playback at it; its own backstop covers a page that
+  // never wakes. On the web (no bridge) this is a no-op and the
+  // page timer stands alone, exactly as before.
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.armSleepDeadline) return;
+    var r = p.armSleepDeadline({ epochMs: epochMs });
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) {}
+}
+function nativeSleepClear() {
+  // v412 Fix 14 (page side): the native deadline clears with the
+  // page's — disarm, re-arm, track arm, and the timed stop itself
+  // all pass through the functions below, so no stale native
+  // deadline can outlive the page's state.
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.clearSleepDeadline) return;
+    var r = p.clearSleepDeadline({});
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) {}
+}
 function armSleepMinutes(n) {
   if (fade.started) fadeRestore();
   state.sleep = { mode: 'minutes', presetMin: n, deadlineMs: Date.now() + n * 60000 };
+  nativeSleepArm(state.sleep.deadlineMs); // v412 Fix 14
   updateSleepLabel();
 }
 function armSleepTrack() {
   if (fade.started) fadeRestore();
   state.sleep = { mode: 'track' };
+  nativeSleepClear(); // v412 Fix 14: a track arm carries no deadline — any standing native deadline clears
   updateSleepLabel();
 }
-function disarmSleep() { state.sleep = { mode: 'off' }; }
+// v412 Fix 14: the native clear rides every disarm (incl. fireTimedStop + sleepTrackEnd).
+function disarmSleep() { state.sleep = { mode: 'off' }; nativeSleepClear(); }
 function fireTimedStop() {
   // §2.4, in order: pause (the pause handler saves the resume point;
   // the timer adds no save of its own) · disarm · fade restore · label.
@@ -1604,6 +1869,7 @@ window.__opnSleep = {
   disarm: function () { disarmSleep(); updateSleepLabel(); },
 };
 setInterval(sleepTick, 1000);
+setInterval(stallTick, 1000); // v412 Fix 2: the stall watchdog's 1 s progress read
 
 // v346: ONE module-level handler table, built once — boot and every
 // re-assert register this same object, so the table's identity (and
@@ -1611,15 +1877,15 @@ setInterval(sleepTick, 1000);
 var mediaHandlers = {
   play: function () { resumeCurrent(); }, // v346 §2.4: the app's resume seam (carries the v320 §2.6 restore point (3) fade restore)
   pause: function () { pauseTransport(); },
-  previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
+  previoustrack: function () { previousWithRule(); }, // v412 Fix 8: the web session reads the one Previous rule
   nexttrack: function () { if (state.queue.length) advanceQueue(1); },
   seekto: function (details) {
     if (details.seekTime == null) return;
     if (details.fastSeek && typeof audioEl.fastSeek === 'function') audioEl.fastSeek(details.seekTime);
     else audioEl.currentTime = details.seekTime;
   },
-  seekforward: function (details) { audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + ((details && details.seekOffset) || 10)); },
-  seekbackward: function (details) { audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) - ((details && details.seekOffset) || 10)); },
+  seekforward: function (details) { seekBy((details && details.seekOffset) || 10); }, // v412 Fix 12: the one seek-step implementation
+  seekbackward: function (details) { seekBy(-((details && details.seekOffset) || 10)); }, // v412 Fix 12
 };
 function registerMediaHandlers() {
   if (oraInShell()) return; // v377 B6: no web action handlers in the shell — transport arrives over the bridge
@@ -1839,10 +2105,12 @@ document.querySelectorAll('#tabbar .tab').forEach(function (b) {
 });
 document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
+document.getElementById('dock-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the dock gains Previous, reading the one rule
+document.getElementById('dock-rate').addEventListener('click', function () { cycleRate(); }); // v412 Fix 13: the dock gains the rate cycler
 document.getElementById('dock-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
 document.getElementById('dock-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
 document.getElementById('dock').addEventListener('click', function (ev) {
-  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-autoplay') || ev.target.closest('#dock-intentions'))) return;
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-prev') || ev.target.closest('#dock-rate') || ev.target.closest('#dock-autoplay') || ev.target.closest('#dock-intentions'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
@@ -1931,6 +2199,7 @@ function renderPodcasts() {
     armPodScroll(rec.scroll);
     api('/api/player/podcasts?series=' + encodeURIComponent(rec.series)).then(function (res) {
       state.podcasts = res;
+      tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
       if (state.tab === 'podcasts' && podLevel === 'series' && state.podcastsReturn === rec) { paintPodcasts(); armPodScroll(rec.scroll); }
     }).catch(function () {});
     return;
@@ -1983,6 +2252,7 @@ function openPodSeries(key) {
   view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="meta">Loading...</p>';
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
+    tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
     if (state.tab === 'podcasts') paintPodcasts();
   }).catch(function (e) {
     if (state.tab === 'podcasts') view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">' + esc(e.message) + '</p>';
@@ -2238,6 +2508,69 @@ function podPositionSkipAway(nextDesc) {
   var pos = Math.floor(audioEl.currentTime || 0);
   if (!(pos > 0)) return;
   writePodPositionQuiet(out.podSeries, out.seriesKey, pos, out.durationS || 0);
+}
+/* ---------------- Day positions (v412 Fix 10) ----------------
+   The day mirror of the podcast position store: a partway DAY
+   track (a prayer, an external) saves its position to the
+   day_positions table through POST /api/player/day-position and
+   reads it back in the day payload's dayPositions fold, where
+   startDesc hands it to the pendingResume seam — so a day track
+   left partway resumes where it stopped, exactly as a podcast
+   does. Same cadence points as the podcast store (the 15 s tick,
+   pause, hide, pagehide, skip-away), same guards (never at the
+   end, never at zero). A position of 0 deletes the row — fired
+   by the ended handler, so a finished prayer holds no position.
+   The client mechanics are a direct post (no offline coalescing
+   slot — the day store's mirror is the table, per §2.8); a
+   failed post degrades to no save and never throws into a
+   playback path. The opn-resume-v312 store keeps only
+   Continue's carry job (§2.8). */
+var dayPosSentKey = null;
+var dayPosSentVal = -1;
+var dayPosLastTick = 0;   // the timeupdate throttle for the 15 s day tick
+function writeDayPositionQuiet(episodeId, positionS, durationS) {
+  if (!episodeId) return;
+  var pos = Math.floor(positionS || 0);
+  if (dayPosSentKey === episodeId) dayPosSentVal = pos;
+  post('/api/player/day-position', { episodeId: episodeId, date: presentedDateStr(), positionS: pos, durationS: Math.floor(durationS || 0) }).catch(function () {});
+}
+function dayPositionTick() {
+  // The tick's attempt — only while a day track is current and
+  // playing, and only when the position has moved >= 5 s since
+  // the last value sent for this episode (the podcast rule).
+  var cur = state.current;
+  if (!cur || cur.kind === 'podcast') return;
+  if (audioEl.paused || audioEl.ended) return;
+  var pos = Math.floor(audioEl.currentTime || 0);
+  var last = (dayPosSentKey === cur.episodeId) ? dayPosSentVal : -1;
+  if (Math.abs(pos - last) < 5) return;
+  writeDayPositionQuiet(cur.episodeId, pos, cur.durationS || 0);
+}
+function dayPositionSaveCurrent() {
+  // The event saves — pause · visibility hide · pagehide. The
+  // podcast guards stand: the ended path never saves (its clear
+  // is the ended handler's own act), and a position of 0 is "not
+  // started" — nothing stands to save.
+  var cur = state.current;
+  if (!cur || cur.kind === 'podcast') return;
+  if (audioEl.ended) return;
+  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
+  var pos = Math.floor(audioEl.currentTime || 0);
+  if (!(pos > 0)) return;
+  writeDayPositionQuiet(cur.episodeId, pos, cur.durationS || 0);
+}
+function dayPositionSkipAway(nextDesc) {
+  // Skip-away — called at the head of startDesc while the
+  // OUTGOING day track and its position still stand (the podcast
+  // mirror, guard for guard).
+  var out = state.current;
+  if (!out || out.kind === 'podcast') return;
+  if (nextDesc && nextDesc.episodeId === out.episodeId) return;
+  if (audioEl.ended) return;
+  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
+  var pos = Math.floor(audioEl.currentTime || 0);
+  if (!(pos > 0)) return;
+  writeDayPositionQuiet(out.episodeId, pos, out.durationS || 0);
 }
 var podPosDraining = false;
 function drainPodPositions() {
@@ -3427,7 +3760,7 @@ function openNowPlaying() {
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
-    + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
+    + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-autoplay">Autoplay On</button><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue"></div>'
@@ -3435,7 +3768,9 @@ function openNowPlaying() {
   document.body.appendChild(sheet);
   sheet.querySelector('#np-min').addEventListener('click', function () { sheet.remove(); });
   sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
-  sheet.querySelector('#np-prev').addEventListener('click', function () { advanceQueue(-1); });
+  sheet.querySelector('#np-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the one rule
+  sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
+  sheet.querySelector('#np-fwd10').addEventListener('click', function () { seekBy(10); }); // v412 Fix 12
   sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
   sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
   sheet.querySelector('#np-sleep').addEventListener('click', function () { openSleepSheet(); });
@@ -3495,7 +3830,7 @@ function updateNowPlaying() {
     else { intEl.textContent = ''; intEl.style.display = 'none'; }
   }
   sheet.querySelector('#np-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
-  sheet.querySelector('#np-prev').disabled = !state.queue.length || state.queueIdx <= 0;
+  sheet.querySelector('#np-prev').disabled = !state.queue.length; // v412 Fix 8: enabled at the queue head (the rule restarts the track there)
   sheet.querySelector('#np-next').disabled = !state.queue.length;
   sheet.querySelector('#np-speed').textContent = state.rate + '×';
   sheet.querySelector('#np-sleep').textContent = sleepLabel();
@@ -4045,6 +4380,9 @@ function nativeStatePayload(stopped) {
   // the key is omitted otherwise, so every non-failure push
   // keeps its standing byte shape.
   if (resumeFailedPending) payload.resumeFailed = true;
+  // v412 Fix 3: the start-failure fact rides the same way — only
+  // while it stands, omitted otherwise (byte shape preserved).
+  if (startFailedPending) payload.startFailed = true;
   return payload;
 }
 function pushNativeState(stopped) {
@@ -4061,6 +4399,7 @@ function pushNativeState(stopped) {
     // next push; a report lost past this point degrades to
     // today's silence, never worse.
     if (payload.resumeFailed) resumeFailedPending = false;
+    if (payload.startFailed) startFailedPending = false; // v412 Fix 3: one-shot, as above
     if (r && r.catch) r.catch(function () {});
   } catch (e) { /* the bridge can never fail playback */ }
 }
@@ -4071,6 +4410,39 @@ var resumeFailedPending = false;
 function noteResumeFailed() {
   resumeFailedPending = true;
   pushNativeState(false);
+}
+/* v412 Fix 3: a rejected START is reported on the same standing
+   push channel as a rejected resume — the startFailed fact, one
+   shot, consumed by the push that carries it. */
+var startFailedPending = false;
+function noteStartFailed() {
+  startFailedPending = true;
+  pushNativeState(false);
+}
+function onStartRejected(desc) {
+  // v412 Fix 3: the start rejection's recovery — report the fact,
+  // then recover ONCE: the descriptor re-resolves against the
+  // live build (queueLiveDesc — the standing seam) and restarts.
+  // A second rejection for the SAME start (episode at queue
+  // index; a successful 'play' clears the key) passes over
+  // exactly as a missing entry passes over: the queue advances
+  // in a queue; a single play stops paused with its card showing
+  // why. A rejection for a descriptor that is no longer current
+  // is not this start's failure and is ignored.
+  if (!desc || state.current !== desc) return;
+  noteStartFailed();
+  var key = desc.episodeId + '@' + (state.queue.length ? state.queueIdx : 'single');
+  if (state.startRetryKey === key) {
+    state.startRetryKey = null;
+    flashPassOver(desc);
+    if (state.queue.length) { advanceQueue(1); return; }
+    try { audioEl.pause(); } catch (e) {}
+    setPlaybackState('paused');
+    return;
+  }
+  state.startRetryKey = key;
+  var live = queueLiveDesc(desc);
+  startDesc(live && live.url ? live : desc);
 }
 /* B3 commands, executed through the app's own transport. After
    a state-bearing command the client pushes fresh state — the
@@ -4083,11 +4455,31 @@ function bridgeDuck(on) {
   bridgeDucked = !!on;
   try { audioEl.volume = on ? (fade.base || 1) * 0.2 : (fade.base || 1); } catch (e) {}
 }
-function bridgePrevious() {
-  // B3 previous: restart the track if > 3 s in, else the
-  // previous queue entry — the rule reads the element.
+function previousWithRule() {
+  // v412 Fix 8: THE Previous rule — one implementation for every
+  // surface (the bridge command, the web media session, Now
+  // Playing, the dock): with a queue standing, > 3 s in restarts
+  // the track, else the previous queue entry. With no queue
+  // standing, Previous is inert on every surface — a single play
+  // has no previous to go to (§1.2's decided end state; the
+  // bridge's former single-play restart retires into the one
+  // rule). The rule reads the element.
+  if (!state.queue.length) return;
   if (state.current && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
-  if (state.queue.length) advanceQueue(-1);
+  advanceQueue(-1);
+}
+function seekBy(deltaS) {
+  // v412 Fix 12: the one seek-step implementation — the standing
+  // system handlers' clamp math, extracted whole: forward clamps
+  // at the duration, backward at zero. The Now Playing ±10 s
+  // buttons call it with ±10; the system handlers pass their
+  // seekOffset through it unchanged.
+  if (deltaS >= 0) audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + deltaS);
+  else audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) + deltaS);
+}
+function bridgePrevious() {
+  // B3 previous — v412 Fix 8: the bridge reads the one rule.
+  previousWithRule();
 }
 function bridgeStop() {
   // B3 stop: stop playback and clear the standing transport —
@@ -4440,7 +4832,7 @@ function ownFetchAudio(cacheKey, enclosureUrl, done) {
       var put = ('caches' in window)
         ? caches.open('opn-ext-audio-v1').then(function (c) { return c.put(cacheKey, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } })); }).catch(function () {})
         : Promise.resolve();
-      return put.then(function () { finish(URL.createObjectURL(blob)); });
+      return put.then(function () { finish(mintBlobUrl(ownBlobOwner(cacheKey), blob)); }); // v412 Fix 11: the cache key's owner holds the mint
     }).catch(function () { finish(null); });
   };
   if (!('caches' in window)) { download(); return; }
@@ -4454,7 +4846,7 @@ function ownFetchAudio(cacheKey, enclosureUrl, done) {
     resp.blob().then(function (blob) {
       if (settled) return;
       settled = true; clearTimeout(fallback);
-      finish(URL.createObjectURL(blob));
+      finish(mintBlobUrl(ownBlobOwner(cacheKey), blob)); // v412 Fix 11: the cache key's owner holds the mint
     });
   }).catch(function () { if (!settled) { settled = true; clearTimeout(fallback); download(); } });
 }
@@ -4898,7 +5290,8 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       var attempt = tryRoute(routes[0]);
       if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
       attempt.then(function (blob) {
-        settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+        var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
+        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
       }).catch(function () {
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
       });
@@ -4927,7 +5320,8 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         resp.blob().then(function (blob) {
           if (done) return;
           done = true; clearTimeout(fallback);
-          settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+          var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
+          settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
         });
       }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownload(slot, meta); } });
     };

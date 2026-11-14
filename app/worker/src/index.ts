@@ -618,10 +618,22 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
     }
     return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [] as unknown[], trackCount: 0 };
   });
+  // v412 Fix 10: the day-positions fold — the presented day's
+  // partway day-track positions ride the payload beside the
+  // blocks, keyed by episode id, exactly as the podcast payload
+  // folds its positions into its entries. The client hands each
+  // to startDesc's pendingResume seam. An absent table (pre-0020
+  // rollback posture) reads as an empty fold, never an error.
+  let dayPositions: Record<string, number> = {};
+  try {
+    const dayPosRows = await env.DB.prepare("SELECT episode_id, position_s FROM day_positions WHERE date=?")
+      .bind(presented).all<{ episode_id: string; position_s: number }>();
+    dayPositions = Object.fromEntries((dayPosRows.results ?? []).map((r) => [r.episode_id, r.position_s]));
+  } catch { dayPositions = {}; }
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
-    version: settings.version, introTexts, blocks,
+    version: settings.version, introTexts, blocks, dayPositions,
   };
 }
 
@@ -1786,6 +1798,42 @@ export default {
             `INSERT INTO podcast_positions (series, seq_key, position_s, duration_s, updated_at) VALUES (?, ?, ?, ?, ?)
              ON CONFLICT(series, seq_key) DO UPDATE SET position_s=excluded.position_s, duration_s=excluded.duration_s, updated_at=excluded.updated_at`,
           ).bind(posDef.key, posSeqKey, posVal, posDur, nowISO()).run();
+          return json({ ok: true });
+        }
+        if (seg[2] === "day-position" && request.method === "POST") {
+          // v412 Fix 10: the day-position save — the day mirror of
+          // the podcast position route above, session-only like it.
+          // The row keys on (date, episode_id): the date is the
+          // track's presented day, sent by the client and validated
+          // to the date shape (an absent or malformed date falls
+          // back to the Chicago calendar day — the presented day
+          // the payload itself serves). The position clamps to the
+          // duration the client saved against when one stands (the
+          // day store has no snapshot to trust instead — §2.8's
+          // mirror carries the client's duration, as the podcast
+          // route does for duration-less entries). A position of 0
+          // deletes any standing row instead of storing a zero row:
+          // zero is "not started" — and it is how the ended
+          // handler clears a finished prayer's position. The write
+          // is an upsert; newest arrival wins.
+          const body = await request.json().catch(() => ({})) as { episodeId?: string; date?: string; positionS?: number; durationS?: number };
+          const dayEpId = String(body.episodeId ?? "");
+          if (!dayEpId || dayEpId.length > 200) return err(400, "bad episodeId");
+          const dayDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date ?? "")) ? String(body.date) : prayerChicagoNow().date;
+          let dayPosVal = Math.floor(Number(body.positionS ?? 0));
+          if (!Number.isFinite(dayPosVal) || dayPosVal < 0) dayPosVal = 0;
+          let dayPosDur = Math.floor(Number(body.durationS ?? 0));
+          if (!Number.isFinite(dayPosDur) || dayPosDur < 0) dayPosDur = 0;
+          if (dayPosDur > 0 && dayPosVal > dayPosDur) dayPosVal = dayPosDur;
+          if (dayPosVal === 0) {
+            await env.DB.prepare("DELETE FROM day_positions WHERE date=? AND episode_id=?")
+              .bind(dayDate, dayEpId).run();
+            return json({ ok: true });
+          }
+          await env.DB.prepare(
+            `INSERT INTO day_positions (date, episode_id, position_s, duration_s, updated_at) VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT(date, episode_id) DO UPDATE SET position_s=excluded.position_s, duration_s=excluded.duration_s, updated_at=excluded.updated_at`,
+          ).bind(dayDate, dayEpId, dayPosVal, dayPosDur, nowISO()).run();
           return json({ ok: true });
         }
         if (seg[2] === "audio" && request.method === "GET") {
