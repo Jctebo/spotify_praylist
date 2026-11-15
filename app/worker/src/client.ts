@@ -2134,7 +2134,7 @@ var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
 var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone' };
 var sideScroll = {};
 function tabSideCfg(tab) {
-  if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination'], ['confession', 'Confession']] };
+  if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination'], ['confession', 'Confession'], ['direction', 'Spiritual Direction']] };
   if (tab === 'wallpaper') return { key: TAB_SIDE_WALLPAPER_KEY, def: 'phone', sides: [['phone', 'Phone'], ['watch', 'Watch']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Prayers'], ['intentions', 'Intentions']] };
 }
@@ -2185,7 +2185,10 @@ function wireSideToggle(tab) {
 function paintConscienceBar(side) {
   var host = document.getElementById('consbar');
   if (!host) return;
-  host.innerHTML = iosBarHtml({ title: side === 'confession' ? 'Confession' : 'Examination' });
+  // v453 §2: the third side reads its own title — the bar
+  // carries the title alone for every side (the v450 rule).
+  var titles = { examination: 'Examination', confession: 'Confession', direction: 'Spiritual Direction' };
+  host.innerHTML = iosBarHtml({ title: titles[side] || 'Examination' });
 }
 /* v448: the Prayers tab's pushed-page bar — the parallel
    host to #consbar, filled by the block + episodes paints
@@ -2335,7 +2338,7 @@ function armPodScroll(y) {
 function paintTabSide(tab, side) {
   if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
   else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
-  else { paintConscienceBar(side); if (side === 'confession') renderConfessionContent(); else renderExaminationContent(); }
+  else { paintConscienceBar(side); if (side === 'confession') renderConfessionContent(); else if (side === 'direction') renderDirectionContent(); else renderExaminationContent(); }
 }
 function switchSide(tab, side) {
   if (!document.getElementById('sidehost')) return;
@@ -8546,8 +8549,8 @@ function renderExaminationContent() {
       // Next section beside it reads the more distinct.
       html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next" aria-label="Next question"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>&#8250;</button><button class="btn" id="deep-next-cat"' + (cats.indexOf(cat) + 1 >= cats.length ? ' disabled' : '') + '>Next section</button></div>';
     } else html += '<p class="meta">No prompts in this category.</p>';
-    html += '<div class="card"><h3>Add your own — ' + esc(cat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
-    html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
+    html += '<div class="card"><h3>Add your own — ' + esc(cat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p>' + kindSwitchHtml('kind-custom') + '<div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
+    html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p>' + kindSwitchHtml('kind-free') + '<div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
     if (!closed) html += '<button class="btn" id="run-close" style="width:100%">Close tonight&rsquo;s examination</button>';
     else html += '<p class="meta">Tonight&rsquo;s run is closed. Its entries stand in Confession preparation.</p>';
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
@@ -8581,10 +8584,52 @@ function renderExaminationContent() {
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
 function entriesHtml(list) { return (list || []).map(entryHtml).join(''); }
-function entryHtml(e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>'; }
+function entryHtml(e) {
+  // v453 §2 (D2 A): a reflection stands in place in the
+  // reflection dress; a sin renders as before.
+  if (e.kind === 'reflection') return reflectionEntryHtml(e, false);
+  return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>';
+}
+/* v453 §2: the reflection dress — the gold-left card with
+   the REFLECTION tag (the package's Screen B form). One
+   renderer serves both seats: the Examination in place
+   (withCategory false — time + the remove link) and the
+   Spiritual Direction page (withCategory true — category
+   + time, no remove: §1 consequence 3). */
+function reflectionEntryHtml(e, withCategory) {
+  return '<div class="entry refl"><span class="refltag">REFLECTION</span><div>' + esc(e.text) + '</div><div class="meta">'
+    + (withCategory ? esc(e.category || '') + ' · ' : '')
+    + esc((e.created_at || '').slice(11, 16))
+    + (withCategory ? '' : ' <a href="#" data-del-entry="' + e.id + '">remove</a>')
+    + '</div></div>';
+}
+/* v453 §2 (D1 A): ONE kind-switch fragment for all three
+   entry forms — a two-way segmented control in the standing
+   .segtoggle dress, Sin standing selected. Each form's save
+   reads its own switch by id (kindOf) and carries the
+   standing value as the POST's kind. */
+function kindSwitchHtml(id) {
+  return '<div class="segtoggle kindswitch" id="' + id + '">'
+    + '<button data-kind="sin" class="active">Sin</button>'
+    + '<button data-kind="reflection">Reflection</button></div>';
+}
+function kindOf(id) {
+  var el = document.getElementById(id);
+  return (el && el.querySelector('[data-kind="reflection"].active')) ? 'reflection' : 'sin';
+}
+function wireKindSwitches() {
+  view.querySelectorAll('.kindswitch').forEach(function (sw) {
+    sw.querySelectorAll('[data-kind]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        sw.querySelectorAll('[data-kind]').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+  });
+}
 function entryFieldHtml(p, closed) {
   if (closed) return '';
-  return '<div class="entryform hidden" id="ef-' + p.id + '"><textarea id="et-' + p.id + '" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-et-' + p.id + '"></p><div style="margin-top:6px"><button class="btn gold small" data-save-entry="' + p.id + '">Save entry</button></div></div>';
+  return '<div class="entryform hidden" id="ef-' + p.id + '"><textarea id="et-' + p.id + '" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-et-' + p.id + '"></p>' + kindSwitchHtml('kind-ef-' + p.id) + '<div style="margin-top:6px"><button class="btn gold small" data-save-entry="' + p.id + '">Save entry</button></div></div>';
 }
 function wireExamination(data) {
   var run = data.run;
@@ -8628,7 +8673,7 @@ function wireExamination(data) {
       var text = document.getElementById('et-' + pid).value.trim();
       if (!text) { fieldNote('fn-et-' + pid, 'Write the entry first.'); return; }
       var prompt = (data.prompts || []).filter(function (p) { return p.id === pid; })[0];
-      post('/api/exam/entries', { runId: run.id, promptId: pid, category: prompt.category, text: text }).then(function () {
+      post('/api/exam/entries', { runId: run.id, promptId: pid, category: prompt.category, text: text, kind: kindOf('kind-ef-' + pid) }).then(function () {
         placeSkip['et-' + pid] = true; // v411 §2.10 (2.2e): the saved draft drops at the switchSide capture
         renderExamination();
       });
@@ -8638,7 +8683,7 @@ function wireExamination(data) {
   if (ca) ca.addEventListener('click', function () {
     var text = document.getElementById('custom-text').value.trim();
     if (!text) { fieldNote('fn-custom-text', 'Write the entry first.'); return; }
-    post('/api/exam/entries', { runId: run.id, promptId: null, category: cat, text: text }).then(function () {
+    post('/api/exam/entries', { runId: run.id, promptId: null, category: cat, text: text, kind: kindOf('kind-custom') }).then(function () {
       placeSkip['custom-text'] = true;
       renderExamination();
     });
@@ -8647,11 +8692,12 @@ function wireExamination(data) {
   if (fa) fa.addEventListener('click', function () {
     var text = document.getElementById('free-text').value.trim();
     if (!text) { fieldNote('fn-free-text', 'Write the entry first.'); return; }
-    post('/api/exam/entries', { runId: run.id, promptId: null, category: 'Anything else', text: text }).then(function () {
+    post('/api/exam/entries', { runId: run.id, promptId: null, category: 'Anything else', text: text, kind: kindOf('kind-free') }).then(function () {
       placeSkip['free-text'] = true;
       renderExamination();
     });
   });
+  wireKindSwitches(); // v453 §2: the three entry forms' kind switches
   wireFieldNotes();
   view.querySelectorAll('[data-del-entry]').forEach(function (a) {
     a.addEventListener('click', function (ev) { ev.preventDefault(); api('/api/exam/entries/' + a.getAttribute('data-del-entry'), { method: 'DELETE' }).then(renderExamination); });
@@ -8690,13 +8736,64 @@ function openPromptsEditor(prompts) {
 
 /* ---------------- Confession ---------------- */
 function renderConfession() { switchSide('conscience', 'confession'); }
+function renderDirection() { switchSide('conscience', 'direction'); }
+/* v453 §2: the standing long date form, client-side — the
+   same construction prayerDateLabel uses server-side
+   (weekday + month + day + year, America/Chicago). */
+function longDateLabel(date) {
+  var p = (date || '').split('-').map(Number);
+  if (p.length !== 3 || !p[0]) return date || '';
+  var dt = new Date(Date.UTC(p[0], p[1] - 1, p[2], 12));
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(dt);
+}
+/* v453 §2 (Amendment 2): the third Conscience side — the
+   reflections gather here, all of them, across passes,
+   grouped by day, newest day first, as Confession gathers
+   the sins. No delete stands on this page (§1 consequence
+   3). The PIN refusal routes through the standing gate as
+   the other sides do. */
+function renderDirectionContent() {
+  view.innerHTML = '<h1 class="screen">Spiritual Direction</h1>' + skelHtml('conscience');
+  api('/api/exam/reflections').then(function (d) {
+    var html = '<div class="row"><div class="grow"><h1 class="screen">Spiritual Direction</h1><p class="sub">reflections gathered from your examinations</p></div></div>';
+    var groups = d.groups || [];
+    if (!groups.length) html += '<div class="card"><p class="meta">No reflections yet. In the Examination, the entry form\'s switch marks an entry as a reflection; it gathers here.</p></div>';
+    html += groups.map(function (g) {
+      return '<h2 class="sectionhead">' + esc(longDateLabel(g.date)) + '</h2><div class="card">' + g.entries.map(function (e) { return reflectionEntryHtml(e, true); }).join('') + '</div>';
+    }).join('');
+    html += '<p class="about">Reflections are the examination entries you marked as reflections — counsel matter, not confession matter. They are never read by any job and never leave this app.</p>';
+    view.innerHTML = html;
+  }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
+}
 function renderConfessionContent() {
   view.innerHTML = '<h1 class="screen">Confession</h1>' + skelHtml('conscience');
   api('/api/confession').then(function (c) {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Confession</h1><p class="sub">preparation and guide</p></div><button class="btn ghost small" id="cf-gear">Guide</button></div>';
     html += '<div class="card"><h3>' + esc(c.elapsed || '') + '</h3>' + (c.lastConfession ? '<p class="meta">Last confession: ' + esc(c.lastConfession.date) + (c.lastConfession.note ? ' — ' + esc(c.lastConfession.note) : '') + '</p>' : '<p class="meta">No confession recorded yet in this app.</p>') + '</div>';
     html += '<h2 class="sectionhead">THE GUIDE</h2>';
-    html += (c.guide || []).map(function (g) { return '<div class="card"><h3>' + g.step_no + ' · ' + esc(g.title) + '</h3><p style="margin:0;line-height:1.55;font-size:15px">' + esc(g.body) + '</p></div>'; }).join('');
+    // v453 §2 (Amendment 1 + D3 A): step 2 paints COMPOSED —
+    // the short preamble + the sins. The sins are the standing
+    // preparation groups, moved into the step (the standalone
+    // PREPARATION section below retires whole, so the sins
+    // stand exactly once on the page). Every other step
+    // paints its stored body as before.
+    var confTotal = 0; (c.prep || []).forEach(function (g) { confTotal += g.entries.length; });
+    var confEntryText = {};
+    (c.prep || []).forEach(function (g) { g.entries.forEach(function (e) { confEntryText[e.id] = e.text; }); });
+    function confPrepGroupsHtml() {
+      return (c.prep || []).map(function (g) {
+        return '<div class="card"><h3>' + esc(g.category) + ' <span class="count">' + g.entries.length + (g.entries.length === 1 ? ' entry' : ' entries') + (g.repeatPrompts ? ' · ' + g.repeatPrompts + ' repeated' : '') + '</span></h3>' + g.entries.map(function (e) { return '<div class="entry"><div class="row"><div class="grow">' + esc(e.text) + '</div><button class="btn ghost small" data-confdel="' + e.id + '">Delete</button></div><div class="meta">' + esc(e.date) + '</div></div>'; }).join('') + '</div>';
+      }).join('');
+    }
+    html += (c.guide || []).map(function (g) {
+      if (g.step_no === 2) {
+        var pre = 'Bless me, Father, for I have sinned.' + (c.lastConfession ? ' ' + esc(c.elapsed || '') + '.' : '') + ' These are my sins:';
+        return '<div class="card"><h3>' + g.step_no + ' · ' + esc(g.title) + '</h3><p style="margin:0;line-height:1.55;font-size:15px">' + pre + '</p>'
+          + (confTotal ? '' : '<p class="meta" style="margin-top:8px">No sins stand ready — entries from your nightly examinations gather here.</p>')
+          + '</div>' + (confTotal ? confPrepGroupsHtml() : '');
+      }
+      return '<div class="card"><h3>' + g.step_no + ' · ' + esc(g.title) + '</h3><p style="margin:0;line-height:1.55;font-size:15px">' + esc(g.body) + '</p></div>';
+    }).join('');
     var pen = c.penance;
     html += '<h2 class="sectionhead">PENANCE</h2>';
     if (pen && pen.text && !pen.done_at) {
@@ -8706,12 +8803,9 @@ function renderConfessionContent() {
     } else {
       html += '<div class="card"><p class="meta">No penance stands open. After your next confession, record the penance here.</p><label class="f">Penance given</label><textarea id="pen-text" placeholder="The penance the priest assigned..."></textarea><p class="fieldnote" id="fn-pen-text"></p><div style="margin-top:8px"><button class="btn" id="pen-save">Save penance</button></div></div>';
     }
-    html += '<h2 class="sectionhead">PREPARATION — SINCE YOUR LAST CONFESSION</h2>';
-    var total = 0; (c.prep || []).forEach(function (g) { total += g.entries.length; });
-    if (!total) html += '<p class="meta">Nothing stands in the preparation list. Entries from your nightly examinations gather here.</p>';
-    html += (c.prep || []).map(function (g) {
-      return '<div class="card"><h3>' + esc(g.category) + ' <span class="count">' + g.entries.length + (g.entries.length === 1 ? ' entry' : ' entries') + (g.repeatPrompts ? ' · ' + g.repeatPrompts + ' repeated' : '') + '</span></h3>' + g.entries.map(function (e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc(e.date) + '</div></div>'; }).join('') + '</div>';
-    }).join('');
+    // v453 §2: the standalone PREPARATION section stands
+    // retired — its groups paint inside guide step 2 above
+    // (the Plan's settlement, §1), so the sins stand once.
     html += '<div class="card"><h3>Confession made</h3><label class="f">Date</label><input type="date" id="cf-date" value="' + todayChicago() + '"><label class="f">Note (optional)</label><input type="text" id="cf-note" placeholder=""><div style="margin-top:10px"><button class="btn gold" id="cf-made">Confession made</button></div><p class="meta" style="margin-top:8px">The preparation list closes under this record and starts empty. Nothing is deleted; the history below keeps every record.</p></div>';
     if ((c.history || []).length) {
       html += '<h2 class="sectionhead">HISTORY</h2>';
@@ -8740,11 +8834,30 @@ function renderConfessionContent() {
       }); } });
     });
     document.getElementById('cf-gear').addEventListener('click', function () { openGuideEditor(c.guide || []); });
+    // v453 §2 (D3 A): each listed sin's Delete — the standing
+    // confirmation first (its line names the entry's first
+    // words), then the Confession-side delete route (it
+    // stands on an open or a closed run), then the re-paint.
+    view.querySelectorAll('[data-confdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-confdel');
+        var text = confEntryText[id] || '';
+        var first = text.split(' ').slice(0, 6).join(' ');
+        if (first.length < text.length) first += '...';
+        openConfirm({ line: 'Delete this entry? "' + first + '"', commitLabel: 'Delete', danger: true, act: function () { api('/api/confession/entries/' + id, { method: 'DELETE' }).then(renderConfession); } });
+      });
+    });
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
 function openGuideEditor(guide) {
   var sheet = document.createElement('div'); sheet.className = 'sheet';
   var rows = guide.map(function (g) {
+    // v453 §2: step 2 carries no editable text — the page
+    // composes it (the short preamble + the sins). The note
+    // stands in its fields' place; the save below collects
+    // only the fielded steps, so the stored step-2 row
+    // stands untouched.
+    if (g.step_no === 2) return '<label class="f">Step 2 — ' + esc(g.title) + '</label><p class="meta">Step 2 reads as the short preamble and your sins — the app composes it; it carries no editable text.</p>';
     return '<label class="f">Step ' + g.step_no + ' — title</label><input type="text" data-guide-title="' + g.step_no + '" value="' + esc(g.title) + '"><label class="f">Text</label><textarea data-guide-body="' + g.step_no + '">' + esc(g.body) + '</textarea>';
   }).join('');
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Confession guide</h1></div><p class="meta">Seeded from Lasance, My Prayer Book (1908), Devotions for Confession, pp. 353-354. Editable in your own words.</p>' + rows + '<p class="fieldnote" id="ge-note"></p><div style="margin-top:14px"><button class="btn gold" id="ge-save">Save guide</button></div></div>';

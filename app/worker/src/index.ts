@@ -813,7 +813,9 @@ async function examToday(env: Env) {
     run = { id: r!.id, date, state: "open", opened_at: nowISO(), closed_at: null };
   }
   const prompts = await env.DB.prepare("SELECT * FROM exam_prompts ORDER BY sort, id").all();
-  const entries = await env.DB.prepare("SELECT * FROM exam_entries WHERE run_id=? ORDER BY created_at, id").bind(run.id).all();
+  // v453 §2: the entry rows carry kind (migration 0025) —
+  // the select names it with the standing columns.
+  const entries = await env.DB.prepare("SELECT id, run_id, prompt_id, category, text, confession_id, created_at, kind FROM exam_entries WHERE run_id=? ORDER BY created_at, id").bind(run.id).all();
   const cats: string[] = [];
   for (const p of (prompts.results ?? []) as { category: string }[]) if (!cats.includes(p.category)) cats.push(p.category);
   const dayIdx = Math.floor(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) / 86400000);
@@ -834,7 +836,9 @@ async function confessionPayload(env: Env) {
   const guide = await env.DB.prepare("SELECT * FROM confession_guide ORDER BY step_no").all();
   const last = await env.DB.prepare("SELECT * FROM confessions ORDER BY date DESC, id DESC LIMIT 1").first<{ id: number; date: string; note: string; penance_text: string; penance_done_at: string | null }>();
   const open = await env.DB.prepare(
-    "SELECT e.*, r.date AS run_date FROM exam_entries e JOIN exam_runs r ON r.id = e.run_id WHERE e.confession_id IS NULL ORDER BY e.created_at, e.id",
+    // v453 §2 (D3 A): Confession lists SINS only — reflections
+    // never stand in the preparation groups.
+    "SELECT e.*, r.date AS run_date FROM exam_entries e JOIN exam_runs r ON r.id = e.run_id WHERE e.confession_id IS NULL AND e.kind='sin' ORDER BY e.created_at, e.id",
   ).all<{ id: number; category: string; text: string; prompt_id: number | null; run_date: string }>();
   const catOrder = ["Preliminary Examination", ...COMMANDMENT_CATS, "Precepts of the Church", "Capital Sins", "Anything else"];
   const groups = new Map<string, { category: string; entries: { id: number; text: string; date: string }[]; repeatPrompts: number }>();
@@ -861,6 +865,25 @@ async function confessionPayload(env: Env) {
     prep,
     history: (hist.results ?? []).map((h) => ({ id: h.id, date: h.date, note: h.note, penance_text: h.penance_text, penance_done_at: h.penance_done_at, entryCount: h.entry_count })),
   };
+}
+
+// v453 §2: the Spiritual Direction read — every reflection
+// entry (kind='reflection', migration 0025), joined to its
+// run's date, grouped by day, newest day first, entries in
+// written order within the day. Reflections are never swept
+// by a confession (the stamp takes sins only), so this list
+// stands across passes whole.
+async function reflectionsPayload(env: Env) {
+  const rows = await env.DB.prepare(
+    "SELECT e.id, e.text, e.category, e.created_at, r.date AS run_date FROM exam_entries e JOIN exam_runs r ON r.id = e.run_id WHERE e.kind='reflection' ORDER BY r.date DESC, e.created_at, e.id",
+  ).all<{ id: number; text: string; category: string; created_at: string; run_date: string }>();
+  const groups: { date: string; entries: { id: number; text: string; category: string; created_at: string }[] }[] = [];
+  for (const e of rows.results ?? []) {
+    let g = groups.length ? groups[groups.length - 1] : null;
+    if (!g || g.date !== e.run_date) { g = { date: e.run_date, entries: [] }; groups.push(g); }
+    g.entries.push({ id: e.id, text: e.text, category: e.category, created_at: e.created_at });
+  }
+  return { ok: true, groups };
 }
 
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
@@ -2871,8 +2894,9 @@ export default {
 
       if (seg[0] === "api" && seg[1] === "exam") {
         if (seg[2] === "today" && request.method === "GET") return json(await examToday(env));
+        if (seg[2] === "reflections" && request.method === "GET") return json(await reflectionsPayload(env));
         if (seg[2] === "entries" && request.method === "POST") {
-          const body = await request.json().catch(() => ({})) as { runId?: number; promptId?: number | null; category?: string; text?: string };
+          const body = await request.json().catch(() => ({})) as { runId?: number; promptId?: number | null; category?: string; text?: string; kind?: string };
           const text = typeof body.text === "string" ? body.text.trim() : "";
           if (!text) return err(400, "text required");
           const run = await env.DB.prepare("SELECT * FROM exam_runs WHERE id=?").bind(body.runId ?? 0).first<{ id: number; state: string }>();
@@ -2885,9 +2909,13 @@ export default {
             category = p.category;
           }
           if (!category) return err(400, "category required");
+          // v453 §2 (D1 A): the entry's kind — 'reflection'
+          // stands as given; anything else (absent, 'sin',
+          // other) writes 'sin'.
+          const kind = body.kind === "reflection" ? "reflection" : "sin";
           const r = await env.DB.prepare(
-            "INSERT INTO exam_entries (run_id, prompt_id, category, text, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id",
-          ).bind(run.id, body.promptId ?? null, category, text, nowISO()).first<{ id: number }>();
+            "INSERT INTO exam_entries (run_id, prompt_id, category, text, kind, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
+          ).bind(run.id, body.promptId ?? null, category, text, kind, nowISO()).first<{ id: number }>();
           return json({ ok: true, id: r?.id }, 201);
         }
         const eMatch = seg[2] === "entries" && seg[3] ? /^(\d+)$/.exec(seg[3]) : null;
@@ -2941,8 +2969,26 @@ export default {
           const r = await env.DB.prepare(
             "INSERT INTO confessions (date, note, created_at) VALUES (?, ?, ?) RETURNING id",
           ).bind(date, typeof body.note === "string" ? body.note : "", nowISO()).first<{ id: number }>();
-          const upd = await env.DB.prepare("UPDATE exam_entries SET confession_id=? WHERE confession_id IS NULL").bind(r!.id).run();
+          // v453 §2: the stamp takes SINS only — a reflection
+          // is not confessed matter; its record never closes
+          // under a confession (§1 consequence 1).
+          const upd = await env.DB.prepare("UPDATE exam_entries SET confession_id=? WHERE confession_id IS NULL AND kind='sin'").bind(r!.id).run();
           return json({ ok: true, id: r?.id, entriesClosed: upd.meta.changes ?? 0 });
+        }
+        const cfDelMatch = seg[2] === "entries" && seg[3] ? /^(\d+)$/.exec(seg[3]) : null;
+        if (cfDelMatch && request.method === "DELETE") {
+          // v453 §2 (D3 A): the Confession-side delete — one
+          // record, one delete, on an open OR a closed run
+          // (the Confession page's list spans both). Sins
+          // only: a reflection — or a missing id — answers
+          // 404 and stands. The standing DELETE
+          // /api/exam/entries/:id is NOT touched: its
+          // open-run rule is the Examination side's seat
+          // (the v450 finding 3 stands preserved there).
+          const row = await env.DB.prepare("SELECT id FROM exam_entries WHERE id=? AND kind='sin'").bind(Number(cfDelMatch[1])).first<{ id: number }>();
+          if (!row) return err(404, "entry not found");
+          await env.DB.prepare("DELETE FROM exam_entries WHERE id=?").bind(Number(cfDelMatch[1])).run();
+          return json({ ok: true });
         }
         if (seg[2] === "penance" && !seg[3] && request.method === "POST") {
           const body = await request.json().catch(() => ({})) as { text?: string };

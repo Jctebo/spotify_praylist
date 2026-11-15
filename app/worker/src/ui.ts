@@ -316,6 +316,13 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .prompt .ptext { font-size:17px; line-height:1.45; }
 .entry { border-left:3px solid var(--accent); padding:6px 10px; margin:8px 0 0; background:#fff; font-size:16px; }
 .entry .meta { margin-top:2px; }
+/* v453: the reflection dress — a reflection entry keeps the
+   .entry seat on a gold-tinted ground, the REFLECTION tag
+   standing above its text; the entry forms' kind switch
+   rides the standing .segtoggle dress with a tighter seat. */
+.entry.refl { background:#f6ecd3; }
+.refltag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--gold-text); border:1px solid var(--gold); border-radius:6px; padding:1px 6px; margin-bottom:4px; }
+.kindswitch { margin:8px 0 0; }
 .hidden { display:none !important; }
 /* v419 (G13/G14): the sheet system — every sheet except Now
    Playing is a partway DRAWER: the .sheet element is the
