@@ -2226,6 +2226,13 @@ var podLevel = 'index';
    error events are the refusal seam, §2.6.3). */
 var podWatch = null;
 var podWatchPlayer = null;
+/* v436 §2.2: the CatholicTV series' FULL PAGE — the channel
+   page the series page is a 15-video window onto. A client
+   constant of the video kind (the series payload carries no
+   such field; no server change rides this release). The act
+   that opens it stands in paintPodcastVideos — its form and
+   handler are podFullPageActHtml / openFullPage below. */
+var YT_CHANNEL_URL = "https://www.youtube.com/@catholictv";
 function placeScreenKey() {
   /* v414 §2.8: the Wallpaper tab rides the same entries —
      its scroll is kept per side, like the merged tabs. */
@@ -2556,6 +2563,48 @@ function wirePodBack() {
   var b = view.querySelector('[data-podback]');
   if (b) b.addEventListener('click', goPodcastsIndex);
 }
+/* ---------------- v436: the full-page act ----------------
+   §2.2: ONE act in the video series page head, in the Podcasts
+   surfaces' standing act dress (the watch view's "Open in
+   YouTube" form — an anchor in ghost-button dress). The
+   anchor form is load-bearing: its native behavior IS the
+   fallback (§2.4), so no surface can strand the tap. The act
+   stands in both paints of paintPodcastVideos — its target
+   is a constant, not snapshot data, and a down feed is
+   exactly when the full page earns its place. */
+function podFullPageActHtml() {
+  return '<p><a class="btn ghost" data-podfullpage href="' + YT_CHANNEL_URL + '" target="_blank" rel="noopener">Full page on YouTube</a></p>';
+}
+function wirePodFullPage() {
+  var a = view.querySelector('[data-podfullpage]');
+  if (a) a.addEventListener('click', openFullPage);
+}
+function openFullPage(e) {
+  // §2.4 branch 1 — the guard fails: do nothing. No
+  // preventDefault, no throw; the anchor's native behavior
+  // stands (web: the channel page opens in a new tab; old
+  // shell 1.0.35: the navigation leaves the app origin and
+  // the shell's standing rule ejects it as an ACTION_VIEW).
+  // The guard reads Capacitor.Plugins.Browser in exactly
+  // the OraDayBridge guard's shape (§2.0; F-436-I4) — no new
+  // detection surface.
+  var cap = window.Capacitor;
+  if (!cap || !cap.Plugins || !cap.Plugins.Browser) return;
+  // Branch 2 — pause BEFORE the open (one sound, §2.4): the
+  // standing pause act, v434's own watch-open line, so the
+  // playback state reads paused from the one source of truth
+  // for the whole time the tab stands. On dismissal nothing
+  // resumes and nothing repaints — the app never navigated.
+  if (e && e.preventDefault) e.preventDefault();
+  if (!audioEl.paused) pauseTransport();
+  var p;
+  try { p = cap.Plugins.Browser.open({ url: YT_CHANNEL_URL, toolbarColor: '#16283f' }); }
+  catch (err) { window.open(YT_CHANNEL_URL, '_blank'); return; }
+  // Branch 3 — a rejected open (no Custom Tab provider
+  // stands on the device) falls back to the anchor's
+  // behavior, performed by hand, exactly once.
+  if (p && p.catch) p.catch(function () { window.open(YT_CHANNEL_URL, '_blank'); });
+}
 /* ---------------- Podcasts VIDEO series (v434) ----------------
    §2.1: the video series page — the standing snapshot's videos,
    newest first. Each row: the thumbnail (referenced from
@@ -2575,8 +2624,10 @@ function paintPodcastVideos() {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
     html += '<div class="card"><h3>' + esc(res.title || 'CatholicTV') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    html += podFullPageActHtml();
     view.innerHTML = html;
     wirePodBack();
+    wirePodFullPage();
     return;
   }
   var newest = (res.videos && res.videos.length) ? res.videos[0] : null;
@@ -2588,6 +2639,9 @@ function paintPodcastVideos() {
   html += '<div class="podpage-head">' + cover
     + '<h1 class="screen">' + esc(res.title) + '</h1>'
     + '<div class="meta">Video series \u00b7 Updated ' + esc(newest ? newest.dateLabel : '') + '</div></div>';
+  // v436 §2.2: the full-page act stands directly under the
+  // page head, before the first video card.
+  html += podFullPageActHtml();
   (res.videos || []).forEach(function (v) {
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (v.imageUrl ? '<img class="rowart" src="' + esc(v.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
@@ -2597,6 +2651,7 @@ function paintPodcastVideos() {
   });
   view.innerHTML = html;
   wirePodBack();
+  wirePodFullPage();
   view.querySelectorAll('[data-podvideo]').forEach(function (c) {
     c.addEventListener('click', function () {
       var id = c.getAttribute('data-podvideo');
