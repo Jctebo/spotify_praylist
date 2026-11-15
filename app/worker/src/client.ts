@@ -7658,24 +7658,29 @@ function paintBlockPage(day, block) {
   // settlement seam) · download-all toggle + share icon · the
   // large round play button · the action row (Sort · Mark all
   // played · the page ⋮ — Open in Spotify's one home now, R4).
-  // v420 §2.3: the head compresses to three rows inside the
-  // same frozen element — Row 1: the back disc seated in the
-  // head (§2.4) · the 56px cover (.blockcover.med) · the
-  // title/meta stack (the caption folded into the meta line,
-  // §2.5; the owner line and the prayed suffix leave the
-  // head — they stand on the grid card + the rows, §2.3) ·
-  // Row 2: the pill line (the compact download chip + the
-  // folded note, §2.6) · Row 3: the slim Play All row (disc ·
-  // label · ⋮ — Sort and Mark all played ride the ⋮, §2.7).
+  // v420 §2.3: the head compresses inside the same frozen
+  // element — Row 1: the back disc seated in the head (§2.4)
+  // · the 56px cover (.blockcover.med) · the title/meta
+  // stack (the caption folded into the meta line, §2.5; the
+  // owner line and the prayed suffix leave the head — they
+  // stand on the grid card + the rows, §2.3) · Row 2: the
+  // pill line (the compact download chip + the folded note,
+  // §2.6).
+  // v422 §2.6: the Play All row retires as a line — the SAME
+  // data-queue disc emission (44px under the .compact scope)
+  // and the page ⋮ move into Row 1's trailing cluster (disc ·
+  // ⋮ at the head's top right); the visible Play All label
+  // retires as an emission (its rule stands for the episodes
+  // page); Sort and Mark all played ride the ⋮ as before.
   var html = '<div class="blockpage-head compact" data-block="' + esc(b.block) + '">'
     + '<div class="blockpage-coverrow"><button class="backdisc" data-back="' + esc(b.block) + '" aria-label="Back to Prayers">&lsaquo;</button>'
     + coverTileHtml(b.block, 'med')
     + '<div class="blockpage-stack"><div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
-    + '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div></div></div>'
+    + '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div></div>'
+    + '<div class="blockpage-cluster"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
+    + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button></div></div>'
     + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
-    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div>'
-    + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button><span class="blockpage-playlabel">Play All — ' + esc(b.label || b.block) + '</span><span class="grow"></span>'
-    + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button></div></div>';
+    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');

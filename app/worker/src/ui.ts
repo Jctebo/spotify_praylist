@@ -21,7 +21,6 @@ export const SHELL_HTML = `<!DOCTYPE html>
   <img class="brandmark" src="/logo.png" alt="Ora Pro Nobis logo">
   <div class="brandtext">
     <div class="wordmark">ORA PRO NOBIS</div>
-    <div class="tagline">A Daily Catholic Prayer Podcast</div>
     <div class="litday" id="litday"></div>
   </div>
   <button class="gearbtn" id="gearbtn" aria-label="Settings">&#9881;</button>
@@ -77,7 +76,6 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .brandbar { position: sticky; top:0; z-index: 30; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 14px; }
 .brandmark { width:38px; height:38px; border-radius:8px; }
 .wordmark { font-size:19px; letter-spacing:2.5px; color:var(--bar-fg); }
-.tagline { font-size:13px; letter-spacing:1.2px; text-transform:uppercase; color:var(--bar-sub); margin-top:1px; }
 .litday { font-size:13px; letter-spacing:.4px; margin-top:1px; color:var(--bar-fg); }
 .view { padding: 14px 12px 96px; max-width: 640px; margin: 0 auto; }
 .tabbar { position: fixed; left:0; right:0; bottom:0; z-index: 30; display:flex; background-color:var(--bar-solid); background:var(--bar-bg); padding-bottom: env(safe-area-inset-bottom); border-top:1px solid rgba(250,245,236,.25); box-shadow:0 -4px 14px rgba(42,38,32,.14); }
@@ -432,16 +430,23 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .blockpage-head .spot { color:var(--bar-fg); margin-top:0; }
 .blockpage-head .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
 /* v420 §2.3: the compressed block head — three rows inside
-   the standing frozen element (head proper 100px: padding
-   6/6 · cover row 56 · pill line 28 at a 4px gap). Every
-   divergence rides the .compact scope, so the episodes
-   page's head — the same classes without .compact — keeps
-   the v419 form untouched (F-420-7). §2.9: the head sticks
-   BELOW the frozen toggle band — brand height + 58px (the
-   toggle's 46px band + its 12px margin; the coupling is
-   named in §2.9 — if the toggle's construction changes,
-   the offset is re-derived in the same change). */
-.blockpage-head.compact { padding:6px 14px; top:calc(var(--brandh, 54px) + 58px); }
+   the standing frozen element. Every divergence rides the
+   .compact scope, so the episodes page's head — the same
+   classes without .compact — keeps the v419 form untouched
+   (F-420-7). v422 §2.7: the head proper is now 94px
+   (padding 4/4 · cover row 56 · pill line 28 at a 2px gap)
+   — the Play All row retired; the disc and the ⋮ ride Row
+   1's trailing cluster (§2.6). §2.4/§2.7: the head sticks
+   FLUSH with the frozen toggle band — brand height + 46px
+   (46 = the toggle's painted band: its 44px button + its
+   two 1px borders). v420's +58px offset carried a +12px
+   margin allowance — the retired defect: the unpainted
+   slot scrolled rows showed through. If the toggle's
+   construction changes, the offset is re-derived in the
+   same change. */
+.blockpage-head.compact { padding:4px 14px; top:calc(var(--brandh, 54px) + 46px); }
+.blockpage-head.compact .blockpage-cluster { display:flex; align-items:center; gap:8px; flex:none; }
+.blockpage-head.compact .playbtn.big { width:44px; height:44px; }
 .blockpage-coverrow { display:flex; align-items:center; }
 .blockpage-head.compact .backdisc { width:36px; height:36px; font-size:19px; position:relative; margin-right:8px; }
 .blockpage-head.compact .backdisc::after { content:''; position:absolute; inset:-4px; }
@@ -449,7 +454,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .blockcover.med .blockcover-initial { font-size:28px; }
 .blockpage-stack { flex:1; min-width:0; margin-left:10px; }
 .blockpage-head.compact .blockpage-meta { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.blockpage-pillrow { display:flex; align-items:center; gap:8px; margin-top:4px; }
+.blockpage-pillrow { display:flex; align-items:center; gap:8px; margin-top:2px; }
 .blockpage-pillrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
 .blockpage-head.compact .chipbtn { min-height:0; padding:5px 12px; position:relative; }
 .blockpage-head.compact .chipbtn::after { content:''; position:absolute; inset:-8px 0; }
