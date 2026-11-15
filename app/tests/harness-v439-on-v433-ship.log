@@ -1,0 +1,29 @@
+ok   - P0: the APP_JS template evaluates (cooks) without error
+FAIL - P1: the whole cooked APP_JS parses (vm.Script) — the gate v435 lacked :: missing ) after argument list @ cooked line 5289
+FAIL - P2: isOwnLogoUrl stands in the cooked script in its backslash-free spelling; the v435 derailment is gone
+FAIL - A0: isOwnLogoUrl + realArtUrl evaluate out of the cooked script :: missing ) after argument list
+note - S census: single-backslash non-escape sequences inside APP_JS (cooking rewrites each): 16
+note -   raw client.ts:234  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+note -   raw client.ts:234  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+note -   raw client.ts:234  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+note -   raw client.ts:3524  \d  var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
+note -   raw client.ts:3524  \d  var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
+note -   raw client.ts:3524  \d  var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
+note -   raw client.ts:3524  \.  var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
+note -   raw client.ts:3601  \d  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+note -   raw client.ts:3601  \d  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+note -   raw client.ts:3601  \d  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+note -   raw client.ts:3601  \.  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+note -   raw client.ts:5297  \/  var s = String(u).replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\//i, '').toLowerCase();
+note -   raw client.ts:5297  \/  var s = String(u).replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\//i, '').toLowerCase();
+note -   raw client.ts:8003  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
+note -   raw client.ts:8003  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
+note -   raw client.ts:8003  \d  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
+FAIL - B1: boot — no pageerror on load :: SyntaxError: missing ) after argument list
+FAIL - B2: boot — the opn-boot stamp reads complete (the synchronous tail ran) :: stamp=started
+FAIL - B3: boot — the day fetch fires
+FAIL - B4: boot — the Prayers home paints content into #view :: viewLen=0
+FAIL - B5: boot — the gear responds and Settings paints
+
+harness-v439: 1 ok / 8 not-ok
+failures: P1: the whole cooked APP_JS parses (vm.Script) — the gate v435 lacked · P2: isOwnLogoUrl stands in the cooked script in its backslash-free spelling; the v435 derailment is gone · A0: isOwnLogoUrl + realArtUrl evaluate out of the cooked script · B1: boot — no pageerror on load · B2: boot — the opn-boot stamp reads complete (the synchronous tail ran) · B3: boot — the day fetch fires · B4: boot — the Prayers home paints content into #view · B5: boot — the gear responds and Settings paints
