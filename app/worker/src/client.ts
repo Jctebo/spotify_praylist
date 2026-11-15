@@ -2492,8 +2492,10 @@ function paintPodcastsIndex() {
   var res = state.podcastsIndex;
   if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podindex'); return; }
   podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
-  var html = '<h1 class="screen">Formation</h1>';
-  html += offlineLineHtml('pod-offline-btn');
+  // v432 §2.3: the offline box retires on the index; the Download
+  // for offline button stands at the head row beside the title, in
+  // its standing dress (id, classes, label byte-identical).
+  var html = '<div class="row headrow"><h1 class="screen grow">Formation</h1><button class="btn ghost small" id="pod-offline-btn">Download for offline</button></div>';
   res.seriesList.forEach(function (s) {
     // v413 §2.7: playlist-style entries — the provider's own
     // show artwork (§2.3's showImageUrl; a series-initial tile
@@ -2767,7 +2769,7 @@ function paintPodcasts() {
   // page; this row also pins (the frozen back row, §4.1), on
   // the cream ground.
   html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Formation">&lsaquo;</button></div>';
-  html += offlineLineHtml('pod-offline-btn');
+  // v432 §2.1: the offline box retires on the series page too — no button seat here.
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
     // series stands unavailable — the section's one error surface.
@@ -2879,8 +2881,8 @@ function paintPodcasts() {
       if (e) openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' });
     });
   });
-  wireOfflineButtons();
-  paintOfflineLine();
+  // v432 §2.2: the offline wiring pair retires with the box — on this
+  // paint both were no-ops (neither button id stands, no line element).
   refreshPodDlStates();
   wirePodBack();
   // v419 (G31): the disclosure toggle — the repaint holds
