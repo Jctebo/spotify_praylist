@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -8310,18 +8310,24 @@ function renderExaminationContent() {
     var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === cat; });
     var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
     var dis = closed ? ' disabled' : '';
-    // v442 §2: the commandment chips return as navigation —
-    // one chip per Commandment category, in payload order,
-    // the resolved category marked; exactly ONE row that
-    // scrolls sideways (the .examchips rule in ui.ts).
-    var cmdCats = cats.filter(function (c) { return c.indexOf('Commandment') === 0; });
-    if (cmdCats.length) html += '<div class="chips examchips">' + cmdCats.map(function (c) { return '<button class="chip' + (c === cat ? ' active' : '') + '" data-examcat="' + esc(c) + '" aria-pressed="' + (c === cat ? 'true' : 'false') + '"' + dis + '>' + esc(c) + '</button>'; }).join('') + '</div>';
+    // v444 §2 (v442's chips, widened): one chip per category
+    // in the payload, in payload order, the resolved category
+    // marked — EVERY category stands reachable, the Precepts
+    // of the Church and the other non-commandment categories
+    // included (v442 carried the commandments only). Exactly
+    // ONE row that scrolls sideways (the .examchips rule in
+    // ui.ts).
+    if (cats.length) html += '<div class="chips examchips">' + cats.map(function (c) { return '<button class="chip' + (c === cat ? ' active' : '') + '" data-examcat="' + esc(c) + '" aria-pressed="' + (c === cat ? 'true' : 'false') + '"' + dis + '>' + esc(c) + '</button>'; }).join('') + '</div>';
     html += '<h2 class="sectionhead">' + esc(cat) + '</h2>';
     if (state.deepIdx >= prompts.length) state.deepIdx = 0;
     var p = prompts[state.deepIdx];
     if (p) {
       html += '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div><div class="meta" style="margin-top:6px">Tap to write an entry in your own words</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
-      html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>Next &#8250;</button><button class="btn" id="deep-next-cat"' + (cmdCats.indexOf(cat) + 1 >= cmdCats.length ? ' disabled' : '') + '>Next commandment</button></div>';
+      // v444 §2b (John's 12:05 amendment): the next-question
+      // button is the arrow alone (›, aria-label "Next
+      // question") in its ghost dress — the labeled solid
+      // Next section beside it reads the more distinct.
+      html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next" aria-label="Next question"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>&#8250;</button><button class="btn" id="deep-next-cat"' + (cats.indexOf(cat) + 1 >= cats.length ? ' disabled' : '') + '>Next section</button></div>';
     } else html += '<p class="meta">No prompts in this category.</p>';
     html += '<div class="card"><h3>Add your own — ' + esc(cat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
     html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
@@ -8332,6 +8338,25 @@ function renderExaminationContent() {
     // v443 §2: restore the chips row's place onto the new
     // row (the read stands at this function's head).
     if (chipsScroll !== null) { var newChipsRow = view.querySelector('.examchips'); if (newChipsRow) newChipsRow.scrollLeft = chipsScroll; }
+    // v444 §2: a pager-driven category change (the Next
+    // section act sets examFollowActive) brings the newly
+    // active chip into view — AFTER the v443 restore above,
+    // move the row by the smallest amount that puts the
+    // active chip fully inside the visible band (the row
+    // only; no page scroll). Chip taps never set the flag:
+    // their scroll stands exactly as restored.
+    if (state.examFollowActive) {
+      state.examFollowActive = false;
+      var followRow = view.querySelector('.examchips');
+      var activeChip = followRow ? followRow.querySelector('.chip.active') : null;
+      if (followRow && activeChip) {
+        var chipL = activeChip.offsetLeft, chipR = chipL + activeChip.offsetWidth;
+        var bandL = followRow.scrollLeft, bandR = bandL + followRow.clientWidth;
+        if (activeChip.offsetWidth >= followRow.clientWidth) followRow.scrollLeft = chipL;
+        else if (chipL < bandL) followRow.scrollLeft = chipL;
+        else if (chipR > bandR) followRow.scrollLeft = chipR - followRow.clientWidth;
+      }
+    }
     wireExamination(data);
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
@@ -8347,19 +8372,23 @@ function wireExamination(data) {
   var pv = document.getElementById('deep-prev'), nx = document.getElementById('deep-next');
   if (pv) pv.addEventListener('click', function () { state.deepIdx--; renderExamination(); });
   if (nx) nx.addEventListener('click', function () { state.deepIdx++; renderExamination(); });
-  // v443 §2: the second next — the solid button crosses to
-  // the next commandment (payload order, the chips' order);
-  // its first question stands (deepIdx resets), the repaint
-  // runs through the standing render path.
+  // v444 §2 (v443's second next, category-general): the
+  // solid button crosses to the next category in the full
+  // payload order (the chips' order, every category — the
+  // Precepts follow Commandment X); its first question
+  // stands (deepIdx resets), the repaint runs through the
+  // standing render path, and the act marks the change
+  // pager-driven so the paint brings the new chip into view.
   var nc = document.getElementById('deep-next-cat');
   if (nc) nc.addEventListener('click', function () {
-    var order = (data.categories || []).filter(function (c) { return c.indexOf('Commandment') === 0; });
+    var order = data.categories || [];
     var nxt = order[order.indexOf(cat) + 1];
-    if (nxt) { state.examCat = nxt; state.deepIdx = 0; renderExamination(); }
+    if (nxt) { state.examCat = nxt; state.deepIdx = 0; state.examFollowActive = true; renderExamination(); }
   });
-  // v442 §2: a chip tap jumps to that commandment — its
+  // v442 §2: a chip tap jumps to that category — its
   // first question stands (deepIdx resets), the repaint
-  // runs through the standing render path.
+  // runs through the standing render path. v444: the tap
+  // never sets examFollowActive — no auto-scroll on a tap.
   view.querySelectorAll('[data-examcat]').forEach(function (b) {
     b.addEventListener('click', function () {
       state.examCat = b.getAttribute('data-examcat');
