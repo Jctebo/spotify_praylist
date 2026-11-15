@@ -73,7 +73,7 @@ export const APP_CSS = `
 [data-lit="rose"] { --bar-bg:linear-gradient(135deg, #6d3441, #8a4453); --bar-solid:#6d3441; --bar-fg:#f9e9e4; --bar-sub:#eed3d7; --accent:#a34a5f; --accent-ink:#ffffff; --accent-text:var(--accent); }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); font-family: Georgia, 'Times New Roman', serif; font-size:17px; }
-.brandbar { position: sticky; top:0; z-index: 30; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 14px; }
+.brandbar { position: sticky; top:0; z-index: 30; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:4px 14px; }
 .brandmark { width:38px; height:38px; border-radius:8px; }
 .wordmark { font-size:19px; letter-spacing:2.5px; color:var(--bar-fg); }
 .litday { font-size:13px; letter-spacing:.4px; margin-top:1px; color:var(--bar-fg); }
@@ -311,7 +311,8 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .count { font-size:14px; color:var(--accent-text); font-family:var(--sans); }
 .err { color:var(--danger); font-size:15px; }
 .about { margin-top:22px; font-size:14px; color:var(--muted); line-height:1.6; }
-.gearbtn { margin-left:auto; background:none; border:none; color:var(--bar-fg); font-size:20px; line-height:1; cursor:pointer; padding:0; width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; flex:none; }
+.gearbtn { margin-left:auto; background:none; border:none; color:var(--bar-fg); font-size:20px; line-height:1; cursor:pointer; padding:0; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; flex:none; position:relative; }
+.gearbtn::after { content:''; position:absolute; inset:-4px; }
 .setrow { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; }
 .setrow .setname { font-size:17px; color:var(--navy); }
 .setcontrols { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
