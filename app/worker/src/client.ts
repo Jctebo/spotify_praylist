@@ -8024,16 +8024,20 @@ function paintListenHome(day) {
   // aria-label keeps the full phrase, so the field's
   // accessible name stands unchanged.
   html += '<div class="searchrow"><div class="searchpill"><input type="search" id="day-search" placeholder="Search" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
-  // v413 §2.4: the library head — filter chips (FD8) + the sort
-  // row (the standing order's truthful name; its Sort button
-  // opens the §2.4 order editor). The home sleep-btn retires
-  // (ruling R2: sleep's one home is the player overflow); Play
-  // All + the offline line stand BELOW the grid.
+  // v413 §2.4: the library head — filter chips (FD8) + the Sort
+  // button (opens the §2.4 order editor). v441: the sort row
+  // retires as a layer — the button moves up into this
+  // .searchrow, after the chips, byte-identical; the order's
+  // name ("Day order" / "Manual order") retires from the home
+  // with its row (the editor is where the order is managed).
+  // The home sleep-btn retires (ruling R2: sleep's one home is
+  // the player overflow); Play All + the offline line stand
+  // BELOW the grid.
   html += '<div class="chips" id="home-chips">'
     + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists" aria-pressed="' + (state.homeFilter === 'praylists' ? 'true' : 'false') + '">Praylists</button>'
     + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas" aria-pressed="' + (state.homeFilter === 'novenas' ? 'true' : 'false') + '">Novenas</button>'
-    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div></div>';
-  html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn" aria-label="Sort">↑↓</button></div>';
+    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div>'
+    + '<button class="btn ghost small" id="sort-btn" aria-label="Sort">↑↓</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
   // v392 W5: the offline readiness line + the download button.
