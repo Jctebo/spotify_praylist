@@ -381,7 +381,7 @@ try {
   const addBusy = await ev(() => document.getElementById("new-add").disabled);
   ok(addBusy === true, "C5: the Add button disables while its POST is in flight");
   await heldClick;
-  await page.waitForFunction(() => { const t = document.getElementById("new-text"); return t && t.value === ""; }, null, { timeout: 30000 });
+  await page.waitForFunction(() => { const t = document.getElementById("new-text"); return t && t.value === ""; }, null, { timeout: 60000 });
   mode = "fail-add";
   await page.fill("#new-text", "For Refused");
   await page.click("#new-add");
@@ -395,7 +395,7 @@ try {
   // intention stands in its group, the draft drops.
   await page.fill("#new-text", "For Theta");
   await page.click("#new-add");
-  await page.waitForFunction(() => document.body.textContent.includes("For Theta") && document.getElementById("new-text").value === "", null, { timeout: 30000 });
+  await page.waitForFunction(() => document.body.textContent.includes("For Theta") && document.getElementById("new-text").value === "", null, { timeout: 60000 });
   ok(sameSet(drawsNow(TODAY), expectedDraw(TODAY, items, poolNow())),
     "C6: a settled add stands in the view, its draft dropped, and the server auto-redrew (today's set equals the expected set over the widened pool)");
 

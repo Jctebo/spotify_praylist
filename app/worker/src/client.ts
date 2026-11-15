@@ -4085,7 +4085,12 @@ function renderIntentions() {
     // .grow cell, the Redraw button at the row's right, and the
     // note slot under the row (empty when idle; .fieldnote:empty
     // stands display:none, so the idle slot costs no height).
-    var html = '<div class="row"><div class="grow"><h1 class="screen">Intentions</h1><p class="sub">the pool</p></div><button class="btn ghost" id="int-redraw">Redraw</button></div><p class="fieldnote" id="int-redraw-note"></p>';
+    // F-426-I4: the h1's top margin is zeroed in the row only —
+    // in the skeleton paint that margin collapses out of the
+    // head, in the flex cell it is contained; zeroing it makes
+    // the two heads measure the same height (57px in the mold),
+    // so the paint landing does not jump.
+    var html = '<div class="row"><div class="grow"><h1 class="screen" style="margin-top:0">Intentions</h1><p class="sub">the pool</p></div><button class="btn ghost" id="int-redraw">Redraw</button></div><p class="fieldnote" id="int-redraw-note"></p>';
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
     // v411 §2.6 (4.1): the add card stands at the head of the
     // surface, directly under the counts strip — the tab's
