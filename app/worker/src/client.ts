@@ -2507,16 +2507,20 @@ function openPodSeries(key) {
     }
   });
 }
+function goPodcastsIndex() {
+  // v411 §2.4: backing out clears the return record —
+  // renderPodcasts then paints the index from its standing
+  // payload (the record is what a TAB return reads, never
+  // the back button).
+  // v421 §2.5 (D-421-1): factored out of wirePodBack into
+  // one named act — the disc tap and the system-back
+  // dispatch call THIS function; one act, two triggers.
+  state.podcastsReturn = null;
+  renderPodcasts();
+}
 function wirePodBack() {
   var b = view.querySelector('[data-podback]');
-  if (b) b.addEventListener('click', function () {
-    // v411 §2.4: backing out clears the return record —
-    // renderPodcasts then paints the index from its standing
-    // payload (the record is what a TAB return reads, never
-    // the back button).
-    state.podcastsReturn = null;
-    renderPodcasts();
-  });
+  if (b) b.addEventListener('click', goPodcastsIndex);
 }
 function paintPodcasts() {
   var res = state.podcasts;
@@ -5772,6 +5776,72 @@ function setupBridgeCommands() {
     p.addListener('transportCommand', handleTransportCommand);
   } catch (e) { /* no listener, no commands — the face still reports state */ }
 }
+/* ---------------- v421: the Android system back binding ----------------
+   The shell's App plugin (@capacitor/app, §2.6) delivers
+   every system back press to ONE 'backButton' listener
+   registered here at boot. With a listener standing, the
+   plugin does not fall through to any platform default —
+   it notifies the listener INSTEAD (and ALSO fires a
+   'backbutton' document event off the same press: that
+   route is expressly NOT bound — one press bound twice
+   would go back two levels, §2.5/F-421-4). The handler is
+   a pure dispatch on the standing view state; it reads
+   no history, calls no history API, and ignores the
+   event's canGoBack — the view state governs, never the
+   WebView history (F-421-3). On the web (no Capacitor,
+   or no App plugin) registration is a no-op and browser
+   behavior is byte-unchanged. */
+function oraAppPlugin() {
+  try {
+    var cap = window.Capacitor;
+    if (!cap || !cap.Plugins || !cap.Plugins.App) return null;
+    return cap.Plugins.App;
+  } catch (e) { return null; }
+}
+function handleSystemBack() {
+  // 1. Overlay first (F-421-5): a standing sheet or
+  // anchored menu dismisses by its OWN close path — a
+  // sheet by sheet.remove() (mountDrawer's standing
+  // close), a menu by the standing menu close — before
+  // any page arm. Back first does what a scrim tap does.
+  var overlay = document.querySelector('.sheet, .anchmenu');
+  if (overlay) {
+    if (overlay.classList.contains('sheet')) overlay.remove();
+    else document.querySelectorAll('.anchmenu, .menucatcher').forEach(function (n) { n.remove(); });
+    return;
+  }
+  // 2. Block arm: the disc's own handler with the disc's
+  // own argument — the [data-back] wiring calls
+  // goListenHome(block name), and the view state carries
+  // that same block name. The From Today's Podcast page
+  // rides this same arm ('__episodes' is a block view).
+  if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'block') {
+    goListenHome(state.prayersView.block);
+    return;
+  }
+  // 3. Series arm (D-421-1): the Podcasts series page
+  // carries the identical disc with identical one-level
+  // semantics; its act is goPodcastsIndex — the same
+  // function the disc's tap calls.
+  if (state.tab === 'podcasts' && podLevel === 'series') {
+    goPodcastsIndex();
+    return;
+  }
+  // 4. Root (F-421-1): a top-level page — nothing in the
+  // reach stands, so the handler reproduces the standing
+  // Android default itself: exitApp() finishes the
+  // activity, the result root back has always produced
+  // in this shell.
+  var app = oraAppPlugin();
+  if (app && app.exitApp) { try { app.exitApp(); } catch (e) {} }
+}
+function setupBackButton() {
+  try {
+    var app = oraAppPlugin();
+    if (!app || !app.addListener) return;
+    app.addListener('backButton', handleSystemBack);
+  } catch (e) { /* no plugin, no binding — the web path is unchanged */ }
+}
 /* B2/B5: the 5 s tick — position refresh and the page's
    heartbeat in one. Pushes only while a current stands. */
 setInterval(function () { if (state.current) pushNativeState(false); }, 5000);
@@ -7921,6 +7991,7 @@ function openGuideEditor(guide) {
 
 setupMediaSession();
 setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
+setupBackButton(); // v421: the Android system back binding (shell only; a guarded no-op elsewhere)
 setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 `;
