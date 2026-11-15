@@ -274,6 +274,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    the navy fill, dress only. */
 .chip { font-family:var(--sans); font-size:14px; padding:7px 14px; min-height:44px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; }
 .chip.active { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+/* v442 §2: the Examination commandment chips stand as
+   exactly ONE row that scrolls sideways — never wrapped. */
+.examchips { flex-wrap:nowrap; overflow-x:auto; }
+.examchips .chip { flex:0 0 auto; }
 /* v410 §2.3: the merged tabs' segmented toggle — ONE control
    serving both merged tabs, drawn from the standing tokens
    (the .modes frame; the current side marked in the

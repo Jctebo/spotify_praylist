@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -8296,14 +8296,20 @@ function renderExaminationContent() {
     var run = data.run;
     var closed = run && run.state === 'closed';
     var cats = data.categories || [];
-    var cat = data.focusCategory || cats[0];
+    var cat = state.examCat || data.focusCategory || cats[0];
     var prompts = (data.prompts || []).filter(function (p) { return p.category === cat; });
     var entriesByPrompt = {};
     (data.entries || []).forEach(function (e) { if (e.prompt_id) { (entriesByPrompt[e.prompt_id] = entriesByPrompt[e.prompt_id] || []).push(e); } });
     var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === cat; });
     var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
-    html += '<h2 class="sectionhead">' + esc(cat) + '</h2>';
     var dis = closed ? ' disabled' : '';
+    // v442 §2: the commandment chips return as navigation —
+    // one chip per Commandment category, in payload order,
+    // the resolved category marked; exactly ONE row that
+    // scrolls sideways (the .examchips rule in ui.ts).
+    var cmdCats = cats.filter(function (c) { return c.indexOf('Commandment') === 0; });
+    if (cmdCats.length) html += '<div class="chips examchips">' + cmdCats.map(function (c) { return '<button class="chip' + (c === cat ? ' active' : '') + '" data-examcat="' + esc(c) + '" aria-pressed="' + (c === cat ? 'true' : 'false') + '"' + dis + '>' + esc(c) + '</button>'; }).join('') + '</div>';
+    html += '<h2 class="sectionhead">' + esc(cat) + '</h2>';
     if (state.deepIdx >= prompts.length) state.deepIdx = 0;
     var p = prompts[state.deepIdx];
     if (p) {
@@ -8327,10 +8333,20 @@ function entryFieldHtml(p, closed) {
 }
 function wireExamination(data) {
   var run = data.run;
-  var cat = data.focusCategory || (data.categories || [])[0];
+  var cat = state.examCat || data.focusCategory || (data.categories || [])[0];
   var pv = document.getElementById('deep-prev'), nx = document.getElementById('deep-next');
   if (pv) pv.addEventListener('click', function () { state.deepIdx--; renderExamination(); });
   if (nx) nx.addEventListener('click', function () { state.deepIdx++; renderExamination(); });
+  // v442 §2: a chip tap jumps to that commandment — its
+  // first question stands (deepIdx resets), the repaint
+  // runs through the standing render path.
+  view.querySelectorAll('[data-examcat]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.examCat = b.getAttribute('data-examcat');
+      state.deepIdx = 0;
+      renderExamination();
+    });
+  });
   view.querySelectorAll('.prompt').forEach(function (card) {
     card.addEventListener('click', function (ev) {
       if (ev.target.tagName === 'TEXTAREA' || ev.target.tagName === 'BUTTON' || ev.target.tagName === 'A') return;
