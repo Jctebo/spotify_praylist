@@ -2794,13 +2794,13 @@ function paintPodcasts() {
     + '<div class="meta">' + res.listenedCount + ' of ' + res.total + ' listened'
     + (podDurSum > 0 ? ' \u00b7 ' + fmtDurLong(podDurSum) : '')
     + (cur ? ' \u00b7 Current: ' + esc(cur.label) : ' \u00b7 Complete') + '</div></div>';
-  if (cur) {
-    html += '<div class="card"><div class="meta">Current episode</div><div class="row">'
-      + podRowArtHtml(cur)
-      + '<button class="playbtn" data-podplay="' + esc(cur.key) + '">&#9654;</button>'
-      + '<div class="grow"><h3>' + esc(cur.title) + '</h3><div class="meta">' + esc(cur.label) + (cur.durationS ? ' · ' + fmtDur(cur.durationS) : '') + '</div></div>'
-      + '</div></div>';
-  }
+  // v433 §2.3 (F-433-2): the Current episode card retires
+  // into its row — the card duplicated the current entry's
+  // own row (same episode, same data-podplay handler, same
+  // playPodFrom act, play only). The current row names
+  // itself in its meta line (podRowString, below); the
+  // resume act stands identical on the row's own disc, and
+  // the §2.5 scroll rule already lands on the row.
   // v419 (G31/F-419-3): the collapse — the entries standing
   // listened BEFORE the current entry fold into one disclosure
   // row where the first of them stands; the current entry and
@@ -2826,20 +2826,31 @@ function paintPodcasts() {
     // dissolves) and the listened date leaves the wrap for
     // the meta line in D2's short form (§2.7). The partway
     // bar stands at the row's bottom edge, unmoved.
+    // v433 §2.4: the row takes v424's slim form — the
+    // .prow-ctl controls line retires; the controls move
+    // into the title line as a .prow-cluster inside
+    // .titlerow, reading mark · play · ⋮ (v424's
+    // played-state · play · ⋮ order, the mark in the
+    // played-state seat), every box 44x44, the ⋮ flush
+    // right. The standalone share retires (F-433-3 — Share
+    // stands first in the ⋮ menu, openPodRowMenu untouched);
+    // the downloaded indicator trails the meta line in
+    // .metarow form, its span and refreshPodDlStates
+    // untouched. The description stands at the two-line
+    // clamp (F-433-1); the head stands entire (F-433-4).
+    // The current entry's meta leads "Current episode · "
+    // (F-433-2 — the retired card's naming, on the row).
     return '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
       + podRowArtHtml(e)
-      + '<div class="grow"><h3>' + esc(e.title) + '</h3>'
-      + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
-      + '<div class="meta">' + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</div></div>'
-      + '</div>'
-      + '<div class="prow-ctl">'
-      + '<span class="rowcluster">'
-      + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
-      + '<button class="iconbtn" data-podshare="' + esc(e.key) + '" aria-label="Share">\u2197</button>'
-      + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span>'
-      + '</span>'
-      + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
+      + '<span class="prow-cluster">'
       + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
+      + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
+      + '</span></div>'
+      + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
+      + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</span>'
+      + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span></div></div>'
       + '</div>'
       // v395 §2.9 (D4): the partway bar — one element at the
       // row's bottom edge, width = position / duration, inside
@@ -2875,12 +2886,10 @@ function paintPodcasts() {
   view.querySelectorAll('[data-podmenu]').forEach(function (b) {
     b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu'), b); });
   });
-  view.querySelectorAll('[data-podshare]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var e = (res.entries || []).filter(function (x) { return x.key === b.getAttribute('data-podshare'); })[0];
-      if (e) openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' });
-    });
-  });
+  // v433 §2.3 (F-433-3): the [data-podshare] wiring retires
+  // with the standalone share emission — it binds nothing
+  // after; the menu's Share is wired inside openPodRowMenu,
+  // untouched.
   // v432 §2.2: the offline wiring pair retires with the box — on this
   // paint both were no-ops (neither button id stands, no line element).
   refreshPodDlStates();
