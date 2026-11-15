@@ -79,9 +79,9 @@ function extractFn(src, name) {
     "S1 the worker-source diff vs the v451-ship base is client.ts + ui.ts only — no index.ts, no migration (got: " + changed.join(", ") + ")");
   const paint = extractFn(CLIENT, "renderIntentions");
   ok(!paint.includes("new-text") && !paint.includes("new-pri") && !paint.includes("new-add") && !paint.includes('class="stats"')
-    && !paint.includes("the pool") && !paint.includes('class="about"') && !paint.includes('id="int-redraw"')
+    && !paint.includes('<p class="sub">the pool</p>') && !paint.includes('class="about"') && !paint.includes('id="int-redraw"')
     && paint.includes('id="int-menu"') && paint.includes('id="int-fab"') && paint.includes('id="int-redraw-note"'),
-    "S2 the retired seats' census in the paint: the Add-card ids, the stats strip, the sub-line, the about paragraph, and the old Redraw button id all read 0 — the headrow (title + ☰), the note slot, and the FAB stand");
+    "S2 the retired seats' census in the paint (read as emitted markup forms — the build's own retirement comments carry the prose): the Add-card ids, the stats strip, the sub-line, the about paragraph, and the old Redraw button id all read 0 — the headrow (title + ☰), the note slot, and the FAB stand");
   const row = extractFn(CLIENT, "intentionRow");
   ok(!row.includes("drawnCount") && !row.includes("data-act") && !row.includes("btn ghost") && !row.includes("librow")
     && row.includes("data-intmenu") && row.includes('class="pri ') && row.includes('card introw'),
@@ -370,10 +370,11 @@ try {
   const added = await ev(`(function(){
     var rows = Array.prototype.slice.call(document.querySelectorAll('.introw'));
     var r = rows.filter(function (x) { return x.textContent.includes('For the new intention'); })[0];
-    return { stands: !!r, tag: r ? r.querySelector('.pri').className : null, first: rows.length ? rows[0].textContent.includes('For the new intention') : false };
+    return { stands: !!r, tag: r ? r.querySelector('.pri').className : null,
+      order: rows.map(function (x) { return Number(x.querySelector('[data-intmenu]').getAttribute('data-intmenu')); }) };
   })()`);
-  ok(a2a && a2b && added.stands && added.tag === "pri H" && added.first,
-    "A2 the add POSTs with the segment's priority (H, chosen in the sheet) and settles — the sheet closed and the new row stands at the head of the flat list with its High tag", JSON.stringify({ post: a2a, settled: a2b, added }));
+  ok(a2a && a2b && added.stands && added.tag === "pri H" && JSON.stringify(added.order) === JSON.stringify([12, 14, 99, 11, 15]),
+    "A2 the add POSTs with the segment's priority (H, chosen in the sheet) and settles — the sheet closed and the new row stands in the High group with its High tag, at the API's order within the priority (the stub appends it; §2 seats the API's order, so it stands after the standing High rows)", JSON.stringify({ post: a2a, settled: a2b, added }));
   await ev(`window.__stub.failAdd = true; document.getElementById('int-menu').click()`);
   await page.waitForSelector('.anchmenu', { timeout: 4000 });
   await ev(`document.querySelector('.anchmenu [data-menuitem="1"]').click()`);
