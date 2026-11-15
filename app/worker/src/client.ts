@@ -6460,11 +6460,15 @@ function paintContinue() {
   var carry = !!(resumeDesc && resumeDesc.episodeId === named.episodeId);
   var blk = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (b) { return b.block === named.block; })[0];
   var blockLabel = blk ? (blk.label || blk.block) : named.block;
-  slot.innerHTML = '<div class="card"><div class="row"><div class="grow"><h3>Continue</h3>'
-    + '<div class="meta">Continue — ' + esc(blockLabel) + ' · ' + esc(named.title) + '</div>'
-    + '<div class="meta">' + playedN + ' of ' + prayers.length + ' heard today</div></div>'
-    + '<button class="btn gold small" id="continue-btn">Continue</button></div>'
-    + '<div style="margin-top:6px"><a href="#" id="continue-all">Play everything instead</a> &middot; <a href="#" id="continue-queue">See queue</a></div></div>';
+  // v431 §2.3: the card's simple form — the resume target whole
+  // on line 1 (the duplicating h3 + "Continue — " prefix retire),
+  // the progress count verbatim on line 2 with See queue seated
+  // at its end. "Play everything instead" retires at John's word
+  // (§1.6); its listener retires with the emission.
+  slot.innerHTML = '<div class="card"><div class="row"><div class="grow">'
+    + '<div class="meta">' + esc(blockLabel) + ' · ' + esc(named.title) + '</div>'
+    + '<div class="meta">' + playedN + ' of ' + prayers.length + ' heard today · <a href="#" id="continue-queue">See queue</a></div></div>'
+    + '<button class="btn gold small" id="continue-btn">Continue</button></div></div>';
   document.getElementById('continue-btn').addEventListener('click', function () {
     var res = buildContinueQueue();
     var build = res.build;
@@ -6482,10 +6486,6 @@ function paintContinue() {
       }
     }
     startQueue(build);
-  });
-  document.getElementById('continue-all').addEventListener('click', function (ev) {
-    ev.preventDefault();
-    startQueue(extRebuildDescs(state.dayPayload));
   });
   document.getElementById('continue-queue').addEventListener('click', function (ev) {
     ev.preventDefault();
@@ -7977,8 +7977,32 @@ function episodesCardHtml(day) {
     + '<div class="blockcard-meta"><span>' + (day.episodes || []).length + ' tracks</span></div>'
     + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
 }
+function shortHomeDate(day) {
+  // v431 §2.1 (F-431-1): the home's date, shortened home-only and
+  // derived client-side. prayerDateLabel and every payload stand
+  // byte-untouched: the day payload's `date` IS the Chicago
+  // calendar date, so the UTC-noon derivation below returns the
+  // identical calendar fields in short form ("Sat, Nov 14,
+  // 2026") — weekday, month, day, and year all stand; nothing is
+  // dropped. Every other surface (the Examination head, the
+  // shell's litday fallback, the media album lines) keeps the
+  // long form. Fallback: no usable `date` → the standing label.
+  var ds = day && day.date;
+  if (ds) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
+    if (m) {
+      var dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+      return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(dt);
+    }
+  }
+  return (day && day.dateLabel) || 'the day&rsquo;s prayers';
+}
 function paintListenHome(day) {
-  var html = '<h1 class="screen">Prayers</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>'; // v419 (G27): the home heading is the tab's name
+  // v431 §2.2 (F-431-6): the title + the short date share ONE
+  // line — the .headrow (title left at its standing 22px, the
+  // date right in its standing .sub dress). v419 (G27) stands:
+  // the heading is still the tab's name.
+  var html = '<div class="row headrow"><h1 class="screen grow">Prayers</h1><p class="sub">' + esc(shortHomeDate(day)) + '</p></div>';
   // §2.6.1: the search pill — typing re-paints the results region
   // in place (the field itself never re-renders, so focus and the
   // query stand); clearing restores the standing home body.
@@ -7998,7 +8022,7 @@ function paintListenHome(day) {
     + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists" aria-pressed="' + (state.homeFilter === 'praylists' ? 'true' : 'false') + '">Praylists</button>'
     + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas" aria-pressed="' + (state.homeFilter === 'novenas' ? 'true' : 'false') + '">Novenas</button>'
     + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div></div>';
-  html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn">Sort</button></div>';
+  html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn" aria-label="Sort">↑↓</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
   // v392 W5: the offline readiness line + the download button.

@@ -143,6 +143,8 @@ html.in-shell .tabbar { padding-bottom: 0; }
 body.dock-on .view { padding-bottom: calc(var(--tabh, 0px) + var(--dockh, 60px)); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
+.headrow { margin:2px 0 12px; }
+.headrow h1.screen, .headrow .sub { margin:0; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 10px; }
 /* v363 §2.1/§2.2: the uniform row height — every track row
    stands at exactly 76px. The fixed height lands on the
