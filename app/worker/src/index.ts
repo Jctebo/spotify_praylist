@@ -22,6 +22,12 @@ export interface Env {
   // deterministic per (date, item) so the gate can assert the
   // weighted distribution exactly (the DevOps LOCAL_DEV precedent).
   LOCAL_DEV?: string;
+  // v427 harness seam ONLY (F-427-I2): overrides the own-feed URL
+  // the per-episode novena enumeration fetches, so the gate can
+  // serve fixture feeds locally. Read ONLY when LOCAL_DEV is "1";
+  // production leaves it unset and the enumeration uses the
+  // pinned OWN_FEED_URL constant below.
+  OWN_FEED_URL?: string;
   // v334 harness seam ONLY: overrides the Divine Office feed URL the
   // courier fetches, so the gate can replay fixture feeds through
   // the real route. Production leaves it unset and the courier uses
@@ -335,13 +341,25 @@ async function prayerGetActiveIntentions(env: Env): Promise<PrayerIntentionRow[]
 // Draw randomness: Math.random in production (the board's behavior).
 // Under LOCAL_DEV (harness only) a deterministic LCG per (date,item)
 // makes the weighted distribution exactly assertable at the gate.
-function drawRandom(env: Env, date: string, itemId: number): number {
-  if (env.LOCAL_DEV !== "1") return Math.random();
-  const s = `${date}:${itemId}`;
+// v427 F-427-I3: the FNV-style hash stands factored as drawHash so
+// the per-item seed strings (`${date}:${itemId}`) and the
+// per-episode seed strings (`${date}:${episodeId}`) share the ONE
+// hash — the per-item seed strings are byte-identical to the
+// pre-refactor shape, so no per-item pick moves (harness-v427
+// proves it against the replicated pre-refactor algorithm).
+function drawHash(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16;
   return (h >>> 0) / 4294967296;
+}
+function drawRandom(env: Env, date: string, itemId: number): number {
+  if (env.LOCAL_DEV !== "1") return Math.random();
+  return drawHash(`${date}:${itemId}`);
+}
+function episodeDrawRandom(env: Env, date: string, episodeId: string): number {
+  if (env.LOCAL_DEV !== "1") return Math.random();
+  return drawHash(`${date}:${episodeId}`);
 }
 // Weighted draw: one active intention per enabled item. Weights H=4, M=2, L=1.
 async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, number>> {
@@ -366,6 +384,87 @@ async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, nu
   if (stmts.length) await env.DB.batch(stmts);
   return map;
 }
+// v427 §2.3: the own feed — the enumeration source for the
+// presented day's novena episode ids. The Worker reads the SAME
+// feed the client resolves the presented day's own tracks from
+// (client.ts OWN_FEED_URL), so the enumerated set equals the
+// presented set by construction. ONE named constant; the harness
+// overrides it under LOCAL_DEV only (F-427-I2, the Env seam).
+const OWN_FEED_URL = "https://orapronobis.media/podcast.xml";
+function ownFeedUrl(env: Env): string {
+  return env.LOCAL_DEV === "1" && env.OWN_FEED_URL ? env.OWN_FEED_URL : OWN_FEED_URL;
+}
+// The stem rule, mirrored exactly from client.ts ownStemOf +
+// ownFamilyOfStem's novena branch (jobs/compose_app_audio.py:619
+// carries the same canon): basename → strip a trailing .mp3 →
+// the stem must START with the presented date → rest after
+// `<date>-` → the LAST `-day-` in rest at index > 0 →
+// episodeId = `novena-` + rest up to that index.
+function ownStemOfUrl(url: string): string {
+  const clean = String(url || "").split("?")[0].split("#")[0];
+  const base = clean.slice(clean.lastIndexOf("/") + 1);
+  return base.slice(-4) === ".mp3" ? base.slice(0, -4) : base;
+}
+function novenaEpisodeIdOfStem(stem: string, date: string): string | null {
+  if (!stem.startsWith(date + "-")) return null;
+  const rest = stem.slice(date.length + 1);
+  const dayAt = rest.lastIndexOf("-day-");
+  if (dayAt <= 0) return null;
+  return "novena-" + rest.slice(0, dayAt);
+}
+// An enclosure-url scan of the feed (its standing shape — no XML
+// parser joins the bundle). Fetch error, non-200, or a parse that
+// finds nothing → the empty set: the fill is skipped, standing
+// rows still emit, and the shell never errors (§2.3 failure mode).
+async function enumerateNovenaEpisodes(env: Env, date: string): Promise<string[]> {
+  try {
+    const res = await fetch(ownFeedUrl(env));
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const ids = new Set<string>();
+    const tagRe = /<enclosure\b[^>]*>/g;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(xml))) {
+      const um = /\burl="([^"]+)"/.exec(m[0]);
+      if (!um) continue;
+      const id = novenaEpisodeIdOfStem(ownStemOfUrl(um[1]), date);
+      if (id) ids.add(id);
+    }
+    return [...ids];
+  } catch { return []; }
+}
+// v427 §2.2: the per-episode sibling of prayerDrawForDate, under
+// its exact disciplines — a standing (date, episode) draw is
+// never re-picked by a read; missing episodes fill from the
+// standing pool (prayerGetActiveIntentions, H=4 · M=2 · L=1) in
+// ONE batch (all-or-nothing: a failed batch writes nothing and
+// the next read retries). Enumeration runs ONLY when the date
+// has no standing episode rows, or when the redraw forces it
+// (§2.3's gate — the feed is 2.1 MB; a per-read fetch is
+// rejected on cost).
+async function prayerEpisodeDrawForDate(env: Env, date: string, forceEnumerate = false): Promise<Map<string, number>> {
+  const existing = await env.DB.prepare("SELECT episode_id, intention_id FROM prayer_episode_draws WHERE date=?").bind(date).all<{ episode_id: string; intention_id: number }>();
+  const map = new Map<string, number>();
+  for (const row of existing.results ?? []) map.set(row.episode_id, row.intention_id);
+  if (!forceEnumerate && map.size > 0) return map;
+  const ids = await enumerateNovenaEpisodes(env, date);
+  const missing = ids.filter((id) => !map.has(id));
+  if (!missing.length) return map;
+  const intentions = await prayerGetActiveIntentions(env);
+  if (!intentions.length) return map;
+  const weights = intentions.map((i) => (i.priority === "H" ? 4 : i.priority === "M" ? 2 : 1));
+  const total = weights.reduce((a, b) => a + b, 0);
+  const stmts: D1PreparedStatement[] = [];
+  for (const episodeId of missing) {
+    let x = episodeDrawRandom(env, date, episodeId) * total;
+    let pick = intentions[intentions.length - 1];
+    for (let k = 0; k < intentions.length; k++) { x -= weights[k]; if (x <= 0) { pick = intentions[k]; break; } }
+    map.set(episodeId, pick.id);
+    stmts.push(env.DB.prepare("INSERT OR IGNORE INTO prayer_episode_draws (date, episode_id, intention_id) VALUES (?, ?, ?)").bind(date, episodeId, pick.id));
+  }
+  if (stmts.length) await env.DB.batch(stmts);
+  return map;
+}
 // v426 §2.3: THE whole-day re-draw entry point (§2.9's contract —
 // v427's per-episode re-draw joins INSIDE this function, under the
 // same snapshot/restore discipline; no second endpoint, no second
@@ -377,16 +476,32 @@ async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, nu
 async function prayerRedrawForDate(env: Env, date: string): Promise<Map<number, number>> {
   const snap = await env.DB.prepare("SELECT item_id, intention_id FROM prayer_draws WHERE date=?").bind(date).all<{ item_id: number; intention_id: number }>();
   const rows = snap.results ?? [];
+  // v427 §2.5: the snapshot extends to today's episode rows,
+  // beside the per-item snapshot, before any delete. The episode
+  // store's absence (a pre-0022 rollback posture) degrades the
+  // join to the standing v426 shape — never an error.
+  let epRows: { episode_id: string; intention_id: number }[] = [];
+  let epStore = true;
+  try {
+    const epSnap = await env.DB.prepare("SELECT episode_id, intention_id FROM prayer_episode_draws WHERE date=?").bind(date).all<{ episode_id: string; intention_id: number }>();
+    epRows = epSnap.results ?? [];
+  } catch { epStore = false; }
   try {
     await env.DB.prepare("DELETE FROM prayer_draws WHERE date=?").bind(date).run();
+    if (epStore) await env.DB.prepare("DELETE FROM prayer_episode_draws WHERE date=?").bind(date).run();
     const map = await prayerDrawForDate(env, date);
-    // v427 joins here: the per-episode re-draw (clear today's
-    // per-episode rows, re-run its draw under the same pool and
-    // weights) runs inside this same snapshot/restore discipline.
+    // v427 §2.5: the per-episode re-draw runs inside this same
+    // try, with FORCED enumeration over the post-mutation pool —
+    // one endpoint, one algorithm; the retire/delete handlers
+    // need no episode-side deletion of their own.
+    if (epStore) await prayerEpisodeDrawForDate(env, date, true);
     return map;
   } catch (e) {
     if (rows.length) {
       await env.DB.batch(rows.map((r) => env.DB.prepare("INSERT OR IGNORE INTO prayer_draws (date, item_id, intention_id) VALUES (?, ?, ?)").bind(date, r.item_id, r.intention_id)));
+    }
+    if (epRows.length) {
+      await env.DB.batch(epRows.map((r) => env.DB.prepare("INSERT OR IGNORE INTO prayer_episode_draws (date, episode_id, intention_id) VALUES (?, ?, ?)").bind(date, r.episode_id, r.intention_id)));
     }
     throw e;
   }
@@ -569,11 +684,13 @@ const INTRO_PAIRING: Record<string, string> = {
 // the presented day's draw (the same prayer payload the helper's
 // read_draw consumes), joined through INTRO_PAIRING — the pairing
 // table stands as generation data (§2.8 ruling 4); only its
-// consumer changed. Novena track ids are feed-born (novena-<slug>)
-// and cannot be enumerated here: the Novenas item's drawn text
-// rides under the "novenas" key and the client applies the
-// standing prefix rule to it. Absence is the missing-intro signal
-// — never an error, never a placeholder.
+// consumer changed. Novena track ids are feed-born (novena-<slug>):
+// v427 enumerates the presented day's ids from the own feed
+// (§2.3) and emits ONE entry per episode id from the per-episode
+// draw store (§2.2) — the "novenas" family key RETIRES (§2.4):
+// an episode with no draw shows NO line, never another draw's
+// text. Absence is the missing-intro signal — never an error,
+// never a placeholder.
 async function playerIntroTexts(
   env: Env,
   presented: string,
@@ -590,8 +707,22 @@ async function playerIntroTexts(
     const text = drawByItem.get(item);
     if (text) out[trackId] = text;
   }
-  const novenaText = drawByItem.get("Novenas");
-  if (novenaText) out["novenas"] = novenaText;
+  // v427 §2.4: the per-episode emission. The whole episode path
+  // stands inside this try/catch (the standing dayPositions /
+  // blockOrder fold pattern): any failure — including the table
+  // absent in a pre-0022 rollback posture — emits NO per-episode
+  // keys and never errors the shell.
+  try {
+    const epMap = await prayerEpisodeDrawForDate(env, presented);
+    if (epMap.size) {
+      const all = await env.DB.prepare("SELECT id, text FROM prayer_intentions").all<{ id: number; text: string }>();
+      const textById = new Map((all.results ?? []).map((i) => [i.id, i.text]));
+      for (const [episodeId, intentionId] of epMap) {
+        const text = textById.get(intentionId);
+        if (text) out[episodeId] = text;
+      }
+    }
+  } catch { /* the episode path degrades to absence */ }
   return out;
 }
 // v342 §2.5: the day SHELL. The payload carries the presented
