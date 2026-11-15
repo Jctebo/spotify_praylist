@@ -825,7 +825,11 @@ async function playerBlockOrder(env: Env): Promise<string[] | null> {
 const COMMANDMENT_CATS = ["Commandment I", "Commandment II", "Commandment III", "Commandment IV", "Commandment V", "Commandment VI and IX", "Commandment VII", "Commandment VIII", "Commandment X"];
 async function examToday(env: Env) {
   const { date } = prayerChicagoNow();
-  let run = await env.DB.prepare("SELECT * FROM exam_runs WHERE date=?").bind(date).first<{ id: number; date: string; state: string; opened_at: string; closed_at: string | null }>();
+  // v445 §2: the day's LATEST run is the day's run (ORDER
+  // BY id DESC) — after a pass closes, a fresh run for the
+  // same date stands above it. An open run is created only
+  // when NO run stands for the date at all.
+  let run = await env.DB.prepare("SELECT * FROM exam_runs WHERE date=? ORDER BY id DESC").bind(date).first<{ id: number; date: string; state: string; opened_at: string; closed_at: string | null }>();
   if (!run) {
     const r = await env.DB.prepare("INSERT INTO exam_runs (date, state, opened_at) VALUES (?, 'open', ?) RETURNING id").bind(date, nowISO()).first<{ id: number }>();
     run = { id: r!.id, date, state: "open", opened_at: nowISO(), closed_at: null };
@@ -2805,6 +2809,20 @@ export default {
         if (rMatch && seg[4] === "close" && request.method === "POST") {
           await env.DB.prepare("UPDATE exam_runs SET state='closed', closed_at=? WHERE id=? AND state='open'").bind(nowISO(), Number(rMatch[1])).run();
           return json({ ok: true });
+        }
+        if (seg[2] === "runs" && !seg[3] && request.method === "POST") {
+          // v445 §2: start a new pass for today. The day's
+          // latest run governs: open → returned unchanged
+          // (never two open runs for a date); closed — or no
+          // run at all → a fresh open run stands. The answer
+          // carries the run either way; the client re-reads
+          // the day after this answers.
+          const { date } = prayerChicagoNow();
+          const latest = await env.DB.prepare("SELECT * FROM exam_runs WHERE date=? ORDER BY id DESC").bind(date).first<{ id: number; date: string; state: string; opened_at: string; closed_at: string | null }>();
+          if (latest && latest.state === "open") return json({ ok: true, run: latest, created: false });
+          const openedAt = nowISO();
+          const r = await env.DB.prepare("INSERT INTO exam_runs (date, state, opened_at) VALUES (?, 'open', ?) RETURNING id").bind(date, openedAt).first<{ id: number }>();
+          return json({ ok: true, run: { id: r!.id, date, state: "open", opened_at: openedAt, closed_at: null }, created: true }, 201);
         }
         if (seg[2] === "prompts" && request.method === "PUT") {
           const body = await request.json().catch(() => ({})) as { prompts?: { id?: number; text?: string }[] };

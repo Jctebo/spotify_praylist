@@ -8309,6 +8309,11 @@ function renderExaminationContent() {
     (data.entries || []).forEach(function (e) { if (e.prompt_id) { (entriesByPrompt[e.prompt_id] = entriesByPrompt[e.prompt_id] || []).push(e); } });
     var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === cat; });
     var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
+    // v445 §2: a closed run offers the new pass from the
+    // head area — one solid act. Its tap starts a fresh run
+    // for tonight and the page repaints open on the focus.
+    // While a run stands open the button does not stand.
+    if (closed) html += '<button class="btn" id="run-new" style="width:100%;margin:4px 0 10px">Start a new examination</button>';
     var dis = closed ? ' disabled' : '';
     // v444 §2 (v442's chips, widened): one chip per category
     // in the payload, in payload order, the resolved category
@@ -8438,6 +8443,13 @@ function wireExamination(data) {
   });
   var rc = document.getElementById('run-close');
   if (rc) rc.addEventListener('click', function () { openConfirm({ line: 'Close the examination for tonight?', commitLabel: 'Close examination', act: function () { post('/api/exam/runs/' + run.id + '/close', {}).then(renderExamination); } }); });
+  // v445 §2: the new-pass act (it stands only on a closed
+  // run) — the route starts a fresh run only when tonight's
+  // latest stands closed; the repaint re-reads the day and
+  // opens on tonight's focus (examCat/deepIdx reset — a
+  // fresh pass, none of the closed pass's place kept).
+  var rn = document.getElementById('run-new');
+  if (rn) rn.addEventListener('click', function () { state.examCat = null; state.deepIdx = 0; post('/api/exam/runs', {}).then(renderExamination); });
   var gear = document.getElementById('ex-gear');
   if (gear) gear.addEventListener('click', function () { openPromptsEditor(data.prompts || []); });
 }
