@@ -366,6 +366,37 @@ async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, nu
   if (stmts.length) await env.DB.batch(stmts);
   return map;
 }
+// v426 §2.3: THE whole-day re-draw entry point (§2.9's contract —
+// v427's per-episode re-draw joins INSIDE this function, under the
+// same snapshot/restore discipline; no second endpoint, no second
+// draw algorithm). Snapshot today's rows, delete today's rows only,
+// re-run the SAME fill. If the fill throws, the snapshot is restored
+// by one batch INSERT OR IGNORE and the error propagates — a failed
+// re-run leaves the standing draw untouched, row for row. Past and
+// future days, played/heard state, and the pool are never written.
+async function prayerRedrawForDate(env: Env, date: string): Promise<Map<number, number>> {
+  const snap = await env.DB.prepare("SELECT item_id, intention_id FROM prayer_draws WHERE date=?").bind(date).all<{ item_id: number; intention_id: number }>();
+  const rows = snap.results ?? [];
+  try {
+    await env.DB.prepare("DELETE FROM prayer_draws WHERE date=?").bind(date).run();
+    const map = await prayerDrawForDate(env, date);
+    // v427 joins here: the per-episode re-draw (clear today's
+    // per-episode rows, re-run its draw under the same pool and
+    // weights) runs inside this same snapshot/restore discipline.
+    return map;
+  } catch (e) {
+    if (rows.length) {
+      await env.DB.batch(rows.map((r) => env.DB.prepare("INSERT OR IGNORE INTO prayer_draws (date, item_id, intention_id) VALUES (?, ?, ?)").bind(date, r.item_id, r.intention_id)));
+    }
+    throw e;
+  }
+}
+// v426 §2.4: a mutation's settle redraw — the mutation stands even
+// when its redraw fails; the handler reports the outcome as
+// redrawn: true | false and the client paints the pool either way.
+async function prayerTryRedraw(env: Env, date: string): Promise<boolean> {
+  try { await prayerRedrawForDate(env, date); return true; } catch { return false; }
+}
 // v335 §2.3: the splice reads the STANDING segment rows (sentinel
 // date 'current') for every payload — one standing segment per block
 // under the same name always, replaced in place on refresh. Dated
@@ -1665,6 +1696,21 @@ export default {
     try {
       if (seg[0] === "api" && seg[1] === "prayer") {
         const { date: pToday } = prayerChicagoNow();
+        if (seg[2] === "redraw" && request.method === "POST") {
+          // v426 §2.3: the manual whole-day re-draw. No body; the
+          // date is always today (Chicago), never client-supplied.
+          // John's session surface only — this block stands inside
+          // the johnOnly gate and the agent-token day-read exemption
+          // is NOT extended to it. On failure the standing draw is
+          // restored row for row by prayerRedrawForDate itself.
+          try {
+            await prayerRedrawForDate(env, pToday);
+            const cnt = await env.DB.prepare("SELECT COUNT(*) AS n FROM prayer_draws WHERE date=?").bind(pToday).first<{ n: number }>();
+            return json({ ok: true, date: pToday, drawn: cnt?.n ?? 0 });
+          } catch {
+            return err(500, "redraw failed — the standing draw stands");
+          }
+        }
         if (seg[2] === "day" && request.method === "GET") {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
@@ -1688,9 +1734,11 @@ export default {
           const r = await env.DB.prepare(
             "INSERT INTO prayer_intentions (text, priority, status, created_at) VALUES (?, ?, 'active', ?) RETURNING id",
           ).bind(text, priority, nowISO()).first<{ id: number }>();
-          // Adding an intention ONLY adds it (v58 rule): today's draws
-          // are untouched; it first enters a draw at the next fill.
-          return json({ ok: true, id: r?.id }, 201);
+          // v426 §2.4: the add auto-redraws today inside its own
+          // request (John's ruling retires the v58 rule). The add
+          // stands even if the redraw fails — redrawn says which.
+          const redrawn = await prayerTryRedraw(env, pToday);
+          return json({ ok: true, id: r?.id, redrawn }, 201);
         }
         const pIntMatch = seg[2] === "intentions" && seg[3] ? /^(\d+)$/.exec(seg[3]) : null;
         if (pIntMatch && seg[4] === "status" && request.method === "POST") {
@@ -1699,10 +1747,17 @@ export default {
           const id = Number(pIntMatch[1]);
           await env.DB.prepare("UPDATE prayer_intentions SET status=? WHERE id=?").bind(body.status, id).run();
           if (body.status === "retired") {
+            // v426 §2.4 / F-426-I3: the standing wider removal
+            // deletion (date >= today) stands, in its standing
+            // order, BEFORE the whole-day redraw that supersedes
+            // the handler's standing partial refill.
             await env.DB.prepare("DELETE FROM prayer_draws WHERE intention_id=? AND date>=?").bind(id, pToday).run();
-            await prayerDrawForDate(env, pToday);
           }
-          return json({ ok: true });
+          // Retire and restore both auto-redraw today (§2.4): the
+          // retired intention leaves today's lines entirely; a
+          // restored one can be seated in them again at once.
+          const redrawn = await prayerTryRedraw(env, pToday);
+          return json({ ok: true, redrawn });
         }
         if (pIntMatch && request.method === "PATCH") {
           const body = await request.json().catch(() => ({})) as { text?: string; priority?: string };
@@ -1712,7 +1767,10 @@ export default {
           if (priority === null) return err(400, "bad priority");
           await env.DB.prepare("UPDATE prayer_intentions SET text=COALESCE(?, text), priority=COALESCE(?, priority) WHERE id=?")
             .bind(typeof body.text === "string" ? body.text : null, priority ?? null, Number(pIntMatch[1])).run();
-          return json({ ok: true });
+          // v426 §2.4: priority is a draw input — an edit re-runs
+          // today's draw inside its own request.
+          const redrawn = await prayerTryRedraw(env, pToday);
+          return json({ ok: true, redrawn });
         }
         if (pIntMatch && request.method === "DELETE") {
           const id = Number(pIntMatch[1]);
@@ -1720,8 +1778,11 @@ export default {
             env.DB.prepare("DELETE FROM prayer_draws WHERE intention_id=?").bind(id),
             env.DB.prepare("DELETE FROM prayer_intentions WHERE id=?").bind(id),
           ]);
-          await prayerDrawForDate(env, pToday);
-          return json({ ok: true });
+          // v426 §2.4 / F-426-I3: the standing all-dates removal
+          // deletion stands above; the whole-day redraw supersedes
+          // the handler's standing refill.
+          const redrawn = await prayerTryRedraw(env, pToday);
+          return json({ ok: true, redrawn });
         }
         if (seg[2] === "audio" && request.method === "GET") {
           const date = seg[3] ?? "";

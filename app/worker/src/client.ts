@@ -4055,6 +4055,19 @@ function intentionRow(it) {
     : '<button class="btn ghost small" data-act="edit" data-id="' + it.id + '">Edit</button> <button class="btn ghost small" data-act="restore" data-id="' + it.id + '">Restore</button> <button class="btn ghost small" data-act="del" data-id="' + it.id + '">Delete</button>';
   return '<div class="librow"><div class="row"><div class="grow"><div>' + esc(it.text) + '</div><div class="meta">' + hist + '</div></div><span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span></div><div style="margin-top:8px">' + actions + '</div></div>';
 }
+// v426 §2.6: the ONE settle paint path — the standing triple
+// (capturePlace · renderIntentions · armPlaceRestore), factored
+// once. The redraw button and every mutation settle call it; no
+// call site keeps its own copy. A mutation whose auto-redraw
+// failed server-side (§2.4) passes redrawFailed and the fresh
+// paint stands the redraw failure line in its head note slot.
+var intentionsRedrawFailed = false;
+function settleIntentions(redrawFailed) {
+  if (redrawFailed) intentionsRedrawFailed = true;
+  capturePlace();
+  renderIntentions();
+  armPlaceRestore('prayers:intentions');
+}
 function renderIntentions() {
   view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>' + skelHtml('intentions');
   var today = todayChicago();
@@ -4068,7 +4081,11 @@ function renderIntentions() {
     // v338 §2.9(3): the per-block segment audio bar retires with
     // the payload's segment fields — the Intentions tab's
     // item/intention listing below stands untouched (§2.9(2)).
-    var html = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>';
+    // v426 §2.5: the head becomes a row — the title lines in a
+    // .grow cell, the Redraw button at the row's right, and the
+    // note slot under the row (empty when idle; .fieldnote:empty
+    // stands display:none, so the idle slot costs no height).
+    var html = '<div class="row"><div class="grow"><h1 class="screen">Intentions</h1><p class="sub">the pool</p></div><button class="btn ghost" id="int-redraw">Redraw</button></div><p class="fieldnote" id="int-redraw-note"></p>';
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
     // v411 §2.6 (4.1): the add card stands at the head of the
     // surface, directly under the counts strip — the tab's
@@ -4076,7 +4093,7 @@ function renderIntentions() {
     // intention. The groups stand second and lose nothing;
     // the card's ids and wireIntentions stand unchanged. The
     // fn-new-text slot (§2.6, 4.2) stands under the field.
-    html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><p class="fieldnote" id="fn-new-text"></p><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention only adds it — it first enters a draw at the next nightly fill.</p></div>';
+    html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><p class="fieldnote" id="fn-new-text"></p><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention redraws today — it can stand in today\u2019s prayers at once.</p></div>';
     [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
       var rows = active.filter(function (i) { return i.priority === g[0]; });
       html += '<h2 class="sectionhead">' + g[1].toUpperCase() + '</h2>';
@@ -4085,27 +4102,56 @@ function renderIntentions() {
     if (retired.length) {
       html += '<h2 class="sectionhead">RETIRED</h2><div class="liblist">' + retired.map(intentionRow).join('') + '</div>';
     }
-    html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool and does not stage the day.</p>';
+    html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool, and its redraw stages the day.</p>';
     view.innerHTML = html;
     wireIntentions(intentions);
+    // v426 §2.4: a settle whose auto-redraw failed stands the
+    // failure line in the fresh paint's note slot — the pool
+    // change is visible; today's lines keep the prior draw.
+    if (intentionsRedrawFailed) { intentionsRedrawFailed = false; fieldNote('int-redraw-note', 'Redraw did not run — the standing draw stands. Try again.'); }
   }).catch(function (e) {
+    intentionsRedrawFailed = false;
     // v419 (G22): the authored failure + a Ghost Retry.
     view.innerHTML = '<h1 class="screen">Intentions</h1><p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
     document.getElementById('int-retry').addEventListener('click', renderIntentions);
   });
 }
 function wireIntentions(intentions) {
+  var redrawBtn = document.getElementById('int-redraw');
+  if (redrawBtn) redrawBtn.addEventListener('click', function () {
+    // v426 §2.5: the tap runs BOTH, in order — POST the draw
+    // re-run, then on settle the one paint path re-reads the
+    // pool and repaints. Busy = disabled + "Redrawing…". A
+    // failed tap does not repaint; the standing paint stands
+    // and the note slot names the failure.
+    redrawBtn.disabled = true;
+    redrawBtn.textContent = 'Redrawing\u2026';
+    post('/api/prayer/redraw', {}).then(function () {
+      settleIntentions(false);
+    }).catch(function () {
+      redrawBtn.disabled = false;
+      redrawBtn.textContent = 'Redraw';
+      fieldNote('int-redraw-note', 'Redraw did not run \u2014 the standing draw stands. Try again.');
+    });
+  });
   var add = document.getElementById('new-add');
   if (add) add.addEventListener('click', function () {
     var text = document.getElementById('new-text').value.trim();
     if (!text) { fieldNote('fn-new-text', 'Write the intention first.'); return; }
-    post('/api/prayer/intentions', { text: text, priority: document.getElementById('new-pri').value }).then(function () {
+    // v426 §2.6 (F-426-3): the add's failure branch — the button
+    // disables while the POST is in flight (the v411 editor-save
+    // precedent); on refusal it re-enables, the draft stands
+    // untouched (no placeSkip, no repaint), and the field note
+    // names the failure.
+    add.disabled = true;
+    post('/api/prayer/intentions', { text: text, priority: document.getElementById('new-pri').value }).then(function (res) {
       // v411 §2.4/§2.10 (2.2e): the saved field's draft drops —
       // capturePlace skips it — while the side's place stands.
       placeSkip['new-text'] = true; placeSkip['new-pri'] = true;
-      capturePlace();
-      renderIntentions();
-      armPlaceRestore('prayers:intentions');
+      settleIntentions(!!(res && res.redrawn === false));
+    }).catch(function () {
+      add.disabled = false;
+      fieldNote('fn-new-text', 'That did not add. Your text is still here \u2014 try again.');
     });
   });
   wireFieldNotes();
@@ -4116,9 +4162,9 @@ function wireIntentions(intentions) {
       // v411 §2.4: the repaint keeps the side's place — capture
       // runs while the standing DOM (draft + scroll) still holds.
       if (act === 'edit') openIntentionEditor(it);
-      else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
-      else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); });
-      else if (act === 'del') { openConfirm({ line: 'Delete this intention and all its draws?', commitLabel: 'Delete', danger: true, act: function () { api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function () { capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); }); } }); }
+      else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); });
+      else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); });
+      else if (act === 'del') { openConfirm({ line: 'Delete this intention and all its draws?', commitLabel: 'Delete', danger: true, act: function () { api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); }); } }); }
     });
   });
 }
@@ -4138,7 +4184,7 @@ function openIntentionEditor(it) {
     var btn = sheet.querySelector('#ed-save');
     btn.disabled = true;
     api('/api/prayer/intentions/' + it.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: sheet.querySelector('#ed-text').value, priority: sheet.querySelector('#ed-pri').value }) })
-      .then(function () { sheet.remove(); capturePlace(); renderIntentions(); armPlaceRestore('prayers:intentions'); })
+      .then(function (res) { sheet.remove(); settleIntentions(!!(res && res.redrawn === false)); })
       .catch(function () { btn.disabled = false; sheet.querySelector('#ed-note').textContent = 'That did not save. Your text is still here \u2014 try again.'; });
   });
 }
