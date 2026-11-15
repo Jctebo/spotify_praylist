@@ -397,7 +397,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    gradient zone (v353's block-page Play All + home card play
    buttons) — an outline in the bar-fg pair, >= 4.88:1 against both
    gradient ends in every theme. */
-.blockpage-head .playbtn, .blockcard .playbtn { box-shadow:0 0 0 2px var(--bar-fg); }
+.blockcard .playbtn { box-shadow:0 0 0 2px var(--bar-fg); }
 .np-title { text-align:center; }
 .np-meta { text-align:center; }
 .np-seekrow { display:flex; align-items:center; gap:10px; margin:22px 0 6px; font-size:13px; color:var(--muted); }
@@ -464,10 +464,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .blockcard-cap { font-size:13px; font-family:var(--sans); color:var(--bar-sub); margin-top:3px; }
 .blockcard-meta { font-size:13px; font-family:var(--sans); color:var(--muted); padding:2px 62px 8px 8px; }
 .blockcard-play { position:absolute; right:10px; bottom:10px; }
-/* v419 (G10): the gradient head is its own frozen zone —
-   the head (with its back row) pins under the brand bar
-   while the rows scroll beneath it (§4.1). */
-.blockpage-head { margin:-14px -14px 12px; padding:12px 14px 14px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); position:sticky; top:var(--brandh, 54px); z-index:24; }
+/* v419 (G10): the gradient head was its own frozen zone.
+   v448: the head band is retired completely — no
+   .blockpage-head element is emitted; the iOS bar in its
+   host is the only header on the block + episodes pages,
+   and the band's facts stand in the scrolling body. */
 .backrow { margin:0 0 6px; }
 /* v419 (G10): the series page's back row pins the same way,
    on the cream ground (the segtoggle pattern). */
@@ -481,16 +482,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    the header alone (John, 2026-11-15 14:26 CT): the brand
    bar, and on pushed pages this bar under it — sticky at
    the brand height where it stands in the page flow; inside
-   a sticky head (.inhead) the head is the frozen element
-   and the bar stands static, bled to the head's edges.
+   a sticky host (#consbar / #pushbar) the host is the
+   frozen element and the bar stands static. (v448: the
+   .inhead seat inside the old block head retired with the
+   head band; no emission passes inhead now.)
    Dress: the light iOS grey-white ground; the chevron, the
    back name, and the right-side acts read var(--accent-text)
    — the standing theme token that carries the day's
    liturgical color for text on a light ground (§2.7); the
    centered title reads the ink, bold. */
 .iosbar { display:flex; align-items:center; height:44px; padding:0 6px; background:#f8f8f6; border-bottom:1px solid var(--line); position:sticky; top:var(--brandh, 54px); z-index:25; margin:0 0 6px; }
-.blockpage-head .iosbar.inhead { position:static; margin:-12px -14px 10px; padding:0 8px; border-bottom:1px solid rgba(42,38,32,.16); }
-.blockpage-head.compact .iosbar.inhead { margin:-4px -14px 8px; }
 .iosbar-back { display:inline-flex; align-items:center; gap:1px; background:none; border:none; padding:0 8px 0 2px; min-height:44px; min-width:44px; cursor:pointer; color:var(--accent-text); font-family:var(--sans); font-size:17px; flex:none; position:relative; z-index:1; }
 .iosbar-back:active { opacity:.55; }
 .iosbar-chev { font-family:Georgia, 'Times New Roman', serif; font-size:25px; line-height:1; padding-bottom:3px; }
@@ -501,54 +502,36 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    sticky element travels only within its parent, and the
    bar's own parent (this host) is exactly the bar's
    height, so the host sticks at the brand height and the
-   bar inside it stands static. */
-#consbar { position:sticky; top:var(--brandh, 54px); z-index:25; }
-#consbar .iosbar { position:static; }
+   bar inside it stands static. v448: the Prayers tab's
+   pushed-page host (#pushbar) takes the same seat — both
+   hosts stand BEFORE their tab's toggle, so the bar takes
+   the top slot and the toggle scrolls beneath it. */
+#consbar, #pushbar { position:sticky; top:var(--brandh, 54px); z-index:25; }
+#consbar .iosbar, #pushbar .iosbar { position:static; }
+/* v448: the bar's plain act dress (the block page's menu
+   act) — the glyph at bar height in the accent, no border,
+   no pill; its box stands wholly inside the bar. */
+.iosbar-act { background:none; border:none; box-shadow:none; color:var(--accent-text); font-family:var(--sans); font-size:20px; line-height:1; height:44px; min-width:44px; padding:0 6px; cursor:pointer; flex:none; }
+.iosbar-act:active { opacity:.55; }
 .iosbar .btn.ghost { color:var(--accent-text); border-color:transparent; background:transparent; }
 .blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
-.blockpage-meta { font-size:14px; color:var(--bar-sub); margin-top:4px; }
+/* v448: the meta line stands in the scrolling body now —
+   the body's own muted dress (the .meta measures). */
+.blockpage-meta { font-size:14px; font-family:var(--sans); color:var(--muted); margin:2px 0 6px; }
 .blockpage-playrow { display:flex; align-items:center; gap:10px; margin-top:12px; }
-.blockpage-playlabel { font-size:16px; color:var(--bar-fg); }
+.blockpage-playlabel { font-size:16px; color:var(--ink); }
 .playbtn.big { width:56px; height:56px; font-size:20px; }
-.blockpage-head .spot { color:var(--bar-fg); margin-top:0; }
-.blockpage-head .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
-/* v420 §2.3: the compressed block head — three rows inside
-   the standing frozen element. Every divergence rides the
-   .compact scope, so the episodes page's head — the same
-   classes without .compact — keeps the v419 form untouched
-   (F-420-7). v422 §2.7: the head proper is now 94px
-   (padding 4/4 · cover row 56 · pill line 28 at a 2px gap)
-   — the Play All row retired; the disc and the ⋮ ride Row
-   1's trailing cluster (§2.6). §2.4/§2.7: the head sticks
-   FLUSH with the frozen toggle band — brand height + 46px
-   (46 = the toggle's painted band: its 44px button + its
-   two 1px borders). v420's +58px offset carried a +12px
-   margin allowance — the retired defect: the unpainted
-   slot scrolled rows showed through. If the toggle's
-   construction changes, the offset is re-derived in the
-   same change. v447 (John, 2026-11-15 14:26 CT): the
-   toggle is NOT frozen — the tabbed pages sit beneath the
-   frozen header and scroll under it — so the head
-   re-seats FLUSH under the brand bar (top var(--brandh))
-   and the +46px toggle allowance retires with the freeze.
-   The head proper is now the iOS bar (44) + cover row 56
-   + pill line 28 over the 4/4 padding. */
-.blockpage-head.compact { padding:4px 14px; top:var(--brandh, 54px); }
-.blockpage-head.compact .blockpage-cluster { display:flex; align-items:center; gap:8px; flex:none; }
-.blockpage-head.compact .playbtn.big { width:44px; height:44px; }
-.blockpage-coverrow { display:flex; align-items:center; }
-.blockpage-head.compact .backdisc { width:36px; height:36px; font-size:19px; position:relative; margin-right:8px; }
-.blockpage-head.compact .backdisc::after { content:''; position:absolute; inset:-4px; }
-.blockcover.med { width:56px; height:56px; border-radius:10px; flex:none; }
-.blockcover.med .blockcover-initial { font-size:28px; }
-.blockpage-stack { flex:1; min-width:0; margin-left:10px; }
-.blockpage-head.compact .blockpage-meta { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* v448: the compact head's rules retire with the head —
+   its cluster, coverrow, stack, in-head meta and chipbtn
+   seats, and the in-head Play All size have no emission
+   now (the backdisc pair inside the head was already
+   orphaned by v447); the .blockcover.med size retires
+   with the cover tile, whose only emission stood in the
+   coverrow. The pill row stands in the body under the
+   meta line and keeps its row dress; its chipbtn takes
+   the standing body .chipbtn dress. */
 .blockpage-pillrow { display:flex; align-items:center; gap:8px; margin-top:2px; }
-.blockpage-pillrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
-.blockpage-head.compact .chipbtn { min-height:0; padding:5px 12px; position:relative; }
-.blockpage-head.compact .chipbtn::after { content:''; position:absolute; inset:-8px 0; }
 .blockpage-pillrow .blockpage-dlnote { margin-top:0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.blockpage-head.compact .blockpage-playrow { margin-top:6px; }
 /* v419 (G26): the search field gains its leading glyph;
    its focus takes the §3.12 accent border (the G20 field
    rule below). */
@@ -656,7 +639,6 @@ img.rowart { object-fit:cover; display:block; }
 .blockpage-owner { font-size:14px; letter-spacing:1px; color:var(--bar-fg); margin-top:6px; }
 .blockpage-dlrow { display:flex; align-items:center; gap:8px; margin-top:10px; }
 .blockpage-dlrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
-.blockpage-head .meta { color:var(--bar-sub); }
 .blockpage-dlnote { margin-top:4px; }
 .podpage-head { margin:0 0 12px; }
 /* v434 §2.6.1: the Podcasts watch view — the frame's seat is a
@@ -719,7 +701,7 @@ a.btn.ghost { background:none; color:var(--navy); border:1px solid var(--line); 
 button.btn:active, .chip:active, .chipbtn:active, .settoggle:active, .menurow:active, .tab:active, .segtoggle button:active, .iconbtn:active, .mvbtn:active, .playbtn:active, .podmark:active, .np-tbtn:active, .npq-row:active, .dock:active, .backdisc:active, .wpcar-arrow:active, .pinpad button:active { box-shadow:inset 0 0 0 999px rgba(42,38,32,.12); }
 .playbtn:active, .backdisc:active { transform:scale(.98); }
 :focus-visible { outline:3px solid var(--navy); outline-offset:2px; }
-.brandbar :focus-visible, .tabbar :focus-visible, .dock :focus-visible, .np-hero :focus-visible, .blockpage-head :focus-visible { outline-color:var(--bar-fg); }
+.brandbar :focus-visible, .tabbar :focus-visible, .dock :focus-visible, .np-hero :focus-visible { outline-color:var(--bar-fg); }
 input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .sheet, .sheet .inner, .anchmenu, .podchev { animation:none; transition:none; }

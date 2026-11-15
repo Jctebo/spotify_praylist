@@ -2165,10 +2165,13 @@ function wireSideToggle(tab) {
   });
 }
 /* v447: the Conscience sides' bar — it stands in its own
-   host between the (unfrozen) toggle and the side host, so
-   the side paints, which replace the side host whole, never
-   carry it, and the frozen layer on these pages stays the
-   header alone: the brand bar + this bar. The sides carry
+   host, so the side paints, which replace the side host
+   whole, never carry it, and the frozen layer on these
+   pages stays the header alone: the brand bar + this bar.
+   v448: the host's seat moves AHEAD of the toggle in
+   paintMergedContainer — the bar takes the top slot
+   directly under the brand bar and the (unfrozen) toggle
+   scrolls beneath it. The sides carry
    no standing in-app back act; their one-level return is
    the app's home tab — the same return Settings' standing
    back performs — so the bar reads Prayers and its tap is
@@ -2180,6 +2183,24 @@ function paintConscienceBar(side) {
   host.innerHTML = iosBarHtml({ dest: 'Prayers', title: side === 'confession' ? 'Confession' : 'Examination', backAttrs: 'data-consback' });
   var b = host.querySelector('[data-consback]');
   if (b) b.addEventListener('click', function () { setTab('prayers'); });
+}
+/* v448: the Prayers tab's pushed-page bar — the parallel
+   host to #consbar, filled by the block + episodes paints
+   and cleared by the home + Intentions paints (a null
+   html). The host carries the standing page's block key
+   (data-barblock): the settlement inserter's page-standing
+   check reads it — the seat the retired .blockpage-head
+   lookup read before this fix. The bar's back act wires
+   here, as paintConscienceBar wires its own:
+   wirePrayersView's [data-back] pass reads the side host
+   only, and this bar stands outside it. */
+function paintPrayersBar(html, block) {
+  var host = document.getElementById('pushbar');
+  if (!host) return;
+  host.innerHTML = html || '';
+  if (block) host.setAttribute('data-barblock', block); else host.removeAttribute('data-barblock');
+  var b = host.querySelector('[data-back]');
+  if (b) b.addEventListener('click', function () { goListenHome(b.getAttribute('data-back')); });
 }
 function enterSideHost() { var h = document.getElementById('sidehost'); if (h) view = h; }
 function recordSideScroll(tab) {
@@ -2325,7 +2346,12 @@ function switchSide(tab, side) {
 }
 function paintMergedContainer(tab) {
   var side = readTabSide(tab);
-  view.innerHTML = paintSideToggle(tab, side) + (tab === 'conscience' ? '<div id="consbar"></div>' : '') + '<div id="sidehost"></div>';
+  // v448: the pushed-page bar host stands BEFORE the toggle
+  // in both merged tabs — the bar takes the top slot directly
+  // under the brand bar, and the toggle + the side host
+  // scroll beneath it (John's word closing the v447 field
+  // check: "put tabs beneath header unfrozen").
+  view.innerHTML = (tab === 'conscience' ? '<div id="consbar"></div>' : '<div id="pushbar"></div>') + paintSideToggle(tab, side) + '<div id="sidehost"></div>';
   wireSideToggle(tab);
   enterSideHost();
   paintTabSide(tab, side);
@@ -4350,6 +4376,7 @@ function settleIntentions(redrawFailed) {
   armPlaceRestore('prayers:intentions');
 }
 function renderIntentions() {
+  paintPrayersBar(null); // v448: the Intentions side is a tab home side — no pushed bar stands over it
   view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>' + skelHtml('intentions');
   var today = todayChicago();
   Promise.all([api('/api/prayer/intentions'), api('/api/prayer/day?date=' + today)]).then(function (res) {
@@ -5837,8 +5864,11 @@ function blockInsertCards(day, standing) {
   // descriptors stand in state and the page paint renders the
   // settled state when the page opens (appendBlockSettingsCards).
   (day.blocks || []).forEach(function (b) {
-    var head = view.querySelector('.blockpage-head');
-    if (!head || head.getAttribute('data-block') !== b.block) return;
+    // v448: the page-standing check reads the pushed bar
+    // host's block key — the seat the retired .blockpage-head
+    // lookup read before the head band retired.
+    var pbar = document.getElementById('pushbar');
+    if (!pbar || pbar.getAttribute('data-barblock') !== b.block) return;
     var entries = [];
     (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
       .forEach(function (row) { entries.push({ sortOrder: row.sortOrder || 0, own: row }); });
@@ -8046,6 +8076,9 @@ function shortHomeDate(day) {
   return (day && day.dateLabel) || 'the day&rsquo;s prayers';
 }
 function paintListenHome(day) {
+  // v448: the home carries no bar — a returning paint
+  // clears the pushed page's bar from its host.
+  paintPrayersBar(null);
   // v431 §2.2 (F-431-6): the title + the short date share ONE
   // line — the .headrow (title left at its standing 22px, the
   // date right in its standing .sub dress). v419 (G27) stands:
@@ -8201,17 +8234,23 @@ function paintBlockPage(day, block) {
   // ⋮ at the head's top right); the visible Play All label
   // retires as an emission (its rule stands for the episodes
   // page); Sort and Mark all played ride the ⋮ as before.
-  var html = '<div class="blockpage-head compact" data-block="' + esc(b.block) + '">'
-    + iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"', inhead: true,
-      rightHtml: '<button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
-        + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' })
-    + '<div class="blockpage-coverrow">'
-    + coverTileHtml(b.block, 'med')
-    + '<div class="blockpage-stack">'
-    + '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div></div>'
-    + '</div>'
+  // v448: the head band retires completely (John's word
+  // closing the v447 field check). The bar stands in the
+  // #pushbar host — the top slot, above the toggle — with
+  // the SHRUNK Play All (the standing .playbtn.small form:
+  // a 30px disc on a 44px tap, wholly inside the bar) and
+  // the menu act in the bar's plain act dress (.iosbar-act,
+  // no pill). The band's facts stand as one plain meta line
+  // at the body's top; the download act + its note stand as
+  // a plain row under it (their [data-blockdl] /
+  // [data-blockdlnote] wiring is view-scoped and follows
+  // the elements); the cover tile retires with the band.
+  paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
+    rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
+      + '<button class="iosbar-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
+  var html = '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div>'
     + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
-    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div></div>';
+    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
@@ -8231,7 +8270,9 @@ function paintBlockPage(day, block) {
       url: b.spotifyUrl || location.origin + '/'
     });
   };
-  var menuBtn = view.querySelector('[data-blockmenu]');
+  // v448: the page menu act stands in the bar host now, not
+  // the side host — its wiring reads the host.
+  var menuBtn = document.querySelector('#pushbar [data-blockmenu]');
   if (menuBtn) menuBtn.addEventListener('click', function () {
     var played = blockPlayedCounts(b.block);
     var items = [
@@ -8265,11 +8306,14 @@ function paintEpisodesPage(day) {
   // block.
   var eps = day.episodes || [];
   var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
-  var html = '<div class="blockpage-head" data-block="__episodes">'
-    + iosBarHtml({ dest: 'Prayers', title: 'From Today\u2019s Podcast', backAttrs: 'data-back="__episodes"', inhead: true })
-    + '<div class="blockcover tone-teal large"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
-    + '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
-    + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div></div>';
+  // v448: the head band retires here too — the bar stands
+  // in the #pushbar host (the top slot, above the toggle);
+  // the meta stands as one plain line at the body's top and
+  // the Play All row as a body row under it, as it stood in
+  // the head; the cover tile retires with the band.
+  paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
+  var html = '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
+    + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');
   view.innerHTML = html;
 }
