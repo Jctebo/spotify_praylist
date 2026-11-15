@@ -1,0 +1,46 @@
+ok 1 - S: one settle function exists and the mutation sites + the button call it (6 call sites)
+ok 2 - S: the standing triple survives in exactly one place — inside the settle function (no hand-copied triple remains)
+ok 3 - S: the Redraw button stands in the full paint's head with its busy label
+ok 4 - S: the redraw failure line stands verbatim in the client
+ok 5 - S: the add failure line stands verbatim in the client
+ok 6 - S: the retired Add-card string is absent and its §2.8 replacement stands
+ok 7 - S: the about line's corrected closing clause stands (the Plan-added companion)
+ok 8 - S: prayerRedrawForDate carries the snapshot / delete-today-only / same-fill / batch-restore construction
+ok 9 - S: the redraw route stands inside the johnOnly-gated session block; the agent door carries no redraw route
+ok 10 - S: the SW pin stands at ora-pro-nobis-v430-1 — unmoved at Implement (Ship moves it)
+ok 11 - fixture: 9 enabled prayer items stand
+ok 12 - app up on local wrangler (LOCAL_DEV)
+ok 13 - L0: the day payload answers (materializes today's draw)
+ok 14 - L0: today's materialized draw equals the deterministic expected set
+ok 15 - S1: POST /api/prayer/redraw answers ok with today's date
+ok 16 - F-426-I2: the endpoint's drawn (9) equals the store's row count (9) = the enabled-item count
+ok 17 - S1: a redraw replaces today's rows wholesale — the post-redraw set equals the expected set for the seeded pool
+ok 18 - S2/S3: past-day and future-day rows stand byte-identical after a redraw
+ok 19 - S6: a redraw with no prior draws is the plain fill (the expected set stands)
+ok 20 - S4: a forced fill failure answers 500 in the standing error shape
+ok 21 - F-426-I1: the batch snapshot-restore is proven in the mold — the standing draw stands row for row after a failed re-run
+ok 22 - S5: an empty pool redraws to a draw-less today with no error
+ok 23 - A1: the add answers 201 + id with redrawn: true
+ok 24 - A1: today's draw re-ran over the widened pool (the post-add set equals the expected set)
+ok 25 - A2: retire answers with redrawn: true
+ok 26 - A2: the retired intention leaves today's draws; the set equals the expected set over the narrowed pool
+ok 27 - A2/F-426-I3: retire's standing wider deletion (date >= today) ran before the redraw — no row for the retired intention stands today or tomorrow
+ok 28 - A3: restore answers with redrawn: true and today's draw re-ran over the restored pool
+ok 29 - A4: a priority edit answers with redrawn: true and the draw re-ran under the new weights
+ok 30 - A5: delete answers with redrawn: true
+ok 31 - A5: the deleted intention stands in no draw on any date; today's set equals the expected set
+ok 32 - A6: a forced redraw failure leaves the add standing (201) with redrawn: false
+ok 33 - A6: the added intention stands in the pool after its failed redraw
+ok 34 - A6: today's draw stands restored row for row after the failed auto-redraw
+ok 35 - S: the agent door cannot trigger a redraw (404, no route)
+ok 36 - S: the door's standing day read is untouched
+ok 37 - C1: the Redraw button stands in the head — .btn ghost dress, 44px tall (44px floor), the note slot beside it
+ok 38 - F-426-I4: the skeleton head (57px) and the full paint's head row (57px) measure the same height — the paint landing does not jump
+ok 39 - C3: a tap disables the button and its label reads Redrawing… while the POST is in flight
+ok 40 - C3: the button's re-run landed — today's set equals the expected set after the corruption
+ok 41 - C3: a successful tap reports nothing verbal — the note slot stands empty, the repainted view is the report
+ok 42 - C4: a failed tap stands the settled failure line and does not repaint — the standing paint stands
+ok 43 - C5: the Add button disables while its POST is in flight
+HARNESS ERROR: page.waitForFunction: Timeout 60000ms exceeded.
+    at /home/hatch/workspace/.worktrees/v426/app/tests/harness-v426.mjs:384:14
+# harness-v426: 43 ok / 1 not-ok
