@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -220,15 +220,6 @@ function skelHtml(kind) {
   if (kind === 'intentions') return '<div data-skeleton="1"><div class="skel" style="height:64px;margin:0 0 10px"></div>' + rows(4, 76) + '</div>';
   if (kind === 'conscience') return '<div data-skeleton="1">' + rows(4, 64) + '</div>';
   return '<div data-skeleton="1">' + rows(3, 76) + '</div>';
-}
-/* v419 (G30): the examination category chips read short —
-   the ordinal + "Cmdt." form; the full category name stands
-   in the data and the filter (the chip's data-cat keeps it). */
-var CMDT_ORDINALS = { First: '1st', Second: '2nd', Third: '3rd', Fourth: '4th', Fifth: '5th', Sixth: '6th', Seventh: '7th', Eighth: '8th', Ninth: '9th', Tenth: '10th' };
-function catChipLabel(c) {
-  var m = /^(\w+) Commandment/.exec(c || '');
-  if (m && CMDT_ORDINALS[m[1]]) return CMDT_ORDINALS[m[1]] + ' Cmdt.';
-  return c;
 }
 function todayChicago() {
   var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
@@ -8266,31 +8257,21 @@ function renderExaminationContent() {
     var run = data.run;
     var closed = run && run.state === 'closed';
     var cats = data.categories || [];
-    if (!state.examCat || cats.indexOf(state.examCat) < 0) state.examCat = data.focusCategory || cats[0];
-    var prompts = (data.prompts || []).filter(function (p) { return p.category === state.examCat; });
+    var cat = data.focusCategory || cats[0];
+    var prompts = (data.prompts || []).filter(function (p) { return p.category === cat; });
     var entriesByPrompt = {};
     (data.entries || []).forEach(function (e) { if (e.prompt_id) { (entriesByPrompt[e.prompt_id] = entriesByPrompt[e.prompt_id] || []).push(e); } });
-    var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === state.examCat; });
+    var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === cat; });
     var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
-    html += '<p class="sub">Begin with gratitude for the day, and a short review of it. Then take the questions as reflection prompts — tap one to write an entry in your own words. What you write flows to Confession preparation.</p>';
-    if (data.focusCategory) html += '<p class="meta">Tonight&rsquo;s focus in depth: <b>' + esc(data.focusCategory) + '</b> — the full short form stands every night.</p>';
-    html += '<div class="chips">' + cats.map(function (c) { return '<button class="chip' + (c === state.examCat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(catChipLabel(c)) + '</button>'; }).join('') + '</div>';
-    html += '<div class="segtoggle inflow"><button id="m-quick" class="' + (state.examMode === 'quick' ? 'active' : '') + '">Quick Review</button><button id="m-deep" class="' + (state.examMode === 'deep' ? 'active' : '') + '">Deep Reflection</button></div>'; // v419 (G9): the mode control is the one segmented construction, in flow
-    html += '<h2 class="sectionhead">' + esc(state.examCat) + '</h2>';
+    html += '<h2 class="sectionhead">' + esc(cat) + '</h2>';
     var dis = closed ? ' disabled' : '';
-    if (state.examMode === 'deep') {
-      if (state.deepIdx >= prompts.length) state.deepIdx = 0;
-      var p = prompts[state.deepIdx];
-      if (p) {
-        html += '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div><div class="meta" style="margin-top:6px">Tap to write an entry in your own words</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
-        html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>Next &#8250;</button></div>';
-      } else html += '<p class="meta">No prompts in this category.</p>';
-    } else {
-      html += prompts.map(function (p) {
-        return '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
-      }).join('');
-    }
-    html += '<div class="card"><h3>Add your own — ' + esc(state.examCat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
+    if (state.deepIdx >= prompts.length) state.deepIdx = 0;
+    var p = prompts[state.deepIdx];
+    if (p) {
+      html += '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div><div class="meta" style="margin-top:6px">Tap to write an entry in your own words</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
+      html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>Next &#8250;</button></div>';
+    } else html += '<p class="meta">No prompts in this category.</p>';
+    html += '<div class="card"><h3>Add your own — ' + esc(cat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
     html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
     if (!closed) html += '<button class="btn" id="run-close" style="width:100%">Close tonight&rsquo;s examination</button>';
     else html += '<p class="meta">Tonight&rsquo;s run is closed. Its entries stand in Confession preparation.</p>';
@@ -8307,10 +8288,7 @@ function entryFieldHtml(p, closed) {
 }
 function wireExamination(data) {
   var run = data.run;
-  view.querySelectorAll('[data-cat]').forEach(function (b) { b.addEventListener('click', function () { state.examCat = b.getAttribute('data-cat'); state.deepIdx = 0; renderExamination(); }); });
-  var q = document.getElementById('m-quick'), d = document.getElementById('m-deep');
-  if (q) q.addEventListener('click', function () { state.examMode = 'quick'; renderExamination(); });
-  if (d) d.addEventListener('click', function () { state.examMode = 'deep'; state.deepIdx = 0; renderExamination(); });
+  var cat = data.focusCategory || (data.categories || [])[0];
   var pv = document.getElementById('deep-prev'), nx = document.getElementById('deep-next');
   if (pv) pv.addEventListener('click', function () { state.deepIdx--; renderExamination(); });
   if (nx) nx.addEventListener('click', function () { state.deepIdx++; renderExamination(); });
@@ -8336,7 +8314,7 @@ function wireExamination(data) {
   if (ca) ca.addEventListener('click', function () {
     var text = document.getElementById('custom-text').value.trim();
     if (!text) { fieldNote('fn-custom-text', 'Write the entry first.'); return; }
-    post('/api/exam/entries', { runId: run.id, promptId: null, category: state.examCat, text: text }).then(function () {
+    post('/api/exam/entries', { runId: run.id, promptId: null, category: cat, text: text }).then(function () {
       placeSkip['custom-text'] = true;
       renderExamination();
     });
