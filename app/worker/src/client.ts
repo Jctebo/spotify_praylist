@@ -6440,9 +6440,60 @@ function resolveAiSignal(day, settings, shellDesc) {
   state.ownStanding.push(row);
   if (shellDesc) {
     state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: 'the-ai-signal', title: shellDesc.title, state: 'present', enclosureUrl: null, streamUrl: shellDesc.streamUrl, durationS: shellDesc.durationS || 0, sizeBytes: shellDesc.sizeBytes || 0, hasText: false }] };
+    aiSettleSwap(day); // v430 Trigger A: a copy already standing swaps in at build
   } else {
     state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
   }
+}
+function aiSettleSwap(day) {
+  // v430 §2.4: the own family's landing, mirrored for the
+  // shell-resolved slot — the ONE track that always played as a
+  // live network stream takes the device-local copy the v392
+  // pass already puts on the phone, under the SAME day key the
+  // pass stores it (opn-ext-audio-v1). The stream stands until
+  // the copy lands (the fallback order); the swap never touches
+  // a live playing element — descriptors are built from what
+  // stands resolved at tap time, so a queued or next-up read
+  // takes the swapped URL while a loaded element keeps its src,
+  // exactly as an own track's mid-play swap behaves. Fire-and-
+  // forget: a cache miss or a stalled read simply leaves the
+  // stream standing (Trigger B or the next build retries).
+  if (!day) return Promise.resolve();
+  var date = day.presentedDay || day.date;
+  if (!date) return Promise.resolve();
+  var row = (state.ownStanding || []).filter(function (r) { return r.sourceKey === 'the-ai-signal'; })[0];
+  if (!row) return Promise.resolve();
+  var st = state.ownSlots[row.sourceKey];
+  if (!st || st.state !== 'present' || !st.tracks || !st.tracks.length) return Promise.resolve();
+  var track = st.tracks.filter(function (t) { return t.episodeId === 'the-ai-signal'; })[0];
+  if (!track) return Promise.resolve();
+  var key = offlineDayKey(date, 'the-ai-signal');
+  var owner = ownBlobOwner(key); // v412 Fix 11: the cache key's owner holds the mint
+  if (owner.blobUrl && track.streamUrl === owner.blobUrl) return Promise.resolve(); // the once-guard: a second fire never re-mints
+  return offlineAudioCache().then(function (cache) {
+    if (!cache) return;
+    return cache.match(key).then(function (resp) {
+      if (!resp) return;
+      return resp.blob().then(function (blob) {
+        if (!blob) return;
+        if (owner.blobUrl && track.streamUrl === owner.blobUrl) return; // the guard re-read after the async seam
+        // v430 §2.5: the settle verifies — a standing copy short
+        // of the descriptor's server-measured sizeBytes never
+        // becomes a play source; the pass's repair owns the copy.
+        if (track.sizeBytes > 0 && blob.size !== track.sizeBytes) return;
+        var objUrl = mintBlobUrl(owner, blob);
+        (state.ownStanding || []).forEach(function (r2) {
+          var st2 = state.ownSlots[r2.sourceKey];
+          if (!st2 || !st2.tracks) return;
+          var touched = false;
+          st2.tracks.forEach(function (t2) { if (t2.episodeId === 'the-ai-signal') { t2.streamUrl = objUrl; touched = true; } });
+          if (touched) { ownSwapRow(r2, day); }
+        });
+        ownRegisterReadTracks();
+        extRebuildDescs(day);
+      });
+    });
+  }).catch(function () {});
 }
 function resolveExternals(day, settingsOverride, snapshotRec) {
   // v337 §2.4: resolution keys on the PRESENTED day (the payload's
@@ -7053,7 +7104,7 @@ function offlineEnumerateToday(date) {
     var st = state.ownSlots[row.sourceKey];
     if (!st || st.state !== 'present') return;
     (st.tracks || []).forEach(function (t) {
-      if (row.shellResolved) { if (t.streamUrl) items.push({ kind: 'ai', date: date, id: t.episodeId, enclosureUrl: t.streamUrl, key: offlineDayKey(date, t.episodeId) }); }
+      if (row.shellResolved) { if (t.streamUrl) items.push({ kind: 'ai', date: date, id: t.episodeId, enclosureUrl: t.streamUrl, sizeBytes: t.sizeBytes || 0, key: offlineDayKey(date, t.episodeId) }); }
       else if (t.enclosureUrl) items.push({ kind: 'own', date: date, id: t.episodeId, enclosureUrl: t.enclosureUrl, key: offlineDayKey(date, t.episodeId) });
     });
   });
@@ -7102,7 +7153,7 @@ function offlineTomorrowBuild(tomorrow, epoch) {
     var extRec = { date: tomorrow, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {}, own: {}, intentions: null };
     var items = [];
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) {
-      if (t.episodeId) items.push({ kind: 'ai', date: tomorrow, id: t.episodeId, enclosureUrl: t.streamUrl, title: t.title, block: b.block, durationS: t.durationS || 0, key: offlineDayKey(tomorrow, t.episodeId) });
+      if (t.episodeId) items.push({ kind: 'ai', date: tomorrow, id: t.episodeId, enclosureUrl: t.streamUrl, title: t.title, block: b.block, durationS: t.durationS || 0, sizeBytes: t.sizeBytes || 0, key: offlineDayKey(tomorrow, t.episodeId) });
     }); });
     var wd = extWeekdayMon0(tomorrow);
     var prim = {};
@@ -7177,16 +7228,50 @@ function offlinePodcastAutoSet() {
 function offlineDownloadItems(items, epoch) {
   return offlineAudioCache().then(function (cache) {
     var chain = Promise.resolve(), have = 0;
+    // v430 Trigger B (§2.4): a kind-'ai' item that resolves
+    // stored fires the settle swap for the PRESENTED day — the
+    // pass landing the copy mid-session swaps the slot's play
+    // source without a reload. Tomorrow's item and any non-
+    // presented date no-op here (no slot stands for them; the
+    // swap itself also reads only the presented day's key).
+    var fireAiSwap = function (it) {
+      var pd = state.dayPayload ? (state.dayPayload.presentedDay || state.dayPayload.date) : null;
+      if (pd && it.key === offlineDayKey(pd, 'the-ai-signal')) aiSettleSwap(state.dayPayload);
+    };
     items.forEach(function (it) {
       chain = chain.then(function () {
         // A clear (epoch bump) mid-pass stops the tail: no
         // further fetches, and a fetch already in flight never
         // puts — the clear wins over the pass (W6).
         if (epoch != null && epoch !== offlineEpoch) return;
+        // v430 §2.5: the size check, scoped to kind 'ai' — its
+        // sizeBytes is server-measured, so byte equality is a
+        // sound test (the other families' feed-claimed sizes
+        // keep the standing posture; the shared offlinePutBlob
+        // stays untouched). A standing entry is read and
+        // verified: a mismatch deletes it and falls through to
+        // the fetch (a short copy from an earlier unchecked
+        // build self-repairs). A fetched blob that mismatches
+        // is NOT stored — the item counts missing and retries
+        // next pass (the W3 posture). An ai item with
+        // sizeBytes 0 skips the check, today's behavior exactly.
+        if (it.kind === 'ai' && it.sizeBytes > 0 && cache) {
+          return cache.match(it.key).then(function (resp) { return resp ? resp.blob() : null; }).catch(function () { return null; }).then(function (standing) {
+            if (standing && standing.size === it.sizeBytes) { have++; fireAiSwap(it); return; }
+            var repair = standing ? cache.delete(it.key).catch(function () {}) : Promise.resolve();
+            return repair.then(function () {
+              return offlineFetchItemAudio(it).then(function (blob) {
+                if (epoch != null && epoch !== offlineEpoch) return false;
+                if (!blob || blob.size !== it.sizeBytes) return false;
+                return offlinePutBlob(cache, it.key, blob);
+              }).then(function (okPut) { if (okPut) { have++; fireAiSwap(it); } }).catch(function () {});
+            });
+          });
+        }
         return offlineCacheHas(cache, it.key).then(function (has) {
-          if (has) { have++; return; }
+          if (has) { have++; if (it.kind === 'ai') fireAiSwap(it); return; }
           return offlineFetchItemAudio(it).then(function (blob) { if (epoch != null && epoch !== offlineEpoch) return false; return offlinePutBlob(cache, it.key, blob); })
-            .then(function (okPut) { if (okPut) have++; }).catch(function () {});
+            .then(function (okPut) { if (okPut) { have++; if (it.kind === 'ai') fireAiSwap(it); } }).catch(function () {});
         });
       });
     });
