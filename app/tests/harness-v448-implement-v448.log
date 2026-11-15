@@ -1,0 +1,36 @@
+ok 1 - S1 the worker-source diff vs the v447-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - S2 no .blockpage-head emission stands anywhere in client.ts — the old head band is eliminated
+ok 3 - S3 the bar hosts paint BEFORE the toggle in paintMergedContainer — the bar takes the top slot, the toggle beneath it
+ok 4 - S4 the block + episodes paints fill the Prayers bar host; the home + Intentions paints clear it
+ok 5 - S5 the hosts share the sticky seat at the brand height; the plain bar-act dress stands; the head band's CSS family stood down
+ok 6 - S6 the whole worker bundles clean (esbuild)
+ok 7 - S6 (housekeeping): the SW pin stands at ora-pro-nobis-v447-1 (Ship moves it)
+ok 8 - S7 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 9 - S7 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 10 - H1 Prayers home: the bar host stands empty (no bar, no block key); the toggle stands
+ok 11 - H1 at rest the toggle stands beneath the frozen header and is not frozen (position static)
+ok 12 - H2 scrolled: the toggle row scrolls away under the frozen header; the brand bar alone stays
+ok 13 - B1 block page: the bar stands in the #pushbar host (Prayers · Morning · its aria), the host carries the block key, the host paints BEFORE the toggle, and no .blockpage-head stands anywhere
+ok 14 - B1 layer order at rest: brand bar · the bar flush under it · the toggle wholly beneath the bar
+ok 15 - B2 Play All shrunk: its box stands wholly inside the bar (height <= the bar's 44) and the visible disc measures 30px (the .playbtn.small ::after)
+ok 16 - B2 the menu act stands inside the bar in the plain act dress — no border, no pill
+ok 17 - B3 the band's facts stand as one plain meta line at the body's top (12 episodes · 48min, settled), inside the side host, not frozen
+ok 18 - B3 the download act + its state line stand as a plain row in the body under the meta line, with their standing data wiring
+ok 19 - B4 scrolled: the bar sticks flush under the brand bar; the toggle AND the meta line scroll away beneath it — the header alone is frozen
+ok 20 - B5 Play All works from the bar: the queue starts and the dock stands with a track
+ok 21 - B6 the menu act in the bar opens its anchored menu (Sort · Share stand in it)
+ok 22 - B7 the bar's back returns one level to the Prayers home and the host clears (no bar, no block key)
+ok 23 - E1 episodes page: the bar stands in the top slot; no head band; the meta line (1 episodes · 5min) and the Play All row stand in the body
+ok 24 - E2 the episodes Play All row in the body plays (the dock names the podcast episode)
+ok 25 - E3 the episodes page's back returns home and the host clears
+ok 26 - I1 the Intentions side: no bar stands (the pushed page's bar never crosses to a home side)
+ok 27 - C1 Examination: the bar stands in its host, the host paints BEFORE the toggle; the chips + heading stand as shipped
+ok 28 - C2 layer order at rest: brand bar · the bar flush under it · the toggle wholly beneath the bar
+ok 29 - C3 scrolled: the bar sticks flush under the brand bar while the toggle scrolls away — the header alone is frozen
+ok 30 - C4 the Conscience bar's back returns to the Prayers home (the sides' one-level return)
+ok 31 - F1 Formation index (tab home): no bar stands
+ok 32 - F2 series page: its bar stands as shipped in v447 (Bible in a Year centered) — untouched by the fix
+ok 33 - G360 block page at 360px: the bar flush under the brand bar, the toggle beneath it, the bar 44px, no new horizontal overflow (362 is the base's own standing measure)
+ok 34 - G360 scrolled: the bar sticks flush under the brand bar at 360px
+ok 35 - browser: zero page errors across every leg
+# harness-v448: 35/35 passed
