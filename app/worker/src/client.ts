@@ -2171,18 +2171,21 @@ function wireSideToggle(tab) {
    v448: the host's seat moves AHEAD of the toggle in
    paintMergedContainer — the bar takes the top slot
    directly under the brand bar and the (unfrozen) toggle
-   scrolls beneath it. The sides carry
-   no standing in-app back act; their one-level return is
-   the app's home tab — the same return Settings' standing
-   back performs — so the bar reads Prayers and its tap is
-   setTab('prayers'), the place kept by the standing
-   place-keeping. */
+   scrolls beneath it.
+   v450: the bar carries NO back act. The sides are the
+   Conscience tab's own home — Examination and Confession
+   are sides of a top-level tab, not pages pushed from
+   Prayers — so no parent stands over them, and the bar
+   names the side alone, centered (John's ruling: the bar
+   registered as a subpage of Prayers, and it is not).
+   The way between tabs is the bottom tab bar, as on
+   every tab home. The v447 reading (the bar reads
+   Prayers, its tap setTab('prayers')) stands retired
+   with its wiring. */
 function paintConscienceBar(side) {
   var host = document.getElementById('consbar');
   if (!host) return;
-  host.innerHTML = iosBarHtml({ dest: 'Prayers', title: side === 'confession' ? 'Confession' : 'Examination', backAttrs: 'data-consback' });
-  var b = host.querySelector('[data-consback]');
-  if (b) b.addEventListener('click', function () { setTab('prayers'); });
+  host.innerHTML = iosBarHtml({ title: side === 'confession' ? 'Confession' : 'Examination' });
 }
 /* v448: the Prayers tab's pushed-page bar — the parallel
    host to #consbar, filled by the block + episodes paints
@@ -2623,6 +2626,16 @@ function wirePodBack() {
    chevron, the name, and the acts in the day's liturgical
    color via the standing theme token var(--accent-text). */
 function iosBarHtml(o) {
+  // v450: a call with no destination emits the title-only
+  // form — no back act stands in the bar (the Conscience
+  // sides' bar; their tab is a home, not a pushed page).
+  // Every standing caller passes a dest and its output is
+  // unchanged.
+  if (!o.dest) {
+    return '<div class="iosbar' + (o.inhead ? ' inhead' : '') + '">'
+      + '<div class="iosbar-title">' + esc(o.title) + '</div>'
+      + '<div class="iosbar-right">' + (o.rightHtml || '') + '</div></div>';
+  }
   var shown = o.dest.length > 14 ? 'Back' : o.dest;
   return '<div class="iosbar' + (o.inhead ? ' inhead' : '') + '">'
     + '<button class="iosbar-back" ' + o.backAttrs + ' aria-label="Back to ' + esc(o.dest) + '">'
@@ -8321,12 +8334,32 @@ function renderConscienceContent() { paintMergedContainer('conscience'); }
 
 /* ---------------- Examination ---------------- */
 function renderExamination() { switchSide('conscience', 'examination'); }
+/* v444 §2's follow math, extracted (v450): move the chips
+   row by the smallest scrollLeft amount that puts its
+   active chip fully inside the visible band (a chip wider
+   than the band aligns its left edge). The row only; no
+   page scroll. Shared by the pager follow and the v450
+   entry follow — the math stands in one place. */
+function followExamChip() {
+  var followRow = view.querySelector('.examchips');
+  var activeChip = followRow ? followRow.querySelector('.chip.active') : null;
+  if (followRow && activeChip) {
+    var chipL = activeChip.offsetLeft, chipR = chipL + activeChip.offsetWidth;
+    var bandL = followRow.scrollLeft, bandR = bandL + followRow.clientWidth;
+    if (activeChip.offsetWidth >= followRow.clientWidth) followRow.scrollLeft = chipL;
+    else if (chipL < bandL) followRow.scrollLeft = chipL;
+    else if (chipR > bandR) followRow.scrollLeft = chipR - followRow.clientWidth;
+  }
+}
 function renderExaminationContent() {
   // v443 §2: the chips row keeps its place across repaints —
   // read the standing row's scrollLeft BEFORE any paint
   // replaces view.innerHTML (the skeleton paint below
   // destroys the row); the paint restores it onto the new
   // row. Preservation only: the row never auto-scrolls.
+  // v450 §2: an entry paint is the one exception — when
+  // this read stands null (no row to preserve), the paint
+  // follows to the resolved active chip at its tail.
   var chipsRow = view.querySelector('.examchips');
   var chipsScroll = chipsRow ? chipsRow.scrollLeft : null;
   view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1>' + skelHtml('conscience');
@@ -8374,24 +8407,27 @@ function renderExaminationContent() {
     // v443 §2: restore the chips row's place onto the new
     // row (the read stands at this function's head).
     if (chipsScroll !== null) { var newChipsRow = view.querySelector('.examchips'); if (newChipsRow) newChipsRow.scrollLeft = chipsScroll; }
+    // v450 §2: an entry paint has no standing row to
+    // preserve (the head read stood null — first entry,
+    // tab entry, or re-entry after the Confession side
+    // painted): the row follows to the resolved active
+    // chip, so the day's selected section stands in view
+    // when the page opens. The math is v444's, shared in
+    // followExamChip. The two follows never both fire on
+    // one paint: a pager paint always has a standing row,
+    // so its head read never stands null.
+    if (chipsScroll === null) followExamChip();
     // v444 §2: a pager-driven category change (the Next
     // section act sets examFollowActive) brings the newly
     // active chip into view — AFTER the v443 restore above,
-    // move the row by the smallest amount that puts the
-    // active chip fully inside the visible band (the row
-    // only; no page scroll). Chip taps never set the flag:
-    // their scroll stands exactly as restored.
+    // the shared follow (followExamChip) moves the row by
+    // the smallest amount that puts the active chip fully
+    // inside the visible band (the row only; no page
+    // scroll). Chip taps never set the flag: their scroll
+    // stands exactly as restored.
     if (state.examFollowActive) {
       state.examFollowActive = false;
-      var followRow = view.querySelector('.examchips');
-      var activeChip = followRow ? followRow.querySelector('.chip.active') : null;
-      if (followRow && activeChip) {
-        var chipL = activeChip.offsetLeft, chipR = chipL + activeChip.offsetWidth;
-        var bandL = followRow.scrollLeft, bandR = bandL + followRow.clientWidth;
-        if (activeChip.offsetWidth >= followRow.clientWidth) followRow.scrollLeft = chipL;
-        else if (chipL < bandL) followRow.scrollLeft = chipL;
-        else if (chipR > bandR) followRow.scrollLeft = chipR - followRow.clientWidth;
-      }
+      followExamChip();
     }
     wireExamination(data);
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
