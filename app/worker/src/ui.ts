@@ -508,6 +508,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    the top slot and the toggle scrolls beneath it. */
 #consbar, #pushbar { position:sticky; top:var(--brandh, 54px); z-index:25; }
 #consbar .iosbar, #pushbar .iosbar { position:static; }
+/* v448: a host carrying a bar bleeds the view's 14px top
+   padding (the retired head's -14px seat), so the bar
+   stands flush under the brand bar at rest as well as
+   stuck; an empty host (the Prayers home) takes no bleed
+   and the home's geometry stands untouched. */
+#consbar:not(:empty), #pushbar:not(:empty) { margin-top:-14px; }
 /* v448: the bar's plain act dress (the block page's menu
    act) — the glyph at bar height in the accent, no border,
    no pill; its box stands wholly inside the bar. */

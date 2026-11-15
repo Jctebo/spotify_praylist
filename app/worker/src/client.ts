@@ -7991,7 +7991,15 @@ function wirePrayersView(day) {
   });
   wireRowActs(view); // v413 §2.6: the row ⋮ + share wiring rides every Prayers paint
   refreshGridDlStates(); // v413 §2.11: the downloaded icons follow the cache's word
-  view.querySelectorAll('[data-queue]').forEach(function (btn) {
+  // v448: the scan covers the pushed bar host too — the
+  // block page's Play All stands in #pushbar now, outside
+  // the side host. The handler is the standing one; every
+  // wire pass follows a host refill on block pages, so no
+  // button is ever wired twice.
+  var queueBtns = Array.prototype.slice.call(view.querySelectorAll('[data-queue]'));
+  var pbHost = document.getElementById('pushbar');
+  if (pbHost) pbHost.querySelectorAll('[data-queue]').forEach(function (b) { queueBtns.push(b); });
+  queueBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var blockName = btn.getAttribute('data-queue');
       var all = extRebuildDescs(day);
