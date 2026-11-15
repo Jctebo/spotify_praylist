@@ -7980,13 +7980,13 @@ function episodesCardHtml(day) {
 function shortHomeDate(day) {
   // v431 §2.1 (F-431-1): the home's date, shortened home-only and
   // derived client-side. prayerDateLabel and every payload stand
-  // byte-untouched: the day payload's `date` IS the Chicago
+  // byte-untouched: the day payload's 'date' IS the Chicago
   // calendar date, so the UTC-noon derivation below returns the
   // identical calendar fields in short form ("Sat, Nov 14,
   // 2026") — weekday, month, day, and year all stand; nothing is
   // dropped. Every other surface (the Examination head, the
   // shell's litday fallback, the media album lines) keeps the
-  // long form. Fallback: no usable `date` → the standing label.
+  // long form. Fallback: no usable 'date' → the standing label.
   var ds = day && day.date;
   if (ds) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
