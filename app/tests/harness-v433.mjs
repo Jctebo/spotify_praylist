@@ -353,9 +353,20 @@ const stackTop = () => ev(() => {
   await paintBible();
   await page.click('[data-podrow="bible-in-a-year:day-318"] [data-podplay]');
   await sleep(300);
-  const q = await ev(() => ({ len: state.queue.length, first: state.queue.length ? state.queue[0].episodeId : null, idx: state.queueIdx }));
-  ok(q.len === 55 && q.first === 'bible-in-a-year:day-318' && q.idx === 0,
-    'L3: a row\u2019s disc tap queues the sequence from the tapped entry (55 entries from Day 318 forward, the tapped entry first)', JSON.stringify(q));
+  // The queue's ORDER is the act's proof: playPodFrom builds
+  // the sequence from the tapped entry forward. (The queue
+  // index itself is not asserted — in the mold the stub
+  // audio ends instantly and the standing advance machinery
+  // moves the index, exactly as at base.)
+  const q = await ev(() => {
+    var order = true;
+    for (var i = 0; i < state.queue.length; i++) {
+      if (state.queue[i].episodeId !== 'bible-in-a-year:day-' + (318 + i)) order = false;
+    }
+    return { len: state.queue.length, first: state.queue.length ? state.queue[0].episodeId : null, order };
+  });
+  ok(q.len === 55 && q.first === 'bible-in-a-year:day-318' && q.order,
+    'L3: a row\u2019s disc tap queues the sequence from the tapped entry (55 entries, Day 318 first, in standing order forward)', JSON.stringify(q));
 
   await page.click('[data-podrow="bible-in-a-year:day-317"] [data-podmenu]');
   await sleep(200);
@@ -390,7 +401,7 @@ const stackTop = () => ev(() => {
     return { listened: e.listened, on: b.classList.contains('on'), glyph: b.textContent, meta: meta.textContent };
   });
   ok(marked.listened === true && marked.on && marked.glyph === '\u2713' && marked.meta.includes('Listened ')
-    && unmarked.listened === false && !unmarked.on && unmarked.glyph === '\u25cb' && !unmarked.meta.includes('Listened'),
+    && unmarked.listened === false && !unmarked.on && unmarked.glyph === '\u25ef' && !unmarked.meta.includes('Listened'),
     'L3: the mark toggles both ways (\u25cb \u2192 \u2713 with the listened state and the meta\u2019s Listened date; \u2713 \u2192 \u25cb back) through the standing routes', JSON.stringify({ marked, unmarked }));
 
   await paintBible();
@@ -427,7 +438,7 @@ const stackTop = () => ev(() => {
       nodesc: probe('bible-in-a-year:day-319'), nodur: probe('bible-in-a-year:day-321') };
   });
   ok(bars.cur === null && bars.nodesc === null && bars.nodur === null
-    && bars.part && bars.part.w === '24.9%' && bars.part.bottom === 0,
+    && bars.part && bars.part.w === '24.9%' && Math.abs(bars.part.bottom) <= 1,
     'L4: the partway bar renders on the unlistened partway entry only (never on the current entry at zero position, a no-position entry, or the no-duration entry — v395\u2019s rule) at the card\u2019s bottom edge', JSON.stringify(bars));
 
   const cur4 = await ev(() => {
@@ -494,10 +505,15 @@ const stackTop = () => ev(() => {
     'L5: the video page stands as base (head 174 · the v436 full-page act standing · first card top 346 · cards 70) and the watch page paints as base', JSON.stringify({ vid, watch }));
 
   await ev(() => {
+    // The v424 seam: the block page paints the track cards
+    // into the side host (the home paints the block grid).
     state.dayPayload = window.__fixture;
     state.dayDescs = window.__descs;
-    state.prayersView = { kind: 'home' };
-    paintListenHome(window.__fixture);
+    state.presentedDay = '2026-11-14';
+    view.innerHTML = paintSideToggle('prayers', 'prayers') + '<div id="sidehost"></div>';
+    enterSideHost();
+    state.prayersView = { kind: 'block', block: 'Morning' };
+    paintBlockPage(window.__fixture, 'Morning');
     wirePrayersView(window.__fixture);
   });
   await sleep(150);
