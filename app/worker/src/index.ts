@@ -242,7 +242,16 @@ function logo512(): Uint8Array {
 // date (High=4, Medium=2, Low=1, persisted, fill-missing only),
 // per-day completions (data only in this app — no behavior is built
 // on them), and the day addendum.
-const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas", "The AI Signal"] as const;
+// v451 §2.2: "The AI Signal" leaves the block list — the show
+// stands in Formation as a registry entry now (the own series
+// kind, below), not in the day. Its BLOCK_CAPTION and
+// PRAYER_BLOCK_START rows retire with it; PRAYLIST_URL never
+// carried a row for it. The name stands in the source-settings
+// PUT's validation for its own settings row only (its standing
+// assignment, which seats nothing now) and in the prayer_items
+// ORDER BY literal (no item carries the block; the literal
+// stands harmless).
+const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas"] as const;
 const PRAYER_BLOCK_START: Record<string, number> = {
   // v339: "Mass and Homilies" carries no hour of its own — it is
   // the day's closing listening block, not a time-of-day office.
@@ -256,12 +265,6 @@ const PRAYER_BLOCK_START: Record<string, number> = {
   // derivation below is start-based, not order-based, so a
   // last-position block with start 9 can never hijack "current".
   Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24, Novenas: 9,
-  // v368 §2.2: "The AI Signal" takes the Mass and Homilies value —
-  // 24 keeps it out of the current-block derivation entirely and
-  // prayerBlockDue reads false at every hour of the presented day.
-  // The entry is REQUIRED: the ?? 0 fallback would make an
-  // unlisted block "current" at every hour.
-  "The AI Signal": 24,
 };
 const PRAYLIST_URL: Record<string, string> = {
   Morning: "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
@@ -283,9 +286,6 @@ const BLOCK_CAPTION: Record<string, string> = {
   // hour caption: Novenas never becomes the derived current block,
   // so its caption must not promise an hour behavior.
   Novenas: "the day's novenas",
-  // v368 §2.2: the content-caption form again — the block is the
-  // day's episode, not an hour office.
-  "The AI Signal": "the day's episode",
 };
 
 interface PrayerItemRow {
@@ -739,8 +739,10 @@ async function playerIntroTexts(
 // pass (§2.8 ruling 3), exactly as it already filled externals.
 // Named-missing is a client computation (settings standing vs
 // resolution results). player_episodes is not read here at all —
-// v368 §2.2.7's ONE bounded exception stands below: the "The AI
-// Signal" block only, whose episode resolves from no feed.
+// v368 §2.2.7's one bounded exception (the "The AI Signal"
+// block's fill) retired at v451 §2.2: the store read lives in
+// the podcasts own-series builders now, and the day carries no
+// block for the show.
 async function playerDayPayload(env: Env, dateOverride?: string) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
@@ -753,36 +755,12 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   // fact in the nightly report, never a payload field.
   // v392 W1: an override (the session route validates it to
   // Chicago today or tomorrow) presents THAT day throughout —
-  // intro texts, the AI Signal store read, presentedDay.
+  // intro texts, presentedDay.
   const presented = dateOverride ?? prayerChicagoNow().date;
   const settings = await sourceSettingsPayload(env);
   const introTexts = await playerIntroTexts(env, presented);
-  // v368 §2.2.7: the ONE bounded exception to the shell's
-  // no-tracks rule — the "The AI Signal" block only. The
-  // episode's existence is a fact of the app's own store and
-  // resolves from NO feed; the shell is the signed-in surface
-  // that already reads that store for introTexts, and the v312
-  // store-read is the standing precedent for own content. When
-  // the presented date's row stands present, the block carries
-  // the single descriptor; otherwise tracks [] + trackCount 0
-  // and the client computes named-missing from the settings
-  // standing exactly as for every own source. No other block's
-  // shell entry changes; no other payload field changes. A
-  // future store-only source reuses this shape deliberately,
-  // never by drift (§2 Concern 2).
-  const aiRow = await env.DB.prepare(
-    "SELECT title, duration_s, size_bytes, audio_state FROM player_episodes WHERE date=? AND episode_id='the-ai-signal'",
-  ).bind(presented).first<{ title: string; duration_s: number; size_bytes: number; audio_state: string }>();
   const blocks = PRAYER_BLOCKS.map((block) => {
     const route = sources.find((x) => x.block === block && x.source_kind === "playlist");
-    if (block === "The AI Signal" && aiRow && aiRow.audio_state === "present") {
-      const desc = {
-        episodeId: "the-ai-signal", title: aiRow.title, block: "The AI Signal", kind: "episode",
-        durationS: aiRow.duration_s, sizeBytes: aiRow.size_bytes,
-        streamUrl: `/api/player/audio/${presented}/the-ai-signal`, state: "present",
-      };
-      return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [desc] as unknown[], trackCount: 1 };
-    }
     return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [] as unknown[], trackCount: 0 };
   });
   // v412 Fix 10: the day-positions fold — the presented day's
@@ -1600,6 +1578,21 @@ async function podIndexPayload(env: Env): Promise<unknown> {
   for (const vdef of POD_VIDEO_SERIES_LIST) {
     seriesList.push(await podVideoIndexEntry(env, vdef));
   }
+  // v451 §2.1: the OWN series appends AFTER the video loop — its
+  // seat, LAST (fifth), is guaranteed by construction, and the
+  // standing entries' order and shape are byte-untouched (the
+  // own entry carries kind: "own"). Its standing is gated here,
+  // server-side, on the 'the-ai-signal' settings row's enabled
+  // flag — the standing Settings switch in its new seat (the
+  // payload route itself answers regardless, as every series'
+  // does; the gate governs the list standing only).
+  const ownSettings = await sourceSettingsPayload(env);
+  const ownRow = ownSettings.sources.find((s) => s.sourceKey === "the-ai-signal");
+  if (ownRow && ownRow.enabled === 1) {
+    for (const odef of POD_OWN_SERIES_LIST) {
+      seriesList.push(await podOwnIndexEntry(env, odef));
+    }
+  }
   return { ok: true, seriesList };
 }
 
@@ -1786,6 +1779,96 @@ async function podVideoIndexEntry(env: Env, def: PodVideoSeriesDef): Promise<unk
     kind: "video", series: def.key, title: def.title, available: !!seq,
     latestLabel: newest ? videoDateLabel(newest.publishedMs) : null,
     showImageUrl: newest ? newest.imageUrl : null,
+  };
+}
+
+// ---- Podcasts OWN series (v451) -----------------------------------
+// Plan §2.1: a third series kind on the v434 precedent — its own
+// def list, its own index-entry and payload builders, appended
+// after the standing lists, routed before the audio def lookup.
+// The source is the app's OWN episode store (player_episodes —
+// one row per date for the show, planted by the production
+// hand-off route, which stands untouched): no feed, no snapshot,
+// no marks, no positions (the video kind's discipline — the show
+// never carried them). The read is direct: the store is the
+// standing fact, so the index and the series page can never
+// disagree, exactly as the other kinds' shared-read builders
+// guarantee. The show image is the app-served Ora Pro Nobis logo
+// ('/logo.png' — the standing own-content logo) on both the
+// index entry and the payload, so the client paints the entry
+// exactly like every other series, with no art special-case.
+interface PodOwnSeriesDef { key: string; title: string }
+const POD_OWN_SERIES_LIST: PodOwnSeriesDef[] = [
+  { key: "the-ai-signal", title: "The AI Signal" },
+];
+function podOwnSeriesDef(key: string): PodOwnSeriesDef | null {
+  return POD_OWN_SERIES_LIST.find((d) => d.key === key) ?? null;
+}
+
+interface PodOwnEntry {
+  key: string; date: string; label: string; title: string;
+  streamUrl: string; durationS: number; sizeBytes: number;
+}
+// The entry's date form — the video kind's "Mon D, YYYY" in
+// America/Chicago (videoDateLabel's discipline), derived from
+// the row's date at payload build, never stored.
+function ownDateLabel(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d, 12));
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric",
+  }).format(dt);
+}
+// The standing catalog read: every present row for the show,
+// newest first. audio_state 'present' is the store's standing
+// fact for a playable episode; any other state does not stand.
+async function podOwnEntries(env: Env): Promise<PodOwnEntry[]> {
+  const rows = await env.DB.prepare(
+    "SELECT date, title, duration_s, size_bytes FROM player_episodes WHERE episode_id='the-ai-signal' AND audio_state='present' ORDER BY date DESC",
+  ).all<{ date: string; title: string; duration_s: number; size_bytes: number }>();
+  return (rows.results ?? []).map((r) => ({
+    key: "the-ai-signal-" + r.date, date: r.date, label: ownDateLabel(r.date), title: r.title,
+    streamUrl: `/api/player/audio/${r.date}/the-ai-signal`, durationS: r.duration_s, sizeBytes: r.size_bytes,
+  }));
+}
+// The current entry: today's when one stands, else the newest —
+// derived at read time, never stored (the audio kind's rule).
+function podOwnCurrent(entries: PodOwnEntry[]): PodOwnEntry | null {
+  if (!entries.length) return null;
+  const today = prayerChicagoNow().date;
+  return entries.find((e) => e.date === today) ?? entries[0];
+}
+
+interface PodOwnPayload {
+  ok: boolean; kind: "own"; series: string; title: string; available: boolean;
+  entries: PodOwnEntry[]; currentKey: string | null; currentLabel: string | null;
+  showImageUrl: string; showDesc: string | null;
+}
+async function podOwnPayload(env: Env, def: PodOwnSeriesDef): Promise<PodOwnPayload> {
+  const entries = await podOwnEntries(env);
+  const current = podOwnCurrent(entries);
+  return {
+    ok: true, kind: "own", series: def.key, title: def.title, available: entries.length > 0,
+    entries, currentKey: current ? current.key : null,
+    currentLabel: current ? current.title : null,
+    showImageUrl: "/logo.png", showDesc: null,
+  };
+}
+
+// The index entry (§2.1): built from the same store read as the
+// series payload, exactly as the other kinds' index entries are
+// built from their own reads — the index and the series page can
+// never disagree. currentLabel is the current entry's TITLE
+// (today's episode when one stands, else the newest), so the
+// card's meta names the episode the page opens on.
+async function podOwnIndexEntry(env: Env, def: PodOwnSeriesDef): Promise<unknown> {
+  const entries = await podOwnEntries(env);
+  const current = podOwnCurrent(entries);
+  return {
+    kind: "own", series: def.key, title: def.title, available: entries.length > 0,
+    currentKey: current ? current.key : null,
+    currentLabel: current ? current.title : null,
+    showImageUrl: "/logo.png",
   };
 }
 
@@ -2206,6 +2289,11 @@ export default {
           // unknown key keeps the base behavior exactly.
           const readVideoDef = podVideoSeriesDef(readSeries);
           if (readVideoDef) return json(await podVideoPayload(env, readVideoDef));
+          // v451 §2.1: an OWN series key routes to the own
+          // payload builder BEFORE the audio def lookup (the
+          // v434 seat); an unknown key keeps the base behavior.
+          const readOwnDef = podOwnSeriesDef(readSeries);
+          if (readOwnDef) return json(await podOwnPayload(env, readOwnDef));
           const readDef = podSeriesDef(readSeries);
           if (!readDef) return err(400, "unknown series");
           return json(await podPayload(env, readDef));
@@ -2612,7 +2700,13 @@ export default {
             if (!stored.has(key)) return err(400, `unknown sourceKey ${key || "(empty)"}`);
             if (seen.has(key)) return err(400, `duplicate sourceKey ${key}`);
             seen.add(key);
-            if (!(s.block === "" || (PRAYER_BLOCKS as readonly string[]).includes(s.block ?? ""))) return err(400, `bad block for ${key}`);
+            // v451 §2.2 census: the 'the-ai-signal' row's standing
+            // assignment names its retired block — the value
+            // seats nothing (the day carries no such block) and
+            // stands accepted for its own row only, so the
+            // whole-table save never strands the row whose
+            // enabled switch now gates the Formation entry.
+            if (!(s.block === "" || (PRAYER_BLOCKS as readonly string[]).includes(s.block ?? "") || (key === "the-ai-signal" && s.block === "The AI Signal"))) return err(400, `bad block for ${key}`);
             if (!(DAY_RULES as readonly string[]).includes(s.dayRule ?? "")) return err(400, `bad dayRule for ${key}`);
             if (s.enabled !== 0 && s.enabled !== 1) return err(400, `bad enabled for ${key}`);
           }

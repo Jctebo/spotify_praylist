@@ -2560,6 +2560,20 @@ function paintPodcastsIndex() {
       } else {
         html += '<div class="meta">Video \u00b7 Latest: ' + esc(s.latestLabel || '') + '</div>';
       }
+    } else if (s.kind === 'own') {
+      // v451 §2.4: an OWN series card — the audio form's counts
+      // do not apply (the kind carries no marks, the video
+      // branch's discipline), so its meta is the standing
+      // Current form alone, naming the current episode (the
+      // payload's currentLabel: today's title when one stands,
+      // else the newest). Its art is the show image the entry
+      // carries ('/logo.png'), over the same tile, through the
+      // standing art line above — no art special-case stands.
+      if (!s.available) {
+        html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
+      } else {
+        html += '<div class="meta">Current: ' + esc(s.currentLabel || '') + '</div>';
+      }
     } else if (!s.available) {
       html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
     } else {
@@ -2581,6 +2595,7 @@ function paintPodSeriesPage() {
   // entered for it. Every standing series-page paint seat (the
   // open, the session return) routes through here.
   if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
+  else if (state.podcasts && state.podcasts.kind === 'own') paintPodOwnSeries();
   else paintPodcasts();
 }
 function openPodSeries(key) {
@@ -2685,6 +2700,114 @@ function openFullPage(e) {
   // behavior, performed by hand, exactly once.
   if (p && p.catch) p.catch(function () { window.open(YT_CHANNEL_URL, '_blank'); });
 }
+/* ---------------- Podcasts OWN series (v451) ----------------
+   §2.4: the own series page — the standing store catalog,
+   newest first, painted in the standing series grammar (the
+   bar · the .podpage-head · the episode rows in the standing
+   episode-row dress). It looks like any other series page:
+   the head's cover is the payload's show image ('/logo.png',
+   the standing own-content logo) over the tile, exactly as an
+   audio page's head carries its show image; the rows carry
+   the row art in its standing form (podRowArtHtml reads the
+   payload's showImageUrl), the title, and the meta line (the
+   current row names itself "Current episode", as the audio
+   rows name theirs). No marks, no partway bar, no download
+   cluster stand (the kind carries none — the video page's
+   discipline); the rows carry NO written intention line (the
+   line was a block-standing artifact, and the uniform-row
+   rule retires it with the block). The ONLY difference from
+   another series' page is invisible: today's row's play act
+   rides the standing local-copy swap seat (aiSettleSwap,
+   Trigger A at this paint; podOwnDesc reads the mint at tap
+   time). */
+function paintPodOwnSeries() {
+  var res = state.podcasts;
+  if (!res || res.kind !== 'own') { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
+  podLevel = 'series';
+  var html = '<h1 class="screen">Formation</h1>';
+  html += iosBarHtml({ dest: 'Formation', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
+  if (!res.available) {
+    // The standing unavailable surface: no present episode
+    // stands in the store — the card form the other series keep.
+    html += '<div class="card"><h3>' + esc(res.title || 'The AI Signal') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    view.innerHTML = html;
+    wirePodBack();
+    return;
+  }
+  var cur = null;
+  res.entries.forEach(function (e) { if (e.key === res.currentKey) cur = e; });
+  // The page head in the standing grammar: the show cover
+  // (large) · the meta line = the standing facts (the episode
+  // count · the total duration · the current episode's title).
+  var durSum = res.entries.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
+  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
+    + (res.showImageUrl ? '<img class="coverimg" src="' + esc(res.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
+  html += '<div class="podpage-head">' + showCover
+    + '<div class="meta">' + res.entries.length + ' episode' + (res.entries.length === 1 ? '' : 's')
+    + (durSum > 0 ? ' \u00b7 ' + fmtDurLong(durSum) : '')
+    + (cur ? ' \u00b7 Current: ' + esc(cur.title) : '') + '</div></div>';
+  res.entries.forEach(function (e) {
+    // The standing episode-row dress (v433's slim form): art ·
+    // the title line with its cluster (the play disc in the
+    // cluster seat) · the meta line. Form-identical for every
+    // row, today's included.
+    html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
+      + podRowArtHtml(e)
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
+      + '<span class="prow-cluster">'
+      + '<button class="playbtn" data-ownplay="' + esc(e.key) + '">&#9654;</button>'
+      + '</span></div>'
+      + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + '</span></div></div>'
+      + '</div></div>';
+  });
+  view.innerHTML = html;
+  wirePodBack();
+  view.querySelectorAll('[data-ownplay]').forEach(function (b) {
+    b.addEventListener('click', function () { playPodOwnFrom(b.getAttribute('data-ownplay')); });
+  });
+  // Trigger A (v430, re-seated): a device-local copy of today's
+  // episode already standing swaps in at this paint.
+  var todayEntry = null;
+  res.entries.forEach(function (e) { if (e.date === todayChicago()) todayEntry = e; });
+  if (todayEntry) aiSettleSwap(todayEntry);
+  // The audio page's scroll rule: the list opens scrolled to
+  // the current entry.
+  if (res.currentKey) {
+    var el = view.querySelector('[data-podrow="' + res.currentKey + '"]');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+  }
+}
+function podOwnDesc(e) {
+  // §2.4: the own entry's descriptor, in the day-descriptor
+  // form the show's descriptor has always taken (trackDesc's
+  // shape: no kind — the podcast stores are never entered; the
+  // day-position mirror treats it exactly as it treated the
+  // block page's descriptor, under its own per-episode key).
+  // Its title takes podDesc's label form; its art is the
+  // payload's show image. TODAY's entry takes the device-local
+  // copy when the swap stands — aiSettleSwap's mint, read here
+  // at tap time, so a copy landing after the paint is taken.
+  var url = e.streamUrl;
+  if (e.date === todayChicago()) {
+    var owner = ownBlobOwners[offlineDayKey(e.date, 'the-ai-signal')];
+    if (owner && owner.blobUrl) url = owner.blobUrl;
+  }
+  return { episodeId: e.key, title: e.label + ': ' + e.title, url: url, available: !!url, block: 'Podcasts', durationS: e.durationS || 0, imageUrl: (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: null };
+}
+function playPodOwnFrom(key) {
+  // The standing series play act (playPodFrom's shape): play
+  // queues the catalog from the tapped entry forward through
+  // the standing queue machinery.
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var idx = -1;
+  res.entries.forEach(function (e, i) { if (e.key === key) idx = i; });
+  if (idx < 0) return;
+  var descs = res.entries.slice(idx).map(podOwnDesc).filter(function (d) { return d.available; });
+  if (!descs.length) return;
+  startQueue(descs, true);
+}
+
 /* ---------------- Podcasts VIDEO series (v434) ----------------
    §2.1: the video series page — the standing snapshot's videos,
    newest first. Each row: the thumbnail (referenced from
@@ -3303,6 +3426,14 @@ function refreshUnsaved() {
 }
 var settingsVersion = null;
 var settingsNote = '';
+// v451 §2.3 census: 'The AI Signal' STANDS in both lists — the
+// 'the-ai-signal' row itself stands assigned to it, the section
+// grouping (settingsSections) keys on the name, and the server's
+// whole-table validation accepts the standing value for its own
+// row; retiring the name would strand the row and break every
+// Settings save. It seats nothing on the Prayers side now: the
+// day carries no such block, so no source placed there stands
+// anywhere in the day.
 var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal'];
 var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal', 'No block', 'Off'];
 var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
@@ -6826,99 +6957,50 @@ function ownBuildIntentions(day, cachedRec) {
     state.introRec = null;
   });
 }
-function claimAiSignalShell(day) {
-  // v368 §2.5.3: the shell fills The AI Signal block's tracks
-  // server-side (the §2.2.7 exception) — the ONLY block whose
-  // payload tracks stand non-empty. The client claims that
-  // descriptor into the own-slot machinery (resolveAiSignal) and
-  // empties the payload list here, synchronously at the pass's
-  // open, so no paint path (the block page renders payload tracks
-  // directly) can ever stand the episode twice or in its raw
-  // shell form. Returns the descriptor, or null when the block
-  // carries none (no registration for the presented day).
-  var blk = (day.blocks || []).filter(function (x) { return x.block === 'The AI Signal'; })[0];
-  if (!blk || !blk.tracks || !blk.tracks.length) return null;
-  var desc = blk.tracks[0];
-  blk.tracks = [];
-  return desc;
-}
-function resolveAiSignal(day, settings, shellDesc) {
-  // v368 §2.5.3: the resolution leg for the store-only episode.
-  // Standing = the settings row (family 'own', sourceKey
-  // 'the-ai-signal' — deliberately NO OWN_ROW_EPISODE entry: the
-  // public-feed own leg must never claim this source, §2.5.2);
-  // a Settings disable by John settles the block absent, the
-  // standing rule for own sources. Result = the shell block's
-  // filled descriptor, claimed by claimAiSignalShell. Present
-  // stands the slot present with the descriptor as its one track
-  // (streamUrl is the signed-in audio route; hasText false — no
-  // text object is staged for this episode kind); absent stands
-  // it named-missing (the ownSettleMissing shape, settled inline:
-  // no feed will ever resolve it). The pair machinery is the
-  // standing one — the descriptor carries episodeId
-  // 'the-ai-signal', so the shell's introTexts (keyed
-  // 'the-ai-signal' in the payload map; v375: buildIntroMap at
-  // day load, the feed guid join retired) stand the intention
-  // row before it with no new pair code (§2.5.4).
-  var s = (settings.sources || []).filter(function (x) { return x.sourceKey === 'the-ai-signal'; })[0];
-  if (!s || s.enabled !== 1 || !s.block) return;
-  var row = { sourceKey: 'the-ai-signal', episodeId: 'the-ai-signal', block: s.block, sortOrder: s.sortOrder, title: s.name, enabled: s.enabled, shellResolved: true };
-  state.ownStanding.push(row);
-  if (shellDesc) {
-    state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: 'the-ai-signal', title: shellDesc.title, state: 'present', enclosureUrl: null, streamUrl: shellDesc.streamUrl, durationS: shellDesc.durationS || 0, sizeBytes: shellDesc.sizeBytes || 0, hasText: false }] };
-    aiSettleSwap(day); // v430 Trigger A: a copy already standing swaps in at build
-  } else {
-    state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
-  }
-}
-function aiSettleSwap(day) {
-  // v430 §2.4: the own family's landing, mirrored for the
-  // shell-resolved slot — the ONE track that always played as a
-  // live network stream takes the device-local copy the v392
-  // pass already puts on the phone, under the SAME day key the
-  // pass stores it (opn-ext-audio-v1). The stream stands until
-  // the copy lands (the fallback order); the swap never touches
-  // a live playing element — descriptors are built from what
-  // stands resolved at tap time, so a queued or next-up read
-  // takes the swapped URL while a loaded element keeps its src,
-  // exactly as an own track's mid-play swap behaves. Fire-and-
-  // forget: a cache miss or a stalled read simply leaves the
-  // stream standing (Trigger B or the next build retries).
-  if (!day) return Promise.resolve();
-  var date = day.presentedDay || day.date;
-  if (!date) return Promise.resolve();
-  var row = (state.ownStanding || []).filter(function (r) { return r.sourceKey === 'the-ai-signal'; })[0];
-  if (!row) return Promise.resolve();
-  var st = state.ownSlots[row.sourceKey];
-  if (!st || st.state !== 'present' || !st.tracks || !st.tracks.length) return Promise.resolve();
-  var track = st.tracks.filter(function (t) { return t.episodeId === 'the-ai-signal'; })[0];
-  if (!track) return Promise.resolve();
-  var key = offlineDayKey(date, 'the-ai-signal');
-  var owner = ownBlobOwner(key); // v412 Fix 11: the cache key's owner holds the mint
-  if (owner.blobUrl && track.streamUrl === owner.blobUrl) return Promise.resolve(); // the once-guard: a second fire never re-mints
-  return offlineAudioCache().then(function (cache) {
-    if (!cache) return;
-    return cache.match(key).then(function (resp) {
-      if (!resp) return;
-      return resp.blob().then(function (blob) {
-        if (!blob) return;
-        if (owner.blobUrl && track.streamUrl === owner.blobUrl) return; // the guard re-read after the async seam
-        // v430 §2.5: the settle verifies — a standing copy short
-        // of the descriptor's server-measured sizeBytes never
-        // becomes a play source; the pass's repair owns the copy.
-        if (track.sizeBytes > 0 && blob.size !== track.sizeBytes) return;
-        var objUrl = mintBlobUrl(owner, blob);
-        (state.ownStanding || []).forEach(function (r2) {
-          var st2 = state.ownSlots[r2.sourceKey];
-          if (!st2 || !st2.tracks) return;
-          var touched = false;
-          st2.tracks.forEach(function (t2) { if (t2.episodeId === 'the-ai-signal') { t2.streamUrl = objUrl; touched = true; } });
-          if (touched) { ownSwapRow(r2, day); }
+function aiSettleSwap(entry) {
+  // v451 §2.4: the v430 swap, re-seated at the only paint that
+  // plays the show now — the own series page. The ONE track that
+  // always played as a live network stream takes the device-
+  // local copy the v392 pass puts on the phone, under the SAME
+  // day key the pass stores it (opn-ext-audio-v1). The stream
+  // stands until the copy lands (the fallback order); the swap
+  // never touches a live playing element — the series page's
+  // descriptors are built from what stands resolved at tap time
+  // (podOwnDesc reads the mint below), so a copy landing after
+  // the paint is taken by the next tap, exactly as the block
+  // page's swap behaved. Fire-and-forget: a cache miss or a
+  // stalled read simply leaves the stream standing (Trigger B
+  // or the next paint retries). Two triggers, as v430 named
+  // them: Trigger A — this paint, with the today entry in hand;
+  // Trigger B — the offline pass landing the presented day's
+  // copy mid-session (offlineDownloadItems), which calls with
+  // no entry and reads the today entry from the own payload.
+  // The settle verifies, as v430 §2.5 ruled: a standing copy
+  // short of the entry's server-measured sizeBytes never
+  // becomes a play source; the pass's repair owns the copy.
+  var date = todayChicago();
+  var owner = ownBlobOwner(offlineDayKey(date, 'the-ai-signal'));
+  if (owner.blobUrl) return Promise.resolve(); // the once-guard: a second fire never re-mints
+  var withEntry = function (e) {
+    if (!e || e.date !== date) return Promise.resolve();
+    return offlineAudioCache().then(function (cache) {
+      if (!cache) return;
+      return cache.match(offlineDayKey(date, 'the-ai-signal')).then(function (resp) {
+        if (!resp) return;
+        return resp.blob().then(function (blob) {
+          if (!blob) return;
+          if (owner.blobUrl) return; // the guard re-read after the async seam
+          if (e.sizeBytes > 0 && blob.size !== e.sizeBytes) return;
+          mintBlobUrl(owner, blob);
         });
-        ownRegisterReadTracks();
-        extRebuildDescs(day);
       });
-    });
+    }).catch(function () {});
+  };
+  if (entry) return withEntry(entry);
+  return api('/api/player/podcasts?series=the-ai-signal').then(function (res) {
+    var e = null;
+    ((res && res.entries) || []).forEach(function (x) { if (x.date === date) e = x; });
+    return withEntry(e);
   }).catch(function () {});
 }
 function resolveExternals(day, settingsOverride, snapshotRec) {
@@ -6927,9 +7009,10 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
   // is the produced fact and no longer keys any consumption path.
   var date = day.presentedDay || day.date;
   if (!date) return;
-  // v368 §2.5.3: claim the shell's AI Signal descriptor before
-  // any paint can consume the payload's block list.
-  var aiShellDesc = claimAiSignalShell(day);
+  // v451 §2.3: no shell claim stands here any more — the day
+  // payload carries no AI Signal block (the show stands in
+  // Formation as a registry entry), so no paint path can stand
+  // the episode on the Prayers side at all.
   state.extSlots = {};
   state.extStanding = [];
   // v392 W3: the settings-dependent build stands extracted as
@@ -6966,10 +7049,6 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     state.ownStanding = ownStanding;
     state.ownSlots = {};
     ownStanding.forEach(function (row) { state.ownSlots[row.sourceKey] = { state: 'loading', tracks: [] }; });
-    // v368 §2.5.3: the store-only episode settles from the shell
-    // in this same pass, before the feed/watchdog machinery runs
-    // (its row is shellResolved — those legs skip it by name).
-    resolveAiSignal(day, settings, aiShellDesc);
     // Day cache: valid only for this date AND this settings version.
     var cache = extCacheRead();
     // v392 W3: on the snapshot path the snapshot's externals
@@ -7523,14 +7602,32 @@ function offlineFetchItemAudio(item) {
   var second = item.source === 'Sing the Hours' ? item.enclosureUrl : passthrough;
   return offlineFetchBlob(first).catch(function () { return offlineFetchBlob(second); });
 }
+function offlineAiItem(date) {
+  // v451 §2.4: today's AI Signal download item, read from the
+  // own series payload — the registry entry is the show's
+  // standing read now (the day payload carries no block for it
+  // and the own-slot enumeration retired with the slot). The
+  // item keeps its standing kind-'ai' shape, so the pass's size
+  // check (§2.5) and the settle swap keep their seats; a day
+  // with no present episode enumerates no item.
+  return api('/api/player/podcasts?series=the-ai-signal').then(function (res) {
+    var e = null;
+    ((res && res.entries) || []).forEach(function (x) { if (x.date === date) e = x; });
+    if (!e) return null;
+    return { kind: 'ai', date: date, id: 'the-ai-signal', enclosureUrl: e.streamUrl, sizeBytes: e.sizeBytes || 0, key: offlineDayKey(date, 'the-ai-signal') };
+  }).catch(function () { return null; });
+}
 function offlineEnumerateToday(date) {
   var items = [];
   (state.ownStanding || []).forEach(function (row) {
     var st = state.ownSlots[row.sourceKey];
     if (!st || st.state !== 'present') return;
     (st.tracks || []).forEach(function (t) {
-      if (row.shellResolved) { if (t.streamUrl) items.push({ kind: 'ai', date: date, id: t.episodeId, enclosureUrl: t.streamUrl, sizeBytes: t.sizeBytes || 0, key: offlineDayKey(date, t.episodeId) }); }
-      else if (t.enclosureUrl) items.push({ kind: 'own', date: date, id: t.episodeId, enclosureUrl: t.enclosureUrl, key: offlineDayKey(date, t.episodeId) });
+      // v451 §2.4: the shellResolved ('ai') branch retires with
+      // the own-slot machinery — today's AI Signal item is
+      // enumerated from the own series payload instead
+      // (offlineAiItem, joined by the pass in offlineCompleteness).
+      if (t.enclosureUrl) items.push({ kind: 'own', date: date, id: t.episodeId, enclosureUrl: t.enclosureUrl, key: offlineDayKey(date, t.episodeId) });
     });
   });
   (state.extStanding || []).forEach(function (slot) {
@@ -7577,9 +7674,13 @@ function offlineTomorrowBuild(tomorrow, epoch) {
   return api('/api/player/day?date=' + encodeURIComponent(tomorrow)).then(function (day) {
     var extRec = { date: tomorrow, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {}, own: {}, intentions: null };
     var items = [];
-    (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) {
-      if (t.episodeId) items.push({ kind: 'ai', date: tomorrow, id: t.episodeId, enclosureUrl: t.streamUrl, title: t.title, block: b.block, durationS: t.durationS || 0, sizeBytes: t.sizeBytes || 0, key: offlineDayKey(tomorrow, t.episodeId) });
-    }); });
+    // v451 §2.4: the day-blocks scan for 'ai' items retires —
+    // it read the shell-filled AI Signal block (the one block
+    // whose payload tracks ever stood non-empty), and that fill
+    // retired with the block. Tomorrow's AI Signal copy
+    // pre-stage retires with it: the episode is a Formation
+    // entry now, and its copy lands when its day becomes today
+    // (offlineAiItem in the today leg above).
     var wd = extWeekdayMon0(tomorrow);
     var prim = {};
     (settings.sources || []).forEach(function (s) { if (s.family === 'external' && s.slotId && s.role !== 'fallback') prim[s.slotId] = s; });
@@ -7661,7 +7762,11 @@ function offlineDownloadItems(items, epoch) {
     // swap itself also reads only the presented day's key).
     var fireAiSwap = function (it) {
       var pd = state.dayPayload ? (state.dayPayload.presentedDay || state.dayPayload.date) : null;
-      if (pd && it.key === offlineDayKey(pd, 'the-ai-signal')) aiSettleSwap(state.dayPayload);
+      // v451 §2.4: Trigger B's seat is unchanged (the presented
+      // day's ai item resolving stored); the swap itself now
+      // reads the today entry from the own payload (aiSettleSwap
+      // takes no day argument in its new seat).
+      if (pd && it.key === offlineDayKey(pd, 'the-ai-signal')) aiSettleSwap();
     };
     items.forEach(function (it) {
       chain = chain.then(function () {
@@ -7763,7 +7868,11 @@ function offlineCompleteness(manual) {
   return offlineEvict(null).then(function () {
     return offlineWaitSettled(0).then(function () {
       if (stale()) throw new Error('offline pass superseded by a clear');
-      return offlineDownloadItems(offlineEnumerateToday(today), epoch).then(function (r1) {
+      return offlineAiItem(today).then(function (aiItem) {
+        var todayItems = offlineEnumerateToday(today);
+        if (aiItem) todayItems.push(aiItem);
+        return offlineDownloadItems(todayItems, epoch);
+      }).then(function (r1) {
         if (stale()) throw new Error('offline pass superseded by a clear');
         var idx = offlineIndexRead();
         idx.days[today] = { have: r1.have, total: r1.total, settingsVersion: (state.offlineSettings || {}).version };
