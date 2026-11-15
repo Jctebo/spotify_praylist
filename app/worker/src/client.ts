@@ -5259,6 +5259,46 @@ function openRead(t) {
    swipe: the .sheet pattern carries no gesture machinery
    anywhere in the estate, and D4 committed the button route. */
 var npScrubbing = false;
+/* v435 §2.1/§2.2: the Now Playing hero follows the playing
+   descriptor. realArtUrl is the sheet's art test: a descriptor
+   imageUrl counts as real art unless it IS the own feed's logo
+   file — the exact-file test (scheme stripped, the whole string
+   lowercased, both host casings in the live feed covered by the
+   one comparison), plus the defensive '/logo.png' clause so
+   the app's own logo path can never re-enter as "art". F-435-1
+   as ruled by John (2026-11-15 00:39 CT: "Use the ora pro Nobis
+   logo for things that come from this podcast"): where no real
+   art stands, the hero is the LOGO — the glyph-tile no-art
+   branch does not stand on this surface; tracks from other
+   sources show their own art through the branch below. */
+function isOwnLogoUrl(u) {
+  if (!u) return false;
+  if (u === '/logo.png') return true;
+  var s = String(u).replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\//i, '').toLowerCase();
+  return s === 'jctebo.github.io/spotify_praylist/images/logo_ora_pro_nobis.png';
+}
+function realArtUrl(cur) {
+  var u = cur && cur.imageUrl;
+  if (!u) return null;
+  return isOwnLogoUrl(u) ? null : u;
+}
+function npArtRender(sheet, cur) {
+  var artEl = sheet.querySelector('#np-art');
+  if (!artEl) return;
+  var art = realArtUrl(cur);
+  var key = art ? 'img:' + art : 'logo';
+  if (artEl.getAttribute('data-artkey') === key) return; // the dock thumb's guard pattern: no rebuild, no img reload, on unrelated renders
+  artEl.setAttribute('data-artkey', key);
+  if (art) {
+    // the rowArtHtml pattern: the art stands over the block
+    // glyph tile; a URL that fails to load removes itself and
+    // the tile beneath stands — never a broken-image glyph.
+    artEl.innerHTML = coverTileHtml(cur.block || '', 'hero')
+      + '<img class="np-art-img" src="' + esc(art) + '" alt="" onerror="this.remove()">';
+  } else {
+    artEl.innerHTML = '<img class="np-art-img" src="/logo.png" alt="Ora Pro Nobis logo">';
+  }
+}
 function npDuration() {
   var d = audioEl.duration;
   if (isFinite(d) && d > 0) return d;
@@ -5276,7 +5316,7 @@ function openNowPlaying() {
   sheet.innerHTML = '<div class="inner">'
     + '<div class="np-hero">'
     + '<div class="np-grab"><span class="grabpill"></span></div>'
-    + '<div class="np-art"><img src="/logo.png" alt="Ora Pro Nobis logo"></div>'
+    + '<div class="np-art" id="np-art"></div>'
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
     + '<div class="np-intention" id="np-intention" style="display:none"></div>'
@@ -5341,6 +5381,7 @@ function updateNowPlaying() {
   if (cur.source) meta = meta ? meta + ' · ' + cur.source : cur.source;
   if (!meta) meta = state.dateLabel || '';
   sheet.querySelector('#np-meta').textContent = meta;
+  npArtRender(sheet, cur); // v435 §2.1: the hero follows the playing descriptor, on open and on every track change
   var litEl = sheet.querySelector('#np-litday'); if (litEl) { var ln = (state.liturgical && state.liturgical.name) || ''; if (litEl.textContent !== ln) litEl.textContent = ln; }
   var intEl = sheet.querySelector('#np-intention');
   if (intEl) {

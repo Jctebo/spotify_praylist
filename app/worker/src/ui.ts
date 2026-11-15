@@ -372,9 +372,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-hero .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
 .np-preview .np-hero .npq-heading { color:var(--bar-fg); }
 .np-preview .np-hero #np-queue-pos { color:var(--bar-sub); }
-.np-art { text-align:center; margin:4px 0 0; }
-.np-art img { width:min(72vw, 340px); height:auto; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
-[data-lit="white"] .np-art img { box-shadow:0 10px 28px rgba(168,134,58,.25); }
+.np-art { position:relative; width:min(72vw, 340px); aspect-ratio:1; margin:4px auto 0; }
+.np-art .blockcover.hero { position:absolute; inset:0; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
+.np-art .blockcover.hero .blockcover-initial { font-size:128px; }
+.np-art img.np-art-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
+[data-lit="white"] .np-art .blockcover.hero, [data-lit="white"] .np-art img.np-art-img { box-shadow:0 10px 28px rgba(168,134,58,.25); }
 /* v354 §2.5F: the measured boundary for accent discs standing on a
    gradient zone (v353's block-page Play All + home card play
    buttons) — an outline in the bar-fg pair, >= 4.88:1 against both
