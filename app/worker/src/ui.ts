@@ -431,6 +431,30 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .playbtn.big { width:56px; height:56px; font-size:20px; }
 .blockpage-head .spot { color:var(--bar-fg); margin-top:0; }
 .blockpage-head .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
+/* v420 §2.3: the compressed block head — three rows inside
+   the standing frozen element (head proper 100px: padding
+   6/6 · cover row 56 · pill line 28 at a 4px gap). Every
+   divergence rides the .compact scope, so the episodes
+   page's head — the same classes without .compact — keeps
+   the v419 form untouched (F-420-7). §2.9: the head sticks
+   BELOW the frozen toggle band — brand height + 58px (the
+   toggle's 46px band + its 12px margin; the coupling is
+   named in §2.9 — if the toggle's construction changes,
+   the offset is re-derived in the same change). */
+.blockpage-head.compact { padding:6px 14px; top:calc(var(--brandh, 54px) + 58px); }
+.blockpage-coverrow { display:flex; align-items:center; }
+.blockpage-head.compact .backdisc { width:36px; height:36px; font-size:19px; position:relative; margin-right:8px; }
+.blockpage-head.compact .backdisc::after { content:''; position:absolute; inset:-4px; }
+.blockcover.med { width:56px; height:56px; border-radius:10px; flex:none; }
+.blockcover.med .blockcover-initial { font-size:28px; }
+.blockpage-stack { flex:1; min-width:0; margin-left:10px; }
+.blockpage-head.compact .blockpage-meta { margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.blockpage-pillrow { display:flex; align-items:center; gap:8px; margin-top:4px; }
+.blockpage-pillrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
+.blockpage-head.compact .chipbtn { min-height:0; padding:5px 12px; position:relative; }
+.blockpage-head.compact .chipbtn::after { content:''; position:absolute; inset:-8px 0; }
+.blockpage-pillrow .blockpage-dlnote { margin-top:0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.blockpage-head.compact .blockpage-playrow { margin-top:6px; }
 /* v419 (G26): the search field gains its leading glyph;
    its focus takes the §3.12 accent border (the G20 field
    rule below). */

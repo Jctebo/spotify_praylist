@@ -4761,7 +4761,11 @@ function refreshGridDlStates() {
     });
     view.querySelectorAll('[data-blockdlnote]').forEach(function (note) {
       var full = !!state.gridDl[note.getAttribute('data-blockdlnote')];
-      note.textContent = full ? 'Downloaded for offline. To remove the day\u2019s downloads, use Clear offline downloads in Settings.' : '';
+      // v420 §2.6: the note folds to one compact line for the
+      // pill line — the downloaded confirmation + the removal
+      // pointer (the act stands only in Settings) survive;
+      // the full sentence does not fit the line.
+      note.textContent = full ? 'Downloaded \u00b7 remove in Settings' : '';
     });
     view.querySelectorAll('[data-rowdl]').forEach(function (el) {
       el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
@@ -7584,19 +7588,23 @@ function paintBlockPage(day, block) {
   // settlement seam) · download-all toggle + share icon · the
   // large round play button · the action row (Sort · Mark all
   // played · the page ⋮ — Open in Spotify's one home now, R4).
-  var html = '<div class="blockpage-head" data-block="' + esc(b.block) + '">'
-    + '<div class="backrow"><button class="backdisc" data-back="' + esc(b.block) + '" aria-label="Back to Prayers">&lsaquo;</button></div>'
-    + coverTileHtml(b.block, 'large')
-    + '<div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
-    + (b.caption ? '<div class="blockpage-desc">' + esc(b.caption) + '</div>' : '')
-    + '<div class="blockpage-owner">Ora Pro Nobis</div>'
-    + '<div class="blockpage-meta"><span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
-    + '<div class="blockpage-dlrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
-    + '<button class="iconbtn light" data-blockshare="' + esc(b.block) + '" aria-label="Share this playlist">&#8599;</button></div>'
-    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div>'
+  // v420 §2.3: the head compresses to three rows inside the
+  // same frozen element — Row 1: the back disc seated in the
+  // head (§2.4) · the 56px cover (.blockcover.med) · the
+  // title/meta stack (the caption folded into the meta line,
+  // §2.5; the owner line and the prayed suffix leave the
+  // head — they stand on the grid card + the rows, §2.3) ·
+  // Row 2: the pill line (the compact download chip + the
+  // folded note, §2.6) · Row 3: the slim Play All row (disc ·
+  // label · ⋮ — Sort and Mark all played ride the ⋮, §2.7).
+  var html = '<div class="blockpage-head compact" data-block="' + esc(b.block) + '">'
+    + '<div class="blockpage-coverrow"><button class="backdisc" data-back="' + esc(b.block) + '" aria-label="Back to Prayers">&lsaquo;</button>'
+    + coverTileHtml(b.block, 'med')
+    + '<div class="blockpage-stack"><div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
+    + '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div></div></div>'
+    + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
+    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button><span class="blockpage-playlabel">Play All — ' + esc(b.label || b.block) + '</span><span class="grow"></span>'
-    + '<button class="btn ghost small" data-blocksort="1">Sort</button>'
-    + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button>'
     + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
@@ -7605,23 +7613,36 @@ function paintBlockPage(day, block) {
   // v413 §2.5: the head's own controls wire here (the page ⋮,
   // Sort, share, and the download-all toggle — the standing
   // data-markblock/data-queue acts wire in the standing passes).
+  // v420 §2.7: Sort + Mark all played + Share ride the page ⋮
+  // (the anchored card); the head's share icon retires (Share
+  // stands in the menu, its v413 home — §2.6).
   var dlBtn = view.querySelector('[data-blockdl]');
   if (dlBtn) dlBtn.addEventListener('click', function () { blockDownloadAll(b.block); });
-  var shBtn = view.querySelector('[data-blockshare]');
-  if (shBtn) shBtn.addEventListener('click', function () {
+  var openBlockShare = function () {
     openShareSheet({
       artHtml: coverTileHtml(b.block, 'sm'), title: b.label || b.block,
       line: 'Playlist \u00b7 ' + ((state.dayDescs || []).filter(function (d) { return d.block === b.block; }).length || n) + ' episodes',
       url: b.spotifyUrl || location.origin + '/'
     });
-  });
-  var sortBtn = view.querySelector('[data-blocksort]');
-  if (sortBtn) sortBtn.addEventListener('click', openBlockOrderEditor);
+  };
   var menuBtn = view.querySelector('[data-blockmenu]');
   if (menuBtn) menuBtn.addEventListener('click', function () {
-    var items = [{ label: 'Share', act: function () { if (shBtn) shBtn.click(); } }];
+    var played = blockPlayedCounts(b.block);
+    var items = [
+      { label: 'Sort', act: function () { openBlockOrderEditor(); } },
+      // §2.7: the mark-all item's label is computed here, at
+      // menu construction (the menu rebuilds at every open,
+      // so the label is fresh at open); its row takes
+      // data-markblock after mount and wirePlayed binds the
+      // standing mark-all act to it — the item's own act is
+      // the menu's close only.
+      { label: (played.total && played.played === played.total) ? 'Mark all unplayed' : 'Mark all played', act: function () {} },
+      { label: 'Share', act: openBlockShare }
+    ];
     if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
-    openSheetMenu(b.label || b.block, items, menuBtn);
+    var card = openSheetMenu(b.label || b.block, items, menuBtn);
+    var markRow = card ? card.querySelector('[data-menuitem="1"]') : null;
+    if (markRow) { markRow.setAttribute('data-markblock', b.block); wirePlayed(card); }
   });
   appendBlockSettingsCards(day, b);
   // v374 §2 (site 1): the header span stands in the view now —
