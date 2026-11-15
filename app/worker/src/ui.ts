@@ -291,7 +291,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    paint (the --tabh precedent); the 54px fallback is its
    standing height. Sticky adds no height and no offset, so
    a view shorter than the screen stands pixel-identical. */
-.segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); position:sticky; top:var(--brandh, 54px); z-index:25; }
+/* v447 (John, 2026-11-15 14:26 CT): the tabbed pages sit
+   BENEATH the frozen header and are NOT frozen — the toggle
+   rows scroll with the page; the header alone is frozen.
+   The sticky seat this rule carried retires. */
+.segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); }
 .segtoggle button { flex:1; font-family:inherit; font-size:15px; padding:8px; background:none; border:none; cursor:pointer; color:var(--muted); }
 .segtoggle button.active { color:var(--navy); box-shadow: inset 0 -2px 0 var(--accent); }
 /* v419 (G9): the Examination mode control is a second-row
@@ -472,6 +476,28 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    disc — 44px, cream chevron, the Disc shadow — on every
    page that carries one. The text .backbtn retires. */
 .backdisc { width:44px; height:44px; border-radius:50%; border:none; background:var(--navy); color:var(--cream); font-family:inherit; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 2px 6px rgba(42,38,32,.25); display:inline-flex; align-items:center; justify-content:center; padding:0 0 2px; flex:none; }
+/* v447: the iOS-style bar — one slim bar at the top of every
+   pushed page (client.ts iosBarHtml). The frozen layer is
+   the header alone (John, 2026-11-15 14:26 CT): the brand
+   bar, and on pushed pages this bar under it — sticky at
+   the brand height where it stands in the page flow; inside
+   a sticky head (.inhead) the head is the frozen element
+   and the bar stands static, bled to the head's edges.
+   Dress: the light iOS grey-white ground; the chevron, the
+   back name, and the right-side acts read var(--accent-text)
+   — the standing theme token that carries the day's
+   liturgical color for text on a light ground (§2.7); the
+   centered title reads the ink, bold. */
+.iosbar { display:flex; align-items:center; height:44px; padding:0 6px; background:#f8f8f6; border-bottom:1px solid var(--line); position:sticky; top:var(--brandh, 54px); z-index:25; margin:0 0 6px; }
+.blockpage-head .iosbar.inhead { position:static; margin:-12px -14px 10px; padding:0 8px; border-bottom:1px solid rgba(42,38,32,.16); }
+.blockpage-head.compact .iosbar.inhead { margin:-4px -14px 8px; }
+.iosbar-back { display:inline-flex; align-items:center; gap:1px; background:none; border:none; padding:0 8px 0 2px; min-height:44px; min-width:44px; cursor:pointer; color:var(--accent-text); font-family:var(--sans); font-size:17px; flex:none; position:relative; z-index:1; }
+.iosbar-back:active { opacity:.55; }
+.iosbar-chev { font-family:Georgia, 'Times New Roman', serif; font-size:25px; line-height:1; padding-bottom:3px; }
+.iosbar-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:112px; }
+.iosbar-title { position:absolute; left:50%; transform:translateX(-50%); max-width:44%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; font-size:17px; color:var(--ink); text-align:center; pointer-events:none; }
+.iosbar-right { margin-left:auto; display:flex; align-items:center; gap:6px; flex:none; position:relative; z-index:1; min-height:44px; }
+.iosbar .btn.ghost { color:var(--accent-text); border-color:transparent; background:transparent; }
 .blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
 .blockpage-meta { font-size:14px; color:var(--bar-sub); margin-top:4px; }
 .blockpage-playrow { display:flex; align-items:center; gap:10px; margin-top:12px; }
@@ -493,8 +519,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    margin allowance — the retired defect: the unpainted
    slot scrolled rows showed through. If the toggle's
    construction changes, the offset is re-derived in the
-   same change. */
-.blockpage-head.compact { padding:4px 14px; top:calc(var(--brandh, 54px) + 46px); }
+   same change. v447 (John, 2026-11-15 14:26 CT): the
+   toggle is NOT frozen — the tabbed pages sit beneath the
+   frozen header and scroll under it — so the head
+   re-seats FLUSH under the brand bar (top var(--brandh))
+   and the +46px toggle allowance retires with the freeze.
+   The head proper is now the iOS bar (44) + cover row 56
+   + pill line 28 over the 4/4 padding. */
+.blockpage-head.compact { padding:4px 14px; top:var(--brandh, 54px); }
 .blockpage-head.compact .blockpage-cluster { display:flex; align-items:center; gap:8px; flex:none; }
 .blockpage-head.compact .playbtn.big { width:44px; height:44px; }
 .blockpage-coverrow { display:flex; align-items:center; }

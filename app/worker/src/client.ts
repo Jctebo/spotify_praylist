@@ -2164,6 +2164,23 @@ function wireSideToggle(tab) {
     b.addEventListener('click', function () { switchSide(tab, b.getAttribute('data-side')); });
   });
 }
+/* v447: the Conscience sides' bar — it stands in its own
+   host between the (unfrozen) toggle and the side host, so
+   the side paints, which replace the side host whole, never
+   carry it, and the frozen layer on these pages stays the
+   header alone: the brand bar + this bar. The sides carry
+   no standing in-app back act; their one-level return is
+   the app's home tab — the same return Settings' standing
+   back performs — so the bar reads Prayers and its tap is
+   setTab('prayers'), the place kept by the standing
+   place-keeping. */
+function paintConscienceBar(side) {
+  var host = document.getElementById('consbar');
+  if (!host) return;
+  host.innerHTML = iosBarHtml({ dest: 'Prayers', title: side === 'confession' ? 'Confession' : 'Examination', backAttrs: 'data-consback' });
+  var b = host.querySelector('[data-consback]');
+  if (b) b.addEventListener('click', function () { setTab('prayers'); });
+}
 function enterSideHost() { var h = document.getElementById('sidehost'); if (h) view = h; }
 function recordSideScroll(tab) {
   if (tab !== 'prayers' && tab !== 'conscience') return;
@@ -2294,8 +2311,7 @@ function armPodScroll(y) {
 function paintTabSide(tab, side) {
   if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
   else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
-  else if (side === 'confession') renderConfessionContent();
-  else renderExaminationContent();
+  else { paintConscienceBar(side); if (side === 'confession') renderConfessionContent(); else renderExaminationContent(); }
 }
 function switchSide(tab, side) {
   if (!document.getElementById('sidehost')) return;
@@ -2309,7 +2325,7 @@ function switchSide(tab, side) {
 }
 function paintMergedContainer(tab) {
   var side = readTabSide(tab);
-  view.innerHTML = paintSideToggle(tab, side) + '<div id="sidehost"></div>';
+  view.innerHTML = paintSideToggle(tab, side) + (tab === 'conscience' ? '<div id="consbar"></div>' : '') + '<div id="sidehost"></div>';
   wireSideToggle(tab);
   enterSideHost();
   paintTabSide(tab, side);
@@ -2568,6 +2584,26 @@ function wirePodBack() {
   var b = view.querySelector('[data-podback]');
   if (b) b.addEventListener('click', goPodcastsIndex);
 }
+/* ---------------- v447: the iOS-style bar ----------------
+   Scope/Plan Builds 1-3: ONE shared emission for every
+   pushed page — the left cluster (the chevron + the
+   destination's name; the button carries the site's
+   standing back wiring unchanged), the page's standing
+   name centered and bold, and the page's own acts at the
+   right. A destination name longer than 14 characters
+   reads "Back" (the long-name rule) — the full name
+   stands in the aria-label either way. The dress stands
+   in ui.ts (.iosbar): the light grey-white ground; the
+   chevron, the name, and the acts in the day's liturgical
+   color via the standing theme token var(--accent-text). */
+function iosBarHtml(o) {
+  var shown = o.dest.length > 14 ? 'Back' : o.dest;
+  return '<div class="iosbar' + (o.inhead ? ' inhead' : '') + '">'
+    + '<button class="iosbar-back" ' + o.backAttrs + ' aria-label="Back to ' + esc(o.dest) + '">'
+    + '<span class="iosbar-chev">&lsaquo;</span><span class="iosbar-name">' + esc(shown) + '</span></button>'
+    + '<div class="iosbar-title">' + esc(o.title) + '</div>'
+    + '<div class="iosbar-right">' + (o.rightHtml || '') + '</div></div>';
+}
 /* ---------------- v436: the full-page act ----------------
    §2.2: ONE act in the video series page head, in the Podcasts
    surfaces' standing act dress (the watch view's "Open in
@@ -2624,7 +2660,7 @@ function paintPodcastVideos() {
   if (!res || res.kind !== 'video') { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '<h1 class="screen">Formation</h1>';
-  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Formation">&lsaquo;</button></div>';
+  html += iosBarHtml({ dest: 'Formation', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -2642,7 +2678,6 @@ function paintPodcastVideos() {
   var cover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
     + (newest && newest.imageUrl ? '<img class="coverimg" src="' + esc(newest.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
   html += '<div class="podpage-head">' + cover
-    + '<h1 class="screen">' + esc(res.title) + '</h1>'
     + '<div class="meta">Video series \u00b7 Updated ' + esc(newest ? newest.dateLabel : '') + '</div></div>';
   // v436 §2.2: the full-page act stands directly under the
   // page head, before the first video card.
@@ -2689,8 +2724,7 @@ function paintPodWatch() {
   var html = '<h1 class="screen">Formation</h1>';
   // The back row's act is closeWatch (one act, two triggers —
   // the disc tap and the system-back dispatch, §2.6.2 seat 1).
-  html += '<div class="backrow stickyrow"><button class="backdisc" data-podwatchback aria-label="Back to CatholicTV">&lsaquo;</button></div>';
-  html += '<div class="watchtitle">' + esc(v.title) + '</div>';
+  html += iosBarHtml({ dest: 'CatholicTV', title: v.title, backAttrs: 'data-podwatchback' });
   html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
   html += '<div id="podwatch-err" class="err" style="display:none"></div>';
   html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 CatholicTV</div>';
@@ -2768,7 +2802,7 @@ function paintPodcasts() {
   // v419 (G10): the back control is the navy disc on every
   // page; this row also pins (the frozen back row, §4.1), on
   // the cream ground.
-  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Formation">&lsaquo;</button></div>';
+  html += iosBarHtml({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
   // v432 §2.1: the offline box retires on the series page too — no button seat here.
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -2789,7 +2823,6 @@ function paintPodcasts() {
   var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
     + (res.showImageUrl ? '<img class="coverimg" src="' + esc(res.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
   html += '<div class="podpage-head">' + showCover
-    + '<h1 class="screen">' + esc(res.title) + '</h1>'
     + (res.showDesc ? '<p class="sub">' + esc(res.showDesc) + '</p>' : '')
     + '<div class="meta">' + res.listenedCount + ' of ' + res.total + ' listened'
     + (podDurSum > 0 ? ' \u00b7 ' + fmtDurLong(podDurSum) : '')
@@ -3273,7 +3306,7 @@ function renderSettings() {
   });
 }
 function paintSettings() {
-  var html = '<h1 class="screen">Settings</h1>';
+  var html = iosBarHtml({ dest: 'Prayers', title: 'Settings', backAttrs: 'data-settingsback' });
   // v419 (G28): the page sub — what the page holds, in one line.
   html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
   // v358 §1 Decision 2: the Playback section stands above Source
@@ -3389,6 +3422,10 @@ function paintSettings() {
   // the fresh paint's snapshot.
   document.getElementById('set-reset').addEventListener('click', renderSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
+  // v447: the bar's back — the same standing act as the
+  // footer's Back (setTab('prayers'), place kept).
+  var setBarBack = view.querySelector('[data-settingsback]');
+  if (setBarBack) setBarBack.addEventListener('click', function () { setTab('prayers'); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -8165,12 +8202,14 @@ function paintBlockPage(day, block) {
   // retires as an emission (its rule stands for the episodes
   // page); Sort and Mark all played ride the ⋮ as before.
   var html = '<div class="blockpage-head compact" data-block="' + esc(b.block) + '">'
-    + '<div class="blockpage-coverrow"><button class="backdisc" data-back="' + esc(b.block) + '" aria-label="Back to Prayers">&lsaquo;</button>'
+    + iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"', inhead: true,
+      rightHtml: '<button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
+        + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' })
+    + '<div class="blockpage-coverrow">'
     + coverTileHtml(b.block, 'med')
-    + '<div class="blockpage-stack"><div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
+    + '<div class="blockpage-stack">'
     + '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div></div>'
-    + '<div class="blockpage-cluster"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
-    + '<button class="btn ghost small" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button></div></div>'
+    + '</div>'
     + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
     + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
@@ -8227,9 +8266,8 @@ function paintEpisodesPage(day) {
   var eps = day.episodes || [];
   var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
   var html = '<div class="blockpage-head" data-block="__episodes">'
-    + '<div class="backrow"><button class="backdisc" data-back="__episodes" aria-label="Back to Prayers">&lsaquo;</button></div>'
+    + iosBarHtml({ dest: 'Prayers', title: 'From Today\u2019s Podcast', backAttrs: 'data-back="__episodes"', inhead: true })
     + '<div class="blockcover tone-teal large"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
-    + '<div class="blockpage-title">FROM TODAY&rsquo;S PODCAST</div>'
     + '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');
