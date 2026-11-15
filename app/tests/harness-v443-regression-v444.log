@@ -1,0 +1,20 @@
+ok 1 - S1 the paint reads the standing chips row's scrollLeft at its head, before the skeleton paint replaces view.innerHTML
+ok 2 - S1 the paint restores the read value onto the new row after view.innerHTML is replaced (and only when a row stood)
+not ok 3 - S2 index.ts and ui.ts are byte-identical to the base (client-only release) :: app/worker/src/ui.ts
+ok 4 - S2 examToday's return keys stand: { ok, date, dateLabel, run, prompts, entries, categories, focusCategory }
+not ok 5 - S3 the worker-source diff vs the v442-ship base is client.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 6 - S3 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+not ok 7 - S3 (housekeeping): the SW pin stands at ora-pro-nobis-v442-1 (Ship moves it)
+not ok 8 - S4 the pager emits deep-next-cat after deep-next, in the solid btn dress (no ghost), disabled when the resolved category is the last commandment
+not ok 9 - S4 the wiring stands beside deep-next: the act resolves the chips' payload order, sets examCat + deepIdx 0, repaints
+ok 10 - S4 the standing Back/Next wiring lines stand byte-untouched (question-only, inside the commandment)
+not ok 11 - P1 (paint): deep-next-cat stands in the pager row — label "Next commandment", the solid btn dress (computed background filled, the ghost Next's transparent), enabled at the focus commandment :: {"stands":true,"label":"Next section","cls":"btn","nextCls":"btn ghost","disabled":false,"bg":"rgb(22, 40, 63)","nextBg":"rgba(0, 0, 0, 0)","head":"Commandment IV","pager":"1 of 3"}
+ok 12 - F412 (fit): the pager row at 412px reads Back · count · Next · Next commandment in order, with no overflow (scrollWidth within clientWidth, last edge inside the view)
+ok 13 - SC1 (scroll, chip tap): the row scrolled to 150, a chip tap repainted to Commandment VII — the new row's scrollLeft is the pre-tap 150, not 0
+ok 14 - SC2 (scroll, pager Next tap): the row scrolled to 200, a Next tap repainted to VII's second question — the new row's scrollLeft is the pre-tap 200, not 0
+ok 15 - NC2 (boundary): at Commandment III's last question the standing Next stands disabled while Next commandment stands enabled — the boundary is crossable from the pager
+ok 16 - NC1 (crossing): a Next commandment tap from III crosses — the heading names Commandment IV, its first question stands, the pager reads "1 of 3", its chip alone is active, deepIdx reset
+not ok 17 - NC3 (last commandment): at Commandment X the pager stands and Next commandment stands disabled (the end clamp, mirrored); the standing Next still works inside X :: {"head":"Commandment X","pager":"1 of 2","nextCatDisabled":false,"nextDisabled":false}
+ok 18 - F360 (fit): the four-element pager row fits 360px — no overflow, the last edge inside the view (the count span flexes)
+ok 19 - browser: zero page errors
+# harness-v443: 12/19 passed
