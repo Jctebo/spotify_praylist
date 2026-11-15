@@ -497,6 +497,13 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .iosbar-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:112px; }
 .iosbar-title { position:absolute; left:50%; transform:translateX(-50%); max-width:44%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; font-size:17px; color:var(--ink); text-align:center; pointer-events:none; }
 .iosbar-right { margin-left:auto; display:flex; align-items:center; gap:6px; flex:none; position:relative; z-index:1; min-height:44px; }
+/* v447: the Conscience bar's host is the sticky box — a
+   sticky element travels only within its parent, and the
+   bar's own parent (this host) is exactly the bar's
+   height, so the host sticks at the brand height and the
+   bar inside it stands static. */
+#consbar { position:sticky; top:var(--brandh, 54px); z-index:25; }
+#consbar .iosbar { position:static; }
 .iosbar .btn.ghost { color:var(--accent-text); border-color:transparent; background:transparent; }
 .blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
 .blockpage-meta { font-size:14px; color:var(--bar-sub); margin-top:4px; }
