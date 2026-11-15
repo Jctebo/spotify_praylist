@@ -8291,6 +8291,13 @@ function renderConscienceContent() { paintMergedContainer('conscience'); }
 /* ---------------- Examination ---------------- */
 function renderExamination() { switchSide('conscience', 'examination'); }
 function renderExaminationContent() {
+  // v443 §2: the chips row keeps its place across repaints —
+  // read the standing row's scrollLeft BEFORE any paint
+  // replaces view.innerHTML (the skeleton paint below
+  // destroys the row); the paint restores it onto the new
+  // row. Preservation only: the row never auto-scrolls.
+  var chipsRow = view.querySelector('.examchips');
+  var chipsScroll = chipsRow ? chipsRow.scrollLeft : null;
   view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1>' + skelHtml('conscience');
   api('/api/exam/today').then(function (data) {
     var run = data.run;
@@ -8314,7 +8321,7 @@ function renderExaminationContent() {
     var p = prompts[state.deepIdx];
     if (p) {
       html += '<div class="card prompt" data-prompt="' + p.id + '"><div class="ptext">' + esc(p.text) + '</div><div class="meta" style="margin-top:6px">Tap to write an entry in your own words</div>' + entriesHtml(entriesByPrompt[p.id]) + entryFieldHtml(p, closed) + '</div>';
-      html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>Next &#8250;</button></div>';
+      html += '<div class="row"><button class="btn ghost" id="deep-prev"' + (state.deepIdx === 0 ? ' disabled' : '') + '>&#8249; Back</button><span class="meta grow" style="text-align:center">' + (state.deepIdx + 1) + ' of ' + prompts.length + '</span><button class="btn ghost" id="deep-next"' + (state.deepIdx + 1 >= prompts.length ? ' disabled' : '') + '>Next &#8250;</button><button class="btn" id="deep-next-cat"' + (cmdCats.indexOf(cat) + 1 >= cmdCats.length ? ' disabled' : '') + '>Next commandment</button></div>';
     } else html += '<p class="meta">No prompts in this category.</p>';
     html += '<div class="card"><h3>Add your own — ' + esc(cat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-custom-text"></p><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
     html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><p class="fieldnote" id="fn-free-text"></p><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
@@ -8322,6 +8329,9 @@ function renderExaminationContent() {
     else html += '<p class="meta">Tonight&rsquo;s run is closed. Its entries stand in Confession preparation.</p>';
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
+    // v443 §2: restore the chips row's place onto the new
+    // row (the read stands at this function's head).
+    if (chipsScroll !== null) { var newChipsRow = view.querySelector('.examchips'); if (newChipsRow) newChipsRow.scrollLeft = chipsScroll; }
     wireExamination(data);
   }).catch(function (e) { if (pinRefusalGate('conscience', renderConscienceContent, e)) return; view.innerHTML = '<p class="err">This page did not load.</p><p><button class="btn ghost" id="con-retry">Retry</button></p>'; document.getElementById('con-retry').addEventListener('click', renderConscienceContent); });
 }
@@ -8337,6 +8347,16 @@ function wireExamination(data) {
   var pv = document.getElementById('deep-prev'), nx = document.getElementById('deep-next');
   if (pv) pv.addEventListener('click', function () { state.deepIdx--; renderExamination(); });
   if (nx) nx.addEventListener('click', function () { state.deepIdx++; renderExamination(); });
+  // v443 §2: the second next — the solid button crosses to
+  // the next commandment (payload order, the chips' order);
+  // its first question stands (deepIdx resets), the repaint
+  // runs through the standing render path.
+  var nc = document.getElementById('deep-next-cat');
+  if (nc) nc.addEventListener('click', function () {
+    var order = (data.categories || []).filter(function (c) { return c.indexOf('Commandment') === 0; });
+    var nxt = order[order.indexOf(cat) + 1];
+    if (nxt) { state.examCat = nxt; state.deepIdx = 0; renderExamination(); }
+  });
   // v442 §2: a chip tap jumps to that commandment — its
   // first question stands (deepIdx resets), the repaint
   // runs through the standing render path.
