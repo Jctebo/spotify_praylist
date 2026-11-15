@@ -1,0 +1,39 @@
+ok 1 - S1 examToday selects the day's run by latest id (ORDER BY id DESC)
+ok 2 - S1 an open run is created only when NO run stands for the date at all
+ok 3 - S1 the payload still carries the selected run and its entries (the return shape stands)
+ok 4 - S2 POST /api/exam/runs stands inside the exam block, below the block's pinGate application (the same guard shape as the entry/close routes)
+ok 5 - S2 an open latest run returns unchanged (created:false) — never two open runs for a date
+ok 6 - S2 a closed latest (read by id DESC) starts a fresh open run — 201, created:true, the run carried in the answer
+ok 7 - S2 the standing close route stands untouched
+ok 8 - S3 the closed paint emits ONE solid act in the head area (after the head row, before the chips): #run-new 'Start a new examination', only when closed
+ok 9 - S3 the act's wiring resets examCat/deepIdx (a fresh pass on the focus), posts /api/exam/runs, and repaints
+ok 10 - S4 the worker-source diff vs the v444-ship base is client.ts + index.ts only (got: app/worker/src/client.ts, app/worker/src/index.ts)
+ok 11 - S4 (housekeeping): the SW pin stands at ora-pro-nobis-v444-1 (Ship moves it)
+ok 12 - S4 the whole worker bundles clean (esbuild) — no syntax break anywhere
+ok 13 - S5 migration 0024 stands in the tree
+ok 14 - S5 0024 rebuilds exam_runs with identical columns + PK, the UNIQUE on date dropped, every row copied across with its id (0018's idiom)
+ok 15 - SV0 all migrations apply clean — exam_runs stands in the fixture D1
+ok 16 - SV0 the rebuilt exam_runs carries NO unique constraint on date (migration 0024 applied) — a second run for a date can insert
+ok 17 - SV0 app up on local wrangler (LOCAL_DEV)
+ok 18 - SV1 (day read, no run stands): the payload carries a fresh OPEN run — created as today
+ok 19 - SV1 the payload carries the seeded prompts and every category incl. the Precepts (the tree seed carries 23 prompts; production's fuller edited set does not ride the fixture — no leg depends on the count)
+ok 20 - SV1 D1: exactly one run stands for today, open
+ok 21 - SV2 an entry posts on the open first pass (201)
+ok 22 - SV2 the standing close route closes the first pass
+ok 23 - SV2 the closed run refuses new entries (409) — the standing guard stands
+ok 24 - SV3 (new pass, latest closed): POST /api/exam/runs starts a fresh OPEN run — 201, created:true, a new id
+ok 25 - SV3 D1: two runs stand for today, exactly one open
+ok 26 - SV4 an entry posts on the second pass (201)
+ok 27 - SV4 (day read, closed + newer open stand): the payload carries the OPEN latest run
+ok 28 - SV4 the payload carries the latest run's entries only — the first pass's entries do not re-show in the new pass
+ok 29 - SV5 (new pass, latest open): the standing run returns unchanged — 200, created:false
+ok 30 - SV5 D1: still two runs for today, exactly one open — never two open runs
+ok 31 - SV6 the second pass closes
+ok 32 - SV6 two new-pass POSTs in a row after a close yield exactly ONE fresh run (the second returns it, created:false)
+ok 33 - SV6 D1: three runs stand for today, exactly one open
+ok 34 - SV7 Confession preparation carries BOTH passes' entries — the run-agnostic read spans the day's runs
+ok 35 - CL1 (closed payload): #run-new stands in the solid btn dress, labeled 'Start a new examination'; the closed read stands whole (chips disabled, no Close act, the closed line stands, no entry field)
+ok 36 - CL2 (open payload): no Start act stands; the Close act stands as before
+ok 37 - CL3 (the tap): posts /api/exam/runs, resets examCat/deepIdx, and repaints OPEN on tonight's focus (heading names the focus; chips + fields enabled; the Close act stands; the Start act is gone)
+ok 38 - browser: zero page errors
+# harness-v445: 38 ok / 0 not-ok
