@@ -1,0 +1,52 @@
+ok   - L1: the bar data-tab values are byte-unchanged (prayers,conscience,podcasts,wallpaper) — identifiers stay
+ok   - L1: the served shell bar reads Prayers · Conscience · Formation · Sacred Art
+ok   - L1: neither old label stands in the bar markup
+ok   - L1 (static): the Podcasts h1 set is 11 Formation / 0 Podcasts on this base (Plan §2.0 re-count, F-438-5 re-grep)
+ok   - L1 (static): the failure line stands at 2, renamed
+ok   - L1 (static): the back-disc aria-labels stand at 2, renamed (audio + video series pages)
+ok   - L1 (static): the 8 Sacred Art string seats stand in client.ts (head · pointer name · pointer line both occurrences · tab h1 · skeleton row · unavailable row · note · off-state)
+ok   - L1 (static): the descriptor block VALUE 'Podcasts' stands — played state keys on it (§1.4)
+ok   - L1 (static): blockDisplayName stands once, applied at exactly the two seats (queue meta · Now Playing meta)
+ok   - L1 (static, F-438-I2): the display map carries exactly one entry — no day block enters it
+ok   - L1 (static): v436's "Full page on YouTube" act stands untouched; the SW pin stands at ora-pro-nobis-v437-1 (Ship moves it); index.ts carries no new name (client-only)
+note - extraction dropped: offlineEvict
+ok   - boot: the extracted client stands (all v438 paint seats + blockDisplayName present)
+ok   - L2: the Formation index skeleton head reads Formation
+ok   - L2: the index error paint reads "Formation did not load." under a Formation head
+ok   - L2: the loaded index head reads Formation; the providers' own series names stand
+ok   - L3 (stay present): the offline line's "podcasts" count noun stands on the index card — the ruled exception (§1.4/F-438-2)
+ok   - L2: the audio series skeleton head reads Formation
+ok   - L2: the audio series page head reads Formation; its back disc aria-label reads "Back to Formation"
+ok   - L2: the video series skeleton head reads Formation
+ok   - L2: the video series page head reads Formation; its back disc reads "Back to Formation"; v436's "Full page on YouTube" act stands untouched
+ok   - L2: the watch view head reads Formation; its back act names the provider (CatholicTV — a stay)
+ok   - L2: the Sacred Art tab head reads Sacred Art (skeleton paint)
+ok   - L2: the web/unavailable paint's note reads "Sacred Art controls live in the app on your phone."
+ok   - L2: the off-state heading reads "Sacred Art is off"; the body sentence under it keeps the feature language (a stay)
+ok   - L2 (F-438-I4): the Settings pointer section heads SACRED ART and its line reads in full "Sacred Art controls live in the Sacred Art tab." — both occurrences moved
+ok   - L3 (stays present): Settings keeps "Own podcast" and "which podcast plays in which block" word-for-word
+ok   - L3: no survivors on the indexSkel surface (allowlist struck)
+ok   - L3: no survivors on the indexErr surface (allowlist struck)
+ok   - L3: no survivors on the index surface (allowlist struck)
+ok   - L3: no survivors on the seriesSkel surface (allowlist struck)
+ok   - L3: no survivors on the series surface (allowlist struck)
+ok   - L3: no survivors on the videoSkel surface (allowlist struck)
+ok   - L3: no survivors on the video surface (allowlist struck)
+ok   - L3: no survivors on the watch surface (allowlist struck)
+ok   - L3: no survivors on the artSkel surface (allowlist struck)
+ok   - L3: no survivors on the artOff surface (allowlist struck)
+ok   - L3: no survivors on the settings surface (allowlist struck)
+ok   - L3: no survivors in the served bar; the new labels stand
+ok   - L5: blockDisplayName maps Podcasts→Formation and returns every other value (incl. empty/undefined) as-is
+ok   - L5: the descriptor's block value in state still reads 'Podcasts' — the value never moved
+ok   - L5: the Now Playing meta names the block "Formation"
+ok   - L5: the queue row meta names the block "Formation"
+ok   - L5: for a repeated id (where the block keys the mark), a mark written under the raw value 'Podcasts' reads played under 'Podcasts' and NOT under 'Formation' — marks key on the value and cannot move
+ok   - L4 @360px: the build bar height equals the base tree's bar height (the single-line height)
+ok   - L4 @360px: every renamed label fits its pill (scrollWidth ≤ pill content width) — no wrap, no shrink taken
+ok   - L4 @360px: Formation and Sacred Art each stand on one line inside their pills
+ok   - L4 @412px: the build bar height equals the base tree's bar height (the single-line height)
+ok   - L4 @412px: every renamed label fits its pill (scrollWidth ≤ pill content width) — no wrap, no shrink taken
+ok   - L4 @412px: Formation and Sacred Art each stand on one line inside their pills
+
+harness-v438: 49 ok / 0 not-ok

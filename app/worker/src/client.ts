@@ -1335,7 +1335,7 @@ function renderQueueList() {
     var isStart = !!preview && i === state.queuePreviewIdx;
     var title = desc.title || '';
     var metaParts = [];
-    if (desc.block) metaParts.push(esc(desc.block));
+    if (desc.block) metaParts.push(esc(blockDisplayName(desc.block)));
     if (desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
     if (!desc.available) metaParts.push('Not available');
     // v363 §2.6: the preview's start row folds "Starts here"
@@ -2479,7 +2479,7 @@ function renderPodcasts() {
     }).catch(function () {});
     return;
   }
-  view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podindex');
+  view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podindex');
   api('/api/player/podcasts').then(function (res) {
     state.podcastsIndex = res;
     if (state.tab === 'podcasts') paintPodcastsIndex();
@@ -2487,7 +2487,7 @@ function renderPodcasts() {
     // v419 (G22): the authored failure + a Ghost Retry on this
     // surface's own re-render.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">Podcasts did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<h1 class="screen">Formation</h1><p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', renderPodcasts);
     }
   });
@@ -2499,9 +2499,9 @@ function paintPodcastsIndex() {
   // line on its own card.
   podLevel = 'index';
   var res = state.podcastsIndex;
-  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podindex'); return; }
+  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podindex'); return; }
   podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
-  var html = '<h1 class="screen">Podcasts</h1>';
+  var html = '<h1 class="screen">Formation</h1>';
   html += offlineLineHtml('pod-offline-btn');
   res.seriesList.forEach(function (s) {
     // v413 §2.7: playlist-style entries — the provider's own
@@ -2547,7 +2547,7 @@ function paintPodSeriesPage() {
 }
 function openPodSeries(key) {
   closeWatch(); // v434 §2.6.2 seat 4: opening any series while a watch record somehow stands closes it first — the invariant has no unnamed path
-  view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries');
+  view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries');
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
@@ -2555,7 +2555,7 @@ function openPodSeries(key) {
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<h1 class="screen">Podcasts</h1><p class="err">Podcasts did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<h1 class="screen">Formation</h1><p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
     }
   });
@@ -2628,10 +2628,10 @@ function openFullPage(e) {
    line is added to or removed from any surface by v434. */
 function paintPodcastVideos() {
   var res = state.podcasts;
-  if (!res || res.kind !== 'video') { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries'); return; }
+  if (!res || res.kind !== 'video') { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
   podLevel = 'series';
-  var html = '<h1 class="screen">Podcasts</h1>';
-  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Podcasts">&lsaquo;</button></div>';
+  var html = '<h1 class="screen">Formation</h1>';
+  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Formation">&lsaquo;</button></div>';
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -2693,7 +2693,7 @@ function paintPodWatch() {
   if (!podWatch) return;
   var v = podWatch.video;
   podLevel = 'watch';
-  var html = '<h1 class="screen">Podcasts</h1>';
+  var html = '<h1 class="screen">Formation</h1>';
   // The back row's act is closeWatch (one act, two triggers —
   // the disc tap and the system-back dispatch, §2.6.2 seat 1).
   html += '<div class="backrow stickyrow"><button class="backdisc" data-podwatchback aria-label="Back to CatholicTV">&lsaquo;</button></div>';
@@ -2766,16 +2766,16 @@ function closeWatch() {
 }
 function paintPodcasts() {
   var res = state.podcasts;
-  if (!res) { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries'); return; }
+  if (!res) { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
   podLevel = 'series';
-  var html = '<h1 class="screen">Podcasts</h1>';
+  var html = '<h1 class="screen">Formation</h1>';
   // v390 §2.7: the back row stands at the top of the series page
   // — back re-reads the index, so the counts the marks just
   // changed stand correct.
   // v419 (G10): the back control is the navy disc on every
   // page; this row also pins (the frozen back row, §4.1), on
   // the cream ground.
-  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Podcasts">&lsaquo;</button></div>';
+  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Formation">&lsaquo;</button></div>';
   html += offlineLineHtml('pod-offline-btn');
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -3311,9 +3311,9 @@ function paintSettings() {
   // v410 §2.7: the WALLPAPER section retires to a pointer —
   // the controls' one home is the Wallpaper tab (§2.6); the
   // section shell and its fill call stand down here.
-  html += '<h2 class="sectionhead">WALLPAPER</h2><div class="liblist"><div class="setrow">'
-    + '<div class="setname">Wallpaper</div>'
-    + '<div class="meta">Wallpaper controls live in the Wallpaper tab.</div>'
+  html += '<h2 class="sectionhead">SACRED ART</h2><div class="liblist"><div class="setrow">'
+    + '<div class="setname">Sacred Art</div>'
+    + '<div class="meta">Sacred Art controls live in the Sacred Art tab.</div>'
     + '</div></div>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
   if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
@@ -3455,8 +3455,8 @@ function wallpaperBridge() {
    controls unmodified. On the web (no bridge) the fill paints
    the standing phone-side note (Flag 3). */
 function renderWallpaper() {
-  view.innerHTML = '<h1 class="screen">Wallpaper</h1><div class="liblist" id="set-wallpaper"><div class="setrow" data-skeleton="1">'
-    + '<div class="setname">Wallpaper</div>'
+  view.innerHTML = '<h1 class="screen">Sacred Art</h1><div class="liblist" id="set-wallpaper"><div class="setrow" data-skeleton="1">'
+    + '<div class="setname">Sacred Art</div>'
     + '<span class="skelbar" style="width:70%"></span><span class="skelbar" style="width:45%"></span>'
     + '</div></div>';
   fillWallpaperSection();
@@ -3484,8 +3484,8 @@ function paintWallpaperUnavailable() {
      form (the sticky freeze needs no cage-free host when
      no toggle paints here). */
   host.className = 'liblist';
-  host.innerHTML = '<div class="setrow"><div class="setname">Wallpaper</div>'
-    + '<div class="meta">Wallpaper controls live in the app on your phone.</div></div>';
+  host.innerHTML = '<div class="setrow"><div class="setname">Sacred Art</div>'
+    + '<div class="meta">Sacred Art controls live in the app on your phone.</div></div>';
 }
 function wallpaperRootOptions(roots, current) {
   return (roots || []).map(function (r) {
@@ -3574,7 +3574,7 @@ function paintWallpaperTab(s, restore) {
    and the tab paints the remembered side's view. */
 function paintWallpaperOff(host) {
   host.innerHTML = '<div class="card">'
-    + '<div class="wpoff-title">Wallpaper is off</div>'
+    + '<div class="wpoff-title">Sacred Art is off</div>'
     + '<p style="margin:0 0 6px;line-height:1.55">The Ora Pro Nobis live wallpaper puts today\u2019s pictures on your home and lock screens.</p>'
     + '<p style="margin:0 0 6px;line-height:1.55">The picture changes as the day goes, all by itself.</p>'
     + '<p style="margin:0 0 12px;line-height:1.55">Set it once \u2014 then SYNC ALL keeps the pictures coming.</p>'
@@ -4738,6 +4738,12 @@ function blockTone(block) { return BLOCK_TONES[block] || 'navy'; }
    its real-logo tile retires (coverTileHtml + rowArtHtml). */
 var BLOCK_GLYPHS = { 'Morning': '\u2600', 'Midmorning': '\u2726', 'Midday': '\u2756', 'Afternoon': '\u2605', 'Evening': '\u2727', 'Night': '\u263e', 'Mass and Homilies': '\u2020', 'Novenas': '\u271a', 'The AI Signal': '\u26a1', '__episodes': '\u266b' };
 function blockGlyphOf(block) { return BLOCK_GLYPHS[block] || '\u2726'; }
+/* v438 §2.2(6): the block value's DISPLAY name at render — the
+   Podcasts tab is named Formation (v438); the descriptor's block
+   VALUE stays 'Podcasts' (played state keys on it). One entry;
+   every other value, empty and undefined included, returns as-is. */
+var BLOCK_DISPLAY_NAMES = { 'Podcasts': 'Formation' };
+function blockDisplayName(block) { return BLOCK_DISPLAY_NAMES[block] || block; }
 function blockLabelOf(block) {
   var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === block; })[0];
   return b ? (b.label || b.block) : (block || '');
@@ -5389,7 +5395,7 @@ function updateNowPlaying() {
   var cur = state.current;
   if (!cur) { sheet.remove(); return; }
   sheet.querySelector('#np-title').textContent = cur.title || '';
-  var meta = cur.block || '';
+  var meta = blockDisplayName(cur.block) || '';
   if (cur.source) meta = meta ? meta + ' · ' + cur.source : cur.source;
   if (!meta) meta = state.dateLabel || '';
   sheet.querySelector('#np-meta').textContent = meta;

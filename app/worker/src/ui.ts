@@ -66,8 +66,8 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabpill"><span class="tabicon">&#10022;</span><span>Prayers</span></span></button>
   <button data-tab="conscience" class="tab"><span class="tabpill"><span class="tabicon">&#10013;</span><span>Conscience</span></span></button>
-  <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon">&#9835;</span><span>Podcasts</span></span></button>
-  <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon">&#9635;</span><span>Wallpaper</span></span></button>
+  <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon">&#9835;</span><span>Formation</span></span></button>
+  <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon">&#9635;</span><span>Sacred Art</span></span></button>
 </nav>
 <script src="/app.js"></script>
 </body>
