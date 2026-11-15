@@ -2354,7 +2354,19 @@ document.getElementById('dock').addEventListener('click', function (ev) {
   if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-menu'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
-window.addEventListener('resize', measureBars);
+/* v437 (§2.1/§2.4): in the shell, mark <html> BEFORE the
+   first measureBars() below — the class takes the bar's
+   env() padding out (ui.ts's html.in-shell rule), so
+   --tabh is measured at the corrected height from the
+   first paint. The resize re-measure (standing since
+   v326) is rAF-throttled and calls only measureBars()
+   (F-437-I3): a fold/unfold lands as a resize. */
+if (oraInShell()) document.documentElement.classList.add('in-shell');
+var barsResizeRaf = 0;
+window.addEventListener('resize', function () {
+  if (barsResizeRaf) return;
+  barsResizeRaf = requestAnimationFrame(function () { barsResizeRaf = 0; measureBars(); });
+});
 measureBars();
 
 /* ---------------- Podcasts (v381) ----------------

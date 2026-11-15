@@ -114,6 +114,12 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .litday { font-size:13px; letter-spacing:.4px; margin-top:1px; color:var(--bar-fg); }
 .view { padding: 14px 12px 96px; max-width: 640px; margin: 0 auto; }
 .tabbar { position: fixed; left:0; right:0; bottom:0; z-index: 30; display:flex; background-color:var(--bar-solid); background:var(--bar-bg); padding-bottom: env(safe-area-inset-bottom); border-top:1px solid rgba(250,245,236,.25); box-shadow:0 -4px 14px rgba(42,38,32,.14); }
+/* v437 (§2.1): in the shell the WebView already stands
+   above the nav bar by the shell's own margin, so the
+   env() padding would count the inset a second time —
+   the boot class (client.ts) takes it out there only;
+   the web keeps the base rule above, unchanged. */
+html.in-shell .tabbar { padding-bottom: 0; }
 .tab { flex:1; background:none; border:none; color:var(--bar-sub); font-family:var(--sans); font-size:13px; padding:8px 2px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; }
 .tab .tabicon { font-size:19px; line-height:1; }
 /* v419 (G18): the active tab carries the accent pill behind
@@ -123,7 +129,7 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .tabpill { display:flex; flex-direction:column; align-items:center; gap:2px; padding:5px 10px; border-radius:999px; }
 .tab.active { color:var(--bar-fg); }
 .tab.active .tabpill { background:var(--accent); color:var(--accent-ink); }
-.dock { position: fixed; left:10px; right:10px; bottom: calc(var(--tabh, 0px) + 8px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 10px; border:1px solid rgba(250,245,236,.25); border-radius:12px; overflow:hidden; cursor:pointer; }
+.dock { position: fixed; left:10px; right:10px; bottom: var(--tabh, 0px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:8px 10px; border:1px solid rgba(250,245,236,.25); border-radius:12px; overflow:hidden; cursor:pointer; }
 [data-lit="white"] .dock { border-color: var(--line); }
 .dockthumb { width:44px; height:44px; border-radius:8px; flex:none; }
 .docktext { flex:1; min-width:0; }
@@ -134,7 +140,7 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .docknext:disabled { opacity:.35; cursor:default; }
 .dockprogress { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(250,245,236,.18); }
 .dockprogress i { display:block; height:100%; width:0; background:var(--accent); }
-body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
+body.dock-on .view { padding-bottom: calc(var(--tabh, 0px) + var(--dockh, 60px)); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 10px; }
