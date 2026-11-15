@@ -1,0 +1,38 @@
+not ok 1 - S1 the worker-source diff vs the v448-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/index.ts, app/worker/src/ui.ts)
+ok 2 - S2 no retired emission stands in client.ts — no searchrow, no search pill, no filter chips, no Continue slot, no square grid, no square card
+ok 3 - S3 the census stands retired in code: searchResultsHtml has no standing form and no dotted code reference to state.searchQuery / state.homeFilter / state._dlKey stands (the retirement comments name the fields in prose only; paintContinue's slot read is the machinery's own no-op guard)
+ok 4 - S3 the Continue machinery stands untouched — paintContinue keeps its slot guard and no-ops on the home
+ok 5 - S4 the Sort act stands in the heading line, before the home body, wired to openBlockOrderEditor; the home paint carries no searchrow and no chips
+ok 6 - S5 the block row is the Formation card form — the tile seat, the standing count/prayed/downloaded spans — with NO play disc and NO chevron
+ok 7 - S6 the episodes row stands last in the same dress (its teal tile kept, no disc); the home body is the ordered rows alone — no slot, no grid
+ok 8 - S7 the block page opens with the series head (large tile · the name · the meta line with its data-bmeta span), the pillrow under the head, the bar as v448 leaves it; the plain body meta line is folded in, not duplicated
+ok 9 - S8 the prayers skeleton takes the rows form — the grid skeleton retires with the grid
+ok 10 - S9 the square-card family + the searchrow seat rules stand down in ui.ts; the row cursor + the head name dress stand
+ok 11 - S10 the whole worker bundles clean (esbuild)
+not ok 12 - S10 (housekeeping): the SW pin stands at ora-pro-nobis-v448-1 (Ship moves it)
+ok 13 - S11 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 14 - S11 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 15 - H1 home stack: the toggle · the heading line (Prayers · the date · the Sort act at its right) · the rows — no search box, no chips, no Continue slot, no grid, no square cards, no bar
+ok 16 - H2 the rows stand in the standing order (the day's blocks in payload order, the episodes row last)
+ok 17 - H2 every row is the Formation card form (.card) with NO play disc and NO chevron element
+ok 18 - H2 rows stand one per line, full width, each at the 44px tap floor
+ok 19 - H3 each row's meta carries its facts — the settled count span (12 tracks), the summed duration (48min), the caption where it stands (Parish novena), the episodes row's count + duration
+ok 20 - H4 the heading's Sort act opens the order editor; a move down re-orders the editor AND the home rows behind it (Midday first)
+ok 21 - H4 the move back restores the standing order on the home
+ok 22 - H5 below the rows stand the whole-day Play All row and the offline line, as today
+ok 23 - H5 the whole-day Play All plays the day (the dock names its first track)
+ok 24 - B1 block page: the bar as v448 leaves it; the body opens with the series head (the large tile · Morning · the meta line, 12 episodes · 48min settled in its data-bmeta span); the download pillrow stands under the head; 12 track rows follow; no plain body meta line duplicates the head
+ok 25 - B1 the track rows stand as they are — play, the menu act, and the written intention line inside the row
+ok 26 - B2 scrolled: the bar sticks flush under the brand bar while the series head scrolls away beneath it — the header alone is frozen
+ok 27 - B3 Play All in the bar plays the block (the dock names Morning track 1)
+ok 28 - B4 a track row's play plays that track (the dock names Morning track 2)
+ok 29 - B4 the track row's menu act opens its menu
+ok 30 - B5 the bar's back returns to the home (the host clears) with the Morning row scrolled back into view
+ok 31 - E1 the episodes page stands as v448 leaves it — the bar, the plain meta line, the Play All body row; no series head (it is not a block page)
+ok 32 - I1 the Intentions side paints as today — no bar stands over a home side
+ok 33 - F1 the Formation index stands as shipped — its rows the plain .card form the Prayers rows now mirror; no bar on the tab home
+ok 34 - F2 the series page's own head stands as shipped (its meta line: 0 of 2 listened) — the grammar the block pages took
+ok 35 - G360 home at 360px: the rows stand full width, one per line, no new horizontal overflow (362 is the base's own standing measure)
+ok 36 - G360 block page at 360px: the series head stands (Morning), no new horizontal overflow
+ok 37 - browser: zero page errors across every leg
+# harness-v449: 35/37 passed
