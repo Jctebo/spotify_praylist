@@ -7558,7 +7558,13 @@ function paintListenHome(day) {
   // §2.6.1: the search pill — typing re-paints the results region
   // in place (the field itself never re-renders, so focus and the
   // query stand); clearing restores the standing home body.
-  html += '<div class="searchpill"><input type="search" id="day-search" placeholder="Search today&rsquo;s prayers" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
+  // v425 §2.2: the pill and the filter chips share ONE line —
+  // the .searchrow wrapper (the chips row retires; 56px
+  // banked). The visible placeholder shortens to "Search" (the
+  // §2.4 deviation, flagged for Review at F-425-7); the
+  // aria-label keeps the full phrase, so the field's
+  // accessible name stands unchanged.
+  html += '<div class="searchrow"><div class="searchpill"><input type="search" id="day-search" placeholder="Search" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
   // v413 §2.4: the library head — filter chips (FD8) + the sort
   // row (the standing order's truthful name; its Sort button
   // opens the §2.4 order editor). The home sleep-btn retires
@@ -7567,7 +7573,7 @@ function paintListenHome(day) {
   html += '<div class="chips" id="home-chips">'
     + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists" aria-pressed="' + (state.homeFilter === 'praylists' ? 'true' : 'false') + '">Praylists</button>'
     + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas" aria-pressed="' + (state.homeFilter === 'novenas' ? 'true' : 'false') + '">Novenas</button>'
-    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div>';
+    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div></div>';
   html += '<div class="row sortrow"><span class="meta grow" id="sort-name">' + (effectiveBlockOrder(day) ? 'Manual order' : 'Day order') + '</span><button class="btn ghost small" id="sort-btn">Sort</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
@@ -7588,7 +7594,18 @@ function paintListenHome(day) {
       var f = chip.getAttribute('data-homefilter');
       // FD8: one active at a time; tapping the active chip clears it.
       state.homeFilter = state.homeFilter === f ? null : f;
-      paintListenHome(day);
+      // v425 §2.5: the chips' dress toggles IN PLACE and only
+      // #home-body repaints (the input handler's exact tail) —
+      // #day-search stands outside every repainted region, so
+      // its node, focus, and query survive a chip tap.
+      view.querySelectorAll('[data-homefilter]').forEach(function (c) {
+        var on = state.homeFilter === c.getAttribute('data-homefilter');
+        c.classList.toggle('active', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      var body = document.getElementById('home-body');
+      if (!body) return;
+      body.innerHTML = homeBodyHtml(day);
       wirePrayersView(day);
       paintContinue();
     });

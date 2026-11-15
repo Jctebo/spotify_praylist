@@ -1,0 +1,26 @@
+ok   - S1: paintListenHome emits ONE .searchrow holding .searchpill then .chips#home-chips (closed after the chips) — no standalone chips-row emission
+ok   - S2 (§2.4 deviation): the visible placeholder reads "Search"; the aria-label keeps "Search today’s prayers"
+ok   - S3: the four .searchrow rules stand scoped; the global .searchpill / .chips / .chip rules stand byte-identical to base
+ok   - S4 (§2.5): the chip handler carries no paintListenHome call — it toggles the dress in place and repaints #home-body only
+ok   - S5: limits — the pin stands at ora-pro-nobis-v424-1 (Ship moves it); no Spotify green; no index.ts delta
+note - extraction dropped: offlineEvict
+pageerror: SyntaxError: Unexpected token '<'
+ok   - L1 (leg 1): the merged line measures 44px at 412 and at 690
+ok   - L1 (leg 1): #home-body’s top stands at 183 from the view’s top — exactly 56px above its standing seat (239)
+ok   - L1 (leg 1): the grid’s cards and their order stand unchanged (nine blocks in contract order, the episodes card last)
+note - widths 412: field 116 · chips 264 | 690: field 344 · chips 264
+ok   - L2 (leg 2): all three chips stand fully inside the line’s bounds at 412 and at 690 (no chip hidden, none clipped)
+ok   - L2 (leg 2): each chip filters the grid (Playlists = the standing set · Novenas isolates its card · Downloaded = the downloaded blocks only)
+ok   - L2 (leg 2, F-425-4): the selected chip’s dress stands unmistakable at the settled form (accent fill · weight 600 · aria-pressed="true")
+ok   - L2 (leg 2): a re-tap on the active chip clears the filter — no chip active, the full grid returns
+ok   - L2 (leg 2): every chip stands ≥44px tall (the v411 floor)
+ok   - L3 (leg 3): typing filters the body in place (the Invitatory hit stands in the results paint)
+ok   - L3 (leg 3): the input node, focus, and value survive typing
+ok   - L3 (leg 3, F-425-3): the input node, focus, and value survive a chip tap with text standing — the chip toggles in place, #day-search is never rebuilt (a real tap also keeps node + value; focus moves to the tapped chip, the platform’s act)
+ok   - L3 (leg 3): clearing the query restores the standing home body (the grid + the Continue slot)
+ok   - L4 (leg 4): the order label stands — "Day order" plain, "Manual order" with a stored order
+ok   - L4 (leg 4): the Sort button opens the standing order editor (nine blocks, up/down on each)
+ok   - L5 (leg 5): the title + date line stand
+ok   - L5 (leg 5): Play All and the offline line stand below the grid
+ok   - L5 (leg 5): the shared .chip dress outside the home (the Examination construction) keeps the standing 14px side padding — the 10px slimming lives only inside .searchrow
+harness-v425: 22 passed, 0 failed

@@ -467,6 +467,15 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .searchpill { margin:0 0 12px; position:relative; }
 .searchpill::before { content:'⌕'; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-family:var(--sans); font-size:17px; pointer-events:none; }
 .searchpill input { width:100%; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--card); padding:0 16px 0 38px; font-family:inherit; font-size:16px; color:var(--ink); -webkit-appearance:none; appearance:none; }
+/* v425 §2.2: the merged home line — the search pill and the
+   filter chips share one 44px row (the chips row retires;
+   56px banked). Scoped to .searchrow only: the global
+   .searchpill / .chips / .chip rules stand untouched (the
+   chip construction is shared — Settings, Examination). */
+.searchrow { display:flex; gap:8px; align-items:center; margin:0 0 12px; }
+.searchrow .searchpill { flex:1 1 auto; min-width:0; margin:0; }
+.searchrow .chips { flex:0 0 auto; flex-wrap:nowrap; margin:0; }
+.searchrow .chip { padding:7px 10px; }
 .liblist { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:0 0 12px; }
 .librow { padding:10px 12px; }
 .librow + .librow { border-top:1px solid var(--line); }
