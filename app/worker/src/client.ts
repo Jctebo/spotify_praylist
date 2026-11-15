@@ -231,7 +231,7 @@ function shortDayLabel(s) {
   // v417 §2.7 (D2): the short day form — 'Nov 14' from an ISO
   // day; a value already standing in a rendered form passes
   // through unchanged. No clock time, no year, no weekday.
-  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+  var m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})/.exec(String(s || ''));
   if (!m) return String(s || '');
   return MONTHS_SHORT[Number(m[2]) - 1] + ' ' + Number(m[3]);
 }
@@ -3521,7 +3521,7 @@ function wallpaperLiveState(s) {
   var line = String(lines[0]);
   if (line.indexOf('Live wallpaper: not on') === 0) return { active: false, drawnName: null };
   if (line.indexOf('Live wallpaper: on') === 0) {
-    var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__\d{4}-\d{2}(?:-\d{2})?\.jpg)/);
+    var m = line.match(/([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*__[0-9]{4}-[0-9]{2}(?:-[0-9]{2})?[.]jpg)/);
     return { active: true, drawnName: m ? m[1] : null };
   }
   return { active: true, drawnName: null };
@@ -3598,7 +3598,7 @@ function wallpaperTitle(slug) {
   }).join(' ');
 }
 function wallpaperTitleFromName(name) {
-  return wallpaperTitle(String(name || '').replace(/__\d{4}-\d{2}(-\d{2})?\.jpg$/, ''));
+  return wallpaperTitle(String(name || '').replace(/__[0-9]{4}-[0-9]{2}(-[0-9]{2})?[.]jpg$/, ''));
 }
 /* v414 §2.3: the showing-now row — the thumbnail reads the
    engine's draw record through the standing session file
@@ -8000,7 +8000,7 @@ function shortHomeDate(day) {
   // long form. Fallback: no usable 'date' → the standing label.
   var ds = day && day.date;
   if (ds) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ds));
+    var m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})/.exec(String(ds));
     if (m) {
       var dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
       return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(dt);
