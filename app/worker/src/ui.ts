@@ -397,7 +397,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    gradient zone (v353's block-page Play All + home card play
    buttons) — an outline in the bar-fg pair, >= 4.88:1 against both
    gradient ends in every theme. */
-.blockcard .playbtn { box-shadow:0 0 0 2px var(--bar-fg); }
+/* v449: the home card play-disc rule stands down with the card (D1). */
 .np-title { text-align:center; }
 .np-meta { text-align:center; }
 .np-seekrow { display:flex; align-items:center; gap:10px; margin:22px 0 6px; font-size:13px; color:var(--muted); }
@@ -457,13 +457,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    at v361: the combined row retired, and intention rows are
    ordinary standard cards under the geometry that stands.) */
 .sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
-.blockgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 10px; }
-.blockcard { position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; }
-.blockcard-face { background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:12px 12px 10px; min-height:76px; }
-.blockcard-name { font-size:17px; letter-spacing:1.2px; color:var(--bar-fg); }
-.blockcard-cap { font-size:13px; font-family:var(--sans); color:var(--bar-sub); margin-top:3px; }
-.blockcard-meta { font-size:13px; font-family:var(--sans); color:var(--muted); padding:2px 62px 8px 8px; }
-.blockcard-play { position:absolute; right:10px; bottom:10px; }
+/* v449 §2 Build 1: the square-card family stands down
+   whole — the two-column grid and its card dress retire
+   with the home's re-form to one series row per line
+   (John: "no more sqaures"). The rows wear the standing
+   .card + .row grammar; no rule of this family has an
+   emission now. */
 /* v419 (G10): the gradient head was its own frozen zone.
    v448: the head band is retired completely — no
    .blockpage-head element is emitted; the iOS bar in its
@@ -549,10 +548,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    56px banked). Scoped to .searchrow only: the global
    .searchpill / .chips / .chip rules stand untouched (the
    chip construction is shared — Settings, Examination). */
-.searchrow { display:flex; gap:8px; align-items:center; margin:0 0 12px; }
-.searchrow .searchpill { flex:1 1 auto; min-width:0; margin:0; }
-.searchrow .chips { flex:0 0 auto; flex-wrap:nowrap; margin:0; }
-.searchrow .chip { padding:7px 10px; }
+/* v449 §2 Build 1: the .searchrow seat rules stand down
+   with the row — the search pill and the filter chips
+   retire from the home (D3 settled). The global
+   .searchpill / .chips / .chip rules above stand
+   untouched (the chip construction is shared — Settings,
+   Examination). */
 .liblist { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:0 0 12px; }
 .librow { padding:10px 12px; }
 .librow + .librow { border-top:1px solid var(--line); }
@@ -618,16 +619,13 @@ button.btn.small { min-height:44px; }
 .tone-plum { background:linear-gradient(135deg, #4a2545, #5f3460); }
 .tone-teal { background:linear-gradient(135deg, #173f3a, #1f554e); }
 .blockcover { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
-.blockcard > .blockcover { height:64px; border-radius:12px 12px 0 0; }
 .blockcover-initial { font-size:28px; color:#e9d9ae; }
-.blockcard > .blockcover .blockcover-initial { font-size:28px; }
 .tone-gold > .blockcover-initial, .rowart.tile.tone-gold { color:#16283f; }
 .blockcover.large { width:120px; height:120px; border-radius:12px; margin:6px 0 10px; }
 .blockcover.large .blockcover-initial { font-size:56px; }
 .blockcover.sm { width:44px; height:44px; flex:none; border-radius:8px; }
 .blockcover.sm .blockcover-initial { font-size:20px; }
 .blockcover .coverimg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.blockcard-name2 { font-size:16px; color:var(--navy); padding:6px 8px 0; }
 .rowartwrap { position:relative; width:44px; height:44px; flex:none; border-radius:8px; overflow:hidden; display:inline-block; }
 .rowartwrap > .rowart { position:absolute; inset:0; width:44px; height:44px; }
 img.rowart { object-fit:cover; display:block; }
@@ -647,6 +645,15 @@ img.rowart { object-fit:cover; display:block; }
 .blockpage-dlrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
 .blockpage-dlnote { margin-top:4px; }
 .podpage-head { margin:0 0 12px; }
+/* v449 §2 Build 3: the Prayers home rows take the
+   Formation series-row dress (the standing .card + .row +
+   tile grammar); the row itself is the tap target, at the
+   44px floor by its art seat + card padding. The block
+   page's series head (.podpage-head.blockhead) carries
+   the block's name under its large tile, at the standing
+   screen-title size and color. */
+.card.blockrow { cursor:pointer; }
+.blockhead-name { font-size:22px; color:var(--navy); margin:2px 0 4px; }
 /* v434 §2.6.1: the Podcasts watch view — the frame's seat is a
    stable full-width 16:9 box; the frame exists only while the
    view stands (created at its paint, destroyed by closeWatch).
@@ -712,12 +719,12 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .sheet, .sheet .inner, .anchmenu, .podchev { animation:none; transition:none; }
 }
-/* G32: the wide rule — the reading column caps at 860px,
-   the block grid takes three columns, and the brand bar's
-   padding follows the cap. */
+/* G32: the wide rule — the reading column caps at 860px
+   and the brand bar's padding follows the cap. (v449: the
+   block grid's three-column line stands down with the
+   grid.) */
 @media (min-width:900px) {
   .view { max-width:860px; }
-  .blockgrid { grid-template-columns:1fr 1fr 1fr; }
   .brandbar { padding-left:max(14px, calc((100vw - 860px) / 2 + 12px)); padding-right:max(14px, calc((100vw - 860px) / 2 + 12px)); }
 }
 `;

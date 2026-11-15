@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -212,7 +212,7 @@ function openConfirm(opts) {
 function skelHtml(kind) {
   var bar = function (w) { return '<span class="skelbar" style="width:' + w + '%"></span>'; };
   var rows = function (n, h) { var s = ''; for (var i = 0; i < n; i++) s += '<div class="skel skelrow" style="height:' + h + 'px"></div>'; return s; };
-  if (kind === 'prayers') return '<div data-skeleton="1"><div class="skel" style="height:30px;width:55%;margin:0 0 12px"></div><div class="skel" style="height:44px;border-radius:999px;margin:0 0 12px"></div><div class="blockgrid">' + rows(6, 118) + '</div></div>';
+  if (kind === 'prayers') return '<div data-skeleton="1"><div class="skel" style="height:30px;width:55%;margin:0 0 12px"></div>' + rows(6, 76) + '</div>';
   if (kind === 'gate') return '<div data-skeleton="1"><div class="skel" style="height:30px;width:50%;margin:0 0 12px"></div><div class="skel" style="height:180px"></div></div>';
   if (kind === 'podindex') return '<div data-skeleton="1">' + rows(3, 76) + '</div>';
   if (kind === 'podseries') return '<div data-skeleton="1"><div class="skel" style="height:120px;margin:0 0 10px"></div>' + bar(60) + rows(5, 76) + '</div>';
@@ -5139,17 +5139,13 @@ function refreshGridDlStates() {
     view.querySelectorAll('[data-rowdl]').forEach(function (el) {
       el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
     });
-    // a standing Downloaded filter re-paints the grid under
-    // the fresh state — once per distinct downloaded set, so
-    // the repaint's own refresh cannot loop.
-    var dlKey = Object.keys(state.gridDl).filter(function (k) { return state.gridDl[k]; }).sort().join(',');
-    if (state.homeFilter === 'downloaded' && state._dlKey !== dlKey) {
-      state._dlKey = dlKey;
-      if (state.dayPayload && state.prayersView && state.prayersView.kind === 'home' && state.tab === 'prayers') {
-        var body = document.getElementById('home-body');
-        if (body) { body.innerHTML = homeBodyHtml(state.dayPayload); wirePrayersView(state.dayPayload); paintContinue(); }
-      }
-    }
+    // v449 §2 Build 1: the standing Downloaded-filter grid
+    // repaint retires with the filter chips — its one purpose
+    // was re-narrowing the home grid under a filter that no
+    // longer stands (the census: the homeFilter and _dlKey
+    // state fields have no other reader). The data-carddl /
+    // data-blockdl / data-rowdl updates above stand
+    // unchanged — the home rows carry the spans now.
   }).catch(function () {});
 }
 function blockDownloadAll(block) {
@@ -7398,9 +7394,8 @@ function buildDayFromPayload(day, snap) {
     // state.prayersView — Listen home or one block page. The view
     // resets to home HERE, in the fetch path (the §2.1.3 pin): a
     // same-tab re-paint never loses the page, and a fresh render
-    // (tab return, reload) always lands home, search cleared.
+    // (tab return, reload) always lands home.
     state.prayersView = { kind: 'home' };
-    state.searchQuery = '';
     paintPrayersView(day);
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
@@ -8033,35 +8028,46 @@ function wirePrayersView(day) {
   wirePlayed(view);
   if (state.current) markPlaying(state.current.episodeId);
 }
-function blockCardHtml(b) {
-  // §2.2.5: the home block card — a liturgical-gradient face
-  // (the --bar-* set), the standing count spans (data-bcount /
-  // data-bprayed, written by the standing updaters unchanged),
-  // and a play button that queues WITHOUT navigating.
-  // v413 §2.4: the card re-forms to the library grammar — a
-  // square theme cover (per-block tone, gold-serif initial; no
-  // images, no Spotify art), the block's name under it, and the
-  // state line: "Playlist · Ora Pro Nobis" + the downloaded
-  // icon where the block's day set stands downloaded (§2.11)
-  // + the standing count spans, their updaters unchanged.
+function blockRowHtml(b) {
+  // v449 §2 Build 1: the home block row — the Formation
+  // series-row form (the shipped paintPodcastsIndex card:
+  // .card > .row > the tile seat + .grow (the name as h3 ·
+  // one .meta line)), one per line, full width. NO play
+  // disc on the row (D1 settled) and NO chevron — the
+  // shipped Formation row carries none (the main seat's
+  // named correction to §2's mockup wording, recorded in
+  // §3). The whole row taps open through the standing
+  // [data-openblock] wiring. coverTileHtml stands in the
+  // tile seat at its 'sm' size (the row's 44px art seat).
+  // The meta line carries the standing spans (data-bcount /
+  // data-bprayed, written by the standing updaters
+  // unchanged; data-carddl, toggled by refreshGridDlStates
+  // unchanged), the count, the duration summed from the
+  // block's tracks (the episodes page's sum), and the
+  // block's caption where it stands.
   var n = b.trackCount != null ? b.trackCount : (b.tracks || []).length;
-  return '<div class="blockcard" data-openblock="' + esc(b.block) + '">'
-    + coverTileHtml(b.block, '')
-    + '<div class="blockcard-name2">' + esc(b.label || b.block) + '</div>'
-    + '<div class="blockcard-meta">Playlist \u00b7 Ora Pro Nobis <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span><br><span data-bcount="' + esc(b.block) + '">' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
-    + '<button class="playbtn blockcard-play" data-queue="' + esc(b.block) + '" aria-label="Play ' + esc(b.label || b.block) + '">&#9654;</button></div>';
+  var dur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
+  return '<div class="card blockrow" data-openblock="' + esc(b.block) + '"><div class="row">'
+    + coverTileHtml(b.block, 'sm')
+    + '<div class="grow"><h3>' + esc(b.label || b.block) + '</h3>'
+    + '<div class="meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '')
+    + '<span data-bcount="' + esc(b.block) + '">' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span>'
+    + (dur > 0 ? ' \u00b7 ' + fmtDurLong(dur) : '')
+    + ' <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span></div></div></div></div>';
 }
-function episodesCardHtml(day) {
-  // §2.2.6: the unblocked group stands as one further card in
-  // the same grid when the day carries episodes.
-  // v413 §2.4/R3: the card takes the same cover form and stands
-  // AFTER the grid's blocks — it is not a block and stands
-  // outside the manual order.
-  return '<div class="blockcard" data-openblock="__episodes">'
-    + '<div class="blockcover tone-teal"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
-    + '<div class="blockcard-name2">From Today&rsquo;s Podcast</div>'
-    + '<div class="blockcard-meta"><span>' + (day.episodes || []).length + ' tracks</span></div>'
-    + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
+function episodesRowHtml(day) {
+  // v449 §2 Build 1: the unblocked group stands as the last
+  // home row, in the same series-row dress — it is not a
+  // block and stands outside the manual order (its standing
+  // seat, kept). Its tile keeps its standing teal tone +
+  // glyph, emitted directly: coverTileHtml would read the
+  // navy fallback for the '__episodes' key.
+  var eps = day.episodes || [];
+  var dur = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
+  return '<div class="card blockrow" data-openblock="__episodes"><div class="row">'
+    + '<div class="blockcover tone-teal sm"><span class="blockcover-initial">' + blockGlyphOf('__episodes') + '</span></div>'
+    + '<div class="grow"><h3>From Today&rsquo;s Podcast</h3>'
+    + '<div class="meta">' + eps.length + ' tracks' + (dur > 0 ? ' \u00b7 ' + fmtDurLong(dur) : '') + '</div></div></div></div>';
 }
 function shortHomeDate(day) {
   // v431 §2.1 (F-431-1): the home's date, shortened home-only and
@@ -8091,30 +8097,17 @@ function paintListenHome(day) {
   // line — the .headrow (title left at its standing 22px, the
   // date right in its standing .sub dress). v419 (G27) stands:
   // the heading is still the tab's name.
-  var html = '<div class="row headrow"><h1 class="screen grow">Prayers</h1><p class="sub">' + esc(shortHomeDate(day)) + '</p></div>';
-  // §2.6.1: the search pill — typing re-paints the results region
-  // in place (the field itself never re-renders, so focus and the
-  // query stand); clearing restores the standing home body.
-  // v425 §2.2: the pill and the filter chips share ONE line —
-  // the .searchrow wrapper (the chips row retires; 56px
-  // banked). The visible placeholder shortens to "Search" (the
-  // §2.4 deviation, flagged for Review at F-425-7); the
-  // aria-label keeps the full phrase, so the field's
-  // accessible name stands unchanged.
-  html += '<div class="searchrow"><div class="searchpill"><input type="search" id="day-search" placeholder="Search" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
-  // v413 §2.4: the library head — filter chips (FD8) + the Sort
-  // button (opens the §2.4 order editor). v441: the sort row
-  // retires as a layer — the button moves up into this
-  // .searchrow, after the chips, byte-identical; the order's
-  // name ("Day order" / "Manual order") retires from the home
-  // with its row (the editor is where the order is managed).
-  // The home sleep-btn retires (ruling R2: sleep's one home is
-  // the player overflow); Play All + the offline line stand
-  // BELOW the grid.
-  html += '<div class="chips" id="home-chips">'
-    + '<button class="chip' + (state.homeFilter === 'praylists' ? ' active' : '') + '" data-homefilter="praylists" aria-pressed="' + (state.homeFilter === 'praylists' ? 'true' : 'false') + '">Praylists</button>'
-    + '<button class="chip' + (state.homeFilter === 'novenas' ? ' active' : '') + '" data-homefilter="novenas" aria-pressed="' + (state.homeFilter === 'novenas' ? 'true' : 'false') + '">Novenas</button>'
-    + '<button class="chip' + (state.homeFilter === 'downloaded' ? ' active' : '') + '" data-homefilter="downloaded" aria-pressed="' + (state.homeFilter === 'downloaded' ? 'true' : 'false') + '">Downloaded</button></div>'
+  // v449 §2 Build 1: the home takes the Formation pattern —
+  // the heading line carries the Sort act at its right (the
+  // #sort-btn emission + its openBlockOrderEditor wiring
+  // move up from the retired .searchrow, byte-identical;
+  // the manual order itself stands), then the block rows,
+  // one per line, and nothing else above the rows. The
+  // .searchrow retires whole: the search pill, the filter
+  // chips, and their wiring (D3 settled — search and chips
+  // retire from the home). Play All + the offline line
+  // stand BELOW the rows (§1's named call).
+  var html = '<div class="row headrow"><h1 class="screen grow">Prayers</h1><p class="sub">' + esc(shortHomeDate(day)) + '</p>'
     + '<button class="btn ghost small" id="sort-btn" aria-label="Sort">↑↓</button></div>';
   html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
@@ -8130,86 +8123,21 @@ function paintListenHome(day) {
     startQueue(queueBuild(extRebuildDescs(day)));
   });
   document.getElementById('sort-btn').addEventListener('click', openBlockOrderEditor);
-  view.querySelectorAll('[data-homefilter]').forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      var f = chip.getAttribute('data-homefilter');
-      // FD8: one active at a time; tapping the active chip clears it.
-      state.homeFilter = state.homeFilter === f ? null : f;
-      // v425 §2.5: the chips' dress toggles IN PLACE and only
-      // #home-body repaints (the input handler's exact tail) —
-      // #day-search stands outside every repainted region, so
-      // its node, focus, and query survive a chip tap.
-      view.querySelectorAll('[data-homefilter]').forEach(function (c) {
-        var on = state.homeFilter === c.getAttribute('data-homefilter');
-        c.classList.toggle('active', on);
-        c.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-      var body = document.getElementById('home-body');
-      if (!body) return;
-      body.innerHTML = homeBodyHtml(day);
-      wirePrayersView(day);
-      paintContinue();
-    });
-  });
-  var search = document.getElementById('day-search');
-  search.addEventListener('input', function () {
-    state.searchQuery = search.value;
-    var body = document.getElementById('home-body');
-    if (!body) return;
-    body.innerHTML = homeBodyHtml(day);
-    wirePrayersView(day);
-    // paintContinue runs on played writes + resolution settles;
-    // a fresh body needs its own call so the Continue card stands
-    // the moment a query is cleared back to the home body.
-    paintContinue();
-  });
 }
 function homeBodyHtml(day) {
-  // While a query stands, the home body is the results paint
-  // instead of the Continue row + cards (§2.2.3).
-  var q = (state.searchQuery || '').trim().toLowerCase();
-  if (q) return searchResultsHtml(day, q);
-  // v344 §2.6: the Continue card's standing place — the slot
-  // under the Play All row. Decision 2: the Continue row stands
-  // FIRST, then the blocks as cards.
-  var html = '<div id="continue-slot"></div>';
-  html += '<div class="blockgrid">';
-  // v413 §2.2/§2.11: the grid paints in the effective order
-  // (manual order filtered — order and membership underneath
-  // unchanged), and the standing filter chip narrows it: Novenas
-  // isolates its card; Downloaded shows only blocks whose day
-  // set stands fully downloaded (state.gridDl, §2.11's read).
-  var gridBlocks = orderedBlocks(day);
-  if (state.homeFilter === 'novenas') gridBlocks = gridBlocks.filter(function (b) { return b.block === 'Novenas'; });
-  else if (state.homeFilter === 'downloaded') gridBlocks = gridBlocks.filter(function (b) { return state.gridDl && state.gridDl[b.block]; });
-  gridBlocks.forEach(function (b) { html += blockCardHtml(b); });
-  if (!state.homeFilter && (day.episodes || []).length) html += episodesCardHtml(day);
-  html += '</div>';
-  return html;
-}
-function searchResultsHtml(day, q) {
-  // §2.6.2: the closed corpus — the presented day only: block
-  // labels + captions, track titles across blocks + the episodes
-  // group, and the prayers' intention texts.
-  // v384 §2.6: the introHit indirection retires — the intention
-  // text rides on the prayer descriptor itself, so the hit reads
-  // prayer descriptors' intentionText directly.
-  var blocks = (day.blocks || []).filter(function (b) {
-    return (b.label || '').toLowerCase().indexOf(q) >= 0
-      || (b.block || '').toLowerCase().indexOf(q) >= 0
-      || (b.caption || '').toLowerCase().indexOf(q) >= 0;
-  });
-  // Track hits read the RESOLVED descriptor list — the presented
-  // day as it stands on its pages (payload tracks, the episodes
-  // group, and the settings families' slot tracks alike), never
-  // the raw payload alone: the Daily Rosary stands on the Morning
-  // page through its settings card, and a search that cannot find
-  // it has not searched the day.
-  var hits = (state.dayDescs || []).filter(function (d) { return (d.title || '').toLowerCase().indexOf(q) >= 0 || (d.intentionText && d.intentionText.toLowerCase().indexOf(q) >= 0); });
-  if (!blocks.length && !hits.length) return '<p class="meta" style="margin-top:14px">Nothing in today&rsquo;s prayers matches.</p>';
+  // v449 §2 Build 1: the home body is the rows alone — the
+  // Continue slot and the square-card grid retire with the
+  // search surface (D3 settled; paintContinue then no-ops
+  // on the home, its machinery untouched; searchResultsHtml
+  // retires whole — its results paint served no other
+  // surface). The blocks paint in the standing effective
+  // order (orderedBlocks — the manual order underneath
+  // unchanged, no filter narrowing it now), one series row
+  // per line; the episodes group stands last, outside the
+  // order, when the day carries episodes.
   var html = '';
-  if (blocks.length) html += '<h2 class="sectionhead">BLOCKS</h2><div class="blockgrid">' + blocks.map(function (b) { return blockCardHtml(b); }).join('') + '</div>';
-  if (hits.length) html += '<h2 class="sectionhead">PRAYERS</h2>' + hits.map(function (t) { return trackCard(t); }).join('');
+  orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b); });
+  if ((day.episodes || []).length) html += episodesRowHtml(day);
   return html;
 }
 function paintBlockPage(day, block) {
@@ -8256,7 +8184,20 @@ function paintBlockPage(day, block) {
   paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
       + '<button class="iosbar-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
-  var html = '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes</span></div>'
+  // v449 §2 Build 2: the body opens with the series-style
+  // head (the series page's .podpage-head grammar): the
+  // block's tile at the head size · the block's name · the
+  // meta line — the v448 body meta folds into the head as
+  // its meta (the data-bmeta span stands, its settlement
+  // writer unchanged; the duration joins the line at first
+  // paint, summed from the block's tracks as the episodes
+  // page sums it, and the settlement seam rewrites the
+  // span to the same settled form). The download pillrow
+  // stands under the head as v448 left it.
+  var headDur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
+  var html = '<div class="podpage-head blockhead">' + coverTileHtml(b.block, 'large')
+    + '<div class="blockhead-name">' + esc(b.label || b.block) + '</div>'
+    + '<div class="meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></div></div>'
     + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
     + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
