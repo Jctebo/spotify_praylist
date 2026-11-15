@@ -11,6 +11,41 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ora Pro Nobis</title>
 <meta name="theme-color" content="#16283f">
+<script>
+// v429 §2.5: the boot stamp + one-shot self-heal. Seated
+// before the stylesheet so the decision never waits on it.
+// A prior boot that started and never completed points at
+// the SW/cache layer: unregister, clear the shell caches
+// (the two standing stores survive), reload exactly once.
+// Any other state simply marks this boot started; the
+// bundle's tail stamps the boot complete and re-arms.
+(function () {
+  try {
+    var boot = localStorage.getItem('opn-boot');
+    if (boot === 'started' && localStorage.getItem('opn-boot-healed') !== '1') {
+      localStorage.setItem('opn-boot-healed', '1');
+      localStorage.setItem('opn-boot', 'healing');
+      var reload = function () { try { location.reload(); } catch (e) {} };
+      var clears = [];
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+          clears.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister().catch(function () {}); }));
+          }).catch(function () {}));
+        }
+        if (window.caches && caches.keys) {
+          clears.push(caches.keys().then(function (keys) {
+            return Promise.all(keys.filter(function (k) { return k !== 'opn-ext-audio-v1' && k !== 'opn-offline-meta-v1'; }).map(function (k) { return caches.delete(k).catch(function () {}); }));
+          }).catch(function () {}));
+        }
+      } catch (e) {}
+      Promise.all(clears).then(reload, reload);
+    } else {
+      localStorage.setItem('opn-boot', 'started');
+    }
+  } catch (e) {}
+})();
+</script>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
@@ -666,9 +701,46 @@ self.addEventListener("activate", function (e) {
     return Promise.all(keys.filter(function (k) { return k !== CACHE && k !== "opn-ext-audio-v1" && k !== "opn-offline-meta-v1"; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
+var SHELL_TIMEOUT_MS = 3000;
+var shellInFlight = 0;
+var shellStallStart = 0;
 self.addEventListener("fetch", function (e) {
   var url = new URL(e.request.url);
   if (url.pathname.indexOf("/api/") === 0) return; // data + audio: network only
+  if (SHELL.indexOf(url.pathname) !== -1) {
+    // v429 §2.3: the shell set races the network against the
+    // timeout. Fetch first: the fresh copy wins and is cached,
+    // as before. Timer first: the pin cache answers on a hit;
+    // on a miss the race stays open and the fetch decides, as
+    // before. The losing fetch still lands its cache copy —
+    // the fetch promise carries the put to completion, and
+    // waitUntil keeps the event alive until it lands. The deadline
+    // is anchored at the start of the current stall (the
+    // first shell fetch still unsettled), so one hung open
+    // pays the timeout once, not once per asset in sequence;
+    // a shell fetch that starts with no stall standing gets
+    // the full timeout of its own.
+    if (shellInFlight === 0) shellStallStart = Date.now();
+    shellInFlight++;
+    var net = fetch(e.request).then(function (r) {
+      var copy = r.clone();
+      return caches.open(CACHE).then(function (c) { return c.put(e.request, copy); }).then(function () { return r; }, function () { return r; });
+    });
+    e.waitUntil(net.then(function () {
+      shellInFlight--; if (shellInFlight === 0) shellStallStart = 0;
+    }, function () {
+      shellInFlight--; if (shellInFlight === 0) shellStallStart = 0;
+    }));
+    var delay = shellStallStart + SHELL_TIMEOUT_MS - Date.now();
+    if (delay < 0) delay = 0;
+    var timed = new Promise(function (resolve) {
+      setTimeout(function () {
+        caches.match(e.request).then(function (hit) { if (hit) resolve(hit); });
+      }, delay);
+    });
+    e.respondWith(Promise.race([net, timed]).catch(function () { return caches.match(e.request); }));
+    return;
+  }
   e.respondWith(
     fetch(e.request).then(function (r) {
       var copy = r.clone();

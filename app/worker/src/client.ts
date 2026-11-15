@@ -8028,4 +8028,5 @@ setupBridgeCommands(); // v377 B3: the native session's transport lands here (sh
 setupBackButton(); // v421: the Android system back binding (shell only; a guarded no-op elsewhere)
 setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
+try { localStorage.setItem('opn-boot', 'complete'); localStorage.removeItem('opn-boot-healed'); } catch (e) {} // v429 §2.5: the boot stamp — the synchronous tail ran through; re-arm the one-shot heal
 `;

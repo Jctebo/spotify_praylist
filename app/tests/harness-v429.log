@@ -1,0 +1,24 @@
+ok   - S1: the fetch handler routes the shell set through the timeout race; SHELL_TIMEOUT_MS = 3000 stands once
+ok   - S2: the /api/ early return and the non-shell fetch-then-catch stand byte-identical to base
+ok   - S3: install + activate stand byte-identical (precache list; the purge spares both standing stores)
+ok   - S4: SHELL_HTML carries the boot marker after the theme-color meta and before the stylesheet link, naming opn-boot / opn-boot-healed
+ok   - S5: the tail stamp stands after the register line as the bundle’s last statement and removes the healed flag
+ok   - S6: limits — the pin stands at ora-pro-nobis-v425-1 in the build tree (Ship moves it); no index.ts delta; no Spotify green; no playback/intention lines touched; the client.ts delta is the stamp only
+ok   - L1a: primed cache + hung shell — the open paints from cache inside [3000, 5000) ms from navigation
+ok   - L1b: the tab bar answers a tap after the hung-open recovery
+ok   - L1c: zero pageerrors through the recovery
+ok   - L2a: a fresh-profile open paints the network copy (the served marker byte proves which copy painted)
+ok   - L2b: a primed profile with a changed bundle on the server paints the FRESH bundle, not the cache
+ok   - L3a: /app.js delayed 2,000 ms (inside the bound) — the network copy wins, paint ≈ delay + pipeline
+ok   - L3b: /app.js delayed 6,000 ms (past the bound) — the cache paints inside the bound, the late fetch lands its cache copy, and a re-open paints the fresh copy (background completion proven)
+ok   - L4a: a doctored bundle throwing before the tail stamp leaves opn-boot at started, never complete
+ok   - L4b: the next open performs exactly ONE extra navigation (the heal reload), no more
+ok   - L4c: the heal unregisters the SW and deletes the shell caches while the seeded opn-ext-audio-v1 + opn-offline-meta-v1 entries SURVIVE, and the healed boot re-registers + re-primes
+ok   - L4d: the healed open paints, the stamp ends complete, the healed flag stands cleared
+ok   - L5a: after a heal whose own boot also fails, the following open performs NO heal (plain navigation count; registrations stand)
+ok   - L5b: a fresh profile (no keys) performs no heal navigation and completes its stamp
+ok   - L5c: at rest after any completed boot, opn-boot-healed stands absent (re-armed)
+ok   - L6: a hung /api/ request is never answered from cache and creates no cache entry
+ok   - L7a: the boot suite on the fixed build — fresh boot, then the pin-flip reload (the v429 pin served over the primed v425 profile): exactly one navigation, paints, zero errors
+ok   - L7b: a cold open under the new pin paints with a live tab bar
+harness-v429: 23/23
