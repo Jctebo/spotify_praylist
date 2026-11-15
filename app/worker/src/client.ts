@@ -4817,33 +4817,38 @@ function trackCard(t) {
     var intIntro = introForTrack(t);
     if (intIntro && intIntro.text) intLine = '<div class="intention-text">Prayer Intention: ' + esc(intIntro.text) + '</div>';
   }
-  var wrap = function (wordsInner, ctlInner) {
+  var wrap = function (wordsInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
-    // NO marker) — the played dot stands as the prayer row's last
-    // element, for both families alike.
-    // v413 §2.6: the row takes the .prow form — artwork left, the
-    // §1.3 cluster right; the row grows past the v363 uniform
-    // 76px for the snippet line (the re-dress's own geometry).
-    // v417 §2.4 (D5/FD5): the prow form becomes TWO lines — the
-    // words line (.row: art + .grow, spanning the full width)
-    // over the .prow-ctl controls line at the bottom right:
-    // [Read?] · the cluster · play · the played dot LAST (its
-    // 44px box stands; the prow CSS zeroes its one-line-row
-    // negative margins).
-    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + wordsInner + '</div>'
-      + '<div class="prow-ctl">' + ctlInner + playedDotHtml(t) + '</div></div>';
+    // NO marker).
+    // v424 §2.2: the card stands as ONE box — wrap emits the
+    // .row alone; the .prow-ctl controls line retires on every
+    // form trackCard serves (the podcast rows keep theirs —
+    // podRowString is a separate emission, FD7). The controls
+    // ride inside .grow: the cluster in the title line (below),
+    // Read + the ⤓ trailing the meta line.
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + wordsInner + '</div></div>';
   };
-  // v413 §2.6: the right-side cluster — ⋮ · share · downloaded
-  // icon · the round play button, in the video's order.
-  // v417 §2.4: the cluster stands in the controls line.
+  // v424 §2.2/§2.3 (FD1/FD2/FD6): the in-box cluster, seated in
+  // the title line inside .grow, reading played dot · play disc
+  // · ⋮ left to right with the ⋮ flush at the card's inner right
+  // edge; every box stands 44×44 (the disc by the cluster-scoped
+  // rule in ui.ts). The standalone Share button retires (FD4) —
+  // Share stands first in the ⋮ menu, as it already did.
   var cluster = function () {
-    return '<span class="rowcluster">'
-      + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button>'
-      + '<button class="iconbtn" data-rowshare="' + esc(key) + '" aria-label="Share">\u2197</button>'
-      + '<span class="dl-ico" data-rowdl="' + esc(key) + '" style="display:none" title="Downloaded">\u2913</span>'
-      + '</span>'
-      + '<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>';
+    return '<span class="prow-cluster">' + playedDotHtml(t)
+      + '<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>'
+      + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
+  };
+  var titleRow = function () {
+    return '<div class="titlerow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + cluster() + '</div>';
+  };
+  // v424 §2.3 (FD5/FD3): the meta line's trailing segment — the
+  // ⤓ downloaded indicator first (a span, state only; it keeps
+  // data-rowdl + its display:none start and refreshGridDlStates
+  // stands untouched), then Read where the card carries text.
+  var metaTrail = function (readCtl) {
+    return '<span class="dl-ico" data-rowdl="' + esc(key) + '" style="display:none" title="Downloaded">\u2913</span>' + readCtl;
   };
   // v413 §2.6: the two-line snippet — where descText stands
   // (externals + podcasts); own Ora rows carry none (F-413-1).
@@ -4859,7 +4864,7 @@ function trackCard(t) {
       // v417 §2.7 (D2): the meta's day word is the presented
       // day's own — 'Today' only when the presented day IS
       // today, the short form otherwise; no clock stands.
-      return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + snippet + '<div class="meta">' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</div>' + intLine + '</div>', cluster());
+      return wrap(rowArtHtml(t) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -4902,7 +4907,9 @@ function trackCard(t) {
     // v417 §2.4 (FD5): Read stands FIRST in the controls
     // line; the .trow-tail wrapper dissolves into the line.
     var readCtl = !noText ? readButton(t, key) : '';
-    return wrap(rowArtHtml(t) + '<div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">' + meta + '</div>' + intLine + '</div>', readCtl + cluster());
+    // v424 §2.3 (FD3): Read trails the meta line in the box,
+    // after the ⤓ — v413's R4 stands (visible, not a menu item).
+    return wrap(rowArtHtml(t) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + '</div>');
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -4912,10 +4919,15 @@ function trackCard(t) {
   // v417 §2.4 (FD5): with text, the Read control stands ALONE
   // on the controls line; without text, no controls line
   // stands at all and the words span the full width.
-  var ctlU = (t.hasText && t.textUrl)
-    ? '<div class="prow-ctl">' + readButton(t, key) + '</div>'
-    : '';
-  return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet</div></div></div>' + ctlU + '</div>';
+  // v424 §2.3 (FD8): the unavailable form folds in — with text,
+  // Read trails the meta line in the box and no controls line
+  // stands; without text the card stands as it stood (no Read,
+  // no cluster — no acts exist to honor).
+  var metaU = (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet';
+  var growU = (t.hasText && t.textUrl)
+    ? '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta metarow"><span>' + metaU + '</span>' + readButton(t, key) + '</div></div>'
+    : '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + metaU + '</div></div>';
+  return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + growU + '</div></div>';
 }
 function openRead(t) {
   // v318 T9: the reading view — the episode's full text within the

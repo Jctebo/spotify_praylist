@@ -572,6 +572,18 @@ img.rowart { object-fit:cover; display:block; }
 .card.trow.prow { padding:8px 10px; margin-bottom:8px; }
 .prow-ctl { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
 .card.trow.prow .played-dot { margin:0; }
+/* v424 §2.2: the one-box card — the controls ride inside
+   .grow: the cluster in the title line, Read + the ⤓
+   trailing the meta line. Every rule scopes to the new
+   classes (.titlerow · .prow-cluster · .metarow): a
+   .card.trow.prow .playbtn rule would also match the
+   podcast rows' disc (FD7 — §2.5's named trap). */
+.titlerow { display:flex; align-items:center; gap:8px; }
+.titlerow h3 { flex:1; min-width:0; margin-bottom:0; }
+.prow-cluster { display:inline-flex; align-items:center; gap:8px; flex:none; }
+.prow-cluster .playbtn { width:44px; height:44px; }
+.metarow { display:flex; align-items:center; gap:8px; }
+.metarow>span:first-child { flex:1; min-width:0; }
 /* v417 §2.6 (FD7): the bars tile — stands in the current
    row's art wrap in place of its art/glyph (tone-navy
    ground, bars in the theme accent; no Spotify green). The

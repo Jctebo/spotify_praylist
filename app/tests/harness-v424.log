@@ -1,0 +1,37 @@
+ok   - S1: trackCard emits no .prow-ctl on any branch (the controls line retires by emission)
+ok   - S2 (FD7): podRowString still emits its .prow-ctl line + podmark + podbar — the podcast construction untouched
+ok   - S3: the cluster’s emission order in the title line = played dot · play disc · ⋮ (data-markplayed · data-playkey · data-rowmenu)
+ok   - S4 (FD4): trackCard emits no data-rowshare; openDayRowMenu’s contents stand (Share first · Download state-matched · Open in Spotify)
+ok   - S5 (FD5): the ⤓ span in trackCard keeps data-rowdl + its display:none start (refreshGridDlStates untouched)
+ok   - S6: limits — the pin stands at ora-pro-nobis-v423-1 (Ship moves it); no Spotify green; no index.ts delta
+note - extraction dropped: offlineEvict
+note - refreshPlayedChrome extracted: true
+pageerror: SyntaxError: Unexpected token '<'
+ok   - L1 (leg 1): every fixture card carries zero .prow-ctl descendants — the card stands as one box
+ok   - L1 (leg 1): no border-top line stands under any card’s words (no divider under the words line, the title line, or the meta line)
+ok   - L1 (leg 1): the fixture cards’ heights bank against §2.4 (each population at or under its settled figure +2)
+note - card heights (mold): {"o1":160,"o3":106,"o2":94,"e1":132,"e2":78,"e3":120,"u1":86,"u2":76} vs settled {"o1":160,"o3":106,"e1":133,"e2":79,"e3":121,"u1":87}
+ok   - L4 (leg 5): the external cards carry no [data-read] — no dead Read stands
+ok   - L4 (leg 5): the own no-text card carries no [data-read] and folds its not-available segment in the meta
+ok   - L4 (leg 5, FD8): the unavailable-with-text card carries Read in its meta row and no .prow-ctl
+ok   - L4 (leg 5, FD8): the unavailable-without-text card carries no Read and no cluster
+ok   - L4 (leg 5): no fixture card gains a control its population never carried (unavailable cards carry no play/⋮/dot; the segment card carries no Read)
+ok   - L5 (leg 6): the card padding + art tile stand (8px/10px · 44px)
+ok   - L5 (leg 6): computed type sizes stand (title 17 · meta 14)
+ok   - L5 (leg 6): the intention line stands inside the card at its standing width (the .grow width, ±1px of base) with its clamp 2
+ok   - L5 (leg 6): the block head measures as v423 left it (head 94 · stack 186 = 46 brand + 46 toggle + 94 head · slot 0 at scroll)
+ok   - L2 (legs 2+3): dot · disc · ⋮ stand inside the title line in that order, the ⋮’s right edge flush with the card’s inner right edge (±1px)
+ok   - L2 (leg 2, FD2): all three cluster boxes measure 44×44
+ok   - L3 (leg 4): Read (trailing the meta line) opens the reading view
+ok   - L3 (leg 4): Share via the ⋮ opens the share sheet (the retired standalone button’s act stands in the menu, FD4)
+ok   - L3 (leg 4): Download stands in the ⋮ while not on device; once downloaded the ⤓ stands visible trailing the meta, before Read
+ok   - L3 (leg 4): the dot tap marks played — dot .on + title .heard + the store written
+ok   - L3 (leg 4): a second dot tap clears both (dot .on off · title .heard off · store cleared)
+ok   - L2 (leg 2): a disc tap plays — the tapped track stands current, the disc takes the playing dress, the bars tile stands on the card
+ok   - L2 (leg 2): a second disc tap pauses (the standing toggle — pauseTransport runs, the current stands)
+ok   - L2 (leg 3): the ⋮ in the box opens its standing menu with its items in standing order (Share · Download while not on device · Open in Spotify)
+ok   - L7 (leg 2): the playing card shows the bars tile in the art wrap with the disc’s playing dress
+ok   - L7 (leg 2): paused, the bars stand frozen on the same card
+ok   - L6 (FD7): a podcast episode row keeps its .prow-ctl line with the standing order (⋮ · share · ⤓ · play · podmark) and gains no in-box cluster
+ok   - L6 (FD7): the podcast row’s partway bar stands at the row’s bottom edge
+harness-v424: 32 passed, 0 failed
