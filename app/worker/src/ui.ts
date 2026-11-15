@@ -141,6 +141,15 @@ html.in-shell .tabbar { padding-bottom: 0; }
 .dockprogress { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(250,245,236,.18); }
 .dockprogress i { display:block; height:100%; width:0; background:var(--accent); }
 body.dock-on .view { padding-bottom: calc(var(--tabh, 0px) + var(--dockh, 60px)); }
+/* v452: the Intentions floating add button — a 56px disc
+   seated at the view's bottom right, above the tab bar,
+   and above the dock when the dock stands (the dock-on
+   reserve pattern above); its right offset matches the
+   view's content edge. Dress from the theme tokens only:
+   the navy ground, the gold +. Painted by the Intentions
+   paint alone, so it leaves with that paint. */
+.intfab { position:fixed; right:12px; bottom:calc(var(--tabh, 0px) + 14px); z-index:35; width:56px; height:56px; border-radius:50%; border:none; background:var(--navy); color:var(--gold); font-family:inherit; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 18px rgba(42,38,32,.30); padding:0; }
+body.dock-on .intfab { bottom:calc(var(--tabh, 0px) + var(--dockh, 60px) + 14px); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
 .headrow { margin:2px 0 12px; }

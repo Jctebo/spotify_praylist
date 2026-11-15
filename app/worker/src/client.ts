@@ -4500,11 +4500,21 @@ function wireFieldNotes() {
 
 /* ---------------- Intentions (the pool) ---------------- */
 function intentionRow(it) {
-  var hist = it.drawnCount ? ('drawn ' + it.drawnCount + (it.drawnCount === 1 ? ' time' : ' times') + (it.lastDrawn ? ' · last ' + it.lastDrawn : '')) : 'not drawn yet';
-  var actions = it.status === 'active'
-    ? '<button class="btn ghost small" data-act="edit" data-id="' + it.id + '">Edit</button> <button class="btn ghost small" data-act="retire" data-id="' + it.id + '">Retire</button> <button class="btn ghost small" data-act="del" data-id="' + it.id + '">Delete</button>'
-    : '<button class="btn ghost small" data-act="edit" data-id="' + it.id + '">Edit</button> <button class="btn ghost small" data-act="restore" data-id="' + it.id + '">Restore</button> <button class="btn ghost small" data-act="del" data-id="' + it.id + '">Delete</button>';
-  return '<div class="librow"><div class="row"><div class="grow"><div>' + esc(it.text) + '</div><div class="meta">' + hist + '</div></div><span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span></div><div style="margin-top:8px">' + actions + '</div></div>';
+  // v452 §2 Build 1 (D1 B · D2 B): the clean row, in the
+  // standing card-row form (one per line, full width) — the
+  // text in the grow cell, the standing .pri tag, and the
+  // row's own ☰ at the right. NOTHING else stands on the
+  // row: the drawn-history line retires (history, status,
+  // and dates live in the Edit sheet, D2 B) and the standing
+  // Edit/Retire/Delete button row retires into the ☰'s
+  // anchored menu (Build 2). A retired row's text stands
+  // muted; its tag and ☰ stand as the active rows'.
+  var retired = it.status !== 'active';
+  return '<div class="card introw"><div class="row">'
+    + '<div class="grow"><div' + (retired ? ' style="color:var(--muted)"' : '') + '>' + esc(it.text) + '</div></div>'
+    + '<span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span>'
+    + '<button class="iconbtn" data-intmenu="' + it.id + '" aria-label="Intention actions">\u2630</button>'
+    + '</div></div>';
 }
 // v426 §2.6: the ONE settle paint path — the standing triple
 // (capturePlace · renderIntentions · armPlaceRestore), factored
@@ -4521,7 +4531,11 @@ function settleIntentions(redrawFailed) {
 }
 function renderIntentions() {
   paintPrayersBar(null); // v448: the Intentions side is a tab home side — no pushed bar stands over it
-  view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>' + skelHtml('intentions');
+  // v452 §2 Build 1: the skeleton head draws the NEW headrow
+  // form (title + the heading ☰), identical markup to the
+  // settled head, so the paint landing does not jump (the
+  // F-426-I4 property, carried to the new form).
+  view.innerHTML = '<div class="row headrow"><h1 class="screen grow">Intentions</h1><button class="iconbtn" id="int-menu" aria-label="Intentions menu">\u2630</button></div>' + skelHtml('intentions');
   var today = todayChicago();
   Promise.all([api('/api/prayer/intentions'), api('/api/prayer/day?date=' + today)]).then(function (res) {
     var intentions = res[0].intentions || [];
@@ -4529,37 +4543,30 @@ function renderIntentions() {
     applyLiturgical(day);
     var active = intentions.filter(function (i) { return i.status === 'active'; });
     var retired = intentions.filter(function (i) { return i.status !== 'active'; });
-    var cnt = { H: 0, M: 0, L: 0 }; active.forEach(function (i) { cnt[i.priority] = (cnt[i.priority] || 0) + 1; });
     // v338 §2.9(3): the per-block segment audio bar retires with
     // the payload's segment fields — the Intentions tab's
     // item/intention listing below stands untouched (§2.9(2)).
-    // v426 §2.5: the head becomes a row — the title lines in a
-    // .grow cell, the Redraw button at the row's right, and the
-    // note slot under the row (empty when idle; .fieldnote:empty
-    // stands display:none, so the idle slot costs no height).
-    // F-426-I4: the h1's top margin is zeroed in the row only —
-    // in the skeleton paint that margin collapses out of the
-    // head, in the flex cell it is contained; zeroing it makes
-    // the two heads measure the same height (57px in the mold),
-    // so the paint landing does not jump.
-    var html = '<div class="row"><div class="grow"><h1 class="screen" style="margin-top:0">Intentions</h1><p class="sub">the pool</p></div><button class="btn ghost" id="int-redraw">Redraw</button></div><p class="fieldnote" id="int-redraw-note"></p>';
-    html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
-    // v411 §2.6 (4.1): the add card stands at the head of the
-    // surface, directly under the counts strip — the tab's
-    // primary act no longer sits below every standing
-    // intention. The groups stand second and lose nothing;
-    // the card's ids and wireIntentions stand unchanged. The
-    // fn-new-text slot (§2.6, 4.2) stands under the field.
-    html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><p class="fieldnote" id="fn-new-text"></p><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention redraws today — it can stand in today\u2019s prayers at once.</p></div>';
-    [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
-      var rows = active.filter(function (i) { return i.priority === g[0]; });
-      html += '<h2 class="sectionhead">' + g[1].toUpperCase() + '</h2>';
-      html += rows.length ? '<div class="liblist">' + rows.map(intentionRow).join('') + '</div>' : '<p class="meta">None.</p>';
-    });
+    // v452 §2 Build 1 (D1 B · D4 A): the settled paint is the
+    // headrow (the title in its .grow cell, the heading ☰ at
+    // its right — the headrow act seat the sort act took on
+    // Prayers), the redraw note slot under it (the slot is
+    // functional, carrying the redraw failure line; empty it
+    // costs no height, .fieldnote:empty stands display:none),
+    // ONE flat list of rows in High → Medium → Low order (the
+    // API's order stands within each priority), the Retired
+    // section at the bottom under its quiet section head, and
+    // the floating add button (Build 3). Retired whole (D4 A):
+    // the stats strip, the "the pool" sub-line, the about
+    // paragraph, the Add card, and the per-priority section
+    // heads — the home is toggle · heading · rows · the
+    // floating button, nothing else.
+    var html = '<div class="row headrow"><h1 class="screen grow">Intentions</h1><button class="iconbtn" id="int-menu" aria-label="Intentions menu">\u2630</button></div><p class="fieldnote" id="int-redraw-note"></p>';
+    var ordered = ['H', 'M', 'L'].reduce(function (acc, p) { return acc.concat(active.filter(function (i) { return i.priority === p; })); }, []);
+    html += ordered.length ? ordered.map(intentionRow).join('') : '<p class="meta">None.</p>';
     if (retired.length) {
-      html += '<h2 class="sectionhead">RETIRED</h2><div class="liblist">' + retired.map(intentionRow).join('') + '</div>';
+      html += '<h2 class="sectionhead">RETIRED</h2>' + retired.map(intentionRow).join('');
     }
-    html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool, and its redraw stages the day.</p>';
+    html += '<button class="intfab" id="int-fab" aria-label="Add an intention">+</button>';
     view.innerHTML = html;
     wireIntentions(intentions);
     // v426 §2.4: a settle whose auto-redraw failed stands the
@@ -4569,80 +4576,112 @@ function renderIntentions() {
   }).catch(function (e) {
     intentionsRedrawFailed = false;
     // v419 (G22): the authored failure + a Ghost Retry.
-    view.innerHTML = '<h1 class="screen">Intentions</h1><p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
+    // v452: its head reads in the new headrow form.
+    view.innerHTML = '<div class="row headrow"><h1 class="screen grow">Intentions</h1></div><p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
     document.getElementById('int-retry').addEventListener('click', renderIntentions);
   });
 }
+function runIntentionsRedraw(menuBtn) {
+  // v452 §2 Build 2: the standing v426 redraw, re-seated from
+  // the retired head button to the heading menu's Redraw item
+  // (the menu has already closed when this runs). The tap runs
+  // BOTH, in order — POST the draw re-run, then on settle the
+  // one paint path re-reads the pool and repaints. Busy seats
+  // on the heading ☰ (disabled + the ellipsis) while the POST
+  // is in flight. A failed tap does not repaint; the standing
+  // paint stands and the note slot names the failure.
+  menuBtn.disabled = true;
+  menuBtn.textContent = '\u2026';
+  post('/api/prayer/redraw', {}).then(function () {
+    settleIntentions(false);
+  }).catch(function () {
+    menuBtn.disabled = false;
+    menuBtn.textContent = '\u2630';
+    fieldNote('int-redraw-note', 'Redraw did not run \u2014 the standing draw stands. Try again.');
+  });
+}
 function wireIntentions(intentions) {
-  var redrawBtn = document.getElementById('int-redraw');
-  if (redrawBtn) redrawBtn.addEventListener('click', function () {
-    // v426 §2.5: the tap runs BOTH, in order — POST the draw
-    // re-run, then on settle the one paint path re-reads the
-    // pool and repaints. Busy = disabled + "Redrawing…". A
-    // failed tap does not repaint; the standing paint stands
-    // and the note slot names the failure.
-    redrawBtn.disabled = true;
-    redrawBtn.textContent = 'Redrawing\u2026';
-    post('/api/prayer/redraw', {}).then(function () {
-      settleIntentions(false);
-    }).catch(function () {
-      redrawBtn.disabled = false;
-      redrawBtn.textContent = 'Redraw';
-      fieldNote('int-redraw-note', 'Redraw did not run \u2014 the standing draw stands. Try again.');
-    });
+  // v452 §2 Build 2: every act opens through openSheetMenu,
+  // anchored at its ☰ — the heading menu ("Intentions":
+  // Redraw + Add intention, D3 A) and each row's menu
+  // ("Intention": Edit · Retire/Restore · Delete). Every act
+  // fires the identical endpoint and settle the standing
+  // buttons fired; only the wiring moved. The floating add
+  // button (Build 3) opens the same add sheet the menu's
+  // Add intention opens.
+  var menuBtn = document.getElementById('int-menu');
+  if (menuBtn) menuBtn.addEventListener('click', function () {
+    openSheetMenu('Intentions', [
+      { label: 'Redraw', act: function () { runIntentionsRedraw(menuBtn); } },
+      { label: 'Add intention', act: function () { openIntentionEditor(null); } }
+    ], menuBtn);
   });
-  var add = document.getElementById('new-add');
-  if (add) add.addEventListener('click', function () {
-    var text = document.getElementById('new-text').value.trim();
-    if (!text) { fieldNote('fn-new-text', 'Write the intention first.'); return; }
-    // v426 §2.6 (F-426-3): the add's failure branch — the button
-    // disables while the POST is in flight (the v411 editor-save
-    // precedent); on refusal it re-enables, the draft stands
-    // untouched (no placeSkip, no repaint), and the field note
-    // names the failure.
-    add.disabled = true;
-    post('/api/prayer/intentions', { text: text, priority: document.getElementById('new-pri').value }).then(function (res) {
-      // v411 §2.4/§2.10 (2.2e): the saved field's draft drops —
-      // capturePlace skips it — while the side's place stands.
-      placeSkip['new-text'] = true; placeSkip['new-pri'] = true;
-      settleIntentions(!!(res && res.redrawn === false));
-    }).catch(function () {
-      add.disabled = false;
-      fieldNote('fn-new-text', 'That did not add. Your text is still here \u2014 try again.');
-    });
-  });
+  var fab = document.getElementById('int-fab');
+  if (fab) fab.addEventListener('click', function () { openIntentionEditor(null); });
   wireFieldNotes();
-  view.querySelectorAll('[data-act]').forEach(function (b) {
+  view.querySelectorAll('[data-intmenu]').forEach(function (b) {
     b.addEventListener('click', function () {
-      var id = Number(b.getAttribute('data-id')); var act = b.getAttribute('data-act');
+      var id = Number(b.getAttribute('data-intmenu'));
       var it = intentions.filter(function (i) { return i.id === id; })[0];
-      // v411 §2.4: the repaint keeps the side's place — capture
-      // runs while the standing DOM (draft + scroll) still holds.
-      if (act === 'edit') openIntentionEditor(it);
-      else if (act === 'retire') post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); });
-      else if (act === 'restore') post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); });
-      else if (act === 'del') { openConfirm({ line: 'Delete this intention and all its draws?', commitLabel: 'Delete', danger: true, act: function () { api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); }); } }); }
+      if (!it) return;
+      // v411 §2.4: the repaint keeps the side's place — the
+      // settle's capture runs while the standing DOM holds.
+      var items = [{ label: 'Edit', act: function () { openIntentionEditor(it); } }];
+      if (it.status === 'active') items.push({ label: 'Retire', act: function () { post('/api/prayer/intentions/' + id + '/status', { status: 'retired' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); }); } });
+      else items.push({ label: 'Restore', act: function () { post('/api/prayer/intentions/' + id + '/status', { status: 'active' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); }); } });
+      items.push({ label: 'Delete', act: function () { openConfirm({ line: 'Delete this intention and all its draws?', commitLabel: 'Delete', danger: true, act: function () { api('/api/prayer/intentions/' + id, { method: 'DELETE' }).then(function (res) { settleIntentions(!!(res && res.redrawn === false)); }); } }); } });
+      openSheetMenu('Intention', items, b);
     });
   });
 }
 function openIntentionEditor(it) {
+  // v452 §2 Build 3: ONE sheet for add and edit — an entry
+  // paints the edit form (the standing editor's shape: the
+  // prefilled text, the facts line, Save); null paints the
+  // add form (empty text, the standing redraw note line,
+  // "Add to the pool"). The priority control is the sheet's
+  // three-way segmented control (the approved Screen C form)
+  // in both forms — one form, one control; it stands in the
+  // standing .segtoggle dress, the chosen segment carrying
+  // .active. The add form's standing default is Medium (the
+  // retired Add card's default). The failure branches stand
+  // as built (v411 §2.6 4.3 · v426 F-426-3): the button
+  // disables while the write is in flight; a refusal leaves
+  // the sheet open, the draft intact, and the note naming
+  // the failure. A success closes the sheet and settles.
+  var adding = !it;
+  var priSel = adding ? 'M' : it.priority;
+  var seg = '<div class="segtoggle" id="ed-pri">' + [['H', 'High'], ['M', 'Medium'], ['L', 'Low']].map(function (p) {
+    return '<button data-pri="' + p[0] + '"' + (p[0] === priSel ? ' class="active"' : '') + '>' + p[1] + '</button>';
+  }).join('') + '</div>';
   var sheet = document.createElement('div'); sheet.className = 'sheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Intention</h1></div>'
-    + '<label class="f">Text</label><input type="text" id="ed-text" value="' + esc(it.text) + '">'
-    + '<label class="f">Priority</label><select id="ed-pri"><option value="H"' + (it.priority === 'H' ? ' selected' : '') + '>High</option><option value="M"' + (it.priority === 'M' ? ' selected' : '') + '>Medium</option><option value="L"' + (it.priority === 'L' ? ' selected' : '') + '>Low</option></select>'
-    + '<p class="meta" style="margin-top:12px">Status: ' + esc(it.status) + ' · Created: ' + esc((it.created_at || '').slice(0, 10)) + ' · Drawn ' + (it.drawnCount || 0) + ' times' + (it.lastDrawn ? ' · last drawn ' + it.lastDrawn : '') + '</p>'
-    + '<p class="fieldnote" id="ed-note"></p><div style="margin-top:14px"><button class="btn gold" id="ed-save">Save</button></div></div>';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (adding ? 'Add an intention' : 'Intention') + '</h1></div>'
+    + '<label class="f">Text</label><input type="text" id="ed-text" placeholder="For..." value="' + (adding ? '' : esc(it.text)) + '">'
+    + '<label class="f">Priority</label>' + seg
+    + (adding
+      ? '<p class="meta" style="margin-top:12px">Adding an intention redraws today — it can stand in today\u2019s prayers at once.</p>'
+      : '<p class="meta" style="margin-top:12px">Status: ' + esc(it.status) + ' · Created: ' + esc((it.created_at || '').slice(0, 10)) + ' · Drawn ' + (it.drawnCount || 0) + ' times' + (it.lastDrawn ? ' · last drawn ' + it.lastDrawn : '') + '</p>')
+    + '<p class="fieldnote" id="ed-note"></p><div style="margin-top:14px"><button class="btn gold" id="ed-save">' + (adding ? 'Add to the pool' : 'Save') + '</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true); // v419: TALL drawer — the header Close retires
+  var segEl = sheet.querySelector('#ed-pri');
+  segEl.querySelectorAll('[data-pri]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      segEl.querySelectorAll('[data-pri]').forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      priSel = b.getAttribute('data-pri');
+    });
+  });
   sheet.querySelector('#ed-save').addEventListener('click', function () {
-    // v411 §2.6 (4.3): the failure branch — the button disables
-    // while the write is in flight; a refusal leaves the sheet
-    // open, the text intact, and says so in the one line.
     var btn = sheet.querySelector('#ed-save');
+    var text = sheet.querySelector('#ed-text').value;
+    if (adding && !text.trim()) { sheet.querySelector('#ed-note').textContent = 'Write the intention first.'; return; }
     btn.disabled = true;
-    api('/api/prayer/intentions/' + it.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: sheet.querySelector('#ed-text').value, priority: sheet.querySelector('#ed-pri').value }) })
-      .then(function (res) { sheet.remove(); settleIntentions(!!(res && res.redrawn === false)); })
-      .catch(function () { btn.disabled = false; sheet.querySelector('#ed-note').textContent = 'That did not save. Your text is still here \u2014 try again.'; });
+    var call = adding
+      ? post('/api/prayer/intentions', { text: text.trim(), priority: priSel })
+      : api('/api/prayer/intentions/' + it.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text, priority: priSel }) });
+    call.then(function (res) { sheet.remove(); settleIntentions(!!(res && res.redrawn === false)); })
+      .catch(function () { btn.disabled = false; sheet.querySelector('#ed-note').textContent = adding ? 'That did not add. Your text is still here \u2014 try again.' : 'That did not save. Your text is still here \u2014 try again.'; });
   });
 }
 
