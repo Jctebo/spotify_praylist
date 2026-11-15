@@ -5294,7 +5294,7 @@ var npScrubbing = false;
 function isOwnLogoUrl(u) {
   if (!u) return false;
   if (u === '/logo.png') return true;
-  var s = String(u).replace(/^(?:[a-z][a-z0-9+.-]*:)?\/\//i, '').toLowerCase();
+  var s = String(u).replace(/^(?:[a-z][a-z0-9+.-]*:)?[/][/]/i, '').toLowerCase();
   return s === 'jctebo.github.io/spotify_praylist/images/logo_ora_pro_nobis.png';
 }
 function realArtUrl(cur) {
