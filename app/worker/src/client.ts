@@ -970,6 +970,7 @@ function pauseTransport() {
   pushNativeState(false); // v377 B2: pause is a push trigger
 }
 function loadDescAudio(desc) {
+  closeWatch(); // v434 §2.6.2 seat 3: every fresh audio start tears a standing watch frame down BEFORE audioEl.play() runs below
   // The audio-load step — startDesc's tail, split out at v384.
   // v388: it is the WHOLE start tail now — no step stands
   // before it and nothing defers it; startDesc runs it inline
@@ -1091,6 +1092,7 @@ function tapPlay(d) {
   startQueue(build, true);
 }
 function resumeCurrent() {
+  closeWatch(); // v434 §2.6.2 seat 3: a resume is an audio start — a standing watch frame is destroyed BEFORE audioEl.play() runs below
   // v346 §2.4: the media-session play handler's seam — the app's
   // own resume path, queue- and position-preserving. It never
   // routes through playTrack/startDesc (playTrack clears the
@@ -2216,6 +2218,14 @@ var placeScroll = sideScroll;
 var placeText = {};
 var placeSkip = {};
 var podLevel = 'index';
+/* v434 §2.6: the Podcasts WATCH record — stands only while the
+   watch view stands (the frame exists only while the view
+   stands). { video, scroll } — the tapped video and the series
+   page's scroll at the tap, so the back act returns to the
+   standing place. podWatchPlayer is the IFrame API handle (its
+   error events are the refusal seam, §2.6.3). */
+var podWatch = null;
+var podWatchPlayer = null;
 function placeScreenKey() {
   /* v414 §2.8: the Wallpaper tab rides the same entries —
      its scroll is kept per side, like the merged tabs. */
@@ -2224,10 +2234,13 @@ function placeScreenKey() {
 }
 function capturePlace() {
   if (state.tab === 'podcasts') {
+    // v434 §2.6.2: a standing WATCH records as its parent SERIES
+    // level (the watch never stands on a return — a tab switch
+    // tears its frame down), at the series page's own scroll.
     state.podcastsReturn = {
-      level: podLevel,
-      series: (podLevel === 'series' && state.podcasts) ? state.podcasts.series : null,
-      scroll: window.scrollY || 0,
+      level: podLevel === 'watch' ? 'series' : podLevel,
+      series: (podLevel !== 'index' && state.podcasts) ? state.podcasts.series : null,
+      scroll: (podLevel === 'watch' && podWatch) ? (podWatch.scroll || 0) : (window.scrollY || 0),
     };
   } else if (state.tab) {
     placeScroll[placeScreenKey()] = window.scrollY || 0;
@@ -2307,6 +2320,7 @@ function paintMergedContainer(tab) {
 }
 
 function setTab(tab) {
+  closeWatch(); // v434 §2.6.2 seat 2: any tab switch tears a standing watch frame down first — the video sounds only while its surface stands open; the harvest below then reads the restored series page, the watch's standing place
   capturePlace(); // v411 §2.4: harvest the outgoing screen before the dispatch repaints
   recordSideScroll(state.tab);
   view = realView;
@@ -2428,12 +2442,12 @@ function renderPodcasts() {
   // stands, scroll best-effort.
   var rec = state.podcastsReturn;
   if (rec && rec.level === 'series' && rec.series && state.podcasts && state.podcasts.series === rec.series) {
-    paintPodcasts();
+    paintPodSeriesPage(); // v434 §2.1: the return paints a video payload through its own painter
     armPodScroll(rec.scroll);
     api('/api/player/podcasts?series=' + encodeURIComponent(rec.series)).then(function (res) {
       state.podcasts = res;
       tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
-      if (state.tab === 'podcasts' && podLevel === 'series' && state.podcastsReturn === rec) { paintPodcasts(); armPodScroll(rec.scroll); }
+      if (state.tab === 'podcasts' && podLevel === 'series' && state.podcastsReturn === rec) { paintPodSeriesPage(); armPodScroll(rec.scroll); }
     }).catch(function () {});
     return;
   }
@@ -2478,7 +2492,18 @@ function paintPodcastsIndex() {
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (s.showImageUrl ? '<img class="rowart" src="' + esc(s.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
     html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(s.title) + '</h3>';
-    if (!s.available) {
+    if (s.kind === 'video') {
+      // v434 §2.1/§2.5: a VIDEO series card carries its own meta
+      // form — the audio form (listened counts, a current
+      // episode) does not apply: a video series carries no marks
+      // and no current episode. Its art is the newest video's
+      // thumbnail (§2.1's showImageUrl), over the same tile.
+      if (!s.available) {
+        html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
+      } else {
+        html += '<div class="meta">Video \u00b7 Latest: ' + esc(s.latestLabel || '') + '</div>';
+      }
+    } else if (!s.available) {
       html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
     } else {
       html += '<div class="meta">' + s.listenedCount + ' of ' + s.total + ' listened'
@@ -2493,12 +2518,21 @@ function paintPodcastsIndex() {
     c.addEventListener('click', function () { openPodSeries(c.getAttribute('data-podseries')); });
   });
 }
+function paintPodSeriesPage() {
+  // v434 §2.1: the series-page dispatch — a VIDEO payload paints
+  // through paintPodcastVideos; the audio paintPodcasts is not
+  // entered for it. Every standing series-page paint seat (the
+  // open, the session return) routes through here.
+  if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
+  else paintPodcasts();
+}
 function openPodSeries(key) {
+  closeWatch(); // v434 §2.6.2 seat 4: opening any series while a watch record somehow stands closes it first — the invariant has no unnamed path
   view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries');
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
-    if (state.tab === 'podcasts') paintPodcasts();
+    if (state.tab === 'podcasts') paintPodSeriesPage();
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
     if (state.tab === 'podcasts') {
@@ -2521,6 +2555,147 @@ function goPodcastsIndex() {
 function wirePodBack() {
   var b = view.querySelector('[data-podback]');
   if (b) b.addEventListener('click', goPodcastsIndex);
+}
+/* ---------------- Podcasts VIDEO series (v434) ----------------
+   §2.1: the video series page — the standing snapshot's videos,
+   newest first. Each row: the thumbnail (referenced from
+   YouTube's hosts, never re-hosted) · the title · the published
+   date. No current-episode card, no collapse, no marks, no
+   partway bar, no download cluster — the row's one act is
+   open-and-watch. The page builds on the standing v427-ship
+   Podcasts grammar (the back row, the page head); no offline
+   line is added to or removed from any surface by v434. */
+function paintPodcastVideos() {
+  var res = state.podcasts;
+  if (!res || res.kind !== 'video') { view.innerHTML = '<h1 class="screen">Podcasts</h1>' + skelHtml('podseries'); return; }
+  podLevel = 'series';
+  var html = '<h1 class="screen">Podcasts</h1>';
+  html += '<div class="backrow stickyrow"><button class="backdisc" data-podback aria-label="Back to Podcasts">&lsaquo;</button></div>';
+  if (!res.available) {
+    // The standing unavailable surface: no snapshot and the feed
+    // unreachable — the card form the audio series keep.
+    html += '<div class="card"><h3>' + esc(res.title || 'CatholicTV') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    view.innerHTML = html;
+    wirePodBack();
+    return;
+  }
+  var newest = (res.videos && res.videos.length) ? res.videos[0] : null;
+  // The page head in the standing grammar: the cover is the
+  // newest video's thumbnail referenced from YouTube's hosts
+  // over the tile fallback; the meta line is §2.5's form.
+  var cover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
+    + (newest && newest.imageUrl ? '<img class="coverimg" src="' + esc(newest.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
+  html += '<div class="podpage-head">' + cover
+    + '<h1 class="screen">' + esc(res.title) + '</h1>'
+    + '<div class="meta">Video series \u00b7 Updated ' + esc(newest ? newest.dateLabel : '') + '</div></div>';
+  (res.videos || []).forEach(function (v) {
+    var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
+    var art = '<span class="rowartwrap">' + tile + (v.imageUrl ? '<img class="rowart" src="' + esc(v.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
+    html += '<div class="card" data-podvideo="' + esc(v.id) + '"><div class="row">' + art
+      + '<div class="grow"><h3>' + esc(v.title) + '</h3><div class="meta">' + esc(v.dateLabel) + '</div></div>'
+      + '</div></div>';
+  });
+  view.innerHTML = html;
+  wirePodBack();
+  view.querySelectorAll('[data-podvideo]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var id = c.getAttribute('data-podvideo');
+      var v = ((state.podcasts && state.podcasts.videos) || []).filter(function (x) { return x.id === id; })[0];
+      if (v) openPodWatch(v);
+    });
+  });
+}
+/* §2.6: the watch surface — a dedicated third level inside the
+   Podcasts navigation. The frame is created at this view's
+   paint and nowhere else: no pre-created or hidden frame stands
+   anywhere in the tab. */
+function openPodWatch(v) {
+  // §2.6.2, the forward direction: opening a video silences the
+  // audio FIRST — the standing pause act (the same function the
+  // transport's pause button runs), so the playback state, the
+  // mini-player, and the Now Playing sheet all read paused from
+  // the one source of truth. The standing playback state reads
+  // paused for the whole time a watch view stands; nothing
+  // resumes the audio when the watch closes — the user resumes
+  // it himself (the estate's standing posture).
+  if (!audioEl.paused) pauseTransport();
+  podWatch = { video: v, scroll: window.scrollY || 0 };
+  paintPodWatch();
+}
+function paintPodWatch() {
+  if (!podWatch) return;
+  var v = podWatch.video;
+  podLevel = 'watch';
+  var html = '<h1 class="screen">Podcasts</h1>';
+  // The back row's act is closeWatch (one act, two triggers —
+  // the disc tap and the system-back dispatch, §2.6.2 seat 1).
+  html += '<div class="backrow stickyrow"><button class="backdisc" data-podwatchback aria-label="Back to CatholicTV">&lsaquo;</button></div>';
+  html += '<div class="watchtitle">' + esc(v.title) + '</div>';
+  html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
+  html += '<div id="podwatch-err" class="err" style="display:none"></div>';
+  html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 CatholicTV</div>';
+  // §2.6.3 (F-434-4): the Open in YouTube act stands PERMANENTLY
+  // under the frame — a plain anchor to the video's watch URL,
+  // opening externally. It does not wait for a refusal to exist.
+  html += '<p><a class="btn ghost" href="' + esc(v.url) + '" target="_blank" rel="noopener">Open in YouTube</a></p>';
+  view.innerHTML = html;
+  var b = view.querySelector('[data-podwatchback]');
+  if (b) b.addEventListener('click', function () { closeWatch(); });
+  wirePodWatchApi();
+}
+function wirePodWatchApi() {
+  // §2.6.3: the IFrame Player API is enabled on the embed for
+  // exactly one purpose — its error events are the refusal seam.
+  // The API script loads on the watch paint only; the player
+  // adopts the standing frame (its src carries enablejsapi=1).
+  var frame = view.querySelector('iframe.podwatch-frame');
+  if (!frame) return;
+  var make = function () {
+    if (!podWatch || !window.YT || !YT.Player) return;
+    try {
+      podWatchPlayer = new YT.Player(frame, { events: { onError: function (e) { podWatchOnError(e && e.data); } } });
+    } catch (e) { /* no API, no seam — the frame and the standing act still stand */ }
+  };
+  if (window.YT && YT.Player) { make(); return; }
+  var prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function () { if (prev) prev(); make(); };
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+}
+function podWatchOnError(code) {
+  // §2.6.3: error codes 100, 101, and 150 (not found / embedding
+  // refused by the owner) stand the authored line and empty the
+  // frame seat — the refused frame's own message does not stand
+  // beside the authored one. Other codes leave the frame
+  // standing (transient player errors are YouTube's to surface).
+  if (code !== 100 && code !== 101 && code !== 150) return;
+  var seat = view.querySelector('.watchframe-wrap');
+  if (seat) seat.innerHTML = '';
+  var line = document.getElementById('podwatch-err');
+  if (line) { line.textContent = 'YouTube won\u2019t play this one inside the app \u2014 open it in YouTube instead.'; line.style.display = ''; }
+}
+function closeWatch() {
+  // §2.6.2: the one named teardown act — destroys the iframe
+  // element, clears the standing watch record, and (when the
+  // watch view is the standing view) repaints the series page
+  // from its standing payload at its standing place. Called
+  // from exactly four seats: the watch's own back act (and the
+  // system-back dispatch that reaches it), any tab switch, the
+  // audio play choke point (loadDescAudio / resumeCurrent /
+  // the Now Playing sheet's open), and the series page's own
+  // re-entry. Teardown, not an IFrame-API pause: a destroyed
+  // frame cannot sound, full stop.
+  if (!podWatch) return;
+  var y = podWatch.scroll || 0;
+  podWatch = null;
+  podWatchPlayer = null;
+  var f = view.querySelector('iframe.podwatch-frame');
+  if (f) f.remove();
+  if (state.tab === 'podcasts' && podLevel === 'watch') {
+    paintPodcastVideos();
+    armPodScroll(y);
+  }
 }
 function paintPodcasts() {
   var res = state.podcasts;
@@ -5037,6 +5212,7 @@ function npDuration() {
   return 0;
 }
 function openNowPlaying() {
+  closeWatch(); // v434 §2.6.2 seat 3: the sheet's open act joins the audio choke point — a standing watch frame is torn down first
   var old = document.querySelector('.np-sheet');
   if (old) old.remove();
   if (!state.current) return;
@@ -5880,6 +6056,13 @@ function handleSystemBack() {
   // rides this same arm ('__episodes' is a block view).
   if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'block') {
     goListenHome(state.prayersView.block);
+    return;
+  }
+  // 3a. Watch arm (v434 §2.6.2 seat 1): the Podcasts watch
+  // view's back act is closeWatch — the same function the
+  // back disc's tap calls (one act, two triggers).
+  if (state.tab === 'podcasts' && podLevel === 'watch') {
+    closeWatch();
     return;
   }
   // 3. Series arm (D-421-1): the Podcasts series page

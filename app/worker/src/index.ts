@@ -57,6 +57,11 @@ export interface Env {
   // seam per feed). Production leaves it unset; the pinned feed
   // URL below governs.
   EXT_RIY_FEED_URL?: string;
+  // v434 harness seam, same rule: a fixture-feed override for the
+  // Podcasts section's CatholicTV video series build (the YouTube
+  // channel feed). Production leaves it unset; the pinned feed
+  // URL below governs.
+  EXT_YT_CATHOLICTV_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -1583,7 +1588,201 @@ async function podIndexPayload(env: Env): Promise<unknown> {
       showImageUrl: p.showImageUrl, showDesc: p.showDesc,
     });
   }
+  // v434 §2.1 (F-434-5): the VIDEO series append AFTER the audio
+  // loop — CatholicTV's seat, fourth and last, is guaranteed by
+  // construction, and the audio entries' order and shape are
+  // byte-untouched (they carry no kind field; the video entry
+  // carries kind: "video" — F-434-I4's wire form).
+  for (const vdef of POD_VIDEO_SERIES_LIST) {
+    seriesList.push(await podVideoIndexEntry(env, vdef));
+  }
   return { ok: true, seriesList };
+}
+
+// ---- Podcasts VIDEO series (v434) ---------------------------------
+// Plan §2: a video series is a NEW KIND of entry in the Podcasts
+// series list, not a fourth audio def — the audio machinery (the
+// day-sequence build, podcast_listens marks, the derived current
+// episode, downloads) does not fit a video list and does not apply
+// to it. The source is the channel's YouTube uploads feed (Atom),
+// read by the Worker into a D1 snapshot on the standing
+// read-to-refresh pattern (the podSequence precedent): the read
+// path is the refresh path, a failed rebuild serves the standing
+// snapshot, no snapshot at all is the series' unavailable surface.
+// Streaming only: no downloads, no marks, no positions, no queue.
+const YT_CATHOLICTV_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCORAZZmab8apqy2TMHZlZVQ";
+const VIDEO_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
+
+interface PodVideoSeriesDef {
+  key: string; title: string;
+  feedUrl: (env: Env) => string;
+}
+const POD_VIDEO_SERIES_LIST: PodVideoSeriesDef[] = [
+  { key: "catholictv", title: "CatholicTV", feedUrl: (env) => env.EXT_YT_CATHOLICTV_FEED_URL || YT_CATHOLICTV_FEED_URL },
+];
+function podVideoSeriesDef(key: string): PodVideoSeriesDef | null {
+  return POD_VIDEO_SERIES_LIST.find((d) => d.key === key) ?? null;
+}
+
+interface YtVideo { id: string; title: string; url: string; publishedMs: number; imageUrl: string | null; descText: string | null }
+
+// The Atom parser (§2.2). The standing extParseFeed is RSS 2.0
+// only — it throws on a document without <channel>/<item> — and
+// the YouTube channel feed is Atom (<feed>/<entry>, yt:videoId,
+// media:group thumbnails), so the video path carries its own
+// parser under the same regex discipline (extXmlText decoding
+// throughout). An entry without a yt:videoId is skipped (it has
+// no identity to stand on); a document that yields ZERO entries
+// throws — an empty parse is a failed rebuild, never an emptied
+// list.
+function ytParseFeed(xml: string): YtVideo[] {
+  if (!/<feed[\s>]/.test(xml)) throw new Error("video feed parse failed");
+  const videos: YtVideo[] = [];
+  const entryRe = /<entry(?:\s[^>]*)?>([\s\S]*?)<\/entry>/g;
+  let m: RegExpExecArray | null;
+  while ((m = entryRe.exec(xml))) {
+    const body = m[1];
+    const idM = /<yt:videoId>([\s\S]*?)<\/yt:videoId>/.exec(body);
+    const id = idM ? extXmlText(idM[1]) : "";
+    if (!id) continue;
+    const titleM = /<title>([\s\S]*?)<\/title>/.exec(body);
+    let url = "";
+    const linkM = /<link\b[^>]*rel="alternate"[^>]*>/.exec(body) || /<link\b[^>]*>/.exec(body);
+    if (linkM) {
+      const hm = /href="([^"]*)"/.exec(linkM[0]);
+      if (hm) url = extXmlText(hm[1]);
+    }
+    if (!url) url = "https://www.youtube.com/watch?v=" + id;
+    const pubM = /<published>([\s\S]*?)<\/published>/.exec(body);
+    const pubMs = pubM ? Date.parse(pubM[1].trim()) : NaN;
+    // The row's thumbnail: the LARGEST media:thumbnail the group
+    // carries, referenced from YouTube's image hosts, never
+    // re-hosted (v413 §1.3.1's rule).
+    let imageUrl: string | null = null;
+    let bestW = -1;
+    const thRe = /<media:thumbnail\b[^>]*>/g;
+    let tm: RegExpExecArray | null;
+    while ((tm = thRe.exec(body))) {
+      const um = /url="([^"]*)"/.exec(tm[0]);
+      if (!um) continue;
+      const wm = /width="(\d+)"/.exec(tm[0]);
+      const w = wm ? Number(wm[1]) : 0;
+      if (w > bestW) { bestW = w; imageUrl = extXmlText(um[1]) || null; }
+    }
+    const descM = /<media:description>([\s\S]*?)<\/media:description>/.exec(body);
+    const descText = descM ? (extStripDesc(descM[1]) || null) : null;
+    videos.push({
+      id, title: titleM ? extXmlText(titleM[1]) : "", url,
+      publishedMs: Number.isFinite(pubMs) ? pubMs : 0,
+      imageUrl, descText,
+    });
+  }
+  if (!videos.length) throw new Error("video feed parse produced no entries");
+  // Newest first (the feed serves them so; the sort makes the
+  // payload honest regardless of the served order).
+  videos.sort((a, b) => b.publishedMs - a.publishedMs);
+  return videos;
+}
+
+async function ytFetchFeedText(url: string): Promise<string> {
+  // The standing transport posture (extFetchFeed's): the Worker's
+  // own fetch under a 15 s abort — the feed sends no CORS header
+  // and the client never touches it (§1.3).
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(url, { headers: { "user-agent": "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
+    if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
+    return await res.text();
+  } finally { clearTimeout(timer); }
+}
+
+interface VideoSnapshot { videos: YtVideo[]; builtAt: string }
+async function videoReadSnapshot(env: Env, def: PodVideoSeriesDef): Promise<VideoSnapshot | null> {
+  const row = await env.DB.prepare("SELECT payload FROM video_snapshots WHERE series=?").bind(def.key).first<{ payload: string }>();
+  if (!row) return null;
+  try {
+    const p = JSON.parse(row.payload) as VideoSnapshot;
+    if (!Array.isArray(p.videos) || typeof p.builtAt !== "string") return null;
+    return p;
+  } catch { return null; }
+}
+// The read path is the refresh path (§2.2, mirroring podSequence
+// clause for clause): fresh snapshot → served, no fetch · stale
+// or missing → rebuild attempted; on success the snapshot is
+// replaced and served · on failure the standing snapshot is
+// served with stale: true · no snapshot at all → null (the
+// series' unavailable surface). The refresh triggers are the
+// read paths only — the video series payload read and the
+// Podcasts index read (podVideoIndexEntry below) — no cron.
+async function videoSequence(env: Env, def: PodVideoSeriesDef): Promise<{ snap: VideoSnapshot; stale: boolean } | null> {
+  const snap = await videoReadSnapshot(env, def);
+  if (snap && Date.now() - Date.parse(snap.builtAt) < VIDEO_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
+  try {
+    const xml = await ytFetchFeedText(def.feedUrl(env));
+    const videos = ytParseFeed(xml);
+    const builtAt = nowISO();
+    const snapFull: VideoSnapshot = { videos, builtAt };
+    await env.DB.prepare(
+      `INSERT INTO video_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+       ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+    ).bind(def.key, JSON.stringify(snapFull), builtAt).run();
+    return { snap: snapFull, stale: false };
+  } catch {
+    if (snap) return { snap, stale: true };
+    return null;
+  }
+}
+
+// §2.5: the date form — the published instant rendered
+// "Mon D, YYYY" in America/Chicago (the estate's standing
+// timezone), built with the tree's standing Intl discipline. A
+// Mass posted late Saturday UTC is Saturday's in Chicago, and
+// the label says so; the row never shows a raw ISO string or a
+// UTC date. Derived at payload build, never stored (a stored
+// label would freeze a timezone form into the snapshot).
+function videoDateLabel(publishedMs: number): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric",
+  }).format(new Date(publishedMs));
+}
+
+interface PodVideoPayload {
+  ok: boolean; kind: "video"; series: string; title: string; available: boolean;
+  stale: boolean; builtAt: string | null;
+  videos: { id: string; title: string; url: string; publishedMs: number; dateLabel: string; imageUrl: string | null; descText: string | null }[];
+}
+async function podVideoPayload(env: Env, def: PodVideoSeriesDef): Promise<PodVideoPayload> {
+  const seq = await videoSequence(env, def);
+  if (!seq) {
+    return { ok: true, kind: "video", series: def.key, title: def.title, available: false, stale: false, builtAt: null, videos: [] };
+  }
+  return {
+    ok: true, kind: "video", series: def.key, title: def.title, available: true,
+    stale: seq.stale, builtAt: seq.snap.builtAt,
+    videos: seq.snap.videos.map((v) => ({
+      id: v.id, title: v.title, url: v.url, publishedMs: v.publishedMs,
+      dateLabel: videoDateLabel(v.publishedMs), imageUrl: v.imageUrl, descText: v.descText,
+    })),
+  };
+}
+
+// The index entry (§2.1): built from the same videoSequence read
+// as the series payload, exactly as the audio index builds each
+// audio entry from its own sequence read — the index and the
+// series page can never disagree. latestLabel is the newest
+// video's dateLabel (§2.5's card meta); showImageUrl is the
+// newest video's thumbnail (the freshest honest art the payload
+// holds; the client's standing self-removing <img> over the
+// navy ♫ tile covers its absence exactly as the audio cards).
+async function podVideoIndexEntry(env: Env, def: PodVideoSeriesDef): Promise<unknown> {
+  const seq = await videoSequence(env, def);
+  const newest = seq && seq.snap.videos.length ? seq.snap.videos[0] : null;
+  return {
+    kind: "video", series: def.key, title: def.title, available: !!seq,
+    latestLabel: newest ? videoDateLabel(newest.publishedMs) : null,
+    showImageUrl: newest ? newest.imageUrl : null,
+  };
 }
 
 // ---- Wallpaper library (v386 §2.3) -----------------------------------
@@ -1768,6 +1967,11 @@ export default {
         // payload; an unknown series answers 400.
         const doorSeries = url.searchParams.get("series");
         if (doorSeries === null) return json(await podIndexPayload(env));
+        // v434 §2.1: the door read mirrors the session read — a
+        // VIDEO series key routes to the video payload builder
+        // before the audio def lookup.
+        const doorVideoDef = podVideoSeriesDef(doorSeries);
+        if (doorVideoDef) return json(await podVideoPayload(env, doorVideoDef));
         const doorDef = podSeriesDef(doorSeries);
         if (!doorDef) return err(400, "unknown series");
         return json(await podPayload(env, doorDef));
@@ -1993,6 +2197,11 @@ export default {
           // answers 400.
           const readSeries = url.searchParams.get("series");
           if (readSeries === null) return json(await podIndexPayload(env));
+          // v434 §2.1: a VIDEO series key routes to the video
+          // payload builder BEFORE the audio def lookup; an
+          // unknown key keeps the base behavior exactly.
+          const readVideoDef = podVideoSeriesDef(readSeries);
+          if (readVideoDef) return json(await podVideoPayload(env, readVideoDef));
           const readDef = podSeriesDef(readSeries);
           if (!readDef) return err(400, "unknown series");
           return json(await podPayload(env, readDef));

@@ -606,6 +606,16 @@ img.rowart { object-fit:cover; display:block; }
 .blockpage-head .meta { color:var(--bar-sub); }
 .blockpage-dlnote { margin-top:4px; }
 .podpage-head { margin:0 0 12px; }
+/* v434 §2.6.1: the Podcasts watch view — the frame's seat is a
+   stable full-width 16:9 box; the frame exists only while the
+   view stands (created at its paint, destroyed by closeWatch).
+   a.btn mirrors button.btn/button.btn.ghost so the standing
+   Open in YouTube anchor wears the same dress. */
+.watchtitle { font-size:19px; font-weight:600; margin:0 0 10px; }
+.watchframe-wrap { position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden; margin:0 0 10px; }
+.watchframe-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+a.btn { display:inline-flex; align-items:center; font-family:var(--sans); background:var(--navy); color:var(--cream); border:none; border-radius:999px; padding:10px 20px; font-size:15px; font-weight:600; min-height:44px; text-decoration:none; cursor:pointer; }
+a.btn.ghost { background:none; color:var(--navy); border:1px solid var(--line); padding:9px 16px; font-weight:400; }
 .sortrow { margin:0 0 10px; }
 /* v417 §2.9 (FD8): the polish density on prow rows — tighter
    padding and row gap; text sizes all stand (D1). §2.4's
