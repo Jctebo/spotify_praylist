@@ -509,7 +509,7 @@ try {
   const mIdx = await menuShape();
   const grpStart = mIdx.map((r, i) => (r.head ? i : -1)).filter((i) => i >= 0).pop();
   const tail = mIdx.slice(grpStart + 1);
-  const secAt = tail.findIndex((r) => ["Prayers", "Conscience", "Formation", "Sacred Art", "Settings"].includes(r.label));
+  const secAt = tail.findIndex((r) => ["Praylist", "Prayers", "Conscience", "Formation", "Sacred Art", "Settings"].includes(r.label));
   const grp = (secAt >= 0 ? tail.slice(0, secAt) : tail).map((r) => `${r.label}${r.state ? "|" + r.state : ""}`);
   ok(JSON.stringify(grp) === JSON.stringify(["The Exorcist Files", "The Counsel of Trent", "The AI Signal", "Courses|\u203a", "Video & more|\u203a"]),
     `C4: on the Podcasts side the standing group is that side's series in full, then the other two sides under FULL names (got ${JSON.stringify(grp)})`);
