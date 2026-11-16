@@ -85,6 +85,7 @@ function setRate(r) {
   if (SPEED_SET.indexOf(r) < 0) return;
   state.rate = r;
   audioEl.playbackRate = r;
+  if (oraNativeMode()) nativeTransportSend({ command: 'setRate', rate: r }); // v466: the engine's rate follows the one global rate
   try { localStorage.setItem('opn-speed-v336', String(r)); } catch (e) {}
   updatePositionState();
   updateNowPlaying();
@@ -978,9 +979,20 @@ function updatePositionState() {
    audioEl.paused alone. v388: the element is the only transport
    there is — the predicates read it alone. */
 function transportPlaying() {
+  // v466: under the native engine the mirror is the truth.
+  if (oraNativeMode()) return !!(nativeMirror && nativeMirror.playing);
   return !audioEl.paused;
 }
 function pauseTransport() {
+  if (oraNativeMode()) {
+    // v466: the pause is a command to the engine — and the
+    // v461 cancel re-seated: a pause issued while a native
+    // start pends retires its intent here, at the one pause
+    // seat every surface funnels through.
+    state.pendingStart = null;
+    nativeTransportSend({ command: 'pause' });
+    return;
+  }
   audioEl.pause();
   pushNativeState(false); // v377 B2: pause is a push trigger
 }
@@ -1075,13 +1087,23 @@ function startDesc(desc) {
   paintWaitLine();
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
-  state.pendingStart = desc; // v461 F1: the start's intent stands readable from this instant until the play event lands (every start funnels through here — one seat governs them all)
+  state.pendingStart = desc; // v461 F1: the start's intent stands readable from this instant until the play event lands (every start funnels through here — one seat governs them all) · v466: the seat stands for the native start too — the branch below sends the contract instead of loading the element, and the ack that clears this is the engine's playing state event (applyNativeState)
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
   setMediaSessionFor(desc);
   setPlaybackState('playing');
   markPlaying(desc.episodeId);
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
+  // v466 Fork B: in the native shell the start's engine act is
+  // the contract send, here at the funnel's tail — every
+  // bookkeeping seat above (the position seams, the pending
+  // start, the snapshot) has run exactly as it runs for the
+  // element, and the skip-away saves above read the element
+  // and so stand down on their own guards (the service writes
+  // the outgoing position back from its own published value).
+  // The send refuses only an unresolvable start; the element
+  // path below then runs as the fallback.
+  if (oraNativeMode() && nativeSendContract(desc)) return;
   // v392 W4: a podcast descriptor resolves cache-first — the
   // downloaded blob when one stands under its pod: key, the
   // enclosure stream exactly as before when none does.
@@ -1150,6 +1172,16 @@ function resumeCurrent() {
   // v388: the element resume stands for every current — the
   // speech-phase resume leg retires with the machinery.
   if (!state.current) { setPlaybackState('none'); return; }
+  if (oraNativeMode()) {
+    // v466: a resume is a play command to the engine; the
+    // pending start names it until the playing ack lands.
+    if (nativeMirror && nativeMirror.playing) { reassertMediaSession(); return; }
+    fadeRestore(); // v320 §2.6 restore point (3)
+    reassertMediaSession();
+    state.pendingStart = state.current;
+    nativeTransportSend({ command: 'play' });
+    return;
+  }
   if (!audioEl.paused) { reassertMediaSession(); return; }
   fadeRestore(); // v320 §2.6 restore point (3) stands: exactly one fade restore per system resume
   reassertMediaSession();
@@ -1329,6 +1361,14 @@ function startQueue(descs, force) {
 }
 function advanceQueue(dir) {
   if (!state.queue.length) return false;
+  if (oraNativeMode()) {
+    // v466: the engine advances through its loaded window;
+    // the client's queue bookkeeping follows on the state
+    // events (applyNativeState). At the window's end the
+    // engine's stopped publish runs the terminal clear.
+    nativeTransportSend({ command: dir > 0 ? 'next' : 'previous' });
+    return true;
+  }
   var i = state.queueIdx + dir;
   while (i >= 0 && i < state.queue.length) {
     var live = queueLiveDesc(state.queue[i]);
@@ -1351,6 +1391,18 @@ function jumpQueueTo(i) {
   if (i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId) {
     if (state.pendingStart) { cancelPendingStart(); return; } // v461 F1: the standing current here is by construction the pending start — a toggle cancels it
     if (transportPlaying()) pauseTransport(); else resumeCurrent();
+    return;
+  }
+  if (oraNativeMode()) {
+    // v466: a jump re-sends the contract at the new index
+    // through the one start funnel (the engine reloads its
+    // window headed at the target) — a deliberate tap pays a
+    // reload; next/previous stay the cheap commands.
+    var liveN = queueLiveDesc(desc);
+    if (!liveN) { markSkipped(desc.episodeId); return; }
+    state.queue[i] = liveN;
+    state.queueIdx = i;
+    startDesc(liveN);
     return;
   }
   var live = queueLiveDesc(desc);
@@ -1622,6 +1674,7 @@ function autoplayOn() {
 function setAutoplay(on) {
   try { localStorage.setItem(AUTOPLAY_KEY, on ? 'on' : 'off'); } catch (e) {}
   syncAutoplayToggles();
+  if (oraNativeMode()) nativeTransportSend({ command: 'autoplay', on: !!on }); // v466: the engine re-windows (the chain tail joins or leaves)
 }
 function syncAutoplayToggles() {
   var on = autoplayOn();
@@ -1905,8 +1958,8 @@ function measureBars() {
 function updateDockProgress() {
   var f = document.getElementById('dock-progress-fill');
   if (!f) return;
-  var d = audioEl.duration;
-  f.style.width = (isFinite(d) && d > 0) ? ((audioEl.currentTime / d) * 100) + '%' : '0%';
+  var pp = playPos(); // v466: the element's read, or the native mirror's
+  f.style.width = pp.dur > 0 ? ((pp.pos / pp.dur) * 100) + '%' : '0%';
 }
 function updateDock() {
   var dock = document.getElementById('dock');
@@ -2002,16 +2055,18 @@ function armSleepMinutes(n) {
   if (fade.started) fadeRestore();
   state.sleep = { mode: 'minutes', presetMin: n, deadlineMs: Date.now() + n * 60000 };
   nativeSleepArm(state.sleep.deadlineMs); // v412 Fix 14
+  if (oraNativeMode()) nativeTransportSend({ command: 'sleepTrackEnd', on: false }); // v466: a minutes arm replaces any track arm on the engine too
   updateSleepLabel();
 }
 function armSleepTrack() {
   if (fade.started) fadeRestore();
   state.sleep = { mode: 'track' };
   nativeSleepClear(); // v412 Fix 14: a track arm carries no deadline — any standing native deadline clears
+  if (oraNativeMode()) nativeTransportSend({ command: 'sleepTrackEnd', on: true }); // v466: the engine holds the track arm (its one-shot pause at the advance)
   updateSleepLabel();
 }
 // v412 Fix 14: the native clear rides every disarm (incl. fireTimedStop + sleepTrackEnd).
-function disarmSleep() { state.sleep = { mode: 'off' }; nativeSleepClear(); }
+function disarmSleep() { state.sleep = { mode: 'off' }; nativeSleepClear(); if (oraNativeMode()) nativeTransportSend({ command: 'sleepTrackEnd', on: false }); }
 function fireTimedStop() {
   // §2.4, in order: pause (the pause handler saves the resume point;
   // the timer adds no save of its own) · disarm · fade restore · label.
@@ -2019,7 +2074,14 @@ function fireTimedStop() {
   // no pause call, no resume write; the fade restore still runs.
   // v388: the element pause stands alone — no speech phase
   // exists for an expiry to land inside.
-  if (!audioEl.paused && state.current) audioEl.pause();
+  if (oraNativeMode()) {
+    // v466: the pause is the engine command (the service's
+    // own deadline leg is the belt behind this page timer);
+    // a pending native start retires through the F1 cancel.
+    if (transportPlaying() && state.current) pauseTransport();
+    else if (state.pendingStart) cancelPendingStart();
+  }
+  else if (!audioEl.paused && state.current) audioEl.pause();
   else if (state.pendingStart) cancelPendingStart(); // v461 F6: a deadline landing inside the load window retires the pending start's intent through F1's cancel — the start cannot complete into playback past its deadline
   disarmSleep();
   fadeRestore();
@@ -6362,6 +6424,13 @@ function openNowPlaying() {
   });
   bar.addEventListener('change', function () {
     npScrubbing = false;
+    if (oraNativeMode()) {
+      // v466: a scrub is a seek command to the engine.
+      var ndur = npDuration();
+      if (ndur > 0) nativeTransportSend({ command: 'seekTo', positionS: Math.max(0, Math.min(ndur, ndur * Number(bar.value) / 1000)) });
+      updateNpSeek();
+      return;
+    }
     var dur = audioEl.duration;
     if (isFinite(dur) && dur > 0) {
       var target = dur * Number(bar.value) / 1000;
@@ -6420,7 +6489,7 @@ function updateNpSeek() {
   var bar = sheet.querySelector('#np-seek');
   if (!bar) return;
   var dur = npDuration();
-  var pos = audioEl.currentTime || 0;
+  var pos = playPos().pos; // v466: the element's read, or the native mirror's
   if (dur > 0) {
     bar.disabled = false;
     bar.value = String(Math.round(1000 * Math.min(pos, dur) / dur));
@@ -6988,6 +7057,11 @@ function nativeStatePayload(stopped) {
   return payload;
 }
 function pushNativeState(stopped) {
+  // v466: in native mode the page pushes NOTHING — the engine
+  // publishes its own state, and a page push would arbitrate
+  // against it at the face. Every standing caller (the push
+  // triggers, the acks, the failure notes) quiets here.
+  if (oraNativeMode()) return;
   try {
     var p = oraBridgePlugin();
     if (!p || !p.setPlaybackState) return;
@@ -7076,7 +7150,14 @@ function previousWithRule() {
   // bridge's former single-play restart retires into the one
   // rule). The rule reads the element.
   if (!state.queue.length) return;
-  if (state.current && (audioEl.currentTime || 0) > 3) { audioEl.currentTime = 0; return; }
+  if (state.current && playPos().pos > 3) {
+    // v466: the restart reads and writes through playPos's
+    // seat — the element in the page engine, a seek command
+    // to the native engine.
+    if (oraNativeMode()) nativeTransportSend({ command: 'seekTo', positionS: 0 });
+    else audioEl.currentTime = 0;
+    return;
+  }
   advanceQueue(-1);
 }
 function seekBy(deltaS) {
@@ -7085,6 +7166,14 @@ function seekBy(deltaS) {
   // at the duration, backward at zero. The Now Playing ±10 s
   // buttons call it with ±10; the system handlers pass their
   // seekOffset through it unchanged.
+  if (oraNativeMode()) {
+    // v466: the step lands on the engine, clamped by the
+    // mirror's position and duration.
+    var pp = playPos();
+    var target = deltaS >= 0 ? Math.min(pp.dur || 0, pp.pos + deltaS) : Math.max(0, pp.pos + deltaS);
+    nativeTransportSend({ command: 'seekTo', positionS: target });
+    return;
+  }
   if (deltaS >= 0) audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + deltaS);
   else audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) + deltaS);
 }
@@ -7111,8 +7200,12 @@ function handleTransportCommand(ev) {
   else if (cmd === 'previous') bridgePrevious();
   else if (cmd === 'seekTo') {
     // Seek is the standing element behavior (v388: no speech
-    // phase stands to make it inert).
-    if (state.current && ev.positionS != null) { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
+    // phase stands to make it inert). v466: under the native
+    // engine the command forwards to the engine instead.
+    if (state.current && ev.positionS != null) {
+      if (oraNativeMode()) nativeTransportSend({ command: 'seekTo', positionS: ev.positionS });
+      else { try { audioEl.currentTime = ev.positionS; } catch (e) {} }
+    }
   }
   else if (cmd === 'stop') { bridgeStop(); return; }
   else return;
@@ -7124,6 +7217,232 @@ function setupBridgeCommands() {
     if (!p || !p.addListener) return;
     p.addListener('transportCommand', handleTransportCommand);
   } catch (e) { /* no listener, no commands — the face still reports state */ }
+}
+/* ---------------- v466 Fork B: the native engine, the page as remote ----------------
+   With the v466 shell (APK 1.0.38+) the service's ExoPlayer is
+   the phone's engine and this page is its remote: a start sends
+   the resolved queue as a CONTRACT (setNativeQueue) instead of
+   loading the element; transport drives the session through
+   nativeTransport commands; the engine's truth returns as
+   nativeState events, mirrored here for every surface that
+   reads position or playing. The mode is a capability read —
+   the plugin stands AND carries the contract method — so a
+   plain browser and every older APK run the page engine
+   byte-for-byte as before (mixed-version safety: an old page
+   in the new shell never sends a contract and its pushes still
+   drive the WEB face; a new page in an old shell reads no
+   contract method and never sends one). Marks and positions
+   under the native engine are the SERVICE's write-backs (the
+   standing routes, from the service); this client's own
+   position saves stand down on their own guards (the element
+   never plays, so its position reads 0 and every save's
+   pos > 0 guard returns) — nothing double-posts. Day played
+   marks are device-local (v344), so the service drains them
+   through takeNativeCompletions and the page applies them
+   with its in-memory legs only, below. */
+var nativeMirror = null; // the last native state event, extrapolated by playPos: playing, positionS, durationS, rate, atMs, trackId, queueIndex
+var nativeContractDescs = []; // the standing contract's descriptors, parallel to its items
+function oraNativeMode() {
+  var p = oraBridgePlugin();
+  return !!(p && p.setNativeQueue && p.nativeTransport);
+}
+function nativeTransportSend(obj) {
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.nativeTransport) return;
+    var r = p.nativeTransport({ command: JSON.stringify(obj) });
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) { /* the remote can never fail the page */ }
+}
+function playPos() {
+  // The one position read for the progress surfaces: the
+  // element's, or the mirror's — extrapolated from the last
+  // native state event by the wall clock and the rate, the
+  // PlaybackState position rule mirrored client-side.
+  if (oraNativeMode() && nativeMirror) {
+    var age = (Date.now() - nativeMirror.atMs) / 1000;
+    var pos = nativeMirror.positionS + (nativeMirror.playing ? age * (nativeMirror.rate || 1) : 0);
+    var dur = nativeMirror.durationS || 0;
+    if (dur > 0 && pos > dur) pos = dur;
+    if (pos < 0) pos = 0;
+    return { pos: pos, dur: dur, ended: false };
+  }
+  return { pos: audioEl.currentTime || 0, dur: (isFinite(audioEl.duration) && audioEl.duration > 0 ? audioEl.duration : 0), ended: !!audioEl.ended };
+}
+function nativeContractItem(d) {
+  var subtitle = '';
+  if (intentionsOn()) { var intro = introForTrack(d); if (intro && intro.text) subtitle = intro.text; }
+  if (d.kind === 'podcast') {
+    var url = d.url || '';
+    if (!url || url.indexOf('blob:') === 0) {
+      // A minted blob URL is WebView-local — the contract
+      // carries the series entry's stream URL instead (the
+      // snapshot's pre-blob discipline). A podcast download
+      // (a Cache API blob) is unreachable natively; the
+      // stream form is the contract's form, a named delta.
+      url = '';
+      var entries = (state.podcasts && state.podcasts.entries) || [];
+      for (var i = 0; i < entries.length; i++) { if (entries[i].key === d.episodeId && entries[i].url) { url = entries[i].url; break; } }
+    }
+    if (!url) return null;
+    return { id: d.episodeId, kind: 'podcast', title: d.title || '', subtitle: subtitle, block: d.block || '',
+      mediaUri: url, needsAuth: false, durationS: d.durationS || 0, seriesKey: d.seriesKey || '', podSeries: d.podSeries || '' };
+  }
+  var t = oraSnapshotTrack(d, presentedDateStr() || '');
+  if (!t) return null;
+  return { id: t.id, kind: t.kind, title: t.title, subtitle: subtitle, block: t.block,
+    mediaUri: t.mediaUri, needsAuth: !!t.needsAuth, durationS: t.durationS || 0, seriesKey: '', podSeries: '' };
+}
+function nativeContractFor(desc) {
+  // The contract for the standing queue (or the single play):
+  // the queue's items resolved, the user queue's length as
+  // queueEnd, and — a day queue with autoplay on — the chain
+  // tail computed at send time (the unplayed day build after
+  // the queue's last item), exactly the chain the element
+  // engine would have appended as it advanced. An item that
+  // cannot resolve drops from the contract (its descriptor
+  // drops with it, so indices stay parallel); the START item
+  // unresolvable refuses the whole contract — the caller
+  // falls back to the page engine for that start.
+  var descs = state.queue.length ? state.queue.slice() : [desc];
+  var startIndex = state.queue.length ? state.queueIdx : 0;
+  if (startIndex < 0 || startIndex >= descs.length) startIndex = descs.indexOf(desc);
+  if (startIndex < 0) return null;
+  var isPod = desc.kind === 'podcast';
+  var items = [];
+  var kept = [];
+  for (var i = 0; i < descs.length; i++) {
+    var item = nativeContractItem(descs[i]);
+    if (!item) { if (i === startIndex) return null; continue; }
+    items.push(item); kept.push(descs[i]);
+  }
+  var newStart = kept.indexOf(desc);
+  if (newStart < 0) return null;
+  var queueEnd = items.length;
+  if (!isPod && autoplayOn()) {
+    var last = kept[kept.length - 1];
+    var all = state.dayDescs || [];
+    var li = -1;
+    for (var j = 0; j < all.length; j++) { if (all[j].episodeId === last.episodeId && (all[j].block || '') === (last.block || '')) li = j; }
+    if (li >= 0) {
+      var tail = unplayedOnly(all.slice(li + 1));
+      for (var k = 0; k < tail.length; k++) {
+        var ti = nativeContractItem(tail[k]);
+        if (ti) { items.push(ti); kept.push(tail[k]); }
+      }
+    }
+  }
+  return { descs: kept, contract: { form: isPod ? 'podcast' : 'day', day: presentedDateStr() || '', dateLabel: state.dateLabel || '',
+    series: isPod ? (desc.podSeries || '') : '', items: items, queueEnd: queueEnd, startIndex: newStart,
+    startPositionS: queueStartPos(desc), autoplay: autoplayOn(), rate: state.rate || 1,
+    stopAtTrackEnd: !!(state.sleep && state.sleep.mode === 'track') } };
+}
+function nativeSendContract(desc) {
+  // The start's engine act under Fork B, called at startDesc's
+  // tail: build the contract for the standing queue (its start
+  // position is queueStartPos — startDesc's body has already
+  // run the pendingResume seams, so the carry reads exactly as
+  // the element's seek would) and hand it to the shell.
+  // Returns false when no contract can be built — the funnel
+  // then loads the element as the fallback.
+  var built = nativeContractFor(desc);
+  if (!built) return false;
+  nativeContractDescs = built.descs;
+  try {
+    var p = oraBridgePlugin();
+    var r = p.setNativeQueue({ queue: JSON.stringify(built.contract) });
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) {}
+  return true;
+}
+function drainNativeCompletions() {
+  // The service's day marks, applied with the in-memory legs
+  // only: the played map's local write (writePlayedQuiet —
+  // the server has no day-mark route to re-post to) and the
+  // payload fold's delete, done directly here. Nothing posts:
+  // the service already wrote the 0/0 day-position row itself
+  // when it marked the track.
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.takeNativeCompletions) return;
+    var r = p.takeNativeCompletions({});
+    if (!r || !r.then) return;
+    r.then(function (res) {
+      var records = (res && res.records) || [];
+      if (!records.length) return;
+      records.forEach(function (rec) {
+        if (!rec || !rec.episodeId) return;
+        writePlayedQuiet(rec.episodeId, rec.date || presentedDateStr(), 'auto', rec.block || '');
+        if (state.dayPayload && state.dayPayload.dayPositions) delete state.dayPayload.dayPositions[rec.episodeId];
+      });
+      refreshPlayedChrome();
+    }).catch(function () {});
+  } catch (e) {}
+}
+function applyNativeState(json) {
+  var st = null;
+  try { st = JSON.parse(json || ''); } catch (e) { return; }
+  if (!st || st.engine !== 'native') return;
+  if (st.stopped) {
+    // The engine's terminal clear — bridgeStop's shape minus
+    // the command (the stop already happened natively).
+    nativeMirror = null;
+    nativeContractDescs = [];
+    if (state.current || state.queue.length) {
+      state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null;
+      setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
+    }
+    drainNativeCompletions();
+    return;
+  }
+  nativeMirror = { playing: !!st.playing, positionS: st.positionS || 0, durationS: st.durationS || 0,
+    rate: st.rate || 1, atMs: Date.now(), trackId: st.trackId || '', queueIndex: st.queueIndex || 0 };
+  if (st.rate && SPEED_SET.indexOf(st.rate) >= 0 && state.rate !== st.rate) {
+    // The engine's rate is the client's own (the contract
+    // carried it); a divergence is a controller-side change —
+    // adopt it so the next contract carries the truth.
+    state.rate = st.rate;
+    try { localStorage.setItem('opn-speed-v336', String(st.rate)); } catch (e) {}
+  }
+  var desc = nativeContractDescs[st.queueIndex];
+  if (desc && desc.episodeId === st.trackId) {
+    var changed = state.current !== desc;
+    if (changed) {
+      state.current = desc;
+      var qi = state.queue.indexOf(desc);
+      if (qi >= 0) state.queueIdx = qi;
+      setMediaSessionFor(desc);
+      markPlaying(desc.episodeId);
+    }
+    // The v461 ack, re-seated: a state event for the pending
+    // start's own track closes its window either way — playing
+    // (the start landed) or not (the engine refused or was
+    // paused at the gate; the intent is resolved, and no
+    // AbortError analog exists natively to name it).
+    if (state.pendingStart && state.pendingStart.episodeId === st.trackId) state.pendingStart = null;
+    setPlaybackState(st.playing ? 'playing' : 'paused');
+    updateDock();
+    if (changed) drainNativeCompletions();
+  }
+  updateDockProgress();
+  updateNpSeek();
+}
+function setupNativeState() {
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.addListener) return;
+    p.addListener('nativeState', function (ev) { applyNativeState(ev && ev.state); });
+  } catch (e) { /* no listener — the mirror simply never moves */ }
+}
+function nativeMirrorTick() {
+  // The standing 5 s interval's native leg: the element's
+  // timeupdate never fires under the native engine, so the
+  // mirror drives the progress surfaces and the queue
+  // snapshot's carry from here.
+  if (!oraNativeMode() || !nativeMirror || !state.current) return;
+  updateDockProgress();
+  updateNpSeek();
+  saveQueueSnapshot(Math.floor(playPos().pos));
 }
 /* ---------------- v421: the Android system back binding ----------------
    The shell's App plugin (@capacitor/app, §2.6) delivers
@@ -7200,7 +7519,7 @@ function setupBackButton() {
 }
 /* B2/B5: the 5 s tick — position refresh and the page's
    heartbeat in one. Pushes only while a current stands. */
-setInterval(function () { if (state.current) pushNativeState(false); }, 5000);
+setInterval(function () { nativeMirrorTick(); if (state.current) pushNativeState(false); }, 5000); // v466: the mirror tick rides the standing interval (a no-op outside native mode)
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -9641,6 +9960,7 @@ function openGuideEditor(guide) {
 
 setupMediaSession();
 setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
+setupNativeState(); // v466: the native engine's state channel (shell 1.0.38+ only; a no-op elsewhere)
 setupBackButton(); // v421: the Android system back binding (shell only; a guarded no-op elsewhere)
 setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }

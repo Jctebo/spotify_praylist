@@ -1,0 +1,41 @@
+ok - F1 statics: state.pendingStart declared in the state literal, null at birth
+ok - F1 statics: exactly ONE set seat (startDesc)
+ok - F1 statics: transportEngaged reads playing OR pending
+ok - F1 statics: cancelPendingStart clears first, then pauses
+ok - F2 statics: loadDescAudio passes the rejection through
+ok - F2 statics: the AbortError return stands ahead of the currency check and the fact report
+ok - F3 statics: writeDayPositionQuiet carries the in-memory fold leg (set + delete)
+ok - F3 statics: tapPlay branch order — pending cancel, playing toggle, paused resume, rebuild
+ok - F4 statics: the currency check stands at the cache chain head, before the mint
+ok - F6 statics: fireTimedStop gains the pending branch through the cancel helper
+note - extraction dropped: nativeMirror, nativeContractDescs, offlineEvict
+note - registrations appended verbatim: 9 (1 play + 7 pause + 1 dock-play)
+ok - F1 leg 1: the start stands pending (one play(), the flag names the current)
+ok - F1 leg 1: a disc tap in the window CANCELS — no second start, src untouched, the faces read paused
+ok - F1 leg 2: a dock tap in the window cancels the same way
+ok - F1 leg 3: during the window the element reads paused, the engaged read stands, and the dock glyph and the row disc AGREE (both ❚❚)
+ok - F1 leg 4: after a cancel, a fresh tap resumes the standing current — queue array, index, and src untouched, exactly one resume play()
+ok - F2 leg 1: AbortError — no retry, no key, no fact, no pass-over, no state touched
+ok - F2 leg 2: NotAllowedError — the fact stands, the retry key is set, exactly one retry start pends
+ok - F2 leg 3 (queue form): the second refusal passes over — the queue ADVANCES to the next entry (its own two attempts follow), then exhausts
+ok - F2 leg 3 (single form): the second refusal stops the single play, paused, its card showing why
+ok - F3 leg 1 (setup): the pause at 3:00 saved into the in-memory fold
+ok - F3 leg 1: the disc on the paused current RESUMES — queue array, index, src untouched; one resume play(); no startDesc
+ok - F3 leg 2: the save writes the fold in memory as it posts
+ok - F3 leg 2: a startDesc restart reads 180 from the fold — no refetch
+ok - F3 leg 3: position 0 deletes the fold entry — a finished prayer restarts at 0
+ok - F4 leg 1 (setup): two cache reads stand, the second start is current
+ok - F4 leg 1: the superseded read resolves late and DROPS — no load, no play, no mint against the dead start
+ok - F4 leg 2: the standing start’s own read passes the guard — it mints, loads, and plays
+ok - F6 leg 1: a deadline in the load window retires the pending start — disarmed, paused, no completion into playback
+ok - F6 leg 1 (late resolve): a pending play resolving after the deadline still leaves the player paused and disarmed
+ok - F6 leg 2: a deadline over ordinary playing pauses exactly as before
+ok - N1: the one Previous rule stands — > 3 s restarts the track, under steps back
+ok - N2: seekBy clamps at both ends, as built
+ok - N3: sleepTrackEnd holds the next head paused and UNSTARTED (src loaded, no play call), the arm disarmed
+ok - A1: the media-session play handler in the window is a no-op — no stacked play()
+ok - A1: the media-session pause handler in the window cancels the pending start
+ok - A2: the bridge play in the window is a no-op and the bridge pause cancels — the tail ack push stands
+ok - A2: a bridge play on a paused standing current RESUMES through resumeCurrent (no reload, no rebuild)
+---
+harness-v461: 37 passed, 0 failed
