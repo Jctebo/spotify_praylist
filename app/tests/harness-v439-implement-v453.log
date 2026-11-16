@@ -1,0 +1,18 @@
+ok   - P0: the APP_JS template evaluates (cooks) without error
+ok   - P1: the whole cooked APP_JS parses (vm.Script) — the gate v435 lacked
+ok   - P2: isOwnLogoUrl stands in the cooked script in its backslash-free spelling; the v435 derailment is gone
+ok   - A0: isOwnLogoUrl + realArtUrl evaluate out of the cooked script
+ok   - A1: the own-feed logo (https, lowercase host) reads as own
+ok   - A2: the own-feed logo (capital host) reads as own
+ok   - A3: the own-feed logo (protocol-relative) reads as own
+ok   - A4: /logo.png reads as own; empty and null do not
+ok   - A5: outside art does not read as own
+ok   - A6: realArtUrl — own logo yields null (the logo branch), real art passes through, no art yields null
+note - S census: single-backslash non-escape sequences inside APP_JS (cooking rewrites each): 0
+ok   - B1: boot — no pageerror on load
+ok   - B2: boot — the opn-boot stamp reads complete (the synchronous tail ran)
+ok   - B3: boot — the day fetch fires
+ok   - B4: boot — the Prayers home paints content into #view
+ok   - B5: boot — the gear responds and Settings paints
+
+harness-v439: 15 ok / 0 not-ok
