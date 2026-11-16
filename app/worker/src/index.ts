@@ -910,6 +910,17 @@ async function bookPayload(env: Env) {
   return { ok: true, groups };
 }
 
+// v470 §2.1/§2.2: the book favorites' read — the stored slugs
+// in stored order. An empty table is the standing state and
+// reads as an empty list; a missing table (pre-0028) reads
+// the same, never an error (the playerBlockOrder posture).
+async function bookFavorites(env: Env): Promise<string[]> {
+  try {
+    const r = await env.DB.prepare("SELECT slug FROM prayer_book_favorites ORDER BY sort_order").all<{ slug: string }>();
+    return (r.results ?? []).map((x) => x.slug);
+  } catch { return []; }
+}
+
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
 // The mapping as data: one row per source in player_source_settings,
 // seeded once by migration 0010 (the seed of record — the Worker
@@ -2304,6 +2315,16 @@ export default {
         ).bind(date, dayName, color, nowISO()).run();
         return json({ ok: true, date });
       }
+      if (seg[2] === "prayer" && seg[3] === "book" && seg[4] === "favorites" && request.method === "GET") {
+        // v470 §2.2: the door mirror of
+        // GET /api/prayer/book/favorites — the same body,
+        // read-only, so Review/Ship verify the stored
+        // favorites. No door write route exists; writes are
+        // John's, session-only (the v328 posture). This route
+        // stands BEFORE the book route below, whose seg[3]
+        // match would otherwise swallow the longer path.
+        return json({ ok: true, favorites: await bookFavorites(env) });
+      }
       if (seg[2] === "prayer" && seg[3] === "book" && request.method === "GET") {
         // v462 §2.3: the door mirror of GET /api/prayer/book —
         // the same bookPayload, read-only, so Review/Ship
@@ -2484,6 +2505,42 @@ export default {
           // family's other reads; NO PIN — the pinGate covers
           // the exam/confession families only.
           return json(await bookPayload(env));
+        }
+        if (seg[2] === "book" && seg[3] === "favorites" && request.method === "GET") {
+          // v470 §2.2: the favorites read — the stored slugs
+          // in stored order; an empty store reads as an empty
+          // list. Session-gated like the book's own read; NO
+          // PIN (the book carries none).
+          return json({ ok: true, favorites: await bookFavorites(env) });
+        }
+        if (seg[2] === "book" && seg[3] === "favorites" && request.method === "PUT") {
+          // v470 §2.2: John's favorites write, in the
+          // block-order PUT's discipline (v413 §2.2) verbatim
+          // in form: every slug validated against prayer_book,
+          // deduped preserving first occurrence, the rows
+          // replaced in one D1 batch with sort_order = index.
+          // Every validation is a named 400 that writes
+          // nothing. An empty array clears the list. The
+          // response is the stored list re-read.
+          const body = await request.json().catch(() => ({})) as { favorites?: unknown };
+          if (!Array.isArray(body.favorites)) return err(400, "favorites required");
+          const bookRows = await env.DB.prepare("SELECT slug FROM prayer_book").all<{ slug: string }>();
+          const bookSlugs = new Set((bookRows.results ?? []).map((x) => x.slug));
+          const slugs: string[] = [];
+          for (const raw of body.favorites) {
+            const slug = String(raw ?? "");
+            if (!bookSlugs.has(slug)) return err(400, `bad slug ${slug || "(empty)"}`);
+            if (!slugs.includes(slug)) slugs.push(slug);
+          }
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [env.DB.prepare("DELETE FROM prayer_book_favorites")];
+          slugs.forEach((slug, i) => {
+            stmts.push(env.DB.prepare(
+              "INSERT INTO prayer_book_favorites (slug, sort_order, updated_at) VALUES (?, ?, ?)",
+            ).bind(slug, i, ts));
+          });
+          await env.DB.batch(stmts);
+          return json({ ok: true, favorites: await bookFavorites(env) });
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
           const r = await env.DB.prepare(
