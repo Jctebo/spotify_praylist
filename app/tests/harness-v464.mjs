@@ -610,7 +610,10 @@ try {
     "C3: reopening the page, the partway row carries its progress bar");
   await page.evaluate(() => { const d = document.querySelectorAll("[data-podrow]")[0].querySelector("[data-podplay]"); if (d) d.click(); });
   let resumed = false;
-  try { await page.waitForFunction(() => document.getElementById("audio").currentTime >= 4.5, null, { timeout: 3000 }); resumed = true; } catch { resumed = false; }
+  // Settle window = the C3 block's own 20s discipline (leg-87 investigation, 2026-11-16): the assertion
+  // rides the loadedmetadata seek chain, whose latency is the environment's; a 3s budget measured that
+  // latency, not the resume value — every sibling media wait in this harness stands at 20s.
+  try { await page.waitForFunction(() => document.getElementById("audio").currentTime >= 4.5, null, { timeout: 20000 }); resumed = true; } catch { resumed = false; }
   ok(resumed, "C3: resuming the episode starts at the saved second (the position rides the payload into the descriptor)");
   await page.evaluate(() => { const a = document.getElementById("audio"); if (a) a.pause(); });
 
