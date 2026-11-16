@@ -1,0 +1,36 @@
+ok 1 - ST1 the worker-source diff vs the v459-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - ST2 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 3 - ST2 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 4 - ST3 standing v459 census: data-blockmenu = 0 on the served bundle (client.ts + ui.ts)
+ok 5 - ST3 standing v459 census: data-blockdl = 0 on the served bundle (client.ts + ui.ts)
+ok 6 - ST3 standing v459 census: blockpage-dlact = 0 on the served bundle (client.ts + ui.ts)
+ok 7 - ST3 standing v459 census: int-menu = 0 on the served bundle (client.ts + ui.ts)
+ok 8 - ST3 standing v459 census: sort-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 9 - ST3 standing v459 census: offline-dl-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 10 - ST3 standing v459 census: pod-offline-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 11 - ST3 standing v459 census: data-podfullpage = 0 on the served bundle (client.ts + ui.ts)
+ok 12 - ST3 standing v459 census: data-menuitem="1" = 0 on the served bundle (client.ts + ui.ts)
+ok 13 - ST4 Restore 1: the emission line stands byte-identical to its v458 lift, and id="int-fab" stands exactly once in the cooked script
+ok 14 - ST4 Restore 2: the two-line fab wiring stands byte-identical to its v458 lift, contiguous, opening openIntentionEditor(null)
+ok 15 - ST4 Restore 3: both .intfab dress rules stand byte-identical to their v458 lifts in ui.ts
+ok 16 - ST5 the universal menu is unedited: openHeaderMenu, openIntentionEditor and openSheetMenu are byte-identical to the v459-ship base
+ok 17 - ST6 the whole worker bundles clean (esbuild)
+ok 18 - ST6 (housekeeping): the SW pin stands at ora-pro-nobis-v459-1 (Ship moves it)
+ok 19 - D2 the Prayers home carries no #int-fab
+ok 20 - D2 a block page (Morning) carries no #int-fab
+ok 21 - D2 the episodes page carries no #int-fab
+ok 22 - D1 the Intentions paint seats #int-fab in its own output (class intfab, glyph +, aria-label 'Add an intention')
+ok 23 - D4 the base offset stands: position fixed, a 56px disc, computed bottom = tabh + 14px
+ok 24 - D4 the dock-on variant stands: with body.dock-on, computed bottom = tabh + dockh (60px) + 14px
+ok 25 - D3 a tap on the disc opens the add-intention editor sheet (the standing openIntentionEditor(null) sheet)
+ok 26 - D5 the universal menu's Intentions page group still stands first (head 'Intentions': Redraw · Add intention)
+ok 27 - D5 the menu's Add intention opens the same add sheet — two doors, one sheet
+ok 28 - D2 the Examination side carries no #int-fab
+ok 29 - D2 the Conscience side 'examination' carries no #int-fab
+ok 30 - D2 the Conscience side 'confession' carries no #int-fab
+ok 31 - D2 the Conscience side 'direction' carries no #int-fab
+ok 32 - D2 the Formation home carries no #int-fab
+ok 33 - D2 a Formation series page (Bible in a Year) carries no #int-fab
+ok 34 - D2 the Sacred Art tab carries no #int-fab (its sides paint only through the shell's wallpaper bridge; outside the shell the tab stands at its web fallback, no toggle, no disc)
+ok 35 - Z zero page errors across every leg
+# harness-v460: 35/35 passed
