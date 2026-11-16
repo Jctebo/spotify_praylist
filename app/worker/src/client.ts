@@ -8757,7 +8757,7 @@ function renderDirectionContent() {
   api('/api/exam/reflections').then(function (d) {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Spiritual Direction</h1><p class="sub">reflections gathered from your examinations</p></div></div>';
     var groups = d.groups || [];
-    if (!groups.length) html += '<div class="card"><p class="meta">No reflections yet. In the Examination, the entry form\'s switch marks an entry as a reflection; it gathers here.</p></div>';
+    if (!groups.length) html += '<div class="card"><p class="meta">No reflections yet. In the Examination, the entry form&rsquo;s switch marks an entry as a reflection; it gathers here.</p></div>';
     html += groups.map(function (g) {
       return '<h2 class="sectionhead">' + esc(longDateLabel(g.date)) + '</h2><div class="card">' + g.entries.map(function (e) { return reflectionEntryHtml(e, true); }).join('') + '</div>';
     }).join('');
