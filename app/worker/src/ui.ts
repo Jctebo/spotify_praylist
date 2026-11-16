@@ -52,13 +52,16 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="brandbar">
-  <img class="brandmark" src="/logo.png" alt="Ora Pro Nobis logo">
-  <div class="brandtext">
-    <div class="wordmark">ORA PRO NOBIS</div>
-    <div class="litday" id="litday"></div>
+<header class="brandbar" id="brandbar">
+  <div class="hdr-row1">
+    <img class="brandmark" src="/logo.png" alt="Ora Pro Nobis logo">
+    <div class="brandtext">
+      <div class="wordmark">ORA PRO NOBIS</div>
+      <div class="litday" id="litday"></div>
+    </div>
+    <button class="hdrmenu" id="hdr-menu" aria-label="Menu">&#9776;</button>
   </div>
-  <button class="gearbtn" id="gearbtn" aria-label="Settings">&#9881;</button>
+  <div class="hdr-row2" id="hdrrow2"></div>
 </header>
 <main id="view" class="view"></main>
 <audio id="audio" preload="none"></audio>
@@ -108,10 +111,36 @@ export const APP_CSS = `
 [data-lit="rose"] { --bar-bg:linear-gradient(135deg, #6d3441, #8a4453); --bar-solid:#6d3441; --bar-fg:#f9e9e4; --bar-sub:#eed3d7; --accent:#a34a5f; --accent-ink:#ffffff; --accent-text:var(--accent); }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); font-family: Georgia, 'Times New Roman', serif; font-size:17px; }
-.brandbar { position: sticky; top:0; z-index: 30; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:4px 14px; }
-.brandmark { width:38px; height:38px; border-radius:8px; }
-.wordmark { font-size:19px; letter-spacing:2.5px; color:var(--bar-fg); }
-.litday { font-size:13px; letter-spacing:.4px; margin-top:1px; color:var(--bar-fg); }
+.brandbar { position: sticky; top:0; z-index: 30; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:0; }
+.brandmark { width:38px; height:38px; border-radius:8px; flex:none; }
+.brandtext { min-width:0; }
+/* v457: the merged two-row header, in the color of the
+   day — row 1 carries the brand (the logo, the wordmark
+   shrunk to a small caps label, the DAY prominent under
+   it) with the menu act (the hamburger) alone at the
+   right; row 2 (#hdrrow2) carries each place's own line
+   (client.ts paintRow2Home / hdrBarHtml): title · date ·
+   the compact pages-menu pill at the right · the place's
+   acts. The header alone is frozen (the brandbar sticky
+   seat); the tabbed pages sit beneath it unfrozen. */
+.hdr-row1 { display:flex; align-items:center; gap:10px; padding:5px 14px 1px; }
+.hdr-row2 { display:flex; align-items:center; gap:8px; padding:1px 14px 7px; min-height:37px; }
+.hdr-row2:empty { display:none; }
+.wordmark { font-size:11px; font-weight:700; letter-spacing:2.2px; color:var(--bar-sub); }
+.litday { font-size:17px; font-weight:700; letter-spacing:.3px; margin-top:0; color:var(--bar-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hdrmenu { margin-left:auto; background:none; border:none; color:var(--bar-fg); font-size:21px; line-height:1; cursor:pointer; padding:0; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; flex:none; position:relative; }
+.hdrmenu::after { content:''; position:absolute; inset:-4px; }
+.hdr2-title { font-size:17px; font-weight:700; color:var(--bar-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hdr2-date { font-size:13.5px; color:var(--bar-sub); white-space:nowrap; }
+.hdr2-right { margin-left:auto; display:flex; align-items:center; gap:8px; flex:none; }
+.hdr2-back { display:inline-flex; align-items:center; gap:1px; background:none; border:none; padding:0 8px 0 0; min-height:36px; min-width:36px; cursor:pointer; color:var(--bar-fg); font-family:var(--sans); font-size:16px; flex:none; }
+.hdr2-back:active { opacity:.55; }
+.hdr2-chev { font-family:Georgia, 'Times New Roman', serif; font-size:24px; line-height:1; padding-bottom:3px; }
+.hdr2-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:112px; }
+.hdr2-act { background:none; border:none; box-shadow:none; color:var(--bar-fg); font-family:var(--sans); font-size:20px; line-height:1; height:36px; min-width:36px; padding:0 4px; cursor:pointer; flex:none; }
+.hdr2-act:active { opacity:.55; }
+#hdrrow2 .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); background:transparent; min-height:36px; padding:6px 12px; }
+#hdrrow2 .iconbtn { min-width:36px; min-height:36px; }
 .view { padding: 14px 12px 96px; max-width: 640px; margin: 0 auto; }
 .tabbar { position: fixed; left:0; right:0; bottom:0; z-index: 30; display:flex; background-color:var(--bar-solid); background:var(--bar-bg); padding-bottom: env(safe-area-inset-bottom); border-top:1px solid rgba(250,245,236,.25); box-shadow:0 -4px 14px rgba(42,38,32,.14); }
 /* v437 (§2.1): in the shell the WebView already stands
@@ -307,6 +336,15 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .segtoggle { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 12px; background:var(--card); }
 .segtoggle button { flex:1; font-family:inherit; font-size:15px; padding:8px; background:none; border:none; cursor:pointer; color:var(--muted); }
 .segtoggle button.active { color:var(--navy); box-shadow: inset 0 -2px 0 var(--accent); }
+/* v457 (Amendment 1): the pages menu in the header — the
+   one .segtoggle construction in its compact pill form,
+   standing right-aligned in row 2 on the bar ground,
+   taking less space: a translucent dark seat, the
+   standing side in cream. Compact height, not the 44px
+   touch rule the in-flow instances take. */
+.segtoggle.pill { margin:0; border:none; background:rgba(10,16,26,.28); border-radius:999px; padding:2px; flex:none; }
+.segtoggle.pill button { flex:none; min-height:30px; font-size:13.5px; padding:5px 11px; border-radius:999px; color:var(--bar-fg); opacity:.72; }
+.segtoggle.pill button.active { background:var(--cream); color:var(--navy); opacity:1; box-shadow:none; }
 /* v419 (G9): the Examination mode control is a second-row
    instance of the one segmented construction, in flow — it
    does not take the sticky rule (the tab's own segtoggle
@@ -358,6 +396,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .anchmenu { position:fixed; z-index:70; background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 32px rgba(42,38,32,.20); padding:6px; overflow-y:auto; animation:opnrise .18s ease; }
 .anchmenu h1.screen { font-size:12px; font-family:var(--sans); letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:4px 8px 6px; }
 .anchmenu .menurow { background:none; border:none; margin:0; border-radius:10px; font-size:15px; }
+/* v457: the header menu's group heads — quiet sans caps
+   lines between the navigation groups; not rows (no act,
+   a tap on one leaves the card open). */
+.menuhead { padding:10px 10px 3px; font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); }
+.menuhead:first-child { padding-top:4px; }
 /* v419 (G23): the confirm drawer — the act named in one
    serif sentence, Ghost Cancel + the Commit (danger where
    the act is destructive) in the foot bar. */
@@ -378,8 +421,6 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .count { font-size:14px; color:var(--accent-text); font-family:var(--sans); }
 .err { color:var(--danger); font-size:15px; }
 .about { margin-top:22px; font-size:14px; color:var(--muted); line-height:1.6; }
-.gearbtn { margin-left:auto; background:none; border:none; color:var(--bar-fg); font-size:20px; line-height:1; cursor:pointer; padding:0; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; flex:none; position:relative; }
-.gearbtn::after { content:''; position:absolute; inset:-4px; }
 .setrow { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; }
 .setrow .setname { font-size:17px; color:var(--navy); }
 .setcontrols { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
@@ -492,49 +533,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    disc — 44px, cream chevron, the Disc shadow — on every
    page that carries one. The text .backbtn retires. */
 .backdisc { width:44px; height:44px; border-radius:50%; border:none; background:var(--navy); color:var(--cream); font-family:inherit; font-size:22px; line-height:1; cursor:pointer; box-shadow:0 2px 6px rgba(42,38,32,.25); display:inline-flex; align-items:center; justify-content:center; padding:0 0 2px; flex:none; }
-/* v447: the iOS-style bar — one slim bar at the top of every
-   pushed page (client.ts iosBarHtml). The frozen layer is
-   the header alone (John, 2026-11-15 14:26 CT): the brand
-   bar, and on pushed pages this bar under it — sticky at
-   the brand height where it stands in the page flow; inside
-   a sticky host (#consbar / #pushbar) the host is the
-   frozen element and the bar stands static. (v448: the
-   .inhead seat inside the old block head retired with the
-   head band; no emission passes inhead now.)
-   Dress: the light iOS grey-white ground; the chevron, the
-   back name, and the right-side acts read var(--accent-text)
-   — the standing theme token that carries the day's
-   liturgical color for text on a light ground (§2.7); the
-   centered title reads the ink, bold. */
-.iosbar { display:flex; align-items:center; height:44px; padding:0 6px; background:#f8f8f6; border-bottom:1px solid var(--line); position:sticky; top:var(--brandh, 54px); z-index:25; margin:0 0 6px; }
-.iosbar-back { display:inline-flex; align-items:center; gap:1px; background:none; border:none; padding:0 8px 0 2px; min-height:44px; min-width:44px; cursor:pointer; color:var(--accent-text); font-family:var(--sans); font-size:17px; flex:none; position:relative; z-index:1; }
-.iosbar-back:active { opacity:.55; }
-.iosbar-chev { font-family:Georgia, 'Times New Roman', serif; font-size:25px; line-height:1; padding-bottom:3px; }
-.iosbar-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:112px; }
-.iosbar-title { position:absolute; left:50%; transform:translateX(-50%); max-width:44%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; font-size:17px; color:var(--ink); text-align:center; pointer-events:none; }
-.iosbar-right { margin-left:auto; display:flex; align-items:center; gap:6px; flex:none; position:relative; z-index:1; min-height:44px; }
-/* v447: the Conscience bar's host is the sticky box — a
-   sticky element travels only within its parent, and the
-   bar's own parent (this host) is exactly the bar's
-   height, so the host sticks at the brand height and the
-   bar inside it stands static. v448: the Prayers tab's
-   pushed-page host (#pushbar) takes the same seat — both
-   hosts stand BEFORE their tab's toggle, so the bar takes
-   the top slot and the toggle scrolls beneath it. */
-#consbar, #pushbar { position:sticky; top:var(--brandh, 54px); z-index:25; }
-#consbar .iosbar, #pushbar .iosbar { position:static; }
-/* v448: a host carrying a bar bleeds the view's 14px top
-   padding (the retired head's -14px seat), so the bar
-   stands flush under the brand bar at rest as well as
-   stuck; an empty host (the Prayers home) takes no bleed
-   and the home's geometry stands untouched. */
-#consbar:not(:empty), #pushbar:not(:empty) { margin-top:-14px; }
-/* v448: the bar's plain act dress (the block page's menu
-   act) — the glyph at bar height in the accent, no border,
-   no pill; its box stands wholly inside the bar. */
-.iosbar-act { background:none; border:none; box-shadow:none; color:var(--accent-text); font-family:var(--sans); font-size:20px; line-height:1; height:44px; min-width:44px; padding:0 6px; cursor:pointer; flex:none; }
-.iosbar-act:active { opacity:.55; }
-.iosbar .btn.ghost { color:var(--accent-text); border-color:transparent; background:transparent; }
+/* v457: the iOS bar family retired whole — the pushed
+   page's bar folds into the header's row 2 (client.ts
+   hdrBarHtml; the .hdr2-* dress at the brandbar rules).
+   The v447/v448 bar hosts and their dress stand nowhere
+   now. */
 .blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
 /* v448: the meta line stands in the scrolling body now —
    the body's own muted dress (the .meta measures). */
@@ -741,7 +744,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
    grid.) */
 @media (min-width:900px) {
   .view { max-width:860px; }
-  .brandbar { padding-left:max(14px, calc((100vw - 860px) / 2 + 12px)); padding-right:max(14px, calc((100vw - 860px) / 2 + 12px)); }
+  .hdr-row1, .hdr-row2 { padding-left:max(14px, calc((100vw - 860px) / 2 + 12px)); padding-right:max(14px, calc((100vw - 860px) / 2 + 12px)); }
 }
 `;
 

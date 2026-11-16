@@ -40,6 +40,29 @@ function applyLiturgical(day) {
     if (el) el.textContent = day.dateLabel || '';
     document.documentElement.removeAttribute('data-lit');
   }
+  pushStatusBarColor();
+}
+// v457 (D3): the phone's time bar takes the same color of
+// the day and follows it. As the theme is applied (this is
+// the one apply point), the app tells the shell the day's
+// color — the computed --bar-solid, the solid the merged
+// header itself reads — over the standing OraDayBridge, in
+// the standing guarded call shape: the bridge can never
+// fail the theme, and on the web, where the plugin does
+// not stand, the call is a no-op and the meta theme-color
+// stands as today. The shell paints its strip with the
+// color and sets the strip's icon appearance from its
+// luminance (APK 1.0.37's setStatusBarColor); the strip's
+// on-device follow is John's field check.
+function pushStatusBarColor() {
+  try {
+    var p = oraBridgePlugin();
+    if (!p || !p.setStatusBarColor) return;
+    var solid = getComputedStyle(document.documentElement).getPropertyValue('--bar-solid').trim();
+    if (!solid) return;
+    var r = p.setStatusBarColor({ color: solid });
+    if (r && r.catch) r.catch(function () {});
+  } catch (e) { /* the bridge can never fail the theme */ }
 }
 
 /* ---------------- Playback speed (v336) ----------------
@@ -2134,7 +2157,12 @@ var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
 var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone' };
 var sideScroll = {};
 function tabSideCfg(tab) {
-  if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination'], ['confession', 'Confession'], ['direction', 'Spiritual Direction']] };
+  // v457 (Amendment 2): a side's third element is its
+  // pages-menu short label, where one stands — the
+  // Conscience sides read Exam · Confess · Direction in
+  // the pill and in the header menu; the sides' page
+  // titles and bars keep the full names.
+  if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination', 'Exam'], ['confession', 'Confession', 'Confess'], ['direction', 'Spiritual Direction', 'Direction']] };
   if (tab === 'wallpaper') return { key: TAB_SIDE_WALLPAPER_KEY, def: 'phone', sides: [['phone', 'Phone'], ['watch', 'Watch']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Prayers'], ['intentions', 'Intentions']] };
 }
@@ -2153,8 +2181,11 @@ function writeTabSide(tab, side) {
 }
 function paintSideToggle(tab, current) {
   var cfg = tabSideCfg(tab);
-  return '<div class="segtoggle" id="sidetoggle">' + cfg.sides.map(function (s) {
-    return '<button data-side="' + s[0] + '"' + (s[0] === current ? ' class="active"' : '') + '>' + s[1] + '</button>';
+  // v457 (Amendment 1): the pages menu stands in the
+  // header's row 2 now, in the compact pill form; a side's
+  // short label (Amendment 2) paints where one stands.
+  return '<div class="segtoggle pill" id="sidetoggle">' + cfg.sides.map(function (s) {
+    return '<button data-side="' + s[0] + '"' + (s[0] === current ? ' class="active"' : '') + '>' + (s[2] || s[1]) + '</button>';
   }).join('') + '</div>';
 }
 function wireSideToggle(tab) {
@@ -2163,6 +2194,58 @@ function wireSideToggle(tab) {
   t.querySelectorAll('[data-side]').forEach(function (b) {
     b.addEventListener('click', function () { switchSide(tab, b.getAttribute('data-side')); });
   });
+}
+/* v457: the header's row 2 — the merged header's second
+   row (ui.ts #hdrrow2), painted by the surfaces that own
+   the place: paintRow2Home for a tab home (title · date ·
+   the compact pages-menu pill at the right · the home's
+   own act), paintRow2Plain for a title-only state (the
+   Conscience gate, the Sacred Art states), paintRow2Bar
+   for a pushed page (its back beside its title — the
+   v447/v448 bar, folded into the header). The row stands
+   inside the frozen header on every page; nothing else
+   freezes. */
+function hdrRow2() { return document.getElementById('hdrrow2'); }
+function row2HomeHtml(tab) {
+  var side = tabSideNow[tab];
+  var title = '', date = '', acts = '';
+  if (tab === 'prayers') {
+    title = side === 'intentions' ? 'Intentions' : 'Prayers';
+    if (side === 'intentions') {
+      acts = '<button class="iconbtn light" id="int-menu" aria-label="Intentions menu">\u2630</button>';
+    } else {
+      if (state.dayPayload && state.dayPayload.date) date = shortHomeDate(state.dayPayload);
+      acts = '<button class="btn ghost small" id="sort-btn" aria-label="Sort">\u2191\u2193</button>';
+    }
+  } else if (tab === 'conscience') {
+    var titles = { examination: 'Examination', confession: 'Confession', direction: 'Spiritual Direction' };
+    title = titles[side] || 'Examination';
+  } else if (tab === 'wallpaper') {
+    title = 'Sacred Art';
+  } else if (tab === 'podcasts') {
+    title = 'Formation';
+    acts = '<button class="btn ghost small" id="pod-offline-btn">Download for offline</button>';
+  }
+  var pill = tab === 'podcasts' ? '' : paintSideToggle(tab, side);
+  return '<span class="hdr2-title" id="hdr2-title">' + esc(title) + '</span>'
+    + (date ? '<span class="hdr2-date">' + esc(date) + '</span>' : '')
+    + '<span class="hdr2-right">' + pill + acts + '</span>';
+}
+function paintRow2Home(tab) {
+  var h = hdrRow2(); if (!h) return;
+  h.removeAttribute('data-barblock');
+  h.innerHTML = row2HomeHtml(tab);
+  wireSideToggle(tab);
+}
+function paintRow2Plain(title) {
+  var h = hdrRow2(); if (!h) return;
+  h.removeAttribute('data-barblock');
+  h.innerHTML = '<span class="hdr2-title" id="hdr2-title">' + esc(title) + '</span>';
+}
+function paintRow2Bar(o) {
+  var h = hdrRow2(); if (!h) return;
+  h.removeAttribute('data-barblock');
+  h.innerHTML = hdrBarHtml(o);
 }
 /* v447: the Conscience sides' bar — it stands in its own
    host, so the side paints, which replace the side host
@@ -2183,17 +2266,20 @@ function wireSideToggle(tab) {
    Prayers, its tap setTab('prayers')) stands retired
    with its wiring. */
 function paintConscienceBar(side) {
-  var host = document.getElementById('consbar');
-  if (!host) return;
-  // v453 §2: the third side reads its own title — the bar
-  // carries the title alone for every side (the v450 rule).
+  // v457: the bar folds into the header's row 2 — the row
+  // stands painted by paintMergedContainer (the side's
+  // title + the pill), and a side switch re-reads only the
+  // title. v453 §2: the third side reads its own title —
+  // the title alone for every side (the v450 rule), in the
+  // full name; the pill beside it reads the short label.
   var titles = { examination: 'Examination', confession: 'Confession', direction: 'Spiritual Direction' };
-  host.innerHTML = iosBarHtml({ title: titles[side] || 'Examination' });
+  var t = document.getElementById('hdr2-title');
+  if (t) t.textContent = titles[side] || 'Examination';
 }
 /* v448: the Prayers tab's pushed-page bar — the parallel
-   host to #consbar, filled by the block + episodes paints
-   and cleared by the home + Intentions paints (a null
-   html). The host carries the standing page's block key
+   host to the Conscience bar's, filled by the block +
+   episodes paints and cleared by the home + Intentions
+   paints (a null html). The host carries the standing page's block key
    (data-barblock): the settlement inserter's page-standing
    check reads it — the seat the retired .blockpage-head
    lookup read before this fix. The bar's back act wires
@@ -2201,9 +2287,15 @@ function paintConscienceBar(side) {
    wirePrayersView's [data-back] pass reads the side host
    only, and this bar stands outside it. */
 function paintPrayersBar(html, block) {
-  var host = document.getElementById('pushbar');
+  // v457: the bar's seat is the header's row 2 — a pushed
+  // page's bar stands there (its block key rides the row,
+  // the seat the settlement inserter's page-standing check
+  // reads), and a null html repaints the tab home's row
+  // (title · date · the pill · the sort act).
+  var host = hdrRow2();
   if (!host) return;
-  host.innerHTML = html || '';
+  if (html == null) { paintRow2Home('prayers'); return; }
+  host.innerHTML = html;
   if (block) host.setAttribute('data-barblock', block); else host.removeAttribute('data-barblock');
   var b = host.querySelector('[data-back]');
   if (b) b.addEventListener('click', function () { goListenHome(b.getAttribute('data-back')); });
@@ -2352,13 +2444,13 @@ function switchSide(tab, side) {
 }
 function paintMergedContainer(tab) {
   var side = readTabSide(tab);
-  // v448: the pushed-page bar host stands BEFORE the toggle
-  // in both merged tabs — the bar takes the top slot directly
-  // under the brand bar, and the toggle + the side host
-  // scroll beneath it (John's word closing the v447 field
-  // check: "put tabs beneath header unfrozen").
-  view.innerHTML = (tab === 'conscience' ? '<div id="consbar"></div>' : '<div id="pushbar"></div>') + paintSideToggle(tab, side) + '<div id="sidehost"></div>';
-  wireSideToggle(tab);
+  // v457: the container's in-view furniture retires — the
+  // pages menu stands in the header's row 2 (paintRow2Home
+  // paints the side's title + the pill and wires it), and
+  // the view carries the side host alone. The v448 bar
+  // hosts retire with the bar's fold into row 2.
+  view.innerHTML = '<div id="sidehost"></div>';
+  paintRow2Home(tab);
   enterSideHost();
   paintTabSide(tab, side);
   armSideScrollRestore(tab, side);
@@ -2518,7 +2610,8 @@ function renderPodcasts() {
     }).catch(function () {});
     return;
   }
-  view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podindex');
+  paintRow2Home('podcasts');
+  view.innerHTML = skelHtml('podindex');
   api('/api/player/podcasts').then(function (res) {
     state.podcastsIndex = res;
     if (state.tab === 'podcasts') paintPodcastsIndex();
@@ -2526,7 +2619,7 @@ function renderPodcasts() {
     // v419 (G22): the authored failure + a Ghost Retry on this
     // surface's own re-render.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<h1 class="screen">Formation</h1><p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', renderPodcasts);
     }
   });
@@ -2538,12 +2631,14 @@ function paintPodcastsIndex() {
   // line on its own card.
   podLevel = 'index';
   var res = state.podcastsIndex;
-  if (!res || !res.seriesList) { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podindex'); return; }
+  if (!res || !res.seriesList) { paintRow2Home('podcasts'); view.innerHTML = skelHtml('podindex'); return; }
   podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
   // v432 §2.3: the offline box retires on the index; the Download
-  // for offline button stands at the head row beside the title, in
-  // its standing dress (id, classes, label byte-identical).
-  var html = '<div class="row headrow"><h1 class="screen grow">Formation</h1><button class="btn ghost small" id="pod-offline-btn">Download for offline</button></div>';
+  // for offline button stands beside the title, in its standing
+  // dress (id, classes, label byte-identical). v457: that seat is
+  // the header's row 2 now (paintRow2Home paints title + button).
+  paintRow2Home('podcasts');
+  var html = '';
   res.seriesList.forEach(function (s) {
     // v413 §2.7: playlist-style entries — the provider's own
     // show artwork (§2.3's showImageUrl; a series-initial tile
@@ -2603,7 +2698,7 @@ function paintPodSeriesPage() {
 }
 function openPodSeries(key) {
   closeWatch(); // v434 §2.6.2 seat 4: opening any series while a watch record somehow stands closes it first — the invariant has no unnamed path
-  view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries');
+  view.innerHTML = skelHtml('podseries');
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
@@ -2611,7 +2706,7 @@ function openPodSeries(key) {
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<h1 class="screen">Formation</h1><p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
     }
   });
@@ -2628,38 +2723,34 @@ function goPodcastsIndex() {
   renderPodcasts();
 }
 function wirePodBack() {
-  var b = view.querySelector('[data-podback]');
+  // v457: the back stands in the header's row 2 now.
+  var h = hdrRow2();
+  var b = h ? h.querySelector('[data-podback]') : null;
   if (b) b.addEventListener('click', goPodcastsIndex);
 }
-/* ---------------- v447: the iOS-style bar ----------------
-   Scope/Plan Builds 1-3: ONE shared emission for every
-   pushed page — the left cluster (the chevron + the
-   destination's name; the button carries the site's
-   standing back wiring unchanged), the page's standing
-   name centered and bold, and the page's own acts at the
-   right. A destination name longer than 14 characters
-   reads "Back" (the long-name rule) — the full name
-   stands in the aria-label either way. The dress stands
-   in ui.ts (.iosbar): the light grey-white ground; the
-   chevron, the name, and the acts in the day's liturgical
-   color via the standing theme token var(--accent-text). */
-function iosBarHtml(o) {
-  // v450: a call with no destination emits the title-only
-  // form — no back act stands in the bar (the Conscience
-  // sides' bar; their tab is a home, not a pushed page).
-  // Every standing caller passes a dest and its output is
-  // unchanged.
+/* ---------------- v457: the row-2 bar ----------------
+   The v447 bar's heir: ONE shared emission for every
+   pushed page, painted into the header's row 2 — the back
+   at the left (the chevron + the destination's name; the
+   button carries the site's standing back wiring
+   unchanged), the page's title beside it, and the page's
+   own acts at the right, all on the bar ground in the
+   color of the day (the .hdr2-* dress in ui.ts). A
+   destination name longer than 14 characters reads "Back"
+   (the long-name rule) — the full name stands in the
+   aria-label either way. A call with no destination emits
+   the title-only form (no standing caller; the shape
+   stands for completeness). */
+function hdrBarHtml(o) {
   if (!o.dest) {
-    return '<div class="iosbar' + (o.inhead ? ' inhead' : '') + '">'
-      + '<div class="iosbar-title">' + esc(o.title) + '</div>'
-      + '<div class="iosbar-right">' + (o.rightHtml || '') + '</div></div>';
+    return '<span class="hdr2-title" id="hdr2-title">' + esc(o.title) + '</span>'
+      + '<span class="hdr2-right">' + (o.rightHtml || '') + '</span>';
   }
   var shown = o.dest.length > 14 ? 'Back' : o.dest;
-  return '<div class="iosbar' + (o.inhead ? ' inhead' : '') + '">'
-    + '<button class="iosbar-back" ' + o.backAttrs + ' aria-label="Back to ' + esc(o.dest) + '">'
-    + '<span class="iosbar-chev">&lsaquo;</span><span class="iosbar-name">' + esc(shown) + '</span></button>'
-    + '<div class="iosbar-title">' + esc(o.title) + '</div>'
-    + '<div class="iosbar-right">' + (o.rightHtml || '') + '</div></div>';
+  return '<button class="hdr2-back" ' + o.backAttrs + ' aria-label="Back to ' + esc(o.dest) + '">'
+    + '<span class="hdr2-chev">&lsaquo;</span><span class="hdr2-name">' + esc(shown) + '</span></button>'
+    + '<span class="hdr2-title" id="hdr2-title">' + esc(o.title) + '</span>'
+    + '<span class="hdr2-right">' + (o.rightHtml || '') + '</span>';
 }
 /* ---------------- v436: the full-page act ----------------
    §2.2: ONE act in the video series page head, in the Podcasts
@@ -2725,10 +2816,10 @@ function openFullPage(e) {
    time). */
 function paintPodOwnSeries() {
   var res = state.podcasts;
-  if (!res || res.kind !== 'own') { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
+  if (!res || res.kind !== 'own') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
-  var html = '<h1 class="screen">Formation</h1>';
-  html += iosBarHtml({ dest: 'Formation', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
+  var html = '';
+  paintRow2Bar({ dest: 'Formation', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no present episode
     // stands in the store — the card form the other series keep.
@@ -2822,10 +2913,10 @@ function playPodOwnFrom(key) {
    line is added to or removed from any surface by v434. */
 function paintPodcastVideos() {
   var res = state.podcasts;
-  if (!res || res.kind !== 'video') { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
+  if (!res || res.kind !== 'video') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
-  var html = '<h1 class="screen">Formation</h1>';
-  html += iosBarHtml({ dest: 'Formation', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
+  var html = '';
+  paintRow2Bar({ dest: 'Formation', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -2886,10 +2977,11 @@ function paintPodWatch() {
   if (!podWatch) return;
   var v = podWatch.video;
   podLevel = 'watch';
-  var html = '<h1 class="screen">Formation</h1>';
+  var html = '';
   // The back row's act is closeWatch (one act, two triggers —
   // the disc tap and the system-back dispatch, §2.6.2 seat 1).
-  html += iosBarHtml({ dest: 'CatholicTV', title: v.title, backAttrs: 'data-podwatchback' });
+  // v457: the back stands in the header's row 2.
+  paintRow2Bar({ dest: 'CatholicTV', title: v.title, backAttrs: 'data-podwatchback' });
   html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
   html += '<div id="podwatch-err" class="err" style="display:none"></div>';
   html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 CatholicTV</div>';
@@ -2898,7 +2990,8 @@ function paintPodWatch() {
   // opening externally. It does not wait for a refusal to exist.
   html += '<p><a class="btn ghost" href="' + esc(v.url) + '" target="_blank" rel="noopener">Open in YouTube</a></p>';
   view.innerHTML = html;
-  var b = view.querySelector('[data-podwatchback]');
+  var wh = hdrRow2();
+  var b = wh ? wh.querySelector('[data-podwatchback]') : null;
   if (b) b.addEventListener('click', function () { closeWatch(); });
   wirePodWatchApi();
 }
@@ -2958,16 +3051,15 @@ function closeWatch() {
 }
 function paintPodcasts() {
   var res = state.podcasts;
-  if (!res) { view.innerHTML = '<h1 class="screen">Formation</h1>' + skelHtml('podseries'); return; }
+  if (!res) { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
-  var html = '<h1 class="screen">Formation</h1>';
-  // v390 §2.7: the back row stands at the top of the series page
+  var html = '';
+  // v390 §2.7: the back stands at the top of the series page
   // — back re-reads the index, so the counts the marks just
-  // changed stand correct.
-  // v419 (G10): the back control is the navy disc on every
-  // page; this row also pins (the frozen back row, §4.1), on
-  // the cream ground.
-  html += iosBarHtml({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
+  // changed stand correct. v457: that seat is the header's
+  // row 2 (the v419 disc + pinned-row form retires with the
+  // bar's fold into the header).
+  paintRow2Bar({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
   // v432 §2.1: the offline box retires on the series page too — no button seat here.
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -3465,7 +3557,12 @@ function renderSettings() {
   view = realView; // v410: Settings paints the full view, never a side host
   state.tab = 'settings';
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.remove('active'); });
-  view.innerHTML = '<h1 class="screen">Settings</h1><p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>' + skelHtml('settings');
+  // v457: the Settings bar stands in the header's row 2
+  // (painted here, at entry, so the skeleton and the
+  // failure paint carry it too); its back is wired by
+  // paintSettings against the standing row.
+  paintRow2Bar({ dest: 'Prayers', title: 'Settings', backAttrs: 'data-settingsback' });
+  view.innerHTML = skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
     settingsVersion = res.version;
@@ -3474,12 +3571,12 @@ function renderSettings() {
   }).catch(function (e) {
     // v419 (G22): the authored failure — a plain sentence and
     // a Ghost Retry wired to this surface's own re-render.
-    view.innerHTML = '<h1 class="screen">Settings</h1><p class="err">Settings did not load.</p><p><button class="btn ghost" id="set-retry">Retry</button></p>';
+    view.innerHTML = '<p class="err">Settings did not load.</p><p><button class="btn ghost" id="set-retry">Retry</button></p>';
     document.getElementById('set-retry').addEventListener('click', renderSettings);
   });
 }
 function paintSettings() {
-  var html = iosBarHtml({ dest: 'Prayers', title: 'Settings', backAttrs: 'data-settingsback' });
+  var html = '';
   // v419 (G28): the page sub — what the page holds, in one line.
   html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
   // v358 §1 Decision 2: the Playback section stands above Source
@@ -3596,9 +3693,13 @@ function paintSettings() {
   document.getElementById('set-reset').addEventListener('click', renderSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
   // v447: the bar's back — the same standing act as the
-  // footer's Back (setTab('prayers'), place kept).
-  var setBarBack = view.querySelector('[data-settingsback]');
-  if (setBarBack) setBarBack.addEventListener('click', function () { setTab('prayers'); });
+  // footer's Back (setTab('prayers'), place kept). v457:
+  // the bar stands in the header's row 2 (painted at
+  // renderSettings' entry); the wiring guards itself so a
+  // repaint never wires the standing node twice.
+  var setBarHost = hdrRow2();
+  var setBarBack = setBarHost ? setBarHost.querySelector('[data-settingsback]') : null;
+  if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab('prayers'); }); }
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -3667,7 +3768,12 @@ function wallpaperBridge() {
    controls unmodified. On the web (no bridge) the fill paints
    the standing phone-side note (Flag 3). */
 function renderWallpaper() {
-  view.innerHTML = '<h1 class="screen">Sacred Art</h1><div class="liblist" id="set-wallpaper"><div class="setrow" data-skeleton="1">'
+  // v457: the tab's title stands in the header's row 2;
+  // the pill joins it when the live state paints its views
+  // (paintWallpaperTab) — the off + unavailable states
+  // stand title-only, as their paints carry no toggle.
+  paintRow2Plain('Sacred Art');
+  view.innerHTML = '<div class="liblist" id="set-wallpaper"><div class="setrow" data-skeleton="1">'
     + '<div class="setname">Sacred Art</div>'
     + '<span class="skelbar" style="width:70%"></span><span class="skelbar" style="width:45%"></span>'
     + '</div></div>';
@@ -3770,8 +3876,8 @@ function paintWallpaperTab(s, restore) {
   host.className = '';
   if (!wallpaperLiveState(s).active) { paintWallpaperOff(host); return; }
   var side = readTabSide('wallpaper');
-  host.innerHTML = paintSideToggle('wallpaper', side) + '<div id="sidehost"></div>';
-  wireSideToggle('wallpaper');
+  host.innerHTML = '<div id="sidehost"></div>';
+  paintRow2Home('wallpaper');
   enterSideHost();
   paintTabSide('wallpaper', side);
   if (restore) {
@@ -4478,7 +4584,7 @@ function saveSettings() {
     })
     .catch(function (e) { if (errEl) errEl.textContent = e.message; });
 }
-document.getElementById('gearbtn').addEventListener('click', renderSettings);
+document.getElementById('hdr-menu').addEventListener('click', function () { openHeaderMenu(); });
 
 /* ---------------- Forms that answer (v411 §2.6) ----------------
    One standard on every empty submit: an inline line under
@@ -4534,11 +4640,10 @@ function settleIntentions(redrawFailed) {
 }
 function renderIntentions() {
   paintPrayersBar(null); // v448: the Intentions side is a tab home side — no pushed bar stands over it
-  // v452 §2 Build 1: the skeleton head draws the NEW headrow
-  // form (title + the heading ☰), identical markup to the
-  // settled head, so the paint landing does not jump (the
-  // F-426-I4 property, carried to the new form).
-  view.innerHTML = '<div class="row headrow"><h1 class="screen grow">Intentions</h1><button class="iconbtn" id="int-menu" aria-label="Intentions menu">\u2630</button></div>' + skelHtml('intentions');
+  // v457: the side's head (title + the heading menu act)
+  // stands in the header's row 2 — the paintPrayersBar(null)
+  // above paints it there; the body opens on the skeleton.
+  view.innerHTML = skelHtml('intentions');
   var today = todayChicago();
   Promise.all([api('/api/prayer/intentions'), api('/api/prayer/day?date=' + today)]).then(function (res) {
     var intentions = res[0].intentions || [];
@@ -4563,7 +4668,7 @@ function renderIntentions() {
     // paragraph, the Add card, and the per-priority section
     // heads — the home is toggle · heading · rows · the
     // floating button, nothing else.
-    var html = '<div class="row headrow"><h1 class="screen grow">Intentions</h1><button class="iconbtn" id="int-menu" aria-label="Intentions menu">\u2630</button></div><p class="fieldnote" id="int-redraw-note"></p>';
+    var html = '<p class="fieldnote" id="int-redraw-note"></p>';
     var ordered = ['H', 'M', 'L'].reduce(function (acc, p) { return acc.concat(active.filter(function (i) { return i.priority === p; })); }, []);
     html += ordered.length ? ordered.map(intentionRow).join('') : '<p class="meta">None.</p>';
     if (retired.length) {
@@ -4580,7 +4685,7 @@ function renderIntentions() {
     intentionsRedrawFailed = false;
     // v419 (G22): the authored failure + a Ghost Retry.
     // v452: its head reads in the new headrow form.
-    view.innerHTML = '<div class="row headrow"><h1 class="screen grow">Intentions</h1></div><p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
+    view.innerHTML = '<p class="err">Intentions did not load.</p><p><button class="btn ghost" id="int-retry">Retry</button></p>';
     document.getElementById('int-retry').addEventListener('click', renderIntentions);
   });
 }
@@ -5052,6 +5157,10 @@ function openSheetMenu(title, items, anchorEl) {
   card.className = 'menusheet anchmenu';
   card.innerHTML = '<h1 class="screen">' + esc(title) + '</h1>'
     + items.map(function (it, i) {
+      // v457: a head item renders the group head line — no
+      // act stands on it, so the standing click path leaves
+      // the card open (the header menu's groups).
+      if (it.head) return '<div class="menuhead" data-menuitem="' + i + '">' + esc(it.label) + '</div>';
       return '<button class="menurow" data-menuitem="' + i + '">' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
     }).join('');
   document.body.appendChild(catcher);
@@ -5092,6 +5201,68 @@ function openSheetMenu(title, items, anchorEl) {
     });
   });
   return card;
+}
+/* v457 (D1 + D2): the header menu — the hamburger at row
+   1's right. NAVIGATION ONLY (the v447–v449 rulings stand:
+   no transport, no toggles, no playback state, no second
+   copy of any surface's content): the Go to groups — the
+   day's blocks + Intentions · the Conscience sides · the
+   Formation series · the Sacred Art sides — and, by John's
+   D2 comment, the Settings entry (the gear's heir: it
+   fires the standing renderSettings, its contents
+   untouched). The standing place is marked 'Here' and
+   inert (the v455 close-only form); any other tap jumps
+   and the card closes (the standing menu contract). The
+   Conscience entries carry the Amendment 2 short labels. */
+function goSide(tab, side) {
+  if (state.tab === tab) { if (tabSideNow[tab] !== side) switchSide(tab, side); return; }
+  writeTabSide(tab, side);
+  setTab(tab);
+}
+function goBlock(block) {
+  if (state.tab === 'prayers' && state.dayPayload) { openBlockPage(block); return; }
+  state.pendingBlock = block;
+  if (state.tab !== 'prayers') setTab('prayers');
+}
+function goSeries(key) {
+  if (state.tab !== 'podcasts') setTab('podcasts');
+  openPodSeries(key);
+}
+function openHeaderMenu() {
+  var items = [];
+  items.push({ head: true, label: 'Prayers' });
+  var day = state.dayPayload;
+  (day && day.blocks ? day.blocks : []).forEach(function (x) {
+    if (x.block === '__episodes') return; // the episodes pseudo-page stands outside the list (v455)
+    var here = state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === x.block;
+    items.push({ label: x.label || x.block, state: here ? 'Here' : null, act: here ? function () {} : function () { goBlock(x.block); } });
+  });
+  var intHere = state.tab === 'prayers' && tabSideNow.prayers === 'intentions';
+  items.push({ label: 'Intentions', state: intHere ? 'Here' : null, act: intHere ? function () {} : function () { goSide('prayers', 'intentions'); } });
+  items.push({ head: true, label: 'Conscience' });
+  [['examination', 'Exam'], ['confession', 'Confess'], ['direction', 'Direction']].forEach(function (s) {
+    var here = state.tab === 'conscience' && tabSideNow.conscience === s[0];
+    items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('conscience', s[0]); } });
+  });
+  items.push({ head: true, label: 'Formation' });
+  var series = (state.podcastsIndex && state.podcastsIndex.seriesList) || [
+    { series: 'catechism', title: 'Catechism in a Year' },
+    { series: 'bible', title: 'Bible in a Year' },
+    { series: 'rosary', title: 'Rosary in a Year' },
+    { series: 'catholictv', title: 'CatholicTV' },
+    { series: 'the-ai-signal', title: 'The AI Signal' }
+  ];
+  series.forEach(function (s) {
+    var here = state.tab === 'podcasts' && podLevel === 'series' && state.podcasts && state.podcasts.series === s.series;
+    items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
+  });
+  items.push({ head: true, label: 'Sacred Art' });
+  [['phone', 'Phone'], ['watch', 'Watch']].forEach(function (s) {
+    var here = state.tab === 'wallpaper' && tabSideNow.wallpaper === s[0];
+    items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('wallpaper', s[0]); } });
+  });
+  items.push({ label: 'Settings', state: state.tab === 'settings' ? 'Here' : null, act: function () { renderSettings(); } });
+  openSheetMenu('Go to', items, document.getElementById('hdr-menu'));
 }
 function openPlayerMenu(anchorEl) {
   // §1.4 + FD3: the player-level overflow — exactly Autoplay ·
@@ -6048,8 +6219,9 @@ function blockInsertCards(day, standing) {
   (day.blocks || []).forEach(function (b) {
     // v448: the page-standing check reads the pushed bar
     // host's block key — the seat the retired .blockpage-head
-    // lookup read before the head band retired.
-    var pbar = document.getElementById('pushbar');
+    // lookup read before the head band retired. v457: the
+    // bar's seat is the header's row 2; the key rides it.
+    var pbar = document.getElementById('hdrrow2');
     if (!pbar || pbar.getAttribute('data-barblock') !== b.block) return;
     var entries = [];
     (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
@@ -7531,6 +7703,11 @@ function buildDayFromPayload(day, snap) {
     // (tab return, reload) always lands home.
     state.prayersView = { kind: 'home' };
     paintPrayersView(day);
+    // v457: a header-menu block jump taken before the day
+    // stood lands now, on the fresh home (goBlock records
+    // it as state.pendingBlock; the day build is its one
+    // consumer).
+    if (state.pendingBlock) { var pb457 = state.pendingBlock; state.pendingBlock = null; openBlockPage(pb457); }
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
     // here, immediately BEFORE the resolution pass is invoked —
@@ -8151,12 +8328,13 @@ function wirePrayersView(day) {
   wireRowActs(view); // v413 §2.6: the row ⋮ + share wiring rides every Prayers paint
   refreshGridDlStates(); // v413 §2.11: the downloaded icons follow the cache's word
   // v448: the scan covers the pushed bar host too — the
-  // block page's Play All stands in #pushbar now, outside
-  // the side host. The handler is the standing one; every
+  // block page's Play All stands in the bar, outside the
+  // side host. The handler is the standing one; every
   // wire pass follows a host refill on block pages, so no
-  // button is ever wired twice.
+  // button is ever wired twice. v457: the bar's host is
+  // the header's row 2.
   var queueBtns = Array.prototype.slice.call(view.querySelectorAll('[data-queue]'));
-  var pbHost = document.getElementById('pushbar');
+  var pbHost = document.getElementById('hdrrow2');
   if (pbHost) pbHost.querySelectorAll('[data-queue]').forEach(function (b) { queueBtns.push(b); });
   queueBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -8271,9 +8449,11 @@ function paintListenHome(day) {
   // chips, and their wiring (D3 settled — search and chips
   // retire from the home). Play All + the offline line
   // stand BELOW the rows (§1's named call).
-  var html = '<div class="row headrow"><h1 class="screen grow">Prayers</h1><p class="sub">' + esc(shortHomeDate(day)) + '</p>'
-    + '<button class="btn ghost small" id="sort-btn" aria-label="Sort">↑↓</button></div>';
-  html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  // v457: the home's head line (title · date · the pill ·
+  // the Sort act) stands in the header's row 2 — the
+  // paintPrayersBar(null) above paints it there, and the
+  // #sort-btn wiring below finds the header's button.
+  var html = '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
   // v392 W5: the offline readiness line + the download button.
   html += offlineLineHtml('offline-dl-btn');
@@ -8335,19 +8515,20 @@ function paintBlockPage(day, block) {
   // retires as an emission (its rule stands for the episodes
   // page); Sort and Mark all played ride the ⋮ as before.
   // v448: the head band retires completely (John's word
-  // closing the v447 field check). The bar stands in the
-  // #pushbar host — the top slot, above the toggle — with
+  // closing the v447 field check). The bar stands in its
+  // host — the top slot, above the toggle — with
   // the SHRUNK Play All (the standing .playbtn.small form:
   // a 30px disc on a 44px tap, wholly inside the bar) and
-  // the menu act in the bar's plain act dress (.iosbar-act,
-  // no pill). The band's facts stand as one plain meta line
+  // the menu act in the bar's plain act dress (v457:
+  // .hdr2-act; the host is the header's row 2 now),
+  // no pill. The band's facts stand as one plain meta line
   // at the body's top; the download act + its note stand as
   // a plain row under it (their [data-blockdl] /
   // [data-blockdlnote] wiring is view-scoped and follows
   // the elements); the cover tile retires with the band.
-  paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
+  paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
-      + '<button class="iosbar-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
+      + '<button class="hdr2-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
   // v455 §2 Build 1 (D1): the series-style head retires
   // completely — no cover tile, no name line; the bar
   // carries the block's name once. The body opens with
@@ -8384,8 +8565,9 @@ function paintBlockPage(day, block) {
     });
   };
   // v448: the page menu act stands in the bar host now, not
-  // the side host — its wiring reads the host.
-  var menuBtn = document.querySelector('#pushbar [data-blockmenu]');
+  // the side host — its wiring reads the host. v457: the
+  // host is the header's row 2.
+  var menuBtn = document.querySelector('#hdrrow2 [data-blockmenu]');
   if (menuBtn) menuBtn.addEventListener('click', function () {
     var played = blockPlayedCounts(b.block);
     var items = [
@@ -8436,11 +8618,11 @@ function paintEpisodesPage(day) {
   var eps = day.episodes || [];
   var durSum = eps.reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
   // v448: the head band retires here too — the bar stands
-  // in the #pushbar host (the top slot, above the toggle);
-  // the meta stands as one plain line at the body's top and
-  // the Play All row as a body row under it, as it stood in
-  // the head; the cover tile retires with the band.
-  paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
+  // in the header's row 2 (v457); the meta stands as one
+  // plain line at the body's top and the Play All row as a
+  // body row under it, as it stood in the head; the cover
+  // tile retires with the band.
+  paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
   var html = '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');
@@ -8496,7 +8678,14 @@ function appendBlockSettingsCards(day, b) {
    editors) already calls them, and a repaint of the side
    inside the standing container is what those callers mean
    now (§2.5). */
-function renderConscience() { gatedTabRender('conscience', renderConscienceContent); }
+function renderConscience() {
+  // v457: the tab's title stands in the header's row 2
+  // before the gate paints — no foreign pill strands
+  // during the PIN paint; the gate's content paint
+  // (paintMergedContainer) repaints the full row.
+  paintRow2Plain('Conscience');
+  gatedTabRender('conscience', renderConscienceContent);
+}
 function renderConscienceContent() { paintMergedContainer('conscience'); }
 
 /* ---------------- Examination ---------------- */
