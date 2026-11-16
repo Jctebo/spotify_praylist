@@ -62,6 +62,12 @@ export interface Env {
   // channel feed). Production leaves it unset; the pinned feed
   // URL below governs.
   EXT_YT_CATHOLICTV_FEED_URL?: string;
+  // v464 harness seams, same rule: fixture-feed overrides for
+  // the Podcasts section's RSS series builds (The Exorcist
+  // Files · The Counsel of Trent). Production leaves them
+  // unset; the pinned feed URLs below govern.
+  EXT_EXORCIST_FEED_URL?: string;
+  EXT_COUNSEL_TRENT_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -1591,6 +1597,10 @@ async function podIndexPayload(env: Env): Promise<unknown> {
       listenedCount: p.listenedCount, total: p.total,
       currentKey: p.currentKey, currentLabel: current ? current.label : null,
       showImageUrl: p.showImageUrl, showDesc: p.showDesc,
+      // v464 §2.1: every index entry gains a category (D3 A) —
+      // the audio defs file under Courses. Additive on the wire;
+      // the standing fields are otherwise byte-untouched.
+      category: "courses",
     });
   }
   // v434 §2.1 (F-434-5): the VIDEO series append AFTER the audio
@@ -1600,6 +1610,16 @@ async function podIndexPayload(env: Env): Promise<unknown> {
   // carries kind: "video" — F-434-I4's wire form).
   for (const vdef of POD_VIDEO_SERIES_LIST) {
     seriesList.push(await podVideoIndexEntry(env, vdef));
+  }
+  // v464 §2.1: the RSS series append AFTER the video loop and
+  // BEFORE the own gate — construction order audio → video →
+  // rss → own. The client paints a Formation side by filtering
+  // this payload by category IN PAYLOAD ORDER (order is
+  // server-owned; no client sort stands anywhere), so within
+  // Podcasts the standing order is the defs' order with the own
+  // series last in its category, as its seat below guarantees.
+  for (const rdef of POD_RSS_SERIES_LIST) {
+    seriesList.push(await podRssIndexEntry(env, rdef));
   }
   // v451 §2.1: the OWN series appends AFTER the video loop — its
   // seat, LAST (fifth), is guaranteed by construction, and the
@@ -1802,6 +1822,9 @@ async function podVideoIndexEntry(env: Env, def: PodVideoSeriesDef): Promise<unk
     kind: "video", series: def.key, title: def.title, available: !!seq,
     latestLabel: newest ? videoDateLabel(newest.publishedMs) : null,
     showImageUrl: newest ? newest.imageUrl : null,
+    // v464 §2.1: the category field (D3 A) — the video def files
+    // under Video & more.
+    category: "video",
   };
 }
 
@@ -1892,6 +1915,265 @@ async function podOwnIndexEntry(env: Env, def: PodOwnSeriesDef): Promise<unknown
     currentKey: current ? current.key : null,
     currentLabel: current ? current.title : null,
     showImageUrl: "/logo.png",
+    // v464 §2.1 (F-464-2): the category field (D3 A) — the AI
+    // Signal files under Podcasts (it is an audio series; the
+    // package's Screen A filing under Video & more was the
+    // outlier). Its construction seat above stands unmoved;
+    // only this value files it.
+    category: "podcasts",
+  };
+}
+
+// ---- Podcasts RSS series (v464) -----------------------------------
+// Plan §2: a fourth series kind on the v434 discipline — its own
+// def list, its own snapshot store (migration 0027 — one store
+// per payload shape keeps every contract absolute), its own
+// payload builders, routed before the audio def lookup in both
+// the session read and the door mirror. The feeds are publisher
+// RSS 2.0: The Exorcist Files on ART19 (verified at Scope,
+// §1.3) and The Counsel of Trent on SoundCloud (pinned at Plan
+// from the publisher's Apple Podcasts listing, §2.0). Episodes
+// stand newest-first, capped at the latest 50 (D4 A — the
+// window is applied at build, so the stored snapshot IS the
+// window), keyed by the feed's GUID with the enclosure URL as
+// the fallback identity. They play in-app through the standing
+// player; marks + positions ride the standing server stores
+// (podcast_listens / podcast_positions, F-464-3) keyed by the
+// GUID, so a mark survives window movement and rebuilds.
+// Streaming only: no downloads. "Current" is the latest
+// episode (entries[0]) — never mark-derived (§1.6).
+const RSS_EXORCIST_FEED_URL = "https://rss.art19.com/the-exorcist-files";
+const RSS_COUNSEL_TRENT_FEED_URL = "https://feeds.soundcloud.com/users/soundcloud:users:406683825/sounds.rss";
+const RSS_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
+const RSS_WINDOW = 50;
+
+interface PodRssSeriesDef {
+  key: string; title: string;
+  feedUrl: (env: Env) => string;
+}
+const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
+  { key: "exorcist-files", title: "The Exorcist Files", feedUrl: (env) => env.EXT_EXORCIST_FEED_URL || RSS_EXORCIST_FEED_URL },
+  { key: "counsel-of-trent", title: "The Counsel of Trent", feedUrl: (env) => env.EXT_COUNSEL_TRENT_FEED_URL || RSS_COUNSEL_TRENT_FEED_URL },
+];
+function podRssSeriesDef(key: string): PodRssSeriesDef | null {
+  return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
+}
+
+// The GUID-aware parse (§2.2). Kind-local because the standing
+// extParseFeed returns no GUID, and the GUID is this kind's
+// identity — the shared parser is NOT edited. The field reads
+// reuse extParseFeed's own expressions and the standing helpers
+// (extXmlText decoding · extItemImage · extItemDesc ·
+// extParseDuration · extStripDesc). An item with no enclosure
+// URL is unplayable and is skipped at build (the registry's
+// enclosure-required posture); an item with neither GUID nor
+// URL never reaches that test.
+interface PodRssItem {
+  guid: string | null; title: string; url: string; length: number;
+  pubMs: number | null; durationS: number; imageUrl: string | null; descText: string | null;
+}
+function podRssParseFeed(xml: string): PodRssItem[] {
+  if (!/<channel[\s>]/.test(xml) || !/<item[\s>]/.test(xml)) throw new Error("feed parse failed");
+  const items: PodRssItem[] = [];
+  const itemRe = /<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/g;
+  let m: RegExpExecArray | null;
+  while ((m = itemRe.exec(xml))) {
+    const body = m[1];
+    const guidM = /<guid\b[^>]*>([\s\S]*?)<\/guid>/.exec(body);
+    const guid = guidM ? (extXmlText(guidM[1]).trim() || null) : null;
+    const titleM = /<title>([\s\S]*?)<\/title>/.exec(body);
+    const encM = /<enclosure\b([^>]*?)\/?>/.exec(body);
+    let url = "", length = 0;
+    if (encM) {
+      const um = /url="([^"]*)"/.exec(encM[1]);
+      if (um) url = extXmlText(um[1]);
+      const lm = /length="(\d+)"/.exec(encM[1]);
+      if (lm) length = Number(lm[1]);
+    }
+    const pubM = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(body);
+    const pubMs = pubM ? Date.parse(pubM[1].trim()) : NaN;
+    const durM = /<[A-Za-z0-9_.-]*:?duration>([^<]*)</.exec(body);
+    items.push({
+      guid,
+      title: titleM ? extXmlText(titleM[1]) : "",
+      url, length,
+      pubMs: Number.isFinite(pubMs) ? pubMs : null,
+      durationS: extParseDuration(durM ? durM[1] : null),
+      imageUrl: extItemImage(body),
+      descText: extItemDesc(body),
+    });
+  }
+  return items;
+}
+
+// The transport (§2.2): extFetchFeed's posture cloned (the
+// estate UA, the 15 s abort) — items from the kind-local parse,
+// the channel head from the standing extParseChannelHead.
+// extFetchFeed itself is untouched.
+async function podRssFetchFeed(url: string): Promise<{ items: PodRssItem[]; channelImageUrl: string | null; channelDesc: string | null }> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(url, { headers: { "user-agent": "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
+    if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
+    const xml = await res.text();
+    const head = extParseChannelHead(xml);
+    return { items: podRssParseFeed(xml), channelImageUrl: head.channelImageUrl, channelDesc: head.channelDesc };
+  } finally { clearTimeout(timer); }
+}
+
+interface PodRssEntry {
+  key: string; title: string; url: string; length: number;
+  publishedMs: number | null; durationS: number; imageUrl: string | null; descText: string | null;
+}
+interface PodRssSnapshot { entries: PodRssEntry[]; builtAt: string; showImageUrl: string | null; showDesc: string | null }
+
+// The build (§2.2): sort newest-first by pubMs (a dateless item
+// sinks last), dedupe by key with the first — newest —
+// occurrence winning, then the D4 window: slice(0, 50), so the
+// stored snapshot is the window, never the full parse
+// (F-464-4). Key = the feed GUID, else the enclosure URL. Each
+// entry's imageUrl is its own art else the channel art (the
+// audio build's fallback rule, applied at build).
+function podRssBuild(items: PodRssItem[], channelImageUrl: string | null): PodRssEntry[] {
+  const keyed: { it: PodRssItem; key: string }[] = [];
+  for (const it of items) {
+    if (!it.url) continue;
+    keyed.push({ it, key: it.guid || it.url });
+  }
+  keyed.sort((a, b) => (b.it.pubMs ?? -Infinity) - (a.it.pubMs ?? -Infinity));
+  const seen = new Set<string>();
+  const entries: PodRssEntry[] = [];
+  for (const { it, key } of keyed) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    entries.push({
+      key, title: it.title, url: it.url, length: it.length,
+      publishedMs: it.pubMs, durationS: it.durationS,
+      imageUrl: it.imageUrl || channelImageUrl || null, descText: it.descText || null,
+    });
+    if (entries.length >= RSS_WINDOW) break;
+  }
+  return entries;
+}
+
+async function podRssReadSnapshot(env: Env, def: PodRssSeriesDef): Promise<PodRssSnapshot | null> {
+  const row = await env.DB.prepare("SELECT payload FROM rss_snapshots WHERE series=?").bind(def.key).first<{ payload: string }>();
+  if (!row) return null;
+  try {
+    const p = JSON.parse(row.payload) as PodRssSnapshot;
+    if (!Array.isArray(p.entries) || typeof p.builtAt !== "string") return null;
+    return p;
+  } catch { return null; }
+}
+// The read path is the refresh path (§2.2, mirroring
+// videoSequence clause for clause at the modeled kind's 2 h max
+// age): fresh snapshot → served, no fetch · stale or missing →
+// rebuild attempted; on success the snapshot is replaced and
+// served · on failure the standing snapshot is served with
+// stale: true · no snapshot at all → null (the series'
+// unavailable surface). A build yielding ZERO entries throws
+// before the store — an empty parse is a failed rebuild, never
+// an emptied list (the video parser's rule). The refresh
+// triggers are the read paths only — the series payload read
+// and the Podcasts index read (podRssIndexEntry below) — no
+// cron.
+async function podRssSequence(env: Env, def: PodRssSeriesDef): Promise<{ snap: PodRssSnapshot; stale: boolean } | null> {
+  const snap = await podRssReadSnapshot(env, def);
+  if (snap && Date.now() - Date.parse(snap.builtAt) < RSS_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
+  try {
+    const feed = await podRssFetchFeed(def.feedUrl(env));
+    const entries = podRssBuild(feed.items, feed.channelImageUrl);
+    if (!entries.length) throw new Error("rss sequence build produced no entries");
+    const builtAt = nowISO();
+    const snapFull: PodRssSnapshot = { entries, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
+    await env.DB.prepare(
+      `INSERT INTO rss_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+       ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+    ).bind(def.key, JSON.stringify(snapFull), builtAt).run();
+    return { snap: snapFull, stale: false };
+  } catch {
+    if (snap) return { snap, stale: true };
+    return null;
+  }
+}
+
+interface PodRssEntryState extends PodRssEntry {
+  label: string; listened: boolean; listenDate: string | null; listenedAt: string | null;
+  source: string | null; positionS: number | null;
+}
+interface PodRssPayload {
+  ok: boolean; kind: "rss"; series: string; title: string; available: boolean;
+  stale: boolean; builtAt: string | null;
+  entries: PodRssEntryState[]; currentKey: string | null; currentLabel: string | null;
+  listenedCount: number; total: number;
+  showImageUrl: string | null; showDesc: string | null;
+}
+async function podRssPayload(env: Env, def: PodRssSeriesDef): Promise<PodRssPayload> {
+  const seq = await podRssSequence(env, def);
+  if (!seq) {
+    return {
+      ok: true, kind: "rss", series: def.key, title: def.title, available: false,
+      stale: false, builtAt: null, entries: [], currentKey: null, currentLabel: null,
+      listenedCount: 0, total: 0, showImageUrl: null, showDesc: null,
+    };
+  }
+  // §2.3: the listened/position fold is podPayload's own two
+  // SELECTs against the standing server stores (F-464-3), with
+  // positionS surfacing only for unlistened entries.
+  const r = await env.DB.prepare("SELECT seq_key, listened_at, listen_date, source FROM podcast_listens WHERE series=?")
+    .bind(def.key).all<{ seq_key: string; listened_at: string; listen_date: string; source: string }>();
+  const listens = new Map((r.results ?? []).map((x) => [x.seq_key, x]));
+  const pr = await env.DB.prepare("SELECT seq_key, position_s FROM podcast_positions WHERE series=?")
+    .bind(def.key).all<{ seq_key: string; position_s: number }>();
+  const positions = new Map((pr.results ?? []).map((x) => [x.seq_key, x.position_s]));
+  const entries: PodRssEntryState[] = seq.snap.entries.map((e) => {
+    const l = listens.get(e.key);
+    return {
+      ...e,
+      // The date label is videoDateLabel(publishedMs) derived at
+      // payload build, never stored (the video kind's timezone
+      // rule); a dateless entry carries no label.
+      label: e.publishedMs != null ? videoDateLabel(e.publishedMs) : "",
+      listened: !!l, listenDate: l ? l.listen_date : null, listenedAt: l ? l.listened_at : null,
+      source: l ? l.source : null, positionS: l ? null : (positions.get(e.key) ?? null),
+    };
+  });
+  // §1.6/§2.3: current = entries[0], the latest episode; marks
+  // never move it.
+  const current = entries.length ? entries[0] : null;
+  return {
+    ok: true, kind: "rss", series: def.key, title: def.title, available: true,
+    stale: seq.stale, builtAt: seq.snap.builtAt,
+    entries, currentKey: current ? current.key : null, currentLabel: current ? current.label : null,
+    listenedCount: entries.filter((e) => e.listened).length, total: entries.length,
+    showImageUrl: seq.snap.showImageUrl ?? null, showDesc: seq.snap.showDesc ?? null,
+  };
+}
+
+// The index entry (§2.3): built from the same podRssSequence
+// read plus the listens fold over the window's keys, exactly as
+// the payload counts them — the card and the page can never
+// disagree. latestLabel is the newest entry's date label;
+// showImageUrl is the channel art.
+async function podRssIndexEntry(env: Env, def: PodRssSeriesDef): Promise<unknown> {
+  const seq = await podRssSequence(env, def);
+  if (!seq) {
+    return {
+      kind: "rss", series: def.key, title: def.title, category: "podcasts", available: false,
+      listenedCount: 0, total: 0, latestLabel: null, showImageUrl: null,
+    };
+  }
+  const r = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=?")
+    .bind(def.key).all<{ seq_key: string }>();
+  const keys = new Set(seq.snap.entries.map((e) => e.key));
+  const listenedCount = (r.results ?? []).filter((x) => keys.has(x.seq_key)).length;
+  const newest = seq.snap.entries.length ? seq.snap.entries[0] : null;
+  return {
+    kind: "rss", series: def.key, title: def.title, category: "podcasts", available: true,
+    listenedCount, total: seq.snap.entries.length,
+    latestLabel: newest && newest.publishedMs != null ? videoDateLabel(newest.publishedMs) : null,
+    showImageUrl: seq.snap.showImageUrl ?? null,
   };
 }
 
@@ -2087,6 +2369,12 @@ export default {
         // audio def lookup (the v451 seat the v434 mirror missed).
         const doorOwnDef = podOwnSeriesDef(doorSeries);
         if (doorOwnDef) return json(await podOwnPayload(env, doorOwnDef));
+        // v464 §2.3: the door read mirrors the session read — an
+        // RSS series key routes to the RSS payload builder before
+        // the audio def lookup, composed WITH the kind, not
+        // after it (the v454 lesson).
+        const doorRssDef = podRssSeriesDef(doorSeries);
+        if (doorRssDef) return json(await podRssPayload(env, doorRssDef));
         const doorDef = podSeriesDef(doorSeries);
         if (!doorDef) return err(400, "unknown series");
         return json(await podPayload(env, doorDef));
@@ -2322,6 +2610,12 @@ export default {
           // v434 seat); an unknown key keeps the base behavior.
           const readOwnDef = podOwnSeriesDef(readSeries);
           if (readOwnDef) return json(await podOwnPayload(env, readOwnDef));
+          // v464 §2.3: an RSS series key routes to the RSS
+          // payload builder BEFORE the audio def lookup (the
+          // v434/v451 seat); an unknown key keeps the base
+          // behavior.
+          const readRssDef = podRssSeriesDef(readSeries);
+          if (readRssDef) return json(await podRssPayload(env, readRssDef));
           const readDef = podSeriesDef(readSeries);
           if (!readDef) return err(400, "unknown series");
           return json(await podPayload(env, readDef));
@@ -2336,15 +2630,26 @@ export default {
           // passes this route — §2.5), and the seqKey validates
           // against THAT series' snapshot.
           const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string; source?: string };
-          const markDef = podSeriesDef(String(body.series ?? ""));
-          if (!markDef) return err(400, "unknown series");
+          // v464 §2.3: the def resolution gains the RSS branch —
+          // the resolved kind picks its snapshot validator
+          // (podSequence for audio, podRssSequence for rss);
+          // every other clause stands (the source whitelist, the
+          // validation order). The writes bind the resolved
+          // series key — a def's key IS the looked-up key by
+          // construction (the finders match on it).
+          const markSeriesKey = String(body.series ?? "");
+          const markDef = podSeriesDef(markSeriesKey);
+          const markRssDef = markDef ? null : podRssSeriesDef(markSeriesKey);
+          if (!markDef && !markRssDef) return err(400, "unknown series");
           if (!["auto", "manual"].includes(body.source ?? "")) return err(400, "source must be auto or manual");
           const seqKey = String(body.seqKey ?? "");
-          const seq = await podSequence(env, markDef);
-          if (!seq || !seq.snap.entries.some((e) => e.key === seqKey)) return err(400, "unknown seqKey");
+          let markKnown = false;
+          if (markDef) { const seq = await podSequence(env, markDef); markKnown = !!seq && seq.snap.entries.some((e) => e.key === seqKey); }
+          else if (markRssDef) { const seq = await podRssSequence(env, markRssDef); markKnown = !!seq && seq.snap.entries.some((e) => e.key === seqKey); }
+          if (!markKnown) return err(400, "unknown seqKey");
           await env.DB.prepare(
             "INSERT OR IGNORE INTO podcast_listens (series, seq_key, listened_at, listen_date, source) VALUES (?, ?, ?, ?, ?)",
-          ).bind(markDef.key, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
+          ).bind(markSeriesKey, seqKey, nowISO(), prayerChicagoNow().date, String(body.source)).run();
           // v395 §2.5 (D5): clearing rides the mark route itself —
           // both sources flow through this one handler, so the
           // auto-mark on 'ended' clears by construction. The
@@ -2352,7 +2657,7 @@ export default {
           // second; no percentage test stands anywhere in this
           // path (the standing law).
           await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
-            .bind(markDef.key, seqKey).run();
+            .bind(markSeriesKey, seqKey).run();
           return json({ ok: true });
         }
         if (seg[2] === "podcasts" && seg[3] === "unmark" && request.method === "POST") {
@@ -2362,15 +2667,21 @@ export default {
           // v390 §2.3: the series validates against the registry,
           // and the delete binds the named series.
           const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string };
-          const unmarkDef = podSeriesDef(String(body.series ?? ""));
-          if (!unmarkDef) return err(400, "unknown series");
+          // v464 §2.3: the def resolution gains the RSS branch.
+          // Unmark validates NO snapshot (the standing form), so
+          // a GUID that fell out of the 50-window still unmarks —
+          // its rows stand harmless until then (§1.7).
+          const unmarkSeriesKey = String(body.series ?? "");
+          const unmarkDef = podSeriesDef(unmarkSeriesKey);
+          const unmarkRssDef = unmarkDef ? null : podRssSeriesDef(unmarkSeriesKey);
+          if (!unmarkDef && !unmarkRssDef) return err(400, "unknown series");
           await env.DB.prepare("DELETE FROM podcast_listens WHERE series=? AND seq_key=?")
-            .bind(unmarkDef.key, String(body.seqKey ?? "")).run();
+            .bind(unmarkSeriesKey, String(body.seqKey ?? "")).run();
           // v395 §2.5 (D5): unmark wipes the episode's whole
           // progress record — the sibling position row deletes
           // beside the listen row, in the same act.
           await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
-            .bind(unmarkDef.key, String(body.seqKey ?? "")).run();
+            .bind(unmarkSeriesKey, String(body.seqKey ?? "")).run();
           return json({ ok: true });
         }
         if (seg[2] === "podcasts" && seg[3] === "position" && request.method === "POST") {
@@ -2392,21 +2703,30 @@ export default {
           // that same fact. The write is an upsert; newest arrival
           // wins (the marks' last-writer-wins posture).
           const body = await request.json().catch(() => ({})) as { series?: string; seqKey?: string; positionS?: number; durationS?: number };
-          const posDef = podSeriesDef(String(body.series ?? ""));
-          if (!posDef) return err(400, "unknown series");
+          // v464 §2.3: the def resolution gains the RSS branch —
+          // the seqKey validates against the resolved kind's
+          // snapshot, and the clamp reads THAT snapshot entry's
+          // own durationS (an RSS entry with no feed duration
+          // takes the standing duration-less case below: the
+          // position saves as sent).
+          const posSeriesKey = String(body.series ?? "");
+          const posDef = podSeriesDef(posSeriesKey);
+          const posRssDef = posDef ? null : podRssSeriesDef(posSeriesKey);
+          if (!posDef && !posRssDef) return err(400, "unknown series");
           const posSeqKey = String(body.seqKey ?? "");
-          const posSeq = await podSequence(env, posDef);
-          const posEntry = posSeq ? posSeq.snap.entries.find((e) => e.key === posSeqKey) : undefined;
+          let posEntry: { key: string; durationS: number } | undefined;
+          if (posDef) { const posSeq = await podSequence(env, posDef); posEntry = posSeq ? posSeq.snap.entries.find((e) => e.key === posSeqKey) : undefined; }
+          else if (posRssDef) { const posSeq = await podRssSequence(env, posRssDef); posEntry = posSeq ? posSeq.snap.entries.find((e) => e.key === posSeqKey) : undefined; }
           if (!posEntry) return err(400, "unknown seqKey");
           const posListen = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=? AND seq_key=?")
-            .bind(posDef.key, posSeqKey).first<{ seq_key: string }>();
+            .bind(posSeriesKey, posSeqKey).first<{ seq_key: string }>();
           if (posListen) return json({ ok: true });
           let posVal = Math.floor(Number(body.positionS ?? 0));
           if (!Number.isFinite(posVal) || posVal < 0) posVal = 0;
           if (posEntry.durationS > 0 && posVal > posEntry.durationS) posVal = posEntry.durationS;
           if (posVal === 0) {
             await env.DB.prepare("DELETE FROM podcast_positions WHERE series=? AND seq_key=?")
-              .bind(posDef.key, posSeqKey).run();
+              .bind(posSeriesKey, posSeqKey).run();
             return json({ ok: true });
           }
           let posDur = posEntry.durationS > 0 ? posEntry.durationS : Math.floor(Number(body.durationS ?? 0));
@@ -2414,7 +2734,7 @@ export default {
           await env.DB.prepare(
             `INSERT INTO podcast_positions (series, seq_key, position_s, duration_s, updated_at) VALUES (?, ?, ?, ?, ?)
              ON CONFLICT(series, seq_key) DO UPDATE SET position_s=excluded.position_s, duration_s=excluded.duration_s, updated_at=excluded.updated_at`,
-          ).bind(posDef.key, posSeqKey, posVal, posDur, nowISO()).run();
+          ).bind(posSeriesKey, posSeqKey, posVal, posDur, nowISO()).run();
           return json({ ok: true });
         }
         if (seg[2] === "day-position" && request.method === "POST") {
