@@ -7478,6 +7478,18 @@ function applyNativeState(json) {
     state.rate = st.rate;
     try { localStorage.setItem('opn-speed-v336', String(st.rate)); } catch (e) {}
   }
+  // v469 Step 6 amendment (i): the v461 ack leaves the desc
+  // gate — a state event for the pending start's own track
+  // closes its window whether or not the publish's queueIndex
+  // resolves through nativeContractDescs. A resume on a
+  // standing contract never re-sends a contract, so the descs
+  // can stand empty or stale for exactly the queues a resume
+  // targets; with the ack inside the gate it never ran, the
+  // pending window never closed, and every in-app pause was
+  // swallowed by cancelPendingStart while the engine sounded
+  // (John's 1.0.40 field failure, 2026-11-16). The desc-gated
+  // block below keeps its current-tracking duties only.
+  if (state.pendingStart && state.pendingStart.episodeId === st.trackId) state.pendingStart = null;
   var desc = nativeContractDescs[st.queueIndex];
   if (desc && desc.episodeId === st.trackId) {
     var changed = state.current !== desc;
@@ -7488,12 +7500,8 @@ function applyNativeState(json) {
       setMediaSessionFor(desc);
       markPlaying(desc.episodeId);
     }
-    // The v461 ack, re-seated: a state event for the pending
-    // start's own track closes its window either way — playing
-    // (the start landed) or not (the engine refused or was
-    // paused at the gate; the intent is resolved, and no
-    // AbortError analog exists natively to name it).
-    if (state.pendingStart && state.pendingStart.episodeId === st.trackId) state.pendingStart = null;
+    // (The v461 ack stands above, outside this gate — v469
+    // Step 6 amendment (i).)
     setPlaybackState(st.playing ? 'playing' : 'paused');
     updateDock();
     // v468: the row paint re-derives on EVERY native event,
@@ -7541,9 +7549,23 @@ function nativeMirrorTick() {
     if (!nativePendingWatch.fired && Date.now() - nativePendingWatch.atMs > 6000) {
       nativePendingWatch.fired = true;
       if (state.current.episodeId === ps.episodeId) {
-        var pos = Math.floor(playPos().pos);
-        if (pos > 0) state.pendingResume = { episodeId: state.current.episodeId, positionS: pos };
-        nativeSendContract(state.current);
+        // v469 Step 6 amendment (ii): the re-send fires only
+        // when the mirror does not already report the engine
+        // PLAYING the pending track. If it does, the start has
+        // landed and the standing pendingStart is stale — the
+        // watch clears it instead of re-sending the contract,
+        // which lands as a fresh play=true load over the
+        // standing state (the second override in John's
+        // 1.0.40 field failure: a pause that landed inside the
+        // window was re-played by the watch's reload).
+        if (nativeMirror && nativeMirror.playing && nativeMirror.trackId === ps.episodeId) {
+          state.pendingStart = null;
+          nativePendingWatch = null;
+        } else {
+          var pos = Math.floor(playPos().pos);
+          if (pos > 0) state.pendingResume = { episodeId: state.current.episodeId, positionS: pos };
+          nativeSendContract(state.current);
+        }
       }
     }
   }
