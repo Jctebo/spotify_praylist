@@ -5342,7 +5342,7 @@ function trackDesc(t, day) {
   // without its day (queueLiveDesc's external rebuild, search
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
-  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
   if (d.available && day) {
     var text = introTextFor(t, day);
     if (text) d.intentionText = text;
@@ -7045,9 +7045,29 @@ function oraSnapshotTrack(d, date) {
     return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
       mediaUri: pre2.charAt(0) === '/' ? origin + pre2 : pre2, needsAuth: onOrigin };
   }
-  // Own episode: the standing session-gated Range route (§2.5),
-  // keyed by the presented day and the episode id — the native
-  // equivalent of the descriptor, independent of download state.
+  // Own episode (v475): the descriptor's OWN address — the
+  // feed enclosure the page engine plays — is the native
+  // address. The Range route this branch synthesized through
+  // v472 is the v312 stored-day route, served only from
+  // player_episodes; the v342 day shell retired the stored-day
+  // publish, and since 2026-11-12 that table has carried no
+  // own-episode rows (the-ai-signal alone, the one store-only
+  // source), so the route answers 404 for every own episode
+  // and a native start on it can never land (the 2026-11-16
+  // field failure: the Marian Antiphon first, every own
+  // episode with it). enclosureUrl stands first (a minted
+  // blob url is WebView-local and never crosses — the podcast
+  // arm's discipline in nativeContractItem); a non-blob url
+  // follows — the AI Signal's url IS its Range-route path, so
+  // its absolutized form is byte-identical to the old
+  // synthesis and its row stands. Only a descriptor with no
+  // address at all keeps the synthesis, as fallback.
+  var ownAddr = d.enclosureUrl || (d.url && String(d.url).indexOf('blob:') !== 0 ? String(d.url) : '');
+  if (ownAddr) {
+    var ownOnOrigin = ownAddr.indexOf(origin + '/') === 0 || ownAddr.charAt(0) === '/';
+    return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'episode', durationS: d.durationS || 0,
+      mediaUri: ownAddr.charAt(0) === '/' ? origin + ownAddr : ownAddr, needsAuth: ownOnOrigin };
+  }
   return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'episode', durationS: d.durationS || 0,
     mediaUri: origin + '/api/player/audio/' + encodeURIComponent(date) + '/' + encodeURIComponent(d.episodeId), needsAuth: true };
 }
@@ -9133,7 +9153,7 @@ function offlineTomorrowBuild(tomorrow, epoch) {
       var stored = offlineSnapshotStore(tomorrow, day, settings, extRec, epoch);
       var origin = location.origin;
       var tracks = items.map(function (it) {
-        if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + '/api/player/audio/' + encodeURIComponent(tomorrow) + '/' + encodeURIComponent(it.id), needsAuth: true };
+        if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false }; // v475: the item's own enclosure address, the ext arm's form — the Range route synthesized here through v472 is retired for own episodes (see oraSnapshotTrack)
         if (it.kind === 'ai') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + (it.enclosureUrl || ''), needsAuth: true };
         return { id: it.id, block: it.block || '', title: it.title || '', kind: 'external', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false };
       });

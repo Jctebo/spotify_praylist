@@ -322,8 +322,17 @@ await ev(() => {
   ok(b1.mode === true && b1.contracts.length === 1, 'B1: the mode reads on with the contract shell standing, and one start sends exactly one contract', JSON.stringify(b1).slice(0, 200));
   ok(c.form === 'day' && c.day === '2026-11-14' && c.items && c.items.length === 3 && c.queueEnd === 3 && c.startIndex === 0,
     'B1: the contract carries the day form — 3 items, queueEnd 3, startIndex 0', JSON.stringify(c).slice(0, 300));
-  ok(c.items && c.items[0].mediaUri.indexOf('/api/player/audio/2026-11-14/ep1') > -1 && c.items[0].needsAuth === true && c.items[0].kind === 'episode',
-    'B1: items resolve through the standing snapshot resolution (the session route, needsAuth)', JSON.stringify(c.items && c.items[0]).slice(0, 200));
+  // v475 RE-PIN (by name, per the v475 record §3): this clause
+  // asserted the Range-route synthesis for an own episode —
+  // the retired form v475 proved answers 404 for every own
+  // episode (player_episodes carries no own rows since
+  // 2026-11-12). The fixture's url ('https://x/ep1.mp3') IS the
+  // descriptor's own address (the enclosure form), and the
+  // contract now carries it, needsAuth false. The Range-route
+  // form's standing coverage moves to harness-v475 P3 (the AI
+  // Signal, whose url is that route's path).
+  ok(c.items && c.items[0].mediaUri === 'https://x/ep1.mp3' && c.items[0].needsAuth === false && c.items[0].kind === 'episode',
+    'B1: items resolve through the standing snapshot resolution (the descriptor\u2019s own address, v475)', JSON.stringify(c.items && c.items[0]).slice(0, 200));
   ok(b1.playCalls === 0 && b1.src === '', 'B1: the element is never touched — no load, no play', JSON.stringify(b1));
   ok(b1.pend === 'ep1' && b1.cur === 'ep1', 'B1: the v461 bookkeeping stands — current set, the start pends on the one seat', JSON.stringify(b1));
 }
