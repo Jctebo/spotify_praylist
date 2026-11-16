@@ -1477,7 +1477,14 @@ function renderQueueList() {
     // cannot stand inside the uniform 76px. The .npq-start
     // accent border stays as the row's second signal.
     if (isStart) metaParts.push('Starts here');
-    var on = dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false;
+    // v477: a podcast row's dot reads the episode's own mark —
+    // the descriptor's listened flag (podDesc carries it from
+    // the payload; the mark writers keep standing copies in
+    // step) — never the day store, which a podcast descriptor
+    // never writes (markCompleted returns at the podcast branch:
+    // the podcasts store is its record). A day row keeps the
+    // isPlayed read untouched.
+    var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false);
     var dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
     return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
       + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
@@ -2718,7 +2725,11 @@ function podDesc(e) {
   // position (podPositionS) — the server value from the open
   // payload, null for listened and untouched entries — so every
   // start the queue reaches can hand it to the resume seam.
-  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null, imageUrl: e.imageUrl || (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: e.descText || null };
+  // v477: the descriptor also carries the entry's listened flag
+  // itself, so a queue row's played dot can read the episode's
+  // own mark (the queue birth and the podcast restore both
+  // build descriptors here, from the store-folded payload).
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: state.podcasts ? state.podcasts.series : null, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', durationS: e.durationS || 0, listened: !!e.listened, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null, imageUrl: e.imageUrl || (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: e.descText || null };
 }
 function podCurrentKey(entries) {
   // v390 §2.10 (option A amendment, 2026-11-12): the in-memory
@@ -2734,6 +2745,23 @@ function podCurrentKey(entries) {
   });
   var cur = day || bonus;
   return cur ? cur.key : null;
+}
+function podSyncQueueListened(series, seqKey, on) {
+  // v477: the queue's copy of the mark. A mark act flips the
+  // payload entry and the server row; the standing queue
+  // descriptors are separate objects (podDesc copies), so the
+  // flip is carried to every standing copy keyed (podSeries,
+  // seriesKey) — the queue, the current, and the preview, the
+  // standings renderQueueList can paint. A descriptor born
+  // later (a queue birth, a restore) reads the flag from the
+  // payload at podDesc instead; the two seats together keep
+  // every queue row's dot on the one episode-level mark.
+  var apply = function (d) {
+    if (d && d.kind === 'podcast' && d.podSeries === series && d.seriesKey === seqKey) d.listened = !!on;
+  };
+  (state.queue || []).forEach(apply);
+  if (state.current) apply(state.current);
+  if (state.previewQueue) state.previewQueue.forEach(apply);
 }
 function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
@@ -2766,6 +2794,11 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
     // feed episode instead. The counts still update.
     if (state.podcasts.kind !== 'rss') state.podcasts.currentKey = podCurrentKey(state.podcasts.entries);
   }
+  // v477: the mark lands on any standing queue copy of the
+  // episode too — outside the payload guard above, because the
+  // server write it rides went out regardless of which page
+  // stands open.
+  podSyncQueueListened(seriesKey, seqKey, true);
 }
 function renderPodcasts() {
   readTabSide('podcasts'); // v464 §2.5: the standing side stands before any paint reads tabSideNow.podcasts
@@ -3526,6 +3559,10 @@ function podToggleMark(key) {
   // routes do the same server-side in the same act.
   entry.positionS = null;
   podPosSlotDrop(res.series, key);
+  // v477: the toggle lands on any standing queue copy of the
+  // episode in the same act, so the queue's dot and the series
+  // page's mark can never disagree inside a session.
+  podSyncQueueListened(res.series, key, entry.listened);
   var left = res.entries.filter(function (e) { return !e.listened; });
   res.listenedCount = res.entries.length - left.length;
   // v464 §2.4: the rss stand-down, as in writePodMarkQuiet —
