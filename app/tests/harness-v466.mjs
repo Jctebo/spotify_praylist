@@ -25,6 +25,12 @@
 //       WEB face standing — the shell's arbitration 'stop'
 //       lands on the page and the page's queue, current, and
 //       saved snapshot stand intact
+//   B9  v468 (the paused-standing field failure): a native
+//       pending start the engine never acks — the standing
+//       contract is re-sent ONCE past the bound, at the
+//       mirror's position; and the row disc's glyph follows
+//       the mirror's playing flips with the current standing
+//       (the recording's disc/dock disagreement)
 // Mold: harness-v461 (client extraction + Chromium + the fake
 // audio), plus a mock OraDayBridge standing on window.Capacitor
 // — the mock IS the shell for these legs: it records contracts
@@ -287,7 +293,7 @@ await ev(() => {
   window.__reset466 = function () {
     window.__reset();
     window.__contracts = []; window.__commands = []; window.__pushes = []; window.__completions = [];
-    nativeMirror = null; nativeContractDescs = [];
+    nativeMirror = null; nativeContractDescs = []; nativePendingWatch = null;
     try { localStorage.removeItem('opn-autoplay-v358'); } catch (e) {}
   };
   window.__dayFixture = function (ids) {
@@ -509,6 +515,53 @@ await ev(() => {
     'B8: the saved queue snapshot stands byte-for-byte after the arbitration stop', JSON.stringify({ before: !!b8.snapBefore, ids: snapIds }));
   ok(b8.ack.pend === null && b8.ack.cur === 'ep1' && b8.ack.q === 3,
     'B8: the engine state event still acks the start over the standing queue', JSON.stringify(b8.ack));
+}
+
+/* ---------------- B9: the no-ack recovery + the row paint (v468) ---------------- */
+{
+  await ev(() => {
+    window.__reset466();
+    var descs = window.__dayFixture(['ep1', 'ep2', 'ep3']);
+    document.getElementById('rows').innerHTML = '<button class="playbtn" data-playkey="ep1" aria-label="Play"></button>';
+    startQueue(descs.slice());
+    // The engine acks the start, then the queue stands PAUSED
+    // at 0:46 — the field shape exactly.
+    window.__emitNative(window.__nativeEvt({ playing: true, positionS: 3 }));
+    var glyphPlaying = document.querySelector('[data-playkey="ep1"]').innerHTML;
+    window.__emitNative(window.__nativeEvt({ playing: false, positionS: 46 }));
+    var glyphPaused = document.querySelector('[data-playkey="ep1"]').innerHTML;
+    // The resume press: a pending start stands, the transport
+    // command goes out — and NO ack ever comes (the dead
+    // service / wedged player of the field failure).
+    resumeCurrent();
+    window.__b9 = {
+      glyphPlaying: glyphPlaying, glyphPaused: glyphPaused,
+      contractsAtResume: window.__contracts.length,
+      commands: window.__commands.map(function (c) { return c.command; }),
+      pend: state.pendingStart && state.pendingStart.episodeId,
+    };
+    nativeMirrorTick(); // the watch stamps this start
+    window.__b9.contractsAfterFirstTick = window.__contracts.length;
+    nativePendingWatch.atMs -= 7000; // the bound passes with no ack
+    nativeMirrorTick(); // the recovery fires
+    window.__b9.contractsAfterBound = window.__contracts.length;
+    window.__b9.resent = window.__contracts[1] || null;
+    nativeMirrorTick(); // and does not fire twice for one start
+    window.__b9.contractsAfterThirdTick = window.__contracts.length;
+    window.__b9.pendAfter = state.pendingStart && state.pendingStart.episodeId;
+  });
+  await sleep(30);
+  const b9 = await ev(() => window.__b9);
+  ok(b9.glyphPlaying.charCodeAt(0) === 10073 && b9.glyphPaused.charCodeAt(0) === 9654,
+    'B9: the row disc follows the mirror — ❚❚ while playing, ▶ after the pause lands with the current unchanged (the recording disagreement, closed)', JSON.stringify(b9).slice(0, 200));
+  ok(b9.contractsAtResume === 1 && b9.commands.join(',') === 'play' && b9.pend === 'ep1',
+    'B9: the resume sends only the play command and the pending start stands — the field shape before the failure', JSON.stringify(b9).slice(0, 200));
+  ok(b9.contractsAfterFirstTick === 1 && b9.contractsAfterBound === 2,
+    'B9: an unacked native pending start re-sends the standing contract once past the bound — the resurrection start', JSON.stringify(b9).slice(0, 200));
+  ok(b9.resent && b9.resent.startIndex === 0 && b9.resent.startPositionS === 46 && b9.resent.items.length === 3,
+    'B9: the re-sent contract stands at the standing index and the mirror position (0:46), the queue whole', JSON.stringify(b9.resent).slice(0, 250));
+  ok(b9.contractsAfterThirdTick === 2 && b9.pendAfter === 'ep1',
+    'B9: the recovery fires once per pending start, and the start still pends on the engine ack', JSON.stringify(b9).slice(0, 200));
 }
 
 await browser.close();
