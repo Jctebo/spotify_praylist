@@ -968,10 +968,15 @@ function setMediaSessionFor(desc) {
   if (oraInShell()) return; // v377 B6: in the shell the native session is the face
   if (!('mediaSession' in navigator)) return;
   try {
+    // v480: the browser session names the track's own art
+    // when one stands (the same artUriFor the native
+    // hand-off rides); the logo pair stands only as the
+    // no-art fallback, the dock's own standing form.
+    var artUri = artUriFor(desc);
     navigator.mediaSession.metadata = new MediaMetadata({
       title: desc.title, artist: 'Ora Pro Nobis',
       album: 'Ora Pro Nobis — ' + (state.dateLabel || state.storedDay || ''),
-      artwork: [{ src: '/logo.png', sizes: '288x288', type: 'image/png' }, { src: '/logo-512.png', sizes: '512x512', type: 'image/png' }],
+      artwork: artUri ? [{ src: artUri }] : [{ src: '/logo.png', sizes: '288x288', type: 'image/png' }, { src: '/logo-512.png', sizes: '512x512', type: 'image/png' }],
     });
   } catch (e) {}
 }
@@ -7100,6 +7105,20 @@ function blockInsertCards(day, standing) {
    from PRE-BLOB source fields only: a blob: URL is WebView-local
    and meaningless to native code, so one never enters the
    snapshot. */
+function artUriFor(desc) {
+  // v480: the track's standing art, named for the native
+  // hand-off — the descriptor's imageUrl (the item's own art
+  // else its channel's, folded server-side) absolutized: a
+  // relative path (the own feed's '/logo.png' among them)
+  // rides the app origin; an absolute URL passes; no art
+  // stands as ''. The shell resolves this URI to bytes and
+  // stamps them on the session item — one path for every
+  // kind, the logo included: it flows through as the own
+  // tracks' artUri, never as a shell-side stamp.
+  var u = (desc && desc.imageUrl) || '';
+  if (!u) return '';
+  return u.charAt(0) === '/' ? location.origin + u : u;
+}
 function oraSnapshotTrack(d, date) {
   var origin = location.origin;
   // v384 §2.2: the intention snapshot branch retires with the
@@ -7116,13 +7135,13 @@ function oraSnapshotTrack(d, date) {
       // this slot through the Worker pass-through — the native
       // side uses the same standing route (§2.5's courier class).
       return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
-        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId), needsAuth: true };
+        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId), needsAuth: true, artUri: artUriFor(d) };
     }
     var pre2 = st.enclosureUrl || (st.streamUrl && String(st.streamUrl).indexOf('blob:') !== 0 ? String(st.streamUrl) : '');
     if (!pre2) return null;
     var onOrigin = pre2.indexOf(origin + '/') === 0 || pre2.charAt(0) === '/';
     return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
-      mediaUri: pre2.charAt(0) === '/' ? origin + pre2 : pre2, needsAuth: onOrigin };
+      mediaUri: pre2.charAt(0) === '/' ? origin + pre2 : pre2, needsAuth: onOrigin, artUri: artUriFor(d) };
   }
   // Own episode (v475): the descriptor's OWN address — the
   // feed enclosure the page engine plays — is the native
@@ -7145,10 +7164,10 @@ function oraSnapshotTrack(d, date) {
   if (ownAddr) {
     var ownOnOrigin = ownAddr.indexOf(origin + '/') === 0 || ownAddr.charAt(0) === '/';
     return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'episode', durationS: d.durationS || 0,
-      mediaUri: ownAddr.charAt(0) === '/' ? origin + ownAddr : ownAddr, needsAuth: ownOnOrigin };
+      mediaUri: ownAddr.charAt(0) === '/' ? origin + ownAddr : ownAddr, needsAuth: ownOnOrigin, artUri: artUriFor(d) };
   }
   return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'episode', durationS: d.durationS || 0,
-    mediaUri: origin + '/api/player/audio/' + encodeURIComponent(date) + '/' + encodeURIComponent(d.episodeId), needsAuth: true };
+    mediaUri: origin + '/api/player/audio/' + encodeURIComponent(date) + '/' + encodeURIComponent(d.episodeId), needsAuth: true, artUri: artUriFor(d) };
 }
 function oraDaySnapshot() {
   var date = state.presentedDay || state.storedDay || null;
@@ -7482,12 +7501,12 @@ function nativeContractItem(d) {
     }
     if (!url) return null;
     return { id: d.episodeId, kind: 'podcast', title: d.title || '', subtitle: subtitle, block: d.block || '',
-      mediaUri: url, needsAuth: false, durationS: d.durationS || 0, seriesKey: d.seriesKey || '', podSeries: d.podSeries || '' };
+      mediaUri: url, needsAuth: false, durationS: d.durationS || 0, seriesKey: d.seriesKey || '', podSeries: d.podSeries || '', artUri: artUriFor(d) };
   }
   var t = oraSnapshotTrack(d, presentedDateStr() || '');
   if (!t) return null;
   return { id: t.id, kind: t.kind, title: t.title, subtitle: subtitle, block: t.block,
-    mediaUri: t.mediaUri, needsAuth: !!t.needsAuth, durationS: t.durationS || 0, seriesKey: '', podSeries: '' };
+    mediaUri: t.mediaUri, needsAuth: !!t.needsAuth, durationS: t.durationS || 0, seriesKey: '', podSeries: '', artUri: t.artUri || '' };
 }
 function nativeContractFor(desc) {
   // The contract for the standing queue (or the single play):
