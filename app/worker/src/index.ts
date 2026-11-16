@@ -2082,6 +2082,11 @@ export default {
         // before the audio def lookup.
         const doorVideoDef = podVideoSeriesDef(doorSeries);
         if (doorVideoDef) return json(await podVideoPayload(env, doorVideoDef));
+        // v454 §2: the door read mirrors the session read — an OWN
+        // series key routes to the own payload builder before the
+        // audio def lookup (the v451 seat the v434 mirror missed).
+        const doorOwnDef = podOwnSeriesDef(doorSeries);
+        if (doorOwnDef) return json(await podOwnPayload(env, doorOwnDef));
         const doorDef = podSeriesDef(doorSeries);
         if (!doorDef) return err(400, "unknown series");
         return json(await podPayload(env, doorDef));
