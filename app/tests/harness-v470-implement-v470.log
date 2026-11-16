@@ -1,0 +1,41 @@
+ok 1 - ST1 migration 0028 is the last migration
+ok 2 - ST1 migration 0028 creates prayer_book_favorites in 0021's shape (slug PK · sort_order · updated_at)
+ok 3 - ST2 index.ts carries the session favorites GET + PUT
+ok 4 - ST2 index.ts carries the door favorites GET (read-only mirror)
+ok 5 - ST3 the cooked client carries the favorites path (load GET + sync PUT) and the working-copy pair
+ok 6 - ST4 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 7 - ST4 the single-backslash census inside APP_JS stands at 0
+ok 8 - ST5 the whole worker bundles clean (esbuild)
+ok 9 - ST5 (housekeeping): the SW pin stands at ora-pro-nobis-v466-1 on this base (Ship moves it)
+ok 10 - SQ1 migration 0028 stands applied: prayer_book_favorites (slug PK · sort_order · updated_at)
+ok 11 - SQ2 the book seed stands unregressed at 34 rows
+ok 12 - SQ2 the favorites table stands empty at seed (the standing state)
+ok 13 - W0 the fixture Worker boots (LOCAL_DEV)
+ok 14 - W1 the session GET on an empty store reads { favorites: [] }
+ok 15 - W2 the PUT stores the list deduped, first occurrence kept, and answers the stored list re-read
+ok 16 - W2 the rows stand with sort_order = index
+ok 17 - W3 the session GET reads the stored list back
+ok 18 - W4 the door GET carries the stored list (the Review/Ship verify surface)
+ok 19 - W5 a bad-slug PUT answers 400 and writes nothing (the store stands)
+ok 20 - W6 no door write route stands (a door PUT does not write)
+ok 21 - W7 an empty PUT clears the list
+ok 22 - B1 two stars write through: the server store holds both, one PUT per toggle
+ok 23 - B1 after a whole localStorage wipe + reload, the Favorites section stands from the server (painted in book order)
+ok 24 - B1 the device key stands rewritten as the server list's mirror
+ok 25 - B2 the carry-up PUTs the device list up once on first open
+ok 26 - B2 a second open carries nothing — the stored list stands unchanged (idempotent)
+ok 27 - B3 a standing server list wins whole over a divergent device mirror — paint, mirror, and store all read the server list
+ok 28 - B4 with the favorites routes dead, the Favorites section paints from the device mirror
+ok 29 - B4 a toggle with the server down lands in the mirror and nothing crashes
+ok 30 - B0 no page errors across the whole run
+---
+harness-v470: 30/30 ok
+
+Standing runs on the same tree (recorded as-is):
+harness-v462: 53/56 ok — not-ok are premise statics only: ST1 (its diff base is
+release/v461-ship; this tree stands on v466-ship + the v468 merge, so migrations
+0026/0027 also show), ST4 housekeeping (its pin premise is ora-pro-nobis-v461-1;
+the standing pin is v466-1), SQ0 (0026-is-last, superseded by 0027/0028). Every
+functional leg green.
+harness-v439: 14 ok / 1 not-ok — the standing result (B5 clicks the retired
+#gearbtn; premise superseded at v457).

@@ -4920,8 +4920,9 @@ function settleIntentions(redrawFailed) {
    on the device under opn-book-v462 after the first fetch
    (the opn-ext-cache-v1 idiom — guarded parse, guarded
    write, a bad record treated as none), favorites
-   device-local under opn-book-favs-v462 (the opn-played
-   idiom). No prayer text stands in this script — the texts
+   server-side since v470 (prayer_book_favorites, migration
+   0028) with opn-book-favs-v462 standing as the device
+   mirror of the server list. No prayer text stands in this script — the texts
    arrive by fetch only and live in state.book. The side
    and the prayer page call no audio function: a written
    surface never disturbs playback. */
@@ -4948,6 +4949,54 @@ function bookFavsRead() {
   } catch (e) { return []; }
 }
 function bookFavsWrite(favs) { try { localStorage.setItem(BOOK_FAVS_KEY, JSON.stringify(favs)); } catch (e) {} }
+/* v470 §2.3: the favorites' working copy is state.bookFavs.
+   The server list is the truth; the device key stands as its
+   mirror. Until the load's server read settles the copy, the
+   mirror stands as the copy (the offline paint never waits). */
+function bookFavsList() {
+  if (state && Array.isArray(state.bookFavs)) return state.bookFavs;
+  return bookFavsRead();
+}
+function bookFavsSet(favs) {
+  state.bookFavs = favs;
+  bookFavsWrite(favs);
+}
+function bookFavsSync() {
+  // The write-through: PUT the whole working copy; the stored
+  // list the server answers with is adopted whole (it is the
+  // truth — validated, deduped). A failed PUT keeps the
+  // mirror; the next toggle or the next open re-syncs.
+  var favs = bookFavsList().slice();
+  return api('/api/prayer/book/favorites', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ favorites: favs }) }).then(function (res) {
+    if (res && Array.isArray(res.favorites)) {
+      bookFavsSet(res.favorites);
+      if (document.getElementById('book-results')) paintBookResults();
+    }
+    return res;
+  }).catch(function () { return null; });
+}
+function bookFavsLoad() {
+  // The server read at book load. Where the server list
+  // stands, it is the truth and the mirror is rewritten from
+  // it. Where the server stands empty and the mirror holds
+  // slugs, the mirror carries up once — one-way and
+  // idempotent: a later open finds the server standing and
+  // carries nothing, and a failed carry-up leaves the mirror
+  // untouched for the next open to retry. A failed read
+  // leaves the mirror standing as the working copy.
+  state.bookFavs = bookFavsRead();
+  return api('/api/prayer/book/favorites').then(function (res) {
+    if (!res || !Array.isArray(res.favorites)) return;
+    if (res.favorites.length) {
+      bookFavsSet(res.favorites);
+      if (document.getElementById('book-results')) paintBookResults();
+    } else if (bookFavsRead().length) {
+      bookFavsSync();
+    } else {
+      bookFavsSet([]);
+    }
+  }).catch(function () {});
+}
 function bookFind(slug) {
   var found = null;
   ((state.book && state.book.groups) || []).forEach(function (g) {
@@ -4965,7 +5014,7 @@ function paintBookResults() {
   var host = document.getElementById('book-results');
   if (!host) return;
   var groups = (state.book && state.book.groups) || [];
-  var favs = bookFavsRead();
+  var favs = bookFavsList();
   var q = bookQuery.trim().toLowerCase();
   var html = '';
   if (q) {
@@ -5007,6 +5056,7 @@ function renderPrayerBook() {
   paintPrayersBar(null); // the side is a tab home side — no pushed bar stands over it
   state.prayersView = { kind: 'book' };
   view.innerHTML = skelHtml('book');
+  bookFavsLoad();
   var copy = bookReadCopy();
   if (copy) { state.book = { groups: copy.groups }; renderPrayerBookSettled(); }
   var today = todayChicago();
@@ -5034,13 +5084,14 @@ function renderPrayerBook() {
   });
 }
 function toggleBookFav(slug) {
-  var favs = bookFavsRead();
+  var favs = bookFavsList().slice();
   var at = favs.indexOf(slug);
   if (at >= 0) favs.splice(at, 1); else favs.push(slug);
-  bookFavsWrite(favs);
+  bookFavsSet(favs);
   if (document.getElementById('book-results')) paintBookResults();
   var ps = document.getElementById('book-page-star');
   if (ps && ps.getAttribute('data-bookstar') === slug) ps.textContent = favs.indexOf(slug) >= 0 ? '\u2605' : '\u2606';
+  bookFavsSync();
 }
 /* Amendment 1: the language switch — the kind-switch mold
    (kindSwitchHtml), a two-way .segtoggle reading English ·
@@ -5059,7 +5110,7 @@ function openPrayerPage(slug) {
   bookPageScroll = window.scrollY || 0;
   state.prayersView = { kind: 'bookpage' };
   paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: p.title, backAttrs: 'data-bookback' }), 'book');
-  var fav = bookFavsRead().indexOf(p.slug) >= 0;
+  var fav = bookFavsList().indexOf(p.slug) >= 0;
   view.innerHTML = '<div id="book-page"><div class="row"><h1 class="screen grow">' + esc(p.title) + '</h1>'
     + (p.bodyLatin ? langSwitchHtml() : '')
     + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
