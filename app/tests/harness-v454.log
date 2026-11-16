@@ -1,0 +1,18 @@
+ok 1 - ST1 the diff vs the v456-ship base is index.ts only — no client change, no migration (got: app/worker/src/index.ts)
+ok 2 - ST2 the own seat stands in the door block between the video seat and the audio def lookup, in the §2 form (two statements)
+ok 3 - ST3 the door consults podOwnSeriesDef exactly once — the one new seat, nowhere else
+ok 4 - ST4 the whole worker bundles clean (esbuild)
+ok 5 - SV0 the real worker boots over the fixture DB (wrangler LOCAL_DEV mold)
+ok 6 - SV1 the door own read answers 200 with the own payload (kind 'own', The AI Signal, available)
+ok 7 - SV2 the entries stand newest-first with only the 'present' rows (the older 'missing' row does not stand), in the standing entry shape
+ok 8 - SV3 currentKey is today's entry (derived at read), currentLabel its title, the show image is the app logo
+ok 9 - SV4 THE MIRROR PROOF: the door payload deep-equals the session route's payload for the same fixture state
+ok 10 - SV5 the door index read is unchanged: five entries in registry order, the own entry last with kind 'own'
+ok 11 - SV6 the door index deep-equals the session index for the same fixture state
+ok 12 - SV7 the door audio read ?series=catechism-in-a-year is unchanged (200, its standing shape, door ≡ session)
+ok 13 - SV7 the door audio read ?series=bible-in-a-year is unchanged (200, its standing shape, door ≡ session)
+ok 14 - SV7 the door audio read ?series=rosary-in-a-year is unchanged (200, its standing shape, door ≡ session)
+ok 15 - SV8 the door video read ?series=catholictv is unchanged (200, kind 'video', door ≡ session)
+ok 16 - SV9 an unknown series through the door still answers 400 "unknown series"
+ok 17 - SV10 the door stays token-gated: the own read without the agent token answers 403
+# harness-v454: 17/17 ok
