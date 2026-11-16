@@ -1,0 +1,17 @@
+ok 1 - ST1 the worker-source diff vs the v454-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - ST2 paintBlockPage emits exactly ONE body-line element before the rows: the .blockpage-meta row carrying the .blockpage-metatext span (the data-bmeta span inside it) and the [data-blockdl] act inside the same div; no note emission stands
+ok 3 - ST3 the note retires whole from the script: no data-blockdlnote emission or sweep stands anywhere in client.ts; 'remove in Settings' census 0
+ok 4 - ST4 the standing machinery stands in its standing form: the [data-blockdl] settlement sweep (text + disabled) and the act wiring unchanged; blockDownloadAll, updateBlockCounts and paintEpisodesPage byte-identical to the base
+ok 5 - ST5 ui.ts: the .blockpage-dlnote rule retires; .blockpage-meta gains the flex row form; the .blockpage-metatext rule stands (flex:1, min-width:0); the act re-forms (flex:none, nowrap, padding 6px 0, no display:block); the orphaned .blockpage-dlrow stands untouched
+ok 6 - ST6 the whole worker bundles clean (esbuild)
+ok 7 - ST7 (housekeeping): the SW pin stands at ora-pro-nobis-v454-1 (Ship moves it)
+ok 8 - ST8 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 9 - ST8 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 10 - B1 the block page opens on ONE row: the body's first element is the single .blockpage-meta row — the text span (Morning prayers · the settled span) at the left, the Download all act at the row's trailing end on the same line; NO note element stands anywhere; the 3 track rows follow
+ok 11 - B2 no Settings text stands in the body lines in the not-downloaded state (no 'Settings' in the page body host, no 'remove in Settings' anywhere in the document)
+ok 12 - B3 the data-bmeta settlement lands in the row: after a stomp, updateBlockCounts rewrites the span in place (3 episodes · 12min) — the span stands inside the text span inside the row
+ok 13 - B4 the download tap runs the download end to end: the act reads On this device, disabled — in the same single row; no note element appears and no Settings text stands in the downloaded state either
+ok 14 - B5 the episodes page stands as today: its meta line is text-only (1 episodes · 5min) with NO act inside it and no download act on the page; the Play All body row stands
+ok 15 - B6 at 360px with a long caption: the caption wraps inside the text span, the act holds the row's trailing end on the row's line (centered against the row), the tap point hits the act, no horizontal overflow (362 is the base's own standing measure)
+ok 16 - Z zero page errors across every leg
+# harness-v458: 16/16 passed
