@@ -762,9 +762,49 @@ function bootQueueSnapshot() {
   // check (the day turn does not kill it) and no restoredQueue
   // flag (Continue is a day surface). The restore itself waits
   // for the series payload (tryStandPodcastRestore).
-  if (rec.form === 'podcast') { state.podRestoreProbe = rec; return; }
+  if (rec.form === 'podcast') {
+    state.podRestoreProbe = rec;
+    // v478: the boot stand — the probe no longer waits for its
+    // series page. The record's own series payload is fetched
+    // through the standing route HERE, at page birth, and the
+    // standing restore runs on its landing, so the dock stands
+    // on every tab from the open instead of appearing only
+    // inside Formation (John, 2026-11-16: the mini player
+    // "gated inside the section"). The landing re-checks the
+    // probe (a series page may have consumed it first), a
+    // standing current waits the stand out (the restore's own
+    // guard), and a DIFFERENT series standing open skips the
+    // stand whole — no payload is stomped, and the series-page
+    // seats remain as the backstop.
+    api('/api/player/podcasts?series=' + encodeURIComponent(rec.series)).then(function (res) {
+      if (!state.podRestoreProbe || state.podRestoreProbe !== rec) return;
+      if (state.current) return;
+      if (state.podcasts && state.podcasts.series && state.podcasts.series !== rec.series) return;
+      state.podcasts = res;
+      tryStandPodcastRestore();
+    }).catch(function () {});
+    return;
+  }
   if (rec.date !== presentedDateStr()) { removeQueueSnapshot(); return; }
   state.restoredQueue = true;
+}
+function seedNativeDescsFromRestore() {
+  // v478: the mirror seeding — a restore stands the page's copy
+  // of the queue the engine already holds (the service cold-read
+  // the persisted contract the same starts wrote), so under the
+  // native engine the standing contract's descriptor seat takes
+  // the restored queue: the engine's publishes can then adopt
+  // and track it (the dock's glyph follows the mirror, an
+  // advance moves its track) instead of falling at
+  // applyNativeState's desc gate. A contract sent THIS session
+  // already populates the seat — the empty check defers to it.
+  // Bound: the seeded indices parallel the restored queue (the
+  // contract's kept order); the adoption's own episodeId check
+  // refuses any mismatch, degrading to the untracked stand,
+  // never to a wrong adoption.
+  if (!oraNativeMode()) return;
+  if (nativeContractDescs.length) return;
+  nativeContractDescs = state.queue.slice();
 }
 function tryStandPodcastRestore() {
   // v412 Fix 9: the podcast restore — runs when a series payload
@@ -795,6 +835,7 @@ function tryStandPodcastRestore() {
   var idx = keptIdx.indexOf(rec.idx);
   if (idx < 0) idx = 0;
   state.queue = descs;
+  seedNativeDescsFromRestore(); // v478: the restored stand tracks the engine
   state.queueIdx = idx;
   var chosen = descs[idx];
   state.current = chosen;
@@ -1655,6 +1696,7 @@ function standRestoredQueue(day) {
   // call stands anywhere in this path — one tap resumes through
   // the standing resumeCurrent() seam.
   state.queue = survivors.map(function (s) { return s.desc; });
+  seedNativeDescsFromRestore(); // v478: the day restore's stand tracks the engine the same way
   state.queueIdx = survivors.indexOf(chosen);
   state.current = chosen.desc;
   setMediaSessionFor(chosen.desc);
