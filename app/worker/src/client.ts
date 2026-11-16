@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -945,7 +945,7 @@ function reassertMediaSession() {
   if (!state.current) { setPlaybackState('none'); return; }
   setMediaSessionFor(state.current);
   registerMediaHandlers();
-  setPlaybackState(transportPlaying() ? 'playing' : 'paused');
+  setPlaybackState(transportEngaged() ? 'playing' : 'paused'); // v461 F1: a pending start declares 'playing', as the faces paint it
   updatePositionState();
 }
 function updatePositionState() {
@@ -983,6 +983,28 @@ function pauseTransport() {
   audioEl.pause();
   pushNativeState(false); // v377 B2: pause is a push trigger
 }
+/* v461 F1 — the pending-start model: a start in flight has a
+   state of its own. state.pendingStart names the descriptor
+   whose start has been issued and not yet landed (the load
+   window: the element still reads paused while the faces
+   already paint playing). transportEngaged() is the toggle
+   surfaces' read — playing OR starting. A toggle while a
+   start pends is a CANCEL, never a restart and never a
+   stacked play(): cancelPendingStart clears the intent
+   first (a pause() on an element that already reads paused
+   may fire no 'pause' event, so no clear is ever left to an
+   event that might not come), then pauses the element; the
+   pending play() rejects as AbortError, which
+   onStartRejected ignores (F2). The flag is memory-only —
+   never written into the queue snapshot, the resume record,
+   or the native state payload. */
+function transportEngaged() {
+  return transportPlaying() || !!state.pendingStart;
+}
+function cancelPendingStart() {
+  state.pendingStart = null;
+  pauseTransport();
+}
 function loadDescAudio(desc) {
   closeWatch(); // v434 §2.6.2 seat 3: every fresh audio start tears a standing watch frame down BEFORE audioEl.play() runs below
   // The audio-load step — startDesc's tail, split out at v384.
@@ -993,7 +1015,7 @@ function loadDescAudio(desc) {
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
   playIntent = true; // v412: a start attempt IS a standing intent to play (the error guard reads it)
-  audioEl.play().catch(function () { onStartRejected(desc); }); // v412 Fix 3: a rejected start is reported + recovered, never swallowed
+  audioEl.play().catch(function (e) { onStartRejected(desc, e); }); // v412 Fix 3: a rejected start is reported + recovered, never swallowed · v461 F2: the rejection's name rides along — an interruption (AbortError) is not a refusal
   setPlaybackState('playing');
   pushNativeState(false); // v377 B2: track change / play
 }
@@ -1052,6 +1074,7 @@ function startDesc(desc) {
   paintWaitLine();
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
+  state.pendingStart = desc; // v461 F1: the start's intent stands readable from this instant until the play event lands (every start funnels through here — one seat governs them all)
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
   setMediaSessionFor(desc);
   setPlaybackState('playing');
@@ -1066,7 +1089,7 @@ function startDesc(desc) {
     caches.open('opn-ext-audio-v1').then(function (c) { return c.match(podKey); })
       .then(function (resp) { return resp ? resp.blob() : null; })
       .catch(function () { return null; })
-      .then(function (blob) { if (blob) desc.url = mintBlobUrl(desc, blob); loadDescAudio(desc); });
+      .then(function (blob) { if (state.current !== desc) return; if (blob) desc.url = mintBlobUrl(desc, blob); loadDescAudio(desc); }); // v461 F4: a superseded start's late cache read drops silently — no mint, no load, no play
     return;
   }
   loadDescAudio(desc);
@@ -1076,6 +1099,7 @@ function playTrack(desc) {
   // the spoken form is retired — every queue entry is a prayer
   // with audio); the toggle reads the transport predicates.
   if (!desc || !desc.available || !desc.url) return;
+  if (state.pendingStart && state.current && state.current.episodeId === desc.episodeId) { cancelPendingStart(); return; } // v461 F1: a toggle during this track's own start cancels the start — never a second startDesc
   if (state.current && state.current.episodeId === desc.episodeId && transportPlaying()) { pauseTransport(); return; }
   state.queue = []; state.queueIdx = -1;
   state.podRestoreProbe = null; // v412 Fix 9: a fresh play retires a standing podcast restore probe
@@ -1092,10 +1116,20 @@ function tapPlay(d) {
   // (§2.1), never in the render-time snapshot.
   if (!d) return;
   var key = d.episodeId || '';
+  // v461 F1: a tap on the track whose start is still loading
+  // CANCELS the start — it never rebuilds the queue, never
+  // restarts the load, never stacks a second play().
+  if (state.pendingStart && state.current && state.current.episodeId === key) { cancelPendingStart(); return; }
   // v384 §2.2: the same-unit toggle at the granularity of the
   // prayer alone — the pair is the unit, so tapping the prayer
   // card while its audio plays pauses it.
   if (state.current && transportPlaying() && state.current.episodeId === key) { pauseTransport(); return; }
+  // v461 F3: a tap on the PAUSED standing current is an
+  // unpause — the element resumes through resumeCurrent (the
+  // jumpQueueTo precedent); the standing queue, its index,
+  // and the track's place all stand. The rebuild below is
+  // for every OTHER row.
+  if (state.current && state.current.episodeId === key) { resumeCurrent(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
   // §2.7: a card in no block (the FROM TODAY'S PODCAST group)
@@ -1303,7 +1337,7 @@ function advanceQueue(dir) {
     startDesc(live);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); }
   return false;
 }
 function jumpQueueTo(i) {
@@ -1314,6 +1348,7 @@ function jumpQueueTo(i) {
   if (i < 0 || i >= state.queue.length) return;
   var desc = state.queue[i];
   if (i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId) {
+    if (state.pendingStart) { cancelPendingStart(); return; } // v461 F1: the standing current here is by construction the pending start — a toggle cancels it
     if (transportPlaying()) pauseTransport(); else resumeCurrent();
     return;
   }
@@ -1686,7 +1721,8 @@ audioEl.addEventListener('ended', function () {
   // A single play's end: the same rule — autoplay ON chains from
   // the ended track through the day; OFF stops, as before.
   if (autoplayOn() && chainForward(endedDesc)) return;
-  state.current = null; setPlaybackState('none'); markPlaying(null);
+  state.current = null; state.pendingStart = null; // v461 F1: the terminal clear (defensive — an ended implies a play landed, so the flag already stands null)
+  setPlaybackState('none'); markPlaying(null);
   updateDock();
 });
 /* v412: the standing intent to play — set at every play attempt
@@ -1777,7 +1813,8 @@ function handleAudioError() {
   paintWaitLine(); // v412 Fix 7: the wait resolved — its line clears
   flashPassOver(cur); // v412 Fix 7: the pass-over shows why on the entry's card
   if (inQueue) { advanceQueue(1); return; }
-  state.current = null; setPlaybackState('none'); markPlaying(null);
+  state.current = null; state.pendingStart = null; // v461 F1: the single-play clear is terminal — no start stands
+  setPlaybackState('none'); markPlaying(null);
   updateDock();
 }
 audioEl.addEventListener('error', function () {
@@ -1794,8 +1831,8 @@ audioEl.addEventListener('waiting', function () { stallNote(); }); // v412 Fix 2
 audioEl.addEventListener('stalled', function () { stallNote(); }); // v412 Fix 2
 audioEl.addEventListener('playing', function () { stallClear(); }); // v412 Fix 2: resumed progress clears the stamp
 audioEl.addEventListener('pause', function () { saveResume(); saveQueueSnapshot(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
-audioEl.addEventListener('play', function () { playIntent = true; state.startRetryKey = null; setPlaybackState('playing'); updateDock(); pushNativeState(false); }); // v412: a play event stands the intent + clears Fix 3's retry key
-audioEl.addEventListener('pause', function () { playIntent = false; }); // v412: any pause ends the standing intent (user pause, sleep stop, track end alike)
+audioEl.addEventListener('play', function () { playIntent = true; state.startRetryKey = null; state.pendingStart = null; setPlaybackState('playing'); updateDock(); pushNativeState(false); }); // v412: a play event stands the intent + clears Fix 3's retry key · v461 F1: the start has landed — the pending window closes
+audioEl.addEventListener('pause', function () { playIntent = false; state.pendingStart = null; }); // v412: any pause ends the standing intent (user pause, sleep stop, track end alike) · v461 F1: and closes the pending-start window with it
 audioEl.addEventListener('pause', function () { updateDock(); });
 audioEl.addEventListener('pause', function () { pushNativeState(false); }); // v377 B2: any element pause states the face
 audioEl.addEventListener('pause', function () {
@@ -1882,7 +1919,7 @@ function updateDock() {
   }
   document.getElementById('dock-title').textContent = cur.title || '';
   document.getElementById('dock-meta').textContent = cur.block || state.dateLabel || '';
-  document.getElementById('dock-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
+  document.getElementById('dock-play').innerHTML = transportEngaged() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport · v461 F1: the engaged read — a pending start paints ❚❚, agreeing with markPlaying's row disc
   document.getElementById('dock-next').disabled = !state.queue.length;
   // v417 §2.8: the retired face buttons' updateDock writes
   // leave with their elements (Previous lives in the dock
@@ -1982,6 +2019,7 @@ function fireTimedStop() {
   // v388: the element pause stands alone — no speech phase
   // exists for an expiry to land inside.
   if (!audioEl.paused && state.current) audioEl.pause();
+  else if (state.pendingStart) cancelPendingStart(); // v461 F6: a deadline landing inside the load window retires the pending start's intent through F1's cancel — the start cannot complete into playback past its deadline
   disarmSleep();
   fadeRestore();
   updateSleepLabel();
@@ -2028,6 +2066,7 @@ function sleepTrackEnd() {
       // element is preload="none", so load() is explicit, per v312).
       state.queueIdx = i;
       state.current = next;
+      state.pendingStart = null; // v461 F1: the held head stands UNSTARTED — no start stands
       setMediaSessionFor(next);
       setPlaybackState('paused');
       audioEl.src = next.url;
@@ -2098,8 +2137,8 @@ setInterval(stallTick, 1000); // v412 Fix 2: the stall watchdog's 1 s progress r
 // re-assert register this same object, so the table's identity (and
 // the harness hook's target) never drifts across a re-assert.
 var mediaHandlers = {
-  play: function () { resumeCurrent(); }, // v346 §2.4: the app's resume seam (carries the v320 §2.6 restore point (3) fade restore)
-  pause: function () { pauseTransport(); },
+  play: function () { if (state.pendingStart) return; resumeCurrent(); }, // v346 §2.4: the app's resume seam (carries the v320 §2.6 restore point (3) fade restore) · v461 F1: while a start pends the intent already stands at play — a stacked resumeCurrent() play() is F1's defect, so the handler is a no-op in the window
+  pause: function () { if (state.pendingStart) { cancelPendingStart(); return; } pauseTransport(); }, // v461 F1: a pause in the window cancels the pending start
   previoustrack: function () { previousWithRule(); }, // v412 Fix 8: the web session reads the one Previous rule
   nexttrack: function () { if (state.queue.length) advanceQueue(1); },
   seekto: function (details) {
@@ -2477,7 +2516,7 @@ function setTab(tab) {
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
   b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
 });
-document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
+document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.pendingStart) { cancelPendingStart(); return; } if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); }); // v461 F1: the pending head branch covers both the queue and single forms
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
 // v417 §2.8 (D4/FD4): the face carries play + next only —
 // Previous (v412 Fix 8's button) and the intentions toggle
@@ -3405,6 +3444,12 @@ function writeDayPositionQuiet(episodeId, positionS, durationS) {
   if (!episodeId) return;
   var pos = Math.floor(positionS || 0);
   if (dayPosSentKey === episodeId) dayPosSentVal = pos;
+  // v461 F3: the in-memory leg its podcast twin carries — the
+  // payload's dayPositions fold tracks the save in-session,
+  // so a restart through startDesc resumes at the true pause
+  // position, never at 0 or at the page-load fold. A position
+  // of 0 deletes, mirroring the server rule.
+  if (state.dayPayload && state.dayPayload.dayPositions) { if (pos > 0) state.dayPayload.dayPositions[episodeId] = pos; else delete state.dayPayload.dayPositions[episodeId]; }
   post('/api/player/day-position', { episodeId: episodeId, date: presentedDateStr(), positionS: pos, durationS: Math.floor(durationS || 0) }).catch(function () {});
 }
 function dayPositionTick() {
@@ -5940,7 +5985,7 @@ function openNowPlaying() {
   // a tap on the handle, or a drag down, minimizes (the sheet
   // removes; playback is never touched).
   wireNpGrab(sheet, function () { sheet.remove(); });
-  sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); });
+  sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.pendingStart) { cancelPendingStart(); return; } if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); }); // v461 F1: the pending head branch, as on the dock
   sheet.querySelector('#np-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the one rule
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
   sheet.querySelector('#np-fwd10').addEventListener('click', function () { seekBy(10); }); // v412 Fix 12
@@ -6004,7 +6049,7 @@ function updateNowPlaying() {
     if (intText) { intEl.textContent = 'Prayer Intention: ' + intText; intEl.style.display = ''; }
     else { intEl.textContent = ''; intEl.style.display = 'none'; }
   }
-  sheet.querySelector('#np-play').innerHTML = transportPlaying() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport
+  sheet.querySelector('#np-play').innerHTML = transportEngaged() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport · v461 F1: the engaged read, as on the dock
   sheet.querySelector('#np-prev').disabled = !state.queue.length; // v412 Fix 8: enabled at the queue head (the rule restarts the track there)
   sheet.querySelector('#np-next').disabled = !state.queue.length;
   syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
@@ -6627,7 +6672,15 @@ function noteStartFailed() {
   startFailedPending = true;
   pushNativeState(false);
 }
-function onStartRejected(desc) {
+function onStartRejected(desc, err) {
+  // v461 F2: an INTERRUPTED start is not a refused start. A
+  // play() interrupted by a pause or by a superseding load
+  // rejects as AbortError — whatever interrupted it already
+  // owns the outcome, so the handler returns FIRST, before
+  // the fact, before the currency check, before any state:
+  // no report, no retry key, no retry, no pass-over — and a
+  // superseding start's pendingStart is never touched.
+  if (err && err.name === 'AbortError') return;
   // v412 Fix 3: the start rejection's recovery — report the fact,
   // then recover ONCE: the descriptor re-resolves against the
   // live build (queueLiveDesc — the standing seam) and restarts.
@@ -6646,6 +6699,7 @@ function onStartRejected(desc) {
     if (state.queue.length) { advanceQueue(1); return; }
     try { audioEl.pause(); } catch (e) {}
     setPlaybackState('paused');
+    state.pendingStart = null; // v461 F1: the stop is terminal — no start stands (the pause above may fire no event on an element that already reads paused)
     return;
   }
   state.startRetryKey = key;
@@ -6693,7 +6747,7 @@ function bridgeStop() {
   // B3 stop: stop playback and clear the standing transport —
   // the queue-exhausted clear's shape, on command.
   try { audioEl.pause(); } catch (e) {}
-  state.queue = []; state.queueIdx = -1; state.current = null;
+  state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; // v461 F1: the stop clear is terminal — no start stands
   setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
   pushNativeState(true);
 }
@@ -6702,8 +6756,8 @@ function handleTransportCommand(ev) {
   if (!cmd) return;
   if (cmd === 'duck') { bridgeDuck(true); return; }
   if (cmd === 'unduck') { bridgeDuck(false); return; }
-  if (cmd === 'play') resumeCurrent();
-  else if (cmd === 'pause') pauseTransport();
+  if (cmd === 'play') { if (!state.pendingStart) resumeCurrent(); } // v461 F1: while a start pends the intent already stands at play — no stacked play(); the tail push below still fires as the ack, as today
+  else if (cmd === 'pause') { if (state.pendingStart) cancelPendingStart(); else pauseTransport(); } // v461 F1: a pause in the window cancels the pending start
   else if (cmd === 'next') { if (state.queue.length) advanceQueue(1); }
   else if (cmd === 'previous') bridgePrevious();
   else if (cmd === 'seekTo') {

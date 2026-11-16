@@ -1,0 +1,70 @@
+ok - F11 statics: createObjectURL stands only inside mintBlobUrl (2 calls)
+ok - F11 statics: mintBlobUrl serves the definition + all five sites
+ok - F11 statics: revokeObjectURL stands in the client
+ok - F7 statics: the error wait bound is 4 tries
+ok - F7 statics: the 20-try bound is gone
+ok - F7 statics: the retrying line wording stands exact (the — escape, as the client source writes it)
+ok - F2 statics: 8 s bound + waiting/stalled stamps
+ok - F3 statics: startFailed fact + noteStartFailed + onStartRejected stand
+ok - F2/F3 statics: the 4 s error window is removed
+ok - F2/F3 statics: the standing-intent guard reads the error listener
+ok - F8 statics: previousWithRule stands
+ok - F8 statics: the web session handler reads the rule
+ok - F8 statics: the bridge command reads the rule
+not ok - F8 statics: the dock Previous reads the rule 
+ok - F8 statics: Now Playing Previous enabled at the queue head
+not ok - F8 statics: the dock carries the Previous button 
+ok - F12 statics: seekBy stands and both system handlers call it
+ok - F12 statics: the Now Playing sheet carries the ±10 s buttons
+not ok - F13 statics: cycleRate + the dock rate button stand 
+ok - F14 statics: the page arms/clears the native deadline through the bridge
+ok - F9 statics: the podcast snapshot form + restore stand
+ok - F10 statics: the day-position post + the payload fold read stand
+ok - F10 statics: the day-position route stands in the Worker
+ok - F10 statics: the payload fold reads day_positions
+ok - F10 statics: migration 0020 creates day_positions keyed (date, episode_id)
+note - extraction dropped: offlineEvict
+ok - F2: waiting/stalled stamps the standing track
+ok - F2: position progress (+0.5 s) clears the stamp
+ok - F2: at the 8 s bound, ONE recovery cycle re-drives the track
+ok - F2: a second failed cycle passes over (queue advances, card shows why)
+ok - F3: a rejected start retries exactly once through the re-resolution seam
+ok - F3: the startFailed fact stands on the native payload (the v397 channel twin)
+ok - F3: the second rejection stops the single play, paused, card showing why
+ok - F7: the standing wait paints the retrying line on the card and the dock
+ok - F7: the fourth try still waits (bound not yet reached)
+ok - F7: the fifth failure passes over — line swaps to the passed-over reason
+ok - F7: a landed URL restarts the entry at once and clears the wait
+ok - F8: > 3 s in, Previous restarts the track
+ok - F8: under 3 s, Previous goes to the previous queue entry
+ok - F8: the bridge command reads the same rule
+ok - F8: the web session handler reads the same rule
+ok - F8: a single play — Previous is inert (no restart, no move)
+ok - F9: a podcast queue snapshots in the podcast form (series + seqKeys, no date)
+ok - F9: the day form stands unchanged for day queues
+ok - F9: boot reads the podcast record into the probe (Continue flag untouched)
+ok - F9: the restore resolves keys against the payload, drops the missing, stands paused at the record index + position
+ok - F9: a record whose entries all vanished clears
+ok - F10: the payload fold hands the saved position to the pendingResume seam at start
+ok - F10: the pause save posts the day position (floored, dated)
+ok - F10: the ended clear posts position 0 (the route deletes the row)
+ok - F10: a podcast track never writes a day position
+ok - F11: a re-mint revokes the owner’s standing URL
+ok - F11: a replaced descriptor’s URL is revoked at the moment of replacement
+ok - F11: the own-audio download mints through its cache-key owner
+ok - F12: seekBy moves ±10 with the standing clamps; the system handlers read the same step
+ok - F13: the cycler steps SPEED_SET through setRate (persisted, labelled)
+ok - F13: the cycler wraps the set (2 -> 0.5)
+ok - F14: a minutes arm stands the same deadline natively
+ok - F14: disarm clears the native deadline
+ok - F10 Worker: 0020 creates day_positions with the pinned columns and the (date, episode_id) primary key
+ok - F10 Worker: the fixture Worker boots (LOCAL_DEV)
+ok - F10 Worker: a save lands the row keyed (date, episode_id)
+ok - F10 Worker: a position past the saved duration clamps to it
+ok - F10 Worker: a zero position deletes the row
+ok - F10 Worker: a save with no episodeId answers 400
+ok - F10 Worker: the day payload fold carries the saved position
+ok - F10 Worker: no agent-door day-position surface exists
+---
+harness-v412: 63 passed, 3 failed
+failures: F8 statics: the dock Previous reads the rule | F8 statics: the dock carries the Previous button | F13 statics: cycleRate + the dock rate button stand
