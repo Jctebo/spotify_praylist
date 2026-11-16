@@ -328,16 +328,22 @@ try {
   await page.click('#tabbar [data-tab="podcasts"]');
   await sleep(400);
 
-  /* ---- D2: each Sacred Art side ---- */
+  /* ---- D2: the Sacred Art tab. Its Phone/Watch sides
+     paint only through the shell's wallpaper bridge
+     (v414 §2.6); outside the shell the tab stands at its
+     web fallback paint, which is the standing this
+     environment can drive. The disc's single emission
+     seat is proven by the ST4 census (id="int-fab"
+     exactly once in the cooked script, in the Intentions
+     paint) plus D1/D2's DOM legs on every paint this
+     environment can stand. ---- */
   await page.click('#tabbar [data-tab="wallpaper"]');
   await sleep(700);
-  ok(!(await fabHere()), "D2 the Sacred Art Phone side carries no #int-fab");
-  const wSides = await ev(`Array.prototype.map.call(document.querySelectorAll('#sidetoggle [data-side]'), function (b) { return b.getAttribute('data-side'); })`);
-  for (const s of wSides) {
-    await ev(`document.querySelector('#sidetoggle [data-side="${s}"]').click()`);
-    await sleep(500);
-    ok(!(await fabHere()), "D2 the Sacred Art side '" + s + "' carries no #int-fab");
-  }
+  const wProbe = await ev(`(function(){ return { fab: !!document.getElementById('int-fab'),
+    toggle: !!document.getElementById('sidetoggle'),
+    fallback: (document.getElementById('view') || {}).textContent.includes('Sacred Art controls live in the app') }; })()`);
+  ok(!wProbe.fab && !wProbe.toggle && wProbe.fallback,
+    "D2 the Sacred Art tab carries no #int-fab (its sides paint only through the shell's wallpaper bridge; outside the shell the tab stands at its web fallback, no toggle, no disc)", JSON.stringify(wProbe));
 
   ok(pageErrors.length === 0, "Z zero page errors across every leg" + (pageErrors.length ? " — " + pageErrors.join(" | ") : ""));
 } finally {
