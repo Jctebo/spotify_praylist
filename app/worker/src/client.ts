@@ -5499,14 +5499,10 @@ function refreshGridDlStates() {
       btn.textContent = full ? 'On this device' : 'Download all';
       btn.disabled = full;
     });
-    view.querySelectorAll('[data-blockdlnote]').forEach(function (note) {
-      var full = !!state.gridDl[note.getAttribute('data-blockdlnote')];
-      // v420 §2.6: the note folds to one compact line for the
-      // pill line — the downloaded confirmation + the removal
-      // pointer (the act stands only in Settings) survive;
-      // the full sentence does not fit the line.
-      note.textContent = full ? 'Downloaded \u00b7 remove in Settings' : '';
-    });
+    // v458 §2: the downloaded note's sweep retires whole
+    // with its line — the act's own state (its text +
+    // disabled, the sweep above) carries the download
+    // state in the one row now.
     view.querySelectorAll('[data-rowdl]').forEach(function (el) {
       el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
     });
@@ -8544,10 +8540,10 @@ function paintBlockPage(day, block) {
   // the menu act in the bar's plain act dress (v457:
   // .hdr2-act; the host is the header's row 2 now),
   // no pill. The band's facts stand as one plain meta line
-  // at the body's top; the download act + its note stand as
-  // a plain row under it (their [data-blockdl] /
-  // [data-blockdlnote] wiring is view-scoped and follows
-  // the elements); the cover tile retires with the band.
+  // at the body's top; the download act stands in that
+  // same row at its trailing end (v458; its wiring is
+  // view-scoped and follows the element); the cover tile
+  // retires with the band.
   paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
       + '<button class="hdr2-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
@@ -8558,15 +8554,19 @@ function paintBlockPage(day, block) {
   // standing form (the data-bmeta span stands inside it,
   // its settlement writer unchanged; the duration joins
   // the line at first paint from the head-duration sum
-  // below), then the download as plain body lines — the
-  // text act ([data-blockdl], its wiring view-scoped and
-  // unchanged) and its note ([data-blockdlnote]). The
+  // below), then the download as plain body lines. The
   // retired forms' history stands in the release
   // documents.
+  // v458 §2: the meta line and the download act collapse
+  // into ONE row — the meta div is the row, carrying the
+  // text span (the data-bmeta span inside it) and the
+  // act at its trailing end; the note line that stood
+  // under the act retires whole, its settlement sweep
+  // in refreshGridDlStates with it, so no Settings
+  // pointer stands anywhere on the page.
   var headDur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
-  var html = '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></div>'
-    + '<button class="blockpage-dlact" data-blockdl="' + esc(b.block) + '">Download all</button>'
-    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div>';
+  var html = '<div class="blockpage-meta"><span class="blockpage-metatext">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></span>'
+    + '<button class="blockpage-dlact" data-blockdl="' + esc(b.block) + '">Download all</button></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');

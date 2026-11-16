@@ -540,8 +540,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    now. */
 .blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
 /* v448: the meta line stands in the scrolling body now —
-   the body's own muted dress (the .meta measures). */
-.blockpage-meta { font-size:14px; font-family:var(--sans); color:var(--muted); margin:2px 0 6px; }
+   the body's own muted dress (the .meta measures).
+   v458 §2: on the block pages the line is the ONE row —
+   flex, the text span taking the line's room and the
+   download act at its trailing end. */
+.blockpage-meta { display:flex; align-items:center; gap:10px; font-size:14px; font-family:var(--sans); color:var(--muted); margin:2px 0 6px; }
+.blockpage-metatext { flex:1; min-width:0; }
 .blockpage-playrow { display:flex; align-items:center; gap:10px; margin-top:12px; }
 .blockpage-playlabel { font-size:16px; color:var(--ink); }
 .playbtn.big { width:56px; height:56px; font-size:20px; }
@@ -554,9 +558,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    coverrow. */
 /* v455 §2 Build 1: the pill row retires with its only
    emitter (the block page's series head) — the download
-   stands as plain body lines now: the text act below and
-   its note under it (.blockpage-dlnote stands). */
-.blockpage-dlact { display:block; background:none; border:none; box-shadow:none; padding:8px 0; margin:0; font-family:var(--sans); font-size:15px; color:var(--accent-text); cursor:pointer; text-align:left; }
+   stands as a plain body act. v458 §2: the act stands at
+   the trailing end of the one meta row (flex form); the
+   note line that stood under it retires whole. */
+.blockpage-dlact { flex:none; white-space:nowrap; background:none; border:none; box-shadow:none; padding:6px 0; margin:0; font-family:var(--sans); font-size:15px; color:var(--accent-text); cursor:pointer; text-align:left; }
 /* v419 (G26): the search field gains its leading glyph;
    its focus takes the §3.12 accent border (the G20 field
    rule below). */
@@ -671,7 +676,6 @@ img.rowart { object-fit:cover; display:block; }
 .blockpage-owner { font-size:14px; letter-spacing:1px; color:var(--bar-fg); margin-top:6px; }
 .blockpage-dlrow { display:flex; align-items:center; gap:8px; margin-top:10px; }
 .blockpage-dlrow .chipbtn { background:transparent; color:var(--bar-fg); border-color:var(--bar-sub); }
-.blockpage-dlnote { margin-top:4px; }
 .podpage-head { margin:0 0 12px; }
 /* v449 §2 Build 3: the Prayers home rows take the
    Formation series-row dress (the standing .card + .row +
