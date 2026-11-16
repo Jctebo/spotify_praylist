@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -1112,6 +1112,23 @@ function startDesc(desc) {
   // The send refuses only an unresolvable start; the element
   // path below then runs as the fallback.
   if (oraNativeMode() && nativeSendContract(desc)) return;
+  // v472 Steps 1+2+5: in the native shell, a start the
+  // contract cannot resolve YET is not an element start —
+  // the resolution runs first (Step 1: the series payload
+  // for a podcast start item the open payload does not
+  // carry · Step 2: the day's standing resolution for an
+  // external slot) and the contract re-sends on success.
+  // A standing failure refuses by name in the new pair
+  // (Step 5) and falls back to the element tail in every
+  // older pair — the tail below, byte-for-byte.
+  if (oraNativeMode()) { nativeResolveStart(desc); return; }
+  elementStartTail(desc);
+}
+function elementStartTail(desc) {
+  // The element start tail — startDesc's own tail through
+  // v469, split out at v472 so the native resolution's
+  // old-pair failure path runs the SAME tail: no second
+  // copy of the cache chain can drift from it.
   // v392 W4: a podcast descriptor resolves cache-first — the
   // downloaded blob when one stands under its pod: key, the
   // enclosure stream exactly as before when none does.
@@ -7428,12 +7445,113 @@ function nativeSendContract(desc) {
   var built = nativeContractFor(desc);
   if (!built) return false;
   nativeContractDescs = built.descs;
+  state.nativeRefusal = null; // v472 Step 5: a contract that sends retires any standing refusal
   try {
     var p = oraBridgePlugin();
     var r = p.setNativeQueue({ queue: JSON.stringify(built.contract) });
     if (r && r.catch) r.catch(function () {});
   } catch (e) {}
   return true;
+}
+function oraOneEngineMode() {
+  // v472 §2.1: the new pair's read — the shell advertises
+  // the inversion with a oneEngine method on the same
+  // plugin, exactly oraNativeMode's capability-read shape.
+  // An old shell (APK 1.0.41 and earlier) carries no such
+  // method: the read is false, and every v472 act that
+  // keys on it stands down to the legacy path.
+  var p = oraBridgePlugin();
+  return !!(p && p.oneEngine);
+}
+function nativeResolveStart(desc) {
+  // v472 Steps 1+2: resolve-first for a native start whose
+  // contract refused at the funnel. Every completion is
+  // guarded by the pending start still standing on THIS
+  // descriptor — a superseded or cancelled start drops
+  // silently (the v461 F4 discipline) — and the resolution
+  // runs at most once per start.
+  if (desc.kind === 'podcast') {
+    // Step 1 (H1a): the start item resolves only from the
+    // OPEN series' entries; a standing queue's series may
+    // not be the open one (or no series stands open at
+    // all). Load the descriptor's own series payload
+    // through the standing route — openPodSeries' fetch,
+    // verbatim — stand it as the open payload, and
+    // re-resolve once against it.
+    var series = desc.podSeries;
+    if (!series) { nativeStartFailed(desc, 'unresolved-start'); return; }
+    api('/api/player/podcasts?series=' + encodeURIComponent(series)).then(function (res) {
+      if (state.pendingStart !== desc) return;
+      state.podcasts = res;
+      tryStandPodcastRestore();
+      if (state.pendingStart !== desc) return;
+      if (nativeSendContract(desc)) return;
+      nativeStartFailed(desc, 'unresolved-start');
+    }).catch(function () {
+      if (state.pendingStart !== desc) return;
+      nativeStartFailed(desc, 'load-failed');
+    });
+    return;
+  }
+  if (state.extSlots && state.extSlots[desc.episodeId]) {
+    // Step 2 (H1b): the day external's resolution stands in
+    // the slot state the day build's own settle machinery
+    // maintains — settleMeta writes the enclosure URL at
+    // feed-meta settle, ahead of the audio download, so
+    // the wait ends there in the normal case. Await THAT
+    // state (a bounded poll of the standing record, never
+    // a second resolver) and re-resolve once when a URL
+    // stands. A 'missing' slot or the bound's expiry is a
+    // standing null: a day-build defect, named at the
+    // failure surface — never routed around.
+    var tries = 0;
+    var poll = function () {
+      if (state.pendingStart !== desc) return;
+      if (nativeSendContract(desc)) return;
+      var st = state.extSlots && state.extSlots[desc.episodeId];
+      if ((st && st.state === 'missing') || ++tries > 32) { nativeStartFailed(desc, 'unresolved-slot'); return; }
+      setTimeout(poll, 250);
+    };
+    poll();
+    return;
+  }
+  nativeStartFailed(desc, 'unresolved-start');
+}
+function nativeStartFailed(desc, reason) {
+  // v472 Step 5: the resolution's failure surface. In the
+  // new pair the start REFUSES by name (refuseNativeStart)
+  // — in the new shell the element is not an engine, and a
+  // silent element load is exactly the dual-engine start
+  // D1 refuses. In every older pair the element tail runs
+  // byte-for-byte as it did before this release.
+  if (!oraOneEngineMode()) { elementStartTail(desc); return; }
+  refuseNativeStart(desc, reason);
+}
+function refuseNativeStart(desc, reason) {
+  // The named refusal: the pending start clears, the
+  // refusal stands readable in state (episodeId · reason ·
+  // atMs), and the line paints on the entry's own card in
+  // flashPassOver's shape (the .passline seat) with the
+  // dock carrying the same words for an unpainted card.
+  // No element load, no contract, no silence.
+  state.pendingStart = null;
+  state.nativeRefusal = { episodeId: desc.episodeId, reason: reason, atMs: Date.now() };
+  var card = document.querySelector('[data-card="' + desc.episodeId + '"]');
+  if (card) {
+    var old = card.querySelector('.passline');
+    if (old) old.remove();
+    var line = document.createElement('div');
+    line.className = 'passline meta';
+    line.textContent = 'Couldn\u2019t play \u2014 ' + reason;
+    card.appendChild(line);
+  }
+  var dt = document.querySelector('.docktext');
+  if (dt) {
+    var dw = dt.querySelector('.passline');
+    if (!dw) { dw = document.createElement('div'); dw.className = 'passline meta'; dt.appendChild(dw); }
+    dw.textContent = 'Couldn\u2019t play \u2014 ' + reason;
+  }
+  updateDock();
 }
 function drainNativeCompletions() {
   // The service's day marks, applied with the in-memory legs
@@ -7475,8 +7593,13 @@ function applyNativeState(json) {
     drainNativeCompletions();
     return;
   }
+  // v472 Step 5: publish order is the render order — an
+  // event older than the last applied one (the plugin's
+  // re-delivered standing state crossing a fresher
+  // publish) never re-paints the mirror backwards.
+  if (st.ts && nativeMirror && nativeMirror.lastTs && st.ts < nativeMirror.lastTs) return;
   nativeMirror = { playing: !!st.playing, positionS: st.positionS || 0, durationS: st.durationS || 0,
-    rate: st.rate || 1, atMs: Date.now(), trackId: st.trackId || '', queueIndex: st.queueIndex || 0 };
+    rate: st.rate || 1, atMs: Date.now(), trackId: st.trackId || '', queueIndex: st.queueIndex || 0, lastTs: st.ts || 0 };
   if (st.rate && SPEED_SET.indexOf(st.rate) >= 0 && state.rate !== st.rate) {
     // The engine's rate is the client's own (the contract
     // carried it); a divergence is a controller-side change —
@@ -7599,6 +7722,24 @@ function nativeMirrorTick() {
         }
       }
     }
+  }
+  // v472 Step 5: the mirror's freshness bound (D-472-1's
+  // bound, enforced): in the new pair the service publishes
+  // on this same tick while a contract stands, so no event
+  // inside two ticks means the publisher is gone — the
+  // render stops asserting a playing fact it cannot prove
+  // and paints the neutral state (the not-playing glyph,
+  // the position frozen at the last event) until the next
+  // event repaints the truth. A pending start is exempt:
+  // its ❚❚ is a genuine standing intent, governed by the
+  // no-ack watch above. Old pairs keep the standing mirror
+  // exactly (the face's publishes are event-driven there).
+  if (oraOneEngineMode() && nativeMirror && !nativeMirror.staleNeutral && !state.pendingStart && state.current
+      && Date.now() - nativeMirror.atMs > 2 * 5000) {
+    nativeMirror.staleNeutral = true;
+    nativeMirror.playing = false;
+    markPlaying(state.current.episodeId);
+    updateDock();
   }
   if (!oraNativeMode() || !nativeMirror || !state.current) return;
   updateDockProgress();
