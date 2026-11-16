@@ -68,14 +68,15 @@ function extractFn(src, name) {
   ok(JSON.stringify(changed) === JSON.stringify(["app/worker/src/client.ts", "app/worker/src/ui.ts"]),
     "ST1 the worker-source diff vs the v453-ship base is client.ts + ui.ts only (got: " + changed.join(", ") + ")");
   const bp = extractFn(CLIENT, "paintBlockPage");
-  ok(!bp.includes("podpage-head") && !bp.includes("blockhead-name") && !bp.includes("coverTileHtml") && !bp.includes("blockpage-pillrow") && !bp.includes("chipbtn"),
-    "ST2 D1: paintBlockPage emits no series head — no .podpage-head, no .blockhead-name, no cover tile call, no pillrow, no chipbtn");
+  ok(!bp.includes("podpage-head blockhead") && !bp.includes("blockhead-name") && !bp.includes("coverTileHtml(b.block, 'large')") && !bp.includes("blockpage-pillrow") && !bp.includes("chipbtn")
+    && bp.includes("coverTileHtml(b.block, 'sm')"),
+    "ST2 D1: paintBlockPage emits no series head — no .podpage-head.blockhead, no .blockhead-name, no large cover tile call, no pillrow, no chipbtn (the share sheet's standing 'sm' tile call stands)");
   ok(bp.includes('class="blockpage-meta"') && bp.includes('<span data-bmeta="') && bp.includes('class="blockpage-dlact" data-blockdl="') && bp.includes('data-blockdlnote="')
     && bp.indexOf('class="blockpage-meta"') < bp.indexOf('data-blockdl="') && bp.indexOf('data-blockdl="') < bp.indexOf('data-blockdlnote="'),
     "ST2 D1: the body opens with the plain .blockpage-meta line (the data-bmeta span inside it), then the download text act, then its note line — in that order");
   ok(bp.includes("state: 'Here'") && bp.includes("openBlockPage(x.block)") && bp.includes("switchSide('prayers', 'intentions')") && bp.includes("x.block === '__episodes'")
     && bp.indexOf("Open in Spotify") < bp.indexOf("state: 'Here'") && bp.indexOf("state: 'Here'") < bp.indexOf("openSheetMenu(b.label")
-    && bp.indexOf("openSheetMenu(b.label") < bp.indexOf('[data-menuitem="1"]'),
+    && bp.indexOf("openSheetMenu(b.label") < bp.indexOf("querySelector('[data-menuitem=\"1\"]')"),
     "ST3 D3: the Go to construction reads day.blocks (the episodes pseudo-page skipped), marks the standing block 'Here', calls the standing openBlockPage / switchSide acts, and APPENDS after the standing items — the openSheetMenu call and the [data-menuitem=\"1\"] Mark-all wiring stand after it");
   ok(CLIENT.includes("function coverTileHtml(") && (CLIENT.split('<div class="podpage-head">').length - 1) === 3
     && extractFn(CLIENT, "openBlockPage") === extractFn(BASE_CLIENT, "openBlockPage")
@@ -265,7 +266,17 @@ try {
   ok(bp.dlCls === "blockpage-dlact" && bp.dlText === "Download all" && bp.dlNoteOrder && bp.intention && bp.intention.includes("For the intentions of the family"),
     "B1 D1: the download stands as a plain text-act line (no chipbtn dress) with its note line under it; the track rows stand as they are (the written intention line inside the first row)", JSON.stringify({ dlCls: bp.dlCls, dlText: bp.dlText, intention: bp.intention }));
 
-  /* ---- D1: the download tap runs the download ---- */
+  /* ---- D1: the download tap runs the download ----
+     The arrangement mirrors production's shape: the block's
+     tracks stand as own items in the offline enumeration
+     (state.ownStanding / state.ownSlots, fed by the source
+     settings the fixture leaves empty), so blockDownloadAll
+     has its standing set to fetch through the feed-audio
+     pass-through the stub serves. */
+  await ev(`(function(){
+    state.ownStanding = [{ sourceKey: 'morning-own', block: 'Morning' }];
+    state.ownSlots = { 'morning-own': { state: 'present', tracks: [9000, 9001, 9002].map(function (id) { return { episodeId: String(id), enclosureUrl: location.origin + '/audio/' + id + '.wav' }; }) } };
+  })()`);
   await page.click('#sidehost [data-blockdl="Morning"]');
   await page.waitForFunction(`(document.querySelector('[data-blockdlnote="Morning"]') || {}).textContent && document.querySelector('[data-blockdlnote="Morning"]').textContent.includes('Downloaded')`, null, { timeout: 12000 }).catch(() => {});
   const dlAfter = await ev(`(function(){
