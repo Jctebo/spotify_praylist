@@ -9165,6 +9165,45 @@ function offlinePodcastAutoSet() {
   }).catch(function () { return []; });
 }
 function offlineDownloadItems(items, epoch) {
+  // v472 Step 3: in the new pair the podcast items ride the
+  // native store (the automatic set included — the field
+  // leg covers a downloaded episode with the network off);
+  // the day / external / ai items keep the Cache path
+  // below, byte-for-byte. The counts combine, so the
+  // completeness pass's readiness numbers read as before.
+  if (oraOneEngineMode()) {
+    var podItems = items.filter(function (it) { return it.kind === 'pod'; });
+    var rest = items.filter(function (it) { return it.kind !== 'pod'; });
+    return offlineDownloadPodNative(podItems, epoch).then(function (rp) {
+      if (!rest.length) return rp;
+      return offlineDownloadItemsCache(rest, epoch).then(function (rr) {
+        return { have: rp.have + rr.have, total: items.length };
+      });
+    });
+  }
+  return offlineDownloadItemsCache(items, epoch);
+}
+function offlineDownloadPodNative(podItems, epoch) {
+  // The Cache arm's sequential shape over the plugin store:
+  // a standing item counts without a fetch; a missing one
+  // fetches through the plugin and counts on a true
+  // standing; a clear (epoch bump) mid-pass stops the tail,
+  // the W6 discipline the Cache arm keeps.
+  var chain = Promise.resolve(), have = 0;
+  podItems.forEach(function (it) {
+    chain = chain.then(function () {
+      if (epoch != null && epoch !== offlineEpoch) return;
+      return podNativeCall('getPodcastDownloads', { series: it.series, keys: [it.id] }).then(function (r) {
+        if (r && r.standing && r.standing.length) { have++; return; }
+        return podNativeCall('downloadPodcast', { series: it.series, episodeId: it.id, url: it.enclosureUrl }).then(function (r2) {
+          if (r2 && r2.standing) have++;
+        });
+      });
+    });
+  });
+  return chain.then(function () { return { have: have, total: podItems.length }; });
+}
+function offlineDownloadItemsCache(items, epoch) {
   return offlineAudioCache().then(function (cache) {
     var chain = Promise.resolve(), have = 0;
     // v430 Trigger B (§2.4): a kind-'ai' item that resolves
@@ -9380,12 +9419,30 @@ function paintOfflineLine() { var el = document.getElementById('offline-line-tex
 function podManualRead() { try { return JSON.parse(localStorage.getItem('opn-pod-manual-v1') || '{}') || {}; } catch (e) { return {}; } }
 function podManualWrite(m) { try { localStorage.setItem('opn-pod-manual-v1', JSON.stringify(m)); } catch (e) {} }
 var podDlBusy = {};
+function podNativeCall(name, args) {
+  // v472 Step 3: one guarded plugin call for the native
+  // podcast store — resolves null on any failure (an absent
+  // method, a rejection), in the bridge's never-fail-the-page
+  // posture; callers read the standing fact, never an error.
+  try {
+    var p = oraBridgePlugin();
+    var r = p && p[name] ? p[name](args) : null;
+    return (r && r.then) ? r.catch(function () { return null; }) : Promise.resolve(null);
+  } catch (e) { return Promise.resolve(null); }
+}
 function podDlTap(key) {
   var res = state.podcasts;
   if (!res || !res.entries) return;
   var entry = null;
   res.entries.forEach(function (e) { if (e.key === key) entry = e; });
   if (!entry || !entry.url) return;
+  // v472 Step 3: in the new pair the by-hand acts re-point
+  // to the native store — the same tap, the same manual
+  // registry (opn-pod-manual-v1 stands as the client's own
+  // record), the bytes in the shell's (series, episode)
+  // section, where the contract build prefers them. Every
+  // older pair runs the Cache path below, byte-for-byte.
+  if (oraOneEngineMode()) { podDlTapNative(key, res, entry); return; }
   var pk = offlinePodKey(res.series, key);
   offlineAudioCache().then(function (cache) {
     if (!cache) return;
@@ -9411,6 +9468,34 @@ function podDlTap(key) {
         });
       }).catch(function () {}).then(function () { delete podDlBusy[pk]; refreshPodDlStates(); paintOfflineLine(); });
     });
+  });
+}
+function podDlTapNative(key, res, entry) {
+  // v472 Step 3: podDlTap's native arm — the Cache arm's act
+  // shapes over the plugin store: a standing manual download
+  // removes (file + registry in one act); a fresh tap fetches
+  // through the plugin and records the registry entry only on
+  // a true standing; the busy flag and the repaints are the
+  // standing ones.
+  var pk = offlinePodKey(res.series, key);
+  var st = podDlStateMap[key] || {};
+  if (st.standing && st.manual) {
+    podNativeCall('deletePodcastDownload', { series: res.series, episodeId: key }).then(function () {
+      var m2 = podManualRead(); delete m2[pk]; podManualWrite(m2);
+      refreshPodDlStates(); paintOfflineLine();
+    });
+    return;
+  }
+  if (st.standing || podDlBusy[pk]) return;
+  podDlBusy[pk] = 1;
+  refreshPodDlStates();
+  podNativeCall('downloadPodcast', { series: res.series, episodeId: key, url: entry.url }).then(function (r) {
+    if (r && r.standing) {
+      var m3 = podManualRead();
+      m3[pk] = { series: res.series, key: key, title: entry.title, sizeBytes: r.sizeBytes || 0, addedAt: new Date().toISOString() };
+      podManualWrite(m3);
+    }
+    delete podDlBusy[pk]; refreshPodDlStates(); paintOfflineLine();
   });
 }
 /* v413 §2.9: the podcast row ⋮ — Share · the state-matched
@@ -9444,6 +9529,30 @@ function refreshPodDlStates() {
   if (!state.podcasts) return;
   var res = state.podcasts;
   var manual = podManualRead();
+  var paintIcons = function () {
+    icons.forEach(function (el) {
+      var st = podDlStateMap[el.getAttribute('data-poddlstate')] || {};
+      el.style.display = st.standing ? '' : 'none';
+    });
+  };
+  // v472 Step 3: in the new pair the states read from the
+  // native store — the plugin answers the standing episode
+  // ids for the open series, and the map + icon paint are
+  // the standing ones. Older pairs enumerate the Cache,
+  // byte-for-byte as before.
+  if (oraOneEngineMode()) {
+    var keys = (res.entries || []).map(function (e) { return e.key; });
+    podNativeCall('getPodcastDownloads', { series: res.series, keys: keys }).then(function (r) {
+      var standing = {};
+      ((r && r.standing) || []).forEach(function (k) { standing[k] = 1; });
+      (res.entries || []).forEach(function (e) {
+        var pk = offlinePodKey(res.series, e.key);
+        podDlStateMap[e.key] = { standing: !!standing[e.key], manual: !!manual[pk], busy: !!podDlBusy[pk] };
+      });
+      paintIcons();
+    });
+    return;
+  }
   offlineAudioCache().then(function (cache) {
     if (!cache) return;
     return cache.keys().then(function (reqs) {
@@ -9453,10 +9562,7 @@ function refreshPodDlStates() {
         var pk = offlinePodKey(res.series, e.key);
         podDlStateMap[e.key] = { standing: !!standing[new URL(pk, location.href).href], manual: !!manual[pk], busy: !!podDlBusy[pk] };
       });
-      icons.forEach(function (el) {
-        var st = podDlStateMap[el.getAttribute('data-poddlstate')] || {};
-        el.style.display = st.standing ? '' : 'none';
-      });
+      paintIcons();
     });
   });
 }
