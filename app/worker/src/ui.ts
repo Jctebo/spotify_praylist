@@ -177,9 +177,11 @@ body.dock-on .view { padding-bottom: calc(var(--tabh, 0px) + var(--dockh, 60px))
    view's content edge. Dress from the theme tokens only:
    the navy ground, the gold +. Painted by the Intentions
    paint alone, so it leaves with that paint. */
-/* v459 §2 Build 4: the floating add disc's dress rules
-   retire with the disc — Add intention stands in the
-   universal menu's Intentions page group (D4 A). */
+/* v460 §1: the disc's dress rules return with the disc
+   (John's amendment, 2026-11-15 23:36 CT) — the single
+   named exception to v459's D4 A. */
+.intfab { position:fixed; right:12px; bottom:calc(var(--tabh, 0px) + 14px); z-index:35; width:56px; height:56px; border-radius:50%; border:none; background:var(--navy); color:var(--gold); font-family:inherit; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 18px rgba(42,38,32,.30); padding:0; }
+body.dock-on .intfab { bottom:calc(var(--tabh, 0px) + var(--dockh, 60px) + 14px); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
 .headrow { margin:2px 0 12px; }

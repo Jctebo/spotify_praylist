@@ -4684,9 +4684,11 @@ function renderIntentions() {
     if (retired.length) {
       html += '<h2 class="sectionhead">RETIRED</h2>' + retired.map(intentionRow).join('');
     }
-    // v459 §2 Build 4: the floating add disc retires whole
-    // (D4 A — no exception); Add intention stands in the
-    // universal menu's Intentions page group.
+    // v460 §1: the floating add disc returns (John's
+    // amendment, 2026-11-15 23:36 CT) — the single named
+    // exception to v459's D4 A; Add intention also stands
+    // in the universal menu's Intentions page group.
+    html += '<button class="intfab" id="int-fab" aria-label="Add an intention">+</button>';
     view.innerHTML = html;
     wireIntentions(intentions);
     // v426 §2.4: a settle whose auto-redraw failed stands the
@@ -4740,6 +4742,12 @@ function wireIntentions(intentions) {
   // Redraw and Add intention stand in the universal menu's
   // Intentions page group (Build 3). The row menus below
   // are item menus; they stand untouched.
+  // v460 §1: the floating add disc's wiring returns with
+  // the disc (John's amendment) — it opens the same add
+  // sheet the menu's Add intention opens. The heading
+  // menu's wiring stays retired.
+  var fab = document.getElementById('int-fab');
+  if (fab) fab.addEventListener('click', function () { openIntentionEditor(null); });
   wireFieldNotes();
   view.querySelectorAll('[data-intmenu]').forEach(function (b) {
     b.addEventListener('click', function () {
