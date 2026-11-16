@@ -2510,18 +2510,23 @@ measureBars();
    v390 §2.7: the tab enters at a SERIES LEVEL (three series —
    Catechism · Bible · Rosary); a card opens the series page,
    which is the v381 presentation below plus a back row. */
-function podRowArtHtml(e) {
+function podRowArtHtml(e, playHtml) {
   // v413 §2.3/§2.6: a podcast row's art — the episode's own art,
   // else the series' show art, else the fallback tile (§2.3's
   // chain). Referenced, never re-hosted.
   // v417 §2.5 (FD3): the tile's content is the podcast mark
   // (♫), never the series initial; the bars tile stands in
   // the wrap for the current row (§2.6).
+  // v456 §2 Build 2: the optional play fragment, the same
+  // mechanism as rowArtHtml — emitted inside the wrap after
+  // the bars tile when a row builder passes one; absent, the
+  // output is byte-identical to before (the Share caller in
+  // the row menu passes nothing and gains no button).
   var s = state.podcasts;
   var url = e.imageUrl || (s && s.showImageUrl) || null;
   var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
-  if (url) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(url) + '" alt="" onerror="this.remove()">' + barsTileHtml() + '</span>';
-  return '<span class="rowartwrap">' + tile + barsTileHtml() + '</span>';
+  if (url) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(url) + '" alt="" onerror="this.remove()">' + barsTileHtml() + (playHtml || '') + '</span>';
+  return '<span class="rowartwrap">' + tile + barsTileHtml() + (playHtml || '') + '</span>';
 }
 function podDesc(e) {
   // v390 §2.7: the descriptor gains the series (the open
@@ -2842,15 +2847,16 @@ function paintPodOwnSeries() {
     + (cur ? ' \u00b7 Current: ' + esc(cur.title) : '') + '</div></div>';
   res.entries.forEach(function (e) {
     // The standing episode-row dress (v433's slim form): art ·
-    // the title line with its cluster (the play disc in the
-    // cluster seat) · the meta line. Form-identical for every
+    // the title line · the meta line. Form-identical for every
     // row, today's included.
+    // v456 §2 Build 4 (D2 B): the cluster span retires whole —
+    // it held the play disc alone; the title row keeps the
+    // title alone, and the disc stands centered on the
+    // thumbnail, passed to podRowArtHtml as its play fragment,
+    // keeping data-ownplay and its standing handler.
     html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
-      + podRowArtHtml(e)
-      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
-      + '<span class="prow-cluster">'
-      + '<button class="playbtn" data-ownplay="' + esc(e.key) + '">&#9654;</button>'
-      + '</span></div>'
+      + podRowArtHtml(e, '<button class="playbtn thumbdisc" data-ownplay="' + esc(e.key) + '">&#9654;</button>')
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3></div>'
       + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + '</span></div></div>'
       + '</div></div>';
   });
@@ -3130,12 +3136,15 @@ function paintPodcasts() {
     // clamp (F-433-1); the head stands entire (F-433-4).
     // The current entry's meta leads "Current episode · "
     // (F-433-2 — the retired card's naming, on the row).
+    // v456 §2 Build 4 (D2 B): the play disc leaves the cluster —
+    // podmark · ⋮ stand in their order — and stands centered on
+    // the thumbnail, passed to podRowArtHtml as its play
+    // fragment, keeping data-podplay and its standing handler.
     return '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
-      + podRowArtHtml(e)
+      + podRowArtHtml(e, '<button class="playbtn thumbdisc" data-podplay="' + esc(e.key) + '">&#9654;</button>')
       + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
       + '<span class="prow-cluster">'
       + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
-      + '<button class="playbtn" data-podplay="' + esc(e.key) + '">&#9654;</button>'
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '</span></div>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
@@ -5115,7 +5124,7 @@ function coverTileHtml(block, cls) {
   // stand.)
   return '<div class="blockcover tone-' + blockTone(block) + (cls ? ' ' + cls : '') + '"><span class="blockcover-initial">' + blockGlyphOf(block) + '</span></div>';
 }
-function rowArtHtml(t) {
+function rowArtHtml(t, playHtml) {
   // §2.3's fallback chain: episode art → show art → theme tile.
   // Referenced at render (an <img> at the provider URL); a URL
   // that fails to load removes itself and the tile beneath
@@ -5125,9 +5134,14 @@ function rowArtHtml(t) {
   // current row (§2.6). v419 (G11): the AI Signal logo special
   // case retires — its rows take the generic chain (episode
   // art → show art → the bolt tile).
+  // v456 §2 Build 2: the optional play fragment — when a row
+  // builder passes one it emits inside the wrap, after the bars
+  // tile (the disc paints above the art); when absent the output
+  // is byte-identical to before — the share-sheet caller passes
+  // nothing and gains no button.
   var tile = '<span class="rowart tile tone-' + blockTone(t._block || t.block) + '"><span>' + blockGlyphOf(t._block || t.block) + '</span></span>';
-  if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()">' + barsTileHtml() + '</span>';
-  return '<span class="rowartwrap">' + tile + barsTileHtml() + '</span>';
+  if (t.imageUrl) return '<span class="rowartwrap">' + tile + '<img class="rowart" src="' + esc(t.imageUrl) + '" alt="" onerror="this.remove()">' + barsTileHtml() + (playHtml || '') + '</span>';
+  return '<span class="rowartwrap">' + tile + barsTileHtml() + (playHtml || '') + '</span>';
 }
 function fmtDurLong(s) {
   s = Math.max(0, Math.round(Number(s) || 0));
@@ -5553,11 +5567,19 @@ function trackCard(t) {
   // edge; every box stands 44×44 (the disc by the cluster-scoped
   // rule in ui.ts). The standalone Share button retires (FD4) —
   // Share stands first in the ⋮ menu, as it already did.
+  // v456 §2 Build 3 (D1 A): the play disc leaves the cluster —
+  // the cluster reads played dot · ⋮ — and stands centered on
+  // the thumbnail instead (thumbDisc, passed to rowArtHtml by
+  // the two available branches below). The disc keeps its
+  // playbtn class, its data-playkey and its data-url, so
+  // markPlaying's glyph swap, the .playing dress, and every
+  // [data-playkey] wiring site stand untouched. The unavailable
+  // branches pass no fragment and stand byte-as-before.
   var cluster = function () {
     return '<span class="prow-cluster">' + playedDotHtml(t)
-      + '<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>'
       + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
   };
+  var thumbDisc = '<button class="playbtn thumbdisc" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>';
   var titleRow = function () {
     return '<div class="titlerow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3>' + cluster() + '</div>';
   };
@@ -5582,7 +5604,7 @@ function trackCard(t) {
       // v417 §2.7 (D2): the meta's day word is the presented
       // day's own — 'Today' only when the presented day IS
       // today, the short form otherwise; no clock stands.
-      return wrap(rowArtHtml(t) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -5627,7 +5649,7 @@ function trackCard(t) {
     var readCtl = !noText ? readButton(t, key) : '';
     // v424 §2.3 (FD3): Read trails the meta line in the box,
     // after the ⤓ — v413's R4 stands (visible, not a menu item).
-    return wrap(rowArtHtml(t) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + '</div>');
+    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + '</div>');
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds

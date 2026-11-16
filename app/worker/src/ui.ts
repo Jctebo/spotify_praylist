@@ -648,6 +648,14 @@ button.btn.small { min-height:44px; }
 .blockcover .coverimg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .rowartwrap { position:relative; width:44px; height:44px; flex:none; border-radius:8px; overflow:hidden; display:inline-block; }
 .rowartwrap > .rowart { position:absolute; inset:0; width:44px; height:44px; }
+/* v456 §2 Build 1: the play/pause disc in its thumbnail seat —
+   a compact 30px disc centered on the 44x44 wrap (7px offsets),
+   translucent navy (the --navy token in rgba form), white glyph;
+   it emits last inside the wrap so it paints above the tile, the
+   img, and the bars tile. The .playing form goes solid navy with
+   an accent ring so the state stays legible against the art. */
+.playbtn.thumbdisc { position:absolute; left:7px; top:7px; width:30px; height:30px; font-size:11px; background:rgba(22,40,63,.78); color:#fff; z-index:2; }
+.playbtn.thumbdisc.playing { background:var(--navy); box-shadow:0 0 0 2px var(--accent); }
 img.rowart { object-fit:cover; display:block; }
 .rowart.tile { display:flex; align-items:center; justify-content:center; font-size:20px; color:#e9d9ae; }
 .card.trow.prow { height:auto; min-height:76px; overflow:visible; }
