@@ -67,7 +67,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <audio id="audio" preload="none"></audio>
 <div id="dock" class="dock hidden"><img class="dockthumb" id="dock-thumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><button id="dock-menu" class="docknext" aria-label="Playback options">&#8943;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
-  <button data-tab="prayers" class="tab"><span class="tabpill"><span class="tabicon">&#10022;</span><span>Prayers</span></span></button>
+  <button data-tab="prayers" class="tab"><span class="tabpill"><span class="tabicon">&#10022;</span><span>Praylist</span></span></button>
   <button data-tab="conscience" class="tab"><span class="tabpill"><span class="tabicon">&#10013;</span><span>Conscience</span></span></button>
   <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon">&#9835;</span><span>Formation</span></span></button>
   <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon">&#9635;</span><span>Sacred Art</span></span></button>
@@ -364,6 +364,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .entry.refl { background:#f6ecd3; }
 .refltag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--gold-text); border:1px solid var(--gold); border-radius:6px; padding:1px 6px; margin-bottom:4px; }
 .kindswitch { margin:8px 0 0; }
+/* v462 §2.4.10: the prayer book's two seats the standing
+   rules do not carry — the row/page favorite star and the
+   reading page's English | Latin switch (the kind-switch
+   dress, seated in the page's head row). */
+.bookrow { cursor:pointer; }
+.bookstar { flex:none; background:none; border:none; font-family:inherit; font-size:19px; line-height:1; color:var(--gold); cursor:pointer; padding:6px 4px; }
+.langswitch { margin:0; flex:none; }
+.langswitch button { flex:none; padding:6px 12px; }
 .hidden { display:none !important; }
 /* v419 (G13/G14): the sheet system — every sheet except Now
    Playing is a partway DRAWER: the .sheet element is the

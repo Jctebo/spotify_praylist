@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -241,6 +241,7 @@ function skelHtml(kind) {
   if (kind === 'podseries') return '<div data-skeleton="1"><div class="skel" style="height:120px;margin:0 0 10px"></div>' + bar(60) + rows(5, 76) + '</div>';
   if (kind === 'settings') return '<div data-skeleton="1">' + rows(3, 96) + '</div>';
   if (kind === 'intentions') return '<div data-skeleton="1"><div class="skel" style="height:64px;margin:0 0 10px"></div>' + rows(4, 76) + '</div>';
+  if (kind === 'book') return '<div data-skeleton="1"><div class="skel" style="height:64px;margin:0 0 10px"></div>' + rows(4, 76) + '</div>';
   if (kind === 'conscience') return '<div data-skeleton="1">' + rows(4, 64) + '</div>';
   return '<div data-skeleton="1">' + rows(3, 76) + '</div>';
 }
@@ -2203,7 +2204,7 @@ function tabSideCfg(tab) {
   // titles and bars keep the full names.
   if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination', 'Exam'], ['confession', 'Confession', 'Confess'], ['direction', 'Spiritual Direction', 'Direction']] };
   if (tab === 'wallpaper') return { key: TAB_SIDE_WALLPAPER_KEY, def: 'phone', sides: [['phone', 'Phone'], ['watch', 'Watch']] };
-  return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Prayers'], ['intentions', 'Intentions']] };
+  return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
 function readTabSide(tab) {
   var cfg = tabSideCfg(tab);
@@ -2249,14 +2250,18 @@ function row2HomeHtml(tab) {
   var side = tabSideNow[tab];
   var title = '', date = '', acts = '';
   if (tab === 'prayers') {
-    title = side === 'intentions' ? 'Intentions' : 'Prayers';
+    // v462 §2.1/§2.4.3: the three-way title — the audio
+    // side reads Praylist, the written side Prayers; the
+    // date narrows to the audio side alone (the book is
+    // timeless, the Intentions pattern).
+    title = side === 'intentions' ? 'Intentions' : side === 'book' ? 'Prayers' : 'Praylist';
     // v459 §2 Build 4: the Intentions heading menu button
     // and the Prayers Sort button retire from this row —
     // their acts stand in the universal menu's page groups.
     // The Intentions row 2 after: title + the pages-menu
     // pill, nothing else. The Prayers row 2 after: title ·
     // date · pill.
-    if (side !== 'intentions' && state.dayPayload && state.dayPayload.date) date = shortHomeDate(state.dayPayload);
+    if (side === 'prayers' && state.dayPayload && state.dayPayload.date) date = shortHomeDate(state.dayPayload);
   } else if (tab === 'conscience') {
     var titles = { examination: 'Examination', confession: 'Confession', direction: 'Spiritual Direction' };
     title = titles[side] || 'Examination';
@@ -2473,7 +2478,7 @@ function armPodScroll(y) {
 
 function paintTabSide(tab, side) {
   if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
-  else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else renderPrayersSide(); }
+  else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else if (side === 'book') renderPrayerBook(); else renderPrayersSide(); }
   else { paintConscienceBar(side); if (side === 'confession') renderConfessionContent(); else if (side === 'direction') renderDirectionContent(); else renderExaminationContent(); }
 }
 function switchSide(tab, side) {
@@ -3616,7 +3621,7 @@ function renderSettings() {
   // (painted here, at entry, so the skeleton and the
   // failure paint carry it too); its back is wired by
   // paintSettings against the standing row.
-  paintRow2Bar({ dest: 'Prayers', title: 'Settings', backAttrs: 'data-settingsback' });
+  paintRow2Bar({ dest: 'Praylist', title: 'Settings', backAttrs: 'data-settingsback' });
   view.innerHTML = skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
@@ -4693,6 +4698,179 @@ function settleIntentions(redrawFailed) {
   renderIntentions();
   armPlaceRestore('prayers:intentions');
 }
+/* ---------------- Prayer book (v462) ----------------
+   The written side of the Praylist tab (side key 'book',
+   painted name Prayers): the standing book from
+   GET /api/prayer/book (migration 0026's seed), held whole
+   on the device under opn-book-v462 after the first fetch
+   (the opn-ext-cache-v1 idiom — guarded parse, guarded
+   write, a bad record treated as none), favorites
+   device-local under opn-book-favs-v462 (the opn-played
+   idiom). No prayer text stands in this script — the texts
+   arrive by fetch only and live in state.book. The side
+   and the prayer page call no audio function: a written
+   surface never disturbs playback. */
+var BOOK_CACHE_KEY = 'opn-book-v462';
+var BOOK_FAVS_KEY = 'opn-book-favs-v462';
+var bookQuery = '';
+var bookPageScroll = 0;
+function bookReadCopy() {
+  try {
+    var raw = localStorage.getItem(BOOK_CACHE_KEY);
+    if (!raw) return null;
+    var rec = JSON.parse(raw);
+    if (!rec || !Array.isArray(rec.groups) || !rec.groups.length) return null;
+    return rec;
+  } catch (e) { return null; }
+}
+function bookWriteCopy(groups) {
+  try { localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify({ fetchedAt: new Date().toISOString(), groups: groups })); } catch (e) {}
+}
+function bookFavsRead() {
+  try {
+    var v = JSON.parse(localStorage.getItem(BOOK_FAVS_KEY) || '[]');
+    return Array.isArray(v) ? v.filter(function (s) { return typeof s === 'string'; }) : [];
+  } catch (e) { return []; }
+}
+function bookFavsWrite(favs) { try { localStorage.setItem(BOOK_FAVS_KEY, JSON.stringify(favs)); } catch (e) {} }
+function bookFind(slug) {
+  var found = null;
+  ((state.book && state.book.groups) || []).forEach(function (g) {
+    (g.prayers || []).forEach(function (p) { if (p.slug === slug) found = { prayer: p, category: g.category }; });
+  });
+  return found;
+}
+function bookRowHtml(p, meta, favs) {
+  var fav = favs.indexOf(p.slug) >= 0;
+  return '<div class="card bookrow" data-bookrow="' + esc(p.slug) + '"><div class="row"><span class="grow">' + esc(p.title) + '</span>'
+    + '<button class="bookstar" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
+    + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '') + '</div>';
+}
+function paintBookResults() {
+  var host = document.getElementById('book-results');
+  if (!host) return;
+  var groups = (state.book && state.book.groups) || [];
+  var favs = bookFavsRead();
+  var q = bookQuery.trim().toLowerCase();
+  var html = '';
+  if (q) {
+    var hits = [];
+    groups.forEach(function (g) {
+      (g.prayers || []).forEach(function (p) {
+        if (p.title.toLowerCase().indexOf(q) >= 0 || p.body.toLowerCase().indexOf(q) >= 0) hits.push({ p: p, category: g.category });
+      });
+    });
+    html = hits.length ? hits.map(function (h) { return bookRowHtml(h.p, h.category, favs); }).join('') : '<p class="meta">None.</p>';
+  } else {
+    var favRows = [];
+    groups.forEach(function (g) {
+      (g.prayers || []).forEach(function (p) { if (favs.indexOf(p.slug) >= 0) favRows.push({ p: p, category: g.category }); });
+    });
+    if (favRows.length) html += '<h2 class="sectionhead">Favorites</h2>' + favRows.map(function (h) { return bookRowHtml(h.p, h.category, favs); }).join('');
+    html += groups.map(function (g) {
+      return '<h2 class="sectionhead">' + esc(g.category) + '</h2>' + (g.prayers || []).map(function (p) { return bookRowHtml(p, null, favs); }).join('');
+    }).join('');
+  }
+  host.innerHTML = html;
+  host.querySelectorAll('[data-bookrow]').forEach(function (row) {
+    row.addEventListener('click', function () { openPrayerPage(row.getAttribute('data-bookrow')); });
+  });
+  host.querySelectorAll('[data-bookstar]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      toggleBookFav(b.getAttribute('data-bookstar'));
+    });
+  });
+}
+function renderPrayerBookSettled() {
+  view.innerHTML = '<div class="searchpill"><input type="text" id="book-search" placeholder="Search" value="' + esc(bookQuery) + '" autocomplete="off"></div><div id="book-results"></div>';
+  var inp = document.getElementById('book-search');
+  if (inp) inp.addEventListener('input', function () { bookQuery = inp.value; paintBookResults(); });
+  paintBookResults();
+}
+function renderPrayerBook() {
+  paintPrayersBar(null); // the side is a tab home side — no pushed bar stands over it
+  state.prayersView = { kind: 'book' };
+  view.innerHTML = skelHtml('book');
+  var copy = bookReadCopy();
+  if (copy) { state.book = { groups: copy.groups }; renderPrayerBookSettled(); }
+  var today = todayChicago();
+  Promise.all([api('/api/prayer/book'), api('/api/prayer/day?date=' + today)]).then(function (res) {
+    var day = res[1] || {};
+    applyLiturgical(day);
+    if (res[0] && Array.isArray(res[0].groups) && res[0].groups.length) {
+      state.book = { groups: res[0].groups };
+      bookWriteCopy(res[0].groups);
+      // Repaint only while the side's list stands — a
+      // prayer page open over the side keeps its paint
+      // (it read the standing copy; the fresh book stands
+      // in state for the return).
+      if (tabSideNow.prayers === 'book' && document.getElementById('book-results')) renderPrayerBookSettled();
+      else if (tabSideNow.prayers === 'book' && !copy && !document.getElementById('book-page')) renderPrayerBookSettled();
+    }
+  }).catch(function () {
+    // A failed fetch with a copy standing leaves the
+    // copy's paint untouched; with no copy it is the
+    // authored failure + Retry (the renderIntentions form).
+    if (!state.book && tabSideNow.prayers === 'book') {
+      view.innerHTML = '<p class="err">Prayers did not load.</p><p><button class="btn ghost" id="book-retry">Retry</button></p>';
+      document.getElementById('book-retry').addEventListener('click', renderPrayerBook);
+    }
+  });
+}
+function toggleBookFav(slug) {
+  var favs = bookFavsRead();
+  var at = favs.indexOf(slug);
+  if (at >= 0) favs.splice(at, 1); else favs.push(slug);
+  bookFavsWrite(favs);
+  if (document.getElementById('book-results')) paintBookResults();
+  var ps = document.getElementById('book-page-star');
+  if (ps && ps.getAttribute('data-bookstar') === slug) ps.textContent = favs.indexOf(slug) >= 0 ? '\u2605' : '\u2606';
+}
+/* Amendment 1: the language switch — the kind-switch mold
+   (kindSwitchHtml), a two-way .segtoggle reading English ·
+   Latin. Painted only where the open prayer carries a
+   Latin text; the choice is per page view, English on
+   every open, with no store. */
+function langSwitchHtml() {
+  return '<div class="segtoggle langswitch" id="book-lang">'
+    + '<button data-lang="en" class="active">English</button>'
+    + '<button data-lang="la">Latin</button></div>';
+}
+function openPrayerPage(slug) {
+  var hit = bookFind(slug);
+  if (!hit) return;
+  var p = hit.prayer;
+  bookPageScroll = window.scrollY || 0;
+  state.prayersView = { kind: 'bookpage' };
+  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: p.title, backAttrs: 'data-bookback' }), 'book');
+  var fav = bookFavsRead().indexOf(p.slug) >= 0;
+  view.innerHTML = '<div id="book-page"><div class="row"><h1 class="screen grow">' + esc(p.title) + '</h1>'
+    + (p.bodyLatin ? langSwitchHtml() : '')
+    + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
+    + '<p class="sub">' + esc(p.source) + '</p>'
+    + '<div class="readtext" id="book-body">' + esc(p.body) + '</div></div>';
+  window.scrollTo(0, 0);
+  var bb = hdrRow2() ? hdrRow2().querySelector('[data-bookback]') : null;
+  if (bb) bb.addEventListener('click', function () { closePrayerPage(); });
+  var sw = document.getElementById('book-lang');
+  if (sw) sw.querySelectorAll('[data-lang]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var la = b.getAttribute('data-lang') === 'la';
+      sw.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('active', x === b); });
+      var body = document.getElementById('book-body');
+      if (body) body.textContent = la ? p.bodyLatin : p.body;
+    });
+  });
+  var ps = document.getElementById('book-page-star');
+  if (ps) ps.addEventListener('click', function () { toggleBookFav(p.slug); });
+}
+function closePrayerPage() {
+  state.prayersView = { kind: 'book' };
+  paintPrayersBar(null);
+  renderPrayerBookSettled();
+  window.scrollTo(0, bookPageScroll || 0);
+}
 function renderIntentions() {
   paintPrayersBar(null); // v448: the Intentions side is a tab home side — no pushed bar stands over it
   // v457: the side's head (title + the heading menu act)
@@ -5372,7 +5550,7 @@ function openHeaderMenu() {
     // offline card's button. The group head and the
     // Prayers navigation head below carry the same name
     // on this one page (D5 A, as approved).
-    items.push({ head: true, label: 'Prayers' });
+    items.push({ head: true, label: 'Praylist' });
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
   } else if (tab === 'podcasts' && podLevel === 'index') {
@@ -5406,7 +5584,7 @@ function openHeaderMenu() {
      other section as one entry, in tab order ---- */
   var standingKey = tab === 'prayers' ? 'prayers' : tab === 'conscience' ? 'conscience' : tab === 'podcasts' ? 'podcasts' : tab === 'wallpaper' ? 'wallpaper' : null;
   var sections = [
-    { key: 'prayers', tab: 'prayers', name: 'Prayers' },
+    { key: 'prayers', tab: 'prayers', name: 'Praylist' },
     { key: 'conscience', tab: 'conscience', name: 'Conscience' },
     { key: 'podcasts', tab: 'podcasts', name: 'Formation' },
     { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
@@ -5426,6 +5604,10 @@ function openHeaderMenu() {
       });
       var intHere = tabSideNow.prayers === 'intentions';
       items.push({ label: 'Intentions', state: intHere ? 'Here' : null, act: intHere ? function () {} : function () { goSide('prayers', 'intentions'); } });
+      // v462 §2.4.9: the written side's line stands directly
+      // after Intentions in the standing Praylist group.
+      var bookHere = tabSideNow.prayers === 'book';
+      items.push({ label: 'Prayers', state: bookHere ? 'Here' : null, act: bookHere ? function () {} : function () { goSide('prayers', 'book'); } });
     } else if (sec.key === 'conscience') {
       [['examination', 'Exam'], ['confession', 'Confess'], ['direction', 'Direction']].forEach(function (s) {
         var here = tabSideNow.conscience === s[0];
@@ -8011,7 +8193,7 @@ function offlineDayFallback(e) {
     if (snap && snap.day && snap.settings) { buildDayFromPayload(snap.day, snap); return; }
     // v419 (G22): the authored failure + a Ghost Retry wired
     // to this surface's own re-render.
-    view.innerHTML = '<h1 class="screen">Prayers</h1><p class="err">Today&rsquo;s prayers did not load.</p><p><button class="btn ghost" id="day-retry">Retry</button></p>';
+    view.innerHTML = '<h1 class="screen">Praylist</h1><p class="err">Today&rsquo;s prayers did not load.</p><p><button class="btn ghost" id="day-retry">Retry</button></p>';
     document.getElementById('day-retry').addEventListener('click', renderPrayersSide);
   });
 }
@@ -8761,7 +8943,7 @@ function paintBlockPage(day, block) {
   // the page's acts stand in the universal menu's page
   // group (Build 3). The bar after: back · title · the
   // Play All disc.
-  paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
+  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>' }), b.block);
   // v455 §2 Build 1 (D1): the series-style head retires
   // completely — no cover tile, no name line; the bar
@@ -8823,7 +9005,7 @@ function paintEpisodesPage(day) {
   // plain line at the body's top and the Play All row as a
   // body row under it, as it stood in the head; the cover
   // tile retires with the band.
-  paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
+  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
   var html = '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');

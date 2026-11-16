@@ -886,6 +886,24 @@ async function reflectionsPayload(env: Env) {
   return { ok: true, groups };
 }
 
+// ---- Prayer book (v462) -------------------------------------------------
+// The written prayer section: the whole standing book from
+// prayer_book (migration 0026), groups in first-appearance
+// order (the exam cats idiom), prayers in sort order.
+// bodyLatin rides explicitly — the Latin text where the
+// seed carries it, null where it does not (Amendment 1) —
+// so the client reads exactly one field.
+async function bookPayload(env: Env) {
+  const r = await env.DB.prepare("SELECT slug, title, category, body, body_latin, source FROM prayer_book ORDER BY sort").all<{ slug: string; title: string; category: string; body: string; body_latin: string | null; source: string }>();
+  const groups: { category: string; prayers: { slug: string; title: string; body: string; bodyLatin: string | null; source: string }[] }[] = [];
+  for (const p of r.results ?? []) {
+    let g = groups.length ? groups[groups.length - 1] : null;
+    if (!g || g.category !== p.category) { g = { category: p.category, prayers: [] }; groups.push(g); }
+    g.prayers.push({ slug: p.slug, title: p.title, body: p.body, bodyLatin: p.body_latin ?? null, source: p.source });
+  }
+  return { ok: true, groups };
+}
+
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
 // The mapping as data: one row per source in player_source_settings,
 // seeded once by migration 0010 (the seed of record — the Worker
@@ -2004,6 +2022,12 @@ export default {
         ).bind(date, dayName, color, nowISO()).run();
         return json({ ok: true, date });
       }
+      if (seg[2] === "prayer" && seg[3] === "book" && request.method === "GET") {
+        // v462 §2.3: the door mirror of GET /api/prayer/book —
+        // the same bookPayload, read-only, so Review/Ship
+        // verify the served book against the seed.
+        return json(await bookPayload(env));
+      }
       if (seg[2] === "prayer" && seg[3] === "intros" && request.method === "GET") {
         // v337 §2.7: the standing intro family's read-back — the
         // generation's verification surface (episodeId · sizeBytes ·
@@ -2165,6 +2189,13 @@ export default {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           return json(await prayerDayPayload(env, date));
+        }
+        if (seg[2] === "book" && !seg[3] && request.method === "GET") {
+          // v462 §2.3: the whole prayer book in one payload.
+          // Session-gated by the johnOnly gate above like the
+          // family's other reads; NO PIN — the pinGate covers
+          // the exam/confession families only.
+          return json(await bookPayload(env));
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
           const r = await env.DB.prepare(
