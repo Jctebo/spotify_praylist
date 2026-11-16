@@ -1183,7 +1183,13 @@ function resumeCurrent() {
   if (oraNativeMode()) {
     // v466: a resume is a play command to the engine; the
     // pending start names it until the playing ack lands.
-    if (nativeMirror && nativeMirror.playing) { reassertMediaSession(); return; }
+    // v473: the standing-playing read must be FRESH (the
+    // service publishes on its 5 s tick and on every engine
+    // event) — a stale playing report, the service silent
+    // since, does not prove the engine sounds; the resume
+    // proceeds below and the engine's own answer corrects
+    // the mirror (harness-v473 R5).
+    if (nativeMirror && nativeMirror.playing && (Date.now() - nativeMirror.atMs) < 15000) { reassertMediaSession(); return; }
     fadeRestore(); // v320 §2.6 restore point (3)
     reassertMediaSession();
     state.pendingStart = state.current;
@@ -7489,7 +7495,26 @@ function applyNativeState(json) {
   // swallowed by cancelPendingStart while the engine sounded
   // (John's 1.0.40 field failure, 2026-11-16). The desc-gated
   // block below keeps its current-tracking duties only.
-  if (state.pendingStart && state.pendingStart.episodeId === st.trackId) state.pendingStart = null;
+  // v473: the ack reads the event's own fact. A PLAYING event
+  // for the pending track closes the window (the start has
+  // landed — amendment (i)'s case, preserved). A NON-playing
+  // event for the same track is the not-landed answer the
+  // no-ack watch exists for: it closes the window only once
+  // the watch's re-send stands fired for this start (the
+  // re-send answered — landed or refused, the start's fate is
+  // resolved and no second recovery stands). Amendment (i)
+  // acked on ANY same-track event, and the service publishes
+  // its standing paused state on the transport tail and the
+  // 5 s tick, so a resume whose first play did not land was
+  // acked within one publish, the watch disarmed, and every
+  // later press re-entered the same dead path (John's field
+  // failure, 2026-11-16 14:14 — the fresh pick that revived
+  // playback sends the very contract the watch would have
+  // sent). Harness-v473 R1/R2 carry the sequence.
+  if (state.pendingStart && state.pendingStart.episodeId === st.trackId) {
+    if (st.playing) state.pendingStart = null;
+    else if (nativePendingWatch && nativePendingWatch.fired && nativePendingWatch.desc === state.pendingStart) state.pendingStart = null;
+  }
   var desc = nativeContractDescs[st.queueIndex];
   if (desc && desc.episodeId === st.trackId) {
     var changed = state.current !== desc;
@@ -7558,7 +7583,13 @@ function nativeMirrorTick() {
         // standing state (the second override in John's
         // 1.0.40 field failure: a pause that landed inside the
         // window was re-played by the watch's reload).
-        if (nativeMirror && nativeMirror.playing && nativeMirror.trackId === ps.episodeId) {
+        // v473: the report must be FRESH — the service
+        // publishes on its 5 s tick and on every engine
+        // event, so a playing report older than three cycles
+        // is a restored/stale fact, not evidence the start
+        // landed; the re-send below is the recovery for
+        // exactly that case (harness-v473 R6).
+        if (nativeMirror && nativeMirror.playing && nativeMirror.trackId === ps.episodeId && (Date.now() - nativeMirror.atMs) < 15000) {
           state.pendingStart = null;
           nativePendingWatch = null;
         } else {
