@@ -96,9 +96,9 @@ function extractFn(src, name) {
 
   ok(cooked.includes("data-menukey") && cooked.includes("data-queue") && cooked.includes('id="play-all"')
     && cooked.includes('class="segtoggle pill" id="sidetoggle"')
-    && UI.includes('id="np-menu"') && UI.includes('id="dock-menu"')
+    && cooked.includes('id="np-menu"') && UI.includes('id="dock-menu"')
     && extractFn(CLIENT, "openSheetMenu").includes("it.key ? ' data-menukey=\"'"),
-    "ST4 stands asserted present: data-menukey (openSheetMenu's additive key render, gated on it.key) · the [data-queue] discs · #play-all · the pages-menu pill markup · the player/dock menu buttons in the shell");
+    "ST4 stands asserted present: data-menukey (openSheetMenu's additive key render, gated on it.key) · the [data-queue] discs · #play-all · the pages-menu pill markup · the player menu button (the Now Playing sheet's emission, in the cooked script) · the dock menu button (the shell)");
 
   const STANDS = ["openFullPage", "wirePlayed", "blockPlayedCounts", "blockDownloadAll", "openBlockOrderEditor", "offlineCompleteness", "settleIntentions", "openIntentionEditor", "paintEpisodesPage", "paintSideToggle", "openShareSheet", "goBlock", "goSide", "goSeries", "setTab"];
   const diffs = STANDS.filter((f) => extractFn(CLIENT, f) !== extractFn(BASE_CLIENT, f));

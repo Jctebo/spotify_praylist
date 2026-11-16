@@ -5358,11 +5358,11 @@ function openHeaderMenu() {
     { key: 'podcasts', tab: 'podcasts', name: 'Formation' },
     { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
   ];
+  // D3 A, as composed: the standing group stands NEXT
+  // (after the page group), then the one-entry sections in
+  // tab order — never expanded in place.
   sections.forEach(function (sec) {
-    if (sec.key !== standingKey) {
-      items.push({ label: sec.name, state: '\u203a', act: function () { setTab(sec.tab); } });
-      return;
-    }
+    if (sec.key !== standingKey) return;
     items.push({ head: true, label: sec.name });
     if (sec.key === 'prayers') {
       var day = state.dayPayload;
@@ -5401,6 +5401,10 @@ function openHeaderMenu() {
         items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('wallpaper', s[0]); } });
       });
     }
+  });
+  sections.forEach(function (sec) {
+    if (sec.key === standingKey) return;
+    items.push({ label: sec.name, state: '\u203a', act: function () { setTab(sec.tab); } });
   });
   /* ---- (4) Settings, alone at the foot (D2 A) ---- */
   items.push({ label: 'Settings', state: state.tab === 'settings' ? 'Here' : null, act: function () { renderSettings(); } });
