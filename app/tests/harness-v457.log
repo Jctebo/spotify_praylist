@@ -1,0 +1,34 @@
+ok 1 - ST1 the worker-source diff vs the v455-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - ST2 the shell carries the two-row header (row 1 + #hdrrow2) with the menu act; the gear stands nowhere in the shell, the styles, or the script
+ok 3 - ST3 the v447/v448 bar stands nowhere: no bar hosts, no bar builder, no bar dress in the served styles or the script
+ok 4 - ST4 D3: applyLiturgical (the one theme apply point) calls pushStatusBarColor, which reads the computed --bar-solid and pushes it over the guarded OraDayBridge
+ok 5 - ST5 Amendment 2 + 1: the Conscience sides carry the short labels (Exam/Confess/Direction) and the pages menu paints in the compact pill form, reading the short label where one stands
+ok 6 - ST6 every barblock reader is re-pointed at the row: the settlement inserter + the Play All scan read #hdrrow2, the block menu wiring reads #hdrrow2, paintPrayersBar seats in the row and repaints the home row on null
+ok 7 - ST7 the whole worker bundles clean (esbuild)
+ok 8 - ST8 (housekeeping): the SW pin stands at ora-pro-nobis-v455-1 (Ship moves it)
+ok 9 - ST9 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 10 - ST9 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 11 - B1 boot: data-lit=green, row 1 carries the DAY prominent + the menu act alone (no gear); row 2 = Prayers · the short date · the pill (Prayers|Intentions, standing side active) in the header's right half · the Sort act in the row
+ok 12 - B2 the header pill switches Prayers -> Intentions: row 2 re-reads Intentions, the pill's standing side follows, the heading menu act stands in the row, the pool paints
+ok 13 - B2 the Intentions heading menu opens from the row (Redraw · Add intention)
+ok 14 - B3 scrolled: the brand bar's top stays at 0 and the pages-menu pill stands inside the frozen header (it never scrolls away)
+ok 15 - B4 the block page's bar stands in row 2: back (Prayers) beside the title, Play All + the menu act at the right, data-barblock=Morning on the row; the body opens on the plain meta line
+ok 16 - B4 the block page's Go to group stands in its menu (v455 D3): the standing block marked Here, the others plain, Intentions last
+ok 17 - B4 the row-2 back returns home: the home row stands again (title + pill, no block key)
+ok 18 - B5 the header menu opens with the four Go to groups (blocks + Intentions · Exam/Confess/Direction · the five series · Phone/Watch) + Settings; from the home nothing is marked Here
+ok 19 - B5 a menu jump lands and closes: Midday's block page stands, its title in row 2
+ok 20 - B5 the standing place is marked Here in the menu
+ok 21 - B5 the Conscience jump lands on the PIN gate: row 2 stands title-only (no foreign pill strands during the gate)
+ok 22 - B5 past the gate the Conscience home stands: row 2 title Examination (full name) + the pill in the Amendment 2 short labels
+ok 23 - B5 the pill switches to Confession from the header: the title follows in full, the guide paints
+ok 24 - B6 the menu's Settings entry opens the standing Settings screen: its back + title stand in row 2, the contents untouched
+ok 25 - B6 the row-2 back returns to the Prayers home
+ok 26 - B7 the Formation index: row 2 carries the title + the offline act; no in-view head stands
+ok 27 - B7 a series page: its back + title stand in row 2
+ok 28 - B7 the row-2 back returns to the Formation index row
+ok 29 - B8 Sacred Art (web): row 2 stands title-only, the unavailable state paints, no pill strands
+ok 30 - B9 D3: applyLiturgical pushes the computed solid over the bridge — the red theme's #5d1616, the unthemed day's default #16283f (the shell's paint itself is the APK's leg, not measured here)
+ok 31 - B10 at 360px the two-row header stands whole (pill visible, menu act stands) with no horizontal overflow
+ok 32 - Z zero page errors across every leg
+
+# harness-v457: 32/32 ok
