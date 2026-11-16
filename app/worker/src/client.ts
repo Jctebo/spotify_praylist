@@ -2194,7 +2194,13 @@ var TAB_SIDE_CONSCIENCE_KEY = 'opn-tabside-conscience-v410';
    Phone (the mockups draw Phone first, and the Phone view
    carries the controls block). */
 var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
-var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone' };
+/* v464 §2.5: the Podcasts (Formation) tab gains a side of its
+   own — the v410 key pattern with this release's number;
+   first-run default Courses (the daily family stands first,
+   §1.5). Its sides are FILTERS of one index paint, not
+   merged-container surfaces (§2.5's named distinction). */
+var TAB_SIDE_PODCASTS_KEY = 'opn-tabside-podcasts-v464';
+var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone', podcasts: 'courses' };
 var sideScroll = {};
 function tabSideCfg(tab) {
   // v457 (Amendment 2): a side's third element is its
@@ -2204,6 +2210,14 @@ function tabSideCfg(tab) {
   // titles and bars keep the full names.
   if (tab === 'conscience') return { key: TAB_SIDE_CONSCIENCE_KEY, def: 'examination', sides: [['examination', 'Examination', 'Exam'], ['confession', 'Confession', 'Confess'], ['direction', 'Spiritual Direction', 'Direction']] };
   if (tab === 'wallpaper') return { key: TAB_SIDE_WALLPAPER_KEY, def: 'phone', sides: [['phone', 'Phone'], ['watch', 'Watch']] };
+  // v464 §2.5: the Formation sides — the side keys ARE the
+  // index payload's category values (§2.1's map), so a side
+  // paints by filtering on its own key. The third side's pill
+  // label is the short form 'More' (v457 Amendment 2: the full
+  // 'Video & more' overflows the 360px row beside the title —
+  // §2.5's computed geometry; the full name stands in the
+  // universal menu).
+  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['video', 'Video & more', 'More']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
 function readTabSide(tab) {
@@ -2232,8 +2246,31 @@ function wireSideToggle(tab) {
   var t = document.getElementById('sidetoggle');
   if (!t) return;
   t.querySelectorAll('[data-side]').forEach(function (b) {
-    b.addEventListener('click', function () { switchSide(tab, b.getAttribute('data-side')); });
+    b.addEventListener('click', function () {
+      // v464 §2.5: Formation's switch act is switchPodSide —
+      // its sides filter one index paint and its place-keeping
+      // is the return record, so the merged container's
+      // switchSide does not serve this tab.
+      if (tab === 'podcasts') switchPodSide(b.getAttribute('data-side'));
+      else switchSide(tab, b.getAttribute('data-side'));
+    });
   });
+}
+function switchPodSide(side) {
+  // v464 §2.5: the Formation side switch — capturePlace (the
+  // standing harvest: the index place enters the return
+  // record) → the stored side moves → the pill's active
+  // classes toggle (switchSide's own step) → the filtered
+  // index repaints. A switch lands at the TOP of the new side:
+  // no per-side scroll store stands for this tab
+  // (recordSideScroll's prayers/conscience guard stands
+  // untouched); the return record still governs series →
+  // index returns.
+  capturePlace();
+  writeTabSide('podcasts', side);
+  document.querySelectorAll('#sidetoggle [data-side]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-side') === side); });
+  paintPodcastsIndex();
+  window.scrollTo(0, 0);
 }
 /* v457: the header's row 2 — the merged header's second
    row (ui.ts #hdrrow2), painted by the surfaces that own
@@ -2271,11 +2308,14 @@ function row2HomeHtml(tab) {
     title = 'Formation';
     // v459 §2 Build 4: the Formation Download-for-offline
     // button retires from this row — its act stands in the
-    // universal menu's Formation page group. The Formation
-    // row 2 after: title alone (the tab carries no pill
-    // today; none is added).
+    // universal menu's Formation page group.
+    // v464 §2.5: the "none is added" sentence is superseded —
+    // the tab gains its three-sided pill (Courses · Podcasts
+    // · More) in this same row-2 seat, through the standing
+    // paintSideToggle call below (the podcasts exclusion
+    // retires with the sentence).
   }
-  var pill = tab === 'podcasts' ? '' : paintSideToggle(tab, side);
+  var pill = paintSideToggle(tab, side);
   return '<span class="hdr2-title" id="hdr2-title">' + esc(title) + '</span>'
     + (date ? '<span class="hdr2-date">' + esc(date) + '</span>' : '')
     + '<span class="hdr2-right">' + pill + acts + '</span>';
@@ -2627,10 +2667,15 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
     state.podcasts.entries.forEach(function (e) { if (e.key === seqKey && !e.listened) { e.listened = true; e.source = source; e.listenDate = todayChicago(); e.positionS = null; } });
     var left = state.podcasts.entries.filter(function (e) { return !e.listened; });
     state.podcasts.listenedCount = state.podcasts.entries.length - left.length;
-    state.podcasts.currentKey = podCurrentKey(state.podcasts.entries);
+    // v464 §2.4: for kind "rss" the currentKey recompute stands
+    // down — current stays the payload's (the latest episode);
+    // the day-derivation would point at the first unlistened
+    // feed episode instead. The counts still update.
+    if (state.podcasts.kind !== 'rss') state.podcasts.currentKey = podCurrentKey(state.podcasts.entries);
   }
 }
 function renderPodcasts() {
+  readTabSide('podcasts'); // v464 §2.5: the standing side stands before any paint reads tabSideNow.podcasts
   // v390 §2.7: the tab enters at the series level — the first
   // open of a session still lands there. v411 §2.4 (the §1.3
   // override, scoped to exactly this): a session return record
@@ -2693,7 +2738,15 @@ function paintPodcastsIndex() {
   // the header's row 2 now (paintRow2Home paints title + button).
   paintRow2Home('podcasts');
   var html = '';
+  // v464 §2.5: the paint filters the payload to the standing
+  // side's category, IN PAYLOAD ORDER (order is server-owned;
+  // no sort stands here). The side key IS the category value
+  // (§2.1's map); an entry from an older payload without the
+  // field files by its kind, as the map reads it.
+  var podSide = tabSideNow.podcasts || 'courses';
   res.seriesList.forEach(function (s) {
+    var sCat = s.category || (s.kind === 'video' ? 'video' : (s.kind === 'own' || s.kind === 'rss') ? 'podcasts' : 'courses');
+    if (sCat !== podSide) return;
     // v413 §2.7: playlist-style entries — the provider's own
     // show artwork (§2.3's showImageUrl; a series-initial tile
     // is the fallback), name, the standing progress facts in
@@ -2701,7 +2754,18 @@ function paintPodcastsIndex() {
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (s.showImageUrl ? '<img class="rowart" src="' + esc(s.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
     html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(s.title) + '</h3>';
-    if (s.kind === 'video') {
+    if (s.kind === 'rss') {
+      // v464 §2.3: an RSS series card — the video form's Latest
+      // with the listened count standing beside it (§1.6's
+      // drawn line); the entry and the series page read the
+      // same sequence + listens fold server-side, so the card
+      // and the page can never disagree.
+      if (!s.available) {
+        html += '<div class="meta">This series is unavailable right now. Try again later.</div>';
+      } else {
+        html += '<div class="meta">' + s.listenedCount + ' of ' + s.total + ' listened \u00b7 Latest: ' + esc(s.latestLabel || '') + '</div>';
+      }
+    } else if (s.kind === 'video') {
       // v434 §2.1/§2.5: a VIDEO series card carries its own meta
       // form — the audio form (listened counts, a current
       // episode) does not apply: a video series carries no marks
@@ -2745,7 +2809,9 @@ function paintPodSeriesPage() {
   // through paintPodcastVideos; the audio paintPodcasts is not
   // entered for it. Every standing series-page paint seat (the
   // open, the session return) routes through here.
-  if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
+  // v464 §2.4: an RSS payload paints through paintPodcastRss.
+  if (state.podcasts && state.podcasts.kind === 'rss') paintPodcastRss();
+  else if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
   else if (state.podcasts && state.podcasts.kind === 'own') paintPodOwnSeries();
   else paintPodcasts();
 }
@@ -2952,6 +3018,82 @@ function playPodOwnFrom(key) {
   var descs = res.entries.slice(idx).map(podOwnDesc).filter(function (d) { return d.available; });
   if (!descs.length) return;
   startQueue(descs, true);
+}
+
+/* ---------------- Podcasts RSS series (v464) ----------------
+   §2.4: the RSS series page — the standing playlist grammar
+   without the course machinery: no derived current (the
+   current IS the latest episode, entries[0]), no collapse
+   fold (the fold is keyed to a derived current; this kind has
+   none), no scroll-to-current (the page opens at the latest,
+   which is the top), and no download state — the kind is
+   streaming-only, so no dl-ico span is emitted and
+   refreshPodDlStates is not called. Rows stand newest-first,
+   all fifty, in podRowString's form built kind-locally (the
+   closure inside paintPodcasts serves the audio kind alone).
+   The marks ride the standing server stores through the
+   standing acts (podToggleMark · writePodMarkQuiet ·
+   playPodFrom · podDesc), which serve the kind unchanged but
+   for the currentKey stand-down in the two mark acts (§2.4's
+   one client seam). */
+function paintPodcastRss() {
+  var res = state.podcasts;
+  if (!res || res.kind !== 'rss') { view.innerHTML = skelHtml('podseries'); return; }
+  podLevel = 'series';
+  var html = '';
+  paintRow2Bar({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
+  if (!res.available) {
+    // The standing unavailable surface: no snapshot and the
+    // feed unreachable — the card form the other series keep.
+    html += '<div class="card"><h3>' + esc(res.title || '') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    view.innerHTML = html;
+    wirePodBack();
+    return;
+  }
+  var rssDurSum = res.entries.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
+  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span>'
+    + (res.showImageUrl ? '<img class="coverimg" src="' + esc(res.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
+  var rssLatest = res.entries.length ? res.entries[0] : null;
+  html += '<div class="podpage-head">' + showCover
+    + (res.showDesc ? '<p class="sub">' + esc(res.showDesc) + '</p>' : '')
+    + '<div class="meta">' + res.listenedCount + ' of ' + res.total + ' listened'
+    + (rssDurSum > 0 ? ' \u00b7 ' + fmtDurLong(rssDurSum) : '')
+    + (rssLatest ? ' \u00b7 Latest: ' + esc(rssLatest.label) : '') + '</div></div>';
+  var rssRowString = function (e) {
+    // podRowString's form (v433's slim prow · v456's thumbnail
+    // disc · the v395 partway bar at the row's bottom edge),
+    // built kind-locally. The meta row is the entry's DATE
+    // label (derived server-side at payload build) · the
+    // duration · the listened date in the standing short form;
+    // the latest entry's meta leads "Latest episode \u00b7 "
+    // (the F-433-2 naming transposed — the current row names
+    // itself). No dl-ico span stands: no download state can
+    // stand on a streaming-only kind.
+    return '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
+      + podRowArtHtml(e, '<button class="playbtn thumbdisc" data-podplay="' + esc(e.key) + '">&#9654;</button>')
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
+      + '<span class="prow-cluster">'
+      + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
+      + '</span></div>'
+      + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
+      + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Latest episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</span></div></div>'
+      + '</div>'
+      + (!e.listened && e.positionS > 0 && e.durationS > 0 ? '<div class="podbar"><i style="width:' + (Math.round(1000 * e.positionS / e.durationS) / 10) + '%"></i></div>' : '')
+      + '</div>';
+  };
+  res.entries.forEach(function (e) { html += rssRowString(e); });
+  view.innerHTML = html;
+  view.querySelectorAll('[data-podplay]').forEach(function (b) {
+    b.addEventListener('click', function () { playPodFrom(b.getAttribute('data-podplay')); });
+  });
+  view.querySelectorAll('[data-podmark]').forEach(function (b) {
+    b.addEventListener('click', function () { podToggleMark(b.getAttribute('data-podmark')); });
+  });
+  view.querySelectorAll('[data-podmenu]').forEach(function (b) {
+    b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu'), b); });
+  });
+  wirePodBack();
 }
 
 /* ---------------- Podcasts VIDEO series (v434) ----------------
@@ -3293,8 +3435,11 @@ function podToggleMark(key) {
   podPosSlotDrop(res.series, key);
   var left = res.entries.filter(function (e) { return !e.listened; });
   res.listenedCount = res.entries.length - left.length;
-  res.currentKey = podCurrentKey(res.entries);
-  if (state.tab === 'podcasts') paintPodcasts();
+  // v464 §2.4: the rss stand-down, as in writePodMarkQuiet —
+  // currentKey stays the payload's (the latest episode), the
+  // counts still update, and the repaint is the kind's own.
+  if (res.kind !== 'rss') res.currentKey = podCurrentKey(res.entries);
+  if (state.tab === 'podcasts') { if (res.kind === 'rss') paintPodcastRss(); else paintPodcasts(); }
   var call = wasListened
     ? post('/api/player/podcasts/unmark', { series: res.series, seqKey: key })
     : post('/api/player/podcasts/mark', { series: res.series, seqKey: key, source: 'manual' });
@@ -5483,7 +5628,16 @@ function openSheetMenu(title, items, anchorEl) {
    rebuilds at every open — every label and state below is
    computed at open, fresh. */
 function goSide(tab, side) {
-  if (state.tab === tab) { if (tabSideNow[tab] !== side) switchSide(tab, side); return; }
+  if (state.tab === tab) {
+    // v464 §2.5: on-tab Formation goes through switchPodSide
+    // (the merged container's switchSide does not serve this
+    // tab); cross-tab keeps the standing form below — write
+    // the side, land on the tab, and renderPodcasts reads the
+    // stored side at its head.
+    if (tab === 'podcasts') { if (tabSideNow.podcasts !== side) switchPodSide(side); }
+    else if (tabSideNow[tab] !== side) switchSide(tab, side);
+    return;
+  }
   writeTabSide(tab, side);
   setTab(tab);
 }
@@ -5614,14 +5768,23 @@ function openHeaderMenu() {
         items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('conscience', s[0]); } });
       });
     } else if (sec.key === 'podcasts') {
-      var series = (state.podcastsIndex && state.podcastsIndex.seriesList) || [
-        { series: 'catechism', title: 'Catechism in a Year' },
-        { series: 'bible', title: 'Bible in a Year' },
-        { series: 'rosary', title: 'Rosary in a Year' },
-        { series: 'catholictv', title: 'CatholicTV' },
-        { series: 'the-ai-signal', title: 'The AI Signal' }
-      ];
-      series.forEach(function (s) {
+      // v464 §2.5: the standing group follows the Prayers form
+      // — the STANDING SIDE's series in full, in payload order,
+      // Here on the open series under the standing rule (the
+      // watch extension below included), then each other side
+      // as ONE entry under its full name ('Courses' ·
+      // 'Podcasts' · 'Video & more'), its act the side switch.
+      // The menu stays a complete map of the side John is
+      // standing in and one tap from every other side. The
+      // hardcoded fallback list retires: when no index payload
+      // stands, the group is the three side entries alone —
+      // the sides are client-known constants; the series list
+      // is not.
+      var podStandingSide = tabSideNow.podcasts || 'courses';
+      var podMenuList = (state.podcastsIndex && state.podcastsIndex.seriesList) || [];
+      podMenuList.forEach(function (s) {
+        var sCat = s.category || (s.kind === 'video' ? 'video' : (s.kind === 'own' || s.kind === 'rss') ? 'podcasts' : 'courses');
+        if (sCat !== podStandingSide) return;
         // The one named extension of the standing Here
         // rule: on the watch view CatholicTV carries the
         // mark — the watch view stands in that series
@@ -5629,6 +5792,10 @@ function openHeaderMenu() {
         var here = (podLevel === 'series' && state.podcasts && state.podcasts.series === s.series)
           || (podLevel === 'watch' && s.series === 'catholictv');
         items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
+      });
+      [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['video', 'Video & more']].forEach(function (sd) {
+        if (sd[0] === podStandingSide) return;
+        items.push({ label: sd[1], state: '\u203a', act: function () { goSide('podcasts', sd[0]); } });
       });
     } else if (sec.key === 'wallpaper') {
       [['phone', 'Phone'], ['watch', 'Watch']].forEach(function (s) {
@@ -8637,8 +8804,14 @@ function openPodRowMenu(key, anchorEl) {
   if (!e) return;
   var st = podDlStateMap[key] || {};
   var items = [{ label: 'Share', act: function () { openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' }); } }];
-  if (e.url && !st.standing) items.push({ label: 'Download', act: function () { podDlTap(key); } });
-  else if (e.url && st.standing && st.manual) items.push({ label: 'Remove download', act: function () { podDlTap(key); } });
+  // v464 §2.4: for an RSS entry Share stands alone above the
+  // mark — the kind is streaming-only, so no Download item
+  // stands in either state (the video kind's posture toward
+  // machinery that does not apply).
+  if (res.kind !== 'rss') {
+    if (e.url && !st.standing) items.push({ label: 'Download', act: function () { podDlTap(key); } });
+    else if (e.url && st.standing && st.manual) items.push({ label: 'Remove download', act: function () { podDlTap(key); } });
+  }
   items.push({ label: e.listened ? 'Mark as not listened' : 'Mark as listened', act: function () { podToggleMark(key); } });
   openSheetMenu(e.title, items, anchorEl);
 }
