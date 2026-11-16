@@ -538,7 +538,15 @@ function markPlaying(id) {
   document.querySelectorAll('[data-playkey]').forEach(function (b) {
     var on = !!id && b.getAttribute('data-playkey') === id;
     b.classList.toggle('playing', on);
-    if (b.classList.contains('playbtn')) b.innerHTML = on ? '&#10073;&#10073;' : '&#9654;';
+    // v468: under the native engine the current row's glyph
+    // reads the transport fact (transportEngaged — the read
+    // the dock and the Now Playing button already use), not
+    // current-ness alone: a current that stands paused after
+    // a start painted ❚❚ here while the dock painted ▶ and
+    // nothing sounded (the v468 recording's disagreement).
+    // The element path keeps its standing paint exactly.
+    var glyphOn = on && (!oraNativeMode() || transportEngaged());
+    if (b.classList.contains('playbtn')) b.innerHTML = glyphOn ? '&#10073;&#10073;' : '&#9654;';
   });
   syncBarsRow(id); // v417 §2.6 (FD7): the bars tile marks the current row
   state.playingUrl = state.current ? state.current.url : null;
@@ -7255,6 +7263,7 @@ function setupBridgeCommands() {
    through takeNativeCompletions and the page applies them
    with its in-memory legs only, below. */
 var nativeMirror = null; // the last native state event, extrapolated by playPos: playing, positionS, durationS, rate, atMs, trackId, queueIndex
+var nativePendingWatch = null; // v468: the no-ack watch's memory — { desc, atMs, fired } for the standing native pending start (see nativeMirrorTick)
 var nativeContractDescs = []; // the standing contract's descriptors, parallel to its items
 function oraNativeMode() {
   var p = oraBridgePlugin();
@@ -7436,6 +7445,15 @@ function applyNativeState(json) {
     if (state.pendingStart && state.pendingStart.episodeId === st.trackId) state.pendingStart = null;
     setPlaybackState(st.playing ? 'playing' : 'paused');
     updateDock();
+    // v468: the row paint re-derives on EVERY native event,
+    // not only on a current change — a playing flip with the
+    // current standing (the pause that follows a start, a
+    // focus loss) otherwise left the row disc painted from
+    // the start while the dock followed the mirror (the
+    // v468 recording's disagreement: disc ❚❚, dock ▶,
+    // silence). markPlaying now reads the same transport
+    // fact the dock reads, at the same moment.
+    markPlaying(desc.episodeId);
     if (changed) drainNativeCompletions();
   }
   updateDockProgress();
@@ -7453,6 +7471,31 @@ function nativeMirrorTick() {
   // timeupdate never fires under the native engine, so the
   // mirror drives the progress surfaces and the queue
   // snapshot's carry from here.
+  // v468: the no-ack recovery runs first, ahead of the
+  // mirror early-return — a native pending start the engine
+  // never acks (a dead service swallowed the transport
+  // command whole; a wedged or errored player never
+  // published) otherwise stands until the next press, and
+  // every press re-enters the same dead path. Past the
+  // bound the standing contract is re-sent ONCE for that
+  // start: the one start that resurrects a dead service
+  // (its queue seam starts the service), reloads the player
+  // at the standing index, and re-runs the engine's own
+  // focus path. The mirror's position rides the standing
+  // pendingResume carry, exactly as a resume's seek would.
+  if (!state.pendingStart) nativePendingWatch = null;
+  if (oraNativeMode() && state.pendingStart && state.current) {
+    var ps = state.pendingStart;
+    if (!nativePendingWatch || nativePendingWatch.desc !== ps) nativePendingWatch = { desc: ps, atMs: Date.now(), fired: false };
+    if (!nativePendingWatch.fired && Date.now() - nativePendingWatch.atMs > 6000) {
+      nativePendingWatch.fired = true;
+      if (state.current.episodeId === ps.episodeId) {
+        var pos = Math.floor(playPos().pos);
+        if (pos > 0) state.pendingResume = { episodeId: state.current.episodeId, positionS: pos };
+        nativeSendContract(state.current);
+      }
+    }
+  }
   if (!oraNativeMode() || !nativeMirror || !state.current) return;
   updateDockProgress();
   updateNpSeek();
