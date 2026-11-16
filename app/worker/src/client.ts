@@ -8348,22 +8348,22 @@ function paintBlockPage(day, block) {
   paintPrayersBar(iosBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
       + '<button class="iosbar-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
-  // v449 §2 Build 2: the body opens with the series-style
-  // head (the series page's .podpage-head grammar): the
-  // block's tile at the head size · the block's name · the
-  // meta line — the v448 body meta folds into the head as
-  // its meta (the data-bmeta span stands, its settlement
-  // writer unchanged; the duration joins the line at first
-  // paint, summed from the block's tracks as the episodes
-  // page sums it, and the settlement seam rewrites the
-  // span to the same settled form). The download pillrow
-  // stands under the head as v448 left it.
+  // v455 §2 Build 1 (D1): the series-style head retires
+  // completely — no cover tile, no name line; the bar
+  // carries the block's name once. The body opens with
+  // the meta as one plain line in the episodes page's
+  // standing form (the data-bmeta span stands inside it,
+  // its settlement writer unchanged; the duration joins
+  // the line at first paint from the head-duration sum
+  // below), then the download as plain body lines — the
+  // text act ([data-blockdl], its wiring view-scoped and
+  // unchanged) and its note ([data-blockdlnote]). The
+  // retired forms' history stands in the release
+  // documents.
   var headDur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
-  var html = '<div class="podpage-head blockhead">' + coverTileHtml(b.block, 'large')
-    + '<div class="blockhead-name">' + esc(b.label || b.block) + '</div>'
-    + '<div class="meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></div></div>'
-    + '<div class="blockpage-pillrow"><button class="chipbtn" data-blockdl="' + esc(b.block) + '">Download all</button>'
-    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div></div>';
+  var html = '<div class="blockpage-meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></div>'
+    + '<button class="blockpage-dlact" data-blockdl="' + esc(b.block) + '">Download all</button>'
+    + '<div class="meta blockpage-dlnote" data-blockdlnote="' + esc(b.block) + '"></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
@@ -8400,6 +8400,22 @@ function paintBlockPage(day, block) {
       { label: 'Share', act: openBlockShare }
     ];
     if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
+    // v455 §2 Build 2 (D3, as amended): the Go to group
+    // appends AFTER the standing items — the Mark-all
+    // wiring below reads [data-menuitem="1"] by position,
+    // so nothing may insert ahead of the standing items.
+    // One item per block of the day, in day order; the
+    // standing block's item carries the 'Here' state and
+    // the close-only act (the Mark-all pattern); the
+    // episodes pseudo-page is not a block and stands
+    // outside the list. Intentions stands last — its act
+    // flips the Prayers tab to its Intentions side.
+    (day.blocks || []).forEach(function (x) {
+      if (x.block === '__episodes') return;
+      if (x.block === b.block) items.push({ label: x.label || x.block, state: 'Here', act: function () {} });
+      else items.push({ label: x.label || x.block, act: function () { openBlockPage(x.block); } });
+    });
+    items.push({ label: 'Intentions', act: function () { switchSide('prayers', 'intentions'); } });
     var card = openSheetMenu(b.label || b.block, items, menuBtn);
     var markRow = card ? card.querySelector('[data-menuitem="1"]') : null;
     if (markRow) { markRow.setAttribute('data-markblock', b.block); wirePlayed(card); }

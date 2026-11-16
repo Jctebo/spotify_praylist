@@ -548,11 +548,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    now (the backdisc pair inside the head was already
    orphaned by v447); the .blockcover.med size retires
    with the cover tile, whose only emission stood in the
-   coverrow. The pill row stands in the body under the
-   meta line and keeps its row dress; its chipbtn takes
-   the standing body .chipbtn dress. */
-.blockpage-pillrow { display:flex; align-items:center; gap:8px; margin-top:2px; }
-.blockpage-pillrow .blockpage-dlnote { margin-top:0; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+   coverrow. */
+/* v455 §2 Build 1: the pill row retires with its only
+   emitter (the block page's series head) — the download
+   stands as plain body lines now: the text act below and
+   its note under it (.blockpage-dlnote stands). */
+.blockpage-dlact { display:block; background:none; border:none; box-shadow:none; padding:8px 0; margin:0; font-family:var(--sans); font-size:15px; color:var(--accent-text); cursor:pointer; text-align:left; }
 /* v419 (G26): the search field gains its leading glyph;
    its focus takes the §3.12 accent border (the G20 field
    rule below). */
@@ -664,12 +665,11 @@ img.rowart { object-fit:cover; display:block; }
 /* v449 §2 Build 3: the Prayers home rows take the
    Formation series-row dress (the standing .card + .row +
    tile grammar); the row itself is the tap target, at the
-   44px floor by its art seat + card padding. The block
-   page's series head (.podpage-head.blockhead) carries
-   the block's name under its large tile, at the standing
-   screen-title size and color. */
+   44px floor by its art seat + card padding. */
+/* v455 §2 Build 1: the block page's series head retires
+   with its name rule — the bar carries the block's name
+   once now; .podpage-head stands for the series pages. */
 .card.blockrow { cursor:pointer; }
-.blockhead-name { font-size:22px; color:var(--navy); margin:2px 0 4px; }
 /* v434 §2.6.1: the Podcasts watch view — the frame's seat is a
    stable full-width 16:9 box; the frame exists only while the
    view stands (created at its paint, destroyed by closeWatch).
