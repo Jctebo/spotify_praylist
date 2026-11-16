@@ -21,6 +21,10 @@
 //   B7  with no contract method on the plugin (an old APK),
 //       the mode reads off and the page engine starts as
 //       before — mixed-version safety
+//   B8  D-466-R1 (the Review return): a contract load with a
+//       WEB face standing — the shell's arbitration 'stop'
+//       lands on the page and the page's queue, current, and
+//       saved snapshot stand intact
 // Mold: harness-v461 (client extraction + Chromium + the fake
 // audio), plus a mock OraDayBridge standing on window.Capacitor
 // — the mock IS the shell for these legs: it records contracts
@@ -446,6 +450,65 @@ await ev(() => {
   const b7 = await ev(() => window.__b7);
   ok(b7.mode === false && b7.playCalls === 1 && b7.src !== '',
     'B7: no contract method on the plugin — the mode reads off and the element starts as before', JSON.stringify(b7));
+}
+
+/* ---------------- B8: the arbitration stop (D-466-R1) ---------------- */
+{
+  await ev(() => {
+    // B7 deleted window.Capacitor (its old-shell premise), so
+    // this leg first re-installs the mock shell in the setup
+    // block's own shape and re-registers the listeners on a
+    // fresh registry.
+    window.__listeners = {};
+    var bridge = {
+      setNativeQueue: function (call) { window.__contracts.push(JSON.parse(call.queue)); return Promise.resolve(); },
+      nativeTransport: function (call) { window.__commands.push(JSON.parse(call.command)); return Promise.resolve(); },
+      setPlaybackState: function (call) { window.__pushes.push(JSON.parse(call.state)); return Promise.resolve(); },
+      setDaySnapshot: function () { return Promise.resolve(); },
+      armSleepDeadline: function () { return Promise.resolve(); },
+      clearSleepDeadline: function () { return Promise.resolve(); },
+      takeNativeCompletions: function () { var r = window.__completions; window.__completions = []; return Promise.resolve({ records: r }); },
+      addListener: function (name, fn) { (window.__listeners[name] = window.__listeners[name] || []).push(fn); },
+    };
+    window.Capacitor = { Plugins: { OraDayBridge: bridge } };
+    setupBridgeCommands();
+    setupNativeState();
+    window.__reset466();
+    var descs = window.__dayFixture(['ep1', 'ep2', 'ep3']);
+    startQueue(descs.slice());
+    // The shell's side of the defect sequence: a WEB face
+    // stands in the service (a stale client's pushes on the
+    // upgrade path, or the cold-restored WEB record), and the
+    // contract this start just sent makes loadNativeContract
+    // arbitrate engines — its act is a bridge 'stop' emitted
+    // against the WEB face, delivered to this page's
+    // transportCommand listener, the door every bridge
+    // command lands on.
+    window.__b8 = { snapBefore: localStorage.getItem('opn-queue-v355') };
+    var hs = window.__listeners.transportCommand || [];
+    hs.forEach(function (f) { f({ command: 'stop' }); });
+    window.__b8.after = {
+      q: state.queue.map(function (d) { return d.episodeId; }),
+      idx: state.queueIdx,
+      cur: state.current && state.current.episodeId,
+      pend: state.pendingStart && state.pendingStart.episodeId,
+      snap: localStorage.getItem('opn-queue-v355'),
+    };
+    // The engine's own word still governs the start: its
+    // playing event acks the pending start on the standing
+    // seat, over the queue the stop would have wiped.
+    window.__emitNative(window.__nativeEvt({ playing: true, positionS: 3 }));
+    window.__b8.ack = { pend: state.pendingStart, cur: state.current && state.current.episodeId, q: state.queue.length };
+  });
+  await sleep(30);
+  const b8 = await ev(() => window.__b8);
+  const snapIds = b8.after.snap ? JSON.parse(b8.after.snap).ids : null;
+  ok(b8.after.q.length === 3 && b8.after.idx === 0 && b8.after.cur === 'ep1' && b8.after.pend === 'ep1',
+    'B8: a contract load with a WEB face standing — the arbitration stop leaves the queue, the index, the current, and the pending start intact', JSON.stringify(b8.after).slice(0, 250));
+  ok(!!b8.snapBefore && b8.after.snap === b8.snapBefore && JSON.stringify(snapIds) === JSON.stringify(['ep1', 'ep2', 'ep3']),
+    'B8: the saved queue snapshot stands byte-for-byte after the arbitration stop', JSON.stringify({ before: !!b8.snapBefore, ids: snapIds }));
+  ok(b8.ack.pend === null && b8.ack.cur === 'ep1' && b8.ack.q === 3,
+    'B8: the engine state event still acks the start over the standing queue', JSON.stringify(b8.ack));
 }
 
 await browser.close();

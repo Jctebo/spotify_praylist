@@ -7184,6 +7184,20 @@ function bridgePrevious() {
 function bridgeStop() {
   // B3 stop: stop playback and clear the standing transport —
   // the queue-exhausted clear's shape, on command.
+  // v466 (D-466-R1): the stop path is engine-aware. The shell
+  // emits this command as its engine-arbitration act —
+  // loadNativeContract and the set-items flip emit it against
+  // a standing WEB face as the native engine takes over. In
+  // native mode, while a contract stands (sent by this page,
+  // or mirrored from the engine's published state), the
+  // command is that arbitration echo, not a terminal clear:
+  // the page's queue, current, and saved snapshot belong to
+  // the contract it just sent and stand untouched. The
+  // native engine's own terminal stop reaches the page as
+  // the stopped state event, whose seat (applyNativeState)
+  // runs the clear. With no contract standing the standing
+  // clear runs as before, in every mode.
+  if (oraNativeMode() && (nativeContractDescs.length || nativeMirror)) return;
   try { audioEl.pause(); } catch (e) {}
   state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; // v461 F1: the stop clear is terminal — no start stands
   setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
