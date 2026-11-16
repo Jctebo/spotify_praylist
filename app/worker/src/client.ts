@@ -2211,12 +2211,13 @@ function row2HomeHtml(tab) {
   var title = '', date = '', acts = '';
   if (tab === 'prayers') {
     title = side === 'intentions' ? 'Intentions' : 'Prayers';
-    if (side === 'intentions') {
-      acts = '<button class="iconbtn light" id="int-menu" aria-label="Intentions menu">\u2630</button>';
-    } else {
-      if (state.dayPayload && state.dayPayload.date) date = shortHomeDate(state.dayPayload);
-      acts = '<button class="btn ghost small" id="sort-btn" aria-label="Sort">\u2191\u2193</button>';
-    }
+    // v459 §2 Build 4: the Intentions heading menu button
+    // and the Prayers Sort button retire from this row —
+    // their acts stand in the universal menu's page groups.
+    // The Intentions row 2 after: title + the pages-menu
+    // pill, nothing else. The Prayers row 2 after: title ·
+    // date · pill.
+    if (side !== 'intentions' && state.dayPayload && state.dayPayload.date) date = shortHomeDate(state.dayPayload);
   } else if (tab === 'conscience') {
     var titles = { examination: 'Examination', confession: 'Confession', direction: 'Spiritual Direction' };
     title = titles[side] || 'Examination';
@@ -2224,7 +2225,11 @@ function row2HomeHtml(tab) {
     title = 'Sacred Art';
   } else if (tab === 'podcasts') {
     title = 'Formation';
-    acts = '<button class="btn ghost small" id="pod-offline-btn">Download for offline</button>';
+    // v459 §2 Build 4: the Formation Download-for-offline
+    // button retires from this row — its act stands in the
+    // universal menu's Formation page group. The Formation
+    // row 2 after: title alone (the tab carries no pill
+    // today; none is added).
   }
   var pill = tab === 'podcasts' ? '' : paintSideToggle(tab, side);
   return '<span class="hdr2-title" id="hdr2-title">' + esc(title) + '</span>'
@@ -2686,7 +2691,6 @@ function paintPodcastsIndex() {
     html += '</div></div></div>';
   });
   view.innerHTML = html;
-  wireOfflineButtons();
   paintOfflineLine();
   view.querySelectorAll('[data-podseries]').forEach(function (c) {
     c.addEventListener('click', function () { openPodSeries(c.getAttribute('data-podseries')); });
@@ -2766,13 +2770,11 @@ function hdrBarHtml(o) {
    stands in both paints of paintPodcastVideos — its target
    is a constant, not snapshot data, and a down feed is
    exactly when the full page earns its place. */
-function podFullPageActHtml() {
-  return '<p><a class="btn ghost" data-podfullpage href="' + YT_CHANNEL_URL + '" target="_blank" rel="noopener">Full page on YouTube</a></p>';
-}
-function wirePodFullPage() {
-  var a = view.querySelector('[data-podfullpage]');
-  if (a) a.addEventListener('click', openFullPage);
-}
+// v459 §2 Build 4: the full-page anchor's emission and
+// its wiring retire whole, with both call sites in the
+// CatholicTV paints — Full page on YouTube stands in the
+// universal menu's CatholicTV page group, through the
+// adapter (Build 3). openFullPage below stands unedited.
 function openFullPage(e) {
   // §2.4 branch 1 — the guard fails: do nothing. No
   // preventDefault, no throw; the anchor's native behavior
@@ -2927,10 +2929,8 @@ function paintPodcastVideos() {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
     html += '<div class="card"><h3>' + esc(res.title || 'CatholicTV') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
-    html += podFullPageActHtml();
     view.innerHTML = html;
     wirePodBack();
-    wirePodFullPage();
     return;
   }
   var newest = (res.videos && res.videos.length) ? res.videos[0] : null;
@@ -2941,9 +2941,10 @@ function paintPodcastVideos() {
     + (newest && newest.imageUrl ? '<img class="coverimg" src="' + esc(newest.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>';
   html += '<div class="podpage-head">' + cover
     + '<div class="meta">Video series \u00b7 Updated ' + esc(newest ? newest.dateLabel : '') + '</div></div>';
-  // v436 §2.2: the full-page act stands directly under the
-  // page head, before the first video card.
-  html += podFullPageActHtml();
+  // v436 §2.2: the full-page act stood directly under the
+  // page head, before the first video card. v459 §2
+  // Build 4: it retires from the page — Full page on
+  // YouTube stands in the universal menu's page group.
   (res.videos || []).forEach(function (v) {
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (v.imageUrl ? '<img class="rowart" src="' + esc(v.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
@@ -2953,7 +2954,6 @@ function paintPodcastVideos() {
   });
   view.innerHTML = html;
   wirePodBack();
-  wirePodFullPage();
   view.querySelectorAll('[data-podvideo]').forEach(function (c) {
     c.addEventListener('click', function () {
       var id = c.getAttribute('data-podvideo');
@@ -2991,10 +2991,11 @@ function paintPodWatch() {
   html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
   html += '<div id="podwatch-err" class="err" style="display:none"></div>';
   html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 CatholicTV</div>';
-  // §2.6.3 (F-434-4): the Open in YouTube act stands PERMANENTLY
-  // under the frame — a plain anchor to the video's watch URL,
-  // opening externally. It does not wait for a refusal to exist.
-  html += '<p><a class="btn ghost" href="' + esc(v.url) + '" target="_blank" rel="noopener">Open in YouTube</a></p>';
+  // §2.6.3 (F-434-4): the Open in YouTube act stood
+  // PERMANENTLY under the frame. v459 §2 Build 4: the
+  // anchor retires from the page — Open in YouTube stands
+  // in the universal menu's watch page group (Build 3).
+  // The frame, the error seam, and the meta line stand.
   view.innerHTML = html;
   var wh = hdrRow2();
   var b = wh ? wh.querySelector('[data-podwatchback]') : null;
@@ -4683,7 +4684,9 @@ function renderIntentions() {
     if (retired.length) {
       html += '<h2 class="sectionhead">RETIRED</h2>' + retired.map(intentionRow).join('');
     }
-    html += '<button class="intfab" id="int-fab" aria-label="Add an intention">+</button>';
+    // v459 §2 Build 4: the floating add disc retires whole
+    // (D4 A — no exception); Add intention stands in the
+    // universal menu's Intentions page group.
     view.innerHTML = html;
     wireIntentions(intentions);
     // v426 §2.4: a settle whose auto-redraw failed stands the
@@ -4704,13 +4707,22 @@ function runIntentionsRedraw(menuBtn) {
   // (the menu has already closed when this runs). The tap runs
   // BOTH, in order — POST the draw re-run, then on settle the
   // one paint path re-reads the pool and repaints. Busy seats
-  // on the heading ☰ (disabled + the ellipsis) while the POST
-  // is in flight. A failed tap does not repaint; the standing
-  // paint stands and the note slot names the failure.
+  // on the passed element (disabled + the ellipsis) while the
+  // POST is in flight. A failed tap does not repaint; the
+  // standing paint stands and the note slot names the failure.
+  // v459 §2 Build 3 (the Redraw adapter): the caller now
+  // passes the header menu button — the app's one menu
+  // control reads busy while the draw is in flight. The
+  // standing flow's repaint recreated the old seat; nothing
+  // recreates the header button, so the success branch
+  // restores its own seat after the settle. The failure
+  // branch already restores.
   menuBtn.disabled = true;
   menuBtn.textContent = '\u2026';
   post('/api/prayer/redraw', {}).then(function () {
     settleIntentions(false);
+    menuBtn.disabled = false;
+    menuBtn.textContent = '\u2630';
   }).catch(function () {
     menuBtn.disabled = false;
     menuBtn.textContent = '\u2630';
@@ -4719,22 +4731,15 @@ function runIntentionsRedraw(menuBtn) {
 }
 function wireIntentions(intentions) {
   // v452 §2 Build 2: every act opens through openSheetMenu,
-  // anchored at its ☰ — the heading menu ("Intentions":
-  // Redraw + Add intention, D3 A) and each row's menu
-  // ("Intention": Edit · Retire/Restore · Delete). Every act
-  // fires the identical endpoint and settle the standing
-  // buttons fired; only the wiring moved. The floating add
-  // button (Build 3) opens the same add sheet the menu's
-  // Add intention opens.
-  var menuBtn = document.getElementById('int-menu');
-  if (menuBtn) menuBtn.addEventListener('click', function () {
-    openSheetMenu('Intentions', [
-      { label: 'Redraw', act: function () { runIntentionsRedraw(menuBtn); } },
-      { label: 'Add intention', act: function () { openIntentionEditor(null); } }
-    ], menuBtn);
-  });
-  var fab = document.getElementById('int-fab');
-  if (fab) fab.addEventListener('click', function () { openIntentionEditor(null); });
+  // anchored at its ☰ — each row's menu ("Intention": Edit ·
+  // Retire/Restore · Delete). Every act fires the identical
+  // endpoint and settle the standing buttons fired; only
+  // the wiring moved.
+  // v459 §2 Build 4: the heading menu's wiring and the
+  // floating add disc's wiring retire with their elements —
+  // Redraw and Add intention stand in the universal menu's
+  // Intentions page group (Build 3). The row menus below
+  // are item menus; they stand untouched.
   wireFieldNotes();
   view.querySelectorAll('[data-intmenu]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -5175,7 +5180,13 @@ function openSheetMenu(title, items, anchorEl) {
       // act stands on it, so the standing click path leaves
       // the card open (the header menu's groups).
       if (it.head) return '<div class="menuhead" data-menuitem="' + i + '">' + esc(it.label) + '</div>';
-      return '<button class="menurow" data-menuitem="' + i + '">' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
+      // v459 §2 Build 1: an item carrying a key renders it as
+      // data-menukey — the seat of the mark-all rewiring (the
+      // caller finds the row BY KEY after mount; no positional
+      // data-menuitem read stands). Additive: no standing
+      // caller passes a key, so every standing card renders
+      // byte-identically.
+      return '<button class="menurow" data-menuitem="' + i + '"' + (it.key ? ' data-menukey="' + esc(it.key) + '"' : '') + '>' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
     }).join('');
   document.body.appendChild(catcher);
   document.body.appendChild(card);
@@ -5217,17 +5228,29 @@ function openSheetMenu(title, items, anchorEl) {
   return card;
 }
 /* v457 (D1 + D2): the header menu — the hamburger at row
-   1's right. NAVIGATION ONLY (the v447–v449 rulings stand:
-   no transport, no toggles, no playback state, no second
-   copy of any surface's content): the Go to groups — the
-   day's blocks + Intentions · the Conscience sides · the
-   Formation series · the Sacred Art sides — and, by John's
-   D2 comment, the Settings entry (the gear's heir: it
-   fires the standing renderSettings, its contents
-   untouched). The standing place is marked 'Here' and
-   inert (the v455 close-only form); any other tap jumps
-   and the card closes (the standing menu contract). The
-   Conscience entries carry the Amendment 2 short labels. */
+   1's right. v459 §2 Build 2 (Amendment 1; D1 A · D2 A ·
+   D3 A · D4 A · D5 A): ONE UNIVERSAL MENU. The card stands
+   in this exact order: (1) the current page's action group
+   under the page's name — the merged page menus and
+   page-level buttons of Build 3, shown only on the pages
+   that carry them; (2) the standing section's group in
+   full (its head, its destinations, its 'Here' marks, the
+   standing jumps); (3) each other section as ONE entry in
+   tab order, its tap the tab-bar landing (setTab — the tab
+   at the side it last stood on); (4) Settings alone at the
+   foot (the gear's heir: it fires the standing
+   renderSettings, its contents untouched). On the Settings
+   screen no section stands: all four take the one-entry
+   form. The navigation part keeps the v447–v449 rulings
+   (no transport, no toggles, no playback state, no second
+   copy of any surface's content); the page group is the
+   amendment's one addition, carrying page acts only. The
+   standing place is marked 'Here' and inert (the v455
+   close-only form); any other tap jumps and the card
+   closes (the standing menu contract). The Conscience
+   entries carry the Amendment 2 short labels. The card
+   rebuilds at every open — every label and state below is
+   computed at open, fresh. */
 function goSide(tab, side) {
   if (state.tab === tab) { if (tabSideNow[tab] !== side) switchSide(tab, side); return; }
   writeTabSide(tab, side);
@@ -5244,39 +5267,159 @@ function goSeries(key) {
 }
 function openHeaderMenu() {
   var items = [];
-  items.push({ head: true, label: 'Prayers' });
-  var day = state.dayPayload;
-  (day && day.blocks ? day.blocks : []).forEach(function (x) {
-    if (x.block === '__episodes') return; // the episodes pseudo-page stands outside the list (v455)
-    var here = state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === x.block;
-    items.push({ label: x.label || x.block, state: here ? 'Here' : null, act: here ? function () {} : function () { goBlock(x.block); } });
-  });
-  var intHere = state.tab === 'prayers' && tabSideNow.prayers === 'intentions';
-  items.push({ label: 'Intentions', state: intHere ? 'Here' : null, act: intHere ? function () {} : function () { goSide('prayers', 'intentions'); } });
-  items.push({ head: true, label: 'Conscience' });
-  [['examination', 'Exam'], ['confession', 'Confess'], ['direction', 'Direction']].forEach(function (s) {
-    var here = state.tab === 'conscience' && tabSideNow.conscience === s[0];
-    items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('conscience', s[0]); } });
-  });
-  items.push({ head: true, label: 'Formation' });
-  var series = (state.podcastsIndex && state.podcastsIndex.seriesList) || [
-    { series: 'catechism', title: 'Catechism in a Year' },
-    { series: 'bible', title: 'Bible in a Year' },
-    { series: 'rosary', title: 'Rosary in a Year' },
-    { series: 'catholictv', title: 'CatholicTV' },
-    { series: 'the-ai-signal', title: 'The AI Signal' }
+  var markBlock = null;
+  var tab = state.tab;
+  /* ---- (1) the page-action group (Build 3) ---- */
+  if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
+    // A block page: Sort · Mark all · Share · Open in
+    // Spotify (where a URL stands) · Download all — the
+    // retired page menu's acts, in its order. The episodes
+    // page carries NO page group (grounded: no page menu
+    // and no page-level act of its own stands there).
+    var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === state.prayersView.block; })[0];
+    if (b) {
+      items.push({ head: true, label: b.label || b.block });
+      items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
+      // The mark-all item: its label computed at open from
+      // the standing counts, exactly as the retired menu
+      // computed it; it carries the key and a close-only
+      // act, and the rewiring below binds the standing
+      // mark act to its row BY KEY after mount.
+      var played = blockPlayedCounts(b.block);
+      items.push({ label: (played.total && played.played === played.total) ? 'Mark all unplayed' : 'Mark all played', key: 'markall', act: function () {} });
+      markBlock = b.block;
+      items.push({ label: 'Share', act: function () {
+        // The retired openBlockShare body, constructed here
+        // from the block descriptor — the identical
+        // openShareSheet call, the identical sheet.
+        openShareSheet({
+          artHtml: coverTileHtml(b.block, 'sm'), title: b.label || b.block,
+          line: 'Playlist \u00b7 ' + ((state.dayDescs || []).filter(function (d) { return d.block === b.block; }).length || (b.trackCount != null ? b.trackCount : (b.tracks || []).length)) + ' episodes',
+          url: b.spotifyUrl || location.origin + '/'
+        });
+      } });
+      if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
+      // The download state settles on the item itself (the
+      // v458 settlement, moved): settled reads 'On this
+      // device' and is inert (the standing Here pattern);
+      // unsettled fires the standing download act, whose
+      // own settle re-reads at the next open.
+      if (state.gridDl && state.gridDl[b.block]) items.push({ label: 'Download all', state: 'On this device', act: function () {} });
+      else items.push({ label: 'Download all', act: function () { blockDownloadAll(b.block); } });
+    }
+  } else if (tab === 'prayers' && tabSideNow.prayers === 'intentions') {
+    // The Intentions side: the retired heading menu's acts.
+    // Redraw's busy seat is the header menu button itself
+    // (the adapter in runIntentionsRedraw restores it).
+    items.push({ head: true, label: 'Intentions' });
+    items.push({ label: 'Redraw', act: function () { runIntentionsRedraw(document.getElementById('hdr-menu')); } });
+    items.push({ label: 'Add intention', act: function () { openIntentionEditor(null); } });
+  } else if (tab === 'prayers' && state.prayersView && state.prayersView.kind === 'home') {
+    // The Prayers home: the retired Sort button + the
+    // offline card's button. The group head and the
+    // Prayers navigation head below carry the same name
+    // on this one page (D5 A, as approved).
+    items.push({ head: true, label: 'Prayers' });
+    items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
+    items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
+  } else if (tab === 'podcasts' && podLevel === 'index') {
+    // The Formation home: the retired row-2 button's act.
+    items.push({ head: true, label: 'Formation' });
+    items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
+  } else if (tab === 'podcasts' && podLevel === 'series' && state.podcasts && state.podcasts.series === 'catholictv') {
+    // The CatholicTV series page: the retired full-page
+    // anchor's act, through the adapter — with the Browser
+    // plugin the standing openFullPage runs whole; without
+    // it, the anchor's native behavior is performed by
+    // hand, exactly once (the v436 branch-3 pattern).
+    // openFullPage itself stands unedited.
+    items.push({ head: true, label: 'CatholicTV' });
+    items.push({ label: 'Full page on YouTube', act: function () {
+      var cap = window.Capacitor;
+      if (cap && cap.Plugins && cap.Plugins.Browser) openFullPage(null);
+      else window.open(YT_CHANNEL_URL, '_blank', 'noopener');
+    } });
+  } else if (tab === 'podcasts' && podLevel === 'watch') {
+    // The watch view: the retired under-frame anchor's act
+    // (its own target/rel form, read from the standing
+    // watch record).
+    items.push({ head: true, label: 'CatholicTV' });
+    items.push({ label: 'Open in YouTube', act: function () { if (podWatch) window.open(podWatch.video.url, '_blank', 'noopener'); } });
+  }
+  // Audio series pages, Conscience sides, Sacred Art
+  // sides, and the Settings screen carry no page group —
+  // no page menu or page-level act stands on them.
+  /* ---- (2) the standing section in full + (3) each
+     other section as one entry, in tab order ---- */
+  var standingKey = tab === 'prayers' ? 'prayers' : tab === 'conscience' ? 'conscience' : tab === 'podcasts' ? 'podcasts' : tab === 'wallpaper' ? 'wallpaper' : null;
+  var sections = [
+    { key: 'prayers', tab: 'prayers', name: 'Prayers' },
+    { key: 'conscience', tab: 'conscience', name: 'Conscience' },
+    { key: 'podcasts', tab: 'podcasts', name: 'Formation' },
+    { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
   ];
-  series.forEach(function (s) {
-    var here = state.tab === 'podcasts' && podLevel === 'series' && state.podcasts && state.podcasts.series === s.series;
-    items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
+  sections.forEach(function (sec) {
+    if (sec.key !== standingKey) {
+      items.push({ label: sec.name, state: '\u203a', act: function () { setTab(sec.tab); } });
+      return;
+    }
+    items.push({ head: true, label: sec.name });
+    if (sec.key === 'prayers') {
+      var day = state.dayPayload;
+      (day && day.blocks ? day.blocks : []).forEach(function (x) {
+        if (x.block === '__episodes') return; // the episodes pseudo-page stands outside the list (v455)
+        var here = state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === x.block;
+        items.push({ label: x.label || x.block, state: here ? 'Here' : null, act: here ? function () {} : function () { goBlock(x.block); } });
+      });
+      var intHere = tabSideNow.prayers === 'intentions';
+      items.push({ label: 'Intentions', state: intHere ? 'Here' : null, act: intHere ? function () {} : function () { goSide('prayers', 'intentions'); } });
+    } else if (sec.key === 'conscience') {
+      [['examination', 'Exam'], ['confession', 'Confess'], ['direction', 'Direction']].forEach(function (s) {
+        var here = tabSideNow.conscience === s[0];
+        items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('conscience', s[0]); } });
+      });
+    } else if (sec.key === 'podcasts') {
+      var series = (state.podcastsIndex && state.podcastsIndex.seriesList) || [
+        { series: 'catechism', title: 'Catechism in a Year' },
+        { series: 'bible', title: 'Bible in a Year' },
+        { series: 'rosary', title: 'Rosary in a Year' },
+        { series: 'catholictv', title: 'CatholicTV' },
+        { series: 'the-ai-signal', title: 'The AI Signal' }
+      ];
+      series.forEach(function (s) {
+        // The one named extension of the standing Here
+        // rule: on the watch view CatholicTV carries the
+        // mark — the watch view stands in that series
+        // alone, and podWatch exists nowhere else.
+        var here = (podLevel === 'series' && state.podcasts && state.podcasts.series === s.series)
+          || (podLevel === 'watch' && s.series === 'catholictv');
+        items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
+      });
+    } else if (sec.key === 'wallpaper') {
+      [['phone', 'Phone'], ['watch', 'Watch']].forEach(function (s) {
+        var here = tabSideNow.wallpaper === s[0];
+        items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('wallpaper', s[0]); } });
+      });
+    }
   });
-  items.push({ head: true, label: 'Sacred Art' });
-  [['phone', 'Phone'], ['watch', 'Watch']].forEach(function (s) {
-    var here = state.tab === 'wallpaper' && tabSideNow.wallpaper === s[0];
-    items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('wallpaper', s[0]); } });
-  });
+  /* ---- (4) Settings, alone at the foot (D2 A) ---- */
   items.push({ label: 'Settings', state: state.tab === 'settings' ? 'Here' : null, act: function () { renderSettings(); } });
-  openSheetMenu('Go to', items, document.getElementById('hdr-menu'));
+  var card = openSheetMenu('Go to', items, document.getElementById('hdr-menu'));
+  // The mark-all rewiring (Build 1 + Build 3): the row is
+  // found BY KEY, takes data-markblock, and wirePlayed
+  // binds the standing mark act to it. The listener order
+  // is the retired construction's own: the card's close
+  // handler bound at mount inside openSheetMenu;
+  // wirePlayed's mark handler binds after — a tap closes
+  // the card and writes the block's whole available set,
+  // then refreshPlayedChrome settles the chrome (its
+  // data-markblock label sweep finds no row in the closed
+  // card — the label is recomputed at the next open).
+  if (markBlock && card) {
+    var markRow = card.querySelector('[data-menukey="markall"]');
+    if (markRow) { markRow.setAttribute('data-markblock', markBlock); wirePlayed(card); }
+  }
+  return card;
 }
 function openPlayerMenu(anchorEl) {
   // §1.4 + FD3: the player-level overflow — exactly Autoplay ·
@@ -5494,15 +5637,11 @@ function refreshGridDlStates() {
     view.querySelectorAll('[data-carddl]').forEach(function (el) {
       el.style.display = state.gridDl[el.getAttribute('data-carddl')] ? '' : 'none';
     });
-    view.querySelectorAll('[data-blockdl]').forEach(function (btn) {
-      var full = !!state.gridDl[btn.getAttribute('data-blockdl')];
-      btn.textContent = full ? 'On this device' : 'Download all';
-      btn.disabled = full;
-    });
-    // v458 §2: the downloaded note's sweep retires whole
-    // with its line — the act's own state (its text +
-    // disabled, the sweep above) carries the download
-    // state in the one row now.
+    // v459 §2 Build 4: the download button's sweep retires
+    // with the button — the state.gridDl computation above
+    // stands, and the download state now settles on the
+    // universal menu's Download all item, read at open
+    // (Build 3). The card/row branches below stand.
     view.querySelectorAll('[data-rowdl]').forEach(function (el) {
       el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
     });
@@ -5511,8 +5650,9 @@ function refreshGridDlStates() {
     // was re-narrowing the home grid under a filter that no
     // longer stands (the census: the homeFilter and _dlKey
     // state fields have no other reader). The data-carddl /
-    // data-blockdl / data-rowdl updates above stand
-    // unchanged — the home rows carry the spans now.
+    // data-rowdl updates above stand unchanged — the home
+    // rows carry the spans now. (v459: the block download
+    // button's own update retired with the button, above.)
   }).catch(function () {});
 }
 function blockDownloadAll(block) {
@@ -8188,17 +8328,18 @@ function offlineLineText() {
     + ' \u00b7 podcasts ' + (idx.pods ? idx.pods.autoHave + '/' + idx.pods.autoTotal : '0/0') + (manualCount ? ' + ' + manualCount + ' by hand' : '')
     + ' \u00b7 tomorrow\u2019s prayers ' + (d2 ? d2.have + '/' + d2.total : '0/0');
 }
-function offlineLineHtml(btnId) {
-  return '<div class="card"><div class="meta" id="offline-line-text">' + esc(offlineLineText()) + '</div>'
-    + '<div class="row" style="margin-top:8px"><button class="btn ghost small" id="' + btnId + '">Download for offline</button></div></div>';
+function offlineLineHtml() {
+  // v459 §2 Build 4: the button row retires — the offline
+  // card stands with its text alone (the text is content;
+  // paintOfflineLine stands). Download for offline stands
+  // in the universal menu's page groups (Prayers home ·
+  // Formation home).
+  return '<div class="card"><div class="meta" id="offline-line-text">' + esc(offlineLineText()) + '</div></div>';
 }
 function paintOfflineLine() { var el = document.getElementById('offline-line-text'); if (el) el.textContent = offlineLineText(); }
-function wireOfflineButtons() {
-  ['offline-dl-btn', 'pod-offline-btn'].forEach(function (id) {
-    var b = document.getElementById(id);
-    if (b) b.addEventListener('click', function () { offlineCompleteness(true); });
-  });
-}
+// v459 §2 Build 4: the offline buttons' wiring retires
+// whole with both its buttons; its two call sites
+// (paintPodcastsIndex · wirePrayersView) go with it.
 /* W4: by-hand podcast downloads — uncapped, registry-protected. */
 function podManualRead() { try { return JSON.parse(localStorage.getItem('opn-pod-manual-v1') || '{}') || {}; } catch (e) { return {}; } }
 function podManualWrite(m) { try { localStorage.setItem('opn-pod-manual-v1', JSON.stringify(m)); } catch (e) {} }
@@ -8379,7 +8520,6 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
   });
-  wireOfflineButtons();
   paintOfflineLine();
   // v343 §2.4: the expand wiring + arm pass ride every paint.
   wireExpand(view);
@@ -8458,23 +8598,27 @@ function paintListenHome(day) {
   // date right in its standing .sub dress). v419 (G27) stands:
   // the heading is still the tab's name.
   // v449 §2 Build 1: the home takes the Formation pattern —
-  // the heading line carries the Sort act at its right (the
-  // #sort-btn emission + its openBlockOrderEditor wiring
-  // move up from the retired .searchrow, byte-identical;
-  // the manual order itself stands), then the block rows,
-  // one per line, and nothing else above the rows. The
-  // .searchrow retires whole: the search pill, the filter
-  // chips, and their wiring (D3 settled — search and chips
-  // retire from the home). Play All + the offline line
-  // stand BELOW the rows (§1's named call).
+  // the heading line carries the Sort act at its right (its
+  // emission + its openBlockOrderEditor wiring move up from
+  // the retired .searchrow, byte-identical; the manual
+  // order itself stands), then the block rows, one per
+  // line, and nothing else above the rows. The .searchrow
+  // retires whole: the search pill, the filter chips, and
+  // their wiring (D3 settled — search and chips retire from
+  // the home). Play All + the offline line stand BELOW the
+  // rows (§1's named call).
   // v457: the home's head line (title · date · the pill ·
   // the Sort act) stands in the header's row 2 — the
-  // paintPrayersBar(null) above paints it there, and the
-  // #sort-btn wiring below finds the header's button.
+  // paintPrayersBar(null) above paints it there.
+  // v459 §2 Build 4: the Sort act retires from that row —
+  // it stands in the universal menu's Prayers page group.
   var html = '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
   // v392 W5: the offline readiness line + the download button.
-  html += offlineLineHtml('offline-dl-btn');
+  // v459 §2 Build 4: the card stands with its text alone —
+  // Download for offline stands in the universal menu's
+  // Prayers page group.
+  html += offlineLineHtml();
   view.innerHTML = html;
   // §2.4: the Play All wiring lives here — the element exists
   // only on home.
@@ -8484,7 +8628,9 @@ function paintListenHome(day) {
     // fallback stands by construction, never a dead button).
     startQueue(queueBuild(extRebuildDescs(day)));
   });
-  document.getElementById('sort-btn').addEventListener('click', openBlockOrderEditor);
+  // v459 §2 Build 4: the Sort button's wiring retires with
+  // its emission (row2HomeHtml) — Sort stands in the
+  // universal menu's Prayers page group.
 }
 function homeBodyHtml(day) {
   // v449 §2 Build 1: the home body is the rows alone — the
@@ -8544,9 +8690,13 @@ function paintBlockPage(day, block) {
   // same row at its trailing end (v458; its wiring is
   // view-scoped and follows the element); the cover tile
   // retires with the band.
+  // v459 §2 Build 4: the page menu button retires from the
+  // bar — the Play All disc stands alone at the bar's right;
+  // the page's acts stand in the universal menu's page
+  // group (Build 3). The bar after: back · title · the
+  // Play All disc.
   paintPrayersBar(hdrBarHtml({ dest: 'Prayers', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
-    rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>'
-      + '<button class="hdr2-act" data-blockmenu="' + esc(b.block) + '" aria-label="Playlist options">\u22ee</button>' }), b.block);
+    rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>' }), b.block);
   // v455 §2 Build 1 (D1): the series-style head retires
   // completely — no cover tile, no name line; the bar
   // carries the block's name once. The body opens with
@@ -8565,8 +8715,12 @@ function paintBlockPage(day, block) {
   // in refreshGridDlStates with it, so no Settings
   // pointer stands anywhere on the page.
   var headDur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
-  var html = '<div class="blockpage-meta"><span class="blockpage-metatext">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></span>'
-    + '<button class="blockpage-dlact" data-blockdl="' + esc(b.block) + '">Download all</button></div>';
+  // v459 §2 Build 4: the download act leaves the one row —
+  // the row keeps its meta text alone (the data-bmeta span
+  // and updateBlockCounts untouched); Download all stands
+  // in the universal menu's page group, its state settling
+  // on the menu item (Build 3).
+  var html = '<div class="blockpage-meta"><span class="blockpage-metatext">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '') + '<span data-bmeta="' + esc(b.block) + '">' + n + ' episodes' + (headDur > 0 ? ' \u00b7 ' + fmtDurLong(headDur) : '') + '</span></span></div>';
   // §2.3.2: the block's rows, rendered by trackCard exactly as
   // the flat paint rendered them.
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
@@ -8577,53 +8731,12 @@ function paintBlockPage(day, block) {
   // v420 §2.7: Sort + Mark all played + Share ride the page ⋮
   // (the anchored card); the head's share icon retires (Share
   // stands in the menu, its v413 home — §2.6).
-  var dlBtn = view.querySelector('[data-blockdl]');
-  if (dlBtn) dlBtn.addEventListener('click', function () { blockDownloadAll(b.block); });
-  var openBlockShare = function () {
-    openShareSheet({
-      artHtml: coverTileHtml(b.block, 'sm'), title: b.label || b.block,
-      line: 'Playlist \u00b7 ' + ((state.dayDescs || []).filter(function (d) { return d.block === b.block; }).length || n) + ' episodes',
-      url: b.spotifyUrl || location.origin + '/'
-    });
-  };
-  // v448: the page menu act stands in the bar host now, not
-  // the side host — its wiring reads the host. v457: the
-  // host is the header's row 2.
-  var menuBtn = document.querySelector('#hdrrow2 [data-blockmenu]');
-  if (menuBtn) menuBtn.addEventListener('click', function () {
-    var played = blockPlayedCounts(b.block);
-    var items = [
-      { label: 'Sort', act: function () { openBlockOrderEditor(); } },
-      // §2.7: the mark-all item's label is computed here, at
-      // menu construction (the menu rebuilds at every open,
-      // so the label is fresh at open); its row takes
-      // data-markblock after mount and wirePlayed binds the
-      // standing mark-all act to it — the item's own act is
-      // the menu's close only.
-      { label: (played.total && played.played === played.total) ? 'Mark all unplayed' : 'Mark all played', act: function () {} },
-      { label: 'Share', act: openBlockShare }
-    ];
-    if (b.spotifyUrl) items.push({ label: 'Open in Spotify', act: function () { window.open(b.spotifyUrl, '_blank', 'noopener'); } });
-    // v455 §2 Build 2 (D3, as amended): the Go to group
-    // appends AFTER the standing items — the Mark-all
-    // wiring below reads [data-menuitem="1"] by position,
-    // so nothing may insert ahead of the standing items.
-    // One item per block of the day, in day order; the
-    // standing block's item carries the 'Here' state and
-    // the close-only act (the Mark-all pattern); the
-    // episodes pseudo-page is not a block and stands
-    // outside the list. Intentions stands last — its act
-    // flips the Prayers tab to its Intentions side.
-    (day.blocks || []).forEach(function (x) {
-      if (x.block === '__episodes') return;
-      if (x.block === b.block) items.push({ label: x.label || x.block, state: 'Here', act: function () {} });
-      else items.push({ label: x.label || x.block, act: function () { openBlockPage(x.block); } });
-    });
-    items.push({ label: 'Intentions', act: function () { switchSide('prayers', 'intentions'); } });
-    var card = openSheetMenu(b.label || b.block, items, menuBtn);
-    var markRow = card ? card.querySelector('[data-menuitem="1"]') : null;
-    if (markRow) { markRow.setAttribute('data-markblock', b.block); wirePlayed(card); }
-  });
+  // v459 §2 Build 4: the download act's wiring, the share
+  // construction, and the whole page-menu construction +
+  // its positional wiring retire here — every one of their
+  // acts lives in the universal menu's block page group
+  // (Build 3), the mark-all rewired BY KEY. No positional
+  // menu read remains anywhere.
   appendBlockSettingsCards(day, b);
   // v374 §2 (site 1): the header span stands in the view now —
   // rewrite it from the current descriptor count, so a block page

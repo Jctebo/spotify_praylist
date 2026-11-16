@@ -177,8 +177,9 @@ body.dock-on .view { padding-bottom: calc(var(--tabh, 0px) + var(--dockh, 60px))
    view's content edge. Dress from the theme tokens only:
    the navy ground, the gold +. Painted by the Intentions
    paint alone, so it leaves with that paint. */
-.intfab { position:fixed; right:12px; bottom:calc(var(--tabh, 0px) + 14px); z-index:35; width:56px; height:56px; border-radius:50%; border:none; background:var(--navy); color:var(--gold); font-family:inherit; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 18px rgba(42,38,32,.30); padding:0; }
-body.dock-on .intfab { bottom:calc(var(--tabh, 0px) + var(--dockh, 60px) + 14px); }
+/* v459 §2 Build 4: the floating add disc's dress rules
+   retire with the disc — Add intention stands in the
+   universal menu's Intentions page group (D4 A). */
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:var(--muted); font-size:15px; margin:0 0 12px; }
 .headrow { margin:2px 0 12px; }
@@ -561,7 +562,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    stands as a plain body act. v458 §2: the act stands at
    the trailing end of the one meta row (flex form); the
    note line that stood under it retires whole. */
-.blockpage-dlact { flex:none; white-space:nowrap; background:none; border:none; box-shadow:none; padding:6px 0; margin:0; font-family:var(--sans); font-size:15px; color:var(--accent-text); cursor:pointer; text-align:left; }
+/* v459 §2 Build 4: the block-page download act's dress
+   rule retires with the act — the one meta row keeps its
+   text alone, and Download all stands in the universal
+   menu's page group. */
 /* v419 (G26): the search field gains its leading glyph;
    its focus takes the §3.12 accent border (the G20 field
    rule below). */
