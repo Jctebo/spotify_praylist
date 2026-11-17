@@ -3835,6 +3835,10 @@ function setTab(tab) {
   recordSideScroll(state.tab);
   view = realView;
   state.tab = tab;
+  // v492: remember the last tab the user opened (John, 2026-11-17:
+  // in general the app opens on the last tab opened; the boot tail
+  // reads this key and falls back to the Mass tab when none stands)
+  try { if (tab === 'prayers' || tab === 'mass' || tab === 'conscience' || tab === 'podcasts' || tab === 'wallpaper') localStorage.setItem('opn-lasttab-v492', tab); } catch (e) {}
   document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
   if (tab === 'prayers') renderPrayers();
   else if (tab === 'mass') renderMass();
@@ -12228,7 +12232,12 @@ setupMediaSession();
 setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
 setupNativeState(); // v466: the native engine's state channel (shell 1.0.38+ only; a no-op elsewhere)
 setupBackButton(); // v421: the Android system back binding (shell only; a guarded no-op elsewhere)
-setTab('prayers');
+// v492 (John, 2026-11-17): a cold start opens on the Mass tab;
+// in general the app opens on the last tab the user opened
+// (opn-lasttab-v492, written by setTab), validated to a tab id.
+var bootTab = 'mass';
+try { var lt = localStorage.getItem('opn-lasttab-v492'); if (lt === 'prayers' || lt === 'mass' || lt === 'conscience' || lt === 'podcasts' || lt === 'wallpaper') bootTab = lt; } catch (e) {}
+setTab(bootTab);
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 try { localStorage.setItem('opn-boot', 'complete'); localStorage.removeItem('opn-boot-healed'); } catch (e) {} // v429 §2.5: the boot stamp — the synchronous tail ran through; re-arm the one-shot heal
 `;

@@ -31,10 +31,16 @@ import path from 'node:path';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 
-/* John's answers to the two open details (release doc §1):
-   (a) pill first side — EXPECTED_PILL · (b) opening tab — EXPECTED_OPEN */
+/* John's answers to the two open details (main chat, 2026-11-17
+   07:18 CT, verbatim): "Open on Mass, pill.keeps.praylist. In
+   general open to last user opened"
+   (a) the pill keeps Praylist — EXPECTED_PILL (the standing value)
+   (b) a cold start opens on Mass — EXPECTED_OPEN — and in general
+       the app opens on the last tab the user opened
+       (opn-lasttab-v492, written by setTab; R15/R16 prove the
+       remembered value wins and a foreign value falls back) */
 const EXPECTED_PILL = 'Praylist';
-const EXPECTED_OPEN = 'prayers';
+const EXPECTED_OPEN = 'mass';
 
 const APP = path.resolve(process.cwd(), 'app');
 const SRC = APP + '/worker/src';
@@ -174,8 +180,8 @@ async function boot(ctx, tag, errs) {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => { errs.push(String(e).slice(0, 160)); console.log('note -', tag, 'pageerror:', String(e).slice(0, 140)); });
   await page.goto(ORIGIN + '/');
-  await page.waitForSelector('[data-openblock]', { timeout: 25000 }).catch(() => console.log('note -', tag, 'openblock slow'));
-  await sleep(500);
+  await page.waitForSelector('#tabbar .tab[data-tab="mass"]', { timeout: 25000 }).catch(() => console.log('note -', tag, 'tabbar slow'));
+  await sleep(700);
   return page;
 }
 
@@ -193,6 +199,8 @@ async function boot(ctx, tag, errs) {
   const open = await page.evaluate(() => state.tab);
   ok(open === EXPECTED_OPEN, 'R2: a cold start opens on the chosen tab (' + EXPECTED_OPEN + ')', String(open));
 
+  await page.click('#tabbar .tab[data-tab="prayers"]');
+  await sleep(900);
   const pill = await page.evaluate(() => {
     const b = document.querySelector('#sidetoggle [data-side="prayers"]');
     return b ? b.textContent.trim() : null;
@@ -212,6 +220,8 @@ async function boot(ctx, tag, errs) {
   await sleep(900);
   s = await page.evaluate(() => ({ tab: state.tab, row2: (document.getElementById('hdrrow2') || {}).textContent || '' }));
   ok(s.tab === 'conscience' && /Conscience/.test(s.row2), 'R6: the Conscience tab opens its surface under its standing name', JSON.stringify(s));
+  ok(await page.evaluate(() => localStorage.getItem('opn-lasttab-v492')) === 'conscience',
+    'R6b: a tab switch writes the last-opened tab (opn-lasttab-v492)');
 
   await page.click('#tabbar .tab[data-tab="podcasts"]');
   await sleep(800);
@@ -264,8 +274,30 @@ async function boot(ctx, tag, errs) {
   const ctx = await browser.newContext({ viewport: { width: 412, height: 915 } });
   await ctx.addInitScript(() => { try { localStorage.setItem('opn-tabside-prayers-v410', 'book'); } catch (e) {} });
   const page = await boot(ctx, 'R-side', errs);
+  await page.click('#tabbar .tab[data-tab="prayers"]');
+  await sleep(900);
   const s = await page.evaluate(() => ({ tab: state.tab, row2: (document.getElementById('hdrrow2') || {}).textContent || '' }));
   ok(/Prayers/.test(s.row2), 'R14: a pre-rename persisted side value (book) lands on the same written-prayers surface', JSON.stringify(s));
+  await ctx.close();
+}
+
+/* ---------------- R-open: the remembered last tab wins ---------------- */
+{
+  const errs = [];
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('opn-lasttab-v492', 'wallpaper'); } catch (e) {} });
+  const page = await boot(ctx, 'R-open', errs);
+  const s = await page.evaluate(() => state.tab);
+  ok(s === 'wallpaper', 'R15: a remembered last tab (wallpaper) wins over the Mass cold-start default', String(s));
+  await ctx.close();
+}
+{
+  const errs = [];
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('opn-lasttab-v492', 'bogus'); } catch (e) {} });
+  const page = await boot(ctx, 'R-open-bad', errs);
+  const s = await page.evaluate(() => state.tab);
+  ok(s === 'mass', 'R16: a foreign remembered value falls back to the Mass tab', String(s));
   await ctx.close();
 }
 
