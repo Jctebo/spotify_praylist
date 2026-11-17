@@ -62,6 +62,13 @@ export interface Env {
   // channel feed). Production leaves it unset; the pinned feed
   // URL below governs.
   EXT_YT_CATHOLICTV_FEED_URL?: string;
+  // v499 harness seams, same rule: fixture-feed overrides for
+  // the Mass tab Virtual side's Daily TV Mass and Springfield
+  // Mass video series builds (YouTube channel feeds).
+  // Production leaves them unset; the pinned feed URLs below
+  // govern.
+  EXT_YT_DAILYTV_FEED_URL?: string;
+  EXT_YT_SPRINGFIELD_FEED_URL?: string;
   // v464 harness seams, same rule: fixture-feed overrides for
   // the Podcasts section's RSS series builds (The Exorcist
   // Files · The Counsel of Trent). Production leaves them
@@ -259,20 +266,40 @@ function logo512(): Uint8Array {
 // assignment, which seats nothing now) and in the prayer_items
 // ORDER BY literal (no item carries the block; the literal
 // stands harmless).
-const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas"] as const;
+// v499: "Mass and Homilies" leaves the block list whole (John,
+// 2026-11-17 — deprecate the block and move its contents: the
+// video Masses to the Mass tab's Virtual Mass side, the homily
+// podcasts to their own release) and "Novenas" stands FIRST in
+// the list (John's word, superseding the 2026-11-03/05
+// prayer-structure placement for the Praylist order). The
+// retired block's BLOCK_CAPTION and PRAYER_BLOCK_START rows
+// retire with it (the v451 precedent); the name stands in the
+// source-settings PUT's validation for its own rows only (the
+// census carve-out at that route) and in the prayer_items
+// ORDER BY literal (the literal stands harmless). Its four
+// external slots stop being served (the courier list below and
+// the client's slot table carry the retirement); their stored
+// marks, positions, settings rows, and registry entries stand
+// undeleted.
+const PRAYER_BLOCKS = ["Novenas", "Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"] as const;
+// v499: the current-block derivation keeps its standing list —
+// the pre-v499 order minus the retired block — so its outcome
+// at every hour is identical to before. The tie rule is
+// earliest list position: over the display list, Novenas
+// (start 9) would take the 09:00 tie from Midmorning; over
+// this list Midmorning still wins it, exactly as today.
+const PRAYER_BLOCK_DERIVATION = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Novenas"] as const;
 const PRAYER_BLOCK_START: Record<string, number> = {
-  // v339: "Mass and Homilies" carries no hour of its own — it is
-  // the day's closing listening block, not a time-of-day office.
-  // 24 keeps it out of the current-block derivation entirely (the
-  // ?? 0 fallback would have made it "current" at every hour, as
-  // the last block in iteration order).
-  // v349: "Novenas" stands LAST in the list (John's decision) but
-  // its prayer window is Midmorning's — start 9 makes the block
-  // DUE from 9 AM (a 24 would read it not-due all day, a regression
-  // against its life inside Midmorning). The current-block
-  // derivation below is start-based, not order-based, so a
-  // last-position block with start 9 can never hijack "current".
-  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24, Novenas: 9,
+  // v499: the retired "Mass and Homilies" row (24, v339)
+  // retires with its block (the v451 precedent).
+  // v349: "Novenas" stands LAST in the derivation list (John's
+  // decision) but its prayer window is Midmorning's — start 9
+  // makes the block DUE from 9 AM (a 24 would read it not-due
+  // all day, a regression against its life inside Midmorning).
+  // The current-block derivation below is start-based over the
+  // derivation list, so the block's first position in the
+  // display list (v499) can never hijack "current".
+  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, Novenas: 9,
 };
 const PRAYLIST_URL: Record<string, string> = {
   Morning: "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
@@ -288,8 +315,8 @@ const PRAYLIST_URL: Record<string, string> = {
 const BLOCK_CAPTION: Record<string, string> = {
   Morning: "from midnight", Midmorning: "from 9 AM", Midday: "from 12 PM",
   Afternoon: "from 3 PM", Evening: "from 6 PM", Night: "from 9 PM",
-  // v339: the block is the day's close, not an hour office.
-  "Mass and Homilies": "the day's Mass and the week's homilies",
+  // v499: the retired "Mass and Homilies" caption (v339: "the
+  // day's Mass and the week's homilies") retires with its block.
   // v349: the content-caption form (the v339 precedent) — NOT an
   // hour caption: Novenas never becomes the derived current block,
   // so its caption must not promise an hour behavior.
@@ -604,7 +631,11 @@ async function prayerDayPayload(env: Env, date: string) {
         // the old list-order reduce returned at every hour; with
         // Novenas last at start 9, Midmorning wins the 09:00 tie
         // on position and Novenas is never the current block.
-        PRAYER_BLOCKS.reduce((cur, b) => {
+        // v499: the reduce runs over PRAYER_BLOCK_DERIVATION
+        // (the standing order), not the display list, so
+        // Novenas' first position in PRAYER_BLOCKS changes no
+        // outcome at any hour.
+        PRAYER_BLOCK_DERIVATION.reduce((cur, b) => {
           const s = PRAYER_BLOCK_START[b] ?? 0;
           const cs = PRAYER_BLOCK_START[cur] ?? 0;
           return hour >= s && s > cs ? b : cur;
@@ -1249,9 +1280,12 @@ function extMatchTvMass(items: ExtFeedItem[], y: number, mo: number, d: number):
 // Barron fetch sends a browser user-agent (a bare resolver UA
 // drew 403 from Word on Fire — §1's probe).
 const EXT_COURIER_SLOTS: { slotId: string; title: string; feed: (env: Env) => string; matcher: "usccb" | "latest"; browserUa?: boolean }[] = [
-  { slotId: "ext-usccb-readings", title: "USCCB Daily Readings", feed: (env) => env.EXT_USCCB_FEED_URL || EXT_USCCB_FEED_URL, matcher: "usccb" },
-  { slotId: "ext-fr-mike-homily", title: "Fr. Mike Sunday Homily", feed: (env) => env.EXT_FRMIKE_FEED_URL || EXT_FRMIKE_FEED_URL, matcher: "latest" },
-  { slotId: "ext-barron-sermon", title: "Bp. Barron Sunday Sermon", feed: (env) => env.EXT_BARRON_FEED_URL || EXT_BARRON_FEED_URL, matcher: "latest", browserUa: true },
+  // v499: the courier class stands EMPTY — its three slots
+  // (ext-usccb-readings · ext-fr-mike-homily · ext-barron-sermon)
+  // were the Mass and Homilies block's, and they retire with
+  // the block (John, 2026-11-17). The machinery
+  // (extCourierSlotsPayload, the matchers, the feed constants)
+  // stands for the next courier-class slot.
 ];
 function extMatchCourierSlot(slot: (typeof EXT_COURIER_SLOTS)[number], items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
   return slot.matcher === "usccb" ? extMatchUsccb(items, y, mo, d) : extMatchLatestByDate(items, y, mo, d);
@@ -1718,6 +1752,14 @@ async function podIndexPayload(env: Env): Promise<unknown> {
 // snapshot, no snapshot at all is the series' unavailable surface.
 // Streaming only: no downloads, no marks, no positions, no queue.
 const YT_CATHOLICTV_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCORAZZmab8apqy2TMHZlZVQ";
+// v499: the Virtual side's two new series channels — Daily TV
+// Mass (the National Catholic Broadcasting Council; the same
+// production whose podcast feed filled the retired Praylist
+// slot) and the Springfield daily Mass (St. Thomas the
+// Apostle, West Springfield, Massachusetts). Identification
+// and evidence: the v499 release doc §2.
+const YT_DAILYTV_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCi6JtCVy4XKu4BSG-AE2chg";
+const YT_SPRINGFIELD_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCP7JPwhCx2UBbnRk_TjLrHg";
 const VIDEO_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
 
 interface PodVideoSeriesDef {
@@ -1726,6 +1768,12 @@ interface PodVideoSeriesDef {
 }
 const POD_VIDEO_SERIES_LIST: PodVideoSeriesDef[] = [
   { key: "catholictv", title: "CatholicTV", feedUrl: (env) => env.EXT_YT_CATHOLICTV_FEED_URL || YT_CATHOLICTV_FEED_URL },
+  // v499: the Virtual Mass side's two new series (John,
+  // 2026-11-17) — served by the series payload route by key,
+  // exactly as catholictv's is; podVideoIndexEntry stands
+  // uncalled (v493), so neither enters the Catechesis index.
+  { key: "dailytvmass", title: "Daily TV Mass", feedUrl: (env) => env.EXT_YT_DAILYTV_FEED_URL || YT_DAILYTV_FEED_URL },
+  { key: "springfieldmass", title: "Springfield Mass", feedUrl: (env) => env.EXT_YT_SPRINGFIELD_FEED_URL || YT_SPRINGFIELD_FEED_URL },
 ];
 function podVideoSeriesDef(key: string): PodVideoSeriesDef | null {
   return POD_VIDEO_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -3302,7 +3350,13 @@ export default {
             // stands accepted for its own row only, so the
             // whole-table save never strands the row whose
             // enabled switch now gates the Formation entry.
-            if (!(s.block === "" || (PRAYER_BLOCKS as readonly string[]).includes(s.block ?? "") || (key === "the-ai-signal" && s.block === "The AI Signal"))) return err(400, `bad block for ${key}`);
+            // v499 census, same pattern: the four Mass and
+            // Homilies external rows keep their standing
+            // assignment, which names the retired block — the
+            // value seats nothing (the day carries no such
+            // block and no leg resolves their slots) and stands
+            // accepted for those four rows only.
+            if (!(s.block === "" || (PRAYER_BLOCKS as readonly string[]).includes(s.block ?? "") || (key === "the-ai-signal" && s.block === "The AI Signal") || (["usccb-daily-readings", "daily-tv-mass", "fr-mike-homily", "barron-sermon"].includes(key) && s.block === "Mass and Homilies"))) return err(400, `bad block for ${key}`);
             if (!(DAY_RULES as readonly string[]).includes(s.dayRule ?? "")) return err(400, `bad dayRule for ${key}`);
             if (s.enabled !== 0 && s.enabled !== 1) return err(400, `bad enabled for ${key}`);
           }

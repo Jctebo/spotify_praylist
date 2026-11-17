@@ -4620,7 +4620,15 @@ function paintMassLiturgy() {
    acts return here, and the universal menu's CatholicTV
    page groups stand on them. */
 var MASS_VIRTUAL_ENTRIES = [
-  { key: 'catholictv-mass', title: 'Catholic TV Mass', meta: 'CatholicTV', series: 'catholictv' }
+  { key: 'catholictv-mass', title: 'Catholic TV Mass', meta: 'CatholicTV', series: 'catholictv' },
+  // v499 (John, 2026-11-17): two entries join — the Daily TV
+  // Mass in its YouTube version (the National Catholic
+  // Broadcasting Council channel) and the Springfield daily
+  // Mass (St. Thomas the Apostle, West Springfield) — each
+  // opening its own video series page by the standing
+  // mechanism, homed here like the first entry.
+  { key: 'dailytv-mass', title: 'Daily TV Mass', meta: 'National Catholic Broadcasting Council', series: 'dailytvmass' },
+  { key: 'springfield-mass', title: 'Springfield Mass', meta: 'St. Thomas the Apostle · West Springfield', series: 'springfieldmass' }
 ];
 var massPodReturn = false;
 function paintMassVirtual() {
@@ -8743,11 +8751,14 @@ var EXT_SLOTS = [
   { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
   { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
   { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
-  { slotId: 'ext-night-prayer', title: 'Night Prayer' },
-  { slotId: 'ext-usccb-readings', title: 'USCCB Daily Readings', source: 'USCCB', courier: true, download: 'direct-first' },
-  { slotId: 'ext-daily-tv-mass', title: 'Daily TV Mass', source: 'Daily TV Mass', feedUrl: 'https://rss.buzzsprout.com/949645.rss', matcher: 'title-date', download: 'direct-first' },
-  { slotId: 'ext-fr-mike-homily', title: 'Fr. Mike Sunday Homily', source: 'Fr. Mike Schmitz', courier: true, download: 'direct-first' },
-  { slotId: 'ext-barron-sermon', title: 'Bp. Barron Sunday Sermon', source: 'Word on Fire', courier: true, download: 'direct-first' }
+  { slotId: 'ext-night-prayer', title: 'Night Prayer' }
+  // v499 (John, 2026-11-17): the Mass and Homilies slots
+  // (ext-usccb-readings · ext-daily-tv-mass · ext-fr-mike-homily
+  // · ext-barron-sermon) retire with their block — the table no
+  // longer names them, so no leg resolves them and no card
+  // stands for them. Their guarded seats (the TV Mass direct
+  // leg above its uses, the offline-tomorrow pair list) read an
+  // absent slot and no-op.
 ];
 var EXT_TOKENS = {
   'ext-invitatory': ['Invitatory', 'Invitatory Psalm'],
@@ -11324,7 +11335,9 @@ function offlineTomorrowBuild(tomorrow, epoch) {
         });
       }).catch(function () {}));
     }
-    [['ext-saint-of-the-day', extMatchSaint], ['ext-daily-tv-mass', extMatchTvMass]].forEach(function (pair) {
+    // v499: the ext-daily-tv-mass pair retires with its slot;
+    // the Saint of the Day pair stands alone.
+    [['ext-saint-of-the-day', extMatchSaint]].forEach(function (pair) {
       var def = bySlot[pair[0]];
       if (!def || !def.feedUrl) return;
       jobs.push(extFetchText(def.feedUrl).then(function (text) {
@@ -11959,29 +11972,23 @@ function paintListenHome(day) {
   // line, and nothing else above the rows. The .searchrow
   // retires whole: the search pill, the filter chips, and
   // their wiring (D3 settled — search and chips retire from
-  // the home). Play All + the offline line stand BELOW the
-  // rows (§1's named call).
+  // the home). The offline line stands BELOW the rows (§1's
+  // named call; the Play All that stood with it retires, v499).
   // v457: the home's head line (title · date · the pill ·
   // the Sort act) stands in the header's row 2 — the
   // paintPrayersBar(null) above paints it there.
   // v459 §2 Build 4: the Sort act retires from that row —
   // it stands in the universal menu's Prayers page group.
   var html = '<div id="home-body">' + homeBodyHtml(day) + '</div>';
-  html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
+  // v499 (John, 2026-11-17): the bottom Play All retires — its
+  // row and its wiring below go together. The offline line
+  // stands under the rows alone; block-level play stands.
   // v392 W5: the offline readiness line + the download button.
   // v459 §2 Build 4: the card stands with its text alone —
   // Download for offline stands in the universal menu's
   // Prayers page group.
   html += offlineLineHtml();
   view.innerHTML = html;
-  // §2.4: the Play All wiring lives here — the element exists
-  // only on home.
-  document.getElementById('play-all').addEventListener('click', function () {
-    // v344 §2.4: Play All skips played — the build passes the
-    // played filter; a fully-played day plays in full (the
-    // fallback stands by construction, never a dead button).
-    startQueue(queueBuild(extRebuildDescs(day)));
-  });
   // v459 §2 Build 4: the Sort button's wiring retires with
   // its emission (row2HomeHtml) — Sort stands in the
   // universal menu's Prayers page group.
