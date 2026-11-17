@@ -7599,6 +7599,7 @@ function bookBodyHtml(text) {
     var resp = ln.indexOf('R. ') === 0 || ln.indexOf('\\u211f. ') === 0 || ln === 'R.' || ln === '\\u211f.';
     return '<div' + (resp ? ' class="bookresp"' : '') + '>' + esc(ln) + '</div>';
   }).join('');
+}
 /* ---------------- v510: Praylist additions ----------------
    The slot picker + the landing in today's Praylist list.
    The store is server-side (migration 0037; the session
