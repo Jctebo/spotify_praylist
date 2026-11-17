@@ -7581,6 +7581,19 @@ function prayerAudioDesc(p, lang) {
     url: '/api/prayer/book/audio/' + encodeURIComponent(p.slug) + '/' + lang,
     available: true, durationS: dur, imageUrl: '/logo.png' };
 }
+/* v508: the book body paints line by line. A line that
+   begins with a response marker (R. or the responsory
+   sign) carries the .bookresp dress (the v488 rule: the
+   people's responses bold); versicles and every other
+   line stand regular. Blank lines stand as blank lines,
+   so the text's standing block structure is preserved. */
+function bookBodyHtml(text) {
+  return String(text == null ? '' : text).split('\\n').map(function (ln) {
+    if (!ln.trim()) return '<div><br></div>';
+    var resp = ln.indexOf('R. ') === 0 || ln.indexOf('\\u211f. ') === 0 || ln === 'R.' || ln === '\\u211f.';
+    return '<div' + (resp ? ' class="bookresp"' : '') + '>' + esc(ln) + '</div>';
+  }).join('');
+}
 function openPrayerPage(slug) {
   var hit = bookFind(slug);
   if (!hit) return;
@@ -7603,7 +7616,7 @@ function openPrayerPage(slug) {
     + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
     + '<p class="sub">' + esc(p.source) + '</p>'
     + (p.audio ? '<div class="row bookaudio"><button class="btn gold" id="book-play">' + bookPlayLabel() + '</button><button class="btn ghost" id="book-add">Add to Praylist</button></div>' : '')
-    + '<div class="readtext" id="book-body">' + esc(p.body) + '</div></div>';
+    + '<div class="readtext" id="book-body">' + bookBodyHtml(p.body) + '</div></div>';
   window.scrollTo(0, 0);
   var bb = hdrRow2() ? hdrRow2().querySelector('[data-bookback]') : null;
   if (bb) bb.addEventListener('click', function () { closePrayerPage(); });
@@ -7614,7 +7627,7 @@ function openPrayerPage(slug) {
       pageLang = la ? 'la' : 'en';
       sw.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('active', x === b); });
       var body = document.getElementById('book-body');
-      if (body) body.textContent = la ? p.bodyLatin : p.body;
+      if (body) body.innerHTML = bookBodyHtml(la ? p.bodyLatin : p.body);
       var pb0 = document.getElementById('book-play');
       if (pb0) pb0.textContent = bookPlayLabel();
     });

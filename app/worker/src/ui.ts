@@ -276,6 +276,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 /* v363 §2.3: the .notavail rule retires with its last row use —
    the not-available signal folds into the row's meta line. */
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
+.bookresp { font-weight:700; }
 /* Intention rows (v361, replacing the v338 combined row and
    v343's uniform 136px form): the intention intro stands as its
    OWN standard .card. The intention text stands as the row's
