@@ -4103,7 +4103,8 @@ function massEpHtml() {
    the sets numbered I-VII; the season names are the customary assignments
    (I Advent · III Lent · IV Easter · VI Ordinary Time). The absolution is
    not repeated per set: it stands once, at the example's end, identical
-   after every set.
+   after every set. (v511: the example retired on John's 15:50 CT word —
+   the absolution now stands once after the seasonal set itself.)
    v503 (John, 2026-11-17 14:18 CT): the samples load SEASONALLY — one
    set stands, the set for the season of the day on screen (the payload's
    season). Set II (Christmas) is added from the same USCCB-published
@@ -4142,7 +4143,11 @@ var MASS_PEN_SAMPLES = [
    values mass.ts serves: Advent · Christmas · Lent · Easter · Ordinary
    Time). A season that maps to no proven set — or no season — stands no
    block at all; never a wrong-season set. The block names the season it
-   loaded (the set's season name as its small heading). */
+   loaded (the set's season name as its small heading).
+   v511 (John, 2026-11-17 15:50 CT): the block is no longer under the
+   example — the example retired (dropExample in massPenForms) and this
+   block IS Form C's invocation set, painted first in the form, before
+   the absolution. The renderer and its dress are unchanged from v503. */
 var MASS_PEN_SAMPLE_SEASONS = {
   'Advent': 'Advent', 'Christmas': 'Christmas', 'Lent': 'Lent',
   'Easter': 'Easter', 'Ordinary Time': 'Ordinary Time'
@@ -4196,22 +4201,54 @@ function massPenForms() {
     }
     return f;
   }
+  /* v511 (John, 2026-11-17 15:50 CT): the standing
+     threefold example retires from Form C — ONE
+     invocation set stands under the form, the seasonal
+     set (the samples block, which massPenBodyHtml now
+     paints FIRST, in the invocation position). The C
+     slice is cut at the absolution's standing first
+     line, located in the slice by its text; every line
+     before it — the example's nine rendered lines and
+     the hidden rubrics among them — is cut, lines and
+     role characters together. What remains of the
+     slice is the absolution + its Amen. The example's
+     lines stand in the Order data untouched; they no
+     longer paint. This supersedes John's 2026-11-17
+     13:54 CT word for v502 (keep the 3-fold example
+     there) on his 15:50 CT word: I just want one.
+     seasonal */
+  function dropExample(f) {
+    for (var i = 0; i < f.lines.length; i++) {
+      if (f.lines[i].indexOf('May almighty God have mercy on us,') === 0) {
+        return { lines: f.lines.slice(i), roles: f.roles.slice(i) };
+      }
+    }
+    return f;
+  }
   var b0 = findFrom('5. The Priest invites', 0);
   var c0 = findFrom('6. The Priest invites', 0);
   var abs = slice(0, amenAfter(0) + 1);
   return {
     A: { lines: MASS_ORDER.confiteorEn.concat(abs.lines), roles: MASS_ROLES.confiteorEn + abs.roles },
     B: dropInvitation(slice(b0, amenAfter(b0) + 1)),
-    C: dropInvitation(slice(c0, amenAfter(c0) + 1))
+    C: dropExample(dropInvitation(slice(c0, amenAfter(c0) + 1)))
   };
 }
 function massPenBodyHtml() {
   var forms = massPenForms();
   var key = (state.mass && state.mass.penform) || 'A';
   var f = forms[key] || forms.A;
-  var h = massLinesHtml(f.lines, f.roles);
-  if (key === 'C') h += massPenSamplesHtml();
-  return h;
+  /* v511: under Form C the seasonal samples block
+     stands FIRST, in the invocation position, and the
+     form's slice — cut to the absolution by
+     dropExample — follows it: the invocations stand
+     before the absolution, as the rite runs. On an
+     unmapped season the block returns '' and the
+     absolution stands alone (the fallback named in
+     the v511 Plan; the retired example never returns
+     and no wrong-season set ever stands). */
+  if (key === 'C') return massPenSamplesHtml() + massLinesHtml(f.lines, f.roles);
+  return massLinesHtml(f.lines, f.roles);
 }
 function massPenToggleHtml() {
   var form = (state.mass && state.mass.penform) || 'A';
