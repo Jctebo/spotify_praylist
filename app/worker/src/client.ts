@@ -3588,7 +3588,7 @@ function row2HomeHtml(tab) {
   } else if (tab === 'wallpaper') {
     title = 'Sacred Art';
   } else if (tab === 'podcasts') {
-    title = 'Formation';
+    title = 'Catechesis';
     // v459 §2 Build 4: the Formation Download-for-offline
     // button retires from this row — its act stands in the
     // universal menu's Formation page group.
@@ -4510,7 +4510,7 @@ function renderPodcasts() {
     // v419 (G22): the authored failure + a Ghost Retry on this
     // surface's own re-render.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<p class="err">Catechesis did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', renderPodcasts);
     }
   });
@@ -4617,7 +4617,7 @@ function openPodSeries(key) {
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
     if (state.tab === 'podcasts') {
-      view.innerHTML = '<p class="err">Formation did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+      view.innerHTML = '<p class="err">Catechesis did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
     }
   });
@@ -4728,7 +4728,7 @@ function paintPodOwnSeries() {
   if (!res || res.kind !== 'own') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Formation', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: 'Catechesis', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no present episode
     // stands in the store — the card form the other series keep.
@@ -4833,7 +4833,7 @@ function paintPodcastRss() {
   if (!res || res.kind !== 'rss') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: 'Catechesis', title: res.title || '', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the
     // feed unreachable — the card form the other series keep.
@@ -4902,7 +4902,7 @@ function paintPodcastVideos() {
   if (!res || res.kind !== 'video') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Formation', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: 'Catechesis', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -5044,7 +5044,7 @@ function paintPodcasts() {
   // changed stand correct. v457: that seat is the header's
   // row 2 (the v419 disc + pinned-row form retires with the
   // bar's fold into the header).
-  paintRow2Bar({ dest: 'Formation', title: res.title || '', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: 'Catechesis', title: res.title || '', backAttrs: 'data-podback' });
   // v432 §2.1: the offline box retires on the series page too — no button seat here.
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -5562,7 +5562,7 @@ function renderSettings() {
   // (painted here, at entry, so the skeleton and the
   // failure paint carry it too); its back is wired by
   // paintSettings against the standing row.
-  paintRow2Bar({ dest: 'Praylist', title: 'Settings', backAttrs: 'data-settingsback' });
+  paintRow2Bar({ dest: 'Pray', title: 'Settings', backAttrs: 'data-settingsback' });
   view.innerHTML = skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
@@ -6858,7 +6858,7 @@ function openPrayerPage(slug) {
   var p = hit.prayer;
   bookPageScroll = window.scrollY || 0;
   state.prayersView = { kind: 'bookpage' };
-  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: p.title, backAttrs: 'data-bookback' }), 'book');
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: p.title, backAttrs: 'data-bookback' }), 'book');
   var fav = bookFavsList().indexOf(p.slug) >= 0;
   // v484 §2.5: the page's language for the audio acts — the
   // standing switch state, English on every open (the
@@ -7399,7 +7399,7 @@ function blockGlyphOf(block) { return BLOCK_GLYPHS[block] || '\u2726'; }
    Podcasts tab is named Formation (v438); the descriptor's block
    VALUE stays 'Podcasts' (played state keys on it). One entry;
    every other value, empty and undefined included, returns as-is. */
-var BLOCK_DISPLAY_NAMES = { 'Podcasts': 'Formation' };
+var BLOCK_DISPLAY_NAMES = { 'Podcasts': 'Catechesis' };
 function blockDisplayName(block) { return BLOCK_DISPLAY_NAMES[block] || block; }
 function blockLabelOf(block) {
   var b = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (x) { return x.block === block; })[0];
@@ -7614,12 +7614,12 @@ function openHeaderMenu() {
     // offline card's button. The group head and the
     // Prayers navigation head below carry the same name
     // on this one page (D5 A, as approved).
-    items.push({ head: true, label: 'Praylist' });
+    items.push({ head: true, label: 'Pray' });
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
   } else if (tab === 'podcasts' && podLevel === 'index') {
     // The Formation home: the retired row-2 button's act.
-    items.push({ head: true, label: 'Formation' });
+    items.push({ head: true, label: 'Catechesis' });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
   } else if (tab === 'podcasts' && podLevel === 'series' && state.podcasts && state.podcasts.series === 'catholictv') {
     // The CatholicTV series page: the retired full-page
@@ -7648,10 +7648,10 @@ function openHeaderMenu() {
      other section as one entry, in tab order ---- */
   var standingKey = tab === 'prayers' ? 'prayers' : tab === 'mass' ? 'mass' : tab === 'conscience' ? 'conscience' : tab === 'podcasts' ? 'podcasts' : tab === 'wallpaper' ? 'wallpaper' : null;
   var sections = [
-    { key: 'prayers', tab: 'prayers', name: 'Praylist' },
+    { key: 'prayers', tab: 'prayers', name: 'Pray' },
     { key: 'mass', tab: 'mass', name: 'Mass' },
     { key: 'conscience', tab: 'conscience', name: 'Conscience' },
-    { key: 'podcasts', tab: 'podcasts', name: 'Formation' },
+    { key: 'podcasts', tab: 'podcasts', name: 'Catechesis' },
     { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
   ];
   // D3 A, as composed: the standing group stands NEXT
@@ -10839,7 +10839,7 @@ function offlineDayFallback(e) {
     if (snap && snap.day && snap.settings) { buildDayFromPayload(snap.day, snap); return; }
     // v419 (G22): the authored failure + a Ghost Retry wired
     // to this surface's own re-render.
-    view.innerHTML = '<h1 class="screen">Praylist</h1><p class="err">Today&rsquo;s prayers did not load.</p><p><button class="btn ghost" id="day-retry">Retry</button></p>';
+    view.innerHTML = '<h1 class="screen">Pray</h1><p class="err">Today&rsquo;s prayers did not load.</p><p><button class="btn ghost" id="day-retry">Retry</button></p>';
     document.getElementById('day-retry').addEventListener('click', renderPrayersSide);
   });
 }
@@ -11701,7 +11701,7 @@ function paintBlockPage(day, block) {
   // the page's acts stand in the universal menu's page
   // group (Build 3). The bar after: back · title · the
   // Play All disc.
-  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: b.label || b.block, backAttrs: 'data-back="' + esc(b.block) + '"',
     rightHtml: '<button class="playbtn small" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button>' }), b.block);
   // v455 §2 Build 1 (D1): the series-style head retires
   // completely — no cover tile, no name line; the bar
@@ -11763,7 +11763,7 @@ function paintEpisodesPage(day) {
   // plain line at the body's top and the Play All row as a
   // body row under it, as it stood in the head; the cover
   // tile retires with the band.
-  paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'From Today’s Podcast', backAttrs: 'data-back="__episodes"' }), '__episodes');
   var html = '<div class="blockpage-meta">' + eps.length + ' episodes' + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '') + '</div>'
     + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div>';
   html += eps.map(function (t) { return trackCard(t); }).join('');
