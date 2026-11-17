@@ -787,7 +787,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
    and seats the pill's colors for the page ground, which is
    always cream (the inactive segment reads navy on the
    pill's light composite ground in every liturgical theme). */
-.mass-seg { flex-wrap: nowrap; margin: 8px 0 14px; max-width: 100%; }
+.mass-seg { flex-wrap: nowrap; margin: 8px 0 14px; max-width: 100%; width: fit-content; }
 .segtoggle.pill.mass-seg button { white-space: nowrap; color: var(--navy); opacity: .72; }
 .segtoggle.pill.mass-seg button.active { color: var(--navy); opacity: 1; }
 .mass-seg button:disabled { opacity: .35; cursor: default; }

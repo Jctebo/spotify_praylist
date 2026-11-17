@@ -4031,7 +4031,7 @@ function massEpHtml() {
   var ep = (state.mass && state.mass.ep) || 'II';
   var f = massFormulary();
   var btns = ['I', 'II', 'III', 'IV'].map(function (k) {
-    return '<button data-ep="' + k + '"' + (ep === k ? ' class="active"' : '') + '>' + k + '</button>';
+    return '<button data-ep="' + k + '"' + (ep === k ? ' class="active"' : '') + '>Prayer ' + k + '</button>';
   }).join('');
   var body = '';
   if (ep === 'IV') {
