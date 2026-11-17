@@ -72,7 +72,7 @@ function ok(c, label, extra) {
     'S3: the v492 opening rule stands whole (cold Mass · last tab · the standing key)');
   ok(C_SRC.split('applyLiturgical(day);').length - 1 === 3,
     'S4: the three standing applyLiturgical call sites stand unchanged (buildDayFromPayload · renderPrayerBook · renderIntentions — the v496 site reads applyLiturgical(day || {}) and does not enter this count)');
-  const stripFix = (s) => { const a = s.indexOf('// v496: the day'); if (a < 0) return s; const b = s.indexOf('setTab(', a); return s.slice(0, a) + s.slice(b); };
+  const stripFix = (s) => { const a = s.indexOf('// v496: the day'); if (a < 0) return s; const e = s.indexOf('applyLiturgical(day || {}); }).catch(function () {});', a); if (e < 0) return s; const b = s.indexOf('\n', e) + 1; return s.slice(0, a) + s.slice(b); };
   ok(stripFix(C_SRC) === C_BASE, 'S5: client.ts differs from the v495 ship only at the v496 boot block');
   const stripPin = (s) => s.replace(/var CACHE = "ora-pro-nobis-v[0-9]+-[0-9]+"/, 'var CACHE = "PIN"');
   ok(stripPin(U_SRC) === stripPin(U_BASE), 'S6: ui.ts differs from the v495 ship only at the pin line');
