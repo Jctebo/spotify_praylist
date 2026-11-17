@@ -945,6 +945,17 @@ async function bookFavorites(env: Env): Promise<string[]> {
   } catch { return []; }
 }
 
+// v495 §2: the Mass personal prayer's read — the one stored
+// slug, or null where no choice stands (the seat cleared, or
+// no row yet). A missing table (pre-0032) reads the same,
+// never an error (the bookFavorites posture).
+async function massPersonalPrayer(env: Env): Promise<string | null> {
+  try {
+    const r = await env.DB.prepare("SELECT slug FROM mass_personal_prayer WHERE id = 1").first<{ slug: string | null }>();
+    return r && r.slug ? r.slug : null;
+  } catch { return null; }
+}
+
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
 // The mapping as data: one row per source in player_source_settings,
 // seeded once by migration 0010 (the seed of record — the Worker
@@ -2342,6 +2353,14 @@ export default {
         ).bind(date, dayName, color, nowISO()).run();
         return json({ ok: true, date });
       }
+      if (seg[2] === "prayer" && seg[3] === "mass-personal-prayer" && request.method === "GET") {
+        // v495 §2: the door mirror of
+        // GET /api/prayer/mass-personal-prayer — the same
+        // body, read-only, so Review/Ship verify the stored
+        // choice. No door write route exists; writes are
+        // John's, session-only (the v328 posture).
+        return json({ ok: true, slug: await massPersonalPrayer(env) });
+      }
       if (seg[2] === "prayer" && seg[3] === "book" && seg[4] === "favorites" && request.method === "GET") {
         // v470 §2.2: the door mirror of
         // GET /api/prayer/book/favorites — the same body,
@@ -2654,6 +2673,34 @@ export default {
           });
           await env.DB.batch(stmts);
           return json({ ok: true, favorites: await bookFavorites(env) });
+        }
+        if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "GET") {
+          // v495 §2: the Mass personal prayer's read — the
+          // stored slug, or null where no choice stands.
+          // Session-gated like the book's own read; NO PIN
+          // (the Mass carries none).
+          return json({ ok: true, slug: await massPersonalPrayer(env) });
+        }
+        if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "PUT") {
+          // v495 §2: John's personal-prayer write, in the
+          // favorites PUT's discipline (v470 §2.2) at one
+          // row: a non-null slug is validated against
+          // prayer_book, null clears the seat, and every
+          // validation is a named 400 that writes nothing.
+          // The one row is upserted whole. The response is
+          // the stored choice re-read.
+          const body = await request.json().catch(() => ({})) as { slug?: unknown };
+          const raw = body.slug ?? null;
+          if (raw !== null && typeof raw !== "string") return err(400, "slug must be a string or null");
+          const slug = raw === null ? null : String(raw);
+          if (slug !== null) {
+            const hit = await env.DB.prepare("SELECT slug FROM prayer_book WHERE slug = ?").bind(slug).first();
+            if (!hit) return err(400, `bad slug ${slug || "(empty)"}`);
+          }
+          await env.DB.prepare(
+            "INSERT INTO mass_personal_prayer (id, slug, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, updated_at = excluded.updated_at",
+          ).bind(slug, nowISO()).run();
+          return json({ ok: true, slug: await massPersonalPrayer(env) });
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
           const r = await env.DB.prepare(
