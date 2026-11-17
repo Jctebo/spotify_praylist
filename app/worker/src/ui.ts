@@ -788,6 +788,8 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
    always cream (the inactive segment reads navy on the
    pill's light composite ground in every liturgical theme). */
 .mass-seg { flex-wrap: nowrap; margin: 8px 0 14px; max-width: 100%; width: fit-content; }
+.mass-chips { width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mass-chips::-webkit-scrollbar { display: none; }
 .segtoggle.pill.mass-seg button { white-space: nowrap; color: var(--navy); opacity: .72; }
 .segtoggle.pill.mass-seg button.active { color: var(--navy); opacity: 1; }
 .mass-seg button:disabled { opacity: .35; cursor: default; }

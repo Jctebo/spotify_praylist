@@ -28,11 +28,23 @@
 // found:false with no parts — the client's per-piece
 // fallback then serves the whole day from Universalis.
 
+export interface MassFeedOption {
+  source: string; // the option's citation, as the feed prints it
+  html: string; // the option's body, the feed's own HTML
+}
+
 export interface MassFeedPart {
   key: string; // r1 | ps | r2 | ga | g | extra
   heading: string; // the feed's own part name, e.g. "Reading 1"
   source: string; // the citation, e.g. "Revelation 3:1-6, 14-22"
   html: string; // the part body, the feed's own HTML
+  // v497: when the day's print carries more than one option
+  // for this part (an alternate reading, or a long/short form
+  // of one passage), the options ride here — options[0] is
+  // always this part's own source/html, so a reader that does
+  // not know the field renders the first-printed option
+  // exactly as before. Absent on a single-option part.
+  options?: MassFeedOption[];
 }
 
 export interface MassReadingsPayload {
@@ -70,6 +82,40 @@ function slotKey(heading: string): string {
   return "extra";
 }
 
+// v497: USCCB prints an alternate under its own heading —
+// in the feed a heading named "Or" (Sunday 2026-11-15's
+// Gospel short form; Sunday 2026-11-08's Reading 2 short
+// form, lowercase "or"), on the readings page "Or:". A part
+// under such a heading, or under a repeat of the preceding
+// part's own heading (its slot key repeating), is an
+// additional OPTION of the preceding part, never a part of
+// its own. groupFeedParts folds those headed alternates
+// into the preceding part's options, in print order; a part
+// that matches neither seam — or that has no predecessor —
+// stands alone exactly as before. Nothing is cut inside a
+// part body: a body whose alternates print in-part (the
+// psalms' alternate response lines are the standing
+// example) rides through whole, ungrouped.
+export function isOrHeading(heading: string): boolean {
+  return /^or:?$/i.test((heading || "").trim());
+}
+
+export function groupFeedParts(raw: MassFeedPart[]): MassFeedPart[] {
+  const out: MassFeedPart[] = [];
+  for (const p of raw) {
+    const prev = out[out.length - 1];
+    const orAlt = isOrHeading(p.heading);
+    const repeatAlt = !orAlt && !!prev && p.key !== "extra" && prev.key === p.key;
+    if (prev && (orAlt || repeatAlt)) {
+      if (!prev.options) prev.options = [{ source: prev.source, html: prev.html }];
+      prev.options.push({ source: p.source, html: p.html });
+      continue;
+    }
+    out.push(p);
+  }
+  return out;
+}
+
 // Parse one day's item out of the feed XML. Pure string
 // work (no DOM in the Worker); the feed's shape is the one
 // verified at the Plan gate.
@@ -97,6 +143,7 @@ export function parseUsccbFeed(xml: string, date: string): MassReadingsPayload {
       const name = stripTags(a ? inner.replace(a[0], " ") : inner);
       heads.push({ name, source, at: m.index, end: m.index + m[0].length });
     }
+    const rawParts: MassFeedPart[] = [];
     for (let i = 0; i < heads.length; i++) {
       const from = heads[i].end;
       let to = i + 1 < heads.length ? heads[i + 1].at : desc.length;
@@ -107,8 +154,11 @@ export function parseUsccbFeed(xml: string, date: string): MassReadingsPayload {
       if (sep >= 0) body = body.slice(0, sep);
       body = body.trim();
       if (!stripTags(body)) continue;
-      out.parts.push({ key: slotKey(heads[i].name), heading: heads[i].name, source: heads[i].source, html: body });
+      rawParts.push({ key: slotKey(heads[i].name), heading: heads[i].name, source: heads[i].source, html: body });
     }
+    // v497: fold the headed alternates into their parts'
+    // options (the standing parts keep print order).
+    out.parts = groupFeedParts(rawParts);
     // The copyright paragraph(s) the item itself carries.
     const tail = desc.slice(desc.indexOf("- - -") >= 0 ? desc.indexOf("- - -") : desc.length);
     const paras = tail.match(/<p>([\s\S]*?)<\/p>/g) || [];

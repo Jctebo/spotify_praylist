@@ -4085,10 +4085,69 @@ var MASS_SLOT_CLOSINGS = {
   r2: ['The word of the Lord.', 'Thanks be to God.'],
   g: ['The Gospel of the Lord.', 'Praise to you, Lord Jesus Christ.']
 };
-function massFeedPartHtml(part, label) {
+/* v497: the alternative-readings chip strip. A part that
+   carries more than one option (the parser grouped the
+   day's headed alternates into part.options) gains a
+   one-row strip of chips above its citation line; a tap
+   swaps only that part's citation, text and closing in
+   place. The choice lives in state.mass.rchoices for the
+   Mass view, like the Eucharistic Prayer choice — no
+   server save; a fresh day opens on the first-printed
+   option. A single-option part renders exactly as before. */
+var MASS_BOOK_ABBR = {
+  'Genesis': 'Gn', 'Exodus': 'Ex', 'Leviticus': 'Lv', 'Numbers': 'Nm', 'Deuteronomy': 'Dt',
+  'Joshua': 'Jos', 'Judges': 'Jgs', 'Ruth': 'Ru', '1 Samuel': '1 Sm', '2 Samuel': '2 Sm',
+  '1 Kings': '1 Kgs', '2 Kings': '2 Kgs', '1 Chronicles': '1 Chr', '2 Chronicles': '2 Chr',
+  'Ezra': 'Ezr', 'Nehemiah': 'Neh', 'Tobit': 'Tb', 'Judith': 'Jdt', 'Esther': 'Est',
+  '1 Maccabees': '1 Mc', '2 Maccabees': '2 Mc', 'Job': 'Jb', 'Psalm': 'Ps', 'Psalms': 'Ps',
+  'Proverbs': 'Prv', 'Ecclesiastes': 'Eccl', 'Song of Songs': 'Sg', 'Wisdom': 'Wis',
+  'Sirach': 'Sir', 'Isaiah': 'Is', 'Jeremiah': 'Jer', 'Lamentations': 'Lam', 'Baruch': 'Bar',
+  'Ezekiel': 'Ez', 'Daniel': 'Dn', 'Hosea': 'Hos', 'Joel': 'Jl', 'Amos': 'Am',
+  'Obadiah': 'Ob', 'Jonah': 'Jon', 'Micah': 'Mi', 'Nahum': 'Na', 'Habakkuk': 'Hb',
+  'Zephaniah': 'Zep', 'Haggai': 'Hg', 'Zechariah': 'Zec', 'Malachi': 'Mal',
+  'Matthew': 'Mt', 'Mark': 'Mk', 'Luke': 'Lk', 'John': 'Jn', 'Acts': 'Acts',
+  'Romans': 'Rom', '1 Corinthians': '1 Cor', '2 Corinthians': '2 Cor', 'Galatians': 'Gal',
+  'Ephesians': 'Eph', 'Philippians': 'Phil', 'Colossians': 'Col',
+  '1 Thessalonians': '1 Thess', '2 Thessalonians': '2 Thess',
+  '1 Timothy': '1 Tim', '2 Timothy': '2 Tim', 'Titus': 'Ti', 'Philemon': 'Phlm',
+  'Hebrews': 'Heb', 'James': 'Jas', '1 Peter': '1 Pt', '2 Peter': '2 Pt',
+  '1 John': '1 Jn', '2 John': '2 Jn', '3 John': '3 Jn', 'Jude': 'Jude', 'Revelation': 'Rv'
+};
+function massCiteParts(source) {
+  var m = /^(.+?)\\s+(\\d+):(\\d+)([\\s\\S]*)$/.exec(source || '');
+  if (!m) return null;
+  return { book: m[1], start: m[2] + ':' + m[3], rest: m[2] + ':' + m[3] + m[4] };
+}
+function massOptionLabel(part, opts, i) {
+  // A long/short form of one passage: both options share
+  // the book and the starting chapter:verse, and USCCB's
+  // own names for the choice are Long form / Short form.
+  if (opts.length === 2) {
+    var a = massCiteParts(opts[0].source), b = massCiteParts(opts[1].source);
+    if (a && b && a.book === b.book && a.start === b.start) return i === 0 ? 'Long form' : 'Short form';
+  }
+  var info = massCiteParts(opts[i].source);
+  if (!info) return opts[i].source || part.heading;
+  return (MASS_BOOK_ABBR[info.book] || info.book) + ' ' + info.rest;
+}
+function massFeedPartHtml(part, label, idx) {
   var s = '<div class="mass-h">' + esc(label || part.heading) + '</div>';
-  if (part.source) s += '<div class="mass-ref">' + esc(part.source) + '</div>';
-  s += massFeedLinesHtml(part.html, part.key === 'ps' || part.key === 'ga');
+  var opts = (part.options && part.options.length > 1) ? part.options : null;
+  var opt = part, oi = 0;
+  if (opts) {
+    var ckey = part.key + ':' + idx;
+    var choices = (state.mass && state.mass.rchoices) || {};
+    oi = choices[ckey] || 0;
+    if (oi < 0 || oi >= opts.length) oi = 0;
+    opt = opts[oi];
+    s += '<div class="segtoggle pill mass-seg mass-chips" role="group" aria-label="Reading options">';
+    for (var ci = 0; ci < opts.length; ci++) {
+      s += '<button type="button" data-rchoice="' + esc(ckey + ':' + ci) + '"' + (ci === oi ? ' class="on"' : '') + '>' + esc(massOptionLabel(part, opts, ci)) + '</button>';
+    }
+    s += '</div>';
+  }
+  if (opt.source) s += '<div class="mass-ref">' + esc(opt.source) + '</div>';
+  s += massFeedLinesHtml(opt.html, part.key === 'ps' || part.key === 'ga');
   var closing = MASS_SLOT_CLOSINGS[part.key];
   if (closing) s += '<div class="mass-line">' + closing[0] + '</div><div class="mass-line mass-people">' + closing[1] + '</div>';
   return s;
@@ -4136,12 +4195,16 @@ function massReadingsHtml() {
       var part = f.parts[i];
       if (part.key !== 'extra' && !present[part.key]) {
         present[part.key] = true;
-        seq.push({ slot: part.key, html: massFeedPartHtml(part, MASS_SLOT_LABELS[part.key]) });
+        seq.push({ slot: part.key, html: massFeedPartHtml(part, MASS_SLOT_LABELS[part.key], i) });
       } else {
-        // A part with no standing slot (an alternate reading
-        // and the like) stands under its own feed heading —
-        // the feed's full text for the day, nothing dropped.
-        seq.push({ slot: null, html: massFeedPartHtml(part, null) });
+        // A part with no standing slot stands under its own
+        // feed heading — the feed's full text for the day,
+        // nothing dropped. (Recognized alternates never
+        // reach here: the parser grouped them into the
+        // preceding part's options. An alternate under an
+        // unrecognized heading stands whole here — the
+        // v497 safety rule.)
+        seq.push({ slot: null, html: massFeedPartHtml(part, null, i) });
       }
     }
   }
@@ -4163,6 +4226,27 @@ function massReadingsHtml() {
 function paintMassReadings() {
   var host = document.getElementById('mass-readings');
   if (host) host.innerHTML = massReadingsHtml();
+  wireMassChips();
+}
+/* v497: the readings chip strips. A tap records the choice
+   in state.mass.rchoices (keyed by part key + part index)
+   and repaints the readings host only — the rest of the
+   scroll does not move. */
+function wireMassChips() {
+  var host = document.getElementById('mass-readings');
+  if (!host) return;
+  var btns = host.querySelectorAll('[data-rchoice]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var v = this.getAttribute('data-rchoice') || '';
+      var cut = v.lastIndexOf(':');
+      if (cut < 0) return;
+      if (!state.mass) state.mass = {};
+      if (!state.mass.rchoices) state.mass.rchoices = {};
+      state.mass.rchoices[v.slice(0, cut)] = parseInt(v.slice(cut + 1), 10) || 0;
+      paintMassReadings();
+    });
+  }
 }
 function massAcksHtml() {
   // v490: citation follows the pieces. The feed's own
@@ -4310,6 +4394,7 @@ function paintMassScroll() {
     });
   });
   wireMassLatin();
+  wireMassChips();
   wireMassPersonal();
   if (typeof state.mass.personalSlug === 'undefined') massPersonalLoad();
 }
@@ -4509,7 +4594,7 @@ function paintMassLiturgy() {
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
-    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personalSlug: undefined, personalLang: 'en' };
+    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personalSlug: undefined, personalLang: 'en' };
     if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;
