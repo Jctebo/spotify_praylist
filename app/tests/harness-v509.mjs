@@ -419,7 +419,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       'P3a picker: the position step names the start, an After row per standing Morning item, and the end', JSON.stringify(p3.pos));
     ok(p3.puts.length === 1 && p3.puts[0].date === TODAY && JSON.stringify(p3.puts[0].additions) === JSON.stringify([{ block: 'Morning', slug: 'morning-offering', lang: 'en', afterId: 'day-m1' }]),
       'P3b pick: exactly one whole-list PUT lands Morning Offering in Morning after the first standing item', JSON.stringify(p3.puts));
-    ok(p3.sheetGone && /In today\u2019s Praylist/.test(p3.landed) && /Morning/.test(p3.landed) && p3.viewBtn && !p3.addBtn && p3.queue === 0,
+    ok(p3.sheetGone && /In today\\u2019s Praylist/.test(p3.landed) && /Morning/.test(p3.landed) && p3.viewBtn && !p3.addBtn && p3.queue === 0,
       'P3c landed: the sheet closes, the page paints the landed state naming Morning with View standing and no Add, the queue untouched', p3.landed);
     ok(p3.store.length === 1 && p3.store[0].slug === 'morning-offering' && p3.store[0].afterId === 'day-m1',
       'P3d store: the day-additions store holds the one addition at its slot', JSON.stringify(p3.store));
@@ -434,11 +434,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         { episodeId: 'day-m1', kind: 'episode', block: 'Morning', title: 'Morning Item One', available: true },
         { episodeId: 'day-m2', kind: 'episode', block: 'Morning', title: 'Morning Item Two', available: true },
       ];
-      const foldedList = foldDayAdditions(base.slice()).map((d) => d.episodeId);
+      const foldedList = foldDayAdditions(base.slice(), state.dayAdditionsDate).map((d) => d.episodeId);
       return { landed: row ? (row.textContent || '') : '', foldedList,
         adopted: JSON.parse(JSON.stringify(state.dayAdditions || [])) };
     });
-    ok(/In today\u2019s Praylist/.test(p4.landed) && /Morning/.test(p4.landed) && p4.adopted.length === 1,
+    ok(/In today\\u2019s Praylist/.test(p4.landed) && /Morning/.test(p4.landed) && p4.adopted.length === 1,
       'P4a read-back: a fresh open of the prayer page paints the landed state from the store fold, not from local state', p4.landed);
     ok(JSON.stringify(p4.foldedList) === JSON.stringify(['day-m1', 'prayer:morning-offering:en', 'day-m2']),
       'P4b landing in the list: the folded day list stands the prayer directly after its anchor, at its chosen slot', JSON.stringify(p4.foldedList));
