@@ -3971,7 +3971,7 @@ function massPartHtml(part, enLines, head) {
   var altLabel = part === 'kyrie' ? 'Greek' : 'Latin';
   var body = lang === 'la' ? massLinesHtml(lat, MASS_LATIN_ROLES[part]) : massLinesHtml(enLines, MASS_ROLES[enKey]);
   return h + '<div class="mass-part" id="mass-part-' + part + '">'
-    + '<div class="mass-picker mass-ltoggle">'
+    + '<div class="segtoggle pill mass-seg mass-ltoggle">'
     + '<button data-lt="' + part + ':en"' + (lang === 'en' ? ' class="active"' : '') + '>English</button>'
     + '<button data-lt="' + part + ':la"' + (lang === 'la' ? ' class="active"' : '') + '>' + altLabel + '</button>'
     + '</div><div class="mass-partbody">' + body + '</div></div>';
@@ -3980,7 +3980,7 @@ function massEpHtml() {
   var ep = (state.mass && state.mass.ep) || 'II';
   var f = massFormulary();
   var btns = ['I', 'II', 'III', 'IV'].map(function (k) {
-    return '<button data-ep="' + k + '"' + (ep === k ? ' class="active"' : '') + '>Eucharistic Prayer ' + k + '</button>';
+    return '<button data-ep="' + k + '"' + (ep === k ? ' class="active"' : '') + '>' + k + '</button>';
   }).join('');
   var body = '';
   if (ep === 'IV') {
@@ -3996,7 +3996,8 @@ function massEpHtml() {
       + massPartHtml('sanctus', MASS_ORDER.sanctus, 'Sanctus')
       + massLinesHtml(MASS_ORDER['ep' + ep], MASS_ROLES['ep' + ep]);
   }
-  return '<div class="mass-eptoggle"><span class="mass-eplabel">Eucharistic Prayer</span>' + btns + '</div>'
+  return '<div class="mass-h">Eucharistic Prayer</div>'
+    + '<div class="segtoggle pill mass-seg mass-eptoggle">' + btns + '</div>'
     + '<div id="mass-epbody">' + body + '</div>';
 }
 function massFormulary() {
@@ -4089,6 +4090,12 @@ function massDayFlags() {
     creed: rank === 'S' || sunday
   };
 }
+/* v489: the big section titles between the major sections
+   of the Mass (John, 2026-11-17) — dividers at the five
+   section starts, in the .mass-section dress. */
+function massSectionHtml(name) {
+  return '<div class="mass-section">' + esc(name) + '</div>';
+}
 function paintMassScroll() {
   var p = state.mass.payload;
   var f = massFormulary();
@@ -4099,14 +4106,15 @@ function paintMassScroll() {
   h += '<div class="mass-day">' + esc(p.name || 'Mass of the Day') + '</div>';
   h += '<div class="mass-date">' + esc(state.mass.dateLabel || '') + '</div>';
   if ((p.versions || []).length > 1) {
-    h += '<div class="mass-picker">' + p.versions.map(function (v) {
+    h += '<div class="segtoggle pill mass-seg mass-vpicker">' + p.versions.map(function (v) {
       return '<button data-version="' + esc(v.key) + '"' + (v.key === state.mass.version ? ' class="active"' : '') + '>' + esc(v.label) + '</button>';
     }).join('') + '</div>';
   }
   h += '<div class="mass-controls"><span class="mass-clabel">Text size</span>'
-    + '<button data-tsize="-1"' + (size <= 0 ? ' disabled' : '') + '>A\u2212</button>'
+    + '<span class="segtoggle pill mass-seg"><button data-tsize="-1"' + (size <= 0 ? ' disabled' : '') + '>A\u2212</button>'
     + '<span class="mass-csize">' + MASS_SIZE_NAMES[size] + '</span>'
-    + '<button data-tsize="1"' + (size >= 3 ? ' disabled' : '') + '>A+</button></div>';
+    + '<button data-tsize="1"' + (size >= 3 ? ' disabled' : '') + '>A+</button></span></div>';
+  h += massSectionHtml('Introductory Rites');
   h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
   h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
   h += '<div class="mass-h">Penitential Act</div>' + massLinesHtml(MASS_ORDER.confiteorEn, MASS_ROLES.confiteorEn);
@@ -4116,12 +4124,15 @@ function paintMassScroll() {
   if (flags.gloria) h += massPartHtml('gloria', MASS_ORDER.gloriaEn, 'Gloria');
   h += massLinesHtml(MASS_ORDER.introTail, MASS_ROLES.introTail);
   h += massPrayerHtml('Collect', f.collect);
+  h += massSectionHtml('Liturgy of the Word');
   h += '<div id="mass-readings">' + massReadingsHtml() + '</div>';
   if (flags.creed) h += massPartHtml('creed', MASS_ORDER.creedEn, 'Creed');
   h += massLinesHtml(MASS_ORDER.creedOutro, MASS_ROLES.creedOutro);
+  h += massSectionHtml('Liturgy of the Eucharist');
   h += massLinesHtml(MASS_ORDER.offertory, MASS_ROLES.offertory);
   h += massPrayerHtml('Prayer over the Offerings', f.prayerOverOfferings);
   h += '<div id="mass-ep">' + massEpHtml() + '</div>';
+  h += massSectionHtml('Communion Rite');
   h += massLinesHtml(MASS_ORDER.communionPre, MASS_ROLES.communionPre);
   h += '<div class="mass-h">The Lord\u2019s Prayer</div>' + massLinesHtml(MASS_ORDER.paterEn, MASS_ROLES.paterEn);
   h += massLinesHtml(MASS_ORDER.communionMid, MASS_ROLES.communionMid);
@@ -4129,6 +4140,7 @@ function paintMassScroll() {
   h += massLinesHtml(MASS_ORDER.communionPost, MASS_ROLES.communionPost);
   h += massAntiphonHtml('Communion Antiphon', f.communionAntiphon);
   h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
+  h += massSectionHtml('Concluding Rites');
   h += massLinesHtml(MASS_ORDER.concluding, MASS_ROLES.concluding);
   h += '<div id="mass-acks">' + massAcksHtml() + '</div>';
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';

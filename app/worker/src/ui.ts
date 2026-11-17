@@ -780,12 +780,19 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-notice { font-size: 12.5px; line-height: 1.45; opacity: .75; border: 1px solid rgba(128,118,96,.35); border-radius: 10px; padding: 8px 10px; margin: 10px 0; }
 .mass-day { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
 .mass-date { font-size: 13px; opacity: .7; margin-bottom: 8px; }
-.mass-picker { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
-.mass-picker button, .mass-eptoggle button, .mass-controls button { border: 1px solid rgba(128,118,96,.45); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
-.mass-controls button:disabled { opacity: .35; cursor: default; }
-.mass-picker button.active, .mass-eptoggle button.active { background: var(--accent, #7a6a3f); color: #fff; border-color: transparent; }
-.mass-eptoggle { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; }
-.mass-eptoggle .mass-eplabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; }
+/* v489: every Mass toggle box takes the header pages-menu
+   pill construction (.segtoggle.pill — one joined group, no
+   gaps, one container) in this Mass seat: the seat carries
+   the margin and the one-row guarantee (nowrap throughout),
+   and seats the pill's colors for the page ground, which is
+   always cream (the inactive segment reads navy on the
+   pill's light composite ground in every liturgical theme). */
+.mass-seg { flex-wrap: nowrap; margin: 8px 0 14px; max-width: 100%; }
+.segtoggle.pill.mass-seg button { white-space: nowrap; color: var(--navy); opacity: .72; }
+.segtoggle.pill.mass-seg button.active { color: var(--navy); opacity: 1; }
+.mass-seg button:disabled { opacity: .35; cursor: default; }
+.mass-seg .mass-csize { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; padding: 5px 11px; color: var(--navy); white-space: nowrap; }
+.mass-section { font-size: 22px; font-weight: 700; letter-spacing: .01em; margin: 26px 0 8px; padding-top: 14px; border-top: 1px solid rgba(128,118,96,.4); }
 .mass-h { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; opacity: .75; margin: 18px 0 6px; }
 .mass-line { font-size: 16.5px; line-height: 1.5; margin: 2px 0; }
 .mass-rubric { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }
@@ -800,14 +807,15 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
    standing rendering and carries no overrides). */
 .mass-people { font-weight: 700; }
 .mass-sh { font-size: 15px; font-weight: 700; opacity: .85; margin: 12px 0 4px; }
-.mass-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
-.mass-controls .mass-clabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; }
-.mass-controls .mass-csize { font-size: 13.5px; font-weight: 600; min-width: 76px; text-align: center; }
+.mass-controls { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin: 8px 0 14px; }
+.mass-controls .mass-clabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; white-space: nowrap; }
+.mass-controls .mass-seg { margin: 0; }
 .mass-scroll.ts-0 .mass-line { font-size: 15px; }
 .mass-scroll.ts-0 .mass-rubric { font-size: 12px; }
 .mass-scroll.ts-0 .mass-h { font-size: 12px; }
 .mass-scroll.ts-0 .mass-sh { font-size: 14px; }
 .mass-scroll.ts-0 .mass-day { font-size: 18.5px; }
+.mass-scroll.ts-0 .mass-section { font-size: 20px; }
 .mass-scroll.ts-0 .mass-date { font-size: 12px; }
 .mass-scroll.ts-0 .mass-ref { font-size: 12px; }
 .mass-scroll.ts-0 .mass-src { font-size: 12.5px; }
@@ -817,6 +825,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-2 .mass-h { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-sh { font-size: 17px; }
 .mass-scroll.ts-2 .mass-day { font-size: 22px; }
+.mass-scroll.ts-2 .mass-section { font-size: 24.5px; }
 .mass-scroll.ts-2 .mass-date { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-ref { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-src { font-size: 15px; }
@@ -826,6 +835,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-3 .mass-h { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-sh { font-size: 19.5px; }
 .mass-scroll.ts-3 .mass-day { font-size: 25px; }
+.mass-scroll.ts-3 .mass-section { font-size: 28px; }
 .mass-scroll.ts-3 .mass-date { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-ref { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-src { font-size: 17px; }
