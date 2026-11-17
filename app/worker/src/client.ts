@@ -8058,7 +8058,7 @@ function ownSlotTrack(row, meta, date) {
     // adapter forwards only the fields it names, and before v483
     // imageUrl was not one of them, so the descriptor built from
     // the track read null whatever the meta carried.
-    imageUrl: meta && meta.imageUrl ? meta.imageUrl : null,
+    imageUrl: meta && meta.imageUrl ? meta.imageUrl : '/logo.png', // v485: an own track's art is the Ora logo — a meta naming no art (a stale-cache re-materialization, the missing state) defaults to it, never null
     // v368 §2.5: a meta may declare hasText false — the store-only
     // episode stages no read-along text object, so no Read control
     // stands on its row and the no-text fold names it in the meta
@@ -8607,10 +8607,10 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       if (!c) return;
       if (row.episodeId === 'novenas') {
         if (c.items && c.items.length) {
-          state.ownSlots[row.sourceKey] = { state: 'present', tracks: c.items.map(function (m) { return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0, imageUrl: m.imageUrl || null }; }) }; // v483: the re-materialized meta carries the cached art
+          state.ownSlots[row.sourceKey] = { state: 'present', tracks: c.items.map(function (m) { return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0, imageUrl: m.imageUrl || '/logo.png' }; }) }; // v483: the re-materialized meta carries the cached art · v485: a record written before the art field existed defaults to the logo, so the write-back heals the record on this open
         }
       } else if (c.episodeId) {
-        state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: c.episodeId, title: c.title, state: 'present', enclosureUrl: c.enclosureUrl, streamUrl: null, durationS: c.durationSec || 0, sizeBytes: c.sizeBytes || 0, imageUrl: c.imageUrl || null }] }; // v483: as above
+        state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: c.episodeId, title: c.title, state: 'present', enclosureUrl: c.enclosureUrl, streamUrl: null, durationS: c.durationSec || 0, sizeBytes: c.sizeBytes || 0, imageUrl: c.imageUrl || '/logo.png' }] }; // v483: as above · v485: the logo default, as above
       }
     });
     // §2.8 ruling 3 (as amended by v375): the intros map stands
