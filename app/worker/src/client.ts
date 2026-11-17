@@ -4550,8 +4550,15 @@ function paintMassScroll() {
   h += massLinesHtml(MASS_ORDER.communionMid, MASS_ROLES.communionMid);
   h += massPartHtml('agnus', MASS_ORDER.agnusEn, 'Agnus Dei');
   h += massLinesHtml(MASS_ORDER.communionPost, MASS_ROLES.communionPost);
-  h += '<div id="mass-personal-before">' + massPersonalSingleHtml('before') + '</div>';
+  /* v505 amendment (John, 2026-11-17 14:53 CT): both
+     private Communion prayers stand AFTER the Communion
+     Antiphon and before the Prayer after Communion —
+     the Pre-Communion seat (the 'before' key) first,
+     then the Post-Communion seat (the 'after' key). The
+     v501 place of the before seat, ahead of the
+     antiphon, is superseded. */
   h += massAntiphonHtml('Communion Antiphon', f.communionAntiphon);
+  h += '<div id="mass-personal-before">' + massPersonalSingleHtml('before') + '</div>';
   h += '<div id="mass-personal-after">' + massPersonalSingleHtml('after') + '</div>';
   h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
   h += massSectionHtml('Concluding Rites');
@@ -4631,10 +4638,15 @@ function paintMassScroll() {
    through the standing whole-list save. The list's
    initial state is seeded by migration 0034 (the
    traditional post-Mass set merged with the standing
-   picks). */
+   picks). The 14:53 CT amendment moves BOTH Communion
+   seats after the Communion Antiphon (the Pre-Communion
+   seat first) and heads them 'Private Pre-Communion
+   Prayer' and 'Private Post-Communion Prayer'; the seat
+   keys and saves stand ('before' holds the Pre pick,
+   'after' the Post pick). */
 var MASS_PERSONAL_SEATS = {
-  before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', add: 'Add a prayer before Communion' },
-  after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', add: 'Add a prayer after Communion' },
+  before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', add: 'Add a Private Pre-Communion Prayer', label: 'Private Pre-Communion Prayer' },
+  after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', add: 'Add a Private Post-Communion Prayer', label: 'Private Post-Communion Prayer' },
   aftermass: { host: 'mass-personal-aftermass', btn: 'mass-personal-aftermass-btn', add: 'Add a prayer after Mass' }
 };
 function massPersonalState() {
@@ -4658,14 +4670,20 @@ function massPersonalPrayerHtml(slug, key) {
 function massPersonalSingleHtml(seat) {
   var cfg = MASS_PERSONAL_SEATS[seat];
   var slug = massPersonalState()[seat];
+  /* v505 amendment (John, 2026-11-17 14:53 CT): each
+     private Communion seat is headed by its label —
+     'Private Pre-Communion Prayer' · 'Private
+     Post-Communion Prayer' — standing above the prayer
+     (or above the button while the seat stands unset). */
+  var head = '<div class="mass-h">' + cfg.label + '</div>';
   var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + (slug ? 'Change prayer' : cfg.add) + '</button></p>';
-  if (typeof slug !== 'string' || !slug) return btn;
+  if (typeof slug !== 'string' || !slug) return head + btn;
   var body = massPersonalPrayerHtml(slug, seat);
-  if (!body) return btn; // the book not loaded yet, or the slug retired — the button stands
+  if (!body) return head + btn; // the book not loaded yet, or the slug retired — the heading and button stand
   /* v505: the single seats take the Post-Mass panel
      dress — the prayer stands inside the .mass-panel
      card, the button below it. */
-  return '<div class="mass-panel">' + body + '</div>' + btn;
+  return head + '<div class="mass-panel">' + body + '</div>' + btn;
 }
 /* v505: the Post-Mass Prayers list — the stored
    after-Mass list in one column, in its stored order.

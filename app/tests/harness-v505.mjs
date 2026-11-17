@@ -113,7 +113,7 @@ const BOOK_COUNT = BOOK.groups.reduce((a, g) => a + g.prayers.length, 0);
   const head = paint.slice(0, paint.indexOf('mass-day'));
   ok(!head.includes('mass-notice') && head.includes('mass-scroll'),
     'S4: no notice stands at the head of the scroll — it opens on the day header');
-  ok(C_SRC.includes("return '<div class=\"mass-panel\">' + body + '</div>' + btn;")
+  ok(C_SRC.includes("'<div class=\"mass-panel\">' + body + '</div>' + btn;")
     && C_SRC.includes('function massPostMassHtml(')
     && C_SRC.includes('function massPersonalMovePanel(')
     && C_SRC.includes('data-mpup') && C_SRC.includes('data-mpdown') && C_SRC.includes('setcontrols')
@@ -132,6 +132,15 @@ const BOOK_COUNT = BOOK.groups.reduce((a, g) => a + g.prayers.length, 0);
     'S8: migration 0034 carries the merge (the seven set slugs · the 1000+ ordinals · the fold · the missing-row insert) and no schema change');
   ok(BOOK_COUNT === 75 && BOOK.groups.length === 9 && SET.every((s) => !!bookRow(s)),
     'S9: the live-book fixture stands (9 groups, 75 prayers) and every set slug is a book row', 'count ' + BOOK_COUNT);
+  const iAnt = paint.indexOf("massAntiphonHtml('Communion Antiphon'");
+  const iBef = paint.indexOf('id="mass-personal-before"', iAnt);
+  const iAft = paint.indexOf('id="mass-personal-after"', iBef);
+  const iPac = paint.indexOf("massPrayerHtml('Prayer after Communion'", iAft);
+  ok(iAnt > 0 && iBef > iAnt && iAft > iBef && iPac > iAft
+    && C_SRC.includes("label: 'Private Pre-Communion Prayer'") && C_SRC.includes("label: 'Private Post-Communion Prayer'")
+    && C_SRC.includes("add: 'Add a Private Pre-Communion Prayer'") && C_SRC.includes("add: 'Add a Private Post-Communion Prayer'")
+    && C_SRC.includes("'<div class=\"mass-h\">' + cfg.label + '</div>'"),
+    'S10: the amendment stands in the source — the paint order is Antiphon · before seat · after seat · Prayer after Communion, and the seats carry the exact Private Pre/Post-Communion labels with their derived button strings and the label heading');
 }
 
 /* ---------------- M: the migration proof ---------------- */
@@ -361,6 +370,7 @@ const panelHeads = (page) => page.evaluate(() =>
       const host = document.getElementById(id);
       const panel = host.querySelector('.mass-panel');
       return {
+        label: (host.querySelector('.mass-h') || {}).textContent || null,
         panel: !!panel,
         panelInSeat: panel ? panel.parentElement === host : false,
         head: panel ? (panel.querySelector('.mass-h') || {}).textContent || null : null,
@@ -372,14 +382,31 @@ const panelHeads = (page) => page.evaluate(() =>
     return { before: seatInfo('mass-personal-before'), after: seatInfo('mass-personal-after') };
   });
   const ANIMA = bookRow('anima-christi'), PAC = bookRow('prayer-after-communion');
-  ok(aInfo.before.panel && aInfo.before.panelInSeat && aInfo.before.head === ANIMA.p.title
+  ok(aInfo.before.label === 'Private Pre-Communion Prayer' && aInfo.before.panel && aInfo.before.panelInSeat && aInfo.before.head === ANIMA.p.title
     && words(aInfo.before.lines) === words(ANIMA.p.body) && aInfo.before.lang && aInfo.before.btn === 'Change prayer',
-    'A1: the before seat\'s prayer stands inside a .mass-panel card in the seat (title · Latin switch · body word-equal to the book row), its Change button below the card',
+    'A1: the Pre-Communion seat stands headed "Private Pre-Communion Prayer", its prayer inside a .mass-panel card in the seat (title · Latin switch · body word-equal to the book row), its Change button below the card',
     JSON.stringify(aInfo.before));
-  ok(aInfo.after.panel && aInfo.after.panelInSeat && aInfo.after.head === PAC.p.title
+  ok(aInfo.after.label === 'Private Post-Communion Prayer' && aInfo.after.panel && aInfo.after.panelInSeat && aInfo.after.head === PAC.p.title
     && words(aInfo.after.lines) === words(PAC.p.body) && aInfo.after.btn === 'Change prayer',
-    'A2: the after seat\'s mirror — the standing pick (Prayer After Communion) stands in the panel dress at its seat',
+    'A2: the Post-Communion seat\'s mirror — headed "Private Post-Communion Prayer", the standing pick (Prayer After Communion) in the panel dress at its seat',
     JSON.stringify(aInfo.after));
+
+  /* (j) the Communion order (the 14:53 amendment) */
+  const jInfo = await page.evaluate(() => {
+    const scroll = document.querySelector('.mass-scroll');
+    const tokens = [];
+    Array.from(scroll.children).forEach((el) => {
+      if (el.id === 'mass-personal-before') tokens.push('SEAT-BEFORE');
+      else if (el.id === 'mass-personal-after') tokens.push('SEAT-AFTER');
+      else if (el.classList && el.classList.contains('mass-h')) tokens.push('H:' + el.textContent);
+    });
+    return { tokens };
+  });
+  const ti = (t) => jInfo.tokens.indexOf(t);
+  ok(ti('H:Communion Antiphon') >= 0 && ti('SEAT-BEFORE') > ti('H:Communion Antiphon')
+    && ti('SEAT-AFTER') > ti('SEAT-BEFORE') && ti('H:Prayer after Communion') > ti('SEAT-AFTER'),
+    'J1: the rendered Communion order — Communion Antiphon · the Pre-Communion seat · the Post-Communion seat · Prayer after Communion; no private-prayer seat stands before the antiphon',
+    JSON.stringify(jInfo.tokens));
 
   /* (b) the tail order + the single final notice */
   const bInfo = await page.evaluate(() => {
@@ -527,8 +554,8 @@ const panelHeads = (page) => page.evaluate(() =>
     btnM: (document.getElementById('mass-personal-aftermass-btn') || {}).textContent || null,
     notice: document.querySelectorAll('.mass-notice').length,
   }));
-  ok(failInfo.scroll && failInfo.section && failInfo.btnB === 'Add a prayer before Communion'
-    && failInfo.btnA === 'Add a prayer after Communion' && failInfo.btnM === 'Add a prayer after Mass' && failInfo.notice === 1,
+  ok(failInfo.scroll && failInfo.section && failInfo.btnB === 'Add a Private Pre-Communion Prayer'
+    && failInfo.btnA === 'Add a Private Post-Communion Prayer' && failInfo.btnM === 'Add a prayer after Mass' && failInfo.notice === 1,
     'H1: the personal GET failing leaves the scroll whole — the Post-Mass Prayers title stands, all three seats keep their buttons, the single notice stands last',
     JSON.stringify(failInfo));
   ok(errs.length === 0, 'L2: the failure boot runs clean (no page errors)', errs.join(' ; '));
@@ -547,7 +574,7 @@ const panelHeads = (page) => page.evaluate(() =>
     const s = document.querySelector('.mass-scroll');
     if (!s) return null;
     const c = s.cloneNode(true);
-    ['mass-personal-before', 'mass-personal-after'].forEach((id) => { const d = c.querySelector('#' + id); if (d) d.innerHTML = ''; });
+    ['mass-personal-before', 'mass-personal-after'].forEach((id) => { const d = c.querySelector('#' + id); if (d) d.remove(); });
     c.querySelectorAll('.mass-notice').forEach((n) => n.remove());
     const kids = Array.from(c.children);
     const idx = kids.findIndex((k) => k.classList && k.classList.contains('mass-section') && k.textContent === 'Concluding Rites');
@@ -557,7 +584,7 @@ const panelHeads = (page) => page.evaluate(() =>
   const hNew = await a.page.evaluate(stripScroll);
   const hBase = await b.page.evaluate(stripScroll);
   ok(hNew && hBase && hNew === hBase,
-    'K1: the Mass scroll renders byte-identical to the v504 ship outside the top notice, the two seat divs (their dress), and the tail from the Concluding Rites title onward');
+    'K1: the Mass scroll renders byte-identical to the v504 ship outside the top notice, the two seat divs (moved + redressed by the amendment, removed whole for the compare), and the tail from the Concluding Rites title onward');
   ok(errs.length === 0, 'L3: the byte-identity boots run clean (no page errors)', errs.join(' ; '));
   await a.ctx.close(); await b.ctx.close();
 }
