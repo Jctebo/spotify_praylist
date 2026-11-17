@@ -75,6 +75,8 @@ export interface Env {
   // unset; the pinned feed URLs below govern.
   EXT_EXORCIST_FEED_URL?: string;
   EXT_COUNSEL_TRENT_FEED_URL?: string;
+  EXT_FRMIKE_HOMILIES_FEED_URL?: string;
+  EXT_BARRON_SERMONS_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -2059,6 +2061,15 @@ async function podOwnIndexEntry(env: Env, def: PodOwnSeriesDef): Promise<unknown
 // episode (entries[0]) — never mark-derived (§1.6).
 const RSS_EXORCIST_FEED_URL = "https://rss.art19.com/the-exorcist-files";
 const RSS_COUNSEL_TRENT_FEED_URL = "https://feeds.soundcloud.com/users/soundcloud:users:406683825/sounds.rss";
+// v500: two homily series join the kind — Sunday Homilies with
+// Fr. Mike Schmitz (Ascension, on Fireside — the same feed the
+// day build's homily slot reads) and Bishop Barron's Sunday
+// Sermons (Word on Fire, on its own Podbean account). Both
+// feeds were proven from the live documents at Plan (v500 doc
+// §2): weekly Sunday homily/sermon, audio enclosures, real
+// dates. Same discipline as the v464 pair, clause for clause.
+const RSS_FRMIKE_HOMILIES_FEED_URL = "https://feeds.fireside.fm/fathermikehomilies/rss";
+const RSS_BARRON_SERMONS_FEED_URL = "https://feed.podbean.com/wordonfire/feed.xml";
 const RSS_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
 const RSS_WINDOW = 50;
 
@@ -2069,6 +2080,8 @@ interface PodRssSeriesDef {
 const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   { key: "exorcist-files", title: "The Exorcist Files", feedUrl: (env) => env.EXT_EXORCIST_FEED_URL || RSS_EXORCIST_FEED_URL },
   { key: "counsel-of-trent", title: "The Counsel of Trent", feedUrl: (env) => env.EXT_COUNSEL_TRENT_FEED_URL || RSS_COUNSEL_TRENT_FEED_URL },
+  { key: "fr-mike-homilies", title: "Sunday Homilies with Fr. Mike Schmitz", feedUrl: (env) => env.EXT_FRMIKE_HOMILIES_FEED_URL || RSS_FRMIKE_HOMILIES_FEED_URL },
+  { key: "barron-sunday-sermons", title: "Bishop Barron's Sunday Sermons", feedUrl: (env) => env.EXT_BARRON_SERMONS_FEED_URL || RSS_BARRON_SERMONS_FEED_URL },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
