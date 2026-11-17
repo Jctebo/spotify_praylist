@@ -4101,12 +4101,22 @@ function massEpHtml() {
    the sets numbered I-VII; the season names are the customary assignments
    (I Advent · III Lent · IV Easter · VI Ordinary Time). The absolution is
    not repeated per set: it stands once, at the example's end, identical
-   after every set. */
+   after every set.
+   v503 (John, 2026-11-17 14:18 CT): the samples load SEASONALLY — one
+   set stands, the set for the season of the day on screen (the payload's
+   season). Set II (Christmas) is added from the same USCCB-published
+   Appendix VI, proven the same way (the appendix PDF re-fetched
+   2026-11-17; its I/III/IV/VI match the v502 capture word-for-word;
+   capture of the five riding sets: tests/fixtures-v503/appendix-vi.txt). */
 var MASS_PEN_SAMPLES = [
   { name: 'Advent', lines: [
     'Lord Jesus, you came to gather the nations into the peace of God’s kingdom:', 'Lord, have mercy.', 'Lord, have mercy.',
     'Lord Jesus, you come in word and sacrament to strengthen us in holiness:', 'Christ, have mercy.', 'Christ, have mercy.',
     'Lord Jesus, you will come in glory with salvation for your people:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' },
+  { name: 'Christmas', lines: [
+    'Lord Jesus, you are mighty God and Prince of peace:', 'Lord, have mercy.', 'Lord, have mercy.',
+    'Lord Jesus, you are the Son of God and Son of Mary:', 'Christ, have mercy.', 'Christ, have mercy.',
+    'Lord Jesus, you are Word made flesh and splendor of the Father:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' },
   { name: 'Lent', lines: [
     'Lord Jesus, you came to reconcile us to one another and to the Father:', 'Lord, have mercy.', 'Lord, have mercy.',
     'Lord Jesus, you heal the wounds of sin and division:', 'Christ, have mercy.', 'Christ, have mercy.',
@@ -4121,21 +4131,35 @@ var MASS_PEN_SAMPLES = [
     'Lord Jesus, you are the Good Shepherd, leading us into everlasting life:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' }
 ];
 
-/* The samples block under the Form C example (v502 amendment): the sets
-   stand whole — no picker, no combining. The priest's words stand in
+/* The samples block under the Form C example (v502 amendment): the set
+   stands whole — no picker, no combining. The priest's words stand in
    italics (.mass-it); the people's responses keep the bold rule. The small
-   asterisk note stands at the block's head, in John's words. */
+   asterisk note stands at the block's head, in John's words.
+   v503: the block loads SEASONALLY — exactly one set stands, the set for
+   the season of the day on screen (the Mass payload's season, the same
+   values mass.ts serves: Advent · Christmas · Lent · Easter · Ordinary
+   Time). A season that maps to no proven set — or no season — stands no
+   block at all; never a wrong-season set. The block names the season it
+   loaded (the set's season name as its small heading). */
+var MASS_PEN_SAMPLE_SEASONS = {
+  'Advent': 'Advent', 'Christmas': 'Christmas', 'Lent': 'Lent',
+  'Easter': 'Easter', 'Ordinary Time': 'Ordinary Time'
+};
 function massPenSamplesHtml() {
+  var season = (state.mass && state.mass.payload && state.mass.payload.season) || null;
+  var want = season ? MASS_PEN_SAMPLE_SEASONS[season] : null;
+  var set = null;
+  for (var s = 0; s < MASS_PEN_SAMPLES.length; s++) {
+    if (MASS_PEN_SAMPLES[s].name === want) set = MASS_PEN_SAMPLES[s];
+  }
+  if (!set) return '';
   var h = '<div class="mass-sh">Sample invocations</div>';
   h += '<div class="mass-ref">* Different forms will be used.</div>';
-  for (var s = 0; s < MASS_PEN_SAMPLES.length; s++) {
-    var set = MASS_PEN_SAMPLES[s];
-    h += '<div class="mass-sh">' + esc(set.name) + '</div>';
-    for (var i = 0; i < set.lines.length; i++) {
-      h += set.roles.charAt(i) === 'P'
-        ? '<div class="mass-line mass-people">' + esc(set.lines[i]) + '</div>'
-        : '<div class="mass-line mass-it">' + esc(set.lines[i]) + '</div>';
-    }
+  h += '<div class="mass-sh">' + esc(set.name) + '</div>';
+  for (var i = 0; i < set.lines.length; i++) {
+    h += set.roles.charAt(i) === 'P'
+      ? '<div class="mass-line mass-people">' + esc(set.lines[i]) + '</div>'
+      : '<div class="mass-line mass-it">' + esc(set.lines[i]) + '</div>';
   }
   return h;
 }
@@ -4151,13 +4175,32 @@ function massPenForms() {
     for (var i = start; i < mid.length; i++) if (mid[i] === 'Amen.') return i;
     return mid.length - 1;
   }
+  /* v503 (John's field report on v502, 2026-11-17): the
+     invitation stands ONCE — in introPre, above the
+     toggle. Each form slice in introMid carries its own
+     copy of the pair; lift the pair out of the B and C
+     slices. The pair is located by its standing first
+     line in the data and cut with its role characters;
+     no text is retyped and no other line moves. Form A
+     carries no invitation and is not passed through. */
+  function dropInvitation(f) {
+    for (var i = 0; i + 1 < f.lines.length; i++) {
+      if (f.lines[i].indexOf('Brethren (brothers and sisters)') === 0) {
+        return {
+          lines: f.lines.slice(0, i).concat(f.lines.slice(i + 2)),
+          roles: f.roles.slice(0, i) + f.roles.slice(i + 2)
+        };
+      }
+    }
+    return f;
+  }
   var b0 = findFrom('5. The Priest invites', 0);
   var c0 = findFrom('6. The Priest invites', 0);
   var abs = slice(0, amenAfter(0) + 1);
   return {
     A: { lines: MASS_ORDER.confiteorEn.concat(abs.lines), roles: MASS_ROLES.confiteorEn + abs.roles },
-    B: slice(b0, amenAfter(b0) + 1),
-    C: slice(c0, amenAfter(c0) + 1)
+    B: dropInvitation(slice(b0, amenAfter(b0) + 1)),
+    C: dropInvitation(slice(c0, amenAfter(c0) + 1))
   };
 }
 function massPenBodyHtml() {
@@ -4478,7 +4521,11 @@ function paintMassScroll() {
   h += massSectionHtml('Introductory Rites');
   h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
   h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
-  h += '<div class="mass-h">Penitential Act</div>' + massPenToggleHtml()
+  /* v503: one header only — the standing Order heading
+     ('Penitential Act*', the tail of introPre) is the
+     section's header; v502's added .mass-h label is gone.
+     The toggle stands under the invitation line. */
+  h += massPenToggleHtml()
     + '<div id="mass-penbody">' + massPenBodyHtml() + '</div>';
   h += massPartHtml('kyrie', MASS_ORDER.kyrieEn, 'Kyrie');
   h += massLinesHtml(MASS_ORDER.introPost, MASS_ROLES.introPost);
