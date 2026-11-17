@@ -68,6 +68,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <div id="dock" class="dock hidden"><img class="dockthumb" id="dock-thumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><button id="dock-menu" class="docknext" aria-label="Playback options">&#8943;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabpill"><span class="tabicon">&#10022;</span><span>Praylist</span></span></button>
+  <button data-tab="mass" class="tab"><span class="tabpill"><span class="tabicon">&#10016;</span><span>Mass</span></span></button>
   <button data-tab="conscience" class="tab"><span class="tabpill"><span class="tabicon">&#10013;</span><span>Conscience</span></span></button>
   <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon">&#9835;</span><span>Formation</span></span></button>
   <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon">&#9635;</span><span>Sacred Art</span></span></button>
@@ -772,6 +773,25 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
   .view { max-width:860px; }
   .hdr-row1, .hdr-row2 { padding-left:max(14px, calc((100vw - 860px) / 2 + 12px)); padding-right:max(14px, calc((100vw - 860px) / 2 + 12px)); }
 }
+/* v486: the Mass tab — one long scroll (Word Among Us form).
+   Text lines stand as the source prints them; numbered and
+   V/. R/. lines are rubrics (small, muted). */
+.mass-scroll { padding: 6px 2px 30px; }
+.mass-notice { font-size: 12.5px; line-height: 1.45; opacity: .75; border: 1px solid rgba(128,118,96,.35); border-radius: 10px; padding: 8px 10px; margin: 10px 0; }
+.mass-day { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
+.mass-date { font-size: 13px; opacity: .7; margin-bottom: 8px; }
+.mass-picker { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+.mass-picker button, .mass-eptoggle button { border: 1px solid rgba(128,118,96,.45); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
+.mass-picker button.active, .mass-eptoggle button.active { background: var(--accent, #7a6a3f); color: #fff; border-color: transparent; }
+.mass-eptoggle { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; }
+.mass-eptoggle .mass-eplabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; }
+.mass-h { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; opacity: .75; margin: 18px 0 6px; }
+.mass-line { font-size: 16.5px; line-height: 1.5; margin: 2px 0; }
+.mass-rubric { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }
+.mass-ref { font-size: 13px; font-style: italic; opacity: .7; margin: 2px 0; }
+.mass-src { font-size: 13.5px; font-weight: 600; opacity: .8; margin: 2px 0; }
+.mass-ack { font-size: 12.5px; line-height: 1.5; opacity: .75; margin: 4px 0; }
+.mass-ack a { color: inherit; }
 `;
 
 export const MANIFEST_JSON = JSON.stringify({

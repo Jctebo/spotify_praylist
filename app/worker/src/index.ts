@@ -72,6 +72,7 @@ export interface Env {
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
 import { APP_JS } from "./client";
+import { massPayload } from "./mass";
 import { LOGO_PNG_B64 } from "./logo";
 import { LOGO512_PNG_B64 } from "./logo512";
 
@@ -2541,6 +2542,16 @@ export default {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           return json(await prayerDayPayload(env, date));
+        }
+        if (seg[2] === "mass" && !seg[3] && request.method === "GET") {
+          // v486: the day's Mass versions + propers for the Mass
+          // tab. Session-gated like the book; NO PIN (the tab is
+          // read-only text). Readings do NOT ride this route —
+          // the client loads them from Universalis's sanctioned
+          // JSONP service directly, per that service's terms.
+          const date = url.searchParams.get("date") ?? pToday;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          return json(await massPayload(env, date));
         }
         if (seg[2] === "book" && !seg[3] && request.method === "GET") {
           // v462 §2.3: the whole prayer book in one payload.
