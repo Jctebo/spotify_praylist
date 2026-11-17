@@ -9305,6 +9305,8 @@ function npArtRender(sheet, cur) {
 function npDuration() {
   var d = audioEl.duration;
   if (isFinite(d) && d > 0) return d;
+  var pd = playPos().dur; // v513: the native mirror's duration — the engine's measured length, the read the dock progress already tracks with; in web mode it is the element's own duration, already answered above
+  if (pd > 0) return pd;
   var cur = state.current;
   if (cur && cur.durationS > 0) return cur.durationS;
   return 0;
