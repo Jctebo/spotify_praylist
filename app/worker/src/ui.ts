@@ -805,6 +805,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-line { font-size: 16.5px; line-height: 1.5; margin: 2px 0; }
 .mass-rubric { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }
 .mass-ref { font-size: 13px; font-style: italic; opacity: .7; margin: 2px 0; }
+.mass-it { font-style: italic; }
 .mass-src { font-size: 13.5px; font-weight: 600; opacity: .8; margin: 2px 0; }
 .mass-ack { font-size: 12.5px; line-height: 1.5; opacity: .75; margin: 4px 0; }
 .mass-ack a { color: inherit; }

@@ -27,7 +27,14 @@
 //     Confiteor gone, the Kyrie block still follows
 //   (c) Form C stands with the Missal trope set, its
 //     rendered word stream equal to the Form C slice
-//     of the production Order data
+//     of the production Order data · the amendment
+//     (13:54 CT): under the example, the samples block
+//     — four Appendix VI sets (Advent · Lent · Easter ·
+//     Ordinary Time) word-equal to the USCCB-published
+//     appendix capture, the priest's sample lines in
+//     italics and the responses bold (computed style),
+//     the asterisk note standing, the example itself in
+//     the normal dress, and no picker inside Form C
 //   (d) an in-view repaint (the version pick) keeps
 //     the standing form; a leave-and-return (a fresh
 //     open) returns BOTH toggles to Form A + EP II
@@ -50,7 +57,12 @@
 // v501 ship per S); the Greek witness is the v486
 // capture of the Missal's Ordo Missae page
 // (tests/fixtures-v486/src-ordo-latin.htm) that
-// gen-mass-order.py drew the Order data from. Run:
+// gen-mass-order.py drew the Order data from; the
+// Appendix VI expectations are the capture of the
+// USCCB-published appendix PDF (tests/fixtures-v502/
+// appendix-vi.txt, fetched 2026-11-17; witness: the
+// USCCB Divine Worship newsletter, Aug-Sept 2010).
+// Run:
 // node app/tests/harness-v502.mjs [--probe] (from the
 // worktree root). --probe only prints.
 import { readFileSync } from 'node:fs';
@@ -70,6 +82,20 @@ const C_BASE = readFileSync(BASE + '/client.ts', 'utf8');
 const U_BASE = readFileSync(BASE + '/ui.ts', 'utf8');
 const BOOK = JSON.parse(readFileSync(APP + '/tests/fixtures/book-live-2026-11-17.json', 'utf8'));
 const WITNESS = readFileSync(APP + '/tests/fixtures-v486/src-ordo-latin.htm', 'utf8');
+const APPX = readFileSync(APP + '/tests/fixtures-v502/appendix-vi.txt', 'utf8');
+/* The Appendix VI capture, parsed by set numeral:
+   the spoken lines of each set in print order. */
+const APPX_SETS = {};
+{
+  let cur = null;
+  for (const raw of APPX.split('\n')) {
+    const ln = raw.trim();
+    const m = ln.match(/^SET (I|II|III|IV|V|VI|VII)$/);
+    if (m) { cur = m[1]; APPX_SETS[cur] = []; continue; }
+    if (cur && ln) APPX_SETS[cur].push(ln);
+  }
+}
+const SAMPLE_MAP = { Advent: 'I', Lent: 'III', Easter: 'IV', 'Ordinary Time': 'VI' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let pass = 0, fail = 0; const failures = [];
@@ -133,7 +159,12 @@ const FORM_A = { lines: CONF.concat(ABS_L), roles: CONF_R + ABS_R };
       'S6-' + f + ': byte-identical to the v501 ship');
   }
   const pin = (s) => s.replace(/ora-pro-nobis-v\d+-\d+/g, 'PIN');
-  ok(pin(U_SRC) === pin(U_BASE), 'S7: ui.ts is byte-identical to the v501 ship outside the pin line');
+  const stripIt = (s) => s.replace(/\.mass-it \{ font-style: italic; \}\n/g, '');
+  ok(pin(stripIt(U_SRC)) === pin(U_BASE), 'S7: ui.ts is byte-identical to the v501 ship outside the pin line and the one added .mass-it rule (the samples italics)');
+  ok(C_SRC.includes('var MASS_PEN_SAMPLES') && C_SRC.includes('function massPenSamplesHtml()')
+    && C_SRC.includes('* Different forms will be used.')
+    && ['Advent', 'Lent', 'Easter', 'Ordinary Time'].every((n) => C_SRC.includes("name: '" + n + "'")),
+    'S9: the Appendix VI samples table, its renderer, and the asterisk note stand in client.ts, the four named sets present');
   ok(WITNESS.includes('Kýrie') && WITNESS.includes('Christe, eléison')
     && GREEK.length === 6 && GREEK.every((ln) => /^(Kýrie|Christe) eléison\.$/.test(ln)),
     'S8: the Missal witness capture carries the Greek Kyrie (Kýrie eléison · Christe eléison), and the six stored lines are those Greek lines — no Latin form',
@@ -328,20 +359,62 @@ async function boot(which, errs, tag) {
   ok(bInfo.kyrieFollows && bInfo.collectAfter,
     'B3: the Kyrie block still follows the form and the scroll stands whole below it');
 
-  /* (c) Form C */
+  /* (c) Form C: the example, then the samples block */
   await page.click('[data-pen="C"]');
   await sleep(400);
   const cInfo = await page.evaluate(() => {
     const pen = document.getElementById('mass-penbody');
-    const lines = Array.from(pen.querySelectorAll('.mass-line')).map((l) => l.textContent);
-    return { words: lines.join(' ').replace(/\s+/g, ' ').trim(), text: pen.textContent };
+    const kids = Array.from(pen.children);
+    const sIdx = kids.findIndex((k) => k.classList.contains('mass-sh') && k.textContent === 'Sample invocations');
+    const before = sIdx >= 0 ? kids.slice(0, sIdx) : kids;
+    const after = sIdx >= 0 ? kids.slice(sIdx) : [];
+    const exLines = before.filter((k) => k.classList.contains('mass-line'));
+    const note = after.find((k) => k.classList.contains('mass-ref'));
+    const sets = {}; let cur = null;
+    after.forEach((k) => {
+      if (k.classList.contains('mass-sh') && k.textContent !== 'Sample invocations') { cur = k.textContent; sets[cur] = []; }
+      else if (cur && k.classList.contains('mass-line')) {
+        sets[cur].push({ t: k.textContent, italic: getComputedStyle(k).fontStyle === 'italic', people: k.classList.contains('mass-people') });
+      }
+    });
+    return {
+      exWords: exLines.map((l) => l.textContent).join(' ').replace(/\s+/g, ' ').trim(),
+      exDress: exLines.map((l) => ({ t: l.textContent, italic: getComputedStyle(l).fontStyle === 'italic', people: l.classList.contains('mass-people') })),
+      text: pen.textContent,
+      heads: after.filter((k) => k.classList.contains('mass-sh')).map((k) => k.textContent),
+      noteText: note ? note.textContent : null,
+      sets,
+      controls: pen.querySelectorAll('button, select, input, textarea').length,
+    };
   });
-  ok(cInfo.words === words(visWords(FORM_C.lines, FORM_C.roles))
+  ok(cInfo.exWords === words(visWords(FORM_C.lines, FORM_C.roles))
     && cInfo.text.includes('You were sent to heal the contrite of heart:')
     && cInfo.text.includes('You came to call sinners:')
     && cInfo.text.includes('You are seated at the right hand of the Father to intercede for us:'),
-    'C1: Form C stands with the Missal trope set, its rendered word stream equal to the Form C slice of the production data',
-    cInfo.words.slice(0, 120));
+    'C1: Form C\'s example stands with the Missal trope set, its rendered word stream equal to the Form C slice of the production data',
+    cInfo.exWords.slice(0, 120));
+  ok(JSON.stringify(cInfo.heads) === JSON.stringify(['Sample invocations', 'Advent', 'Lent', 'Easter', 'Ordinary Time'])
+    && cInfo.noteText === '* Different forms will be used.',
+    'C2: the samples block stands under the example — its heading, the asterisk note in John\'s words, and the four named sets in order',
+    JSON.stringify(cInfo.heads) + ' :: ' + cInfo.noteText);
+  ok(Object.keys(SAMPLE_MAP).every((name) => {
+    const got = (cInfo.sets[name] || []).map((l) => l.t);
+    return JSON.stringify(got) === JSON.stringify(APPX_SETS[SAMPLE_MAP[name]] || []);
+  }), 'C3: each sample set renders line-for-line equal to the Appendix VI capture (Advent=I · Lent=III · Easter=IV · Ordinary Time=VI)',
+    JSON.stringify(Object.fromEntries(Object.entries(cInfo.sets).map(([k, v]) => [k, v.length]))));
+  ok(Object.keys(SAMPLE_MAP).every((name) => {
+    const ls = cInfo.sets[name] || [];
+    return ls.length === 9 && ls.every((l, i) => (i % 3 === 2) ? (l.people && !l.italic) : (!l.people && l.italic));
+  }), 'C4: in the samples the priest\'s words stand in italics and the people\'s responses bold — computed style, every set');
+  {
+    const trope = cInfo.exDress.find((l) => l.t.indexOf('You were sent to heal') === 0);
+    const resps = cInfo.exDress.filter((l) => l.t === 'Lord, have mercy. Or: Kyrie, eleison.');
+    const resp = resps[resps.length - 1];
+    ok(trope && !trope.italic && resp && resp.people,
+      'C5: the example itself keeps the normal dress — its trope lines not italic, its responses bold');
+  }
+  ok(cInfo.controls === 0,
+    'C6: no picker controls stand inside Form C — the sets stand whole');
 
   /* (d) in-view repaint keeps the form; a fresh open resets both */
   await page.click('[data-version="feria"]');

@@ -4091,6 +4091,55 @@ function massEpHtml() {
    forms are rubrics and never render, so no rendered
    word moves across a seam. The Kyrie block follows
    the chosen form exactly as it stands today. */
+/* Appendix VI sample invocation sets for Form C (v502 amendment, John
+   2026-11-17 13:54 CT). Client-side table (the MASS_VIRTUAL_ENTRIES
+   precedent). Texts verbatim from the Missal's Appendix VI as published by
+   the USCCB ([In the Dioceses of the United States]); witness: the USCCB
+   Divine Worship newsletter, Aug-Sept 2010, printing all the tropes in the
+   same order. Roles run trope/acclamation/response three times: 'p' priest
+   (italics in the samples block), 'P' people (bold). The appendix prints
+   the sets numbered I-VII; the season names are the customary assignments
+   (I Advent · III Lent · IV Easter · VI Ordinary Time). The absolution is
+   not repeated per set: it stands once, at the example's end, identical
+   after every set. */
+var MASS_PEN_SAMPLES = [
+  { name: 'Advent', lines: [
+    'Lord Jesus, you came to gather the nations into the peace of God’s kingdom:', 'Lord, have mercy.', 'Lord, have mercy.',
+    'Lord Jesus, you come in word and sacrament to strengthen us in holiness:', 'Christ, have mercy.', 'Christ, have mercy.',
+    'Lord Jesus, you will come in glory with salvation for your people:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' },
+  { name: 'Lent', lines: [
+    'Lord Jesus, you came to reconcile us to one another and to the Father:', 'Lord, have mercy.', 'Lord, have mercy.',
+    'Lord Jesus, you heal the wounds of sin and division:', 'Christ, have mercy.', 'Christ, have mercy.',
+    'Lord Jesus, you intercede for us with your Father:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' },
+  { name: 'Easter', lines: [
+    'Lord Jesus, you raise the dead to life in the Spirit:', 'Lord, have mercy.', 'Lord, have mercy.',
+    'Lord Jesus, you bring pardon and peace to the sinner:', 'Christ, have mercy.', 'Christ, have mercy.',
+    'Lord Jesus, you bring light to those in darkness:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' },
+  { name: 'Ordinary Time', lines: [
+    'Lord Jesus, you have shown us the way to the Father:', 'Lord, have mercy.', 'Lord, have mercy.',
+    'Lord Jesus, you have given us the consolation of the truth:', 'Christ, have mercy.', 'Christ, have mercy.',
+    'Lord Jesus, you are the Good Shepherd, leading us into everlasting life:', 'Lord, have mercy.', 'Lord, have mercy.'], roles: 'ppPppPppP' }
+];
+
+/* The samples block under the Form C example (v502 amendment): the sets
+   stand whole — no picker, no combining. The priest's words stand in
+   italics (.mass-it); the people's responses keep the bold rule. The small
+   asterisk note stands at the block's head, in John's words. */
+function massPenSamplesHtml() {
+  var h = '<div class="mass-sh">Sample invocations</div>';
+  h += '<div class="mass-ref">* Different forms will be used.</div>';
+  for (var s = 0; s < MASS_PEN_SAMPLES.length; s++) {
+    var set = MASS_PEN_SAMPLES[s];
+    h += '<div class="mass-sh">' + esc(set.name) + '</div>';
+    for (var i = 0; i < set.lines.length; i++) {
+      h += set.roles.charAt(i) === 'P'
+        ? '<div class="mass-line mass-people">' + esc(set.lines[i]) + '</div>'
+        : '<div class="mass-line mass-it">' + esc(set.lines[i]) + '</div>';
+    }
+  }
+  return h;
+}
+
 function massPenForms() {
   var mid = MASS_ORDER.introMid, mr = MASS_ROLES.introMid;
   function slice(from, to) { return { lines: mid.slice(from, to), roles: mr.slice(from, to) }; }
@@ -4113,8 +4162,11 @@ function massPenForms() {
 }
 function massPenBodyHtml() {
   var forms = massPenForms();
-  var f = forms[(state.mass && state.mass.penform) || 'A'] || forms.A;
-  return massLinesHtml(f.lines, f.roles);
+  var key = (state.mass && state.mass.penform) || 'A';
+  var f = forms[key] || forms.A;
+  var h = massLinesHtml(f.lines, f.roles);
+  if (key === 'C') h += massPenSamplesHtml();
+  return h;
 }
 function massPenToggleHtml() {
   var form = (state.mass && state.mass.penform) || 'A';
