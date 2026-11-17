@@ -3877,7 +3877,9 @@ function setTab(tab) {
 
 /* ================= v486: the Mass tab =================
    One long scroll (Word Among Us form): the ICEL notice at
-   the top and the foot (Q5 A) · the day's celebration + the
+   the top and the foot (Q5 A; v505 moves the copyright
+   material beneath the prayers — the notice stands once,
+   as the scroll's last element) · the day's celebration + the
    version picker (Q2 A) · the Order of Mass with the day's
    propers set in place and the readings from the USCCB Daily
    Readings RSS feed via the Worker's mass-readings route
@@ -4505,7 +4507,9 @@ function paintMassScroll() {
   var flags = massDayFlags();
   var size = (typeof state.mass.textSize === 'number') ? state.mass.textSize : 1;
   var h = '<div class="mass-scroll ts-' + size + '">';
-  h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
+  /* v505: no notice at the top — the scroll opens on the
+     day header; the copyright material stands beneath the
+     prayers at the tail (see the tail below). */
   h += '<div class="mass-day">Daily Lectionary</div>';
   h += '<div class="mass-dayname">' + esc(p.name || 'Mass of the Day') + '</div>';
   h += '<div class="mass-date">' + esc(state.mass.dateLabel || '') + '</div>';
@@ -4552,9 +4556,16 @@ function paintMassScroll() {
   h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
   h += massSectionHtml('Concluding Rites');
   h += massLinesHtml(MASS_ORDER.concluding, MASS_ROLES.concluding);
+  /* v505: the Post-Mass Prayers section stands directly
+     after the Concluding Rites, carrying the after-Mass
+     seat as one ordered list; beneath the prayers stand
+     the copyright lines — the readings' acknowledgments,
+     then the ICEL notice, once, as the scroll's final
+     element. */
+  h += massSectionHtml('Post-Mass Prayers');
+  h += '<div id="mass-personal-aftermass">' + massPostMassHtml() + '</div>';
   h += '<div id="mass-acks">' + massAcksHtml() + '</div>';
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
-  h += '<div id="mass-personal-aftermass">' + massPersonalAfterMassHtml() + '</div>';
   h += '</div>';
   view.innerHTML = h;
   view.querySelectorAll('[data-version]').forEach(function (b) {
@@ -4608,7 +4619,19 @@ function paintMassScroll() {
    Latin switch stands at its seat or panel (per page
    view, English first, no store), its state held per
    Mass view in state.mass.personalLang, keyed per seat
-   and panel so each switch holds its own state. */
+   and panel so each switch holds its own state.
+   v505: the two Communion seats take the after-Mass
+   panel dress (the standing prayer stands inside a
+   .mass-panel card), and the after-Mass seat moves into
+   its own big section — "Post-Mass Prayers", directly
+   after the Concluding Rites — as ONE ordered list in
+   one column: each prayer carries the v413 move buttons
+   (up · down) and a one-tap Remove on the prayer itself;
+   a move or a removal writes the stored list at once
+   through the standing whole-list save. The list's
+   initial state is seeded by migration 0034 (the
+   traditional post-Mass set merged with the standing
+   picks). */
 var MASS_PERSONAL_SEATS = {
   before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', add: 'Add a prayer before Communion' },
   after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', add: 'Add a prayer after Communion' },
@@ -4639,9 +4662,19 @@ function massPersonalSingleHtml(seat) {
   if (typeof slug !== 'string' || !slug) return btn;
   var body = massPersonalPrayerHtml(slug, seat);
   if (!body) return btn; // the book not loaded yet, or the slug retired — the button stands
-  return body + btn;
+  /* v505: the single seats take the Post-Mass panel
+     dress — the prayer stands inside the .mass-panel
+     card, the button below it. */
+  return '<div class="mass-panel">' + body + '</div>' + btn;
 }
-function massPersonalAfterMassHtml() {
+/* v505: the Post-Mass Prayers list — the stored
+   after-Mass list in one column, in its stored order.
+   Each panel carries the shared prayer dress, the v413
+   move buttons (up · down, each disabled at its end of
+   the list), and a one-tap Remove on the prayer itself:
+   a move or a removal writes the stored list at once,
+   no popup, no confirmation. */
+function massPostMassHtml() {
   var cfg = MASS_PERSONAL_SEATS.aftermass;
   var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + cfg.add + '</button></p>';
   var list = massPersonalState().afterMass;
@@ -4651,7 +4684,11 @@ function massPersonalAfterMassHtml() {
     var body = massPersonalPrayerHtml(slug, 'aftermass:' + slug);
     if (!body) return;
     panels += '<div class="mass-panel">' + body
-      + '<p><button class="btn ghost" data-mpremove="' + i + '">Remove</button></p></div>';
+      + '<div class="setcontrols">'
+      + '<button class="mvbtn" data-mpup="' + i + '" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>&#8593;</button>'
+      + '<button class="mvbtn" data-mpdown="' + i + '" aria-label="Move down"' + (i === list.length - 1 ? ' disabled' : '') + '>&#8595;</button>'
+      + '<button class="btn ghost" data-mpremove="' + i + '">Remove</button>'
+      + '</div></div>';
   });
   if (!panels) return btn; // no standing prayer could be found in the book — the button stands
   return '<div class="mass-panels">' + panels + '</div>'
@@ -4665,7 +4702,7 @@ function massPersonalLangHtml(key, lang) {
 function paintMassPersonalSeat(seat) {
   var host = document.getElementById(MASS_PERSONAL_SEATS[seat].host);
   if (!host) return;
-  host.innerHTML = seat === 'aftermass' ? massPersonalAfterMassHtml() : massPersonalSingleHtml(seat);
+  host.innerHTML = seat === 'aftermass' ? massPostMassHtml() : massPersonalSingleHtml(seat);
   wireMassPersonalSeat(seat);
 }
 function paintMassPersonal() {
@@ -4687,6 +4724,12 @@ function wireMassPersonalSeat(seat) {
   });
   host.querySelectorAll('[data-mpremove]').forEach(function (b) {
     b.addEventListener('click', function () { massPersonalRemovePanel(parseInt(b.getAttribute('data-mpremove'), 10)); });
+  });
+  host.querySelectorAll('[data-mpup]').forEach(function (b) {
+    b.addEventListener('click', function () { massPersonalMovePanel(parseInt(b.getAttribute('data-mpup'), 10), -1); });
+  });
+  host.querySelectorAll('[data-mpdown]').forEach(function (b) {
+    b.addEventListener('click', function () { massPersonalMovePanel(parseInt(b.getAttribute('data-mpdown'), 10), 1); });
   });
 }
 function wireMassPersonal() {
@@ -4814,6 +4857,17 @@ function massPersonalPick(seat, slug, sheet) {
   } else {
     massPersonalSave({ seat: seat, slug: slug }, sheet);
   }
+}
+/* v505: a re-order move in the Post-Mass list — swap
+   the entry with its neighbor and write the stored
+   list whole at once (the standing save). An out-of-
+   range move writes nothing. */
+function massPersonalMovePanel(idx, dir) {
+  var list = (massPersonalState().afterMass || []).slice();
+  var j = idx + dir;
+  if (idx < 0 || idx >= list.length || j < 0 || j >= list.length) return;
+  var t = list[idx]; list[idx] = list[j]; list[j] = t;
+  massPersonalSave({ seat: 'aftermass', slugs: list }, null);
 }
 function massPersonalRemovePanel(idx) {
   var list = (massPersonalState().afterMass || []).slice();
