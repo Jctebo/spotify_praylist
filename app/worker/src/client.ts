@@ -7747,7 +7747,8 @@ function openPlayerMenu(anchorEl) {
   openSheetMenu('Playback', [
     { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
     { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
-    { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } }
+    { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } },
+    { label: 'Exit player', act: function () { exitPlayer(); } }
   ], anchorEl);
 }
 function openDockMenu(anchorEl) {
@@ -7770,6 +7771,7 @@ function openDockMenu(anchorEl) {
   items.push({ label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } });
   items.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
   items.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
+  items.push({ label: 'Exit player', act: function () { exitPlayer(); } }); // v491: the unload act stands last in the dock overflow (John's screenshot menu)
   openSheetMenu('Playback', items, anchorEl);
 }
 /* FD6: ONE share sheet — the episode card at its head, Share…
@@ -9083,6 +9085,48 @@ function bridgeStop() {
   if (oraNativeMode() && (nativeContractDescs.length || nativeMirror)) return;
   try { audioEl.pause(); } catch (e) {}
   state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; // v461 F1: the stop clear is terminal — no start stands
+  setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
+  pushNativeState(true);
+}
+function exitPlayer() {
+  // v491: the Exit player act (John, 2026-11-17) — stop
+  // playback AND unload the queue AND dismiss the dock, one
+  // act from the user's seat; no standing act did all three.
+  // Order is the substance: (1) the standing position saves
+  // FIRST, while the current track and its position still
+  // stand (the v479 rule — exit is a close, so a later resume
+  // lands where he left off); (2) a pending start is
+  // cancelled (its cancel pauses the transport) or the
+  // transport pauses — under the native engine that pause
+  // command is also the position save's native leg, since
+  // the service writes its pause position while its contract
+  // still stands; (3) an armed sleep timer is cancelled (it
+  // is playback state, not a setting — autoplay and
+  // intentions stay exactly as set); (4) the clear itself,
+  // bridgeStop's shape, engine-aware: under the native
+  // engine the stop command fires exactly once — the shell
+  // clears its queue and face stores, stops the engine, and
+  // stops itself, so the notification/lock-screen face is
+  // gone and cannot heal back (no queue stands; a media
+  // press after exit finds nothing to resume). The stopped
+  // state event that follows finds the page already cleared
+  // and its own clear stands down. Played marks are never
+  // written here. Now Playing, if open, closes through
+  // updateDock's standing rule (no current, no sheet) —
+  // back to the page he was on. The dock stays hidden until
+  // the next play press, which starts fresh normally.
+  podPositionSaveCurrent();
+  dayPositionSaveCurrent();
+  if (state.pendingStart) cancelPendingStart(); else pauseTransport();
+  if (state.sleep && state.sleep.mode !== 'off') disarmSleep();
+  if (oraNativeMode()) {
+    nativeTransportSend({ command: 'stop' });
+    nativeContractDescs = [];
+    nativeMirror = null;
+    nativePendingWatch = null;
+  }
+  try { audioEl.pause(); } catch (e) {}
+  state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null;
   setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
   pushNativeState(true);
 }
