@@ -3847,8 +3847,10 @@ function setTab(tab) {
    One long scroll (Word Among Us form): the ICEL notice at
    the top and the foot (Q5 A) · the day's celebration + the
    version picker (Q2 A) · the Order of Mass with the day's
-   propers set in place and the readings loaded live from
-   Universalis's sanctioned JSONP service (Q3 A) · the
+   propers set in place and the readings from the USCCB Daily
+   Readings RSS feed via the Worker's mass-readings route
+   (v490; the standing Universalis JSONP payload fills, per
+   piece, whatever the feed lacks for the day) · the
    Eucharistic Prayer toggle (I · II · III · IV; II stands on
    open — the prayer the day's rubrics most commonly carry)
    · per-part English | Latin toggles where the Latin stands
@@ -3868,6 +3870,25 @@ function loadMassReadings(dateStr) {
   s.src = 'https://universalis.com/' + digits + '/jsonpmass.js?callback=universalisCallback';
   s.async = true;
   document.head.appendChild(s);
+}
+/* v490: the day's readings — THE source is the USCCB Daily
+   Readings RSS feed (NABRE), fetched server-side by the
+   Worker's mass-readings route (the tab is served on John's
+   website, where the USCCB terms allow free display from
+   the feed). The Universalis payload above stands as the
+   per-piece BACKUP (John's general rule, 2026-11-17): any
+   headed piece the feed lacks for the day is filled from
+   Universalis alone, and the Universalis / Jerusalem Bible
+   acknowledgment lines stand only on days a backup piece
+   actually came from there. massUsedFallback is set by
+   massReadingsHtml on every render; massAcksHtml reads it. */
+var massFeed = null;
+var massUsedFallback = false;
+function loadMassFeed(dateStr) {
+  api('/api/prayer/mass-readings?date=' + dateStr).then(function (p) {
+    massFeed = p;
+    if (state.tab === 'mass') { paintMassReadings(); paintMassAcks(); }
+  }).catch(function () {});
 }
 /* v488: role-aware line rendering. MASS_ROLES carries one
    code per line: P the people's part (bold) · p the priest's
@@ -4006,10 +4027,47 @@ function massFormulary() {
   for (var i = 0; i < vs.length; i++) if (vs[i].key === state.mass.version) return vs[i].formulary || {};
   return (vs[0] && vs[0].formulary) || {};
 }
-function massReadingsHtml() {
+/* v490: feed part lines — the same presentation cleaning
+   as v487 (block tags become line breaks, inline tags drop
+   keeping their text, entities decode; words byte-for-byte
+   the feed's). The feed prints the psalm response and the
+   Alleluia refrain as R. lines: those are the people's
+   part and stand bold; every other line stands regular. */
+function massFeedLinesHtml(html, responsive) {
+  var parts = String(html || '').replace(/<br[^>]*>/gi, '\\n').split(/<\\/?(?:div|p|ul|li)(?:\\s[^>]*)?>/i);
+  var out = '';
+  for (var i = 0; i < parts.length; i++) {
+    var sub = parts[i].split('\\n');
+    for (var j = 0; j < sub.length; j++) {
+      var t = sub[j].replace(/^\\s+|\\s+$/g, '');
+      if (!t) continue;
+      var text = massDecodeEntities(t.replace(/<[^>]*>/g, '')).replace(/\\s+/g, ' ').replace(/^\\s+|\\s+$/g, '');
+      if (!text) continue;
+      var people = responsive && /^R\\./.test(text);
+      out += '<div class="' + (people ? 'mass-line mass-people' : 'mass-line') + '">' + esc(text) + '</div>';
+    }
+  }
+  return out;
+}
+var MASS_SLOT_LABELS = { r1: 'First Reading', ps: 'Responsorial Psalm', r2: 'Second Reading', ga: 'Gospel Acclamation', g: 'Gospel' };
+var MASS_SLOT_CLOSINGS = {
+  r1: ['The word of the Lord.', 'Thanks be to God.'],
+  r2: ['The word of the Lord.', 'Thanks be to God.'],
+  g: ['The Gospel of the Lord.', 'Praise to you, Lord Jesus Christ.']
+};
+function massFeedPartHtml(part, label) {
+  var s = '<div class="mass-h">' + esc(label || part.heading) + '</div>';
+  if (part.source) s += '<div class="mass-ref">' + esc(part.source) + '</div>';
+  s += massFeedLinesHtml(part.html, part.key === 'ps' || part.key === 'ga');
+  var closing = MASS_SLOT_CLOSINGS[part.key];
+  if (closing) s += '<div class="mass-line">' + closing[0] + '</div><div class="mass-line mass-people">' + closing[1] + '</div>';
+  return s;
+}
+/* v490: one Universalis piece, rendered exactly as the
+   standing v486-v488 code rendered it — the backup form. */
+function massBackupPartHtml(key) {
   var d = massReadings;
-  if (!d) return '<div class="mass-h">Readings</div><div class="mass-rubric">The day\u2019s readings load from Universalis\u2026</div>';
-  var h = '';
+  if (!d) return '';
   function reading(head, item, closing) {
     if (!item) return '';
     var s = '<div class="mass-h">' + head + '</div>';
@@ -4019,33 +4077,86 @@ function massReadingsHtml() {
     if (closing) s += '<div class="mass-line">' + closing[0] + '</div><div class="mass-line mass-people">' + closing[1] + '</div>';
     return s;
   }
-  h += reading('First Reading', d.Mass_R1, ['The word of the Lord.', 'Thanks be to God.']);
-  if (d.Mass_Ps) {
-    h += '<div class="mass-h">Responsorial Psalm</div>'
+  if (key === 'r1') return reading('First Reading', d.Mass_R1, MASS_SLOT_CLOSINGS.r1);
+  if (key === 'r2') return reading('Second Reading', d.Mass_R2, MASS_SLOT_CLOSINGS.r2);
+  if (key === 'g') return reading('Gospel', d.Mass_G, MASS_SLOT_CLOSINGS.g);
+  if (key === 'ps') {
+    if (!d.Mass_Ps) return '';
+    return '<div class="mass-h">Responsorial Psalm</div>'
       + (d.Mass_Ps.source ? '<div class="mass-ref">' + esc(massCleanText(d.Mass_Ps.source)) + '</div>' : '')
       + massReadingTextHtml(d.Mass_Ps.text);
   }
-  h += reading('Second Reading', d.Mass_R2, ['The word of the Lord.', 'Thanks be to God.']);
-  if (d.Mass_GA) {
-    h += '<div class="mass-h">Gospel Acclamation</div>'
+  if (key === 'ga') {
+    if (!d.Mass_GA) return '';
+    return '<div class="mass-h">Gospel Acclamation</div>'
       + (d.Mass_GA.heading ? '<div class="mass-src">' + esc(massCleanText(d.Mass_GA.heading)) + '</div>' : '')
       + (d.Mass_GA.source ? '<div class="mass-ref">' + esc(massCleanText(d.Mass_GA.source)) + '</div>' : '')
       + massGaTextHtml(d.Mass_GA.text);
   }
-  h += reading('Gospel', d.Mass_G, ['The Gospel of the Lord.', 'Praise to you, Lord Jesus Christ.']);
-  return h;
+  return '';
+}
+function massReadingsHtml() {
+  var f = massFeed, d = massReadings;
+  if (!f && !d) return '<div class="mass-h">Readings</div><div class="mass-rubric">The day\u2019s readings load\u2026</div>';
+  massUsedFallback = false;
+  var seq = [];
+  var present = {};
+  if (f && f.found && f.parts) {
+    for (var i = 0; i < f.parts.length; i++) {
+      var part = f.parts[i];
+      if (part.key !== 'extra' && !present[part.key]) {
+        present[part.key] = true;
+        seq.push({ slot: part.key, html: massFeedPartHtml(part, MASS_SLOT_LABELS[part.key]) });
+      } else {
+        // A part with no standing slot (an alternate reading
+        // and the like) stands under its own feed heading —
+        // the feed's full text for the day, nothing dropped.
+        seq.push({ slot: null, html: massFeedPartHtml(part, null) });
+      }
+    }
+  }
+  var CANON = ['r1', 'ps', 'r2', 'ga', 'g'];
+  for (var ci = 0; ci < CANON.length; ci++) {
+    var key = CANON[ci];
+    if (present[key]) continue;
+    var fb = massBackupPartHtml(key);
+    if (!fb) continue;
+    massUsedFallback = true;
+    var pos = 0;
+    for (var k = 0; k < seq.length; k++) {
+      if (seq[k].slot && CANON.indexOf(seq[k].slot) < ci) pos = k + 1;
+    }
+    seq.splice(pos, 0, { slot: key, html: fb });
+  }
+  return seq.map(function (e) { return e.html; }).join('');
 }
 function paintMassReadings() {
   var host = document.getElementById('mass-readings');
   if (host) host.innerHTML = massReadingsHtml();
 }
 function massAcksHtml() {
-  var h = '<div class="mass-ack">' + esc(MASS_READINGS_ACK_1) + '</div>'
-    + '<div class="mass-ack">' + esc(MASS_READINGS_ACK_2) + '</div>';
-  if (massReadings && massReadings.copyright && massReadings.copyright.text) {
-    h += '<div class="mass-ack">' + esc(massCleanText(massReadings.copyright.text)) + '</div>';
+  // v490: citation follows the pieces. The feed's own
+  // copyright lines (carried in the route payload exactly
+  // as the feed prints them) stand with the readings
+  // always; the Universalis / Jerusalem Bible lines stand
+  // only when a backup piece actually came from Universalis
+  // in this render (massUsedFallback, set by
+  // massReadingsHtml above).
+  var h = '';
+  var f = massFeed;
+  if (f && f.found && f.copyright) {
+    for (var i = 0; i < f.copyright.length; i++) {
+      h += '<div class="mass-ack">' + esc(f.copyright[i]) + '</div>';
+    }
   }
-  h += '<div class="mass-ack">Readings and calendar: <a href="https://www.universalis.com" target="_blank" rel="noopener">Universalis</a></div>';
+  if (massUsedFallback && massReadings) {
+    h += '<div class="mass-ack">' + esc(MASS_READINGS_ACK_1) + '</div>'
+      + '<div class="mass-ack">' + esc(MASS_READINGS_ACK_2) + '</div>';
+    if (massReadings.copyright && massReadings.copyright.text) {
+      h += '<div class="mass-ack">' + esc(massCleanText(massReadings.copyright.text)) + '</div>';
+    }
+    h += '<div class="mass-ack">Readings and calendar: <a href="https://www.universalis.com" target="_blank" rel="noopener">Universalis</a></div>';
+  }
   return h;
 }
 function paintMassAcks() {
@@ -4203,6 +4314,7 @@ function renderMass() {
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
   loadMassReadings(today);
+  loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
     state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today) };

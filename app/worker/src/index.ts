@@ -73,6 +73,7 @@ export interface Env {
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
 import { APP_JS } from "./client";
 import { massPayload } from "./mass";
+import { massReadingsPayload } from "./mass-readings";
 import { LOGO_PNG_B64 } from "./logo";
 import { LOGO512_PNG_B64 } from "./logo512";
 
@@ -2547,11 +2548,27 @@ export default {
           // v486: the day's Mass versions + propers for the Mass
           // tab. Session-gated like the book; NO PIN (the tab is
           // read-only text). Readings do NOT ride this route —
-          // the client loads them from Universalis's sanctioned
-          // JSONP service directly, per that service's terms.
+          // they ride mass-readings below (v490).
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           return json(await massPayload(env, date));
+        }
+        if (seg[2] === "mass-readings" && !seg[3] && request.method === "GET") {
+          // v490: the day's readings from the USCCB Daily
+          // Readings RSS feed (NABRE), fetched server-side by
+          // mass-readings.ts under the USCCB website display
+          // terms (the tab is served on John's website; no
+          // permission or fee). Session-gated like the propers
+          // route; NO PIN. A piece the feed lacks for the day
+          // is filled client-side from the standing Universalis
+          // payload, per piece (John's fallback rule).
+          const date = url.searchParams.get("date") ?? pToday;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          try {
+            return json(await massReadingsPayload(date));
+          } catch {
+            return json({ date, found: false, parts: [], copyright: [] });
+          }
         }
         if (seg[2] === "book" && !seg[3] && request.method === "GET") {
           // v462 §2.3: the whole prayer book in one payload.
