@@ -43,7 +43,8 @@
 // Fixtures (Improvement D): the book is the LIVE payload
 // captured through the prayer door on 2026-11-17
 // (tests/fixtures/book-live-2026-11-17.json — 9 groups,
-// 75 prayers, the six pilots carrying the audio fold).
+// 77 prayers at the ship refresh (post-v508 live book),
+// the six pilots carrying the audio fold).
 // The day is the LIVE player payload captured through the
 // door the same day (tests/fixtures/day-live-2026-11-17
 // .json — the seven blocks in standing order, the
@@ -139,8 +140,8 @@ const BOOK_COUNT = BOOK.groups.reduce((a, g) => a + g.prayers.length, 0);
   ok(MIG37.includes('CREATE TABLE IF NOT EXISTS prayer_day_additions') && MIG37.includes('after_id TEXT')
     && MIG37.includes('CREATE INDEX IF NOT EXISTS idx_prayer_day_additions_date ON prayer_day_additions (date, seq)'),
     'S7: migration 0037 carries the table (nullable after_id) and the (date, seq) index');
-  ok(BOOK_COUNT === 75 && BOOK.groups.length === 9 && PILOTS.every((s) => { const r = bookRow(s); return r && r.audio && r.audio.en; }),
-    'S8: the live-book fixture stands (9 groups, 75 prayers) and every pilot carries its audio fold', 'count ' + BOOK_COUNT);
+  ok(BOOK_COUNT === 77 && BOOK.groups.length === 9 && PILOTS.every((s) => { const r = bookRow(s); return r && r.audio && r.audio.en; }),
+    'S8: the live-book fixture stands (9 groups, 77 prayers) and every pilot carries its audio fold', 'count ' + BOOK_COUNT);
   ok(Array.isArray(DAY_RAW.blocks) && DAY_RAW.blocks.map((b) => b.block).join(',') === SLOT_BLOCKS.join(','),
     'S9: the live day fixture stands — the seven blocks in standing order');
 }
