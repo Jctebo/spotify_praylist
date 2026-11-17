@@ -41,7 +41,7 @@ export const SEASON_PAGES: Record<string, string> = {
   "Lent": SRC + "lentmass.htm",
   "Easter": SRC + "eastermass.htm",
 };
-const COMMONS_PAGE = SRC + "commons.htm";
+const COMMONS_PAGE = SRC + "roman_missal_commons.htm";
 const SAINT_PAGE = (slug: string) => "https://www.liturgies.net/saints/" + slug + "/readings.htm";
 
 /* ---------- HTML -> lines (the proven normalization) ---------- */
@@ -83,6 +83,13 @@ export function extractItems(lines: string[], from: number, to: number): MassFor
   let buf: string[] = [];
   const flush = () => {
     if (!cur) return;
+    // Some saint pages print the Latin form of a prayer as the
+    // first line under the English heading (ship-stage evidence,
+    // §5: St Josaphat). A leading Latin line is not the English
+    // text: drop it when English lines follow.
+    if (buf.length > 1 && /quaesumus|Domine,|in Ecclesia|Spiritum,|beatus|beata/.test(buf[0]) && !/^(O God|Grant|Almighty|Stir|Defend|Pour|Bestow|May)/.test(buf[0])) {
+      buf = buf.slice(1);
+    }
     const text = buf.join(" ").replace(/\s+/g, " ").trim();
     if (text && (out as Record<string, unknown>)[cur] === undefined) {
       if (cur === "entranceAntiphon" || cur === "communionAntiphon") {
@@ -256,6 +263,14 @@ async function fetchLines(url: string): Promise<string[] | null> {
   } catch { return null; }
 }
 
+async function fetchText(url: string): Promise<string | null> {
+  try {
+    const r = await fetch(url, { headers: { "User-Agent": "OraProNobisApp/1.0" } });
+    if (!r.ok) return null;
+    return await r.text();
+  } catch { return null; }
+}
+
 async function cachedFormulary(env: CacheEnv, key: string, compute: () => Promise<MassFormulary>): Promise<MassFormulary> {
   try {
     const row = await env.DB.prepare("SELECT body, fetched_at FROM mass_cache WHERE key = ?").bind(key)
@@ -307,8 +322,13 @@ export async function resolveFormulary(env: CacheEnv, v: MassVersion): Promise<M
     const key = "form:saint:" + (candidates[0] ?? v.key);
     return cachedFormulary(env, key, async () => {
       for (const slug of candidates) {
-        const lines = await fetchLines(SAINT_PAGE(slug));
-        if (!lines) continue;
+        const html = await fetchText(SAINT_PAGE(slug));
+        // Stub guard (ship-stage evidence, §5): the source's
+        // full saint pages run 12-14 KB; a ~5 KB stub page on the
+        // same host carries a divergent text (St Rose Philippine
+        // Duchesne) and is treated as NO page — propers absent.
+        if (!html || html.length < 8000) continue;
+        const lines = normalizeLines(html);
         const { formulary, commonName } = saintFormulary(lines);
         if (!formulary.collect) continue;
         if (commonName && Object.keys(formulary).length < 6) {

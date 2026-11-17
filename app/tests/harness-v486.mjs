@@ -75,8 +75,10 @@ const pageCache = {
   [SEASON_PAGES['Christmas']]: fs.readFileSync(FIX + '/christmasmass.htm', 'utf8'),
   [SEASON_PAGES['Lent']]: fs.readFileSync(FIX + '/lentmass.htm', 'utf8'),
   [SEASON_PAGES['Easter']]: fs.readFileSync(FIX + '/eastermass.htm', 'utf8'),
-  'http://www.liturgies.net/Liturgies/Catholic/roman_missal/commons.htm': fs.readFileSync(FIX + '/src-commons.htm', 'utf8'),
+  'http://www.liturgies.net/Liturgies/Catholic/roman_missal/roman_missal_commons.htm': fs.readFileSync(FIX + '/src-commons.htm', 'utf8'),
   'https://www.liturgies.net/saints/elizabethofhungary/readings.htm': fs.readFileSync(FIX + '/src-saint-elizabethofhungary.htm', 'utf8'),
+  'https://www.liturgies.net/saints/josaphat/readings.htm': fs.readFileSync(FIX + '/src-saint-josaphat.htm', 'utf8'),
+  'https://www.liturgies.net/saints/rosephilippineduchesne/readings.htm': fs.readFileSync(FIX + '/src-saint-rosephilippineduchesne.htm', 'utf8'),
 };
 globalThis.fetch = async (url) => {
   const body = pageCache[url];
@@ -118,6 +120,16 @@ const sameWords = (a, b) => wordsOf(a) === wordsOf(b);
   ok(p18.versions.length === 3 && p18.defaultVersion.indexOf('dedication') >= 0, 'X11 the calendar dataset: Nov 18 carries ferial + two optional memorials, defaulting to an optional memorial (Q2 A)', JSON.stringify(p18.versions.map((v) => v.key)));
   const p22 = await massPayload(noDbEnv, '2026-11-22');
   ok(p22.versions.length === 1 && sameWords(p22.versions[0].formulary.collect, KING_COLLECT), 'X12 the calendar dataset + extractor: Nov 22 (Christ the King) resolves to the proven formulary', JSON.stringify(p22.versions.map((v) => v.key)));
+  // Ship-stage evidence legs (§5): St Josaphat's page prints the
+  // Latin collect as the first line under the COLLECT head — the
+  // extractor must yield the English text alone. St Rose
+  // Philippine Duchesne's page is a ~5 KB stub whose collect
+  // contradicts the independent witness — the stub guard treats
+  // it as no page, so her propers stand absent.
+  const jo = await resolveFormulary(noDbEnv, { key: 'saint-josaphat', label: 'Saint Josaphat, Bishop and Martyr', kind: 'saint', slug: 'josaphat', slugs: ['josaphat'] });
+  ok(!!jo.collect && jo.collect.startsWith('Stir up in your Church') && !/quaesumus/.test(jo.collect), 'X13 St Josaphat: the Collect stands in English, the Latin first line dropped', (jo.collect || '').slice(0, 60));
+  const ro = await resolveFormulary(noDbEnv, { key: 'saint-rosephilippineduchesne', label: 'Saint Rose Philippine Duchesne, Virgin', kind: 'saint', slug: 'rosephilippineduchesne', slugs: ['rosephilippineduchesne'] });
+  ok(!ro.collect, 'X14 St Rose Philippine Duchesne: the stub page is rejected — no Collect stands (verbatim or absent)', Object.keys(ro).join(','));
 }
 
 /* ---------------- J: the readings payloads ---------------- */
