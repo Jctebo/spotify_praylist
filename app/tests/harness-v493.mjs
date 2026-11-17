@@ -14,12 +14,12 @@
 //       Catholic TV Mass, series catholictv) · the Formation
 //       index append retired server-side · the two-side
 //       Catechesis cfg · ui.ts + the mass sources untouched ·
-//       paintMassScroll byte-identical to the v491 ship tree
+//       paintMassScroll byte-identical to the v492 ship tree
 //       · the v491 Exit player items stand
 //   P   cooked parse + Chromium boot clean
 //   A   the Mass tab carries the Liturgy | Virtual toggle
 //       (connected, one row, row 2), Liturgy on first open,
-//       and the Liturgy scroll byte-for-byte the v491 build's
+//       and the Liturgy scroll byte-for-byte the v492 build's
 //       rendering of the same fixture day
 //   B   side switch swaps in place and back with no state
 //       loss (version · EP · Latin · text size · scroll),
@@ -34,8 +34,10 @@
 //       Video & more segment), Counsel of Trent and The
 //       Exorcist Files stand in Podcasts, and a device whose
 //       stored side is the retired 'video' opens on Courses
-//   E   nav order/labels as the base carries them; the
-//       player is untouched (a play/pause cycle runs clean)
+//   E   nav order/labels as the v492 base carries them
+//       (Mass · Pray · Conscience · Catechesis · Sacred
+//       Art, untouched by v493); the player is untouched
+//       (a play/pause cycle runs clean)
 // Fixtures stand in the production payload shapes
 // (Improvement D): the Mass payload in mass.ts's shape, the
 // readings feed in mass-readings.ts's shape, the podcasts
@@ -52,9 +54,9 @@ const SRC = APP + '/worker/src';
 const C_SRC = readFileSync(SRC + '/client.ts', 'utf8');
 const U_SRC = readFileSync(SRC + '/ui.ts', 'utf8');
 const I_SRC = readFileSync(SRC + '/index.ts', 'utf8');
-const SHIP = path.resolve(process.cwd(), '../../.worktrees/v491-ship/app/worker/src');
-const C491 = readFileSync(SHIP + '/client.ts', 'utf8');
-const U491 = readFileSync(SHIP + '/ui.ts', 'utf8');
+const SHIP = path.resolve(process.cwd(), '../../.worktrees/v492-ship/app/worker/src');
+const C492 = readFileSync(SHIP + '/client.ts', 'utf8');
+const U492 = readFileSync(SHIP + '/ui.ts', 'utf8');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let pass = 0, fail = 0; const failures = [];
@@ -73,14 +75,15 @@ function ok(c, label, extra) {
   ok(I_SRC.includes('const POD_VIDEO_SERIES_LIST'), 'S3: the video series def stands — the series payload route is the Virtual entry target');
   ok(C_SRC.includes("sides: [['courses', 'Courses'], ['podcasts', 'Podcasts']]"), 'S4: the Catechesis toggle cfg carries exactly two sides, Courses · Podcasts');
   ok(C_SRC.includes("sides: [['liturgy', 'Liturgy'], ['virtual', 'Virtual']]"), 'S5: the Mass toggle cfg carries Liturgy · Virtual, Liturgy the default');
-  ok(U_SRC === U491, 'S6: ui.ts byte-identical to the v491 ship tree (nav, header, CSS untouched by the build)');
+  const pinNorm = (s) => s.replace(/ora-pro-nobis-v\d+-\d+/g, 'PIN');
+  ok(pinNorm(U_SRC) === pinNorm(U492), 'S6: ui.ts identical to the v492 ship tree apart from the SW pin line (the v492 nav stands; header + CSS untouched by v493)');
   let same = true;
   for (const f of ['mass.ts', 'mass-order.ts', 'mass-readings.ts', 'mass-calendar.ts']) {
     if (readFileSync(SRC + '/' + f, 'utf8') !== readFileSync(SHIP + '/' + f, 'utf8')) same = false;
   }
-  ok(same, 'S7: mass.ts / mass-order.ts / mass-readings.ts / mass-calendar.ts byte-identical to v491 ship');
+  ok(same, 'S7: mass.ts / mass-order.ts / mass-readings.ts / mass-calendar.ts byte-identical to the v492 ship tree');
   const ps = (s) => s.slice(s.indexOf('function paintMassScroll()'), s.indexOf('function wireMassEp()'));
-  ok(ps(C_SRC) === ps(C491), 'S8: paintMassScroll is byte-identical to the v491 ship tree (the Liturgy rendering stands)');
+  ok(ps(C_SRC) === ps(C492), 'S8: paintMassScroll is byte-identical to the v492 ship tree (the Liturgy rendering stands)');
   ok(C_SRC.includes("{ label: 'Exit player', act: function () { exitPlayer(); } }"), 'S9: the v491 Exit player act stands in the menus');
 }
 
@@ -89,10 +92,10 @@ function cook(src) {
   const t = src.indexOf('APP_JS = `') + 10;
   return new Function('return `' + src.slice(t, src.indexOf('`;', t)) + '`')();
 }
-let COOKED = null, COOKED491 = null;
+let COOKED = null, COOKED492 = null;
 try { COOKED = cook(C_SRC); ok(true, 'P1: the cooked APP_JS parses (the v439 gate)'); }
 catch (e) { ok(false, 'P1: the cooked APP_JS parses (the v439 gate)', String(e).slice(0, 160)); }
-try { COOKED491 = cook(C491); } catch (e) { console.log('note - v491 base cook failed:', String(e).slice(0, 120)); }
+try { COOKED492 = cook(C492); } catch (e) { console.log('note - v492 base cook failed:', String(e).slice(0, 120)); }
 const APP_CSS = U_SRC.slice(U_SRC.indexOf('APP_CSS = `') + 11, U_SRC.indexOf('`;', U_SRC.indexOf('APP_CSS = `')));
 const SHELL = U_SRC.slice(U_SRC.indexOf('SHELL_HTML = `') + 14, U_SRC.indexOf('`;', U_SRC.indexOf('SHELL_HTML = `')));
 
@@ -183,15 +186,15 @@ ${cooked}
 </body></html>`;
 }
 
-let PAGE = '', PAGE491 = '';
+let PAGE = '', PAGE492 = '';
 const server = http.createServer((req, res) => {
   const u = (req.url || '/').split('?')[0];
   if (u === '/v493') { res.setHeader('Content-Type', 'text/html'); res.end(PAGE); return; }
-  if (u === '/v491') { res.setHeader('Content-Type', 'text/html'); res.end(PAGE491); return; }
+  if (u === '/v492') { res.setHeader('Content-Type', 'text/html'); res.end(PAGE492); return; }
   res.statusCode = 404; res.end('not found');
 });
 PAGE = buildPage(COOKED);
-PAGE491 = buildPage(COOKED491);
+PAGE492 = buildPage(COOKED492);
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const ORIGIN = 'http://127.0.0.1:' + server.address().port;
 const requirePw = createRequire('/home/hatch/workspace/.tools/pwtest/package.json');
@@ -240,14 +243,14 @@ async function openMass(page) {
   ok(secs.join('|') === 'Introductory Rites|Liturgy of the Word|Liturgy of the Eucharist|Communion Rite|Concluding Rites',
     'A3: the Liturgy scroll stands with its five big section titles (v489)', secs.join('|'));
 
-  // (a) byte-for-byte: the same fixture day through the v491 build
-  const page491 = await boot(ctx, '/v491', 'A-base', errs);
-  await openMass(page491);
+  // (a) byte-for-byte: the same fixture day through the v492 build
+  const page492 = await boot(ctx, '/v492', 'A-base', errs);
+  await openMass(page492);
   const html493 = await page.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
-  const html491 = await page491.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
-  ok(!!html493 && html493 === html491, 'A4: the Liturgy scroll renders byte-for-byte as the v491 build renders the same day',
-    'len493=' + (html493 || '').length + ' len491=' + (html491 || '').length);
-  await page491.close();
+  const html492 = await page492.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
+  ok(!!html493 && html493 === html492, 'A4: the Liturgy scroll renders byte-for-byte as the v492 build renders the same day',
+    'len493=' + (html493 || '').length + ' len492=' + (html492 || '').length);
+  await page492.close();
 
   // (b) set the scroll's state, switch away and back
   await page.click('[data-version="feria"]');
@@ -350,8 +353,8 @@ async function openMass(page) {
     'D5: the Podcasts side stands untouched — Counsel of Trent · The Exorcist Files · The AI Signal', podCards.join('|'));
 
   const nav = await page.evaluate(() => Array.from(document.querySelectorAll('#tabbar .tab')).map((b) => b.getAttribute('data-tab') + ':' + b.textContent.trim()));
-  ok(nav.join('|') === 'prayers:\u2726Praylist|mass:\u2720Mass|conscience:\u271dConscience|podcasts:\u266bFormation|wallpaper:\u25a3Sacred Art',
-    'E1: the bottom nav stands as the base carries it (order + labels untouched)', nav.join('|'));
+  ok(nav.join('|') === 'mass:\u2720Mass|prayers:\u2726Pray|conscience:\u271dConscience|podcasts:\u266bCatechesis|wallpaper:\u25a3Sacred Art',
+    'E1: the bottom nav stands as the v492 base carries it — Mass · Pray · Conscience · Catechesis · Sacred Art (order + labels untouched by v493)', nav.join('|'));
 
   // the player untouched: a day-track play/pause cycle runs clean
   await page.click('#tabbar .tab[data-tab="prayers"]');
