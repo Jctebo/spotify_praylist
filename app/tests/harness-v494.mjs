@@ -32,7 +32,7 @@ const APP = path.resolve(process.cwd(), 'app');
 const SRC = APP + '/worker/src';
 const C_SRC = readFileSync(SRC + '/client.ts', 'utf8');
 const U_SRC = readFileSync(SRC + '/ui.ts', 'utf8');
-const BASE = path.resolve(process.cwd(), '../../.worktrees/v493/app/worker/src');
+const BASE = path.resolve(process.cwd(), '../../.worktrees/v493-ship/app/worker/src');
 const C_BASE = readFileSync(BASE + '/client.ts', 'utf8');
 const U_BASE = readFileSync(BASE + '/ui.ts', 'utf8');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -53,12 +53,14 @@ function ok(c, label, extra) {
   ok(ep.includes(">Prayer ' + k"), 'S3: massEpHtml prints the full Prayer N segment labels');
   ok(ep.includes("['I', 'II', 'III', 'IV']") && ep.includes('data-ep="'), 'S4: the EP keys + data-ep values stand unchanged (I · II · III · IV)');
   ok(C_SRC.includes("'<div class=\"mass-h\">Eucharistic Prayer</div>'"), 'S5: the Eucharistic Prayer heading above the box stands unchanged');
-  // the ui.ts delta against the v493 build is the .mass-seg rule alone
-  const strip = (s) => s.replace(/\.mass-seg \{[^}]*\}/, '.mass-seg {}');
-  ok(strip(U_SRC) === strip(U_BASE), 'S6: ui.ts outside the .mass-seg rule is byte-identical to the v493 build');
+  // the ui.ts delta against the v493 ship (production base) is the
+  // .mass-seg rule plus the SW CACHE pin line alone
+  const strip = (s) => s.replace(/\.mass-seg \{[^}]*\}/, '.mass-seg {}')
+    .replace(/var CACHE = "ora-pro-nobis-v[0-9]+-[0-9]+"/, 'var CACHE = "PIN"');
+  ok(strip(U_SRC) === strip(U_BASE), 'S6: ui.ts outside the .mass-seg rule + the pin line is byte-identical to the v493 ship');
   // the client.ts delta is the EP label alone
   ok(C_SRC.split("'>Prayer ' + k").join("'>' + k") === C_BASE,
-    'S7: client.ts differs from the v493 build only at the EP label seat');
+    'S7: client.ts differs from the v493 ship only at the EP label seat');
 }
 
 /* ---------------- fixtures + pages ---------------- */
@@ -232,7 +234,7 @@ const MEASURE = () => {
   await ctx.close();
 }
 
-/* ---------------- (e) byte-identity vs the v493 build ---------------- */
+/* ---------------- (e) byte-identity vs the v493 ship ---------------- */
 {
   const errs = [];
   const a = await boot('/v494', 390, errs, 'e494');
@@ -240,7 +242,7 @@ const MEASURE = () => {
   const norm = (html) => html ? html.replace(/>Prayer (I|II|III|IV)</g, '>$1<') : html;
   const hNew = await a.page.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
   const hBase = await b.page.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
-  ok(hNew && hBase && norm(hNew) === hBase, 'E1: the Mass scroll renders byte-identical to the v493 build, the EP segment labels excepted');
+  ok(hNew && hBase && norm(hNew) === hBase, 'E1: the Mass scroll renders byte-identical to the v493 ship, the EP segment labels excepted');
   await a.ctx.close(); await b.ctx.close();
 }
 
