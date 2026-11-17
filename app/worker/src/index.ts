@@ -975,22 +975,49 @@ async function reflectionsPayload(env: Env) {
 // bodyLatin rides explicitly — the Latin text where the
 // seed carries it, null where it does not (Amendment 1) —
 // so the client reads exactly one field.
-// v484: PRAYER_AUDIO — the small-test pilot map. Six named
-// prayers carry pre-rendered audio (production voice
-// avocado_v2:MAI_03, rendered once from the stored bodies);
-// the values are the renders' measured durations in seconds.
-// The files stand in the AUDIO bucket at
-// prayer-audio/<slug>.<lang>.mp3, land through the door
+// PRAYER_AUDIO — the prayer-audio series map. The v484
+// pilot's six prayers and v509's batch 1 (the Daily group +
+// Morning & evening, 26 more) carry pre-rendered audio
+// (production voice avocado_v2:MAI_03, rendered once from
+// the stored bodies); the values are the renders' measured
+// durations in seconds. The files stand in the AUDIO bucket
+// at prayer-audio/<slug>.<lang>.mp3, land through the door
 // route below, and play through the session route beside
 // the book's other reads. A slug or language outside this
 // map has no audio — the book payload folds `audio` onto
 // exactly these rows and no other.
 const PRAYER_AUDIO: Record<string, { en: number; la?: number }> = {
-  "sub-tuum-praesidium": { en: 19.4, la: 25.3 },
-  "anima-christi": { en: 29.9, la: 37.5 },
-  "te-deum": { en: 107.4, la: 143.1 },
-  "guardian-angel": { en: 10.5, la: 10.6 },
+  "our-father": { en: 21.2, la: 26.7 },
+  "hail-mary": { en: 14.9, la: 20.3 },
+  "glory-be": { en: 10.1, la: 12.9 },
+  "apostles-creed": { en: 39.5, la: 44.3 },
+  "angelus": { en: 42.6, la: 46.3 },
+  "regina-caeli": { en: 43.5, la: 35.3 },
+  "act-of-faith": { en: 11.0 },
+  "act-of-hope": { en: 15.3 },
+  "act-of-charity": { en: 22.0 },
   "act-of-contrition": { en: 44.9 },
+  "te-deum": { en: 107.4, la: 143.1 },
+  "prayer-before-a-crucifix": { en: 14.2, la: 17.0 },
+  "act-of-reparation-to-the-sacred-heart": { en: 136.7 },
+  "the-angelic-trisagion": { en: 10.2, la: 12.1 },
+  "the-sign-of-the-cross": { en: 7.8 },
+  "an-offering": { en: 17.9 },
+  "prayer-for-perseverance": { en: 16.7 },
+  "prayer-of-st-ignatius": { en: 21.8, la: 35.2 },
+  "prayer-for-the-supreme-pontiff": { en: 94.5 },
+  "ejaculation-of-resignation": { en: 7.9, la: 13.2 },
+  "my-god-my-only-good": { en: 5.9 },
+  "veni-creator": { en: 149.4, la: 376.4 },
+  "prayer-to-the-father-of-mercies": { en: 57.6 },
+  "for-the-sovereign-pontiff": { en: 12.5, la: 12.4 },
+  "morning-offering": { en: 20.2 },
+  "guardian-angel": { en: 10.5, la: 10.6 },
+  "evening-prayer": { en: 86.6 },
+  "prayer-before-sleep": { en: 25.6 },
+  "offerings-for-the-beginning-of-the-day": { en: 143.0 },
+  "anima-christi": { en: 29.9, la: 37.5 },
+  "sub-tuum-praesidium": { en: 19.4, la: 25.3 },
   "prayer-for-all-the-faithful-departed": { en: 17.4 },
 };
 async function bookPayload(env: Env) {
