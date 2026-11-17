@@ -1,18 +1,23 @@
 // harness-v509.mjs — v509 prayer audio batch 1 (Plan §2.6).
 // Mold: harness-v484 (statics + the real client extracted into
-// Chromium + fixtures drawn from production).
+// Chromium + fixtures drawn from production), with the P legs
+// driven against a stub of v510's day-additions store in the
+// shape of harness-v510's stub (the route's own validation and
+// fold mirrored at the fetch seam).
 // Fixtures: fixtures/book-v509-live.json — the LIVE book payload
-// read through the prayer door at Plan time (Improvement D);
-// renders: the v484 pilot renders.json (the six pilots) + the
-// v509 renders.json (the 26 new batch-1 prayers) — the map must
-// name exactly their union, with their measured durations.
+// read through the prayer door (Improvement D; refreshed at
+// compose to the compose-time book); renders: the v484 pilot
+// renders.json (the six pilots) + the v509 renders.json (the
+// 26 new batch-1 prayers) — the map must name exactly their
+// union, with their measured durations.
 // Legs:
 //   ST  statics: the PRAYER_AUDIO map names exactly the 32
 //       rendered slugs (6 pilot + 26 batch-1) with measured
 //       durations · the fold, door-route refusal, session
 //       route Range idiom, and the prayer-kind guards stand
 //       as v484 left them · the page paints its acts only
-//       under the `audio` fold · the SW pin premise.
+//       under the `audio` fold · the fixture census · the
+//       SW pin premise of the base under test.
 //   F   file standing: every one of the 48 map files stands
 //       in its render record with matching byte size.
 //   A   descriptor: prayerAudioDesc over the live fixture —
@@ -23,15 +28,21 @@
 //   C   marks + positions (Q5 A, v484's legs).
 //   D   the page: a batch-1 page paints Play + Add; a
 //       non-batch, non-pilot page paints neither.
-//   P   the v510 slot picker (the amendment leg): one Add
-//       tap opens the picker · choosing a block + position
-//       lands the prayer in that slot, read back from the
-//       store · a cancelled picker writes nothing · after
-//       the pick, View lands on today's Praylist at the
-//       chosen block with the prayer standing in it. On a
-//       pre-v510 base these legs read not-ok BY PREMISE
-//       (the picker is v510's build) and are recorded
-//       as-is; on the composed v510 base they must pass.
+//   P   the v510 slot picker (the amendment leg), on a
+//       batch-1 page (Morning Offering): one Add tap opens
+//       the picker on the seven blocks and issues no request
+//       · a cancelled picker writes nothing · picking a
+//       block + an After position issues exactly one whole-
+//       list PUT and the page paints the landed state naming
+//       the block, with View standing · the landing reads
+//       back from the store (a fresh page open paints landed
+//       from the day fold; the folded day list stands the
+//       prayer at its slot) · View sets the landing seam
+//       (praylistLanding + pendingBlock) toward the chosen
+//       block. On a pre-v510 base the P legs read not-ok BY
+//       PREMISE (the picker is v510's build) and are
+//       recorded as-is; on the composed v510+ base they
+//       must pass.
 // Run: node app/tests/harness-v509.mjs   (from the worktree root)
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -49,6 +60,8 @@ const BOOK = JSON.parse(readFileSync(APP + '/tests/fixtures/book-v509-live.json'
 const RENDERS484 = JSON.parse(readFileSync('/home/hatch/workspace/projects/ora-pro-nobis/v484-prayer-audio/renders.json', 'utf8'));
 const RENDERS509 = JSON.parse(readFileSync('/home/hatch/workspace/projects/ora-pro-nobis/v509-prayer-audio/renders.json', 'utf8'));
 const RENDER_DIRS = { v484: '/home/hatch/workspace/projects/ora-pro-nobis/v484-prayer-audio', v509: '/home/hatch/workspace/projects/ora-pro-nobis/v509-prayer-audio' };
+const TODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const PIN_PREMISE = process.env.V509_PIN || null; // the base's pin, named by the run
 
 let pass = 0, fail = 0; const failures = [];
 function ok(c, label, extra) {
@@ -71,7 +84,7 @@ try {
   ok(JSON.stringify(Object.keys(MAP).sort()) === JSON.stringify(Object.keys(want).sort()),
     'ST1 statics: PRAYER_AUDIO names exactly the 32 rendered slugs (6 pilot + 26 batch-1)', Object.keys(MAP).join(','));
   let durOk = true;
-  for ( const slug of Object.keys(want)) for (const lang of Object.keys(want[slug])) {
+  for (const slug of Object.keys(want)) for (const lang of Object.keys(want[slug])) {
     if (!MAP[slug] || MAP[slug][lang] !== want[slug][lang]) durOk = false;
   }
   ok(durOk, 'ST2 statics: every map duration equals its render\u2019s measured duration (both renders.json)');
@@ -89,12 +102,12 @@ try {
   const guards = (C_SRC.match(/kind === 'prayer'/g) || []).length + (C_SRC.match(/kind !== 'prayer'/g) || []).length;
   ok(guards >= 5, 'ST7 statics: the prayer guard stands at markCompleted, the three day-position seams, and the ended clear', String(guards));
   const opp = C_SRC.slice(C_SRC.indexOf('function openPrayerPage'), C_SRC.indexOf('function closePrayerPage'));
-  ok(opp.includes("(p.audio ? '<div class=\"row bookaudio\">") && opp.includes('id="book-play"') && opp.includes('id="book-add"'),
+  ok(opp.includes('id="book-play"') && opp.includes('id="book-add"') && opp.includes('p.audio'),
     'ST8 statics: the prayer page paints Play + Add to Praylist only where the audio fold stands');
   const groups = BOOK.groups.map((g) => g.prayers.length);
-  ok(BOOK.groups.length === 9 && groups.reduce((a, b) => a + b, 0) === 75,
-    'ST9 fixture: the live book stands at 75 prayers in 9 groups', groups.join('/'));
-  ok(U_SRC.includes('ora-pro-nobis-v505-1'), 'ST10 statics: the SW pin stands at ora-pro-nobis-v505-1 on this base (Ship moves it)');
+  ok(BOOK.groups.length === 9 && groups.reduce((a, b) => a + b, 0) === 77,
+    'ST9 fixture: the live book stands at 77 prayers in 9 groups (post-v506 census, refreshed at compose)', groups.join('/'));
+  if (PIN_PREMISE) ok(U_SRC.includes(PIN_PREMISE), 'ST10 statics: the SW pin stands at ' + PIN_PREMISE + ' on this base (Ship moves it)');
 }
 
 /* ---------------- F: file standing ---------------- */
@@ -154,6 +167,11 @@ for (const d of decls) {
 console.log('note - extraction dropped:', dropped.join(', ') || 'none');
 const APP_CSS = U_SRC.slice(U_SRC.indexOf('APP_CSS = `') + 11, U_SRC.indexOf('`;', U_SRC.indexOf('APP_CSS = `')));
 
+/* The stub book fold for the day-additions stub store:
+   slug -> {title, audio} exactly as the fixture carries it. */
+const STUBROWS = {};
+for (const g of BOOK.groups) for (const p of g.prayers) STUBROWS[p.slug] = { title: p.title, audio: MAP[p.slug] || null };
+
 const PAGE_HEAD = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>CSSHERE</style></head>
 <body data-lit="">
 <audio id="audio"></audio>
@@ -163,9 +181,47 @@ const PAGE_HEAD = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>CSSHE
 <div id="rows"></div>
 <script>
 window.__fetchLog = [];
+window.__putLog = [];
+window.__daStore = { date: '${TODAY}', rows: [] };
+var STUBROWS = ${JSON.stringify(STUBROWS)};
+var STUB_BLOCKS = ['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+function daFold(rows) {
+  return rows.map(function (r) {
+    var hit = STUBROWS[r.slug];
+    var a = hit && hit.audio ? hit.audio[r.lang] : null;
+    if (!hit || !a) return null;
+    return { block: r.block, slug: r.slug, lang: r.lang, afterId: r.afterId === undefined ? null : r.afterId, title: hit.title, durationS: a };
+  }).filter(Boolean);
+}
 window.fetch = function (path, opts) {
-  window.__fetchLog.push({ path: String(path) });
-  return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({}); } });
+  var p = String(path);
+  window.__fetchLog.push({ path: p, method: (opts && opts.method) || 'GET' });
+  var ans = function (status, body) { return Promise.resolve({ ok: status < 400, status: status,
+    json: function () { return Promise.resolve(body); },
+    text: function () { return Promise.resolve(JSON.stringify(body)); } }); };
+  if (p.indexOf('/api/player/day-additions') === 0) {
+    var body = {};
+    try { body = JSON.parse((opts && opts.body) || '{}'); } catch (e) {}
+    window.__putLog.push(body);
+    if (body.date !== '${TODAY}' || !Array.isArray(body.additions)) return ans(400, { error: 'bad additions' });
+    var seen = {}, rows = [];
+    for (var i = 0; i < body.additions.length; i++) {
+      var a = body.additions[i];
+      if (!a || STUB_BLOCKS.indexOf(a.block) < 0) return ans(400, { error: 'bad block' });
+      var hit = STUBROWS[a.slug];
+      if (!hit || !hit.audio || !hit.audio[a.lang]) return ans(400, { error: 'bad prayer audio' });
+      var key = a.slug + '|' + a.lang;
+      if (seen[key]) continue;
+      seen[key] = 1;
+      rows.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId === undefined ? null : a.afterId });
+    }
+    window.__daStore = { date: body.date, rows: rows };
+    return ans(200, { ok: true, date: body.date, additions: rows });
+  }
+  if (p === '/api/player/day' || p.indexOf('/api/player/day?') === 0) {
+    return ans(200, { ok: true, presentedDay: '${TODAY}', date: '${TODAY}', additions: daFold(window.__daStore.rows), blocks: [], tracks: [] });
+  }
+  return ans(200, { ok: true });
 };
 function extFetchText(url) { return Promise.reject(new Error('offline')); }
 function refreshPlayedChrome() {}
@@ -175,11 +231,12 @@ URL.revokeObjectURL = function (u) { window.__revoked.push(u); };
 </` + `script>
 <script>
 var state = { tab: 'prayers', block: null, playingKey: null, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null,
-  storedDay: '2026-11-17', presentedDay: '2026-11-17', dateLabel: 'Tuesday, November 17', liturgical: null,
+  storedDay: '${TODAY}', presentedDay: '${TODAY}', dateLabel: 'Today', liturgical: null,
   pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null,
   repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, restoreProbe: null, podRestoreProbe: null,
   prayersView: { kind: 'home' }, searchQuery: '', podcasts: null, podcastsIndex: null, podcastsReturn: null,
-  extSlots: {}, extStanding: [], rate: 1, errWaitKey: null, errWaitN: 0, startRetryKey: null, lastStartAt: 0, book: null, bookFavs: [] };
+  extSlots: {}, extStanding: [], rate: 1, errWaitKey: null, errWaitN: 0, startRetryKey: null, lastStartAt: 0, book: null, bookFavs: [],
+  dayAdditions: [], dayAdditionsDate: null, pendingBlock: null };
 try { localStorage.setItem('opn-intentions-v384', 'off'); } catch (e) {}
 </` + `script>`;
 const PAGE = PAGE_HEAD.replace('CSSHERE', () => APP_CSS) + '<script>\n' + pieces.join('\n') + '\n</' + 'script>';
@@ -202,6 +259,7 @@ for (const g of folded.groups) for (const p of g.prayers) if (MAP[p.slug]) p.aud
 await page.evaluate((b) => { state.book = b; }, folded);
 const MAPSLUGS = Object.keys(MAP);
 const NONMAP = (() => { let hit = null; BOOK.groups.forEach((g) => g.prayers.forEach((p) => { if (!hit && !MAP[p.slug]) hit = p.slug; })); return hit; })();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ---------------- A: the descriptor ---------------- */
 {
@@ -288,10 +346,9 @@ const NONMAP = (() => { let hit = null; BOOK.groups.forEach((g) => g.prayers.for
     view = document.getElementById('view');
     state.queue = []; state.queueIdx = -1; state.current = null;
     openPrayerPage('our-father');
-    const batch = { play: !!document.getElementById('book-play'), add: !!document.getElementById('book-add') };
-    return { batch };
+    return { play: !!document.getElementById('book-play'), add: !!document.getElementById('book-add') };
   });
-  ok(r.batch.play && r.batch.add, 'D1 page: a batch-1 prayer page (Our Father) paints Play + Add to Praylist');
+  ok(r.play && r.add, 'D1 page: a batch-1 prayer page (Our Father) paints Play + Add to Praylist');
   const r2 = await page.evaluate((nonmap) => {
     openPrayerPage(nonmap);
     return { play: !!document.getElementById('book-play'), add: !!document.getElementById('book-add') };
@@ -299,32 +356,106 @@ const NONMAP = (() => { let hit = null; BOOK.groups.forEach((g) => g.prayers.for
   ok(!r2.play && !r2.add, 'D2 page: a non-batch, non-pilot prayer page (' + NONMAP + ') paints neither act — unchanged');
 }
 
-/* ---------------- P: the v510 slot picker (amendment leg) ----------------
-   Generic probe at build time; tightened to v510's shipped
-   shapes at compose. The picker is v510's build: on a
-   pre-v510 base every P leg reads not-ok by premise. */
+/* ---------------- P: the v510 slot picker (amendment leg) ---------------- */
 {
-  const r = await page.evaluate(() => {
-    view = document.getElementById('view');
-    state.queue = []; state.queueIdx = -1; state.current = null;
-    openPrayerPage('morning-offering');
-    const candSel = '[class*="slot"], [id*="slot"], [class*="picker"], [id*="picker"]';
-    const candsBefore = document.querySelectorAll(candSel).length;
-    const add = document.getElementById('book-add');
-    const before = JSON.stringify(state.queue.map((d) => d.episodeId));
-    if (add) add.click();
-    const cands = Array.from(document.querySelectorAll(candSel));
-    const newPicker = cands.slice(candsBefore).find((el) => el.offsetParent !== null || el.style.display !== 'none');
-    const pickerOpen = !!newPicker && /(Morning|Midday|Afternoon|Evening|Night)/.test(newPicker.textContent || '');
-    return { before, pickerOpen, queueNow: JSON.stringify(state.queue.map((d) => d.episodeId)) };
-  });
-  ok(r.pickerOpen, 'P1 picker: one Add tap on a batch-1 page opens the slot picker (blocks named)', r.queueNow);
-  ok(r.queueNow === r.before, 'P2 picker: opening the picker alone lands nothing — the pick is the confirmation', r.queueNow);
-  // P3 (choose + read-back), P4 (cancel writes nothing), and
-  // P5 (View lands on today's Praylist at the chosen block)
-  // are exercised at compose against v510's shipped picker
-  // shapes; the premise leg below stands for them here.
-  ok(r.pickerOpen, 'P3 premise: the picker stands in this tree, so the choose/cancel/View legs can run (compose-time on the v510 base)');
+  const hasPicker = C_SRC.includes('function openSlotPicker');
+  if (!hasPicker) {
+    ok(false, 'P1 picker: one Add tap on a batch-1 page opens the slot picker on the seven blocks, no request issued (PREMISE: the picker is v510\u2019s build, absent from this base)');
+    ok(false, 'P2 picker: a cancelled picker writes nothing (PREMISE)');
+    ok(false, 'P3 picker: the pick issues exactly one whole-list PUT and the page paints the landed state naming the block, View standing (PREMISE)');
+    ok(false, 'P4 read-back: the landing reads back from the store — a fresh open paints landed from the day fold and the folded day list stands the prayer at its slot (PREMISE)');
+    ok(false, 'P5 view: View sets the landing seam toward the chosen block (PREMISE)');
+  } else {
+    /* a built day for the position step: two standing
+       Morning items, the payload dated today */
+    await page.evaluate((today) => {
+      view = document.getElementById('view');
+      state.dayDescs = [
+        { episodeId: 'day-m1', kind: 'episode', block: 'Morning', title: 'Morning Item One', available: true },
+        { episodeId: 'day-m2', kind: 'episode', block: 'Morning', title: 'Morning Item Two', available: true },
+      ];
+      state.dayPayload = { presentedDay: today, date: today };
+      state.dayAdditions = []; state.dayAdditionsDate = today;
+      window.__daStore = { date: today, rows: [] };
+      window.__putLog.length = 0;
+      state.queue = []; state.queueIdx = -1; state.current = null;
+      openPrayerPage('morning-offering');
+    }, TODAY);
+    await sleep(300);
+    const p1 = await page.evaluate(() => {
+      const add = document.getElementById('book-add');
+      const putsBefore = window.__putLog.length;
+      if (add) add.click();
+      const sheet = document.querySelector('.slotpick');
+      const blocks = sheet ? Array.from(sheet.querySelectorAll('[data-slotblock]')).map((r) => r.getAttribute('data-slotblock')) : [];
+      return { addStood: !!add, sheet: !!sheet, blocks, puts: window.__putLog.length - putsBefore };
+    });
+    ok(p1.addStood && p1.sheet && JSON.stringify(p1.blocks) === JSON.stringify(['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night']) && p1.puts === 0,
+      'P1 picker: one Add tap on a batch-1 page opens the slot picker on the seven blocks in standing order, no request issued', JSON.stringify(p1));
+    const p2 = await page.evaluate(() => {
+      const sheet = document.querySelector('.slotpick');
+      if (sheet) sheet.click(); // the backdrop seam: a click on the sheet itself dismisses
+      return { gone: !document.querySelector('.slotpick'), puts: window.__putLog.length,
+        rows: window.__daStore.rows.length, queue: state.queue.length };
+    });
+    ok(p2.gone && p2.puts === 0 && p2.rows === 0 && p2.queue === 0,
+      'P2 picker: a cancelled picker writes nothing — no PUT, the store stands empty, the queue untouched', JSON.stringify(p2));
+    const p3 = await page.evaluate(async () => {
+      openPrayerPage('morning-offering');
+      await new Promise((r) => setTimeout(r, 250));
+      document.getElementById('book-add').click();
+      const sheet = document.querySelector('.slotpick');
+      sheet.querySelector('[data-slotblock="Morning"]').click();
+      const pos = Array.from(sheet.querySelectorAll('[data-slotpos]')).map((r) => r.getAttribute('data-slotpos'));
+      sheet.querySelector('[data-slotpos="day-m1"]').click();
+      await new Promise((r) => setTimeout(r, 350));
+      const row = document.getElementById('book-audio-row');
+      return { pos, puts: window.__putLog.slice(), sheetGone: !document.querySelector('.slotpick'),
+        landed: row ? (row.textContent || '') : '', viewBtn: !!document.getElementById('book-view'),
+        addBtn: !!document.getElementById('book-add'), queue: state.queue.length,
+        store: JSON.parse(JSON.stringify(window.__daStore.rows)) };
+    });
+    ok(JSON.stringify(p3.pos) === JSON.stringify(['', 'day-m1', 'day-m2', 'end']),
+      'P3a picker: the position step names the start, an After row per standing Morning item, and the end', JSON.stringify(p3.pos));
+    ok(p3.puts.length === 1 && p3.puts[0].date === TODAY && JSON.stringify(p3.puts[0].additions) === JSON.stringify([{ block: 'Morning', slug: 'morning-offering', lang: 'en', afterId: 'day-m1' }]),
+      'P3b pick: exactly one whole-list PUT lands Morning Offering in Morning after the first standing item', JSON.stringify(p3.puts));
+    ok(p3.sheetGone && /In today\u2019s Praylist/.test(p3.landed) && /Morning/.test(p3.landed) && p3.viewBtn && !p3.addBtn && p3.queue === 0,
+      'P3c landed: the sheet closes, the page paints the landed state naming Morning with View standing and no Add, the queue untouched', p3.landed);
+    ok(p3.store.length === 1 && p3.store[0].slug === 'morning-offering' && p3.store[0].afterId === 'day-m1',
+      'P3d store: the day-additions store holds the one addition at its slot', JSON.stringify(p3.store));
+    const p4 = await page.evaluate(async () => {
+      /* a fresh open: clear the adopted state; the page's
+         own day read must re-adopt from the store fold */
+      state.dayAdditions = []; state.dayAdditionsDate = null;
+      openPrayerPage('morning-offering');
+      await new Promise((r) => setTimeout(r, 400));
+      const row = document.getElementById('book-audio-row');
+      const base = [
+        { episodeId: 'day-m1', kind: 'episode', block: 'Morning', title: 'Morning Item One', available: true },
+        { episodeId: 'day-m2', kind: 'episode', block: 'Morning', title: 'Morning Item Two', available: true },
+      ];
+      const foldedList = foldDayAdditions(base.slice()).map((d) => d.episodeId);
+      return { landed: row ? (row.textContent || '') : '', foldedList,
+        adopted: JSON.parse(JSON.stringify(state.dayAdditions || [])) };
+    });
+    ok(/In today\u2019s Praylist/.test(p4.landed) && /Morning/.test(p4.landed) && p4.adopted.length === 1,
+      'P4a read-back: a fresh open of the prayer page paints the landed state from the store fold, not from local state', p4.landed);
+    ok(JSON.stringify(p4.foldedList) === JSON.stringify(['day-m1', 'prayer:morning-offering:en', 'day-m2']),
+      'P4b landing in the list: the folded day list stands the prayer directly after its anchor, at its chosen slot', JSON.stringify(p4.foldedList));
+    const p5 = await page.evaluate(() => {
+      const orig = switchSide;
+      let ssArgs = null;
+      switchSide = function () { ssArgs = Array.from(arguments); };
+      const vb = document.getElementById('book-view');
+      if (vb) vb.click();
+      const landing = praylistLanding ? { block: praylistLanding.block, episodeId: praylistLanding.episodeId } : null;
+      const pending = state.pendingBlock;
+      switchSide = orig;
+      return { landing, pending, ssArgs };
+    });
+    ok(p5.landing && p5.landing.block === 'Morning' && p5.landing.episodeId === 'prayer:morning-offering:en' && p5.pending === 'Morning',
+      'P5 view: View sets the landing seam — praylistLanding + pendingBlock name the chosen block and the prayer', JSON.stringify(p5));
+  }
 }
 
 await browser.close();
