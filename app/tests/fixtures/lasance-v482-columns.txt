@@ -1,0 +1,326 @@
+# Lasance, My Prayer Book (1908) — column-separated text for the
+# parallel-column pages the v482 additions stand on, extracted from
+# the DjVu XML (Internet Archive item MyPrayerBookHappinessInGoodness)
+# by PAGECOLUMN, so each language's column reads contiguously.
+# Generated at v482 Implement; the flat text layer interleaves these
+# columns and cannot carry contiguous spans. Separator: ==COL==
+==COL== printed p.223 — Sub Tuum Praesidium (evening prayer block)
+Prayers  During  the  Day  22$
+V.  Benedictus  Deus  in  V.  Biessed  be  God  in
+Sanctis  suis.  his  saints.
+R.  Amen.  R.  Amen.
+==COL==
+In  the  Evening
+^Tub    tuum    presidium  VJII'e  *ly.  to  thy  patron-
+^3  conf ugimus,  sancta  Dei  vIlA*  age,  O  holy  mother
+genitrix;    nostras  depreca-  of  Godl    despise  not  our
+tiones  ne  despicias  in  neces-  petitions    in    our  neces-
+sitatibus    nostris;     sed    a  skies,     but     deliver  us
+periculis  cunctis  libera  nos,  from  all  dangers,  O  ever
+semper    virgo   gloriosa    et  glorious   and   blessed  Vir-
+benedicta.  gin.
+V,  Dignare  me,  laudare  V.  Make  me  worthy  to
+te,  virgo  sacrata.  praise  thee,  holy  Virgin^
+R.  Da  mini  virtutem  con-  R.  Give    me  strength
+tra  hostes  tuos                . .  against  thine  enemies.
+V.  Benedictus  Deus  in  V.  Blessed  be  God  in
+Sanctis  suis.  his  saints.
+R.  Amen.  R.  Amen.
+==COL==
+The  Sovereign  Pontiff,  Pius  VI,  by  a  decree  of  the
+Sacred  Congregation  of  Indulgences,  April  5,  1786,  granted
+an  indulgence  of  one  hundred  days,  once  a  day,  to  all  Che
+faithful  who,  moved  by  the  true  spirit  of  religion  to  atone  in
+some  manner  for  the  insults  offered  to  the  most  blessed
+Virgin  Mary,  mother  of  God,  and  to  the  saints,  and  to
+defend  and  promote  the*  worship  and  veneration  of  their
+holy  images,  shall  say,  with  at  least  contrite  heart  and
+devotion,  the  Salve  Regina,  with  the  versicles,  Dignart
+me  and  Benedictus  Deus,  in  the  morning,  and  Sub  tuum
+presidium,  with  the  same  versicles,  in  the  evening.  Also
+an  indulgence  of  seven  years  and  seven  quarantines  on  aK
+the  Sundays  of  the  year
+==COL==
+Digitized  by
+==COL==
+==COL== printed p.228 — Prayer Before a Crucifix
+228  Prayers  During  the  Day
+==COL==
+shall  recite  the  above  prayer,  an  indulgence  of  three  hun-
+dred days,  once  a  day.
+^rager  of  &amp;t.  &amp;fjomas  Slqutna*
+WHICH  HE  WAS  ACCUSTOMED  TO  RECITE  EVERY  DAY
+BEFORE  THE  IMAGE  OF  JESUS  CHRIST
+aONCEDE   mihi,    miseri-  g^RXNT  me  grace,  O  mer-
+cors  Deus,  quae  tibi  \§)  cifui   God,   to  desire
+placita  sunt  ardenter  con-  ardently  all  that  is  pleasing
+cupiscere,  prudenter  inves-  to  Thee,  to  examine  it  pru-
+tigare,   veraciter  agnoscere  dently,  to  acknowledge  it
+et   perfecte  adimplere,   ad  truthfully,  and  to  accom-
+laudem  et  gloriam  nominis  plish  it  perfectly,  for  the
+tui.    Amen.  praise  and  glory  of  Thy
+name.  Amen.
+His  Holiness,  Pope  Leo  XIII,  by  a  rescript  of  the  Sacred
+Congregation  of  Indulgences,  June  ax,  1879,  granted  an
+indulgence  of  three  hundred  days  to  all  the  faithful  who,
+before  studying  or  reading,  shall,  with  at  least  contrite
+heart  and  devotion,  recite  this  prayer.
+JFntmlgtncw
+FOR  READING  THE  HOLY  GOSPEL
+His  Holiness,  Leo  XIII,  by  a  rescript  of  the  Sacred
+Congregation  of  Indulgences,  Dec.  13,  1898,  granted  to
+the  faithful  who  spend  at  least  a  quarter  of  an  hour  in
+reading  the  Holy  Gospel,  an  indulgence  of  three  hundred
+days,  once  a  day ;  also  a  plenary  indulgence  once  a  month,
+on  any  day  of  the  month,  to  those  who  shall  have  spent
+a  quarter  of  an  hour  a  day  on  every  day  of  the  month  in
+reading  the  Holy  Gospel,  on  the  usual  conditions  —  con-
+fession and  communion,  and  praying  for  the  intention  of
+vhe  Sovereign  Pontiff.
+==COL==
+Digitized  by
+==COL==
+==COL== printed p.438 — Te Deum (Benediction)
+43$       Benediction  of  the  Blessed  Sacrament
+==COL==
+%t  Brum
+*3j**E  Deum  laudamus:
+15)  Te    Dominum  con-
+fitemur.
+Te  aeternum  Patrem,  omnis
+terra  veneratur.
+Tibi   omnes    angeli  :  tibi
+coeli   et  universae  potes-
+tates:
+TibP  cherubim  et  seraphim
+incessabili  voce  proqla-
+mant:
+Sanctus,   sanctus,  sanctus,
+Dominus  Deus  Sabaoth.
+Pleni  sunt  coeli  et  terra  ma-
+jestatis  glorias  tuae.
+Te   gloriosus  apostolorum
+chorus:
+Te  prophetarum  lau4abilis
+numerus:
+Te    martyrum  candidatus
+laudat  exercitus.
+Te    per    orbem  terrarum
+s  a  n  c  t  a    confitetur  Ec-
+clesia.
+Patrem  immensae  majes-
+tatis;
+Venerandum  tuum  verum  et
+unicum  Filium;
+Sanctum    quoque  Paracli-
+tum  Spiritum.
+Tu  Rex  gloriae,  Chris-
+te.
+Tu  Patris  sempiternus  es
+Filius.
+Tu  ad  liberandum  sus-
+cepturus  hominem,
+==COL==
+e    praise  Thee,  O
+God;   we  acknowl-
+edge Thee  to  be  our  Lord.
+All  the  earth  worships  Thee,
+the  Father  everlasting.
+To  Thee  all  the  angels  cry
+aloud;  the  heavens,  and
+all  the  heavenly  powers,
+To  Thee  the  cherubim  and
+seraphim  continually  do
+cry:
+Holy,  holy,  holy,  Lord  God
+of  Sabaoth.
+Heaven  and  earth  are  full  of
+the  majesty  of  Thy  glory.
+The  glorious  choir  of  the
+apostles  praises  Thee.
+The  admirable  company  of
+the  prophets  praises  Thee.
+The  noble  army  of  the  mar-
+tyrs praises  Thee.
+The  holy  Church  through-
+out the  world  acknowl-
+edges Thee.
+The  Father  oi  infinite  maj-
+esty;
+Thy    adorable,    true,  and
+only  Son;
+Also,  the  Holy  Ghost,  the
+Comforter.
+Thou,   O   Christ,   art  the
+King  of  glory.
+Thou  art   the  everlasting
+Son  of  the  Father.
+When  Thou  didst  take  upon
+Thee    to    deliver  man,
+==COL==
+XSx
+==COL==
+Digitized  by
+==COL==
+==COL== printed p.439 — Te Deum (Benediction)
+Te  Deum  Laudamus
+==COL==
+439
+==COL==
+non  horruisti  Virginis
+uterum.
+Tu  de  victo  mortis
+acuteo,  aperuisti  cre-
+dentibus  regna  ccelo-
+rum.
+Tu  ad  dexteram
+Dei  sedes  in  gloria
+Patris.
+Judex  crederis  esse  ventu-
+rus.
+Te  ergo  quaesumus,  tuis
+famulis  subveni,  quos
+pretioso  sanguine  redem-
+isti.
+Sterna  fac  cum  Sanctis
+tuis  in  gloria  nume-
+rari.
+Salvum  fac  populum  tuum,
+Domine,  et  benedic  hae-
+reditati  tuae.
+Et  rege  eos,  et  extolle  illos
+usque  in  aeternum.
+Per  singulos  dies  benedi-
+cimus  Te.
+Et  laudamus  nomen  tuum
+in  saeculum,  et  in  specu-
+lum saeculi.
+Dignare,  Domine,  die  isto,  si-
+ne peccato  nos  custodire.
+Miserere  nostri,  Domine,
+miserere  nostri.
+Fiat  misericordia  tua,  Do-
+mine, super  nos:  quemad-
+modum  speravimus  in  Te.
+In  Te,  Domine,  speravi;
+non  confundar  in  aeter-
+num.
+==COL==
+Thou  didst  not  disdain
+the  Virgin's  womb.
+Having  overcome  the  sting
+of  death,  Thou  didst
+open  the  kingdom  of
+heaven  to  all  believers.
+Thou  sittest  at  the  right
+hand  of  God,  in  the  glory
+of  the  Father.
+We  believe  that  Thou  shalt
+come  to  be  our  Judge.
+We  therefore  pray  Thee  to
+help  Thy  servants,  whom
+Thou  hast  redeemed  with
+Thy  precious  blood.
+Make  them  to  be  numbered
+with  Thy  saints  in  glory
+everlasting.
+Save  Thy  people,  O  Lord,
+and  bless  Thy  inheri-
+tance.
+Govern    them,    and  raise
+them  up  forever.
+Every   day   we  bless
+Thee.
+And  we  praise  Thy  name
+forever;  yea,  forever  and
+ever.
+Vouchsafe,  O  Lord,  this  day,
+to  keep  us  from  sin.
+Have  mercy  on  us,  O  Lord,
+have  mercy  on  us.
+Let  Thy  mercy,  O  Lord,
+be  upon  us,  as  we  have
+hoped  in  Thee.
+In  Thee,  O  Lord,  I  have
+hoped;  let  me  never  be
+confounded.
+==COL==
+Digitized  by
+==COL==
+==COL== printed p.517 — Act of Reparation
+Acts  in  Presence  of  the  Blessed  Sacrament  517
+==COL==
+£tt  £ct  of  IfiUparatum  to  tije  Statu*  ffteatt  of  Jwus
+(For  the  First  Friday  of  the  Mdnih)
+*TJ*dorable  Heart  of  Jesus,  glowing  with  love  for  us
+*J^&gt;  and  inflamed  with  zeal  for  our  salvation:  O
+Heart !  ever  sensible  of  our  misery  and  the  wretchedness
+to  which  our  sins  have  reduced  us,  infinitely  rich  in
+mercy  to  heal  the  wounds  of  our  souls,  behold  us  humbly
+prostrate  before  Thee  to  express  the  sorrow  that  fills
+our  hearts  for  the  coldness  and  indifference  with  which
+we  have  so  long  requited  the  numberless  benefits  that
+Thou  hast  conferred  upon  us.  With  a  deep  sense  of
+the  outrages  that  have  been  heaped  upon  Thee  by  our
+sins  and  the  sins  of  others,  we  come  to  make  a  solemn
+reparation  of  honor  to  thy  most  sacred  majesty.  It
+was  our  sins  that  overwhelmed  Thy  Heart  with  bitter-
+ness; it  was  the  weight  of  our  iniquities  that  pressed
+down  Thy  face  to  the  earth  in  the  Garden  of  Olives,  and
+caused  Thee  to  expire  in  anguish  and  agony  on  the  cros^.
+But  now,  repenting  and  sorrowful,  we  cast  ourselves  at
+Thy  feet,  and  implore  forgiveness.  Adorable  Heart  of
+Jesus,  source  of  true  contrition  and  ever  merciful  to  the
+penitent  sinner,  impart  to  our  hearts  the  spirit  of  pen-
+ance, and  give  to  our  eyes  a  fountain  of  tears,  that  we
+may  sincerely  bewail  our  sins  now  and  for  the  rest  of
+our  days.  Oh,  would  that  we  could  blot  them  out,
+even  with  our  blood!  Pardon  them,  O  Lord,  in  Thy
+mercy,  and  pardon  and  convert  to  Thee  all  that  have
+committed  irreverences  and  sacrileges  against  Thee  in
+the  sacrament  of  Thy  love,  and  thus  give  another  proof
+that  Thy  mercy  is  above  all  Thy,works.  Divine  Jesus,
+with  Thee  there  are  mercy  and  plentiful  redemption;
+deliver  us  from  Our  sins,  accept  the  sincere  desire  we
+==COL==
+Digitized  by
+==COL==
+==COL== printed p.518 — Act of Reparation
+General  Devotions
+==COL==
+now  entertain,  and  our  holy  resolution,  relying  on  the
+assistance  of  Thy  grace,  henceforth  to  be  faithful  to
+Thee.  And  in  order  to  repair  the  sins  of  ingratitude
+by  which  we  have  grieved  Thy  most  tender  and  loving
+Heart,  we  are  resolved  in  the  future  ever  to  love  and
+honor  Thee  in  the  most  adorable  Sacrament  of  the
+Altar,  wjiere  Thou  art  ever  present  to  hear  and  grant
+our  petitions,  and  to  be  the  food  and  life  of  our  souls.
+Be  Thou,  O  compassionate  Jesus !  our  Mediator  with
+Thy  heavenly  Father,  Whom  we  have  so  grievously
+offended,  strengthen  our  weakness,  confirm  these  our
+resolutions  of  amendment,  and  as  Thy  sacred  Heart
+is  our  refuge  and  our  hope  when  we  have  sinned,  so
+may  it  be  the  strength  and  support  of  our  repentance,
+that  nothing  in  life  or  death  may  ever  again  separate
+us  from  Thee.  Amen.
+&amp;n  3ci  of  Consecration  ano  fteparatton  to  tfje  Mast
+&amp;actto  &amp;eart  of  3z»xu
+iqrvosT  sacred  Heart  of  Jesus!  I  adore  Thee;  I
+%JLlt  offer  to  Thee  all  that  I  am  and  all  that  I  possess;
+I  consecrate  to  Thee  my  soul  with,  its  faculties,  my
+body  *ith  all  its  senses,  my  heart  with  all  its  affections,
+desiring  in  all  things  to  honor,  love,  and  glorify  Thee;
+in  thanksgiving  for  the  numberless  benefits  that  I
+have  received  from  Thee,  especially  in  the  Holy  Eucha-
+rist ;  in  atonement  for  my  own  sins  as  well  as  in  rep-
+aration for  all  the  offenses  that  are  committed  against
+Thee  in  the  sacrament  of  Thy  love,  and,  finally,  in
+humble  supplication,  that  I  may  henceforth  be  faithful
+to  Thee,  that  I  may  please  Thee  in  thought,  word,  and
+deed*  that  I  may  suffer  in  patience  and  in  perfect  res-
+ignation to  Thy  holy  will,  that  I  may  become  like  to
+Thee  m  meekness  and  humility,  that  I  may  persevere  in
+==COL==
+Digitized  by
+==COL==
