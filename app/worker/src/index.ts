@@ -825,6 +825,7 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
     version: settings.version, introTexts, blocks, dayPositions, blockOrder,
+    additions: await dayAdditionsFold(env, presented),
   };
 }
 
@@ -838,6 +839,46 @@ async function playerBlockOrder(env: Env): Promise<string[] | null> {
     const names = (r.results ?? []).map((x) => x.block);
     return names.length ? names : null;
   } catch { return null; }
+}
+
+// v510 §2.1: the day's Praylist additions — the prayers John
+// slotted into today's list from their book pages, stored
+// per presented day in prayer_day_additions (migration
+// 0037). The read is the stored rows in seq order; a
+// missing table (pre-0037) reads empty, never an error
+// (the dayPositions posture).
+interface DayAdditionRow { block: string; slug: string; lang: string; afterId: string | null }
+async function dayAdditions(env: Env, date: string): Promise<DayAdditionRow[]> {
+  try {
+    const r = await env.DB.prepare("SELECT block, slug, lang, after_id FROM prayer_day_additions WHERE date=? ORDER BY seq, id").bind(date).all<{ block: string; slug: string; lang: string; after_id: string | null }>();
+    return (r.results ?? []).map((x) => ({ block: x.block, slug: x.slug, lang: x.lang, afterId: x.after_id }));
+  } catch { return []; }
+}
+
+// v510 §2.1: the payload fold — the stored rows resolved
+// against the book + the standing audio map (PRAYER_AUDIO),
+// title and duration riding the fold so the client builds
+// the prayer's descriptor without the book in hand. An
+// addition whose fold no longer resolves (the slug gone,
+// or its language's audio retired from the map) drops
+// from the fold, never an error.
+async function dayAdditionsFold(env: Env, date: string): Promise<{ block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[]> {
+  const rows = await dayAdditions(env, date);
+  if (!rows.length) return [];
+  const titles = new Map<string, string>();
+  try {
+    const r = await env.DB.prepare("SELECT slug, title FROM prayer_book").all<{ slug: string; title: string }>();
+    for (const x of r.results ?? []) titles.set(x.slug, x.title);
+  } catch { /* no titles: every row drops below */ }
+  const out: { block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[] = [];
+  for (const a of rows) {
+    const audio = PRAYER_AUDIO[a.slug];
+    const dur = audio ? (a.lang === "la" ? audio.la : audio.en) : undefined;
+    const title = titles.get(a.slug);
+    if (dur === undefined || !title) continue;
+    out.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId, title, durationS: dur });
+  }
+  return out;
 }
 
 // ---- Examination + Confession -------------------------------------------
@@ -2934,6 +2975,51 @@ export default {
             return json(await playerDayPayload(env, dateParam));
           }
           return json(await playerDayPayload(env));
+        }
+        if (seg[2] === "day-additions" && request.method === "PUT") {
+          // v510 §2.1: John's Praylist additions write — the
+          // favorites PUT's discipline (v470 §2.2) in form:
+          // the day's whole list, every entry validated,
+          // deduped by (slug, lang) preserving first
+          // occurrence, the day's rows replaced in one D1
+          // batch with seq = index. Additions are today-only:
+          // the date must be the presented Chicago day. Every
+          // validation is a named 400 that writes nothing.
+          // The response is the stored list re-read.
+          const body = await request.json().catch(() => ({})) as { date?: unknown; additions?: unknown };
+          const today = prayerChicagoNow().date;
+          if (body.date !== today) return err(400, "date must be today");
+          if (!Array.isArray(body.additions)) return err(400, "additions required");
+          if (body.additions.length > 75) return err(400, "too many additions");
+          const seen = new Set<string>();
+          const rows: DayAdditionRow[] = [];
+          for (const raw of body.additions as { block?: unknown; slug?: unknown; lang?: unknown; afterId?: unknown }[]) {
+            const block = String(raw?.block ?? "");
+            if (!(PRAYER_BLOCKS as readonly string[]).includes(block)) return err(400, `bad block ${block || "(empty)"}`);
+            const slug = String(raw?.slug ?? "");
+            const lang = String(raw?.lang ?? "");
+            const audio = PRAYER_AUDIO[slug];
+            if (!audio || (lang !== "en" && lang !== "la") || (lang === "la" ? audio.la : audio.en) === undefined) {
+              return err(400, `bad prayer ${slug || "(empty)"}/${lang || "(empty)"}`);
+            }
+            let afterId: string | null;
+            if (raw?.afterId === null || raw?.afterId === undefined) afterId = null;
+            else if (typeof raw.afterId === "string" && raw.afterId.length <= 200) afterId = raw.afterId;
+            else return err(400, "bad afterId");
+            const key = slug + ":" + lang;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            rows.push({ block, slug, lang, afterId });
+          }
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [env.DB.prepare("DELETE FROM prayer_day_additions WHERE date=?").bind(today)];
+          rows.forEach((a, i) => {
+            stmts.push(env.DB.prepare(
+              "INSERT INTO prayer_day_additions (date, block, slug, lang, after_id, seq, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ).bind(today, a.block, a.slug, a.lang, a.afterId, i, ts));
+          });
+          await env.DB.batch(stmts);
+          return json({ ok: true, date: today, additions: await dayAdditions(env, today) });
         }
         if (seg[2] === "podcasts" && request.method === "GET") {
           // v381 §2.2: the Podcasts tab's read — the sequence

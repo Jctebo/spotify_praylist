@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, mass: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, mass: null, dayAdditions: null, dayAdditionsDate: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -7385,8 +7385,13 @@ function settleIntentions(redrawFailed) {
    prayer (its book row carries the audio fold) gains a
    Play control and an Add to Praylist act (§2.5). Every
    other prayer page stays a written surface, byte for
-   byte. */
+   byte.
+   v510: the Add act opens the slot picker; the pick lands
+   the prayer in today's Praylist list itself (the v510
+   block at openPrayerPage) — the v484 queue append is
+   retired whole. */
 var BOOK_CACHE_KEY = 'opn-book-v462';
+var bookBlocks = null; // v510 §2.4: the day's block list (keys + labels), captured at the book's own day fetch for the slot picker
 var BOOK_FAVS_KEY = 'opn-book-favs-v462';
 var bookQuery = '';
 var bookPageScroll = 0;
@@ -7523,6 +7528,7 @@ function renderPrayerBook() {
   Promise.all([api('/api/prayer/book'), api('/api/prayer/day?date=' + today)]).then(function (res) {
     var day = res[1] || {};
     applyLiturgical(day);
+    if (Array.isArray(day.blocks) && day.blocks.length) bookBlocks = day.blocks; // v510 §2.4: the slot picker's block labels
     if (res[0] && Array.isArray(res[0].groups) && res[0].groups.length) {
       state.book = { groups: res[0].groups };
       bookWriteCopy(res[0].groups);
@@ -7593,6 +7599,272 @@ function bookBodyHtml(text) {
     var resp = ln.indexOf('R. ') === 0 || ln.indexOf('\\u211f. ') === 0 || ln === 'R.' || ln === '\\u211f.';
     return '<div' + (resp ? ' class="bookresp"' : '') + '>' + esc(ln) + '</div>';
   }).join('');
+/* ---------------- v510: Praylist additions ----------------
+   The slot picker + the landing in today's Praylist list.
+   The store is server-side (migration 0037; the session
+   PUT /api/player/day-additions replaces the day's whole
+   list, the favorites discipline); the day payload folds
+   the presented day's rows (playerDayPayload) and the
+   client adopts them into state.dayAdditions at every day
+   build. The fold (§2.2) weaves each addition into the
+   descriptor list at its anchor, so the block page, the
+   counts, Play All, and the section queues all read the
+   prayer standing in its block like any block item. The
+   mirror below is this device's last-adopted copy, read
+   only where no build stands yet — the server fold is
+   the truth wherever it stands. Additions are today-only:
+   the store is date-keyed and any other date reads empty. */
+var DAYADD_KEY = 'opn-dayadd-v510';
+var SLOT_BLOCKS = ['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+var praylistLanding = null;
+function dayAdditionsMirrorWrite() {
+  try { localStorage.setItem(DAYADD_KEY, JSON.stringify({ date: state.dayAdditionsDate, additions: state.dayAdditions || [] })); } catch (e) {}
+}
+function dayAdditionsMirrorRead() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(DAYADD_KEY) || 'null');
+    if (!rec || rec.date !== todayChicago() || !Array.isArray(rec.additions)) return null;
+    return rec.additions;
+  } catch (e) { return null; }
+}
+function adoptDayAdditions(date, additions) {
+  if (!date || !Array.isArray(additions)) return;
+  state.dayAdditions = additions.filter(function (a) {
+    return a && typeof a.block === 'string' && typeof a.slug === 'string' && typeof a.lang === 'string';
+  });
+  state.dayAdditionsDate = date;
+  dayAdditionsMirrorWrite();
+}
+function dayAdditionsNow() {
+  // The day's additions as they stand for TODAY: the adopted
+  // server list where it stands for today, else this device's
+  // mirror of it. Any other date reads empty.
+  var today = todayChicago();
+  if (state.dayAdditions && state.dayAdditionsDate === today) return state.dayAdditions;
+  var m = dayAdditionsMirrorRead();
+  if (m) { state.dayAdditions = m; state.dayAdditionsDate = today; return m; }
+  return [];
+}
+function dayAdditionStanding(slug, lang) {
+  var list = dayAdditionsNow();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].slug === slug && list[i].lang === lang) return list[i];
+  }
+  return null;
+}
+function slotBlockLabel(block) {
+  var blocks = (state.dayPayload && state.dayPayload.blocks) || bookBlocks || [];
+  for (var i = 0; i < blocks.length; i++) {
+    if (blocks[i].block === block) return blocks[i].label || block;
+  }
+  return block;
+}
+function dayAdditionDesc(a) {
+  // The addition's descriptor, in the trackDesc shape the
+  // queue builds consume. kind 'prayer' is load-bearing
+  // (the v484 §2.6 guards ride it: queueLiveDesc stands the
+  // descriptor as itself, and no played mark or day position
+  // is ever written for it). Title and duration ride the
+  // payload fold; where an adopted raw row lacks them (the
+  // PUT's answer), they resolve from the book in hand.
+  var title = a.title, dur = a.durationS;
+  if (title === undefined || title === null || dur === undefined || dur === null) {
+    var hit = bookFind(a.slug);
+    if (hit) {
+      title = hit.prayer.title;
+      var d0 = prayerAudioDesc(hit.prayer, a.lang);
+      dur = d0 ? d0.durationS : 0;
+    }
+  }
+  return { episodeId: 'prayer:' + a.slug + ':' + a.lang, kind: 'prayer',
+    title: (title || a.slug) + (a.lang === 'la' ? ' (Latin)' : ''),
+    url: '/api/prayer/book/audio/' + encodeURIComponent(a.slug) + '/' + a.lang,
+    enclosureUrl: null, available: true, block: a.block, source: '',
+    durationS: dur || 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null };
+}
+function weaveAdditions(seg, adds) {
+  // One block's segment with its additions woven in, by the
+  // §2.2 anchor rules in seq order: '' stands at the head;
+  // an anchor naming an item already emitted (a base
+  // descriptor or an earlier addition) stands directly
+  // after it, additions on one anchor stacking in seq
+  // order; an end anchor (null) or an anchor not standing
+  // today stands at the tail, in seq order.
+  if (!adds.length) return seg;
+  var out = [];
+  var placed = {};
+  var pending = adds.slice();
+  function emit(d) { out.push(d); placed[d.episodeId] = true; }
+  function drain(headPhase) {
+    var moved = true;
+    while (moved) {
+      moved = false;
+      for (var k = 0; k < pending.length; k++) {
+        var a = pending[k];
+        if ((a.afterId === '' && headPhase) || (a.afterId && placed[a.afterId])) {
+          emit(dayAdditionDesc(a));
+          pending.splice(k, 1);
+          moved = true;
+          break;
+        }
+      }
+    }
+  }
+  drain(true);
+  seg.forEach(function (d) { emit(d); drain(false); });
+  pending.forEach(function (a) { emit(dayAdditionDesc(a)); });
+  return out;
+}
+function foldDayAdditions(descs, dateStr) {
+  // §2.2: weave the day's additions into a descriptor list.
+  // The list stands in block order (the canonical blocks,
+  // then the unblocked group); segments are woven per block
+  // and re-emitted in the canonical order, so an addition
+  // to a block standing empty today still takes its block's
+  // place in the day.
+  if (!state.dayAdditions || state.dayAdditionsDate !== dateStr || !state.dayAdditions.length) return descs;
+  var byBlock = {};
+  state.dayAdditions.forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
+  var segs = {}, segOrder = [];
+  descs.forEach(function (d) {
+    var b = d.block || '';
+    if (!segs[b]) { segs[b] = []; segOrder.push(b); }
+    segs[b].push(d);
+  });
+  var out = [];
+  SLOT_BLOCKS.forEach(function (b) {
+    if (segs[b] || byBlock[b]) { out = out.concat(weaveAdditions(segs[b] || [], byBlock[b] || [])); delete segs[b]; }
+  });
+  segOrder.forEach(function (b) {
+    if (segs[b]) { out = out.concat(segs[b]); delete segs[b]; }
+  });
+  return out;
+}
+function dayAdditionCardHtml(d) {
+  // §2.3: the added prayer's card on its block page — the
+  // trackCard dress with the play disc in the thumbDisc
+  // form, so the standing [data-playkey] wiring plays it
+  // from its slot through tapPlay + sectionQueueFrom. No
+  // played dot and no row menu: a prayer writes no marks
+  // and takes no row acts.
+  var disc = '<button class="playbtn thumbdisc" data-playkey="' + esc(d.episodeId) + '" data-url="' + esc(d.url) + '">&#9654;</button>';
+  return '<div class="card trow prow addition" data-card="' + esc(d.episodeId) + '"><div class="row">'
+    + rowArtHtml(d, disc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(d.title) + '</h3></div>'
+    + '<div class="meta">' + (d.durationS ? fmtDur(d.durationS) + ' \\u00b7 ' : '') + 'Added to Praylist</div></div></div></div>';
+}
+function appendBlockAdditionCards(block) {
+  // §2.3: the block's addition cards take their slots in
+  // the painted page. The folded descriptor list is the
+  // order's truth: each card stands directly after the
+  // card of the descriptor preceding it in the list (the
+  // swap passes replace standing cards in place and never
+  // re-order the DOM, so a slot taken at paint keeps its
+  // place as the page settles); where no preceding card
+  // stands, before the page's first card; where the block
+  // paints no cards at all, at the view's end.
+  var list = state.dayDescs || [];
+  var adds = list.filter(function (d) { return d.kind === 'prayer' && d.block === block; });
+  adds.forEach(function (d) {
+    var tmp = document.createElement('div');
+    tmp.innerHTML = dayAdditionCardHtml(d);
+    var card = tmp.firstChild;
+    if (!card) return;
+    var idx = list.indexOf(d);
+    var prev = null;
+    for (var k = idx - 1; k >= 0; k--) {
+      if (list[k].block !== block) break;
+      var pc = view.querySelector('[data-card="' + list[k].episodeId + '"]');
+      if (pc) { prev = pc; break; }
+    }
+    if (prev && prev.parentNode) prev.parentNode.insertBefore(card, prev.nextSibling);
+    else {
+      var first = view.querySelector('[data-card]');
+      if (first && first.parentNode) first.parentNode.insertBefore(card, first);
+      else view.appendChild(card);
+    }
+  });
+}
+function openSlotPicker(p, lang, repaintRow) {
+  // §2.4: the slot picker — the standing sheet drawer (the
+  // Mass library popup's form). Step 1 picks the block;
+  // step 2 picks the position in it. A position tap is the
+  // one write (the day's whole list through the session
+  // PUT, the answered list adopted); the drawer's standing
+  // closes (backdrop tap, drag-dismiss) write nothing — no
+  // request is issued before a position tap.
+  var old = document.querySelector('.slotpick');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow" id="slot-title">Add to Praylist</h1></div>'
+    + '<div id="slot-body"></div><p class="fieldnote" id="slot-note"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var chosenBlock = null;
+  function setTitle(t) { var el = sheet.querySelector('#slot-title'); if (el) el.textContent = t; }
+  function paintStep1() {
+    chosenBlock = null;
+    setTitle('Add to Praylist');
+    var html = '<p class="sub">' + esc(p.title) + (lang === 'la' ? ' (Latin)' : '') + ' \\u2014 pick a part of today\\u2019s Praylist.</p>';
+    SLOT_BLOCKS.forEach(function (b) {
+      var n = (state.dayDescs || []).filter(function (d) { return d.block === b; }).length;
+      html += '<div class="card bookrow" data-slotblock="' + esc(b) + '"><div class="row"><span class="grow">' + esc(slotBlockLabel(b)) + '</span></div>'
+        + (n ? '<div class="meta">' + n + ' standing</div>' : '') + '</div>';
+    });
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    host.querySelectorAll('[data-slotblock]').forEach(function (row) {
+      row.addEventListener('click', function () { chosenBlock = row.getAttribute('data-slotblock'); paintStep2(); });
+    });
+  }
+  function paintStep2() {
+    setTitle('In ' + slotBlockLabel(chosenBlock));
+    var built = !!(state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date) === todayChicago() && (state.dayDescs || []).length);
+    var list = built ? (state.dayDescs || []).filter(function (d) { return d.block === chosenBlock; }) : [];
+    var html = '<div class="card bookrow" data-slotback="1"><div class="row"><span class="grow">\\u2190 All parts</span></div></div>';
+    html += '<div class="card bookrow" data-slotpos=""><div class="row"><span class="grow">At the start of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    list.forEach(function (d) {
+      html += '<div class="card bookrow" data-slotpos="' + esc(d.episodeId) + '"><div class="row"><span class="grow">After ' + esc(d.title) + '</span></div></div>';
+    });
+    html += '<div class="card bookrow" data-slotpos="end"><div class="row"><span class="grow">At the end of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    if (!built) html += '<p class="sub">The day\\u2019s list is still loading \\u2014 the start and end stand open.</p>';
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    var back = host.querySelector('[data-slotback]');
+    if (back) back.addEventListener('click', paintStep1);
+    host.querySelectorAll('[data-slotpos]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var v = row.getAttribute('data-slotpos');
+        pick(v === 'end' ? null : v);
+      });
+    });
+  }
+  function pick(afterId) {
+    // The defensive re-check rides the tap: a prayer that
+    // came to stand since the paint is never written twice.
+    if (dayAdditionStanding(p.slug, lang)) { sheet.remove(); if (repaintRow) repaintRow(); return; }
+    var list = dayAdditionsNow().slice();
+    list.push({ block: chosenBlock, slug: p.slug, lang: lang, afterId: afterId });
+    var payload = { date: todayChicago(), additions: list.map(function (a) {
+      return { block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId === undefined ? null : a.afterId };
+    }) };
+    api('/api/player/day-additions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.additions)) { slotFail(); return; }
+      adoptDayAdditions(res.date, res.additions);
+      sheet.remove();
+      if (repaintRow) repaintRow();
+    }).catch(function () { slotFail(); });
+  }
+  function slotFail() {
+    // A failed save leaves the sheet open and the page as
+    // it stood — no silent state (the massPersonalSave
+    // posture).
+    fieldNote('slot-note', 'Could not save \\u2014 try again.');
+  }
+  paintStep1();
 }
 function openPrayerPage(slug) {
   var hit = bookFind(slug);
@@ -7615,7 +7887,7 @@ function openPrayerPage(slug) {
     + (p.bodyLatin ? langSwitchHtml() : '')
     + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
     + '<p class="sub">' + esc(p.source) + '</p>'
-    + (p.audio ? '<div class="row bookaudio"><button class="btn gold" id="book-play">' + bookPlayLabel() + '</button><button class="btn ghost" id="book-add">Add to Praylist</button></div>' : '')
+    + (p.audio ? '<div class="row bookaudio" id="book-audio-row"></div>' : '')
     + '<div class="readtext" id="book-body">' + bookBodyHtml(p.body) + '</div></div>';
   window.scrollTo(0, 0);
   var bb = hdrRow2() ? hdrRow2().querySelector('[data-bookback]') : null;
@@ -7628,39 +7900,63 @@ function openPrayerPage(slug) {
       sw.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('active', x === b); });
       var body = document.getElementById('book-body');
       if (body) body.innerHTML = bookBodyHtml(la ? p.bodyLatin : p.body);
-      var pb0 = document.getElementById('book-play');
-      if (pb0) pb0.textContent = bookPlayLabel();
+      paintBookAudioRow(); // v510 §2.5: the audio row is per-language — the landed state follows the switch
     });
   });
   var ps = document.getElementById('book-page-star');
   if (ps) ps.addEventListener('click', function () { toggleBookFav(p.slug); });
   // v484 §2.5: the audio acts — pilot prayers only (the
   // controls row stands only where the fold stands).
-  var pb = document.getElementById('book-play');
-  if (pb) pb.addEventListener('click', function () {
-    var d = prayerAudioDesc(p, pageLang);
-    if (!d) return;
-    playTrack(d); // the standing funnel — a tap on the standing current toggles pause; a pending start cancels
-    pb.textContent = bookPlayLabel();
-  });
-  var ab = document.getElementById('book-add');
-  if (ab) ab.addEventListener('click', function () {
-    var d = prayerAudioDesc(p, pageLang);
-    if (!d) return;
-    var standing = state.queue.some(function (x) { return x.episodeId === d.episodeId; });
-    if (!standing) {
-      // The append stands in the page queue: visible in the
-      // queue list, reachable by a queue-row tap and by
-      // Next (both re-send the contract from state.queue),
-      // and inside every later contract. It does not
-      // re-send a live contract (§2.5's named bound).
-      state.queue.push(d);
-      saveQueueSnapshot();
-      renderQueueList();
+  // v510 §2.5: the row's paint is derived — where the
+  // prayer (in the page's language) stands in today's
+  // Praylist list, the landed state + the View act stand
+  // in place of the Add act; the state is re-derived at
+  // every paint from the adopted list, never from a
+  // pick's intent. The v484 queue append retires whole:
+  // the Add act opens the slot picker (§2.4) and the pick
+  // writes the day list, never the queue.
+  function paintBookAudioRow() {
+    var row = document.getElementById('book-audio-row');
+    if (!row) return;
+    var standing = dayAdditionStanding(p.slug, pageLang);
+    if (standing) {
+      row.innerHTML = '<button class="btn gold" id="book-play">' + bookPlayLabel() + '</button>'
+        + '<span class="btn ghost bookin">In today\\u2019s Praylist \\u2713 \\u2014 ' + esc(slotBlockLabel(standing.block)) + '</span>'
+        + '<button class="btn ghost" id="book-view">View</button>';
+    } else {
+      row.innerHTML = '<button class="btn gold" id="book-play">' + bookPlayLabel() + '</button>'
+        + '<button class="btn ghost" id="book-add">Add to Praylist</button>';
     }
-    ab.textContent = standing ? 'In Praylist \\u2713' : 'Added \\u2713';
-    setTimeout(function () { if (ab.parentNode) ab.textContent = 'Add to Praylist'; }, 1800);
-  });
+    var pb = document.getElementById('book-play');
+    if (pb) pb.addEventListener('click', function () {
+      var d = prayerAudioDesc(p, pageLang);
+      if (!d) return;
+      playTrack(d); // the standing funnel — a tap on the standing current toggles pause; a pending start cancels
+      pb.textContent = bookPlayLabel();
+    });
+    var ab = document.getElementById('book-add');
+    if (ab) ab.addEventListener('click', function () { openSlotPicker(p, pageLang, paintBookAudioRow); });
+    var vb = document.getElementById('book-view');
+    if (vb) vb.addEventListener('click', function () {
+      var st = dayAdditionStanding(p.slug, pageLang);
+      if (!st) { paintBookAudioRow(); return; }
+      praylistLanding = { block: st.block, episodeId: 'prayer:' + p.slug + ':' + pageLang };
+      state.pendingBlock = st.block; // the standing seam: the day build opens the block page
+      switchSide('prayers', 'prayers');
+    });
+  }
+  paintBookAudioRow();
+  // v510 §2.5: the additions refresh — the day payload's
+  // fold read for the landed state's truth on every
+  // device (the phone writes, the web reads). A read only:
+  // no build, no paint of the audio side.
+  if (p.audio) {
+    api('/api/player/day').then(function (day) {
+      if (!day) return;
+      adoptDayAdditions(day.presentedDay || day.date || null, day.additions);
+      if (document.getElementById('book-audio-row')) paintBookAudioRow();
+    }).catch(function () {});
+  }
 }
 function closePrayerPage() {
   state.prayersView = { kind: 'book' };
@@ -10471,6 +10767,7 @@ function extRebuildDescs(day) {
     });
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
+  descs = foldDayAdditions(descs, date); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
@@ -11477,6 +11774,9 @@ function buildDayFromPayload(day, snap) {
     // v338 §2.7(5): trackCard consults the day payload's intros map
     // from state, uniformly for both families.
     state.dayPayload = day;
+    // v510 §2.2: the day's Praylist additions adopt from the
+    // payload's fold, before any descriptor build reads them.
+    adoptDayAdditions(day.presentedDay || day.date || null, day.additions);
     // v392 W2: a pristine clone for the offline snapshot, taken
     // before the resolution pass mutates the payload (the AI
     // Signal claim empties its block list in place).
@@ -11499,7 +11799,9 @@ function buildDayFromPayload(day, snap) {
     (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { allDescs.push(d); }); });
     // v318 T9: the Read view's lookup — payload tracks by episode id,
     // and the day's descriptors for its play/pause control.
-    state.dayDescs = allDescs;
+    // v510 §2.2: the additions fold weaves the day's slotted
+    // prayers into the list at their anchors.
+    state.dayDescs = foldDayAdditions(allDescs, day.presentedDay || day.date);
     refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
     pushDaySnapshot(); // v359 §2.4: the initial build hands the native side the day shell's own tracks
     state.readTracks = {};
@@ -11518,6 +11820,17 @@ function buildDayFromPayload(day, snap) {
     // it as state.pendingBlock; the day build is its one
     // consumer).
     if (state.pendingBlock) { var pb457 = state.pendingBlock; state.pendingBlock = null; openBlockPage(pb457); }
+    // v510 §2.5: the View jump's landing — the block page the
+    // pendingBlock seam just opened carries the added prayer's
+    // card; the landing accents it and scrolls it into view.
+    // The record clears either way: a card not found (the list
+    // changed between the pick and the jump) still lands on
+    // the block page, which is the required landing.
+    if (praylistLanding) {
+      var pl510 = praylistLanding; praylistLanding = null;
+      var lc510 = view.querySelector('[data-card="' + pl510.episodeId + '"]');
+      if (lc510) { lc510.classList.add('landed'); lc510.scrollIntoView({ block: 'center' }); }
+    }
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
     // here, immediately BEFORE the resolution pass is invoked —
@@ -12498,6 +12811,7 @@ function paintBlockPage(day, block) {
   // (Build 3), the mark-all rewired BY KEY. No positional
   // menu read remains anywhere.
   appendBlockSettingsCards(day, b);
+  appendBlockAdditionCards(b.block); // v510 §2.3: the day's slotted prayers stand at their slots
   // v374 §2 (site 1): the header span stands in the view now —
   // rewrite it from the current descriptor count, so a block page
   // painted after settlement reads the true count at first paint

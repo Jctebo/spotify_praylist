@@ -501,6 +501,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .npq-meta { font-size:14px; font-family:var(--sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .npq-dot.played-dot { flex:0 0 12px; width:12px; height:12px; margin:0; padding:0; cursor:default; }
 .npq-start { border-color:var(--accent); }
+/* v510 §2.6: the View jump's landing accent on the added
+   prayer's block-page card — the .npq-start treatment
+   (the accent border in the day's color) on the card. */
+.card.landed { border-color:var(--accent); }
 /* Confession PIN (v356): the gate, the pad, the recovery sheet.
    Built on the standing tokens — the pad's accent is var(--accent),
    which v352's liturgical layer re-points by the day's color. */
