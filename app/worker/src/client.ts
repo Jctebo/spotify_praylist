@@ -8054,6 +8054,11 @@ function ownSlotTrack(row, meta, date) {
     available: present, streamUrl: present ? (meta.streamUrl || meta.enclosureUrl) : null,
     enclosureUrl: meta ? meta.enclosureUrl : null,
     durationS: meta ? (meta.durationS || 0) : 0, sizeBytes: meta ? (meta.sizeBytes || 0) : 0,
+    // v483: the meta's standing art rides the track record — this
+    // adapter forwards only the fields it names, and before v483
+    // imageUrl was not one of them, so the descriptor built from
+    // the track read null whatever the meta carried.
+    imageUrl: meta && meta.imageUrl ? meta.imageUrl : null,
     // v368 §2.5: a meta may declare hasText false — the store-only
     // episode stages no read-along text object, so no Read control
     // stands on its row and the no-text fold names it in the meta
@@ -8337,7 +8342,15 @@ function ownResolveFeed(day, needed) {
     if (!fam || !needed[fam.family]) return false;
     var meta = {
       episodeId: fam.episodeId, title: ownFeedTitle(it.title), state: 'present',
-      enclosureUrl: it.url, streamUrl: null, durationS: it.durationS || 0, sizeBytes: it.length || 0
+      enclosureUrl: it.url, streamUrl: null, durationS: it.durationS || 0, sizeBytes: it.length || 0,
+      // v483: the own track's standing art — the estate's own-content
+      // logo path. The own feed carries no per-item image; its
+      // channel art IS the logo. Named here, at the track's birth,
+      // it rides ownSlotTrack -> trackDesc -> artUriFor to the
+      // session like every other kind's art (v480's path); before
+      // v483 the meta named none and the system player stamped
+      // nothing on own prayers.
+      imageUrl: '/logo.png'
     };
     (found[fam.family] = found[fam.family] || []).push(meta);
     if (fam.family !== 'novenas') {
@@ -8594,10 +8607,10 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       if (!c) return;
       if (row.episodeId === 'novenas') {
         if (c.items && c.items.length) {
-          state.ownSlots[row.sourceKey] = { state: 'present', tracks: c.items.map(function (m) { return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0 }; }) };
+          state.ownSlots[row.sourceKey] = { state: 'present', tracks: c.items.map(function (m) { return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0, imageUrl: m.imageUrl || null }; }) }; // v483: the re-materialized meta carries the cached art
         }
       } else if (c.episodeId) {
-        state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: c.episodeId, title: c.title, state: 'present', enclosureUrl: c.enclosureUrl, streamUrl: null, durationS: c.durationSec || 0, sizeBytes: c.sizeBytes || 0 }] };
+        state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: c.episodeId, title: c.title, state: 'present', enclosureUrl: c.enclosureUrl, streamUrl: null, durationS: c.durationSec || 0, sizeBytes: c.sizeBytes || 0, imageUrl: c.imageUrl || null }] }; // v483: as above
       }
     });
     // §2.8 ruling 3 (as amended by v375): the intros map stands
@@ -8666,10 +8679,10 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var st = state.ownSlots[row.sourceKey];
         if (!st || st.state !== 'present' || !st.tracks.length) return;
         if (row.episodeId === 'novenas') {
-          ownRec[row.sourceKey] = { items: st.tracks.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes }; }) };
+          ownRec[row.sourceKey] = { items: st.tracks.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes, imageUrl: m.imageUrl || null }; }) }; // v483: the cached own record carries the track's art
         } else {
           var m0 = st.tracks[0];
-          ownRec[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes };
+          ownRec[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes, imageUrl: m0.imageUrl || null }; // v483: as above
         }
       });
       rec.own = ownRec;
@@ -9185,16 +9198,16 @@ function offlineTomorrowOwn(settings, tomorrow, extRec) {
         if (ownDateInStem(stem) !== tomorrow) return;
         var fam = ownFamilyOfStem(stem);
         if (!fam || fam.episodeId !== epId) return;
-        matches.push({ episodeId: epId, title: ownFeedTitle(it.title), enclosureUrl: it.url, durationS: it.durationS || 0, sizeBytes: it.length || 0 });
+        matches.push({ episodeId: epId, title: ownFeedTitle(it.title), enclosureUrl: it.url, durationS: it.durationS || 0, sizeBytes: it.length || 0, imageUrl: '/logo.png' }); // v483: the own match names the standing own-content logo, as the live settle meta does
       });
       if (!matches.length) return;
       if (epId === 'novenas') {
-        extRec.own[row.sourceKey] = { items: matches.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes }; }) };
+        extRec.own[row.sourceKey] = { items: matches.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes, imageUrl: m.imageUrl || null }; }) }; // v483: the snapshot's stored own record carries the art, as the day cache's does
       } else {
         var m0 = matches[0];
-        extRec.own[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes };
+        extRec.own[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes, imageUrl: m0.imageUrl || null }; // v483: as above
       }
-      matches.forEach(function (m) { out.push({ kind: 'own', date: tomorrow, id: m.episodeId, enclosureUrl: m.enclosureUrl, title: m.title, block: row.block, durationS: m.durationS, key: offlineDayKey(tomorrow, m.episodeId) }); });
+      matches.forEach(function (m) { out.push({ kind: 'own', date: tomorrow, id: m.episodeId, enclosureUrl: m.enclosureUrl, title: m.title, block: row.block, durationS: m.durationS, key: offlineDayKey(tomorrow, m.episodeId), imageUrl: m.imageUrl || null }); }); // v483: the pushed own item carries the match's art to the snapshot map
     });
     return out;
   }).catch(function () { return []; });
@@ -9251,7 +9264,7 @@ function offlineTomorrowBuild(tomorrow, epoch) {
       var stored = offlineSnapshotStore(tomorrow, day, settings, extRec, epoch);
       var origin = location.origin;
       var tracks = items.map(function (it) {
-        if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false }; // v475: the item's own enclosure address, the ext arm's form — the Range route synthesized here through v472 is retired for own episodes (see oraSnapshotTrack)
+        if (it.kind === 'own') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false, artUri: artUriFor(it) }; // v475: the item's own enclosure address, the ext arm's form — the Range route synthesized here through v472 is retired for own episodes (see oraSnapshotTrack) · v483: the own arm names the item's art (the logo, absolutized) — the ai/ext arms keep v480's no-art bound
         if (it.kind === 'ai') return { id: it.id, block: it.block || '', title: it.title || '', kind: 'episode', durationS: it.durationS || 0, mediaUri: origin + (it.enclosureUrl || ''), needsAuth: true };
         return { id: it.id, block: it.block || '', title: it.title || '', kind: 'external', durationS: it.durationS || 0, mediaUri: it.enclosureUrl, needsAuth: false };
       });
