@@ -3483,7 +3483,12 @@ var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
    §1.5). Its sides are FILTERS of one index paint, not
    merged-container surfaces (§2.5's named distinction). */
 var TAB_SIDE_PODCASTS_KEY = 'opn-tabside-podcasts-v464';
-var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone', podcasts: 'courses' };
+/* v493: the Mass tab joins the merged-tab family — two
+   sides, Liturgy (the standing day's-Mass scroll) and
+   Virtual (the entries list), the v410 key pattern with
+   this release's number; first-run default Liturgy. */
+var TAB_SIDE_MASS_KEY = 'opn-tabside-mass-v493';
+var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone', podcasts: 'courses', mass: 'liturgy' };
 var sideScroll = {};
 function tabSideCfg(tab) {
   // v457 (Amendment 2): a side's third element is its
@@ -3500,7 +3505,15 @@ function tabSideCfg(tab) {
   // 'Video & more' overflows the 360px row beside the title —
   // §2.5's computed geometry; the full name stands in the
   // universal menu).
-  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['video', 'Video & more', 'More']] };
+  // v493: the podcasts sides drop to TWO — Courses ·
+  // Podcasts. The 'video' side ('Video & more') retires:
+  // CatholicTV was its content, and the series leaves
+  // Catechesis whole for the Mass tab's Virtual side
+  // (John, 2026-11-17: "So catechism will now have 2
+  // tabs"). A stored side of 'video' is unknown to
+  // readTabSide and lands on the default, Courses.
+  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts']] };
+  if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Liturgy'], ['virtual', 'Virtual']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
 function readTabSide(tab) {
@@ -3587,6 +3600,10 @@ function row2HomeHtml(tab) {
     title = titles[side] || 'Examination';
   } else if (tab === 'wallpaper') {
     title = 'Sacred Art';
+  } else if (tab === 'mass') {
+    // v493: the Mass home's title names the standing side,
+    // as the Prayers and Conscience homes name theirs.
+    title = side === 'virtual' ? 'Virtual' : 'Liturgy';
   } else if (tab === 'podcasts') {
     title = 'Catechesis';
     // v459 §2 Build 4: the Formation Download-for-offline
@@ -3674,7 +3691,7 @@ function paintPrayersBar(html, block) {
 }
 function enterSideHost() { var h = document.getElementById('sidehost'); if (h) view = h; }
 function recordSideScroll(tab) {
-  if (tab !== 'prayers' && tab !== 'conscience') return;
+  if (tab !== 'prayers' && tab !== 'conscience' && tab !== 'mass') return;
   sideScroll[tab + ':' + tabSideNow[tab]] = window.scrollY || 0;
 }
 function armSideScrollRestore(tab, side) {
@@ -3735,7 +3752,7 @@ var YT_CHANNEL_URL = "https://www.youtube.com/@catholictv";
 function placeScreenKey() {
   /* v414 §2.8: the Wallpaper tab rides the same entries —
      its scroll is kept per side, like the merged tabs. */
-  if (state.tab === 'prayers' || state.tab === 'conscience' || state.tab === 'wallpaper') return state.tab + ':' + tabSideNow[state.tab];
+  if (state.tab === 'prayers' || state.tab === 'conscience' || state.tab === 'wallpaper' || state.tab === 'mass') return state.tab + ':' + tabSideNow[state.tab];
   return state.tab;
 }
 function capturePlace() {
@@ -3800,7 +3817,15 @@ function armPodScroll(y) {
 }
 
 function paintTabSide(tab, side) {
-  if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
+  if (tab === 'mass') {
+    // v493: the row-2 title names the standing side, on the
+    // container paint and on every switch (the v450
+    // Conscience bar rule: a side switch re-reads the title).
+    var mt = document.getElementById('hdr2-title');
+    if (mt) mt.textContent = side === 'virtual' ? 'Virtual' : 'Liturgy';
+    if (side === 'virtual') paintMassVirtual(); else paintMassLiturgy();
+  }
+  else if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
   else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else if (side === 'book') renderPrayerBook(); else renderPrayersSide(); }
   else { paintConscienceBar(side); if (side === 'confession') renderConfessionContent(); else if (side === 'direction') renderDirectionContent(); else renderExaminationContent(); }
 }
@@ -3831,6 +3856,7 @@ function paintMergedContainer(tab) {
 
 function setTab(tab) {
   closeWatch(); // v434 §2.6.2 seat 2: any tab switch tears a standing watch frame down first — the video sounds only while its surface stands open; the harvest below then reads the restored series page, the watch's standing place
+  massPodReturn = false; // v493: a tab switch ends any Mass hosting of the CatholicTV series page — the page's home reads from the tab that opens it
   capturePlace(); // v411 §2.4: harvest the outgoing screen before the dispatch repaints
   recordSideScroll(state.tab);
   view = realView;
@@ -4313,7 +4339,15 @@ function wireMassLatin() {
   });
 }
 function renderMass() {
-  paintRow2Plain('Mass');
+  // v493: the Mass tab is a merged tab now — the container
+  // paints the row-2 home (the side's title + the Liturgy |
+  // Virtual pill) and the side host; the sides paint through
+  // paintTabSide. The scroll's own state (state.mass) is
+  // untouched by the container: a side switch repaints from
+  // it, never reloads it.
+  paintMergedContainer('mass');
+}
+function paintMassLiturgy() {
   var today = todayChicago();
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
@@ -4322,11 +4356,55 @@ function renderMass() {
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
     state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today) };
-    paintMassScroll();
+    if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;
-    view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">The day\u2019s Mass could not be loaded.</div></div>';
+    if (tabSideNow.mass === 'liturgy' && !massPodReturn) view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">The day\u2019s Mass could not be loaded.</div></div>';
   });
+}
+/* ---------------- v493: the Mass Virtual side ----------------
+   The entries list: data-shaped and ordered, so a later
+   entry stands by appending a record, on John's word
+   alone. One entry today (John, 2026-11-17: "under
+   virtual put the Catholic TV mass as the first entry.
+   Will add more"). The Catholic TV Mass entry opens the
+   standing CatholicTV series page — the channel's video
+   list, whose headline content is the daily Mass — homed
+   under this tab now: the series leaves Catechesis whole
+   (John: "Yes. It leaves xatechesis"). massPodReturn is
+   the hosting flag: while it stands, the series page and
+   its watch view paint under the Mass tab, their back
+   acts return here, and the universal menu's CatholicTV
+   page groups stand on them. */
+var MASS_VIRTUAL_ENTRIES = [
+  { key: 'catholictv-mass', title: 'Catholic TV Mass', meta: 'CatholicTV', series: 'catholictv' }
+];
+var massPodReturn = false;
+function paintMassVirtual() {
+  var html = '';
+  MASS_VIRTUAL_ENTRIES.forEach(function (e) {
+    var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
+    var art = '<span class="rowartwrap">' + tile + '</span>';
+    html += '<div class="card" data-massventry="' + esc(e.key) + '"><div class="row">' + art
+      + '<div class="grow"><h3>' + esc(e.title) + '</h3><div class="meta">' + esc(e.meta) + '</div></div>'
+      + '</div></div>';
+  });
+  view.innerHTML = html;
+  view.querySelectorAll('[data-massventry]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var key = c.getAttribute('data-massventry');
+      var e = MASS_VIRTUAL_ENTRIES.filter(function (x) { return x.key === key; })[0];
+      if (e) openMassVirtualSeries(e);
+    });
+  });
+}
+function openMassVirtualSeries(e) {
+  massPodReturn = true;
+  openPodSeries(e.series);
+}
+function returnToMassVirtual() {
+  massPodReturn = false;
+  renderMass();
 }
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
   b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
@@ -4597,7 +4675,7 @@ function paintPodcastsIndex() {
   view.innerHTML = html;
   paintOfflineLine();
   view.querySelectorAll('[data-podseries]').forEach(function (c) {
-    c.addEventListener('click', function () { openPodSeries(c.getAttribute('data-podseries')); });
+    c.addEventListener('click', function () { massPodReturn = false; openPodSeries(c.getAttribute('data-podseries')); });
   });
 }
 function paintPodSeriesPage() {
@@ -4617,11 +4695,11 @@ function openPodSeries(key) {
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
-    if (state.tab === 'podcasts') paintPodSeriesPage();
+    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) paintPodSeriesPage();
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
-    if (state.tab === 'podcasts') {
-      view.innerHTML = '<p class="err">Catechesis did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) {
+      view.innerHTML = '<p class="err">' + ((state.tab === 'mass' && massPodReturn) ? 'The Catholic TV Mass did not load.' : 'Catechesis did not load.') + '</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
     }
   });
@@ -4639,9 +4717,13 @@ function goPodcastsIndex() {
 }
 function wirePodBack() {
   // v457: the back stands in the header's row 2 now.
+  // v493: while the CatholicTV series page stands homed
+  // under the Mass tab (massPodReturn), the same back act
+  // returns to the Virtual side instead of the Formation
+  // index.
   var h = hdrRow2();
   var b = h ? h.querySelector('[data-podback]') : null;
-  if (b) b.addEventListener('click', goPodcastsIndex);
+  if (b) b.addEventListener('click', function () { if (massPodReturn) returnToMassVirtual(); else goPodcastsIndex(); });
 }
 /* ---------------- v457: the row-2 bar ----------------
    The v447 bar's heir: ONE shared emission for every
@@ -4906,7 +4988,7 @@ function paintPodcastVideos() {
   if (!res || res.kind !== 'video') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Catechesis', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: massPodReturn ? 'Mass' : 'Catechesis', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -5034,6 +5116,12 @@ function closeWatch() {
   var f = view.querySelector('iframe.podwatch-frame');
   if (f) f.remove();
   if (state.tab === 'podcasts' && podLevel === 'watch') {
+    paintPodcastVideos();
+    armPodScroll(y);
+  }
+  // v493: the same return when the watch stands homed
+  // under the Mass tab — the series page repaints in place.
+  if (state.tab === 'mass' && massPodReturn && podLevel === 'watch') {
     paintPodcastVideos();
     armPodScroll(y);
   }
@@ -7549,6 +7637,12 @@ function goSide(tab, side) {
     // the side, land on the tab, and renderPodcasts reads the
     // stored side at its head.
     if (tab === 'podcasts') { if (tabSideNow.podcasts !== side) switchPodSide(side); }
+    // v493: a Mass side act while the CatholicTV series
+    // page stands pushed over the tab re-renders the tab
+    // home on the chosen side — the pushed page's row-2 bar
+    // retires with it (the container's switchSide assumes
+    // the home row stands).
+    else if (tab === 'mass' && massPodReturn) { writeTabSide('mass', side); massPodReturn = false; renderMass(); }
     else if (tabSideNow[tab] !== side) switchSide(tab, side);
     return;
   }
@@ -7625,7 +7719,7 @@ function openHeaderMenu() {
     // The Formation home: the retired row-2 button's act.
     items.push({ head: true, label: 'Catechesis' });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
-  } else if (tab === 'podcasts' && podLevel === 'series' && state.podcasts && state.podcasts.series === 'catholictv') {
+  } else if ((tab === 'podcasts' || (tab === 'mass' && massPodReturn)) && podLevel === 'series' && state.podcasts && state.podcasts.series === 'catholictv') {
     // The CatholicTV series page: the retired full-page
     // anchor's act, through the adapter — with the Browser
     // plugin the standing openFullPage runs whole; without
@@ -7638,7 +7732,7 @@ function openHeaderMenu() {
       if (cap && cap.Plugins && cap.Plugins.Browser) openFullPage(null);
       else window.open(YT_CHANNEL_URL, '_blank', 'noopener');
     } });
-  } else if (tab === 'podcasts' && podLevel === 'watch') {
+  } else if ((tab === 'podcasts' || (tab === 'mass' && massPodReturn)) && podLevel === 'watch') {
     // The watch view: the retired under-frame anchor's act
     // (its own target/rel form, read from the standing
     // watch record).
@@ -7664,7 +7758,14 @@ function openHeaderMenu() {
   sections.forEach(function (sec) {
     if (sec.key !== standingKey) return;
     items.push({ head: true, label: sec.name });
-    if (sec.key === 'prayers') {
+    if (sec.key === 'mass') {
+      // v493: the Mass standing group lists its two sides,
+      // in the Conscience/Wallpaper form.
+      [['liturgy', 'Liturgy'], ['virtual', 'Virtual']].forEach(function (s) {
+        var here = tabSideNow.mass === s[0];
+        items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('mass', s[0]); } });
+      });
+    } else if (sec.key === 'prayers') {
       var day = state.dayPayload;
       (day && day.blocks ? day.blocks : []).forEach(function (x) {
         if (x.block === '__episodes') return; // the episodes pseudo-page stands outside the list (v455)
@@ -7708,7 +7809,7 @@ function openHeaderMenu() {
           || (podLevel === 'watch' && s.series === 'catholictv');
         items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
       });
-      [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['video', 'Video & more']].forEach(function (sd) {
+      [['courses', 'Courses'], ['podcasts', 'Podcasts']].forEach(function (sd) {
         if (sd[0] === podStandingSide) return;
         items.push({ label: sd[1], state: '\u203a', act: function () { goSide('podcasts', sd[0]); } });
       });

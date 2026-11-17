@@ -1656,14 +1656,17 @@ async function podIndexPayload(env: Env): Promise<unknown> {
       category: "courses",
     });
   }
-  // v434 §2.1 (F-434-5): the VIDEO series append AFTER the audio
-  // loop — CatholicTV's seat, fourth and last, is guaranteed by
-  // construction, and the audio entries' order and shape are
-  // byte-untouched (they carry no kind field; the video entry
-  // carries kind: "video" — F-434-I4's wire form).
-  for (const vdef of POD_VIDEO_SERIES_LIST) {
-    seriesList.push(await podVideoIndexEntry(env, vdef));
-  }
+  // v434 §2.1 (F-434-5): the VIDEO series appended here, AFTER
+  // the audio loop — CatholicTV's seat, fourth and last.
+  // v493: that append RETIRES. The CatholicTV series leaves
+  // Catechesis (Formation) whole and stands under the Mass
+  // tab's Virtual side (John, 2026-11-17: "Yes. It leaves
+  // xatechesis"), so no video entry stands in this payload
+  // and no 'video' category reaches the Formation sides.
+  // POD_VIDEO_SERIES_LIST, podVideoIndexEntry, and the video
+  // build stand untouched below: the series payload route
+  // (/api/player/podcasts?series=catholictv) is the Virtual
+  // entry's target now, and it answers as it always has.
   // v464 §2.1: the RSS series append AFTER the video loop and
   // BEFORE the own gate — construction order audio → video →
   // rss → own. The client paints a Formation side by filtering
