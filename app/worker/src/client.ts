@@ -4366,13 +4366,15 @@ function paintMassScroll() {
   h += massLinesHtml(MASS_ORDER.communionMid, MASS_ROLES.communionMid);
   h += massPartHtml('agnus', MASS_ORDER.agnusEn, 'Agnus Dei');
   h += massLinesHtml(MASS_ORDER.communionPost, MASS_ROLES.communionPost);
+  h += '<div id="mass-personal-before">' + massPersonalSingleHtml('before') + '</div>';
   h += massAntiphonHtml('Communion Antiphon', f.communionAntiphon);
-  h += '<div id="mass-personal">' + massPersonalHtml() + '</div>';
+  h += '<div id="mass-personal-after">' + massPersonalSingleHtml('after') + '</div>';
   h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
   h += massSectionHtml('Concluding Rites');
   h += massLinesHtml(MASS_ORDER.concluding, MASS_ROLES.concluding);
   h += '<div id="mass-acks">' + massAcksHtml() + '</div>';
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
+  h += '<div id="mass-personal-aftermass">' + massPersonalAfterMassHtml() + '</div>';
   h += '</div>';
   view.innerHTML = h;
   view.querySelectorAll('[data-version]').forEach(function (b) {
@@ -4399,60 +4401,117 @@ function paintMassScroll() {
   wireMassLatin();
   wireMassChips();
   wireMassPersonal();
-  if (typeof state.mass.personalSlug === 'undefined') massPersonalLoad();
+  if (typeof state.mass.personal === 'undefined') massPersonalLoad();
 }
-/* ---------------- v495: the personal prayer after the
-   Communion Antiphon ----------------
-   John's order (2026-11-17): after the Communion Antiphon,
-   a button opens a search popup over the written-prayer
-   library; the picked prayer's text stands in the scroll
-   at the seat, and the choice is kept saved (server-side,
-   migration 0032 — the v470 favorites pattern at one row).
-   One prayer at the seat. The seat's paints: no choice —
-   the button alone; a choice — the prayer (its title as a
-   scroll heading, its body as scroll lines, so the v488
-   stepper governs it) plus the Change prayer button. A
-   failed load of the saved choice leaves the scroll whole
-   with the button standing: the seat never blocks the
-   scroll. Where the prayer carries Latin, the book page's
-   own English | Latin switch stands at the seat (per page
-   view, English first, no store — Amendment 1's rule),
-   its state held per Mass view in state.mass.personalLang. */
-function massPersonalHtml() {
-  var slug = state.mass ? state.mass.personalSlug : undefined;
-  var btn = '<p><button class="btn ghost" id="mass-personal-btn">' + (slug ? 'Change prayer' : 'Add your own prayer') + '</button></p>';
-  if (!slug) return btn;
+/* ---------------- v495's seat, generalized by v501:
+   personal prayers at THREE seats ----------------
+   John's orders (2026-11-17): v495 stood one seat after
+   the Communion Antiphon; v501 stands a single-prayer
+   seat BEFORE the Communion Antiphon, keeps the v495
+   seat after it (its button renamed to match the pair),
+   and adds a MULTIPLE-prayer seat after Mass — the last
+   element of the scroll, its prayers standing side by
+   side in one sideways-scrolling row of panels, in the
+   order added. Each seat: a button opens the search
+   popup over the written-prayer library; the picked
+   prayer's text stands in the scroll at the seat (its
+   title as a scroll heading, its body as scroll lines,
+   so the v488 stepper governs it), and the choice is
+   kept saved server-side per seat (migration 0033 —
+   the v470 favorites pattern, seat-keyed). The seats
+   are independent: a pick, change, or remove at one
+   never touches another. A failed load of the saved
+   choices leaves the scroll whole with the buttons
+   standing: a seat never blocks the scroll. Where a
+   prayer carries Latin, the book page's own English |
+   Latin switch stands at its seat or panel (per page
+   view, English first, no store), its state held per
+   Mass view in state.mass.personalLang, keyed per seat
+   and panel so each switch holds its own state. */
+var MASS_PERSONAL_SEATS = {
+  before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', add: 'Add a prayer before Communion' },
+  after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', add: 'Add a prayer after Communion' },
+  aftermass: { host: 'mass-personal-aftermass', btn: 'mass-personal-aftermass-btn', add: 'Add a prayer after Mass' }
+};
+function massPersonalState() {
+  return (state.mass && state.mass.personal) || {};
+}
+/* One standing prayer's dress, shared by the single
+   seats and the after-Mass panels: the title as a
+   scroll heading, the lang switch where Latin stands
+   (its state under the given key), the body as scroll
+   lines. Empty where the book cannot find the slug. */
+function massPersonalPrayerHtml(slug, key) {
   var hit = bookFind(slug);
-  if (!hit) return btn; // the book not loaded yet, or the slug retired — the button stands
+  if (!hit) return '';
   var p = hit.prayer;
-  var lang = (state.mass.personalLang === 'la' && p.bodyLatin) ? 'la' : 'en';
+  var lang = (state.mass.personalLang && state.mass.personalLang[key] === 'la' && p.bodyLatin) ? 'la' : 'en';
   var h = '<div class="mass-h">' + esc(p.title) + '</div>';
-  if (p.bodyLatin) h += '<div class="row">' + massPersonalLangHtml(lang) + '</div>';
+  if (p.bodyLatin) h += '<div class="row">' + massPersonalLangHtml(key, lang) + '</div>';
   h += massTextHtml(lang === 'la' ? p.bodyLatin : p.body, 'P');
-  return h + btn;
+  return h;
 }
-function massPersonalLangHtml(lang) {
-  return '<div class="segtoggle langswitch" id="mass-personal-lang">'
-    + '<button data-mplang="en"' + (lang === 'en' ? ' class="active"' : '') + '>English</button>'
-    + '<button data-mplang="la"' + (lang === 'la' ? ' class="active"' : '') + '>Latin</button></div>';
+function massPersonalSingleHtml(seat) {
+  var cfg = MASS_PERSONAL_SEATS[seat];
+  var slug = massPersonalState()[seat];
+  var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + (slug ? 'Change prayer' : cfg.add) + '</button></p>';
+  if (typeof slug !== 'string' || !slug) return btn;
+  var body = massPersonalPrayerHtml(slug, seat);
+  if (!body) return btn; // the book not loaded yet, or the slug retired — the button stands
+  return body + btn;
+}
+function massPersonalAfterMassHtml() {
+  var cfg = MASS_PERSONAL_SEATS.aftermass;
+  var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + cfg.add + '</button></p>';
+  var list = massPersonalState().afterMass;
+  if (!Array.isArray(list) || !list.length) return btn;
+  var panels = '';
+  list.forEach(function (slug, i) {
+    var body = massPersonalPrayerHtml(slug, 'aftermass:' + slug);
+    if (!body) return;
+    panels += '<div class="mass-panel">' + body
+      + '<p><button class="btn ghost" data-mpremove="' + i + '">Remove</button></p></div>';
+  });
+  if (!panels) return btn; // no standing prayer could be found in the book — the button stands
+  return '<div class="mass-panels">' + panels + '</div>'
+    + '<p><button class="btn ghost" id="' + cfg.btn + '">Add another prayer</button></p>';
+}
+function massPersonalLangHtml(key, lang) {
+  return '<div class="segtoggle langswitch">'
+    + '<button data-mplang="en" data-mpkey="' + esc(key) + '"' + (lang === 'en' ? ' class="active"' : '') + '>English</button>'
+    + '<button data-mplang="la" data-mpkey="' + esc(key) + '"' + (lang === 'la' ? ' class="active"' : '') + '>Latin</button></div>';
+}
+function paintMassPersonalSeat(seat) {
+  var host = document.getElementById(MASS_PERSONAL_SEATS[seat].host);
+  if (!host) return;
+  host.innerHTML = seat === 'aftermass' ? massPersonalAfterMassHtml() : massPersonalSingleHtml(seat);
+  wireMassPersonalSeat(seat);
 }
 function paintMassPersonal() {
-  var host = document.getElementById('mass-personal');
-  if (!host) return;
-  host.innerHTML = massPersonalHtml();
-  wireMassPersonal();
+  paintMassPersonalSeat('before');
+  paintMassPersonalSeat('after');
+  paintMassPersonalSeat('aftermass');
 }
-function wireMassPersonal() {
-  var host = document.getElementById('mass-personal');
+function wireMassPersonalSeat(seat) {
+  var host = document.getElementById(MASS_PERSONAL_SEATS[seat].host);
   if (!host) return;
-  var btn = document.getElementById('mass-personal-btn');
-  if (btn) btn.addEventListener('click', openMassPersonalPicker);
+  var btn = document.getElementById(MASS_PERSONAL_SEATS[seat].btn);
+  if (btn) btn.addEventListener('click', function () { openMassPersonalPicker(seat); });
   host.querySelectorAll('[data-mplang]').forEach(function (b) {
     b.addEventListener('click', function () {
-      state.mass.personalLang = b.getAttribute('data-mplang');
-      paintMassPersonal();
+      if (!state.mass.personalLang) state.mass.personalLang = {};
+      state.mass.personalLang[b.getAttribute('data-mpkey')] = b.getAttribute('data-mplang');
+      paintMassPersonalSeat(seat);
     });
   });
+  host.querySelectorAll('[data-mpremove]').forEach(function (b) {
+    b.addEventListener('click', function () { massPersonalRemovePanel(parseInt(b.getAttribute('data-mpremove'), 10)); });
+  });
+}
+function wireMassPersonal() {
+  wireMassPersonalSeat('before');
+  wireMassPersonalSeat('after');
+  wireMassPersonalSeat('aftermass');
 }
 /* The book's groups for the seat + the picker: the standing
    in-memory copy first, the device cache behind it, the
@@ -4467,37 +4526,52 @@ function massBookGroups() {
     return null;
   }).catch(function () { return null; });
 }
+function massPersonalAdopt(res) {
+  if (!res) return { before: null, after: null, afterMass: [] };
+  return {
+    before: typeof res.before === 'string' ? res.before : null,
+    after: typeof res.after === 'string' ? res.after : null,
+    afterMass: Array.isArray(res.afterMass) ? res.afterMass.filter(function (s) { return typeof s === 'string'; }) : []
+  };
+}
 function massPersonalLoad() {
   if (!state.mass || state.mass.personalLoading) return;
   state.mass.personalLoading = true;
-  var slugP = api('/api/prayer/mass-personal-prayer').then(function (res) {
-    return (res && typeof res.slug === 'string') ? res.slug : null;
-  }).catch(function () { return null; });
-  Promise.all([slugP, massBookGroups()]).then(function (r) {
+  var seatsP = api('/api/prayer/mass-personal-prayer').then(function (res) {
+    return massPersonalAdopt(res);
+  }).catch(function () { return { before: null, after: null, afterMass: [] }; });
+  Promise.all([seatsP, massBookGroups()]).then(function (r) {
     if (!state.mass) return;
-    state.mass.personalSlug = r[0];
+    state.mass.personal = r[0];
     if (r[1]) state.book = { groups: r[1] };
     state.mass.personalLoading = false;
     paintMassPersonal();
   });
 }
 /* The picker: the standing sheet construction (a TALL
-   drawer via mountDrawer) — a head row, the book's own
-   search pill, a Remove row standing first where a prayer
-   is set, and the library in the book's own list dress
-   (groups under their section heads; a search stands as a
-   flat hit list with the group as each row's meta — the
-   paintBookResults form, minus the book home's furniture).
-   A row tap saves through the session route; the answered
-   slug is the truth adopted. A failed save leaves the seat
-   as it stood and the sheet open — no silent state. */
-function openMassPersonalPicker() {
+   drawer via mountDrawer), opened for the seat that
+   called it and writing only that seat — a head row
+   naming the seat's add, the book's own search pill, a
+   Remove row standing first at a single seat where a
+   prayer is set, and the library in the book's own list
+   dress (groups under their section heads; a search
+   stands as a flat hit list with the group as each
+   row's meta — the paintBookResults form, minus the
+   book home's furniture). At the after-Mass seat the
+   sheet APPENDS: no Remove row stands (per-panel
+   Remove owns clearing) and a prayer already standing
+   at the seat carries the standing mark with no pick
+   act, so it is never added twice. A row tap saves
+   through the session route; the answered body is the
+   truth adopted. A failed save leaves the seat as it
+   stood and the sheet open — no silent state. */
+function openMassPersonalPicker(seat) {
   var old = document.querySelector('.mpsheet');
   if (old) old.remove();
-  var cur = state.mass ? state.mass.personalSlug : null;
+  var cur = seat === 'aftermass' ? null : (massPersonalState()[seat] || null);
   var sheet = document.createElement('div');
   sheet.className = 'sheet mpsheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add your own prayer</h1></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + MASS_PERSONAL_SEATS[seat].add + '</h1></div>'
     + '<div class="searchpill"><input type="text" id="mp-search" placeholder="Search" autocomplete="off"></div>'
     + (cur ? '<div class="card" data-mpremove="1"><div class="row"><span class="grow">Remove prayer</span></div></div>' : '')
     + '<div id="mp-results"></div></div>';
@@ -4505,23 +4579,30 @@ function openMassPersonalPicker() {
   mountDrawer(sheet, true); // v419: TALL drawer
   massBookGroups().then(function (groups) {
     if (groups && !(state.book && state.book.groups)) state.book = { groups: groups };
-    if (document.body.contains(sheet)) paintMassPersonalResults(sheet);
+    if (document.body.contains(sheet)) paintMassPersonalResults(sheet, seat);
   });
-  paintMassPersonalResults(sheet);
+  paintMassPersonalResults(sheet, seat);
   var inp = sheet.querySelector('#mp-search');
-  if (inp) inp.addEventListener('input', function () { paintMassPersonalResults(sheet); });
+  if (inp) inp.addEventListener('input', function () { paintMassPersonalResults(sheet, seat); });
   var rm = sheet.querySelector('[data-mpremove]');
-  if (rm) rm.addEventListener('click', function () { massPersonalSave(null, sheet); });
+  if (rm) rm.addEventListener('click', function () { massPersonalSave({ seat: seat, slug: null }, sheet); });
 }
-function massPersonalRowHtml(p, meta) {
+function massPersonalRowHtml(p, meta, standing) {
+  if (standing) {
+    // Already standing after Mass: the standing mark,
+    // no pick act — a tap on the row does nothing.
+    return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(p.title) + '</span></div>'
+      + '<div class="meta">Standing after Mass</div></div>';
+  }
   return '<div class="card bookrow" data-mppick="' + esc(p.slug) + '"><div class="row"><span class="grow">' + esc(p.title) + '</span></div>'
     + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '') + '</div>';
 }
-function paintMassPersonalResults(sheet) {
+function paintMassPersonalResults(sheet, seat) {
   var host = sheet.querySelector('#mp-results');
   if (!host) return;
   var groups = (state.book && state.book.groups) || [];
   if (!groups.length) { host.innerHTML = '<p class="meta">Loading...</p>'; return; }
+  var standing = seat === 'aftermass' ? (massPersonalState().afterMass || []) : [];
   var inp = sheet.querySelector('#mp-search');
   var q = inp ? inp.value.trim().toLowerCase() : '';
   var html = '';
@@ -4532,22 +4613,41 @@ function paintMassPersonalResults(sheet) {
         if (p.title.toLowerCase().indexOf(q) >= 0 || p.body.toLowerCase().indexOf(q) >= 0) hits.push({ p: p, category: g.category });
       });
     });
-    html = hits.length ? hits.map(function (h) { return massPersonalRowHtml(h.p, h.category); }).join('') : '<p class="meta">None.</p>';
+    html = hits.length ? hits.map(function (hh) { return massPersonalRowHtml(hh.p, hh.category, standing.indexOf(hh.p.slug) >= 0); }).join('') : '<p class="meta">None.</p>';
   } else {
     html = groups.map(function (g) {
-      return '<h2 class="sectionhead">' + esc(g.category) + '</h2>' + (g.prayers || []).map(function (p) { return massPersonalRowHtml(p, null); }).join('');
+      return '<h2 class="sectionhead">' + esc(g.category) + '</h2>' + (g.prayers || []).map(function (p) { return massPersonalRowHtml(p, null, standing.indexOf(p.slug) >= 0); }).join('');
     }).join('');
   }
   host.innerHTML = html;
   host.querySelectorAll('[data-mppick]').forEach(function (row) {
-    row.addEventListener('click', function () { massPersonalSave(row.getAttribute('data-mppick'), sheet); });
+    row.addEventListener('click', function () { massPersonalPick(seat, row.getAttribute('data-mppick'), sheet); });
   });
 }
-function massPersonalSave(slug, sheet) {
-  api('/api/prayer/mass-personal-prayer', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug: slug }) }).then(function (res) {
-    if (!state.mass) return;
-    state.mass.personalSlug = (res && typeof res.slug === 'string') ? res.slug : null;
-    state.mass.personalLang = 'en';
+function massPersonalPick(seat, slug, sheet) {
+  if (seat === 'aftermass') {
+    var list = (massPersonalState().afterMass || []).slice();
+    if (list.indexOf(slug) >= 0) return; // never a duplicate
+    list.push(slug);
+    massPersonalSave({ seat: 'aftermass', slugs: list }, sheet);
+  } else {
+    massPersonalSave({ seat: seat, slug: slug }, sheet);
+  }
+}
+function massPersonalRemovePanel(idx) {
+  var list = (massPersonalState().afterMass || []).slice();
+  if (idx < 0 || idx >= list.length) return;
+  list.splice(idx, 1);
+  massPersonalSave({ seat: 'aftermass', slugs: list }, null);
+}
+function massPersonalSave(payload, sheet) {
+  api('/api/prayer/mass-personal-prayer', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
+    if (!state.mass || !res) return;
+    state.mass.personal = massPersonalAdopt(res);
+    if (payload.seat === 'before' || payload.seat === 'after') {
+      // A changed single-seat pick starts its switch on English.
+      if (state.mass.personalLang) delete state.mass.personalLang[payload.seat];
+    }
     if (sheet) sheet.remove();
     paintMassPersonal();
   }).catch(function () {});
@@ -4598,7 +4698,7 @@ function paintMassLiturgy() {
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
-    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personalSlug: undefined, personalLang: 'en' };
+    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
     if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;

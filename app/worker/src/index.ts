@@ -978,15 +978,39 @@ async function bookFavorites(env: Env): Promise<string[]> {
   } catch { return []; }
 }
 
-// v495 §2: the Mass personal prayer's read — the one stored
-// slug, or null where no choice stands (the seat cleared, or
-// no row yet). A missing table (pre-0032) reads the same,
-// never an error (the bookFavorites posture).
-async function massPersonalPrayer(env: Env): Promise<string | null> {
+// v495 §2, generalized by v501 §2: the Mass personal
+// prayers' read — the three seats' stored choices. The
+// single seats (before · after) read element 0 of their
+// seat's slugs array, null where the seat stands empty;
+// afterMass reads its ordered list whole. A missing table
+// (pre-0033), a missing seat row, or an unparseable slugs
+// value reads empty for that seat, never an error (the
+// bookFavorites posture).
+interface MassPersonalBody { before: string | null; after: string | null; afterMass: string[] }
+async function massPersonalPrayers(env: Env): Promise<MassPersonalBody> {
+  const out: MassPersonalBody = { before: null, after: null, afterMass: [] };
   try {
-    const r = await env.DB.prepare("SELECT slug FROM mass_personal_prayer WHERE id = 1").first<{ slug: string | null }>();
-    return r && r.slug ? r.slug : null;
-  } catch { return null; }
+    const r = await env.DB.prepare("SELECT seat, slugs FROM mass_personal_prayer").all<{ seat: string; slugs: string }>();
+    for (const row of r.results ?? []) {
+      let arr: unknown = null;
+      try { arr = JSON.parse(row.slugs); } catch { arr = null; }
+      if (!Array.isArray(arr)) continue;
+      const slugs = arr.filter((x): x is string => typeof x === "string");
+      if (row.seat === "before") out.before = slugs[0] ?? null;
+      else if (row.seat === "after") out.after = slugs[0] ?? null;
+      else if (row.seat === "aftermass") out.afterMass = slugs;
+    }
+  } catch { /* pre-0033: every seat reads empty */ }
+  return out;
+}
+
+// v501 §2: one seat's write — the seat row upserted whole
+// with its slugs array (the session PUT validates first;
+// a named 400 writes nothing).
+async function massPersonalWrite(env: Env, seat: string, slugs: string[]): Promise<void> {
+  await env.DB.prepare(
+    "INSERT INTO mass_personal_prayer (seat, slugs, updated_at) VALUES (?, ?, ?) ON CONFLICT(seat) DO UPDATE SET slugs = excluded.slugs, updated_at = excluded.updated_at",
+  ).bind(seat, JSON.stringify(slugs), nowISO()).run();
 }
 
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
@@ -2415,12 +2439,13 @@ export default {
         return json({ ok: true, date });
       }
       if (seg[2] === "prayer" && seg[3] === "mass-personal-prayer" && request.method === "GET") {
-        // v495 §2: the door mirror of
-        // GET /api/prayer/mass-personal-prayer — the same
-        // body, read-only, so Review/Ship verify the stored
-        // choice. No door write route exists; writes are
-        // John's, session-only (the v328 posture).
-        return json({ ok: true, slug: await massPersonalPrayer(env) });
+        // v495 §2, generalized by v501 §2: the door mirror
+        // of GET /api/prayer/mass-personal-prayer — the
+        // same three-seat body, read-only, so Review/Ship
+        // verify the stored choices. No door write route
+        // exists; writes are John's, session-only (the
+        // v328 posture).
+        return json({ ok: true, ...(await massPersonalPrayers(env)) });
       }
       if (seg[2] === "prayer" && seg[3] === "book" && seg[4] === "favorites" && request.method === "GET") {
         // v470 §2.2: the door mirror of
@@ -2736,32 +2761,49 @@ export default {
           return json({ ok: true, favorites: await bookFavorites(env) });
         }
         if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "GET") {
-          // v495 §2: the Mass personal prayer's read — the
-          // stored slug, or null where no choice stands.
-          // Session-gated like the book's own read; NO PIN
-          // (the Mass carries none).
-          return json({ ok: true, slug: await massPersonalPrayer(env) });
+          // v495 §2, generalized by v501 §2: the Mass
+          // personal prayers' read — the three seats'
+          // stored choices. Session-gated like the book's
+          // own read; NO PIN (the Mass carries none).
+          return json({ ok: true, ...(await massPersonalPrayers(env)) });
         }
         if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "PUT") {
-          // v495 §2: John's personal-prayer write, in the
-          // favorites PUT's discipline (v470 §2.2) at one
-          // row: a non-null slug is validated against
-          // prayer_book, null clears the seat, and every
+          // v501 §2: John's personal-prayer write, in the
+          // favorites PUT's discipline (v470 §2.2) per
+          // seat: { seat: 'before'|'after', slug } sets or
+          // clears (null) a single seat; { seat:
+          // 'aftermass', slugs: [...] } replaces the
+          // after-Mass list whole. Every slug validates
+          // against prayer_book, a duplicate inside an
+          // aftermass payload is refused, and every
           // validation is a named 400 that writes nothing.
-          // The one row is upserted whole. The response is
-          // the stored choice re-read.
-          const body = await request.json().catch(() => ({})) as { slug?: unknown };
-          const raw = body.slug ?? null;
-          if (raw !== null && typeof raw !== "string") return err(400, "slug must be a string or null");
-          const slug = raw === null ? null : String(raw);
-          if (slug !== null) {
+          // The seat row is upserted whole. The response
+          // is the three seats re-read.
+          const body = await request.json().catch(() => ({})) as { seat?: unknown; slug?: unknown; slugs?: unknown };
+          const seat = body.seat;
+          if (seat !== "before" && seat !== "after" && seat !== "aftermass") {
+            return err(400, "seat must be before, after, or aftermass");
+          }
+          let slugs: string[];
+          if (seat === "aftermass") {
+            if (!Array.isArray(body.slugs)) return err(400, "slugs must be an array");
+            slugs = [];
+            for (const raw of body.slugs) {
+              if (typeof raw !== "string") return err(400, "slugs must be strings");
+              if (slugs.includes(raw)) return err(400, `duplicate slug ${raw || "(empty)"}`);
+              slugs.push(raw);
+            }
+          } else {
+            const raw = body.slug ?? null;
+            if (raw !== null && typeof raw !== "string") return err(400, "slug must be a string or null");
+            slugs = raw === null ? [] : [String(raw)];
+          }
+          for (const slug of slugs) {
             const hit = await env.DB.prepare("SELECT slug FROM prayer_book WHERE slug = ?").bind(slug).first();
             if (!hit) return err(400, `bad slug ${slug || "(empty)"}`);
           }
-          await env.DB.prepare(
-            "INSERT INTO mass_personal_prayer (id, slug, updated_at) VALUES (1, ?, ?) ON CONFLICT(id) DO UPDATE SET slug = excluded.slug, updated_at = excluded.updated_at",
-          ).bind(slug, nowISO()).run();
-          return json({ ok: true, slug: await massPersonalPrayer(env) });
+          await massPersonalWrite(env, seat, slugs);
+          return json({ ok: true, ...(await massPersonalPrayers(env)) });
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
           const r = await env.DB.prepare(
