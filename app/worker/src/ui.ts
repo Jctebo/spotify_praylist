@@ -70,8 +70,8 @@ export const SHELL_HTML = `<!DOCTYPE html>
   <button data-tab="mass" class="tab"><span class="tabpill"><span class="tabicon">&#10016;</span><span>Mass</span></span></button>
   <button data-tab="prayers" class="tab"><span class="tabpill"><span class="tabicon">&#10022;</span><span>Pray</span></span></button>
   <button data-tab="conscience" class="tab"><span class="tabpill"><span class="tabicon">&#10013;</span><span>Conscience</span></span></button>
-  <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon">&#128366;</span><span>Catechesis</span></span></button>
-  <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon">&#128320;</span><span>Sacred Art</span></span></button>
+  <button data-tab="podcasts" class="tab"><span class="tabpill"><span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.6 C9.9 4.8 6.7 4.3 3.6 4.7 V19.3 C6.7 18.9 9.9 19.4 12 21.2 C14.1 19.4 17.3 18.9 20.4 19.3 V4.7 C17.3 4.3 14.1 4.8 12 6.6 Z"/><path d="M12 6.6 V21.2"/><path d="M6.1 8.4 C7.7 8.1 9.3 8.4 10.5 9.3"/><path d="M6.1 12.1 C7.7 11.8 9.3 12.1 10.5 13"/><path d="M17.9 8.4 C16.3 8.1 14.7 8.4 13.5 9.3"/><path d="M17.9 12.1 C16.3 11.8 14.7 12.1 13.5 13"/></svg></span><span>Catechesis</span></span></button>
+  <button data-tab="wallpaper" class="tab"><span class="tabpill"><span class="tabicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.8" stroke-width="2.7"/><path d="M12 7.4 V16.6 M8.6 10.6 H15.4" stroke-width="2.3"/></svg></span><span>Sacred Art</span></span></button>
 </nav>
 <script src="/app.js"></script>
 </body>
@@ -152,6 +152,7 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 html.in-shell .tabbar { padding-bottom: 0; }
 .tab { flex:1; background:none; border:none; color:var(--bar-sub); font-family:var(--sans); font-size:13px; padding:8px 2px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; }
 .tab .tabicon { font-size:19px; line-height:1; }
+.tab .tabicon svg { width:19px; height:19px; display:block; }
 /* v419 (G18): the active tab carries the accent pill behind
    its glyph+label — the 2px inset rule retires. The pill's
    added height is absorbed by the standing --tabh
