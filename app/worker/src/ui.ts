@@ -800,6 +800,9 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-seg button:disabled { opacity: .35; cursor: default; }
 .mass-seg .mass-csize { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; padding: 5px 11px; color: var(--navy); white-space: nowrap; }
 .mass-section { font-size: 22px; font-weight: 700; letter-spacing: .01em; margin: 26px 0 8px; padding-top: 14px; border-top: 1px solid rgba(128,118,96,.4); }
+.mass-collapsible { cursor: pointer; }
+.mass-collmark { float: right; }
+.mass-personal-hidden { display: none; }
 .mass-h { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; opacity: .75; margin: 18px 0 6px; }
 .mass-line { font-size: 16.5px; line-height: 1.5; margin: 2px 0; }
 .mass-rubric { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }

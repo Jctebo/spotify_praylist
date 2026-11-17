@@ -4522,6 +4522,17 @@ function paintMassScroll() {
     + '<span class="segtoggle pill mass-seg"><button data-tsize="-1"' + (size <= 0 ? ' disabled' : '') + '>A\u2212</button>'
     + '<span class="mass-csize">' + MASS_SIZE_NAMES[size] + '</span>'
     + '<button data-tsize="1"' + (size >= 3 ? ' disabled' : '') + '>A+</button></span></div>';
+  /* v506: the Pre-Mass Prayers section — the first
+     section of the scroll proper, above the Order of
+     Mass, DEFAULT COLLAPSED on every view (John,
+     2026-11-17): the title stands in the big-section
+     dress with its collapse marker; the seat host
+     stands hidden until John expands it. The open
+     state is view state only (state.mass.preMassOpen,
+     reset at paintMassLiturgy's entry beside the v502
+     resets). */
+  h += '<div class="mass-section mass-collapsible" id="mass-premass-head">Pre-Mass Prayers <span class="mass-collmark">' + (state.mass.preMassOpen ? '&#9662;' : '&#9656;') + '</span></div>';
+  h += '<div id="mass-personal-premass"' + (state.mass.preMassOpen ? '' : ' class="mass-personal-hidden"') + '>' + massPersonalListHtml('premass') + '</div>';
   h += massSectionHtml('Introductory Rites');
   h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
   h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
@@ -4558,8 +4569,11 @@ function paintMassScroll() {
      v501 place of the before seat, ahead of the
      antiphon, is superseded. */
   h += massAntiphonHtml('Communion Antiphon', f.communionAntiphon);
-  h += '<div id="mass-personal-before">' + massPersonalSingleHtml('before') + '</div>';
-  h += '<div id="mass-personal-after">' + massPersonalSingleHtml('after') + '</div>';
+  /* v506: the two private Communion seats stand here
+     as card lists on the one system (their headings
+     ride the list paint). */
+  h += '<div id="mass-personal-before">' + massPersonalListHtml('before') + '</div>';
+  h += '<div id="mass-personal-after">' + massPersonalListHtml('after') + '</div>';
   h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
   h += massSectionHtml('Concluding Rites');
   h += massLinesHtml(MASS_ORDER.concluding, MASS_ROLES.concluding);
@@ -4570,7 +4584,7 @@ function paintMassScroll() {
      then the ICEL notice, once, as the scroll's final
      element. */
   h += massSectionHtml('Post-Mass Prayers');
-  h += '<div id="mass-personal-aftermass">' + massPostMassHtml() + '</div>';
+  h += '<div id="mass-personal-aftermass">' + massPersonalListHtml('aftermass') + '</div>';
   h += '<div id="mass-acks">' + massAcksHtml() + '</div>';
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
   h += '</div>';
@@ -4600,10 +4614,23 @@ function paintMassScroll() {
   wireMassPen();
   wireMassChips();
   wireMassPersonal();
+  /* v506: the Pre-Mass Prayers collapse — tapping its
+     title opens or shuts the section in place; the
+     state is view state only and resets at every
+     paintMassLiturgy entry. */
+  var pmHead = document.getElementById('mass-premass-head');
+  if (pmHead) pmHead.addEventListener('click', function () {
+    state.mass.preMassOpen = !state.mass.preMassOpen;
+    var host = document.getElementById('mass-personal-premass');
+    if (host) host.classList.toggle('mass-personal-hidden', !state.mass.preMassOpen);
+    var mark = pmHead.querySelector('.mass-collmark');
+    if (mark) mark.innerHTML = state.mass.preMassOpen ? '&#9662;' : '&#9656;';
+  });
   if (typeof state.mass.personal === 'undefined') massPersonalLoad();
 }
-/* ---------------- v495's seat, generalized by v501:
-   personal prayers at THREE seats ----------------
+/* ---------------- v495's seat, generalized by v501,
+   one card system at four sections by v506:
+   personal prayers on the Mass tab ----------------
    John's orders (2026-11-17): v495 stood one seat after
    the Communion Antiphon; v501 stands a single-prayer
    seat BEFORE the Communion Antiphon, keeps the v495
@@ -4643,11 +4670,25 @@ function paintMassScroll() {
    seat first) and heads them 'Private Pre-Communion
    Prayer' and 'Private Post-Communion Prayer'; the seat
    keys and saves stand ('before' holds the Pre pick,
-   'after' the Post pick). */
+   'after' the Post pick).
+   v506: ONE card system at FOUR sections — a new seat
+   'premass' carries the Pre-Mass Prayers section at the
+   top of the scroll (default collapsed; its list seeded
+   by migration 0035 with the traditional prayers before
+   Mass), and the two Communion seats convert from
+   single picks to card lists on the v505 system, in
+   their v505 places under their exact labels. Every
+   seat now stores an ordered list server-side (the
+   route answers all four as lists); every seat adds
+   from the library popup with the duplicate guard,
+   removes with one tap on the card, and re-orders with
+   the v413 move buttons. Only the Pre-Mass section
+   collapses. */
 var MASS_PERSONAL_SEATS = {
-  before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', add: 'Add a Private Pre-Communion Prayer', label: 'Private Pre-Communion Prayer' },
-  after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', add: 'Add a Private Post-Communion Prayer', label: 'Private Post-Communion Prayer' },
-  aftermass: { host: 'mass-personal-aftermass', btn: 'mass-personal-aftermass-btn', add: 'Add a prayer after Mass' }
+  premass: { host: 'mass-personal-premass', btn: 'mass-personal-premass-btn', key: 'preMass', add: 'Add a prayer before Mass', standing: 'Standing \u2014 Pre-Mass Prayers' },
+  before: { host: 'mass-personal-before', btn: 'mass-personal-before-btn', key: 'before', add: 'Add a Private Pre-Communion Prayer', label: 'Private Pre-Communion Prayer', standing: 'Standing \u2014 Private Pre-Communion Prayer' },
+  after: { host: 'mass-personal-after', btn: 'mass-personal-after-btn', key: 'after', add: 'Add a Private Post-Communion Prayer', label: 'Private Post-Communion Prayer', standing: 'Standing \u2014 Private Post-Communion Prayer' },
+  aftermass: { host: 'mass-personal-aftermass', btn: 'mass-personal-aftermass-btn', key: 'afterMass', add: 'Add a prayer after Mass', standing: 'Standing after Mass' }
 };
 function massPersonalState() {
   return (state.mass && state.mass.personal) || {};
@@ -4667,39 +4708,27 @@ function massPersonalPrayerHtml(slug, key) {
   h += massTextHtml(lang === 'la' ? p.bodyLatin : p.body, 'P');
   return h;
 }
-function massPersonalSingleHtml(seat) {
+/* v506: ONE list paint for all four prayer sections —
+   the seat's stored list in one column, in its stored
+   order. Each prayer stands as a .mass-panel card
+   carrying the shared prayer dress, the v413 move
+   buttons (up · down, each disabled at its end of the
+   list), and a one-tap Remove on the prayer itself: a
+   move or a removal writes the stored list at once,
+   no popup, no confirmation. A seat with a label (the
+   two private Communion lists) is headed by it,
+   standing whether the list stands empty or full. The
+   after-Mass paint of v505 is this function's first
+   shape; the single seats' paint retires into it. */
+function massPersonalListHtml(seat) {
   var cfg = MASS_PERSONAL_SEATS[seat];
-  var slug = massPersonalState()[seat];
-  /* v505 amendment (John, 2026-11-17 14:53 CT): each
-     private Communion seat is headed by its label —
-     'Private Pre-Communion Prayer' · 'Private
-     Post-Communion Prayer' — standing above the prayer
-     (or above the button while the seat stands unset). */
-  var head = '<div class="mass-h">' + cfg.label + '</div>';
-  var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + (slug ? 'Change prayer' : cfg.add) + '</button></p>';
-  if (typeof slug !== 'string' || !slug) return head + btn;
-  var body = massPersonalPrayerHtml(slug, seat);
-  if (!body) return head + btn; // the book not loaded yet, or the slug retired — the heading and button stand
-  /* v505: the single seats take the Post-Mass panel
-     dress — the prayer stands inside the .mass-panel
-     card, the button below it. */
-  return head + '<div class="mass-panel">' + body + '</div>' + btn;
-}
-/* v505: the Post-Mass Prayers list — the stored
-   after-Mass list in one column, in its stored order.
-   Each panel carries the shared prayer dress, the v413
-   move buttons (up · down, each disabled at its end of
-   the list), and a one-tap Remove on the prayer itself:
-   a move or a removal writes the stored list at once,
-   no popup, no confirmation. */
-function massPostMassHtml() {
-  var cfg = MASS_PERSONAL_SEATS.aftermass;
+  var head = cfg.label ? '<div class="mass-h">' + cfg.label + '</div>' : '';
   var btn = '<p><button class="btn ghost" id="' + cfg.btn + '">' + cfg.add + '</button></p>';
-  var list = massPersonalState().afterMass;
-  if (!Array.isArray(list) || !list.length) return btn;
+  var list = massPersonalState()[cfg.key];
+  if (!Array.isArray(list) || !list.length) return head + btn;
   var panels = '';
   list.forEach(function (slug, i) {
-    var body = massPersonalPrayerHtml(slug, 'aftermass:' + slug);
+    var body = massPersonalPrayerHtml(slug, seat + ':' + slug);
     if (!body) return;
     panels += '<div class="mass-panel">' + body
       + '<div class="setcontrols">'
@@ -4708,8 +4737,8 @@ function massPostMassHtml() {
       + '<button class="btn ghost" data-mpremove="' + i + '">Remove</button>'
       + '</div></div>';
   });
-  if (!panels) return btn; // no standing prayer could be found in the book — the button stands
-  return '<div class="mass-panels">' + panels + '</div>'
+  if (!panels) return head + btn; // no standing prayer could be found in the book — the heading and button stand
+  return head + '<div class="mass-panels">' + panels + '</div>'
     + '<p><button class="btn ghost" id="' + cfg.btn + '">Add another prayer</button></p>';
 }
 function massPersonalLangHtml(key, lang) {
@@ -4720,10 +4749,11 @@ function massPersonalLangHtml(key, lang) {
 function paintMassPersonalSeat(seat) {
   var host = document.getElementById(MASS_PERSONAL_SEATS[seat].host);
   if (!host) return;
-  host.innerHTML = seat === 'aftermass' ? massPostMassHtml() : massPersonalSingleHtml(seat);
+  host.innerHTML = massPersonalListHtml(seat);
   wireMassPersonalSeat(seat);
 }
 function paintMassPersonal() {
+  paintMassPersonalSeat('premass');
   paintMassPersonalSeat('before');
   paintMassPersonalSeat('after');
   paintMassPersonalSeat('aftermass');
@@ -4741,16 +4771,17 @@ function wireMassPersonalSeat(seat) {
     });
   });
   host.querySelectorAll('[data-mpremove]').forEach(function (b) {
-    b.addEventListener('click', function () { massPersonalRemovePanel(parseInt(b.getAttribute('data-mpremove'), 10)); });
+    b.addEventListener('click', function () { massPersonalRemovePanel(seat, parseInt(b.getAttribute('data-mpremove'), 10)); });
   });
   host.querySelectorAll('[data-mpup]').forEach(function (b) {
-    b.addEventListener('click', function () { massPersonalMovePanel(parseInt(b.getAttribute('data-mpup'), 10), -1); });
+    b.addEventListener('click', function () { massPersonalMovePanel(seat, parseInt(b.getAttribute('data-mpup'), 10), -1); });
   });
   host.querySelectorAll('[data-mpdown]').forEach(function (b) {
-    b.addEventListener('click', function () { massPersonalMovePanel(parseInt(b.getAttribute('data-mpdown'), 10), 1); });
+    b.addEventListener('click', function () { massPersonalMovePanel(seat, parseInt(b.getAttribute('data-mpdown'), 10), 1); });
   });
 }
 function wireMassPersonal() {
+  wireMassPersonalSeat('premass');
   wireMassPersonalSeat('before');
   wireMassPersonalSeat('after');
   wireMassPersonalSeat('aftermass');
@@ -4769,19 +4800,19 @@ function massBookGroups() {
   }).catch(function () { return null; });
 }
 function massPersonalAdopt(res) {
-  if (!res) return { before: null, after: null, afterMass: [] };
-  return {
-    before: typeof res.before === 'string' ? res.before : null,
-    after: typeof res.after === 'string' ? res.after : null,
-    afterMass: Array.isArray(res.afterMass) ? res.afterMass.filter(function (s) { return typeof s === 'string'; }) : []
-  };
+  var lists = { before: [], after: [], afterMass: [], preMass: [] };
+  if (!res) return lists;
+  ['before', 'after', 'afterMass', 'preMass'].forEach(function (k) {
+    if (Array.isArray(res[k])) lists[k] = res[k].filter(function (s) { return typeof s === 'string'; });
+  });
+  return lists;
 }
 function massPersonalLoad() {
   if (!state.mass || state.mass.personalLoading) return;
   state.mass.personalLoading = true;
   var seatsP = api('/api/prayer/mass-personal-prayer').then(function (res) {
     return massPersonalAdopt(res);
-  }).catch(function () { return { before: null, after: null, afterMass: [] }; });
+  }).catch(function () { return { before: [], after: [], afterMass: [], preMass: [] }; });
   Promise.all([seatsP, massBookGroups()]).then(function (r) {
     if (!state.mass) return;
     state.mass.personal = r[0];
@@ -4793,29 +4824,27 @@ function massPersonalLoad() {
 /* The picker: the standing sheet construction (a TALL
    drawer via mountDrawer), opened for the seat that
    called it and writing only that seat — a head row
-   naming the seat's add, the book's own search pill, a
-   Remove row standing first at a single seat where a
-   prayer is set, and the library in the book's own list
-   dress (groups under their section heads; a search
-   stands as a flat hit list with the group as each
-   row's meta — the paintBookResults form, minus the
-   book home's furniture). At the after-Mass seat the
-   sheet APPENDS: no Remove row stands (per-panel
-   Remove owns clearing) and a prayer already standing
-   at the seat carries the standing mark with no pick
-   act, so it is never added twice. A row tap saves
-   through the session route; the answered body is the
-   truth adopted. A failed save leaves the seat as it
-   stood and the sheet open — no silent state. */
+   naming the seat's add, the book's own search pill,
+   and the library in the book's own list dress (groups
+   under their section heads; a search stands as a flat
+   hit list with the group as each row's meta — the
+   paintBookResults form, minus the book home's
+   furniture). At EVERY seat the sheet APPENDS (v506 —
+   the after-Mass form generalized): no Remove row
+   stands (the cards' one-tap Remove owns clearing) and
+   a prayer already standing at the seat carries the
+   seat's standing mark with no pick act, so it is
+   never added twice. A row tap saves through the
+   session route; the answered body is the truth
+   adopted. A failed save leaves the seat as it stood
+   and the sheet open — no silent state. */
 function openMassPersonalPicker(seat) {
   var old = document.querySelector('.mpsheet');
   if (old) old.remove();
-  var cur = seat === 'aftermass' ? null : (massPersonalState()[seat] || null);
   var sheet = document.createElement('div');
   sheet.className = 'sheet mpsheet';
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + MASS_PERSONAL_SEATS[seat].add + '</h1></div>'
     + '<div class="searchpill"><input type="text" id="mp-search" placeholder="Search" autocomplete="off"></div>'
-    + (cur ? '<div class="card" data-mpremove="1"><div class="row"><span class="grow">Remove prayer</span></div></div>' : '')
     + '<div id="mp-results"></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true); // v419: TALL drawer
@@ -4826,15 +4855,14 @@ function openMassPersonalPicker(seat) {
   paintMassPersonalResults(sheet, seat);
   var inp = sheet.querySelector('#mp-search');
   if (inp) inp.addEventListener('input', function () { paintMassPersonalResults(sheet, seat); });
-  var rm = sheet.querySelector('[data-mpremove]');
-  if (rm) rm.addEventListener('click', function () { massPersonalSave({ seat: seat, slug: null }, sheet); });
 }
-function massPersonalRowHtml(p, meta, standing) {
+function massPersonalRowHtml(p, meta, standing, seat) {
   if (standing) {
-    // Already standing after Mass: the standing mark,
-    // no pick act — a tap on the row does nothing.
+    // Already standing at this seat: the seat's
+    // standing mark, no pick act — a tap on the row
+    // does nothing.
     return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(p.title) + '</span></div>'
-      + '<div class="meta">Standing after Mass</div></div>';
+      + '<div class="meta">' + MASS_PERSONAL_SEATS[seat].standing + '</div></div>';
   }
   return '<div class="card bookrow" data-mppick="' + esc(p.slug) + '"><div class="row"><span class="grow">' + esc(p.title) + '</span></div>'
     + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '') + '</div>';
@@ -4844,7 +4872,7 @@ function paintMassPersonalResults(sheet, seat) {
   if (!host) return;
   var groups = (state.book && state.book.groups) || [];
   if (!groups.length) { host.innerHTML = '<p class="meta">Loading...</p>'; return; }
-  var standing = seat === 'aftermass' ? (massPersonalState().afterMass || []) : [];
+  var standing = massPersonalState()[MASS_PERSONAL_SEATS[seat].key] || [];
   var inp = sheet.querySelector('#mp-search');
   var q = inp ? inp.value.trim().toLowerCase() : '';
   var html = '';
@@ -4855,10 +4883,10 @@ function paintMassPersonalResults(sheet, seat) {
         if (p.title.toLowerCase().indexOf(q) >= 0 || p.body.toLowerCase().indexOf(q) >= 0) hits.push({ p: p, category: g.category });
       });
     });
-    html = hits.length ? hits.map(function (hh) { return massPersonalRowHtml(hh.p, hh.category, standing.indexOf(hh.p.slug) >= 0); }).join('') : '<p class="meta">None.</p>';
+    html = hits.length ? hits.map(function (hh) { return massPersonalRowHtml(hh.p, hh.category, standing.indexOf(hh.p.slug) >= 0, seat); }).join('') : '<p class="meta">None.</p>';
   } else {
     html = groups.map(function (g) {
-      return '<h2 class="sectionhead">' + esc(g.category) + '</h2>' + (g.prayers || []).map(function (p) { return massPersonalRowHtml(p, null, standing.indexOf(p.slug) >= 0); }).join('');
+      return '<h2 class="sectionhead">' + esc(g.category) + '</h2>' + (g.prayers || []).map(function (p) { return massPersonalRowHtml(p, null, standing.indexOf(p.slug) >= 0, seat); }).join('');
     }).join('');
   }
   host.innerHTML = html;
@@ -4867,40 +4895,33 @@ function paintMassPersonalResults(sheet, seat) {
   });
 }
 function massPersonalPick(seat, slug, sheet) {
-  if (seat === 'aftermass') {
-    var list = (massPersonalState().afterMass || []).slice();
-    if (list.indexOf(slug) >= 0) return; // never a duplicate
-    list.push(slug);
-    massPersonalSave({ seat: 'aftermass', slugs: list }, sheet);
-  } else {
-    massPersonalSave({ seat: seat, slug: slug }, sheet);
-  }
+  var list = (massPersonalState()[MASS_PERSONAL_SEATS[seat].key] || []).slice();
+  if (list.indexOf(slug) >= 0) return; // never a duplicate
+  list.push(slug);
+  massPersonalSave({ seat: seat, slugs: list }, sheet);
 }
 /* v505: a re-order move in the Post-Mass list — swap
    the entry with its neighbor and write the stored
    list whole at once (the standing save). An out-of-
-   range move writes nothing. */
-function massPersonalMovePanel(idx, dir) {
-  var list = (massPersonalState().afterMass || []).slice();
+   range move writes nothing. v506: the same act at
+   every seat, on the seat's own list. */
+function massPersonalMovePanel(seat, idx, dir) {
+  var list = (massPersonalState()[MASS_PERSONAL_SEATS[seat].key] || []).slice();
   var j = idx + dir;
   if (idx < 0 || idx >= list.length || j < 0 || j >= list.length) return;
   var t = list[idx]; list[idx] = list[j]; list[j] = t;
-  massPersonalSave({ seat: 'aftermass', slugs: list }, null);
+  massPersonalSave({ seat: seat, slugs: list }, null);
 }
-function massPersonalRemovePanel(idx) {
-  var list = (massPersonalState().afterMass || []).slice();
+function massPersonalRemovePanel(seat, idx) {
+  var list = (massPersonalState()[MASS_PERSONAL_SEATS[seat].key] || []).slice();
   if (idx < 0 || idx >= list.length) return;
   list.splice(idx, 1);
-  massPersonalSave({ seat: 'aftermass', slugs: list }, null);
+  massPersonalSave({ seat: seat, slugs: list }, null);
 }
 function massPersonalSave(payload, sheet) {
   api('/api/prayer/mass-personal-prayer', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
     if (!state.mass || !res) return;
     state.mass.personal = massPersonalAdopt(res);
-    if (payload.seat === 'before' || payload.seat === 'after') {
-      // A changed single-seat pick starts its switch on English.
-      if (state.mass.personalLang) delete state.mass.personalLang[payload.seat];
-    }
     if (sheet) sheet.remove();
     paintMassPersonal();
   }).catch(function () {});
@@ -4956,14 +4977,14 @@ function paintMassLiturgy() {
   // one entry every open passes through (tab open and
   // side switch alike); in-view switches repaint only
   // their own section hosts and never pass through it.
-  if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; }
+  if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; state.mass.preMassOpen = false; }
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
   loadMassReadings(today);
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
-    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', penform: 'A', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
+    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', penform: 'A', preMassOpen: false, latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
     if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;

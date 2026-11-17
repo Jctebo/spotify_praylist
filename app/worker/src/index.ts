@@ -978,27 +978,26 @@ async function bookFavorites(env: Env): Promise<string[]> {
   } catch { return []; }
 }
 
-// v495 §2, generalized by v501 §2: the Mass personal
-// prayers' read — the three seats' stored choices. The
-// single seats (before · after) read element 0 of their
-// seat's slugs array, null where the seat stands empty;
-// afterMass reads its ordered list whole. A missing table
-// (pre-0033), a missing seat row, or an unparseable slugs
-// value reads empty for that seat, never an error (the
-// bookFavorites posture).
-interface MassPersonalBody { before: string | null; after: string | null; afterMass: string[] }
+// v495 §2, generalized by v501 §2 and v506 §2: the Mass
+// personal prayers' read — every seat's stored list,
+// whole, in stored order (v506 converts the before/after
+// single picks to lists; their element-0 reads retire).
+// A missing table (pre-0033), a missing seat row, or an
+// unparseable slugs value reads empty for that seat,
+// never an error (the bookFavorites posture).
+interface MassPersonalBody { before: string[]; after: string[]; afterMass: string[]; preMass: string[] }
 async function massPersonalPrayers(env: Env): Promise<MassPersonalBody> {
-  const out: MassPersonalBody = { before: null, after: null, afterMass: [] };
+  const out: MassPersonalBody = { before: [], after: [], afterMass: [], preMass: [] };
+  const keys: Record<string, "before" | "after" | "afterMass" | "preMass"> = { before: "before", after: "after", aftermass: "afterMass", premass: "preMass" };
   try {
     const r = await env.DB.prepare("SELECT seat, slugs FROM mass_personal_prayer").all<{ seat: string; slugs: string }>();
     for (const row of r.results ?? []) {
+      const k = keys[row.seat];
+      if (!k) continue;
       let arr: unknown = null;
       try { arr = JSON.parse(row.slugs); } catch { arr = null; }
       if (!Array.isArray(arr)) continue;
-      const slugs = arr.filter((x): x is string => typeof x === "string");
-      if (row.seat === "before") out.before = slugs[0] ?? null;
-      else if (row.seat === "after") out.after = slugs[0] ?? null;
-      else if (row.seat === "aftermass") out.afterMass = slugs;
+      out[k] = arr.filter((x): x is string => typeof x === "string");
     }
   } catch { /* pre-0033: every seat reads empty */ }
   return out;
@@ -2761,42 +2760,37 @@ export default {
           return json({ ok: true, favorites: await bookFavorites(env) });
         }
         if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "GET") {
-          // v495 §2, generalized by v501 §2: the Mass
-          // personal prayers' read — the three seats'
-          // stored choices. Session-gated like the book's
-          // own read; NO PIN (the Mass carries none).
+          // v495 §2, generalized by v501 §2 and v506 §2:
+          // the Mass personal prayers' read — the four
+          // seats' stored lists. Session-gated like the
+          // book's own read; NO PIN (the Mass carries
+          // none).
           return json({ ok: true, ...(await massPersonalPrayers(env)) });
         }
         if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "PUT") {
-          // v501 §2: John's personal-prayer write, in the
-          // favorites PUT's discipline (v470 §2.2) per
-          // seat: { seat: 'before'|'after', slug } sets or
-          // clears (null) a single seat; { seat:
-          // 'aftermass', slugs: [...] } replaces the
-          // after-Mass list whole. Every slug validates
-          // against prayer_book, a duplicate inside an
-          // aftermass payload is refused, and every
-          // validation is a named 400 that writes nothing.
-          // The seat row is upserted whole. The response
-          // is the three seats re-read.
-          const body = await request.json().catch(() => ({})) as { seat?: unknown; slug?: unknown; slugs?: unknown };
+          // v501 §2, generalized by v506 §2: John's
+          // personal-prayer write, in the favorites PUT's
+          // discipline (v470 §2.2) per seat: { seat,
+          // slugs: [...] } replaces the seat's list whole
+          // at every seat (before · after · aftermass ·
+          // premass); the v501 { slug } single-pick form
+          // retires with the seats' conversion to lists.
+          // Every slug validates against prayer_book, a
+          // duplicate inside a payload is refused, and
+          // every validation is a named 400 that writes
+          // nothing. The seat row is upserted whole. The
+          // response is the four seats re-read.
+          const body = await request.json().catch(() => ({})) as { seat?: unknown; slugs?: unknown };
           const seat = body.seat;
-          if (seat !== "before" && seat !== "after" && seat !== "aftermass") {
-            return err(400, "seat must be before, after, or aftermass");
+          if (seat !== "before" && seat !== "after" && seat !== "aftermass" && seat !== "premass") {
+            return err(400, "seat must be before, after, aftermass, or premass");
           }
-          let slugs: string[];
-          if (seat === "aftermass") {
-            if (!Array.isArray(body.slugs)) return err(400, "slugs must be an array");
-            slugs = [];
-            for (const raw of body.slugs) {
-              if (typeof raw !== "string") return err(400, "slugs must be strings");
-              if (slugs.includes(raw)) return err(400, `duplicate slug ${raw || "(empty)"}`);
-              slugs.push(raw);
-            }
-          } else {
-            const raw = body.slug ?? null;
-            if (raw !== null && typeof raw !== "string") return err(400, "slug must be a string or null");
-            slugs = raw === null ? [] : [String(raw)];
+          if (!Array.isArray(body.slugs)) return err(400, "slugs must be an array");
+          const slugs: string[] = [];
+          for (const raw of body.slugs) {
+            if (typeof raw !== "string") return err(400, "slugs must be strings");
+            if (slugs.includes(raw)) return err(400, `duplicate slug ${raw || "(empty)"}`);
+            slugs.push(raw);
           }
           for (const slug of slugs) {
             const hit = await env.DB.prepare("SELECT slug FROM prayer_book WHERE slug = ?").bind(slug).first();
