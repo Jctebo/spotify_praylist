@@ -12,7 +12,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -29,7 +30,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -37,7 +39,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -51,7 +54,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -69,7 +73,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "dedicationoflateran",
 "dedicationof",
 "dedication"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -85,7 +90,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "leogreat",
 "leo"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -93,7 +99,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -110,7 +117,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "martinoftours",
 "martinof",
 "martin"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -118,7 +126,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -133,7 +142,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "josaphat",
 "slugs": [
 "josaphat"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -141,7 +151,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -158,7 +169,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "francesxaviercabrini",
 "francesxavier",
 "frances"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -166,7 +178,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -183,7 +196,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -191,7 +205,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -205,7 +220,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -222,7 +238,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "margaretofscotland",
 "margaretof",
 "margaret"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-gertrude",
@@ -231,7 +248,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "gertrude",
 "slugs": [
 "gertrude"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -239,7 +257,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -256,7 +275,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "elizabethofhungary",
 "elizabethof",
 "elizabeth"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -264,7 +284,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -276,7 +297,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "key": "saint-dedicationofbasilicasofsaintspeterandpaul",
 "label": "Dedication of the Basilicas of Saints Peter and Paul, Apostles",
 "kind": "common",
-"common": "dedication"
+"common": "dedication",
+"rank": "m"
 },
 {
 "key": "saint-rosephilippineduchesne",
@@ -287,7 +309,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "rosephilippineduchesne",
 "rosephilippine",
 "rose"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -295,7 +318,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -309,7 +333,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -323,7 +348,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -341,7 +367,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "presentationofblessedvirgin",
 "presentationofblessed",
 "presentationof"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -349,7 +376,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -363,7 +391,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -379,7 +408,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "clementi",
 "clement"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-columban",
@@ -388,7 +418,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "columban",
 "slugs": [
 "columban"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedmiguelagustnpro",
@@ -400,7 +431,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedmiguelagustn",
 "blessedmiguel",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -408,7 +440,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -426,7 +459,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "andrewdnglcand",
 "andrewdnglc",
 "andrew"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -434,7 +468,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -451,7 +486,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "catherineofalexandria",
 "catherineof",
 "catherine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -459,7 +495,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -476,7 +513,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "thanksgivingdayusa",
 "thanksgivingday",
 "thanksgiving"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -484,7 +522,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -498,7 +537,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -515,7 +555,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -523,7 +564,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -537,7 +579,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -552,7 +595,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "andrew",
 "slugs": [
 "andrew"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -566,7 +610,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -580,7 +625,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -596,7 +642,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "francisxavier",
 "francis"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -604,7 +651,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -620,7 +668,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johndamascene",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -628,7 +677,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -645,7 +695,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -653,7 +704,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -667,7 +719,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -682,7 +735,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "ambrose",
 "slugs": [
 "ambrose"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -690,7 +744,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -708,7 +763,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "immaculateconceptionofblessedvirgin",
 "immaculateconceptionofblessed",
 "immaculateconceptionof"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -725,7 +781,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "juandiegocuauhtlatoatzin",
 "juandiego",
 "juan"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -733,7 +790,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -751,7 +809,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -759,7 +818,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -775,7 +835,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "damasusi",
 "damasus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -783,7 +844,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -801,7 +863,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -815,7 +878,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -832,7 +896,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofcross",
 "johnof",
 "john"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -840,7 +905,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -854,7 +920,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -868,7 +935,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -882,7 +950,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -896,7 +965,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -913,7 +983,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -921,7 +992,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -935,7 +1007,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -951,7 +1024,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "petercanisius",
 "peter"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -959,7 +1033,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -973,7 +1048,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -990,7 +1066,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofkanty",
 "johnof",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -998,7 +1075,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1012,7 +1090,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1026,7 +1105,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1041,7 +1121,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "stephen",
 "slugs": [
 "stephen"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -1055,7 +1136,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1071,7 +1153,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "holyinnocents",
 "holy"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -1087,7 +1170,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "thomasbecket",
 "thomas"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1095,7 +1179,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1109,7 +1194,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1125,7 +1211,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "sylvesteri",
 "sylvester"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1133,7 +1220,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1147,7 +1235,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1165,7 +1254,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "basilgreatandgregory",
 "basilgreatand",
 "basilgreat"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1173,7 +1263,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1187,7 +1278,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1204,7 +1296,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "elizabethannseton",
 "elizabethann",
 "elizabeth"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1212,7 +1305,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1228,7 +1322,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johnneumann",
 "john"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1236,7 +1331,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1252,7 +1348,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "andrbessette",
 "andr"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1260,7 +1357,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Christmas",
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1277,7 +1375,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "raymondofpenyafort",
 "raymondof",
 "raymond"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1285,7 +1384,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Christmas",
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1299,7 +1399,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Christmas",
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1316,7 +1417,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1324,7 +1426,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Christmas",
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1338,7 +1441,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1352,7 +1456,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1366,7 +1471,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1381,7 +1487,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "hilary",
 "slugs": [
 "hilary"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1389,7 +1496,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1403,7 +1511,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1417,7 +1526,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1434,7 +1544,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1442,7 +1553,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1456,7 +1568,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1470,7 +1583,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1484,7 +1598,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1499,7 +1614,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "fabian",
 "slugs": [
 "fabian"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-sebastian",
@@ -1508,7 +1624,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "sebastian",
 "slugs": [
 "sebastian"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1516,7 +1633,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1531,7 +1649,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "agnes",
 "slugs": [
 "agnes"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1539,7 +1658,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1553,7 +1673,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1569,7 +1690,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "mariannecope",
 "marianne"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-vincent",
@@ -1578,7 +1700,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "vincent",
 "slugs": [
 "vincent"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -1589,7 +1712,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1597,7 +1721,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1611,7 +1736,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1629,7 +1755,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "conversionofsaintpaul",
 "conversionofsaint",
 "conversionof"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -1646,7 +1773,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "timothyandtitus",
 "timothyand",
 "timothy"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1654,7 +1782,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1670,7 +1799,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "angelamerici",
 "angela"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1678,7 +1808,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1694,7 +1825,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "thomasaquinas",
 "thomas"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1702,7 +1834,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1716,7 +1849,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1733,7 +1867,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1741,7 +1876,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1755,7 +1891,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1769,7 +1906,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1786,7 +1924,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "presentationoflord",
 "presentationof",
 "presentation"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -1801,7 +1940,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "ansgar",
 "slugs": [
 "ansgar"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blaise",
@@ -1810,7 +1950,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "blaise",
 "slugs": [
 "blaise"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1818,7 +1959,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1832,7 +1974,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1847,7 +1990,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "agatha",
 "slugs": [
 "agatha"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1855,7 +1999,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1873,7 +2018,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "paulmikiand",
 "paulmiki",
 "paul"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -1881,7 +2027,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1895,7 +2042,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -1911,7 +2059,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "jeromeemiliani",
 "jerome"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-josephinebakhita",
@@ -1921,7 +2070,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "josephinebakhita",
 "josephine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1929,7 +2079,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1943,7 +2094,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1961,7 +2113,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -1969,7 +2122,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -1983,7 +2137,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2000,7 +2155,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2008,7 +2164,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2022,7 +2179,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2036,7 +2194,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2050,7 +2209,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2068,7 +2228,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "sevenholyfoundersofservite",
 "sevenholyfoundersof",
 "sevenholyfounders"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2076,7 +2237,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2090,7 +2252,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2104,7 +2267,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2121,7 +2285,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2129,7 +2294,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2143,7 +2309,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2161,7 +2328,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "chairofsaintpeter",
 "chairofsaint",
 "chairof"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -2176,7 +2344,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "polycarp",
 "slugs": [
 "polycarp"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -2184,7 +2353,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2198,7 +2368,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2212,7 +2383,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2226,7 +2398,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2243,7 +2416,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "gregoryofnarek",
 "gregoryof",
 "gregory"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2251,7 +2425,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2265,7 +2440,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2279,7 +2455,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2293,7 +2470,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2309,7 +2487,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "katharinedrexel",
 "katharine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2317,7 +2496,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2332,7 +2512,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "casimir",
 "slugs": [
 "casimir"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2340,7 +2521,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2354,7 +2536,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2371,7 +2554,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2379,7 +2563,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2393,7 +2578,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2410,7 +2596,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofgod",
 "johnof",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2418,7 +2605,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2435,7 +2623,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "francesofrome",
 "francesof",
 "frances"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2443,7 +2632,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2457,7 +2647,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2471,7 +2662,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2485,7 +2677,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2502,7 +2695,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2510,7 +2704,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2524,7 +2719,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2538,7 +2734,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2552,7 +2749,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2567,7 +2765,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "patrick",
 "slugs": [
 "patrick"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2575,7 +2774,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2592,7 +2792,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "cyrilofjerusalem",
 "cyrilof",
 "cyril"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2600,7 +2801,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2615,7 +2817,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "joseph",
 "slugs": [
 "joseph"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2632,7 +2835,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2640,7 +2844,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2654,7 +2859,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Lent",
 "week": 5,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2668,7 +2874,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2682,7 +2889,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2696,7 +2904,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2710,7 +2919,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2724,7 +2934,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2738,7 +2949,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2752,7 +2964,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2770,7 +2983,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "mondaywithinoctaveof",
 "mondaywithinoctave",
 "mondaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2788,7 +3002,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "tuesdaywithinoctaveof",
 "tuesdaywithinoctave",
 "tuesdaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2806,7 +3021,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "wednesdaywithinoctaveof",
 "wednesdaywithinoctave",
 "wednesdaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2824,7 +3040,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "thursdaywithinoctaveof",
 "thursdaywithinoctave",
 "thursdaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2842,7 +3059,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "fridaywithinoctaveof",
 "fridaywithinoctave",
 "fridaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2860,7 +3078,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "saturdaywithinoctaveof",
 "saturdaywithinoctave",
 "saturdaywithin"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2874,7 +3093,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -2891,7 +3111,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "annunciationoflord",
 "annunciationof",
 "annunciation"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -2905,7 +3126,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2923,7 +3145,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnbaptistdela",
 "johnbaptistde",
 "johnbaptist"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -2931,7 +3154,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2945,7 +3169,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2959,7 +3184,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2976,7 +3202,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -2984,7 +3211,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -2998,7 +3226,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3012,7 +3241,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3028,7 +3258,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "martini",
 "martin"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3036,7 +3267,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3050,7 +3282,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3064,7 +3297,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3078,7 +3312,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3095,7 +3330,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3103,7 +3339,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3117,7 +3354,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3131,7 +3369,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3145,7 +3384,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3160,7 +3400,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "anselm",
 "slugs": [
 "anselm"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3168,7 +3409,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3182,7 +3424,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3197,7 +3440,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "adalbert",
 "slugs": [
 "adalbert"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-george",
@@ -3206,7 +3450,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "george",
 "slugs": [
 "george"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3214,7 +3459,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3231,7 +3477,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "fidelisofsigmaringen",
 "fidelisof",
 "fidelis"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3239,7 +3486,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 4,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3253,7 +3501,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3267,7 +3516,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3281,7 +3531,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3299,7 +3550,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "louisgrignionde",
 "louisgrignion",
 "louis"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-peterchanel",
@@ -3309,7 +3561,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "peterchanel",
 "peter"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3317,7 +3570,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3334,7 +3588,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "catherineofsiena",
 "catherineof",
 "catherine"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -3342,7 +3597,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3358,7 +3614,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "piusv",
 "pius"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3366,7 +3623,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3382,7 +3640,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "josephworker",
 "joseph"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3390,7 +3649,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 5,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3404,7 +3664,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3421,7 +3682,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "philipandjames",
 "philipand",
 "philip"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -3435,7 +3697,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3449,7 +3712,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3463,7 +3727,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3477,7 +3742,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3494,7 +3760,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3502,7 +3769,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 6,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3516,7 +3784,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3533,7 +3802,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofvila",
 "johnof",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-damiendeveuster",
@@ -3544,7 +3814,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "damiendeveuster",
 "damiende",
 "damien"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3552,7 +3823,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3566,7 +3838,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3583,7 +3856,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "nereusandachilleus",
 "nereusand",
 "nereus"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-pancras",
@@ -3592,7 +3866,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "pancras",
 "slugs": [
 "pancras"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3600,7 +3875,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3618,7 +3894,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3626,7 +3903,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3641,7 +3919,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "matthias",
 "slugs": [
 "matthias"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -3656,7 +3935,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "isidore",
 "slugs": [
 "isidore"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3664,7 +3944,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Easter",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3678,7 +3959,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3695,7 +3977,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -3703,7 +3986,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3719,7 +4003,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johni",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3727,7 +4012,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3741,7 +4027,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3758,7 +4045,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "bernardineofsiena",
 "bernardineof",
 "bernardine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3766,7 +4054,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3782,7 +4071,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "christophermagallanes",
 "christopher"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3790,7 +4080,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3807,7 +4098,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ritaofcascia",
 "ritaof",
 "rita"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -3818,7 +4110,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3826,7 +4119,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 7,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3840,7 +4134,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -3854,7 +4149,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3870,7 +4166,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "bedevenerable",
 "bede"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-gregoryvii",
@@ -3880,7 +4177,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "gregoryvii",
 "gregory"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-marymagdalenedepazzi",
@@ -3892,7 +4190,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "marymagdalenede",
 "marymagdalene",
 "mary"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3900,7 +4199,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3916,7 +4216,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "philipneri",
 "philip"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -3924,7 +4225,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3941,7 +4243,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "augustineofcanterbury",
 "augustineof",
 "augustine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3949,7 +4252,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3963,7 +4267,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -3979,7 +4284,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "paulvi",
 "paul"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -3990,7 +4296,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -3998,7 +4305,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 8,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4016,7 +4324,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "mostholybodyandbloodof",
 "mostholybodyandblood",
 "mostholybodyand"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -4034,7 +4343,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "visitationofblessedvirgin",
 "visitationofblessed",
 "visitationof"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -4049,7 +4359,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "justin",
 "slugs": [
 "justin"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4057,7 +4368,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 9,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4074,7 +4386,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "marcellinusandpeter",
 "marcellinusand",
 "marcellinus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4082,7 +4395,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 9,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4100,7 +4414,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "charleslwangaand",
 "charleslwanga",
 "charles"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4108,7 +4423,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 9,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4126,7 +4442,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "mostsacredheartof",
 "mostsacredheart",
 "mostsacred"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -4141,7 +4458,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "boniface",
 "slugs": [
 "boniface"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-immaculateheartofblessedvirginmary",
@@ -4153,7 +4471,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "immaculateheartofblessedvirgin",
 "immaculateheartofblessed",
 "immaculateheartof"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -4164,7 +4483,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4172,7 +4492,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 9,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4186,7 +4507,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4200,7 +4522,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4214,7 +4537,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4229,7 +4553,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "ephrem",
 "slugs": [
 "ephrem"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4237,7 +4562,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4251,7 +4577,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4266,7 +4593,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "barnabas",
 "slugs": [
 "barnabas"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4274,7 +4602,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4291,7 +4620,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4299,7 +4629,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 10,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4313,7 +4644,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4327,7 +4659,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4341,7 +4674,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4355,7 +4689,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4369,7 +4704,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4383,7 +4719,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4398,7 +4735,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "romuald",
 "slugs": [
 "romuald"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -4409,7 +4747,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4417,7 +4756,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 11,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4431,7 +4771,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4447,7 +4788,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "aloysiusgonzaga",
 "aloysius"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4455,7 +4797,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4471,7 +4814,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johnfisher",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-paulinusofnola",
@@ -4482,7 +4826,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "paulinusofnola",
 "paulinusof",
 "paulinus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4490,7 +4835,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4504,7 +4850,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4518,7 +4865,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4532,7 +4880,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4549,7 +4898,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4557,7 +4907,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 12,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4571,7 +4922,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 13,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4586,7 +4938,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "irenaeus",
 "slugs": [
 "irenaeus"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4594,7 +4947,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 13,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4611,7 +4965,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "peterandpaul",
 "peterand",
 "peter"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -4629,7 +4984,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "firstmartyrsofholyroman",
 "firstmartyrsofholy",
 "firstmartyrsof"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4637,7 +4993,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 13,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4653,7 +5010,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "junperoserra",
 "junpero"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4661,7 +5019,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 13,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4675,7 +5034,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 13,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4690,7 +5050,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "thomas",
 "slugs": [
 "thomas"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -4704,7 +5065,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4720,7 +5082,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "anthonyzaccaria",
 "anthony"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-elizabethofportugal",
@@ -4731,7 +5094,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "elizabethofportugal",
 "elizabethof",
 "elizabeth"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4739,7 +5103,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4755,7 +5120,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "mariagoretti",
 "maria"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4763,7 +5129,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4777,7 +5144,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4791,7 +5159,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4808,7 +5177,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "augustinezhaorong",
 "augustinezhao",
 "augustine"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4816,7 +5186,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4833,7 +5204,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4841,7 +5213,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 14,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4855,7 +5228,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -4869,7 +5243,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4884,7 +5259,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "henry",
 "slugs": [
 "henry"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4892,7 +5268,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4908,7 +5285,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "kateritekakwitha",
 "kateri"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4916,7 +5294,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4931,7 +5310,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "bonaventure",
 "slugs": [
 "bonaventure"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -4939,7 +5319,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4957,7 +5338,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyofmount",
 "ourladyof",
 "ourlady"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4965,7 +5347,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -4982,7 +5365,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -4990,7 +5374,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 15,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5004,7 +5389,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5018,7 +5404,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5033,7 +5420,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "apollinaris",
 "slugs": [
 "apollinaris"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5041,7 +5429,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5058,7 +5447,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "lawrenceofbrindisi",
 "lawrenceof",
 "lawrence"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5066,7 +5456,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5082,7 +5473,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "marymagdalene",
 "mary"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -5097,7 +5489,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "bridget",
 "slugs": [
 "bridget"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5105,7 +5498,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5121,7 +5515,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "sharbelmakhlf",
 "sharbel"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -5132,7 +5527,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5140,7 +5536,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 16,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5154,7 +5551,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5171,7 +5569,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "joachimandanne",
 "joachimand",
 "joachim"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5179,7 +5578,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5193,7 +5593,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5207,7 +5608,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5222,7 +5624,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "martha",
 "slugs": [
 "martha"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5230,7 +5633,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5246,7 +5650,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "peterchrysologus",
 "peter"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5254,7 +5659,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5271,7 +5677,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ignatiusofloyola",
 "ignatiusof",
 "ignatius"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5279,7 +5686,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 17,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5293,7 +5701,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5310,7 +5719,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "eusebiusofvercelli",
 "eusebiusof",
 "eusebius"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-peterjulianeymard",
@@ -5321,7 +5731,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "peterjulianeymard",
 "peterjulian",
 "peter"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5329,7 +5740,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5343,7 +5755,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5360,7 +5773,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnmaryvianney",
 "johnmary",
 "john"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5368,7 +5782,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5386,7 +5801,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "dedicationofbasilicaofsaintmary",
 "dedicationofbasilicaofsaint",
 "dedicationofbasilicaof"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5394,7 +5810,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5411,7 +5828,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "transfigurationoflord",
 "transfigurationof",
 "transfiguration"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -5426,7 +5844,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "cajetan",
 "slugs": [
 "cajetan"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-sixtusii",
@@ -5436,7 +5855,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "sixtusii",
 "sixtus"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -5447,7 +5867,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5455,7 +5876,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 18,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5469,7 +5891,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5487,7 +5910,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "teresabenedictaofcross",
 "teresabenedictaof",
 "teresabenedicta"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5495,7 +5919,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5510,7 +5935,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "lawrence",
 "slugs": [
 "lawrence"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -5525,7 +5951,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "clare",
 "slugs": [
 "clare"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5533,7 +5960,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5551,7 +5979,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "janefrancesde",
 "janefrances",
 "jane"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5559,7 +5988,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5574,7 +6004,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "pontian",
 "slugs": [
 "pontian"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5582,7 +6013,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5599,7 +6031,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "maximilianmarykolbe",
 "maximilianmary",
 "maximilian"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5607,7 +6040,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 19,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5625,7 +6059,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "assumptionofblessedvirgin",
 "assumptionofblessed",
 "assumptionof"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -5642,7 +6077,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "stephenofhungary",
 "stephenof",
 "stephen"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5650,7 +6086,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5664,7 +6101,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5678,7 +6116,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5694,7 +6133,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johneudes",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5702,7 +6142,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5717,7 +6158,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "bernard",
 "slugs": [
 "bernard"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5725,7 +6167,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5741,7 +6184,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "piusx",
 "pius"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5749,7 +6193,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 20,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5763,7 +6208,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5780,7 +6226,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "roseoflima",
 "roseof",
 "rose"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5788,7 +6235,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5803,7 +6251,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "bartholomew",
 "slugs": [
 "bartholomew"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -5820,7 +6269,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "josephofcalasanz",
 "josephof",
 "joseph"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-louis",
@@ -5829,7 +6279,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "louis",
 "slugs": [
 "louis"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -5837,7 +6288,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5851,7 +6303,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5866,7 +6319,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "monica",
 "slugs": [
 "monica"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5874,7 +6328,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5889,7 +6344,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "augustine",
 "slugs": [
 "augustine"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5897,7 +6353,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 21,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5911,7 +6368,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -5925,7 +6383,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5939,7 +6398,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5953,7 +6413,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5967,7 +6428,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -5983,7 +6445,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "gregorygreat",
 "gregory"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -5991,7 +6454,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6008,7 +6472,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6016,7 +6481,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 22,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6030,7 +6496,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6044,7 +6511,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6058,7 +6526,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6072,7 +6541,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6088,7 +6558,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "peterclaver",
 "peter"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6096,7 +6567,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6110,7 +6582,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6127,7 +6600,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6135,7 +6609,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 23,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6149,7 +6624,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6165,7 +6641,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johnchrysostom",
 "john"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6173,7 +6650,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6191,7 +6669,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "exaltationofholy",
 "exaltationof",
 "exaltation"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -6209,7 +6688,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6217,7 +6697,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6232,7 +6713,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "cornelius",
 "slugs": [
 "cornelius"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6240,7 +6722,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6257,7 +6740,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "hildegardofbingen",
 "hildegardof",
 "hildegard"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-robertbellarmine",
@@ -6267,7 +6751,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "robertbellarmine",
 "robert"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6275,7 +6760,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6292,7 +6778,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6300,7 +6787,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 24,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6314,7 +6802,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6331,7 +6820,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "andrewkimtaegn",
 "andrewkim",
 "andrew"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6339,7 +6829,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6354,7 +6845,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "matthew",
 "slugs": [
 "matthew"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -6368,7 +6860,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6385,7 +6878,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "piusofpietrelcina",
 "piusof",
 "pius"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6393,7 +6887,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6407,7 +6902,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6424,7 +6920,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6432,7 +6929,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 25,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6446,7 +6944,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6463,7 +6962,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "vincentdepaul",
 "vincentde",
 "vincent"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6471,7 +6971,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6489,7 +6990,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "lawrenceruizand",
 "lawrenceruiz",
 "lawrence"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-wenceslaus",
@@ -6498,7 +7000,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "wenceslaus",
 "slugs": [
 "wenceslaus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6506,7 +7009,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6521,7 +7025,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "michael",
 "slugs": [
 "michael"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -6536,7 +7041,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "jerome",
 "slugs": [
 "jerome"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6544,7 +7050,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6562,7 +7069,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "thrseofchild",
 "thrseof",
 "thrse"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6570,7 +7078,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6587,7 +7096,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "holyguardianangels",
 "holyguardian",
 "holy"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6595,7 +7105,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 26,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6609,7 +7120,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6626,7 +7138,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "francisofassisi",
 "francisof",
 "francis"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6634,7 +7147,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6650,7 +7164,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "faustinakowalska",
 "faustina"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedfrancisxavierseelos",
@@ -6662,7 +7177,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedfrancisxavier",
 "blessedfrancis",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6670,7 +7186,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6685,7 +7202,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "bruno",
 "slugs": [
 "bruno"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedmarierosedurocher",
@@ -6697,7 +7215,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedmarierose",
 "blessedmarie",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6705,7 +7224,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6723,7 +7243,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6731,7 +7252,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6745,7 +7267,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6760,7 +7283,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "denis",
 "slugs": [
 "denis"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-johnleonardi",
@@ -6770,7 +7294,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johnleonardi",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -6781,7 +7306,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6789,7 +7315,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 27,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6803,7 +7330,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6819,7 +7347,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johnxxiii",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6827,7 +7356,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6841,7 +7371,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6855,7 +7386,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6871,7 +7403,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "callistusi",
 "callistus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6879,7 +7412,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6896,7 +7430,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "teresaofjesus",
 "teresaof",
 "teresa"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -6904,7 +7439,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6919,7 +7455,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "hedwig",
 "slugs": [
 "hedwig"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-margaretmaryalacoque",
@@ -6930,7 +7467,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "margaretmaryalacoque",
 "margaretmary",
 "margaret"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -6941,7 +7479,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -6949,7 +7488,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 28,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -6963,7 +7503,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -6978,7 +7519,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "luke",
 "slugs": [
 "luke"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -6996,7 +7538,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johndebrbeufandisaac",
 "johndebrbeufand",
 "johndebrbeuf"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7004,7 +7547,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7021,7 +7565,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "paulofcross",
 "paulof",
 "paul"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7029,7 +7574,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7043,7 +7589,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7060,7 +7607,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnpaulii",
 "johnpaul",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7068,7 +7616,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7085,7 +7634,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofcapistrano",
 "johnof",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedvirginmary",
@@ -7096,7 +7646,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7104,7 +7655,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 29,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7118,7 +7670,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7132,7 +7685,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7146,7 +7700,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7160,7 +7715,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7177,7 +7733,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "simonandjude",
 "simonand",
 "simon"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -7191,7 +7748,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7208,7 +7766,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7216,7 +7775,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 30,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7230,7 +7790,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7246,7 +7807,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "allsaints",
 "all"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -7264,7 +7826,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "commemorationofallfaithfuldepartedallsouls",
 "commemorationofallfaithfuldepartedall",
 "commemorationofallfaithfuldeparted"
-]
+],
+"rank": "s"
 }
 ]
 },
@@ -7281,7 +7844,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "martindeporres",
 "martinde",
 "martin"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7289,7 +7853,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7305,7 +7870,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "charlesborromeo",
 "charles"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7313,7 +7879,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7327,7 +7894,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7344,7 +7912,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7352,7 +7921,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 31,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7366,7 +7936,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7380,7 +7951,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7398,7 +7970,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "dedicationoflateran",
 "dedicationof",
 "dedication"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -7414,7 +7987,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "leogreat",
 "leo"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7422,7 +7996,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7439,7 +8014,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "martinoftours",
 "martinof",
 "martin"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7447,7 +8023,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7462,7 +8039,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "josaphat",
 "slugs": [
 "josaphat"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7470,7 +8048,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7487,7 +8066,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "francesxaviercabrini",
 "francesxavier",
 "frances"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7495,7 +8075,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 32,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7509,7 +8090,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7525,7 +8107,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "albertgreat",
 "albert"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7533,7 +8116,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7548,7 +8132,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "gertrude",
 "slugs": [
 "gertrude"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-margaretofscotland",
@@ -7559,7 +8144,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "margaretofscotland",
 "margaretof",
 "margaret"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7567,7 +8153,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7584,7 +8171,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "elizabethofhungary",
 "elizabethof",
 "elizabeth"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7592,7 +8180,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7610,7 +8199,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "dedicationofbasilicasofsaintspeterand",
 "dedicationofbasilicasofsaintspeter",
 "dedicationofbasilicasofsaints"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-rosephilippineduchesne",
@@ -7621,7 +8211,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "rosephilippineduchesne",
 "rosephilippine",
 "rose"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7629,7 +8220,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7643,7 +8235,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7660,7 +8253,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7668,7 +8262,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 33,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7682,7 +8277,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7697,7 +8293,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "cecilia",
 "slugs": [
 "cecilia"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7705,7 +8302,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7721,7 +8319,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "clementi",
 "clement"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-columban",
@@ -7730,7 +8329,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "columban",
 "slugs": [
 "columban"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-blessedmiguelagustnpro",
@@ -7742,7 +8342,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedmiguelagustn",
 "blessedmiguel",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7750,7 +8351,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7766,7 +8368,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "andrewdnglc",
 "andrew"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7774,7 +8377,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7791,7 +8395,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "catherineofalexandria",
 "catherineof",
 "catherine"
-]
+],
+"rank": "m"
 },
 {
 "key": "saint-thanksgivingdayusa",
@@ -7802,7 +8407,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "thanksgivingdayusa",
 "thanksgivingday",
 "thanksgiving"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7810,7 +8416,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7824,7 +8431,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7841,7 +8449,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7849,7 +8458,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Ordinary Time",
 "week": 34,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7863,7 +8473,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7877,7 +8488,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7892,7 +8504,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "andrew",
 "slugs": [
 "andrew"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -7906,7 +8519,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7920,7 +8534,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7936,7 +8551,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "francisxavier",
 "francis"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -7944,7 +8560,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7960,7 +8577,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "johndamascene",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -7968,7 +8586,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 1,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -7982,7 +8601,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -7997,7 +8617,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "nicholas",
 "slugs": [
 "nicholas"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8005,7 +8626,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8020,7 +8642,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "ambrose",
 "slugs": [
 "ambrose"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -8028,7 +8651,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8046,7 +8670,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "immaculateconceptionofblessedvirgin",
 "immaculateconceptionofblessed",
 "immaculateconceptionof"
-]
+],
+"rank": "S"
 }
 ]
 },
@@ -8063,7 +8688,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "juandiegocuauhtlatoatzin",
 "juandiego",
 "juan"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8071,7 +8697,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8089,7 +8716,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "ourladyof",
 "ourlady",
 "our"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8097,7 +8725,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8113,7 +8742,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "damasusi",
 "damasus"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8121,7 +8751,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 2,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8135,7 +8766,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -8150,7 +8782,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "lucy",
 "slugs": [
 "lucy"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -8158,7 +8791,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8175,7 +8809,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofcross",
 "johnof",
 "john"
-]
+],
+"rank": "M"
 },
 {
 "key": "ferial",
@@ -8183,7 +8818,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8197,7 +8833,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8211,7 +8848,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8225,7 +8863,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8242,7 +8881,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "blessedvirginmary",
 "blessedvirgin",
 "blessed"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8250,7 +8890,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8264,7 +8905,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": "Advent",
 "week": 3,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -8278,7 +8920,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8294,7 +8937,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "petercanisius",
 "peter"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8302,7 +8946,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8316,7 +8961,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8333,7 +8979,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "johnofkanty",
 "johnof",
 "john"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8341,7 +8988,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8355,7 +9003,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8369,7 +9018,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -8383,7 +9033,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "sunday"
+"part": "sunday",
+"rank": "Sunday"
 }
 ]
 },
@@ -8398,7 +9049,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slug": "john",
 "slugs": [
 "john"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -8414,7 +9066,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "holyinnocents",
 "holy"
-]
+],
+"rank": "F"
 }
 ]
 },
@@ -8430,7 +9083,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "thomasbecket",
 "thomas"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8438,7 +9092,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8452,7 +9107,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 },
@@ -8468,7 +9124,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "slugs": [
 "sylvesteri",
 "sylvester"
-]
+],
+"rank": "m"
 },
 {
 "key": "ferial",
@@ -8476,7 +9133,8 @@ export const MASS_CALENDAR: Record<string, { name: string; default: string; vers
 "kind": "season",
 "season": null,
 "week": null,
-"part": "weekday"
+"part": "weekday",
+"rank": "ferial"
 }
 ]
 }

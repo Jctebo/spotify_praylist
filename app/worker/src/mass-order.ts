@@ -1086,3 +1086,43 @@ export const MASS_LATIN: Record<string, string[]> = {
 "Kýrie eléison."
 ]
 };
+// v488: one role code per line above, index-aligned.
+// P people (bold) · p priest (regular) · r rubric /
+// commentary (never rendered) · h heading · d dialogue
+// (a combined V/. R/. line) · x excluded (another Mass
+// form, season, or alternative text — see the release
+// document, section 2, Control 4 audit). The rubric
+// split follows the source pages own typography (red
+// print); the people/priest split follows the Missals
+// own speaker cues. See gen-mass-order.py.
+export const MASS_ROLES: Record<string, string> = {
+"offertory": "hrrrppppprrPrppprppppprrPrpppprrppr",
+"prefaceDialogue": "prPrprPrprP",
+"epI": "ppprprpprppppppprpphprrppppppppphpppppppppppppppppppprxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrpppppprprxxxxxxxxxxxxxrrppppppprrprrprppppprppprrprrpppprpppppprrprPPPrPPPrPPPrppppppppppppppppppppprppppppprprphrppprrppprprprppppppppppppppprprpppprppppprP",
+"epII": "pprpprpprrpprrpprppprrprrppprpppppprrprPPPrPPPrPPPrppppppppppppprprrxxxxxrpppppppppprprppppprP",
+"epIII": "pppprppprpprprprrppprppprrprrppprpppppprrprPPPrPPPrPPPrpppppppppprppppprpppppppppprpprppppprP",
+"epIV": "pPpPpPppppppppppppppppPPPPPrppppppppppppppppppppppppppppppppppprppprpprppprppppprrpprppprrprrppprpppppprrprPPPrPPPrPPPrppppppppppppppppppppprppppppppppppppppprprppppprP",
+"sanctus": "PPPPP",
+"concluding": "hrrprPrpprPrrrrxxxxxxxxxxxxxxxxxrrprprprprP",
+"commonPreface1": "ppppppppppppppppp",
+"confiteorEn": "PPPPPrPPrPPPP",
+"introPre": "hrrrprPrpppprpprprPrrprrhrrppr",
+"kyrieEn": "ddd",
+"introMid": "rppprPrrrpprrprPrprPrppprPrrrpprrrpprPrpprPrpprPrppprPrr",
+"gloriaEn": "PPPPPPPPPPPPPPPPPPPPPPPP",
+"introPost": "rxxxr",
+"introTail": "rprrP",
+"creedEn": "PPPPPPPPPPPPPrPPPPPPPPPPPPPPPPPPPPrxxxxxxxxxxxxxxxxxxxx",
+"creedOutro": "r",
+"communionPre": "pr",
+"paterEn": "PPPPPPPPPP",
+"communionMid": "rppppppprrPPPrppppppprprPrprPrprrpppr",
+"agnusEn": "PPPPPP",
+"communionPost": "rrpppppppprpppppprppprPPPP"
+};
+export const MASS_LATIN_ROLES: Record<string, string> = {
+"gloria": "PPPPPPPPPPPPPPPPP",
+"sanctus": "PPPPP",
+"agnus": "PPPPPP",
+"kyrie": "PPPPPP"
+};

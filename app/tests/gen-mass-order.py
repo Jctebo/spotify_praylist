@@ -8,8 +8,8 @@ and prints a FAIL line the build must not ship over.
 """
 import re, html as H, json
 
-FIX = '/home/hatch/workspace/.worktrees/v486/app/tests/fixtures-v486/'
-OUT = '/home/hatch/workspace/.worktrees/v486/app/worker/src/mass-order.ts'
+FIX = '/home/hatch/workspace/.worktrees/v488/app/tests/fixtures-v486/'
+OUT = '/home/hatch/workspace/.worktrees/v488/app/worker/src/mass-order.ts'
 
 def norm(h):
     def font_repl(m):
@@ -404,6 +404,165 @@ for key, lines in latin.items():
 for k, v in segs.items():
     print(k, len(v), 'lines', ('| ' + v[0][:60]) if v else '| EMPTY')
 
+# ---------- v488: role classification (people / priest /
+# rubric / heading / dialogue / excluded) ----------
+# The Order page prints its rubrics in RED (<font
+# color="#ff0000">) and the spoken text in black — the
+# source's own typography decides commentary vs spoken.
+# Mark the red spans, run the standing normalization over
+# the marked text, and carry a per-line red flag out (a
+# line is red when at least half its characters stand in a
+# red span; the Missal's black instruction numbers prefix
+# red rubric lines). The texts must come out identical to
+# the standing normalization — asserted here.
+def norm_flagged(path):
+    raw = open(path, encoding='utf-8', errors='replace').read()
+    marked = re.sub(r'<font color="#ff0000">(.*?)</font>', '\x02\\1\x03', raw, flags=re.S)
+    out = []
+    state = False
+    for ln in norm(marked):
+        red_chars = 0; total = 0; cur = state
+        for ch in ln:
+            if ch == '\x02': cur = True; continue
+            if ch == '\x03': cur = False; continue
+            total += 1
+            if cur: red_chars += 1
+        state = cur
+        text = re.sub(r'\s+', ' ', ln.replace('\x02', '').replace('\x03', '')).strip()
+        # A span holding only whitespace leaves a marker-only
+        # line, which the standing normalization drops as
+        # empty — drop it here too so the lists stay aligned.
+        if text:
+            out.append((text, total > 0 and red_chars * 2 >= total))
+    return out
+
+flagged_o = norm_flagged(FIX + 'src-order-of-mass.htm')
+flagged_p = norm_flagged(FIX + 'src-prefaces.htm')
+assert [t for t, _ in flagged_o] == o, 'flagged Order lines differ from the standing normalization'
+assert [t for t, _ in flagged_p] == p, 'flagged Preface lines differ from the standing normalization'
+FLAGMAP = {}
+FLAG_CONFLICTS = []
+for _t, _r in flagged_o + flagged_p:
+    if _t in FLAGMAP and FLAGMAP[_t] != _r and _t not in FLAG_CONFLICTS:
+        FLAG_CONFLICTS.append(_t)
+    FLAGMAP[_t] = _r
+print('red-flag conflicts:', FLAG_CONFLICTS)
+def is_red(ln): return FLAGMAP.get(ln, False)
+
+HEADING_LINES = {'The Introductory Rites', 'The Liturgy of the Eucharist',
+                 'The Concluding Rites', 'Penitential Act*'}
+SANCTUS_SET = set(segs['sanctus'])
+ACCLAMATION_LINES = {
+    'We proclaim your Death, O Lord,', 'and profess your Resurrection',
+    'until you come again.', 'When we eat this Bread and drink this Cup,',
+    'we proclaim your Death, O Lord,', 'Save us, Savior of the world,',
+    'for by your Cross and Resurrection', 'you have set us free.'}
+PEOPLE_LINES = ACCLAMATION_LINES | SANCTUS_SET | {
+    'Amen.', 'And with your spirit.', 'Blessed be God for ever.',
+    'Thanks be to God.'}
+CUE_EXACT = {'The people:', 'The Priest:', 'All:', 'All reply:', 'The people reply:'}
+CUE_VERB_RE = re.compile(r'\b(says|saying|continues|adds|reply|acclaim|acclaiming|follows|invites)\b')
+def is_cue(ln):
+    if ln in CUE_EXACT: return True
+    return (ln.endswith(':') and (ln[:1].isupper() or ln[:1].isdigit())
+            and CUE_VERB_RE.search(ln) is not None)
+def cue_subject(ln):
+    if ln in ('The people:', 'The people reply:'): return 'P'
+    if ln == 'The Priest:': return 'p'
+    # A line the Missal introduces as said TOGETHER with the
+    # people ('Lord, I am not worthy…') is the people's line
+    # too — it stands bold as their response. (The Pater
+    # Noster introduction's 'together with the people'
+    # continues into its own segment, which defaults to the
+    # people's part on its own.)
+    if 'together with the people' in ln: return 'P'
+    if 'people' in ln and re.search(r'\b(reply|acclaim|acclaims|acclaiming|continue|continues|conclude|concludes)\b', ln):
+        return 'P'
+    if ln.startswith('All'): return 'P'
+    if 'they say' in ln or 'they continue' in ln: return 'P'
+    if 'Priest' in ln or 'celebrant' in ln or 'Deacon' in ln or 'Bishop' in ln: return 'p'
+    return None
+
+def _idx(lines, pred, start=0):
+    for i in range(start, len(lines)):
+        if pred(lines[i]): return i
+    return -1
+def build_xregions(seg, lines):
+    regs = []
+    if seg == 'creedEn':
+        a = _idx(lines, lambda l: l.startswith('19. Instead of'))
+        if a >= 0: regs.append((a + 1, len(lines) - 1))
+    if seg == 'introPost':
+        hits = [i for i, l in enumerate(lines)
+                if l.startswith('V/. Kyrie') or l.startswith('V/. Christe')]
+        if hits: regs.append((min(hits), max(hits)))
+    if seg == 'epI':
+        a = _idx(lines, lambda l: l == 'PROPER FORMS OF THE COMMUNICANTES')
+        b = _idx(lines, lambda l: l.startswith('87. With hands extended'))
+        if a >= 0 and b > a: regs.append((a, b - 1))
+        t = _idx(lines, lambda l: l.startswith('From the Mass of the Paschal Vigil'), start=95)
+        e = _idx(lines, lambda l: l == '(Through Christ our Lord. Amen.)', start=t) if t >= 0 else -1
+        if t >= 0 and e >= t: regs.append((t, e))
+    if seg == 'epII':
+        a = _idx(lines, lambda l: l.startswith('In Masses for the Dead'))
+        e = _idx(lines, lambda l: l == 'may also be one with him in his Resurrection.', start=a) if a >= 0 else -1
+        if a >= 0 and e > a: regs.append((a + 1, e))
+    if seg == 'concluding':
+        a = _idx(lines, lambda l: l.startswith('143. In a Pontifical Mass'))
+        d = _idx(lines, lambda l: l.startswith('the Father, X and the Son'), start=a) if a >= 0 else -1
+        e = _idx(lines, lambda l: l == 'Amen.', start=d) if d >= 0 else -1
+        if a >= 0 and e > a: regs.append((a + 1, e))
+    return regs
+
+SEG_DEFAULT = {'introPre': 'p', 'confiteorEn': 'P', 'introMid': 'p',
+               'kyrieEn': 'p', 'introPost': 'p', 'gloriaEn': 'P',
+               'introTail': 'p', 'creedEn': 'P', 'creedOutro': 'p',
+               'offertory': 'p', 'prefaceDialogue': 'p',
+               'commonPreface1': 'p', 'sanctus': 'P', 'epI': 'p',
+               'epII': 'p', 'epIII': 'p', 'epIV': 'p',
+               'communionPre': 'p', 'paterEn': 'P', 'communionMid': 'p',
+               'agnusEn': 'P', 'communionPost': 'p', 'concluding': 'p'}
+def classify(seg, lines):
+    regs = build_xregions(seg, lines)
+    pending = SEG_DEFAULT.get(seg, 'p')
+    roles = []
+    for i, ln in enumerate(lines):
+        if any(a <= i <= b for a, b in regs):
+            roles.append('x'); continue
+        if ln in HEADING_LINES:
+            roles.append('h'); continue
+        if is_cue(ln):
+            pending = cue_subject(ln) or pending
+            roles.append('r'); continue
+        m = re.match(r'^\d+\.\s+(.*)$', ln)
+        if m and len(m.group(1).split()) <= 6:
+            roles.append('h'); continue
+        if ln.startswith('*'):
+            roles.append('r'); continue
+        if is_red(ln):
+            roles.append('r'); continue
+        if ln.startswith('V/.') and ' R/. ' in ln:
+            roles.append('d'); continue
+        if ln.startswith('V/.'):
+            roles.append('p'); continue
+        if ln.startswith('R/.'):
+            roles.append('P'); continue
+        if ln in PEOPLE_LINES:
+            roles.append('P'); continue
+        roles.append(pending)
+    return ''.join(roles)
+
+ROLES = {k: classify(k, v) for k, v in segs.items()}
+LATIN_ROLES = {k: 'P' * len(v) for k, v in MASS_LATIN.items()}
+for k, v in segs.items():
+    assert len(ROLES[k]) == len(v), ('roles length', k)
+with open('/tmp/v488-classification-dump.txt', 'w', encoding='utf-8') as df:
+    for k, v in segs.items():
+        df.write(f"\n===== {k}\n")
+        for i, ln in enumerate(v):
+            df.write(f"{ROLES[k][i]} {'RED' if is_red(ln) else '   '} {i}\t{ln}\n")
+print('classification dump: /tmp/v488-classification-dump.txt')
+
 ts = ('// v486: generated by app/tests/gen-mass-order.py from the\n'
       '// proven source pages (Order of Mass + Prefaces, Roman\n'
       '// Missal 2011). Fixed ICEL texts; do not hand-edit.\n'
@@ -414,6 +573,19 @@ ts = ('// v486: generated by app/tests/gen-mass-order.py from the\n'
       '// tertia emendata (see gen-mass-order.py). A part absent\n'
       '// here carries no toggle.\n'
       'export const MASS_LATIN: Record<string, string[]> = '
-      + json.dumps(MASS_LATIN, ensure_ascii=False, indent=0) + ';\n')
+      + json.dumps(MASS_LATIN, ensure_ascii=False, indent=0) + ';\n'
+      '// v488: one role code per line above, index-aligned.\n'
+      '// P people (bold) · p priest (regular) · r rubric /\n'
+      '// commentary (never rendered) · h heading · d dialogue\n'
+      '// (a combined V/. R/. line) · x excluded (another Mass\n'
+      '// form, season, or alternative text — see the release\n'
+      '// document, section 2, Control 4 audit). The rubric\n'
+      '// split follows the source pages own typography (red\n'
+      '// print); the people/priest split follows the Missals\n'
+      '// own speaker cues. See gen-mass-order.py.\n'
+      'export const MASS_ROLES: Record<string, string> = '
+      + json.dumps(ROLES, ensure_ascii=False, indent=0) + ';\n'
+      'export const MASS_LATIN_ROLES: Record<string, string> = '
+      + json.dumps(LATIN_ROLES, ensure_ascii=False, indent=0) + ';\n')
 open(OUT, 'w', encoding='utf-8').write(ts)
 print('wrote', OUT)

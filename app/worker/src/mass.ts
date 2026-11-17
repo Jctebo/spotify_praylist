@@ -25,6 +25,7 @@ interface MassVersion {
   key: string;
   label: string;
   kind: string;
+  rank?: string;
   season?: string | null;
   week?: number | null;
   part?: string;
@@ -354,7 +355,11 @@ export async function massPayload(env: CacheEnv, date: string): Promise<unknown>
   }
   const versions = [];
   for (const v of entry.versions) {
-    versions.push({ key: v.key, label: v.label, formulary: await resolveFormulary(env, v) });
+    versions.push({ key: v.key, label: v.label, rank: v.rank ?? null, formulary: await resolveFormulary(env, v) });
   }
-  return { date, name: entry.name, defaultVersion: entry.default, versions, inCalendar: true };
+  // v488: the day's season (from its season-kind version, the
+  // same data that drives the propers) rides the payload so
+  // the client can apply the day-true Gloria/Creed rule.
+  const season = entry.versions.find((v) => v.kind === "season")?.season ?? null;
+  return { date, name: entry.name, defaultVersion: entry.default, versions, season, inCalendar: true };
 }

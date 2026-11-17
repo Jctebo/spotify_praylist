@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""v486: generate app/worker/src/mass-calendar.ts from the estate's
+"""v486: generate (v488: each version also carries its celebration rank
+from the same classification — S/F/M/m, Sunday, ferial — for the
+reader's day-true Gloria/Creed rule). app/worker/src/mass-calendar.ts from the estate's
 corrected devotional calendar ICS (the same calendar the nightly
 devotional job stands on). One entry per date: the day's display
 name + its Mass versions (principal · optional memorials · ferial),
@@ -14,7 +16,7 @@ from the dataset; the Worker falls back to its temporal math.
 import re, json, sys, datetime
 
 ICS = '/home/hatch/workspace/goals/saint-of-the-day-picture-rotation/files/devotional-calendar-2026-11-06-to-2027-12-31.ics'
-OUT = '/home/hatch/workspace/.worktrees/v486/app/worker/src/mass-calendar.ts'
+OUT = '/home/hatch/workspace/.worktrees/v488/app/worker/src/mass-calendar.ts'
 
 raw = open(ICS, encoding='utf-8').read().replace('\r\n ', '').replace('\n ', '')
 events = re.findall(r'BEGIN:VEVENT(.*?)END:VEVENT', raw, re.S)
@@ -143,26 +145,27 @@ for d in sorted(parsed):
     for rank, name in saints:
         if any(k in name for k in TEMPORAL_KEYS):
             versions.append({'key': 'temporal', 'label': name, 'kind': 'season',
-                             'season': season, 'week': week, 'part': 'sunday'})
+                             'season': season, 'week': week, 'part': 'sunday', 'rank': 'Sunday'})
         elif name.startswith('Dedication of the Basilicas'):
             versions.append({'key': 'saint-' + saint_slug(name), 'label': name,
-                             'kind': 'common', 'common': 'dedication'})
+                             'kind': 'common', 'common': 'dedication', 'rank': rank})
         else:
             versions.append({'key': 'saint-' + saint_slug(name), 'label': name,
                              'kind': 'saint', 'slug': saint_slug(name),
-                             'slugs': slug_candidates(name)})
+                             'slugs': slug_candidates(name), 'rank': rank})
     # Ferial version on weekdays that carry any other version, and as
     # the sole version on plain ferial days.
     if ferial is not None:
         versions.append({'key': 'ferial', 'label': ferial[1], 'kind': 'season',
                          'season': season, 'week': week,
-                         'part': 'sunday' if is_sunday else 'weekday'})
+                         'part': 'sunday' if is_sunday else 'weekday',
+                         'rank': 'Sunday' if is_sunday else 'ferial'})
     elif not is_sunday and saints and all(r in ('M', 'm') for r, _ in saints):
         # A weekday under a memorial / optional memorial also
         # carries the ferial form; under a solemnity or feast it
         # does not.
         versions.append({'key': 'ferial', 'label': 'Weekday Mass', 'kind': 'season',
-                         'season': season, 'week': week, 'part': 'weekday'})
+                         'season': season, 'week': week, 'part': 'weekday', 'rank': 'ferial'})
     if not versions: continue
     # Default: first optional memorial when one stands (Q2 A), else
     # the first version (the principal).

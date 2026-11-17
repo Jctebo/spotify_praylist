@@ -781,7 +781,8 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-day { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
 .mass-date { font-size: 13px; opacity: .7; margin-bottom: 8px; }
 .mass-picker { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
-.mass-picker button, .mass-eptoggle button { border: 1px solid rgba(128,118,96,.45); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
+.mass-picker button, .mass-eptoggle button, .mass-controls button { border: 1px solid rgba(128,118,96,.45); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; cursor: pointer; }
+.mass-controls button:disabled { opacity: .35; cursor: default; }
 .mass-picker button.active, .mass-eptoggle button.active { background: var(--accent, #7a6a3f); color: #fff; border-color: transparent; }
 .mass-eptoggle { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; }
 .mass-eptoggle .mass-eplabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; }
@@ -792,6 +793,43 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-src { font-size: 13.5px; font-weight: 600; opacity: .8; margin: 2px 0; }
 .mass-ack { font-size: 12.5px; line-height: 1.5; opacity: .75; margin: 4px 0; }
 .mass-ack a { color: inherit; }
+/* v488: the people's parts stand bold (the printed-missal
+   convention); a segment subheading; the text-size controls
+   row; and the size scale classes on the scroll — one class
+   scales every Mass text element in step (ts-1 is the
+   standing rendering and carries no overrides). */
+.mass-people { font-weight: 700; }
+.mass-sh { font-size: 15px; font-weight: 700; opacity: .85; margin: 12px 0 4px; }
+.mass-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+.mass-controls .mass-clabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; }
+.mass-controls .mass-csize { font-size: 13.5px; font-weight: 600; min-width: 76px; text-align: center; }
+.mass-scroll.ts-0 .mass-line { font-size: 15px; }
+.mass-scroll.ts-0 .mass-rubric { font-size: 12px; }
+.mass-scroll.ts-0 .mass-h { font-size: 12px; }
+.mass-scroll.ts-0 .mass-sh { font-size: 14px; }
+.mass-scroll.ts-0 .mass-day { font-size: 18.5px; }
+.mass-scroll.ts-0 .mass-date { font-size: 12px; }
+.mass-scroll.ts-0 .mass-ref { font-size: 12px; }
+.mass-scroll.ts-0 .mass-src { font-size: 12.5px; }
+.mass-scroll.ts-0 .mass-ack, .mass-scroll.ts-0 .mass-notice { font-size: 11.5px; }
+.mass-scroll.ts-2 .mass-line { font-size: 18.5px; }
+.mass-scroll.ts-2 .mass-rubric { font-size: 14.5px; }
+.mass-scroll.ts-2 .mass-h { font-size: 14.5px; }
+.mass-scroll.ts-2 .mass-sh { font-size: 17px; }
+.mass-scroll.ts-2 .mass-day { font-size: 22px; }
+.mass-scroll.ts-2 .mass-date { font-size: 14.5px; }
+.mass-scroll.ts-2 .mass-ref { font-size: 14.5px; }
+.mass-scroll.ts-2 .mass-src { font-size: 15px; }
+.mass-scroll.ts-2 .mass-ack, .mass-scroll.ts-2 .mass-notice { font-size: 14px; }
+.mass-scroll.ts-3 .mass-line { font-size: 21px; }
+.mass-scroll.ts-3 .mass-rubric { font-size: 16.5px; }
+.mass-scroll.ts-3 .mass-h { font-size: 16.5px; }
+.mass-scroll.ts-3 .mass-sh { font-size: 19.5px; }
+.mass-scroll.ts-3 .mass-day { font-size: 25px; }
+.mass-scroll.ts-3 .mass-date { font-size: 16.5px; }
+.mass-scroll.ts-3 .mass-ref { font-size: 16.5px; }
+.mass-scroll.ts-3 .mass-src { font-size: 17px; }
+.mass-scroll.ts-3 .mass-ack, .mass-scroll.ts-3 .mass-notice { font-size: 16px; }
 `;
 
 export const MANIFEST_JSON = JSON.stringify({
