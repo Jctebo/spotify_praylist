@@ -3484,9 +3484,11 @@ var TAB_SIDE_WALLPAPER_KEY = 'opn-tabside-wallpaper-v414';
    merged-container surfaces (§2.5's named distinction). */
 var TAB_SIDE_PODCASTS_KEY = 'opn-tabside-podcasts-v464';
 /* v493: the Mass tab joins the merged-tab family — two
-   sides, Liturgy (the standing day's-Mass scroll) and
-   Virtual (the entries list), the v410 key pattern with
-   this release's number; first-run default Liturgy. */
+   sides, Lectionary (the standing day's-Mass scroll) and
+   Virtual Mass (the entries list), the v410 key pattern
+   with this release's number; first-run default
+   Lectionary. (Side titles renamed by v498; the side keys
+   and this store key are unchanged.) */
 var TAB_SIDE_MASS_KEY = 'opn-tabside-mass-v493';
 var tabSideNow = { prayers: 'prayers', conscience: 'examination', wallpaper: 'phone', podcasts: 'courses', mass: 'liturgy' };
 var sideScroll = {};
@@ -3513,7 +3515,7 @@ function tabSideCfg(tab) {
   // tabs"). A stored side of 'video' is unknown to
   // readTabSide and lands on the default, Courses.
   if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts']] };
-  if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Liturgy'], ['virtual', 'Virtual']] };
+  if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
 function readTabSide(tab) {
@@ -3603,7 +3605,7 @@ function row2HomeHtml(tab) {
   } else if (tab === 'mass') {
     // v493: the Mass home's title names the standing side,
     // as the Prayers and Conscience homes name theirs.
-    title = side === 'virtual' ? 'Virtual' : 'Liturgy';
+    title = side === 'virtual' ? 'Virtual Mass' : 'Lectionary';
   } else if (tab === 'podcasts') {
     title = 'Catechesis';
     // v459 §2 Build 4: the Formation Download-for-offline
@@ -3822,7 +3824,7 @@ function paintTabSide(tab, side) {
     // container paint and on every switch (the v450
     // Conscience bar rule: a side switch re-reads the title).
     var mt = document.getElementById('hdr2-title');
-    if (mt) mt.textContent = side === 'virtual' ? 'Virtual' : 'Liturgy';
+    if (mt) mt.textContent = side === 'virtual' ? 'Virtual Mass' : 'Lectionary';
     if (side === 'virtual') paintMassVirtual(); else paintMassLiturgy();
   }
   else if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
@@ -4328,7 +4330,8 @@ function paintMassScroll() {
   var size = (typeof state.mass.textSize === 'number') ? state.mass.textSize : 1;
   var h = '<div class="mass-scroll ts-' + size + '">';
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
-  h += '<div class="mass-day">' + esc(p.name || 'Mass of the Day') + '</div>';
+  h += '<div class="mass-day">Daily Lectionary</div>';
+  h += '<div class="mass-dayname">' + esc(p.name || 'Mass of the Day') + '</div>';
   h += '<div class="mass-date">' + esc(state.mass.dateLabel || '') + '</div>';
   if ((p.versions || []).length > 1) {
     h += '<div class="segtoggle pill mass-seg mass-vpicker">' + p.versions.map(function (v) {
@@ -4579,8 +4582,9 @@ function wireMassLatin() {
 }
 function renderMass() {
   // v493: the Mass tab is a merged tab now — the container
-  // paints the row-2 home (the side's title + the Liturgy |
-  // Virtual pill) and the side host; the sides paint through
+  // paints the row-2 home (the side's title + the
+  // Lectionary | Virtual Mass pill) and the side host; the
+  // sides paint through
   // paintTabSide. The scroll's own state (state.mass) is
   // untouched by the container: a side switch repaints from
   // it, never reloads it.
@@ -8000,7 +8004,7 @@ function openHeaderMenu() {
     if (sec.key === 'mass') {
       // v493: the Mass standing group lists its two sides,
       // in the Conscience/Wallpaper form.
-      [['liturgy', 'Liturgy'], ['virtual', 'Virtual']].forEach(function (s) {
+      [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass']].forEach(function (s) {
         var here = tabSideNow.mass === s[0];
         items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('mass', s[0]); } });
       });

@@ -779,6 +779,9 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll { padding: 6px 2px 30px; }
 .mass-notice { font-size: 12.5px; line-height: 1.45; opacity: .75; border: 1px solid rgba(128,118,96,.35); border-radius: 10px; padding: 8px 10px; margin: 10px 0; }
 .mass-day { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
+/* v498: the day's observance name stands as its own line
+   under the fixed Daily Lectionary header. */
+.mass-dayname { font-size: 16.5px; font-weight: 600; margin: 0 0 2px; }
 .mass-date { font-size: 13px; opacity: .7; margin-bottom: 8px; }
 /* v489: every Mass toggle box takes the header pages-menu
    pill construction (.segtoggle.pill — one joined group, no
@@ -817,6 +820,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-0 .mass-h { font-size: 12px; }
 .mass-scroll.ts-0 .mass-sh { font-size: 14px; }
 .mass-scroll.ts-0 .mass-day { font-size: 18.5px; }
+.mass-scroll.ts-0 .mass-dayname { font-size: 15px; }
 .mass-scroll.ts-0 .mass-section { font-size: 20px; }
 .mass-scroll.ts-0 .mass-date { font-size: 12px; }
 .mass-scroll.ts-0 .mass-ref { font-size: 12px; }
@@ -827,6 +831,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-2 .mass-h { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-sh { font-size: 17px; }
 .mass-scroll.ts-2 .mass-day { font-size: 22px; }
+.mass-scroll.ts-2 .mass-dayname { font-size: 18.5px; }
 .mass-scroll.ts-2 .mass-section { font-size: 24.5px; }
 .mass-scroll.ts-2 .mass-date { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-ref { font-size: 14.5px; }
@@ -837,6 +842,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-3 .mass-h { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-sh { font-size: 19.5px; }
 .mass-scroll.ts-3 .mass-day { font-size: 25px; }
+.mass-scroll.ts-3 .mass-dayname { font-size: 20.5px; }
 .mass-scroll.ts-3 .mass-section { font-size: 28px; }
 .mass-scroll.ts-3 .mass-date { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-ref { font-size: 16.5px; }
