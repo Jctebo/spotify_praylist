@@ -18,7 +18,7 @@
 //   (f) a Latin-carrying pick carries the book page's own
 //       English | Latin switch at the seat
 //   (g) the rest of the Mass scroll is byte-identical to
-//       the v494 build's rendering, the seat div excepted;
+//       the v494 ship's rendering, the seat div excepted;
 //       player/nav untouched
 //   (h) cooked parse + Chromium boot clean (the v439 gate)
 // Fixtures (Improvement D): the book is the LIVE payload
@@ -47,7 +47,7 @@ const C_SRC = readFileSync(SRC + '/client.ts', 'utf8');
 const I_SRC = readFileSync(SRC + '/index.ts', 'utf8');
 const U_SRC = readFileSync(SRC + '/ui.ts', 'utf8');
 const MIG = readFileSync(APP + '/migrations/0032_mass_personal_prayer.sql', 'utf8');
-const BASE = path.resolve(process.cwd(), '../../.worktrees/v494/app/worker/src');
+const BASE = path.resolve(process.cwd(), '../../.worktrees/v494-ship/app/worker/src');
 const C_BASE = readFileSync(BASE + '/client.ts', 'utf8');
 const U_BASE = readFileSync(BASE + '/ui.ts', 'utf8');
 const BOOK = JSON.parse(readFileSync(APP + '/tests/fixtures/book-live-2026-11-17.json', 'utf8'));
@@ -88,10 +88,10 @@ const ANIMA = bookRow('anima-christi');
   ok(ant > 0 && seat > ant && pac > seat,
     'S6: the seat div stands in paintMassScroll between the Communion Antiphon and the Prayer after Communion');
   const pin = (s) => s.replace(/ora-pro-nobis-v\d+-\d+/g, 'PIN');
-  ok(pin(U_SRC) === pin(U_BASE), 'S7: ui.ts is byte-identical to the v494 build (the pin line normalized)');
+  ok(pin(U_SRC) === pin(U_BASE), 'S7: ui.ts is byte-identical to the v494 ship (the pin line normalized)');
   for (const f of ['mass.ts', 'mass-order.ts', 'mass-readings.ts']) {
     ok(readFileSync(SRC + '/' + f, 'utf8') === readFileSync(BASE + '/' + f, 'utf8'),
-      'S8-' + f + ': the Mass source stands byte-identical to the v494 build');
+      'S8-' + f + ': the Mass source stands byte-identical to the v494 ship');
   }
   ok(!!CONTRITION && !CONTRITION.p.bodyLatin && !!ANIMA && !!ANIMA.p.bodyLatin && BOOK_COUNT === 75 && BOOK.groups.length === 9,
     'S9: the live-book fixture stands (9 groups, 75 prayers; Contrition has no Latin, Anima Christi carries Latin)',
@@ -379,7 +379,7 @@ async function boot(which, errs, tag) {
   await ctx.close();
 }
 
-/* ---------------- (g) byte-identity vs the v494 build ---------------- */
+/* ---------------- (g) byte-identity vs the v494 ship ---------------- */
 {
   const errs = [];
   const a = await boot('/v495', errs, 'g495');
@@ -388,7 +388,7 @@ async function boot(which, errs, tag) {
   const hNew = await a.page.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
   const hBase = await b.page.evaluate(() => { const s = document.querySelector('.mass-scroll'); return s ? s.outerHTML : null; });
   ok(hNew && hBase && strip(hNew) === hBase,
-    'G1: the Mass scroll renders byte-identical to the v494 build, the seat div excepted');
+    'G1: the Mass scroll renders byte-identical to the v494 ship, the seat div excepted');
   ok(errs.length === 0, 'H2: the byte-identity boots run clean (no page errors)', errs.join(' ; '));
   await a.ctx.close(); await b.ctx.close();
 }
