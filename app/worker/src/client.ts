@@ -1469,7 +1469,7 @@ function renderPinGate(tab, contentFn, opts) {
   clearPinWait();
   var titles = pinGateTitles(tab);
   pinGateCtx = { tab: tab, contentFn: contentFn, entry: '' };
-  var html = '<h1 class="screen">' + titles.screen + '</h1>';
+  var html = '';
   html += '<div class="card pingate" id="pingate-card"><div class="lockline">' + titles.lock + '</div>';
   html += '<div class="pindots" id="pindots"></div>';
   // v419 (G29): the hint line under the dots — the PIN rule,
@@ -1509,7 +1509,7 @@ function renderPinGate(tab, contentFn, opts) {
 function renderPinSetupPrompt(tab, contentFn, opts) {
   var titles = pinGateTitles(tab);
   var unreadable = !!(opts && opts.unreadable);
-  var html = '<h1 class="screen">' + titles.screen + '</h1>';
+  var html = '';
   html += '<div class="card pingate"><div class="lockline">' + (unreadable
     ? 'The PIN state could not be read &mdash; this tab stays locked until it can be checked.'
     : 'No PIN is set yet &mdash; this tab stays locked until you set a PIN.') + '</div>';
@@ -1587,7 +1587,7 @@ function submitPinVerify() {
 }
 function renderPinRecoveryForm(tab, contentFn) {
   clearPinWait();
-  var html = '<h1 class="screen">' + pinGateTitles(tab).screen + '</h1>';
+  var html = '';
   html += '<div class="card"><h3>Use your recovery code</h3>'
     + '<p class="meta">Enter the code shown when the PIN was set, and choose a new PIN. Your examination and confession content is kept.</p>'
     + '<label class="f">Recovery code</label><input type="text" id="rec-code" autocomplete="off" style="text-transform:uppercase">'
