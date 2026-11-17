@@ -12487,6 +12487,26 @@ setupMediaSession();
 setupBridgeCommands(); // v377 B3: the native session's transport lands here (shell only; a no-op elsewhere)
 setupNativeState(); // v466: the native engine's state channel (shell 1.0.38+ only; a no-op elsewhere)
 setupBackButton(); // v421: the Android system back binding (shell only; a guarded no-op elsewhere)
+// v496: the day's color applies at boot, on every opening
+// tab. v492's opening rule (a cold start opens on Mass; in
+// general the app opens on the last tab opened) retired the
+// incidental feed the color always rode: before it, every
+// boot opened the Pray tab, whose day fetch ran
+// applyLiturgical before any other tab stood. The Mass
+// tab's own first load never carried the color — its
+// payload carries no liturgicalDay and its settle never
+// applied it — so a boot onto Mass, or onto any tab but
+// Pray, left the header on the unthemed navy default and
+// the day's name unpainted (John's defect report,
+// 2026-11-17: the day color does not take at Mass first
+// load). The boot now reads the day's record itself, from
+// the lightest standing payload that carries it
+// (/api/prayer/day — the same feed the Book and Intentions
+// sides apply from), and applies it beside the opening
+// tab's paint. The tab paints still apply it as before
+// when they settle; the values are the same day's, so a
+// second apply changes nothing.
+api('/api/prayer/day?date=' + todayChicago()).then(function (day) { applyLiturgical(day || {}); }).catch(function () {});
 // v492 (John, 2026-11-17): a cold start opens on the Mass tab;
 // in general the app opens on the last tab the user opened
 // (opn-lasttab-v492, written by setTab), validated to a tab id.
