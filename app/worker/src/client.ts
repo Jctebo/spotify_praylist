@@ -960,6 +960,11 @@ function markCompleted(desc) {
   // open. A series track carries no day-played record: the
   // podcasts store is its record.
   if (desc.kind === 'podcast' && desc.seriesKey) { writePodMarkQuiet(desc.seriesKey, desc.podSeries, 'auto'); return; }
+  // v484 §2.6: a book prayer writes no mark anywhere — the
+  // test leaves prayed and favorite marks unchanged (Q5 A),
+  // so the completion seam returns for the prayer kind
+  // exactly as it takes its own path for podcasts.
+  if (desc.kind === 'prayer') return;
   var d = presentedDateStr();
   if (!d) return;
   writePlayed(desc.episodeId, d, 'played', desc.block);
@@ -1847,7 +1852,7 @@ audioEl.addEventListener('ended', function () {
   // v412 Fix 10: a day track that reaches its end clears its
   // saved position in the same moment (a position of 0 deletes
   // the row) — a finished prayer never resumes at its end.
-  if (endedDesc && endedDesc.kind !== 'podcast') writeDayPositionQuiet(endedDesc.episodeId, 0, 0);
+  if (endedDesc && endedDesc.kind !== 'podcast' && endedDesc.kind !== 'prayer') writeDayPositionQuiet(endedDesc.episodeId, 0, 0); // v484 §2.6: a book prayer holds no day position to clear
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) {
     if (advanceQueue(1)) return;
@@ -3784,7 +3789,7 @@ function dayPositionTick() {
   // playing, and only when the position has moved >= 5 s since
   // the last value sent for this episode (the podcast rule).
   var cur = state.current;
-  if (!cur || cur.kind === 'podcast') return;
+  if (!cur || cur.kind === 'podcast' || cur.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
   if (audioEl.paused || audioEl.ended) return;
   var pos = Math.floor(audioEl.currentTime || 0);
   var last = (dayPosSentKey === cur.episodeId) ? dayPosSentVal : -1;
@@ -3797,7 +3802,7 @@ function dayPositionSaveCurrent() {
   // is the ended handler's own act), and a position of 0 is "not
   // started" — nothing stands to save.
   var cur = state.current;
-  if (!cur || cur.kind === 'podcast') return;
+  if (!cur || cur.kind === 'podcast' || cur.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
   if (audioEl.ended) return;
   if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
   var pos = Math.floor(audioEl.currentTime || 0);
@@ -3809,7 +3814,7 @@ function dayPositionSkipAway(nextDesc) {
   // OUTGOING day track and its position still stand (the podcast
   // mirror, guard for guard).
   var out = state.current;
-  if (!out || out.kind === 'podcast') return;
+  if (!out || out.kind === 'podcast' || out.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
   if (nextDesc && nextDesc.episodeId === out.episodeId) return;
   if (audioEl.ended) return;
   if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
@@ -5032,7 +5037,12 @@ function settleIntentions(redrawFailed) {
    mirror of the server list. No prayer text stands in this script — the texts
    arrive by fetch only and live in state.book. The side
    and the prayer page call no audio function: a written
-   surface never disturbs playback. */
+   surface never disturbs playback.
+   v484: the one exception — the prayer page of a PILOT
+   prayer (its book row carries the audio fold) gains a
+   Play control and an Add to Praylist act (§2.5). Every
+   other prayer page stays a written surface, byte for
+   byte. */
 var BOOK_CACHE_KEY = 'opn-book-v462';
 var BOOK_FAVS_KEY = 'opn-book-favs-v462';
 var bookQuery = '';
@@ -5210,6 +5220,24 @@ function langSwitchHtml() {
     + '<button data-lang="en" class="active">English</button>'
     + '<button data-lang="la">Latin</button></div>';
 }
+/* v484 §2.4: the prayer track descriptor — the one builder
+   every prayer-audio act reads. A pilot prayer's row carries
+   the audio fold (the measured durations per language);
+   a language the fold does not carry builds nothing. The
+   descriptor rides the standing contracts as itself:
+   queueLiveDesc stands it (no day descriptor can match its
+   id), and the native contract resolves it through
+   oraSnapshotTrack's own arm — its non-blob url is its own
+   address, on-origin, with the Ora logo as its art. */
+function prayerAudioDesc(p, lang) {
+  var a = (p && p.audio) || {};
+  var dur = lang === 'la' ? a.la : a.en;
+  if (!dur) return null;
+  return { episodeId: 'prayer:' + p.slug + ':' + lang, kind: 'prayer',
+    title: p.title + (lang === 'la' ? ' (Latin)' : ''), block: '',
+    url: '/api/prayer/book/audio/' + encodeURIComponent(p.slug) + '/' + lang,
+    available: true, durationS: dur, imageUrl: '/logo.png' };
+}
 function openPrayerPage(slug) {
   var hit = bookFind(slug);
   if (!hit) return;
@@ -5218,10 +5246,20 @@ function openPrayerPage(slug) {
   state.prayersView = { kind: 'bookpage' };
   paintPrayersBar(hdrBarHtml({ dest: 'Praylist', title: p.title, backAttrs: 'data-bookback' }), 'book');
   var fav = bookFavsList().indexOf(p.slug) >= 0;
+  // v484 §2.5: the page's language for the audio acts — the
+  // standing switch state, English on every open (the
+  // Amendment 1 rule), read by both acts at tap time.
+  var pageLang = 'en';
+  function bookPlayLabel() {
+    var d = prayerAudioDesc(p, pageLang);
+    if (d && state.current && state.current.episodeId === d.episodeId && (transportPlaying() || state.pendingStart)) return '\\u275a\\u275a Pause';
+    return '\\u25b6 Play';
+  }
   view.innerHTML = '<div id="book-page"><div class="row"><h1 class="screen grow">' + esc(p.title) + '</h1>'
     + (p.bodyLatin ? langSwitchHtml() : '')
     + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
     + '<p class="sub">' + esc(p.source) + '</p>'
+    + (p.audio ? '<div class="row bookaudio"><button class="btn gold" id="book-play">' + bookPlayLabel() + '</button><button class="btn ghost" id="book-add">Add to Praylist</button></div>' : '')
     + '<div class="readtext" id="book-body">' + esc(p.body) + '</div></div>';
   window.scrollTo(0, 0);
   var bb = hdrRow2() ? hdrRow2().querySelector('[data-bookback]') : null;
@@ -5230,13 +5268,43 @@ function openPrayerPage(slug) {
   if (sw) sw.querySelectorAll('[data-lang]').forEach(function (b) {
     b.addEventListener('click', function () {
       var la = b.getAttribute('data-lang') === 'la';
+      pageLang = la ? 'la' : 'en';
       sw.querySelectorAll('[data-lang]').forEach(function (x) { x.classList.toggle('active', x === b); });
       var body = document.getElementById('book-body');
       if (body) body.textContent = la ? p.bodyLatin : p.body;
+      var pb0 = document.getElementById('book-play');
+      if (pb0) pb0.textContent = bookPlayLabel();
     });
   });
   var ps = document.getElementById('book-page-star');
   if (ps) ps.addEventListener('click', function () { toggleBookFav(p.slug); });
+  // v484 §2.5: the audio acts — pilot prayers only (the
+  // controls row stands only where the fold stands).
+  var pb = document.getElementById('book-play');
+  if (pb) pb.addEventListener('click', function () {
+    var d = prayerAudioDesc(p, pageLang);
+    if (!d) return;
+    playTrack(d); // the standing funnel — a tap on the standing current toggles pause; a pending start cancels
+    pb.textContent = bookPlayLabel();
+  });
+  var ab = document.getElementById('book-add');
+  if (ab) ab.addEventListener('click', function () {
+    var d = prayerAudioDesc(p, pageLang);
+    if (!d) return;
+    var standing = state.queue.some(function (x) { return x.episodeId === d.episodeId; });
+    if (!standing) {
+      // The append stands in the page queue: visible in the
+      // queue list, reachable by a queue-row tap and by
+      // Next (both re-send the contract from state.queue),
+      // and inside every later contract. It does not
+      // re-send a live contract (§2.5's named bound).
+      state.queue.push(d);
+      saveQueueSnapshot();
+      renderQueueList();
+    }
+    ab.textContent = standing ? 'In Praylist \\u2713' : 'Added \\u2713';
+    setTimeout(function () { if (ab.parentNode) ab.textContent = 'Add to Praylist'; }, 1800);
+  });
 }
 function closePrayerPage() {
   state.prayersView = { kind: 'book' };

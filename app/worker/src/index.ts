@@ -899,13 +899,35 @@ async function reflectionsPayload(env: Env) {
 // bodyLatin rides explicitly — the Latin text where the
 // seed carries it, null where it does not (Amendment 1) —
 // so the client reads exactly one field.
+// v484: PRAYER_AUDIO — the small-test pilot map. Six named
+// prayers carry pre-rendered audio (production voice
+// avocado_v2:MAI_03, rendered once from the stored bodies);
+// the values are the renders' measured durations in seconds.
+// The files stand in the AUDIO bucket at
+// prayer-audio/<slug>.<lang>.mp3, land through the door
+// route below, and play through the session route beside
+// the book's other reads. A slug or language outside this
+// map has no audio — the book payload folds `audio` onto
+// exactly these rows and no other.
+const PRAYER_AUDIO: Record<string, { en: number; la?: number }> = {
+  "sub-tuum-praesidium": { en: 19.4, la: 25.3 },
+  "anima-christi": { en: 29.9, la: 37.5 },
+  "te-deum": { en: 107.4, la: 143.1 },
+  "guardian-angel": { en: 10.5, la: 10.6 },
+  "act-of-contrition": { en: 44.9 },
+  "prayer-for-all-the-faithful-departed": { en: 17.4 },
+};
 async function bookPayload(env: Env) {
   const r = await env.DB.prepare("SELECT slug, title, category, body, body_latin, source FROM prayer_book ORDER BY sort").all<{ slug: string; title: string; category: string; body: string; body_latin: string | null; source: string }>();
-  const groups: { category: string; prayers: { slug: string; title: string; body: string; bodyLatin: string | null; source: string }[] }[] = [];
+  const groups: { category: string; prayers: { slug: string; title: string; body: string; bodyLatin: string | null; source: string; audio?: { en: number; la?: number } }[] }[] = [];
   for (const p of r.results ?? []) {
     let g = groups.length ? groups[groups.length - 1] : null;
     if (!g || g.category !== p.category) { g = { category: p.category, prayers: [] }; groups.push(g); }
-    g.prayers.push({ slug: p.slug, title: p.title, body: p.body, bodyLatin: p.body_latin ?? null, source: p.source });
+    const row: { slug: string; title: string; body: string; bodyLatin: string | null; source: string; audio?: { en: number; la?: number } } =
+      { slug: p.slug, title: p.title, body: p.body, bodyLatin: p.body_latin ?? null, source: p.source };
+    const audio = PRAYER_AUDIO[p.slug];
+    if (audio) row.audio = audio;
+    g.prayers.push(row);
   }
   return { ok: true, groups };
 }
@@ -2331,6 +2353,27 @@ export default {
         // verify the served book against the seed.
         return json(await bookPayload(env));
       }
+      if (seg[2] === "prayer" && seg[3] === "audio" && request.method === "POST") {
+        // v484: the prayer-audio hand-off — raw MP3 bytes in,
+        // the R2 object out, in the episode door's shape
+        // (v368 §2.4) but on the book's own surface: the
+        // episode route's contract refuses every id but
+        // the-ai-signal and writes dated day rows, and a book
+        // prayer is neither. The slug and language must stand
+        // in PRAYER_AUDIO — anything else refuses 400, so the
+        // door can only ever land the pilot files. A re-render
+        // replaces the object whole. The caller's success test
+        // is sizeBytes equal to the MP3's byte size on disk.
+        const paSlug = request.headers.get("x-prayer-slug") ?? "";
+        const paLang = request.headers.get("x-prayer-lang") ?? "";
+        const paEntry = PRAYER_AUDIO[paSlug];
+        if (!paEntry || !(paLang in paEntry)) return err(400, "prayer audio outside the pilot map");
+        const paBody = await request.arrayBuffer();
+        if (paBody.byteLength < 1 || paBody.byteLength > 25 * 1024 * 1024) return err(400, "bad audio size");
+        const paKey = `prayer-audio/${paSlug}.${paLang}.mp3`;
+        await env.AUDIO.put(paKey, paBody, { httpMetadata: { contentType: "audio/mpeg" } });
+        return json({ ok: true, slug: paSlug, lang: paLang, sizeBytes: paBody.byteLength });
+      }
       if (seg[2] === "prayer" && seg[3] === "intros" && request.method === "GET") {
         // v337 §2.7: the standing intro family's read-back — the
         // generation's verification surface (episodeId · sizeBytes ·
@@ -2505,6 +2548,45 @@ export default {
           // family's other reads; NO PIN — the pinGate covers
           // the exam/confession families only.
           return json(await bookPayload(env));
+        }
+        if (seg[2] === "book" && seg[3] === "audio" && request.method === "GET") {
+          // v484: a pilot prayer's pre-rendered audio, served
+          // from the AUDIO bucket with the episode audio
+          // route's Range passthrough (lock-screen seek
+          // depends on ranged reads). Session-gated like the
+          // book's other reads; NO PIN. A slug or language
+          // outside PRAYER_AUDIO answers 404 — no other book
+          // prayer has audio in the test.
+          const paSlug = decodeURIComponent(seg[4] ?? "");
+          const paLang = seg[5] ?? "";
+          const paEntry = PRAYER_AUDIO[paSlug];
+          if (!paEntry || !(paLang in paEntry)) return err(404, "no audio for that prayer");
+          const rangeHdr = request.headers.get("range");
+          let range: R2Range | undefined = undefined;
+          if (rangeHdr) {
+            const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHdr.trim());
+            if (m && (m[1] || m[2])) {
+              if (m[1] === "") range = { suffix: Number(m[2]) };
+              else if (m[2] === "") range = { offset: Number(m[1]) };
+              else range = { offset: Number(m[1]), length: Number(m[2]) - Number(m[1]) + 1 };
+            }
+          }
+          const paKey = `prayer-audio/${paSlug}.${paLang}.mp3`;
+          const obj = range ? await env.AUDIO.get(paKey, { range }) : await env.AUDIO.get(paKey);
+          if (!obj) return err(404, "prayer audio not available yet");
+          const headers: Record<string, string> = {
+            "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "accept-ranges": "bytes",
+          };
+          if (range && obj.range) {
+            const total = obj.size;
+            const offset = obj.range.offset ?? (obj.range.suffix !== undefined ? total - (obj.range.length ?? obj.range.suffix) : 0);
+            const length = obj.range.length ?? (total - offset);
+            headers["content-range"] = `bytes ${offset}-${offset + length - 1}/${total}`;
+            headers["content-length"] = String(length);
+            return new Response(obj.body, { status: 206, headers });
+          }
+          headers["content-length"] = String(obj.size);
+          return new Response(obj.body, { headers });
         }
         if (seg[2] === "book" && seg[3] === "favorites" && request.method === "GET") {
           // v470 §2.2: the favorites read — the stored slugs
