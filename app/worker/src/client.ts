@@ -4015,6 +4015,30 @@ function massPrayerHtml(head, text) {
   var h = '<div class="mass-h">' + esc(head) + '</div>';
   return text ? h + massTextHtml(text) : h;
 }
+/* v502: the lines + roles a part renders with. For the
+   Kyrie's Greek side, the six stored Greek lines pair
+   into the three V/. R/. dialogue lines the English
+   carries — the leader's line regular, the people's
+   response bold, by the standing 'd' rule (John,
+   2026-11-17: the Greek Kyrie formatted like the
+   English, as call and response). The stored Greek
+   stays byte-verbatim (it is the Missal's Greek,
+   verified at Plan); the pairing is render-only.
+   Every other part and side returns the standing
+   data untouched. */
+function massPartLines(part, lang, enLines) {
+  var enKey = { kyrie: 'kyrieEn', gloria: 'gloriaEn', sanctus: 'sanctus', agnus: 'agnusEn', creed: 'creedEn' }[part];
+  if (lang === 'la') {
+    if (part === 'kyrie') {
+      var g = MASS_LATIN.kyrie || [];
+      var dlg = [];
+      for (var i = 0; i + 1 < g.length; i += 2) dlg.push('V/. ' + g[i] + ' R/. ' + g[i + 1]);
+      return { lines: dlg, roles: 'ddd' };
+    }
+    return { lines: MASS_LATIN[part], roles: MASS_LATIN_ROLES[part] };
+  }
+  return { lines: enLines, roles: MASS_ROLES[enKey] };
+}
 function massPartHtml(part, enLines, head) {
   var lat = MASS_LATIN[part];
   var lang = (state.mass && state.mass.latin[part]) || 'en';
@@ -4022,7 +4046,8 @@ function massPartHtml(part, enLines, head) {
   var enKey = { kyrie: 'kyrieEn', gloria: 'gloriaEn', sanctus: 'sanctus', agnus: 'agnusEn', creed: 'creedEn' }[part];
   if (!lat) return h + massLinesHtml(enLines, MASS_ROLES[enKey]);
   var altLabel = part === 'kyrie' ? 'Greek' : 'Latin';
-  var body = lang === 'la' ? massLinesHtml(lat, MASS_LATIN_ROLES[part]) : massLinesHtml(enLines, MASS_ROLES[enKey]);
+  var sel = massPartLines(part, lang, enLines);
+  var body = massLinesHtml(sel.lines, sel.roles);
   return h + '<div class="mass-part" id="mass-part-' + part + '">'
     + '<div class="segtoggle pill mass-seg mass-ltoggle">'
     + '<button data-lt="' + part + ':en"' + (lang === 'en' ? ' class="active"' : '') + '>English</button>'
@@ -4052,6 +4077,62 @@ function massEpHtml() {
   return '<div class="mass-h">Eucharistic Prayer</div>'
     + '<div class="segtoggle pill mass-seg mass-eptoggle">' + btns + '</div>'
     + '<div id="mass-epbody">' + body + '</div>';
+}
+/* v502: the Penitential Act in its three forms (John,
+   2026-11-17) — a toggle at the head of the section in
+   the EP toggle's pattern: the chosen form shows in
+   place, the others hide, and Form A stands at every
+   open. The forms are SLICED from the standing Order
+   data at their standing seams; no text is retyped.
+   Form A is the Confiteor plus the absolution that
+   follows it in introMid; Forms B and C run from their
+   numbered invitation rubrics in introMid through
+   their own absolutions. The seam lines between the
+   forms are rubrics and never render, so no rendered
+   word moves across a seam. The Kyrie block follows
+   the chosen form exactly as it stands today. */
+function massPenForms() {
+  var mid = MASS_ORDER.introMid, mr = MASS_ROLES.introMid;
+  function slice(from, to) { return { lines: mid.slice(from, to), roles: mr.slice(from, to) }; }
+  function findFrom(prefix, start) {
+    for (var i = start || 0; i < mid.length; i++) if (mid[i].indexOf(prefix) === 0) return i;
+    return -1;
+  }
+  function amenAfter(start) {
+    for (var i = start; i < mid.length; i++) if (mid[i] === 'Amen.') return i;
+    return mid.length - 1;
+  }
+  var b0 = findFrom('5. The Priest invites', 0);
+  var c0 = findFrom('6. The Priest invites', 0);
+  var abs = slice(0, amenAfter(0) + 1);
+  return {
+    A: { lines: MASS_ORDER.confiteorEn.concat(abs.lines), roles: MASS_ROLES.confiteorEn + abs.roles },
+    B: slice(b0, amenAfter(b0) + 1),
+    C: slice(c0, amenAfter(c0) + 1)
+  };
+}
+function massPenBodyHtml() {
+  var forms = massPenForms();
+  var f = forms[(state.mass && state.mass.penform) || 'A'] || forms.A;
+  return massLinesHtml(f.lines, f.roles);
+}
+function massPenToggleHtml() {
+  var form = (state.mass && state.mass.penform) || 'A';
+  var btns = ['A', 'B', 'C'].map(function (k) {
+    return '<button data-pen="' + k + '"' + (form === k ? ' class="active"' : '') + '>Form ' + k + '</button>';
+  }).join('');
+  return '<div class="segtoggle pill mass-seg mass-pentoggle">' + btns + '</div>';
+}
+function wireMassPen() {
+  view.querySelectorAll('[data-pen]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.mass.penform = b.getAttribute('data-pen');
+      document.getElementById('mass-penbody').innerHTML = massPenBodyHtml();
+      view.querySelectorAll('[data-pen]').forEach(function (x) {
+        x.classList.toggle('active', x.getAttribute('data-pen') === state.mass.penform);
+      });
+    });
+  });
 }
 function massFormulary() {
   if (!state.mass || !state.mass.payload) return {};
@@ -4345,8 +4426,8 @@ function paintMassScroll() {
   h += massSectionHtml('Introductory Rites');
   h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
   h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
-  h += '<div class="mass-h">Penitential Act</div>' + massLinesHtml(MASS_ORDER.confiteorEn, MASS_ROLES.confiteorEn);
-  h += massLinesHtml(MASS_ORDER.introMid, MASS_ROLES.introMid);
+  h += '<div class="mass-h">Penitential Act</div>' + massPenToggleHtml()
+    + '<div id="mass-penbody">' + massPenBodyHtml() + '</div>';
   h += massPartHtml('kyrie', MASS_ORDER.kyrieEn, 'Kyrie');
   h += massLinesHtml(MASS_ORDER.introPost, MASS_ROLES.introPost);
   if (flags.gloria) h += massPartHtml('gloria', MASS_ORDER.gloriaEn, 'Gloria');
@@ -4399,6 +4480,7 @@ function paintMassScroll() {
     });
   });
   wireMassLatin();
+  wireMassPen();
   wireMassChips();
   wireMassPersonal();
   if (typeof state.mass.personal === 'undefined') massPersonalLoad();
@@ -4673,7 +4755,8 @@ function wireMassLatin() {
       var host = document.getElementById('mass-part-' + part);
       if (!host) return;
       var enKey = { kyrie: 'kyrieEn', gloria: 'gloriaEn', sanctus: 'sanctus', agnus: 'agnusEn', creed: 'creedEn' }[part];
-      host.querySelector('.mass-partbody').innerHTML = massLinesHtml(lang === 'la' ? MASS_LATIN[part] : MASS_ORDER[enKey], lang === 'la' ? MASS_LATIN_ROLES[part] : MASS_ROLES[enKey]);
+      var sel = massPartLines(part, lang, MASS_ORDER[enKey]);
+      host.querySelector('.mass-partbody').innerHTML = massLinesHtml(sel.lines, sel.roles);
       host.querySelectorAll('[data-lt]').forEach(function (x) {
         x.classList.toggle('active', x.getAttribute('data-lt') === part + ':' + lang);
       });
@@ -4692,13 +4775,24 @@ function renderMass() {
 }
 function paintMassLiturgy() {
   var today = todayChicago();
+  // v502: every open of this side stands on the defaults
+  // — Penitential Form A and Eucharistic Prayer II
+  // (John, 2026-11-17). A pick made during a view lives
+  // in state.mass, and a standing same-day state is
+  // repainted whole on a return, so without this reset a
+  // pick would survive a leave-and-return and the tab
+  // would re-open on it. The reset stands here, at the
+  // one entry every open passes through (tab open and
+  // side switch alike); in-view switches repaint only
+  // their own section hosts and never pass through it.
+  if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; }
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
   loadMassReadings(today);
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
-    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
+    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', penform: 'A', latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
     if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;
