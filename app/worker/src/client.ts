@@ -3831,6 +3831,41 @@ function massLinesHtml(lines) {
     return '<div class="' + cls + '">' + esc(ln) + '</div>';
   }).join('');
 }
+/* v487: the Universalis readings payload is HTML by design.
+   Convert it to clean lines at render — presentation only:
+   block tags become line breaks, inline tags drop keeping
+   their text, entities decode to their characters. The
+   words stay the service's words, byte for byte. */
+var MASS_NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: String.fromCharCode(160) };
+function massDecodeEntities(s) {
+  return String(s || '')
+    .replace(/&#x([0-9a-fA-F]+);/g, function (m, h) { return String.fromCodePoint(parseInt(h, 16)); })
+    .replace(/&#(\\d+);/g, function (m, d) { return String.fromCodePoint(parseInt(d, 10)); })
+    .replace(/&([a-zA-Z]+);/g, function (m, n) { return Object.prototype.hasOwnProperty.call(MASS_NAMED_ENTITIES, n) ? MASS_NAMED_ENTITIES[n] : m; });
+}
+function massCleanLines(html) {
+  var parts = String(html || '').replace(/<br[^>]*>/gi, '\\n').split(/<\\/?(?:div|p)(?:\\s[^>]*)?>/i);
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var sub = parts[i].split('\\n');
+    for (var j = 0; j < sub.length; j++) {
+      var t = sub[j].replace(/^\\s+|\\s+$/g, '');
+      if (!t) continue;
+      var rubric = /^<i>[\\s\\S]*<\\/i>$/.test(t);
+      var text = massDecodeEntities(t.replace(/<[^>]*>/g, '')).replace(/\\s+/g, ' ').replace(/^\\s+|\\s+$/g, '');
+      if (text) out.push({ text: text, rubric: rubric });
+    }
+  }
+  return out;
+}
+function massCleanText(s) {
+  return massDecodeEntities(String(s || '').replace(/<[^>]*>/g, ' ')).replace(/\\s+/g, ' ').replace(/^\\s+|\\s+$/g, '');
+}
+function massReadingTextHtml(text) {
+  return massCleanLines(text).map(function (ln) {
+    return '<div class="' + (ln.rubric ? 'mass-rubric' : 'mass-line') + '">' + esc(ln.text) + '</div>';
+  }).join('');
+}
 function massTextHtml(text) {
   return String(text || '').split('\\n').map(function (ln) {
     return ln.trim() ? '<div class="mass-line">' + esc(ln) + '</div>' : '';
@@ -3894,17 +3929,17 @@ function massReadingsHtml() {
   function reading(head, item, closing) {
     if (!item) return '';
     var s = '<div class="mass-h">' + head + '</div>';
-    if (item.heading) s += '<div class="mass-src">' + esc(item.heading) + '</div>';
-    if (item.source) s += '<div class="mass-ref">' + esc(item.source) + '</div>';
-    s += massTextHtml(item.text);
+    if (item.heading) s += '<div class="mass-src">' + esc(massCleanText(item.heading)) + '</div>';
+    if (item.source) s += '<div class="mass-ref">' + esc(massCleanText(item.source)) + '</div>';
+    s += massReadingTextHtml(item.text);
     if (closing) s += '<div class="mass-line">' + closing[0] + '</div><div class="mass-rubric">' + closing[1] + '</div>';
     return s;
   }
   h += reading('First Reading', d.Mass_R1, ['The word of the Lord.', 'Thanks be to God.']);
   if (d.Mass_Ps) {
     h += '<div class="mass-h">Responsorial Psalm</div>'
-      + (d.Mass_Ps.source ? '<div class="mass-ref">' + esc(d.Mass_Ps.source) + '</div>' : '')
-      + massTextHtml(d.Mass_Ps.text);
+      + (d.Mass_Ps.source ? '<div class="mass-ref">' + esc(massCleanText(d.Mass_Ps.source)) + '</div>' : '')
+      + massReadingTextHtml(d.Mass_Ps.text);
   }
   h += reading('Second Reading', d.Mass_R2, ['The word of the Lord.', 'Thanks be to God.']);
   h += reading('Gospel Acclamation', d.Mass_GA, null);
@@ -3919,7 +3954,7 @@ function massAcksHtml() {
   var h = '<div class="mass-ack">' + esc(MASS_READINGS_ACK_1) + '</div>'
     + '<div class="mass-ack">' + esc(MASS_READINGS_ACK_2) + '</div>';
   if (massReadings && massReadings.copyright && massReadings.copyright.text) {
-    h += '<div class="mass-ack">' + esc(massReadings.copyright.text) + '</div>';
+    h += '<div class="mass-ack">' + esc(massCleanText(massReadings.copyright.text)) + '</div>';
   }
   h += '<div class="mass-ack">Readings and calendar: <a href="https://www.universalis.com" target="_blank" rel="noopener">Universalis</a></div>';
   return h;
