@@ -3517,7 +3517,12 @@ function tabSideCfg(tab) {
   // (John, 2026-11-17: "So catechism will now have 2
   // tabs"). A stored side of 'video' is unknown to
   // readTabSide and lands on the default, Courses.
-  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts']] };
+  // v516: a THIRD side stands — Novenas (the v514
+  // prayer-profiles package, John's decision 6): the
+  // day's active novenas with their days and
+  // intentions, read from the day's own resolution and
+  // independent of the profiles and the Novenas layer.
+  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['novenas', 'Novenas']] };
   if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
@@ -5280,6 +5285,10 @@ function paintPodcastsIndex() {
   // card tappable. An unavailable series shows its unavailable
   // line on its own card.
   podLevel = 'index';
+  // v516: the Novenas side paints from the day's own
+  // resolution, not the series registry — branch before
+  // the series guard (the side needs no series payload).
+  if (tabSideNow.podcasts === 'novenas') { paintCatechesisNovenas(); return; }
   var res = state.podcastsIndex;
   if (!res || !res.seriesList) { paintRow2Home('podcasts'); view.innerHTML = skelHtml('podindex'); return; }
   podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
@@ -5354,6 +5363,161 @@ function paintPodcastsIndex() {
   view.querySelectorAll('[data-podseries]').forEach(function (c) {
     c.addEventListener('click', function () { massPodReturn = false; openPodSeries(c.getAttribute('data-podseries')); });
   });
+}
+// ============================================================
+// v516 — the Catechesis Novenas side (the v514 prayer-
+// profiles package, §P6; John's decision 6). The side lists
+// the presented day's ACTIVE novenas — name · Day n · the
+// day's drawn intention where one stands · the played mark —
+// painted from the day's own resolution (state.ownSlots
+// ['novenas'] + the day payload's introTexts draws), so this
+// list and the Praylist's Novenas group can never disagree.
+// The side reads the resolution, never the profile fold: it
+// lists every active novena whether the Novenas layer stands
+// in today's Praylist or not, under any profile. No new
+// store and no feed read of its own — the kick below reuses
+// the standing resolution machinery (the day payload read,
+// the source settings, the externals cache, ownResolveFeed).
+// Played marks belong to the episode (the standing rule):
+// the rows carry the standing played-dot and the standing
+// played chrome serves them, so a mark set on either surface
+// reads on both. A row tap plays the episode by the standing
+// episode play path (ownSlotTrack + trackDesc + tapPlay —
+// the Praylist novena card's own construction).
+// ============================================================
+var catNovResolveInFlight = false;
+function catechesisNovenasRow() {
+  var row = null;
+  (state.ownStanding || []).forEach(function (r) { if (r.sourceKey === 'novenas') row = r; });
+  return row || { sourceKey: 'novenas', episodeId: 'novenas', block: 'Novenas' };
+}
+function catechesisNovenasName(title) {
+  // The novena's name: the feed title minus its trailing
+  // " Day <n>" (ownFeedTitle has already stripped the
+  // ' - <Month D, YYYY>' display suffix upstream). The
+  // pattern is built from BS_CH, the standing construction
+  // (novenaInfo's): this client ships inside a template
+  // literal, where a written backslash cooks.
+  var t = String(title || '');
+  var m = new RegExp(BS_CH + 's+Day' + BS_CH + 's+' + BS_CH + 'd{1,2}' + BS_CH + 's*$').exec(t);
+  return m ? t.slice(0, m.index) : t;
+}
+function paintCatechesisNovenas() {
+  paintRow2Home('podcasts');
+  var day = state.dayPayload;
+  var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+  var settled = !!(day && slot && (slot.state === 'present' || slot.state === 'missing'));
+  var html = '';
+  if (settled && slot.state === 'present' && slot.tracks && slot.tracks.length) {
+    html = slot.tracks.map(function (meta) {
+      var info = novenaInfo(meta.episodeId, meta.title);
+      var intro = introTextFor(meta, day);
+      return '<div class="card" data-card="' + esc(meta.episodeId) + '" data-novplay="' + esc(meta.episodeId) + '">'
+        + '<div class="row"><div class="rowartwrap tile">' + (meta.imageUrl ? '<img class="rowart" src="' + esc(meta.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>'
+        + '<div class="grow"><h3' + (isPlayed(meta.episodeId, day.date, 'Novenas') ? ' class="heard"' : '') + '>' + esc(catechesisNovenasName(meta.title)) + '</h3>'
+        + (info ? '<div class="meta">Day ' + info.n + '</div>' : '')
+        + (intro ? '<div class="meta">' + esc(intro) + '</div>' : '')
+        + '</div>' + playedDotHtml({ episodeId: meta.episodeId, block: 'Novenas' }) + '</div></div>';
+    }).join('');
+  } else {
+    // The named empty state (P6): painted before the
+    // resolution settles, on a novena-less day, and when
+    // the resolution fails — never an error.
+    html = '<div class="card"><div class="meta">No novenas are running today</div></div>';
+  }
+  view.innerHTML = html;
+  wireCatechesisNovenas();
+  wirePlayed(view);
+  if (!settled) catechesisNovenasResolve();
+}
+function wireCatechesisNovenas() {
+  view.querySelectorAll('[data-novplay]').forEach(function (card) {
+    card.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-markplayed]')) return; // the dot's own act (wirePlayed)
+      var day = state.dayPayload;
+      var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+      if (!day || !slot || !slot.tracks) return;
+      var meta = null;
+      slot.tracks.forEach(function (m) { if (m.episodeId === card.getAttribute('data-novplay')) meta = m; });
+      if (!meta) return;
+      tapPlay(trackDesc(ownSlotTrack(catechesisNovenasRow(), meta, day.date), day));
+    });
+  });
+}
+function catechesisNovenasSettled() {
+  // The settle hook (ownSettlePresent / ownSettleMissing):
+  // the novenas resolution landed — repaint if this side
+  // stands. Off the side it costs nothing.
+  if (state.tab === 'podcasts' && tabSideNow.podcasts === 'novenas') paintPodcastsIndex();
+}
+function catechesisNovenasResolve() {
+  // The paint-free kick for a Catechesis-first open (the
+  // boot renders only the opening tab, so the day build
+  // has not run): adopt the day payload + derive the
+  // standing + settle the novenas slot through the
+  // standing machinery. No Pray paint is ever called; the
+  // settle hook repaints this side when the slot lands.
+  // Any failure leaves the empty state standing (the
+  // episode path's posture: degrade, never error).
+  if (catNovResolveInFlight) return;
+  if (state.dayPayload && state.ownSlots && state.ownSlots['novenas']
+    && (state.ownSlots['novenas'].state === 'present' || state.ownSlots['novenas'].state === 'missing')) return;
+  catNovResolveInFlight = true;
+  var done = function () { catNovResolveInFlight = false; };
+  api('/api/player/day').then(function (dayRes) {
+    var day = dayRes && (dayRes.day || dayRes);
+    if (!day || !day.date) { done(); return; }
+    if (!state.dayPayload) {
+      day.intros = buildIntroMap(day);
+      state.dayPayload = day;
+      state.presentedDay = day.date;
+    }
+    day = state.dayPayload;
+    return api('/api/player/source-settings').then(function (sres) {
+      var settings = sres && (sres.settings || sres);
+      if (!settings || !settings.sources) { done(); return; }
+      if (!state.ownStanding) {
+        state.ownStanding = settings.sources.filter(function (s) {
+          return s.enabled !== false && OWN_ROW_EPISODE[s.sourceKey] && s.block;
+        }).slice().sort(function (a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+      }
+      var row = null;
+      state.ownStanding.forEach(function (r) { if (r.sourceKey === 'novenas') row = r; });
+      if (!row) { done(); return; }
+      if (!state.ownSlots) state.ownSlots = {};
+      if (state.ownSlots['novenas']) { done(); return; }
+      state.ownSlots['novenas'] = { state: 'loading', tracks: [] };
+      // The externals cache, under resolveExternals' own
+      // validity rule (record date + settings version +
+      // record slots + the payload's profile fold) — a
+      // covered record seeds the slot in the standing
+      // re-materialized shape (the resolveExternals cache
+      // branch's own map); otherwise the feed settles it.
+      var rec = extCacheRead();
+      var profile = day.profile || null;
+      var covered = !!(rec && rec.date === day.date
+        && rec.settingsVersion === settings.version && rec.slots
+        && (profile ? (rec.profileKey === profile.key && rec.profileVersion === profile.version)
+                    : (rec.profileKey == null && rec.profileVersion == null)));
+      var seeded = false;
+      if (covered && rec.own && rec.own.novenas && rec.own.novenas.items && rec.own.novenas.items.length) {
+        state.ownSlots['novenas'] = {
+          state: 'present',
+          tracks: rec.own.novenas.items.map(function (m) {
+            return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0, imageUrl: m.imageUrl || '/logo.png' };
+          })
+        };
+        seeded = true;
+        catechesisNovenasSettled();
+      }
+      if (!seeded) {
+        var needed = {};
+        needed['novenas'] = [row];
+        ownResolveFeed(day, needed);
+      }
+      done();
+    });
+  }).catch(function () { done(); });
 }
 function paintPodSeriesPage() {
   // v434 §2.1: the series-page dispatch — a VIDEO payload paints
@@ -8833,7 +8997,10 @@ function openHeaderMenu() {
           || (podLevel === 'watch' && s.series === 'catholictv');
         items.push({ label: s.title || s.series, state: here ? 'Here' : null, act: here ? function () {} : function () { goSeries(s.series); } });
       });
-      [['courses', 'Courses'], ['podcasts', 'Podcasts']].forEach(function (sd) {
+      // v516: the other-sides entries read the sides table
+      // itself (tabSideCfg) — the third side, Novenas,
+      // stands here by the same rule as the standing two.
+      tabSideCfg('podcasts').sides.forEach(function (sd) {
         if (sd[0] === podStandingSide) return;
         items.push({ label: sd[1], state: '\u203a', act: function () { goSide('podcasts', sd[0]); } });
       });
@@ -11327,6 +11494,7 @@ function ownResolveFeed(day, needed) {
 }
 function ownSettlePresent(day, row, metas) {
   state.ownSlots[row.sourceKey] = { state: 'present', tracks: metas };
+  if (row.sourceKey === 'novenas') catechesisNovenasSettled(); // v516: the Catechesis Novenas side repaints on the settle
   ownSwapRow(row, day);
   ownRegisterReadTracks();
   extRebuildDescs(day);
@@ -11357,6 +11525,7 @@ function ownSettlePresent(day, row, metas) {
 }
 function ownSettleMissing(day, row) {
   state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
+  if (row.sourceKey === 'novenas') catechesisNovenasSettled(); // v516: the Catechesis Novenas side repaints on the settle
   ownSwapRow(row, day);
   extRebuildDescs(day);
   updateBlockCounts(day);
