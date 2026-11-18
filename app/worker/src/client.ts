@@ -9582,12 +9582,12 @@ function npArtRender(sheet, cur) {
   }
 }
 function npDuration() {
-  var d = audioEl.duration;
-  if (isFinite(d) && d > 0) return d;
-  var pd = playPos().dur; // v513: the native mirror's duration — the engine's measured length, the read the dock progress already tracks with; in web mode it is the element's own duration, already answered above
+  var pd = playPos().dur; // v520: the one position read stands first — in native mode the engine's published duration (the contract's, else its measured length; v513's mirror read); in web mode it is the element's own duration. The page element's own duration stands last: in native mode the element is not the engine (it holds a paused restore stand or a fallback load), and its finite length outranked the true reads and painted the bar full on podcast tracks (the v513 field leg)
   if (pd > 0) return pd;
   var cur = state.current;
   if (cur && cur.durationS > 0) return cur.durationS;
+  var d = audioEl.duration;
+  if (isFinite(d) && d > 0) return d;
   return 0;
 }
 function openNowPlaying() {
