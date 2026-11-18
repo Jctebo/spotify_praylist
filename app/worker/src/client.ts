@@ -2507,7 +2507,10 @@ function unplayedOnly(descs) {
   // at tap time is excluded here, so no advance can ever start it.
   var d = presentedDateStr();
   if (!d) return descs.slice();
-  return descs.filter(function (x) { return !isPlayed(x.episodeId, d, x.block); });
+  // v515: a podcast descriptor's played state is its series
+  // listen (the descriptor's flag), never a day-store row —
+  // the filter reads each kind's own store.
+  return descs.filter(function (x) { return x.kind === 'podcast' ? !x.listened : !isPlayed(x.episodeId, d, x.block); });
 }
 function queueBuild(descs) {
   // §2.4's fallback, at the same build-time seam: the filtered
@@ -8332,6 +8335,15 @@ function playedDotHtml(t) {
   // .on class) with the title stepped to the meta tone (.heard).
   var id = t.episodeId;
   if (!id) return '';
+  // v515: a podcast descriptor's mark is its series listen,
+  // never a day-store row — its dot reads the descriptor's
+  // own listened flag (the listens fold the series payload
+  // carries, the Plan P4 read) and stands as a plain span,
+  // so no tap on it can write the wrong store. The day
+  // store's button below stands for the day's own tracks.
+  if (t.kind === 'podcast') {
+    return '<span class="played-dot poddot' + (t.listened ? ' on' : '') + '" data-poddot="' + esc(id) + '" aria-hidden="true"></span>';
+  }
   // v360 §2.3.2: the dot carries its occurrence's block beside
   // the id (tracks carry it as _block, descriptors as block);
   // refreshPlayedChrome and the toggle repaint/write from the
@@ -8341,6 +8353,9 @@ function playedDotHtml(t) {
   return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
 }
 function heardCls(t) {
+  // v515: a podcast descriptor's heard state is its listen
+  // (the playedDotHtml rule, at the title's seat).
+  if (t.kind === 'podcast') return t.listened ? ' class="heard"' : '';
   return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '') ? ' class="heard"' : '';
 }
 var BS_CH = String.fromCharCode(92);
@@ -8384,7 +8399,11 @@ function blockPlayedCounts(block) {
   var d = presentedDateStr();
   var total = 0, played = 0;
   (state.dayDescs || []).forEach(function (x) {
-    if (!x.available || x.block !== block) return;
+    // v515: podcast descriptors stand outside the day store's
+    // counts whole — their marks live in the listens store,
+    // so the Podcasts group carries no prayed count and its
+    // mark-all (a day-store act) never stands for it.
+    if (!x.available || x.block !== block || x.kind === 'podcast') return;
     total++;
     if (d && isPlayed(x.episodeId, d, x.block)) played++;
   });
@@ -8402,6 +8421,21 @@ function refreshPlayedChrome() {
     if (card) {
       var h = card.querySelector('h3');
       if (h) h.classList.toggle('heard', on);
+    }
+  });
+  // v515: the podcast groups' plain dots follow their
+  // descriptors' listened flags (the mark seam flips the
+  // standing copies; this pass repaints them in place).
+  view.querySelectorAll('[data-poddot]').forEach(function (sp) {
+    var pid = sp.getAttribute('data-poddot');
+    var pdesc = null;
+    (state.dayDescs || []).forEach(function (x) { if (x.episodeId === pid) pdesc = x; });
+    var pon = !!(pdesc && pdesc.listened);
+    sp.classList.toggle('on', pon);
+    var pcard = sp.closest('[data-card]');
+    if (pcard) {
+      var ph = pcard.querySelector('h3');
+      if (ph) ph.classList.toggle('heard', pon);
     }
   });
   view.querySelectorAll('[data-novline]').forEach(function (sp) {

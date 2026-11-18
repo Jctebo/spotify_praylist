@@ -231,6 +231,10 @@ h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:nor
 .played-dot { flex:0 0 44px; width:44px; height:44px; margin:-10px -12px -10px 0; padding:0; background:none; border:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .played-dot::after { content:''; width:12px; height:12px; border-radius:50%; border:1px solid var(--line); background:transparent; }
 .played-dot.on::after { background:var(--accent); border-color:var(--accent); }
+/* v515: the Podcasts group's plain dot (a span, not the day
+   store's button) — the seat and circle stand as the
+   button's; the cursor carries that it is not a control. */
+.played-dot.poddot { cursor:default; }
 /* The played row's second, quieter signal: the title steps down
    to the standing meta tone (var(--muted)) — a tone change, like
    the ring-to-fill change, not a trophy mark. */
