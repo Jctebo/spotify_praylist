@@ -508,6 +508,66 @@ async function prayerEpisodeDrawForDate(env: Env, date: string, forceEnumerate =
   if (stmts.length) await env.DB.batch(stmts);
   return map;
 }
+// v528 §2.2: the per-track draw — the track-keyed sibling of
+// prayerDrawForDate, under its fill-missing discipline (a
+// standing (date, track) draw is never re-picked; missing keys
+// fill in ONE batch, INSERT OR IGNORE, first draw wins), but
+// with decision B4's pick: UNIFORM random from the full active
+// pool — deliberately NOT the H=4 · M=2 · L=1 weighting above,
+// which governs the block-head segments' draw only and is not
+// touched here. Under LOCAL_DEV (harness only) the pick is the
+// standing drawHash over `${date}:${trackKey}`, so the gate
+// can assert the exact map (the episodeDrawRandom posture).
+function trackDrawRandom(env: Env, date: string, trackKey: string): number {
+  if (env.LOCAL_DEV !== "1") return Math.random();
+  return drawHash(`${date}:${trackKey}`);
+}
+async function prayerTrackDraws(env: Env, date: string, keys: string[], via: string): Promise<Map<string, { intentionId: number; text: string }>> {
+  const wanted = [...new Set(keys.filter((k) => typeof k === "string" && k.length > 0 && !k.startsWith("intro:") && !k.startsWith("seg:")))];
+  const map = new Map<string, { intentionId: number; text: string }>();
+  if (!wanted.length) return map;
+  const readStanding = async () => {
+    // D1 caps bound variables per statement (100) — the
+    // standing read runs in chunks of 15 keys so a full
+    // day build's batch (and a 120-key probe) stays
+    // inside the cap.
+    const found = new Map<string, number>();
+    for (let i = 0; i < wanted.length; i += 15) {
+      const chunk = wanted.slice(i, i + 15);
+      const ph = chunk.map(() => "?").join(",");
+      const r = await env.DB.prepare(`SELECT track_key, intention_id FROM prayer_track_draws WHERE date=? AND track_key IN (${ph})`)
+        .bind(date, ...chunk).all<{ track_key: string; intention_id: number }>();
+      for (const row of r.results ?? []) found.set(row.track_key, row.intention_id);
+    }
+    return found;
+  };
+  let standing = await readStanding();
+  const missing = wanted.filter((k) => !standing.has(k));
+  if (missing.length) {
+    const intentions = await prayerGetActiveIntentions(env);
+    if (intentions.length) {
+      const stmts: D1PreparedStatement[] = [];
+      for (const key of missing) {
+        const idx = Math.min(intentions.length - 1, Math.floor(trackDrawRandom(env, date, key) * intentions.length));
+        const pick = intentions[idx];
+        stmts.push(env.DB.prepare("INSERT OR IGNORE INTO prayer_track_draws (date, track_key, intention_id, drawn_via, created_at) VALUES (?, ?, ?, ?, ?)")
+          .bind(date, key, pick.id, via === "play" ? "play" : "build", nowISO()));
+      }
+      // The fill batch runs in chunks of 15 statements —
+      // the same D1 variable cap as the reads above.
+      for (let i = 0; i < stmts.length; i += 15) await env.DB.batch(stmts.slice(i, i + 15));
+      standing = await readStanding();
+    }
+  }
+  if (!standing.size) return map;
+  const all = await env.DB.prepare("SELECT id, text FROM prayer_intentions").all<{ id: number; text: string }>();
+  const byId = new Map((all.results ?? []).map((i) => [i.id, i.text]));
+  for (const [key, intentionId] of standing) {
+    const text = byId.get(intentionId);
+    if (text) map.set(key, { intentionId, text });
+  }
+  return map;
+}
 // v426 §2.3: THE whole-day re-draw entry point (§2.9's contract —
 // v427's per-episode re-draw joins INSIDE this function, under the
 // same snapshot/restore discipline; no second endpoint, no second
@@ -3372,6 +3432,11 @@ export default {
             // order, BEFORE the whole-day redraw that supersedes
             // the handler's standing partial refill.
             await env.DB.prepare("DELETE FROM prayer_draws WHERE intention_id=? AND date>=?").bind(id, pToday).run();
+            // v528 §2.2: the per-track store mirrors the same
+            // cleanup — a retired intention's track draws for
+            // date >= today delete with it, and the next request
+            // for an affected key re-fills from the remaining pool.
+            await env.DB.prepare("DELETE FROM prayer_track_draws WHERE intention_id=? AND date>=?").bind(id, pToday).run();
           }
           // Retire and restore both auto-redraw today (§2.4): the
           // retired intention leaves today's lines entirely; a
@@ -3396,6 +3461,10 @@ export default {
           const id = Number(pIntMatch[1]);
           await env.DB.batch([
             env.DB.prepare("DELETE FROM prayer_draws WHERE intention_id=?").bind(id),
+            // v528 §2.2: the per-track store's rows for the
+            // deleted intention go with it (all dates, as the
+            // prayer_draws deletion above).
+            env.DB.prepare("DELETE FROM prayer_track_draws WHERE intention_id=?").bind(id),
             env.DB.prepare("DELETE FROM prayer_intentions WHERE id=?").bind(id),
           ]);
           // v426 §2.4 / F-426-I3: the standing all-dates removal
@@ -3663,6 +3732,34 @@ export default {
              ON CONFLICT(series, seq_key) DO UPDATE SET position_s=excluded.position_s, duration_s=excluded.duration_s, updated_at=excluded.updated_at`,
           ).bind(posSeriesKey, posSeqKey, posVal, posDur, nowISO()).run();
           return json({ ok: true });
+        }
+        if (seg[2] === "track-draws" && request.method === "POST") {
+          // v528 §2.2: the per-track intention draw — the client
+          // sends the built day's track keys in ONE batch at the
+          // build settle (via 'build'), and a single key at the
+          // startDesc seam for a track the build does not cover
+          // (via 'play', the field trial's measuring field). The
+          // server returns every standing draw for the keys and
+          // fills the missing ones (prayerTrackDraws: uniform
+          // random from the full active pool, INSERT OR IGNORE,
+          // first draw wins). intro:/seg: keys are the block-head
+          // Intentions segments themselves and draw nothing.
+          // Session route on the day-position precedent.
+          const body = await request.json().catch(() => ({})) as { date?: unknown; keys?: unknown; via?: unknown };
+          const date = typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : null;
+          if (!date) return err(400, "bad date");
+          if (!Array.isArray(body.keys)) return err(400, "keys must be an array");
+          if (body.keys.length > 500) return err(400, "too many keys (max 500)");
+          const keys: string[] = [];
+          for (const raw of body.keys) {
+            if (typeof raw !== "string" || raw.length === 0 || raw.length > 300) return err(400, "keys must be non-empty strings");
+            keys.push(raw);
+          }
+          const via = body.via === "play" ? "play" : "build";
+          const draws = await prayerTrackDraws(env, date, keys, via);
+          const out: Record<string, { intentionId: number; text: string }> = {};
+          for (const [k, v] of draws) out[k] = v;
+          return json({ ok: true, date, draws: out });
         }
         if (seg[2] === "day-position" && request.method === "POST") {
           // v412 Fix 10: the day-position save — the day mirror of

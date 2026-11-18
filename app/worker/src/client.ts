@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, mass: null, dayAdditions: null, dayAdditionsDate: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -2226,6 +2226,86 @@ function loadDescAudio(desc) {
   setPlaybackState('playing');
   pushNativeState(false); // v377 B2: track change / play
 }
+/* ---------------- v528: the per-track intention draw ----
+   Decision B4–B7 (Scope package 46 Part B): every audio
+   track carries an intention drawn at random (uniform, the
+   full active pool, each track independent) — built-day
+   tracks from the day build's batch settle (drawn_via
+   'build', standing all day), tracks the build does not
+   cover from the startDesc seam at play (drawn_via 'play',
+   the field trial). One server store (migration 0040,
+   POST /api/player/track-draws) backs both paths; first
+   draw wins, so no surface can show two intentions for one
+   track on one day. state.trackDraws is the one map every
+   surface paints from (trackCard's line, the prayer page,
+   Now Playing, the series rows); it is date-scoped to the
+   presented date and dropped when the date turns. */
+function trackKeyOf(t) {
+  if (!t || !t.episodeId) return null;
+  if (t.episodeId.indexOf('intro:') === 0 || t.episodeId.indexOf('seg:') === 0) return null;
+  return playedKey(t.episodeId, t.block || t._block || '');
+}
+function trackDrawTextFor(t) {
+  var k = trackKeyOf(t);
+  if (!k || !state.trackDraws || state.trackDrawsDate !== presentedDateStr()) return null;
+  return state.trackDraws[k] || null;
+}
+function requestTrackDraws(keys, via) {
+  var date = presentedDateStr();
+  if (!date || !keys || !keys.length) return;
+  if (state.trackDrawsDate !== date) { state.trackDraws = {}; state.trackDrawsDate = date; state.trackDrawsPending = {}; }
+  if (!state.trackDraws) state.trackDraws = {};
+  if (!state.trackDrawsPending) state.trackDrawsPending = {};
+  var ask = keys.filter(function (k) { return k && !state.trackDraws[k] && !state.trackDrawsPending[k]; });
+  if (!ask.length) return;
+  ask.forEach(function (k) { state.trackDrawsPending[k] = 1; });
+  post('/api/player/track-draws', { date: date, keys: ask, via: via }).then(function (res) {
+    ask.forEach(function (k) { delete state.trackDrawsPending[k]; });
+    if (!res || !res.ok || !res.draws) return;
+    if (state.trackDrawsDate !== (res.date || date)) return; // the day turned mid-flight — the map belongs to the new day
+    Object.keys(res.draws).forEach(function (k) { if (res.draws[k] && res.draws[k].text) state.trackDraws[k] = res.draws[k].text; });
+    refreshTrackDrawSurfaces(via === 'build');
+  }).catch(function () {
+    // Best-effort (the day-position posture): a failed draw
+    // never blocks or delays playback; the next settle or
+    // play retries the key.
+    ask.forEach(function (k) { delete state.trackDrawsPending[k]; });
+  });
+}
+function settleTrackDraws() {
+  // §2.2: at the settle of the day build, the built day's
+  // track keys go in one batch (per settle moment — the
+  // resolution rebuilds re-run this and only missing keys
+  // are asked for, so a settled slot's tracks join the same
+  // standing map without a second draw).
+  var seen = {}, keys = [];
+  (state.dayDescs || []).forEach(function (d) {
+    var k = trackKeyOf(d);
+    if (k && !seen[k]) { seen[k] = 1; keys.push(k); }
+  });
+  if (keys.length) requestTrackDraws(keys, 'build');
+}
+function ensureTrackDraw(desc) {
+  // §2.4: the by-play draw — a descriptor starting with no
+  // standing draw asks for its single key beside the play.
+  var k = trackKeyOf(desc);
+  if (!k) return;
+  if (state.trackDrawsDate === presentedDateStr() && state.trackDraws && state.trackDraws[k]) return;
+  requestTrackDraws([k], 'play');
+}
+function refreshTrackDrawSurfaces(repaintRows) {
+  if (document.querySelector('.np-sheet')) updateNowPlaying();
+  var bp = document.getElementById('book-track-intention');
+  if (bp) {
+    var bt = (state.trackDraws || {})[bp.getAttribute('data-trackkey')];
+    if (bt && intentionsOn()) { bp.textContent = 'Track intention: ' + bt; bp.style.display = ''; }
+    else { bp.textContent = ''; bp.style.display = 'none'; }
+  }
+  if (repaintRows && state.dayPayload && state.tab === 'prayers' && state.prayersView
+    && (state.prayersView.kind === 'home' || state.prayersView.kind === 'block')) {
+    paintPrayersView(state.dayPayload);
+  }
+}
 function startDesc(desc) {
   // v388 §2.2: the start sequence, written-only. Bookkeeping
   // stands on the PRAYER from the unit's first instant (the
@@ -2253,6 +2333,7 @@ function startDesc(desc) {
     try { URL.revokeObjectURL(state.current.blobUrl); } catch (e) {}
     state.current.blobUrl = null;
   }
+  ensureTrackDraw(desc); // v528 §2.4: the by-play draw rides beside the play — fire-and-forget, a failed draw never blocks the start
   podPositionSkipAway(desc);
   dayPositionSkipAway(desc); // v412 Fix 10: the day mirror of the skip-away save
   if (desc.kind === 'podcast') {
@@ -6519,6 +6600,7 @@ function paintPodcasts() {
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '</span></div>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
+      + ((state.trackDraws && state.trackDraws[e.key] && intentionsOn()) ? '<div class="intention-text track-draw-line">Track intention: ' + esc(state.trackDraws[e.key]) + '</div>' : '')
       + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</span>'
       + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span></div></div>'
       + '</div>'
@@ -8615,6 +8697,7 @@ function openPrayerPage(slug) {
     + (p.bodyLatin ? langSwitchHtml() : '')
     + '<button class="bookstar" id="book-page-star" data-bookstar="' + esc(p.slug) + '" aria-label="Favorite">' + (fav ? '\u2605' : '\u2606') + '</button></div>'
     + '<p class="sub">' + esc(p.source) + '</p>'
+    + '<div class="intention-text track-draw-line" id="book-track-intention" data-trackkey="" style="display:none"></div>'
     + (p.audio ? '<div class="row bookaudio" id="book-audio-row"></div>' : '')
     + '<div class="readtext" id="book-body">' + bookBodyHtml(p.body) + '</div></div>';
   window.scrollTo(0, 0);
@@ -8629,10 +8712,28 @@ function openPrayerPage(slug) {
       var body = document.getElementById('book-body');
       if (body) body.innerHTML = bookBodyHtml(la ? p.bodyLatin : p.body);
       paintBookAudioRow(); // v510 §2.5: the audio row is per-language — the landed state follows the switch
+      paintBookIntention(); // v528 §2.3: the drawn intention is per-language too — its key carries the language
     });
   });
   var ps = document.getElementById('book-page-star');
   if (ps) ps.addEventListener('click', function () { toggleBookFav(p.slug); });
+  // v528 §2.3: the prayer page paints the intention drawn
+  // for this prayer's own key (prayer:<slug>:<lang>) from
+  // the one trackDraws map — standing where the prayer
+  // stands in the built day (its batch draw), and landing
+  // here after a by-play draw through
+  // refreshTrackDrawSurfaces, which reads the element's
+  // data-trackkey.
+  function paintBookIntention() {
+    var el = document.getElementById('book-track-intention');
+    if (!el) return;
+    var key = 'prayer:' + p.slug + ':' + pageLang;
+    el.setAttribute('data-trackkey', key);
+    var t = (state.trackDraws && state.trackDrawsDate === presentedDateStr()) ? state.trackDraws[key] : null;
+    if (t && intentionsOn()) { el.textContent = 'Track intention: ' + t; el.style.display = ''; }
+    else { el.textContent = ''; el.style.display = 'none'; }
+  }
+  paintBookIntention();
   // v484 §2.5: the audio acts — pilot prayers only (the
   // controls row stands only where the fold stands).
   // v510 §2.5: the row's paint is derived — where the
@@ -9845,6 +9946,17 @@ function trackCard(t) {
     var intIntro = introForTrack(t);
     if (intIntro && intIntro.text) intLine = '<div class="intention-text">Prayer Intention: ' + esc(intIntro.text) + '</div>';
   }
+  // v528 §2.3: the track's OWN drawn intention (decision B6)
+  // — one additional line under the title, from the one
+  // state.trackDraws map, whenever a draw stands for the
+  // card's key (the playedKey rule). The standing paired
+  // line above is the block-head draw and stands untouched;
+  // an unavailable track carries no line (the standing rule).
+  var drawLine = '';
+  if (t.available && intentionsOn()) {
+    var drawText = trackDrawTextFor(t);
+    if (drawText) drawLine = '<div class="intention-text track-draw-line">Track intention: ' + esc(drawText) + '</div>';
+  }
   var wrap = function (wordsInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
@@ -9900,7 +10012,7 @@ function trackCard(t) {
       // v417 §2.7 (D2): the meta's day word is the presented
       // day's own — 'Today' only when the presented day IS
       // today, the short form otherwise; no clock stands.
-      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + drawLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -9945,7 +10057,7 @@ function trackCard(t) {
     var readCtl = !noText ? readButton(t, key) : '';
     // v424 §2.3 (FD3): Read trails the meta line in the box,
     // after the ⤓ — v413's R4 stands (visible, not a menu item).
-    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + '</div>');
+    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + drawLine + '</div>');
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -10077,6 +10189,7 @@ function openNowPlaying() {
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
     + '<div class="np-intention" id="np-intention" style="display:none"></div>'
+    + '<div class="np-intention" id="np-track-intention" style="display:none"></div>'
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
@@ -10160,6 +10273,18 @@ function updateNowPlaying() {
     var intText = intentionsOn() ? (cur.intentionText || null) : null;
     if (intText) { intEl.textContent = 'Prayer Intention: ' + intText; intEl.style.display = ''; }
     else { intEl.textContent = ''; intEl.style.display = 'none'; }
+  }
+  var tdEl = sheet.querySelector('#np-track-intention');
+  if (tdEl) {
+    // v528 §2.3: the track's OWN drawn intention stands on
+    // Now Playing (decision B6) — from the one trackDraws
+    // map, for state.current's key, before, at, and during
+    // play; the by-play draw (§2.4) lands it here mid-play
+    // for tracks outside the build via
+    // refreshTrackDrawSurfaces' re-run of this paint.
+    var tdText = intentionsOn() ? trackDrawTextFor(cur) : null;
+    if (tdText) { tdEl.textContent = 'Track intention: ' + tdText; tdEl.style.display = ''; }
+    else { tdEl.textContent = ''; tdEl.style.display = 'none'; }
   }
   sheet.querySelector('#np-play').innerHTML = transportEngaged() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport · v461 F1: the engaged read, as on the dock
   sheet.querySelector('#np-prev').disabled = !state.queue.length; // v412 Fix 8: enabled at the queue head (the rule restarts the track there)
@@ -11655,6 +11780,7 @@ function extRebuildDescs(day) {
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
+  settleTrackDraws(); // v528 §2.2: a rebuild's newly settled tracks join the batch — only their missing keys are asked for
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -12751,6 +12877,10 @@ function buildDayFromPayload(day, snap) {
     // (keyed by the day the listener experienced, never the
     // stored day), and the store snapshot loads at render.
     state.presentedDay = day.presentedDay || day.date || null;
+    // v528 §2.1: the track-draw map is the presented date's
+    // own — a new date drops it whole (B5: a new draw the
+    // next day; nothing carries over).
+    if (state.trackDrawsDate !== state.presentedDay) { state.trackDraws = {}; state.trackDrawsDate = state.presentedDay; state.trackDrawsPending = {}; }
     state.playedCache = readPlayed();
     state.dateLabel = day.dateLabel || '';
     applyLiturgical(day);
@@ -12832,6 +12962,10 @@ function buildDayFromPayload(day, snap) {
     // externals dispatch — its descriptors join the day
     // through extRebuildDescs as each series settles.
     resolveProfilePodcasts(day);
+    // v528 §2.2: the build settle — the built day's track
+    // keys go to the draw store in one batch; the returned
+    // map paints the rows before any play (B6).
+    settleTrackDraws();
     // v344 §2.6: the played chrome's standing pass at render end
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
