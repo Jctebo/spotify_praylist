@@ -846,12 +846,19 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
    scales every Mass text element in step (ts-1 is the
    standing rendering and carries no overrides). */
 .mass-people { font-weight: 700; }
+/* v532: the priest's quiet (low-voice) words stand italic
+   (riding on .mass-line, so the text-size scale applies in
+   step); the "(priest says quietly)" marker before each
+   such prayer stands in the rubric register — the
+   .mass-rubric values, upright and regular weight. */
+.mass-quiet { font-style: italic; }
+.mass-quiet-note { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }
 .mass-sh { font-size: 15px; font-weight: 700; opacity: .85; margin: 12px 0 4px; }
 .mass-controls { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; margin: 8px 0 14px; }
 .mass-controls .mass-clabel { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; margin-right: 2px; white-space: nowrap; }
 .mass-controls .mass-seg { margin: 0; }
 .mass-scroll.ts-0 .mass-line { font-size: 15px; }
-.mass-scroll.ts-0 .mass-rubric { font-size: 12px; }
+.mass-scroll.ts-0 .mass-rubric, .mass-scroll.ts-0 .mass-quiet-note { font-size: 12px; }
 .mass-scroll.ts-0 .mass-h { font-size: 12px; }
 .mass-scroll.ts-0 .mass-sh { font-size: 14px; }
 .mass-scroll.ts-0 .mass-day { font-size: 18.5px; }
@@ -862,7 +869,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-0 .mass-src { font-size: 12.5px; }
 .mass-scroll.ts-0 .mass-ack, .mass-scroll.ts-0 .mass-notice { font-size: 11.5px; }
 .mass-scroll.ts-2 .mass-line { font-size: 18.5px; }
-.mass-scroll.ts-2 .mass-rubric { font-size: 14.5px; }
+.mass-scroll.ts-2 .mass-rubric, .mass-scroll.ts-2 .mass-quiet-note { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-h { font-size: 14.5px; }
 .mass-scroll.ts-2 .mass-sh { font-size: 17px; }
 .mass-scroll.ts-2 .mass-day { font-size: 22px; }
@@ -873,7 +880,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-scroll.ts-2 .mass-src { font-size: 15px; }
 .mass-scroll.ts-2 .mass-ack, .mass-scroll.ts-2 .mass-notice { font-size: 14px; }
 .mass-scroll.ts-3 .mass-line { font-size: 21px; }
-.mass-scroll.ts-3 .mass-rubric { font-size: 16.5px; }
+.mass-scroll.ts-3 .mass-rubric, .mass-scroll.ts-3 .mass-quiet-note { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-h { font-size: 16.5px; }
 .mass-scroll.ts-3 .mass-sh { font-size: 19.5px; }
 .mass-scroll.ts-3 .mass-day { font-size: 25px; }

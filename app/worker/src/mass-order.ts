@@ -1091,12 +1091,16 @@ export const MASS_LATIN: Record<string, string[]> = {
 // commentary (never rendered) · h heading · d dialogue
 // (a combined V/. R/. line) · x excluded (another Mass
 // form, season, or alternative text — see the release
-// document, section 2, Control 4 audit). The rubric
+// document, section 2, Control 4 audit) · q the priest's
+// quiet (low-voice) words (v532: rendered italic, with a
+// "(priest says quietly)" marker before each prayer — the
+// census stands in the v532 release document, section 2).
+// The rubric
 // split follows the source pages own typography (red
 // print); the people/priest split follows the Missals
 // own speaker cues. See gen-mass-order.py.
 export const MASS_ROLES: Record<string, string> = {
-"offertory": "hrrrppppprrPrppprppppprrPrpppprrppr",
+"offertory": "hrrrqqqqqrrPrqqqrqqqqqrrPrqqqqrrqqr",
 "prefaceDialogue": "prPrprPrprP",
 "epI": "ppprprpprppppppprpphprrppppppppphpppppppppppppppppppprxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrpppppprprxxxxxxxxxxxxxrrppppppprrprrprppppprppprrprrpppprpppppprrprPPPrPPPrPPPrppppppppppppppppppppprppppppprprphrppprrppprprprppppppppppppppprprpppprppppprP",
 "epII": "pprpprpprrpprrpprppprrprrppprpppppprrprPPPrPPPrPPPrppppppppppppprprrxxxxxrpppppppppprprppppprP",
@@ -1116,9 +1120,9 @@ export const MASS_ROLES: Record<string, string> = {
 "creedOutro": "r",
 "communionPre": "pr",
 "paterEn": "PPPPPPPPPP",
-"communionMid": "rppppppprrPPPrppppppprprPrprPrprrpppr",
+"communionMid": "rppppppprrPPPrppppppprprPrprPrprrqqqr",
 "agnusEn": "PPPPPP",
-"communionPost": "rrpppppppprpppppprppprPPPP"
+"communionPost": "rrqqqqqqqqrqqqqqqrppprPPPP"
 };
 export const MASS_LATIN_ROLES: Record<string, string> = {
 "gloria": "PPPPPPPPPPPPPPPPP",

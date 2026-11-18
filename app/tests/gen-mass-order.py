@@ -552,7 +552,38 @@ def classify(seg, lines):
         roles.append(pending)
     return ''.join(roles)
 
-ROLES = {k: classify(k, v) for k, v in segs.items()}
+# v532: the priest's quiet (low-voice) prayers carry the role
+# 'q' (rendered italic, with a "(priest says quietly)" marker
+# before each prayer). The census stands in the v532 release
+# document, section 2: each range below is a prayer whose own
+# rubric line in the Missal text directs a low voice ("saying
+# in a low voice" / "saying quietly" / "says quietly"). The
+# typography pass cannot see this — the rubric lines classify
+# 'r' and the prayers 'p' — so the census is applied here as
+# an explicit override, anchored on each prayer's first line.
+QUIET = {
+    'offertory': [(4, 8, 'Blessed are you, Lord God of all creation,'),
+                  (13, 15, 'By the mystery of this water and wine'),
+                  (17, 21, 'Blessed are you, Lord God of all creation,'),
+                  (26, 29, 'With humble spirit and contrite heart'),
+                  (32, 33, 'Wash me, O Lord, from my iniquity')],
+    'communionMid': [(33, 35, 'May this mingling of the Body and Blood')],
+    'communionPost': [(2, 9, 'Lord Jesus Christ, Son of the living God,'),
+                      (11, 16, 'May the receiving of your Body and Blood,')],
+}
+def apply_quiet(roles_map):
+    for seg, ranges in QUIET.items():
+        lines = segs[seg]
+        r = list(roles_map[seg])
+        for a, b, first in ranges:
+            assert lines[a] == first, ('quiet anchor', seg, a, lines[a])
+            for i in range(a, b + 1):
+                assert r[i] == 'p', ('quiet override on non-priest line', seg, i, r[i])
+                r[i] = 'q'
+        roles_map[seg] = ''.join(r)
+    return roles_map
+
+ROLES = apply_quiet({k: classify(k, v) for k, v in segs.items()})
 LATIN_ROLES = {k: 'P' * len(v) for k, v in MASS_LATIN.items()}
 for k, v in segs.items():
     assert len(ROLES[k]) == len(v), ('roles length', k)

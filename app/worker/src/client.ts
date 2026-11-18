@@ -1111,12 +1111,16 @@ var MASS_LATIN = {
 // commentary (never rendered) · h heading · d dialogue
 // (a combined V/. R/. line) · x excluded (another Mass
 // form, season, or alternative text — see the release
-// document, section 2, Control 4 audit). The rubric
+// document, section 2, Control 4 audit) · q the priest's
+// quiet (low-voice) words (v532: rendered italic, with a
+// "(priest says quietly)" marker before each prayer — the
+// census stands in the v532 release document, section 2).
+// The rubric
 // split follows the source pages own typography (red
 // print); the people/priest split follows the Missals
 // own speaker cues. See gen-mass-order.py.
 var MASS_ROLES = {
-"offertory": "hrrrppppprrPrppprppppprrPrpppprrppr",
+"offertory": "hrrrqqqqqrrPrqqqrqqqqqrrPrqqqqrrqqr",
 "prefaceDialogue": "prPrprPrprP",
 "epI": "ppprprpprppppppprpphprrppppppppphpppppppppppppppppppprxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrpppppprprxxxxxxxxxxxxxrrppppppprrprrprppppprppprrprrpppprpppppprrprPPPrPPPrPPPrppppppppppppppppppppprppppppprprphrppprrppprprprppppppppppppppprprpppprppppprP",
 "epII": "pprpprpprrpprrpprppprrprrppprpppppprrprPPPrPPPrPPPrppppppppppppprprrxxxxxrpppppppppprprppppprP",
@@ -1136,9 +1140,9 @@ var MASS_ROLES = {
 "creedOutro": "r",
 "communionPre": "pr",
 "paterEn": "PPPPPPPPPP",
-"communionMid": "rppppppprrPPPrppppppprprPrprPrprrpppr",
+"communionMid": "rppppppprrPPPrppppppprprPrprPrprrqqqr",
 "agnusEn": "PPPPPP",
-"communionPost": "rrpppppppprpppppprppprPPPP"
+"communionPost": "rrqqqqqqqqrqqqqqqrppprPPPP"
 };
 var MASS_LATIN_ROLES = {
 "gloria": "PPPPPPPPPPPPPPPPP",
@@ -3939,8 +3943,13 @@ function loadMassFeed(dateStr) {
    heading inside a segment (always shown) · d a combined
    V/. R/. dialogue line (the V/. part regular, the R/.
    part bold) · x another Mass form's or season's text, or
-   an alternative text (never rendered). A caller without
-   roles keeps the standing v486/v487 line-form rule. */
+   an alternative text (never rendered) · q the priest's
+   quiet (low-voice) words (v532: italic, with the marker
+   "(priest says quietly)" standing BEFORE each unbroken
+   run of q lines — one marker per prayer; the census
+   stands in the v532 release document, section 2). A
+   caller without roles keeps the standing v486/v487
+   line-form rule. */
 function massLinesHtml(lines, roles) {
   if (!roles) {
     return (lines || []).map(function (ln) {
@@ -3952,6 +3961,11 @@ function massLinesHtml(lines, roles) {
     var role = roles.charAt(i);
     if (role === 'r' || role === 'x') return '';
     if (role === 'h') return '<div class="mass-sh">' + esc(ln) + '</div>';
+    if (role === 'q') {
+      var note = (i === 0 || roles.charAt(i - 1) !== 'q')
+        ? '<div class="mass-quiet-note">(priest says quietly)</div>' : '';
+      return note + '<div class="mass-line mass-quiet">' + esc(ln) + '</div>';
+    }
     if (role === 'P') return '<div class="mass-line mass-people">' + esc(ln) + '</div>';
     if (role === 'd') {
       var cut = ln.indexOf('R/.');
