@@ -11040,32 +11040,37 @@ function setupBackButton() {
 /* B2/B5: the 5 s tick — position refresh and the page's
    heartbeat in one. Pushes only while a current stands. */
 setInterval(function () { nativeMirrorTick(); if (state.current) pushNativeState(false); }, 5000); // v466: the mirror tick rides the standing interval (a no-op outside native mode)
-function podDayDesc(series, payload) {
-  // v515 §2 (P4): one series' CURRENT entry as the day's
-  // Podcasts-group descriptor — podDesc's shape with the
-  // series explicit (the open payload here is per-series, so
-  // state.podcasts cannot name it). The (podSeries, seriesKey)
-  // pair is the Catechesis episode's own identity: playing it
-  // in the day marks the series exactly as a Catechesis play
-  // does. streamUrl/enclosureUrl mirror ownSlotTrack's fields
-  // where trackCard reads them; a podcast episode carries no
-  // read-along text (hasText false, textUrl null).
-  if (!payload || !payload.currentKey || !payload.entries) return null;
-  var e = null;
-  payload.entries.forEach(function (x) { if (x.key === payload.currentKey) e = x; });
-  if (!e) return null;
-  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: series, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', _block: 'Podcasts', durationS: e.durationS || 0, listened: !!e.listened, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null, imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, streamUrl: e.url || null, enclosureUrl: e.url || null, hasText: false, textUrl: null };
+function podGroupFacts() {
+  // v522: the Podcasts group's standing facts, read from
+  // the retained payloads — how many podcasts stand in
+  // the day, and how many episodes they carry between
+  // them. The group's counts read these, never the day
+  // build (no Podcasts episode stands in it).
+  var groups = state.podGroups;
+  var n = 0, eps = 0;
+  if (groups && groups.payloads) {
+    (groups.series || []).forEach(function (k) {
+      var pl = groups.payloads[k];
+      if (!pl) return;
+      n++;
+      eps += (pl.entries || []).length;
+    });
+  }
+  return { series: n, episodes: eps };
 }
 function resolveProfilePodcasts(day) {
   // v515 §2 (P4): the Podcasts layer build — for each series
   // in the fold's Podcasts layer, in layer order, the series
-  // payload's current entry becomes ONE descriptor in
-  // state.podGroups. A series with no current entry (or a
-  // failed read) contributes nothing. Each settle rebuilds
-  // the group list in layer order and re-runs the descriptor
+  // payload is fetched and retained on state.podGroups; the
+  // group's series cards paint from the retained payloads.
+  // v522: the resolver no longer builds episode descriptors
+  // — what stands in the day is THE PODCAST itself, not its
+  // current episode standing as a track (podDayDesc retires
+  // whole; the fold in extRebuildDescs contributes nothing
+  // for the shell). Each settle re-runs the descriptor
   // build + counts for the standing day; the Podcasts block
   // page repaints when it stands.
-  state.podGroups = { series: [], descs: [] };
+  state.podGroups = { series: [], payloads: {} };
   var fold = day && day.profile;
   if (!fold || !fold.layers) return;
   var podLayer = null;
@@ -11073,11 +11078,7 @@ function resolveProfilePodcasts(day) {
   if (!podLayer || !podLayer.on || !podLayer.series || !podLayer.series.length) return;
   var keys = podLayer.series.slice();
   state.podGroups.series = keys.slice();
-  var settled = {};
   var rebuild = function () {
-    var descs = [];
-    keys.forEach(function (k) { if (settled[k]) descs.push(settled[k]); });
-    state.podGroups.descs = descs;
     if (state.dayPayload === day) {
       extRebuildDescs(day);
       updateBlockCounts(day);
@@ -11086,10 +11087,9 @@ function resolveProfilePodcasts(day) {
   };
   keys.forEach(function (k) {
     api('/api/player/podcasts?series=' + encodeURIComponent(k)).then(function (payload) {
-      settled[k] = podDayDesc(k, payload);
+      state.podGroups.payloads[k] = payload;
       rebuild();
     }).catch(function () {
-      settled[k] = null;
       rebuild();
     });
   });
@@ -11106,12 +11106,12 @@ function extRebuildDescs(day) {
   var date = day.presentedDay || day.date;
   (day.blocks || []).forEach(function (b) {
     (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
-    // v515 §2: the Podcasts layer shell emits the profile
-    // podcast group's descriptors in place — they are
-    // descriptors already (the podDesc precedent), so no
-    // expandDescs; the shell carries no tracks and no
-    // settings rows, so this segment is the whole segment.
-    if (b.layer === 'podcasts') { (state.podGroups ? state.podGroups.descs : []).forEach(function (d) { descs.push(d); }); }
+    // v522: the Podcasts layer shell folds NOTHING — no
+    // Podcasts-group episode stands in the day build (the
+    // group shows the podcast itself, and playing happens
+    // from its series page); the shell carries no tracks
+    // and no settings rows, so this segment is empty by
+    // design.
     // v342/v348: the block's settings rows stand after any payload
     // tracks, merged across families in settings order (v348 §2.2).
     // A settled-missing family emits its one named-missing
@@ -11304,7 +11304,11 @@ function updateBlockCounts(day) {
     // state line — the caption segment stands nowhere on the
     // grid card (it survives as the block page head's
     // description); the count is the line's tail.
-    el.textContent = (counts[b] || 0) + ' tracks';
+    // v522: the Podcasts group's count reads the podcasts
+    // standing (podGroupFacts), never the day build — no
+    // Podcasts episode stands in it.
+    var pf = (blk && blk.layer === 'podcasts') ? podGroupFacts() : null;
+    el.textContent = pf ? (pf.series + (pf.series === 1 ? ' podcast' : ' podcasts')) : ((counts[b] || 0) + ' tracks');
   });
   // v413 §2.10 (FD4): the block page's meta line rides the same
   // settlement seam — "<N> episodes · <total duration>", the
@@ -11317,6 +11321,10 @@ function updateBlockCounts(day) {
   });
   view.querySelectorAll('[data-bmeta]').forEach(function (el) {
     var b = el.getAttribute('data-bmeta');
+    var blk2 = (day.blocks || []).filter(function (x) { return x.block === b; })[0];
+    // v522: the Podcasts page's meta names what stands —
+    // the podcasts, and the episodes they carry.
+    if (blk2 && blk2.layer === 'podcasts') { var pf2 = podGroupFacts(); el.textContent = pf2.series + (pf2.series === 1 ? ' podcast' : ' podcasts') + (pf2.episodes ? ' \u00b7 ' + pf2.episodes + ' episodes' : ''); return; }
     el.textContent = (counts[b] || 0) + ' episodes' + (durSums[b] ? ' \u00b7 ' + fmtDurLong(durSums[b]) : '');
   });
 }
@@ -12993,22 +13001,20 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
   });
-  // v521: the Podcasts group's series act — on the group's
-  // page, a group card's body tap opens its FULL PODCAST:
-  // the series page through the standing goSeries route
-  // (the same view and the same state the Catechesis →
-  // Podcasts open produces). The card's own controls are
-  // not navigation (the [data-openblock] guard, verbatim):
-  // the play disc still plays the episode, the ⋮ keeps
-  // its menu, the played dot stands as it stood.
+  // v522: the Podcasts group's click-through — on the
+  // group's page, the series card IS the podcast's entry
+  // in the day, and a tap anywhere on it goes through to
+  // the podcast itself: the series page through the
+  // standing goSeries route (the same view and the same
+  // state the Catechesis → Podcasts open produces), where
+  // all its episodes stand and play. The card carries no
+  // inner controls, so no guard stands. (v521's [data-card]
+  // body-tap wiring stood on the episode cards this page
+  // no longer paints; the series act it carried stands
+  // here now, on the series card itself.)
   if (state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === 'Podcasts') {
-    view.querySelectorAll('[data-card]').forEach(function (card) {
-      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === card.getAttribute('data-card'); })[0];
-      if (!d || d.kind !== 'podcast' || !d.podSeries) return;
-      card.addEventListener('click', function (ev) {
-        if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
-        goSeries(d.podSeries);
-      });
+    view.querySelectorAll('[data-daypodseries]').forEach(function (card) {
+      card.addEventListener('click', function () { goSeries(card.getAttribute('data-daypodseries')); });
     });
   }
   paintOfflineLine();
@@ -13541,15 +13547,42 @@ function homeBodyHtml(day) {
   return html;
 }
 function appendBlockPodcastCards(b) {
-  // v515 §2: the Podcasts layer shell's cards — the profile
-  // podcast group's descriptors as trackCards, appended after
-  // the settings/addition appends (both empty for the shell),
-  // in the appendBlockSettingsCards temp-div pattern. The
-  // standing [data-playkey] wiring and the data-queue Play
-  // All read them from state.dayDescs unchanged.
-  (state.podGroups ? state.podGroups.descs : []).forEach(function (d) {
+  // v522: the Podcasts layer shell's cards — ONE SERIES
+  // CARD per picked series, in layer order, painted from
+  // the retained payloads in the Catechesis index card's
+  // own form (v390 §2.7: the art wrap, the title, the
+  // kind's meta line), in the appendBlockSettingsCards
+  // temp-div pattern. The card carries no episode acts —
+  // no play disc, no played dot, no menu; its one act is
+  // the click-through to the podcast itself, wired in
+  // wirePrayersView from [data-daypodseries]. A series
+  // whose payload has not settled paints no card yet;
+  // the resolver's settle repaint appends it.
+  var groups = state.podGroups;
+  if (!groups || !groups.payloads) return;
+  (groups.series || []).forEach(function (series) {
+    var payload = groups.payloads[series];
+    if (!payload) return;
+    var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
+    var art = '<span class="rowartwrap">' + tile + (payload.showImageUrl ? '<img class="rowart" src="' + esc(payload.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
+    var meta;
+    if (!payload.available) {
+      meta = 'This series is unavailable right now. Try again later.';
+    } else if (payload.kind === 'rss') {
+      var latest = (payload.entries || [])[0];
+      meta = payload.listenedCount + ' of ' + payload.total + ' listened' + (latest ? ' \u00b7 Latest: ' + esc(latest.label || '') : '');
+    } else if (payload.kind === 'video') {
+      var newest = (payload.videos || [])[0];
+      meta = 'Video' + (newest ? ' \u00b7 Latest: ' + esc(newest.dateLabel || '') : '');
+    } else if (payload.kind === 'own') {
+      meta = 'Current: ' + esc(payload.currentLabel || '');
+    } else {
+      var cur = null;
+      (payload.entries || []).forEach(function (x) { if (x.key === payload.currentKey) cur = x; });
+      meta = payload.listenedCount + ' of ' + payload.total + ' listened' + (cur ? ' \u00b7 Current: ' + esc(cur.label || '') : ' \u00b7 Complete');
+    }
     var tmp = document.createElement('div');
-    tmp.innerHTML = trackCard(d);
+    tmp.innerHTML = '<div class="card" data-daypodseries="' + esc(series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(payload.title || series) + '</h3><div class="meta">' + meta + '</div></div></div></div>';
     while (tmp.firstChild) view.appendChild(tmp.removeChild(tmp.firstChild));
   });
 }
