@@ -26,14 +26,19 @@ files in Drive phone-queue + phone-current, the saint subject first
 (slug starts "saint-"/"st-"), else first alphabetically. Same Drive
 file the site's square is composed from, every night.
 
-COMPOSITION (the job's own spec): landscape 1920×1080, wide framing,
-NO watch clock zone (the clock-zone rule binds watch/phone images
-only). The day's portrait phone art stands at full height,
-right-of-center, with feathered edges over an extended ground — the
-art itself scaled to cover, blurred and darkened, blended over the
-site's deep-blue gradient family (#10294d → #0a1c3a → #040b1a, the
-_composite_site_square palette) — so the saint subject stays the
-clear subject and the frame is filled, never a naive center crop.
+COMPOSITION (v526 spec, revised v535): landscape 1920×1080, wide
+framing, NO watch clock zone (the clock-zone rule binds watch/phone
+images only). The day's portrait phone art stands at full height,
+right-of-center, with feathered edges, over a full-bleed ground that
+is the art itself — cover-scaled across the whole frame, heavily
+blurred so no second subject forms, at its own full brightness and
+color, with NO added gradient and NO darkening — so the painting's
+own background and light paint the frame edge to edge and the saint
+subject stays the clear subject; never a naive center crop. (v526's
+ground — the cover layer darkened to 0.45 and blended 0.55 over the
+deep-blue gradient family — read as the art standing in dark space;
+John's field feedback, 2026-11-18: "Wide images should paint more
+of the background." v535 removes the gradient and the darkening.)
 The burned-in title at the foot of the phone art stays legible.
 
 A miss (no candidate, download failure) prints a WARN and exits 1 —
@@ -100,43 +105,30 @@ def pick_site_wallpaper(date_iso: str) -> tuple[str, bytes] | None:
 
 def composite_desktop(raw: bytes) -> bytes:
     """Compose the day's portrait phone art into a 1920×1080 desktop
-    frame: blurred extended ground over the deep-blue gradient, the
-    art at full height right-of-center with feathered edges and a
-    gentle foot fade. No reserved clock zone anywhere."""
+    frame: a full-bleed ground of the art itself at full brightness
+    (v535), the art at full height right-of-center with feathered
+    edges and a gentle foot fade. No reserved clock zone anywhere."""
     from io import BytesIO
 
-    from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
     W, H = DESKTOP_W, DESKTOP_H
-    top = (16, 41, 77)     # #10294d deep blue
-    mid = (10, 28, 58)     # #0a1c3a
-    bottom = (4, 11, 26)   # #040b1a near-black blue
-    strip = Image.new("RGB", (1, H))
-    for y in range(H):
-        t = y / (H - 1)
-        if t < 0.55:
-            a, b, u = top, mid, t / 0.55
-        else:
-            a, b, u = mid, bottom, (t - 0.55) / 0.45
-        strip.putpixel((0, y), tuple(round(a[i] + (b[i] - a[i]) * u) for i in range(3)))
-    canvas = strip.resize((W, H))
-
     art = Image.open(BytesIO(raw)).convert("RGB")
 
-    # Extended ground: the art scaled to cover the wide frame, blurred
-    # and darkened, blended over the gradient — the frame's ground is
-    # the day's own image, carried wide. The cover crop anchors toward
-    # the art's upper third (its lit scene, not the subject's dark
-    # midsection) and the blend keeps the deep-blue gradient dominant,
-    # so the ground reads as atmosphere, never a second subject.
+    # Full-bleed ground (v535): the art cover-scaled across the whole
+    # wide frame, heavily blurred so no second subject forms, at its
+    # OWN full brightness and color — no gradient under it, no
+    # darkening, no blend. The frame is painted by the day's own
+    # background and light, edge to edge. The cover crop anchors
+    # toward the art's upper third (its lit scene). v526 darkened
+    # this layer to 0.45 and blended it over a deep-blue gradient;
+    # the gradient dominated and the frame read as dark space.
     cover_scale = max(W / art.width, H / art.height)
     cover = art.resize((round(art.width * cover_scale), round(art.height * cover_scale)))
     cx = (cover.width - W) // 2
     cy = round((cover.height - H) * 0.18)
     cover = cover.crop((cx, cy, cx + W, cy + H))
-    cover = cover.filter(ImageFilter.GaussianBlur(56))
-    cover = ImageEnhance.Brightness(cover).enhance(0.45)
-    canvas = Image.blend(canvas, cover, 0.55)
+    canvas = cover.filter(ImageFilter.GaussianBlur(56))
 
     # Subject panel: full height, right-of-center (panel center at
     # 63% of the width — desktop composition, clear space to the left).
