@@ -13009,6 +13009,22 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
   });
+  // v517 §2: the collapsed card's acts — expand flips the
+  // paint flag and re-paints from the standing day payload
+  // (no fetch, no write); Customize opens the editor for
+  // the effective profile.
+  view.querySelectorAll('[data-profexpand]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      profCardOpen = !profCardOpen;
+      if (state.dayPayload) paintPrayersView(state.dayPayload);
+    });
+  });
+  view.querySelectorAll('[data-profcustomize]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var fold = state.dayPayload && state.dayPayload.profile;
+      if (fold && fold.key) openProfileEditor(fold.key);
+    });
+  });
   if (state.current) markPlaying(state.current.episodeId);
 }
 function blockRowHtml(b) {
@@ -13083,6 +13099,9 @@ function shortHomeDate(day) {
    (profileRebuild — the renderPrayersSide path), so a
    midday switch re-composes today from the new fold. No
    fold stands (the pre-0038 posture), no card stands. */
+// v517 §2: the profile card stands collapsed on a cold
+// open; expanding is a paint state of the open session.
+var profCardOpen = false;
 function profPut(path, body) { return api(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
 function profileRebuild() {
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); }).catch(function () {});
@@ -13098,14 +13117,23 @@ function profileCardHtml(day) {
     if (l.key === 'novenas') novOn = !!l.on;
     if (l.key === 'podcasts') { podOn = !!l.on; podCount = (l.series || []).length; }
   });
-  return '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
+  // v517 §2: the head row always paints (the name, the
+  // resolution line, the honor line) with the expand toggle;
+  // the body — the Change row, the layer rows, the Choose
+  // podcasts row when on, and the Customize row — paints
+  // only while profCardOpen stands.
+  var html = '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine) + '</div>'
     + (fold.honorLine ? '<div class="meta">' + esc(fold.honorLine) + '</div>' : '')
-    + '</div><button class="btn ghost" data-profchange="1">Change</button></div>'
-    + '<div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-proflayer="novenas">' + (novOn ? 'On' : 'Off') + '</button></div>'
-    + '<div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-proflayer="podcasts">' + (podOn ? 'On' : 'Off') + '</button></div>'
-    + (podOn ? '<div class="row"><span class="grow">Podcast series</span><button class="btn ghost" data-podpick="1">Choose podcasts (' + podCount + ')</button></div>' : '')
-    + '</div>';
+    + '</div><button class="btn ghost" data-profexpand="1">' + (profCardOpen ? 'Done' : 'Edit') + '</button></div>';
+  if (profCardOpen) {
+    html += '<div class="row"><span class="grow">Prayer profile</span><button class="btn ghost" data-profchange="1">Change</button></div>'
+      + '<div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-proflayer="novenas">' + (novOn ? 'On' : 'Off') + '</button></div>'
+      + '<div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-proflayer="podcasts">' + (podOn ? 'On' : 'Off') + '</button></div>'
+      + (podOn ? '<div class="row"><span class="grow">Podcast series</span><button class="btn ghost" data-podpick="1">Choose podcasts (' + podCount + ')</button></div>' : '')
+      + '<div class="row"><span class="grow">Customize</span><button class="btn ghost" data-profcustomize="1">Customize profile</button></div>';
+  }
+  return html + '</div>';
 }
 function profileLayerToggle(which) {
   // The layer act on the CURRENT (effective) profile: read
@@ -13146,7 +13174,7 @@ function openProfileSheet() {
     var html = '<p class="sub">For today</p>';
     res.profiles.forEach(function (p) {
       var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
-      html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '</div></div>';
+      html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
     });
     if (eff && eff.resolvedBy === 'pick') {
       html += '<div class="card bookrow" data-profpick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
@@ -13154,7 +13182,7 @@ function openProfileSheet() {
     html += '<p class="sub">Standing default</p>';
     res.profiles.forEach(function (p) {
       var mark = res.state.standingKey === p.key;
-      html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '</div></div>';
+      html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
     });
     html += '<p class="sub">Day rule</p>';
     html += '<div class="card bookrow" data-profrule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
@@ -13174,7 +13202,204 @@ function openProfileSheet() {
     if (ruleRow) ruleRow.addEventListener('click', function () {
       profPut('/api/prayer/profiles/state', { dayRule: !res.state.dayRule }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
     });
+    // v517 §2: each row's Edit act — its tap is not the
+    // row's pick act (stopPropagation), the sheet closes,
+    // and the editor opens for that key (a default opens
+    // it in copy mode).
+    body.querySelectorAll('[data-profedit]').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var k = btn.getAttribute('data-profedit');
+        sheet.remove();
+        openProfileEditor(k);
+      });
+    });
   }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+}
+function openProfileEditor(key) {
+  // v517 §2: the profile editor — a .sheet in the slot
+  // picker's dress on mountDrawer. Local state only:
+  // nothing writes until a Save act. A custom opens in
+  // edit mode (Save over itself · Save as new · Delete);
+  // a default opens in copy mode (Save as new only — the
+  // named profiles cannot be changed, and the copy starts
+  // with an empty honor line: the standing honor line
+  // belongs to the three named defaults). The series
+  // checklist is local too (the openPodcastPicker paint,
+  // but a tap flips the local list — no PUT). Delete is
+  // arm-then-tap; any other editor act disarms it.
+  var old = document.querySelector('.profedit');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profedit';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Profile</h1></div>'
+    + '<div class="profeditbody"><p class="sub">Loading \\u2026</p></div><p class="fieldnote profeditnote"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.profeditbody');
+  var note = sheet.querySelector('.profeditnote');
+  var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  var mode = 'edit', edName = '', edHonor = '', edCore = [], edLayers = null;
+  var seriesList = null, seriesFailed = false, delArmed = false, loaded = false;
+  function disarm() {
+    if (!delArmed) return;
+    delArmed = false;
+    var db = body ? body.querySelector('[data-eddelete]') : null;
+    if (db) db.textContent = 'Delete profile';
+  }
+  function serverMsg(e, generic) {
+    if (e && e.data && e.data.error) return e.data.error;
+    return generic;
+  }
+  function paint() {
+    if (!body || !edLayers) return;
+    var html = '';
+    if (mode === 'copy') html += '<p class="sub">The named profiles cannot be changed \\u2014 saving makes your own copy.</p>';
+    html += '<label class="f">Name</label><input type="text" data-edname="1" value="' + esc(edName) + '">'
+      + '<label class="f">Honor line (optional)</label><input type="text" data-edhonor="1" value="' + esc(edHonor) + '">';
+    html += '<p class="sub">Blocks</p>';
+    edCore.forEach(function (b, i) {
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(b) + '</span>'
+        + (i > 0 ? '<button class="btn ghost" data-edup="' + esc(b) + '">\\u2191</button>' : '')
+        + (i < edCore.length - 1 ? '<button class="btn ghost" data-eddown="' + esc(b) + '">\\u2193</button>' : '')
+        + '<button class="btn ghost" data-edoff="' + esc(b) + '">Off</button></div></div>';
+    });
+    HOURS.forEach(function (b) {
+      if (edCore.indexOf(b) >= 0) return;
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(b) + '</span>'
+        + '<button class="btn ghost" data-edon="' + esc(b) + '">On</button></div></div>';
+    });
+    html += '<p class="sub">Layers</p>';
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-edlayer="novenas">' + (edLayers.novenas.on ? 'On' : 'Off') + '</button></div></div>';
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-edlayer="podcasts">' + (edLayers.podcasts.on ? 'On' : 'Off') + '</button></div></div>';
+    if (seriesFailed) html += '<p class="sub">Podcasts did not load.</p>';
+    else if (!seriesList) html += '<p class="sub">Loading \\u2026</p>';
+    else seriesList.forEach(function (s) {
+      var chosen = (edLayers.podcasts.series || []).indexOf(s.series) >= 0;
+      html += '<div class="card bookrow" data-edseries="' + esc(s.series) + '"><div class="row"><span class="grow">' + esc(s.title || s.series) + '</span><span class="meta">' + (chosen ? '\\u2713' : '') + '</span></div></div>';
+    });
+    html += '<div class="row">';
+    if (mode === 'copy') {
+      html += '<button class="btn gold" data-edsave="new">Save as new profile</button>';
+    } else {
+      html += '<button class="btn gold" data-edsave="over">Save</button>'
+        + '<button class="btn ghost" data-edsave="new">Save as new</button>'
+        + '<button class="btn ghost" data-eddelete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>';
+    }
+    html += '</div>';
+    body.innerHTML = html;
+    var nameIn = body.querySelector('[data-edname]');
+    if (nameIn) nameIn.addEventListener('input', function (ev) { edName = ev.target.value; disarm(); });
+    var honorIn = body.querySelector('[data-edhonor]');
+    if (honorIn) honorIn.addEventListener('input', function (ev) { edHonor = ev.target.value; disarm(); });
+    body.querySelectorAll('[data-edup]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        disarm();
+        var i = edCore.indexOf(btn.getAttribute('data-edup'));
+        if (i > 0) { var t = edCore[i - 1]; edCore[i - 1] = edCore[i]; edCore[i] = t; }
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-eddown]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        disarm();
+        var i = edCore.indexOf(btn.getAttribute('data-eddown'));
+        if (i >= 0 && i < edCore.length - 1) { var t = edCore[i + 1]; edCore[i + 1] = edCore[i]; edCore[i] = t; }
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-edoff]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        disarm();
+        var i = edCore.indexOf(btn.getAttribute('data-edoff'));
+        if (i >= 0) edCore.splice(i, 1);
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-edon]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        disarm();
+        var b = btn.getAttribute('data-edon');
+        if (edCore.indexOf(b) < 0) edCore.push(b);
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-edlayer]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        disarm();
+        var which = btn.getAttribute('data-edlayer');
+        if (which === 'novenas') edLayers.novenas.on = !edLayers.novenas.on;
+        else if (which === 'podcasts') edLayers.podcasts.on = !edLayers.podcasts.on;
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-edseries]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        disarm();
+        var k = row.getAttribute('data-edseries');
+        var list = edLayers.podcasts.series || (edLayers.podcasts.series = []);
+        var at = list.indexOf(k);
+        if (at >= 0) list.splice(at, 1); else list.push(k);
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-edsave]').forEach(function (btn) {
+      btn.addEventListener('click', function () { doSave(btn.getAttribute('data-edsave')); });
+    });
+    var delBtn = body.querySelector('[data-eddelete]');
+    if (delBtn) delBtn.addEventListener('click', function () {
+      if (!delArmed) { delArmed = true; delBtn.textContent = 'Tap again to delete'; return; }
+      profPut('/api/prayer/profiles/delete', { profileKey: key }).then(function () { sheet.remove(); profileRebuild(); }).catch(function (e) {
+        disarm();
+        if (note) note.textContent = serverMsg(e, 'Could not delete \\u2014 try again.');
+      });
+    });
+  }
+  function doSave(act) {
+    disarm();
+    var name = edName.trim();
+    if (!name) { if (note) note.textContent = 'Give the profile a name.'; return; }
+    if (!edCore.length) { if (note) note.textContent = 'Keep at least one block standing.'; return; }
+    if (note) note.textContent = '';
+    var payload = {
+      key: (mode === 'edit' && act === 'over') ? key : null,
+      name: name, honorLine: edHonor, coreBlocks: edCore.slice(),
+      layers: JSON.parse(JSON.stringify(edLayers)),
+    };
+    profPut('/api/prayer/profiles/save', payload).then(function () { sheet.remove(); profileRebuild(); }).catch(function (e) {
+      // api() rejects with the parsed body on .data — the
+      // note carries the server message where one stands.
+      if (note) note.textContent = serverMsg(e, 'Could not save \\u2014 try again.');
+    });
+  }
+  api('/api/player/podcasts').then(function (idx) {
+    seriesList = (idx && idx.seriesList) || [];
+    if (loaded) paint();
+  }).catch(function () {
+    seriesFailed = true;
+    if (loaded) paint();
+  });
+  api('/api/prayer/profiles').then(function (res) {
+    var rec = null;
+    ((res && res.profiles) || []).forEach(function (p) { if (p.key === key) rec = p; });
+    if (!rec) {
+      if (body) body.innerHTML = '';
+      if (note) note.textContent = 'That profile no longer stands.';
+      return;
+    }
+    mode = rec.kind === 'default' ? 'copy' : 'edit';
+    edName = rec.name || '';
+    edHonor = mode === 'copy' ? '' : (rec.honorLine || '');
+    edCore = (rec.coreBlocks || []).slice();
+    edLayers = JSON.parse(JSON.stringify(rec.layers || { novenas: { on: false }, podcasts: { on: false, series: [] } }));
+    var h1 = sheet.querySelector('h1.screen');
+    if (h1) h1.textContent = mode === 'copy' ? 'Customize profile' : 'Edit profile';
+    loaded = true;
+    paint();
+  }).catch(function () {
+    if (body) body.innerHTML = '';
+    if (note) note.textContent = 'Profiles did not load.';
+  });
 }
 function openPodcastPicker() {
   // The series picker for the effective profile's Podcasts
