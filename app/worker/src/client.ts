@@ -3871,6 +3871,7 @@ function paintMergedContainer(tab) {
 function setTab(tab) {
   closeWatch(); // v434 §2.6.2 seat 2: any tab switch tears a standing watch frame down first — the video sounds only while its surface stands open; the harvest below then reads the restored series page, the watch's standing place
   massPodReturn = false; // v493: a tab switch ends any Mass hosting of the CatholicTV series page — the page's home reads from the tab that opens it
+  podOrigin = null; // v534 F1: a tab switch likewise ends any Pray hosting of a series page
   capturePlace(); // v411 §2.4: harvest the outgoing screen before the dispatch repaints
   recordSideScroll(state.tab);
   view = realView;
@@ -5492,6 +5493,7 @@ var MASS_VIRTUAL_ENTRIES = [
   { key: 'springfield-mass', title: 'Springfield Mass', meta: 'St. Thomas the Apostle · West Springfield', series: 'springfieldmass' }
 ];
 var massPodReturn = false;
+var podOrigin = null; // v534 F1: the series page's Pray homing — 'prayers' while a series page entered from Pray stands in the Pray stack; null in its Catechesis home (massPodReturn is the Mass homing's own record)
 function paintMassVirtual() {
   var html = '';
   MASS_VIRTUAL_ENTRIES.forEach(function (e) {
@@ -5699,11 +5701,16 @@ function renderPodcasts() {
   view.innerHTML = skelHtml('podindex');
   api('/api/player/podcasts').then(function (res) {
     state.podcastsIndex = res;
-    if (state.tab === 'podcasts') paintPodcastsIndex();
+    // v534 F2: the paint (not the cache fill) guards on
+    // the level, as the return branches above guard
+    // theirs — a series opened over this cold load (a
+    // cross-tab goSeries) is never overwritten when this
+    // completion lands last.
+    if (state.tab === 'podcasts' && podLevel === 'index') paintPodcastsIndex();
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry on this
     // surface's own re-render.
-    if (state.tab === 'podcasts') {
+    if (state.tab === 'podcasts' && podLevel === 'index') {
       view.innerHTML = '<p class="err">Catechesis did not load.</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', renderPodcasts);
     }
@@ -5715,6 +5722,7 @@ function paintPodcastsIndex() {
   // card tappable. An unavailable series shows its unavailable
   // line on its own card.
   podLevel = 'index';
+  podOrigin = null; // v534 F1: the index standing means any series page is Catechesis-homed — no Pray origin survives this paint
   // v516: the Novenas side paints from the day's own
   // resolution, not the series registry — branch before
   // the series guard (the side needs no series payload).
@@ -5962,15 +5970,16 @@ function paintPodSeriesPage() {
 }
 function openPodSeries(key) {
   closeWatch(); // v434 §2.6.2 seat 4: opening any series while a watch record somehow stands closes it first — the invariant has no unnamed path
+  podLevel = 'series'; // v534 F2: the level is series from the tap — renderPodcasts' cold index completion can no longer overwrite this page (its paints guard on the level now, as the return branches' always have)
   view.innerHTML = skelHtml('podseries');
   api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (res) {
     state.podcasts = res;
     tryStandPodcastRestore(); // v412 Fix 9: the series payload stands — a podcast restore probe may resolve
-    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) paintPodSeriesPage();
+    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn) || podOrigin === 'prayers') paintPodSeriesPage();
   }).catch(function (e) {
     // v419 (G22): the authored failure + a Ghost Retry.
-    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) {
-      view.innerHTML = '<p class="err">' + ((state.tab === 'mass' && massPodReturn) ? 'The Catholic TV Mass did not load.' : 'Catechesis did not load.') + '</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
+    if (state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn) || podOrigin === 'prayers') {
+      view.innerHTML = '<p class="err">' + ((state.tab === 'mass' && massPodReturn) ? 'The Catholic TV Mass did not load.' : (podOrigin === 'prayers' ? 'The podcast did not load.' : 'Catechesis did not load.')) + '</p><p><button class="btn ghost" id="pod-retry">Retry</button></p>';
       document.getElementById('pod-retry').addEventListener('click', function () { openPodSeries(key); });
     }
   });
@@ -5984,7 +5993,24 @@ function goPodcastsIndex() {
   // one named act — the disc tap and the system-back
   // dispatch call THIS function; one act, two triggers.
   state.podcastsReturn = null;
+  podLevel = 'index'; // v534 F2: the level is index from the act — a cold index completion paints against it, never against a level a series open has since claimed
   renderPodcasts();
+}
+function podSeriesDest() {
+  // v534 F1: the series page's back names its actual home
+  // — Mass while Mass hosts it (v493), the Podcasts group
+  // page while Pray hosts it, else Catechesis.
+  if (massPodReturn) return 'Mass';
+  if (podOrigin === 'prayers') return 'Podcasts';
+  return 'Catechesis';
+}
+function returnToPrayPodcastsGroup() {
+  // v534 F1: the Pray-homed series page's back act — the
+  // Podcasts group page repaints from the standing day
+  // payload (openBlockPage is its standing entry).
+  podOrigin = null;
+  podLevel = 'index';
+  openBlockPage('Podcasts');
 }
 function wirePodBack() {
   // v457: the back stands in the header's row 2 now.
@@ -5992,9 +6018,12 @@ function wirePodBack() {
   // under the Mass tab (massPodReturn), the same back act
   // returns to the Virtual side instead of the Formation
   // index.
+  // v534 F1: while the series page stands homed in Pray
+  // (podOrigin), the same act returns to the Podcasts
+  // group page.
   var h = hdrRow2();
   var b = h ? h.querySelector('[data-podback]') : null;
-  if (b) b.addEventListener('click', function () { if (massPodReturn) returnToMassVirtual(); else goPodcastsIndex(); });
+  if (b) b.addEventListener('click', function () { if (massPodReturn) returnToMassVirtual(); else if (podOrigin === 'prayers') returnToPrayPodcastsGroup(); else goPodcastsIndex(); });
 }
 /* ---------------- v457: the row-2 bar ----------------
    The v447 bar's heir: ONE shared emission for every
@@ -6085,7 +6114,7 @@ function paintPodOwnSeries() {
   if (!res || res.kind !== 'own') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Catechesis', title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: podSeriesDest(), title: res.title || 'The AI Signal', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no present episode
     // stands in the store — the card form the other series keep.
@@ -6190,7 +6219,7 @@ function paintPodcastRss() {
   if (!res || res.kind !== 'rss') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: 'Catechesis', title: res.title || '', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: podSeriesDest(), title: res.title || '', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the
     // feed unreachable — the card form the other series keep.
@@ -6259,7 +6288,7 @@ function paintPodcastVideos() {
   if (!res || res.kind !== 'video') { view.innerHTML = skelHtml('podseries'); return; }
   podLevel = 'series';
   var html = '';
-  paintRow2Bar({ dest: massPodReturn ? 'Mass' : 'Catechesis', title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: podSeriesDest(), title: res.title || 'CatholicTV', backAttrs: 'data-podback' });
   if (!res.available) {
     // The standing unavailable surface: no snapshot and the feed
     // unreachable — the card form the audio series keep.
@@ -6407,7 +6436,7 @@ function paintPodcasts() {
   // changed stand correct. v457: that seat is the header's
   // row 2 (the v419 disc + pinned-row form retires with the
   // bar's fold into the header).
-  paintRow2Bar({ dest: 'Catechesis', title: res.title || '', backAttrs: 'data-podback' });
+  paintRow2Bar({ dest: podSeriesDest(), title: res.title || '', backAttrs: 'data-podback' });
   // v432 §2.1: the offline box retires on the series page too — no button seat here.
   if (!res.available) {
     // §2.1/L9: with no snapshot and the feed unreachable the
@@ -6884,6 +6913,7 @@ function refreshUnsaved() {
   el.textContent = n === 0 ? '' : (n === 1 ? '1 change not saved' : n + ' changes not saved');
 }
 var settingsVersion = null;
+var settingsReturnTab = 'prayers'; // v534 F3: the tab Settings was opened from, recorded at renderSettings entry (state.tab becomes 'settings' there, so the origin is captured, never re-read); the back acts return to it
 var settingsNote = '';
 // v451 §2.3 census: 'The AI Signal' STANDS in both lists — the
 // 'the-ai-signal' row itself stands assigned to it, the section
@@ -6916,6 +6946,10 @@ function settingsSections() {
   return out;
 }
 function renderSettings() {
+  // v534 F3: record the origin tab BEFORE the 'settings'
+  // assignment below overwrites state.tab — a re-entry
+  // (the Reset act re-renders) keeps the first recording.
+  if (state.tab !== 'settings') settingsReturnTab = state.tab;
   capturePlace(); // v411 §2.4: harvest the outgoing screen before Settings paints
   recordSideScroll(state.tab);
   view = realView; // v410: Settings paints the full view, never a side host
@@ -6925,7 +6959,7 @@ function renderSettings() {
   // (painted here, at entry, so the skeleton and the
   // failure paint carry it too); its back is wired by
   // paintSettings against the standing row.
-  paintRow2Bar({ dest: 'Pray', title: 'Settings', backAttrs: 'data-settingsback' });
+  paintRow2Bar({ dest: ({ prayers: 'Pray', mass: 'Mass', podcasts: 'Catechesis', conscience: 'Conscience', wallpaper: 'Sacred Art' })[settingsReturnTab] || 'Pray', title: 'Settings', backAttrs: 'data-settingsback' }); // v534 F3: the bar names the recorded origin tab
   view.innerHTML = skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
@@ -7055,15 +7089,18 @@ function paintSettings() {
   // standing values return, and the unsaved line clears with
   // the fresh paint's snapshot.
   document.getElementById('set-reset').addEventListener('click', renderSettings);
-  document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
+  document.getElementById('set-back').addEventListener('click', function () { setTab(settingsReturnTab); });
   // v447: the bar's back — the same standing act as the
   // footer's Back (setTab('prayers'), place kept). v457:
   // the bar stands in the header's row 2 (painted at
   // renderSettings' entry); the wiring guards itself so a
   // repaint never wires the standing node twice.
+  // v534 F3: both acts return to the recorded origin tab
+  // (settingsReturnTab) — from Pray the act is the
+  // standing setTab('prayers') byte-for-byte.
   var setBarHost = hdrRow2();
   var setBarBack = setBarHost ? setBarHost.querySelector('[data-settingsback]') : null;
-  if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab('prayers'); }); }
+  if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -9335,6 +9372,12 @@ function goBlock(block) {
   if (state.tab !== 'prayers') setTab('prayers');
 }
 function goSeries(key) {
+  // v534 F1: entered from Pray, the series page homes in
+  // the Pray stack — no tab switch; the origin record
+  // stands, and the page's back returns to the Podcasts
+  // group page (returnToPrayPodcastsGroup). From any
+  // other tab the standing form stands.
+  if (state.tab === 'prayers') { podOrigin = 'prayers'; openPodSeries(key); return; }
   if (state.tab !== 'podcasts') setTab('podcasts');
   openPodSeries(key);
 }
@@ -11428,6 +11471,30 @@ function handleSystemBack() {
     else document.querySelectorAll('.anchmenu, .menucatcher').forEach(function (n) { n.remove(); });
     return;
   }
+  // 1b. Settings arm (v534 F4): while Settings stands, its
+  // row-2 back stands in the DOM and no other page's does —
+  // the press runs that button's own act (F3's dynamic
+  // return). Before v534 this surface had no arm: a press
+  // fell to the root and closed the app (or, over a block
+  // page, took the block arm under the standing Settings).
+  var setBackBtn = document.querySelector('[data-settingsback]');
+  if (setBackBtn) { setBackBtn.click(); return; }
+  // 1c. Book page arm (v534 F4): the prayer-book page's own
+  // back act is closePrayerPage (one act, two triggers).
+  // Before v534 the bookpage kind had no arm — a press
+  // closed the app from the page.
+  if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'bookpage') {
+    closePrayerPage();
+    return;
+  }
+  // 1d. Pray-homed series arm (v534 F1/F4): the series
+  // page standing in the Pray stack returns to the
+  // Podcasts group page — before the block arm below,
+  // whose view state (the Podcasts block) also stands.
+  if (state.tab === 'prayers' && podOrigin === 'prayers' && podLevel === 'series') {
+    returnToPrayPodcastsGroup();
+    return;
+  }
   // 2. Block arm: the disc's own handler with the disc's
   // own argument — the [data-back] wiring calls
   // goListenHome(block name), and the view state carries
@@ -11440,7 +11507,11 @@ function handleSystemBack() {
   // 3a. Watch arm (v434 §2.6.2 seat 1): the Podcasts watch
   // view's back act is closeWatch — the same function the
   // back disc's tap calls (one act, two triggers).
-  if (state.tab === 'podcasts' && podLevel === 'watch') {
+  // v534 F4: the arm reads the Mass hosting too (a watch
+  // standing under the Mass tab is the same surface;
+  // closeWatch already repaints it there) — before v534 a
+  // press there fell to the root and closed the app.
+  if ((state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) && podLevel === 'watch') {
     closeWatch();
     return;
   }
@@ -11448,8 +11519,12 @@ function handleSystemBack() {
   // carries the identical disc with identical one-level
   // semantics; its act is goPodcastsIndex — the same
   // function the disc's tap calls.
-  if (state.tab === 'podcasts' && podLevel === 'series') {
-    goPodcastsIndex();
+  // v534 F4: widened to the Mass hosting, the act branching
+  // as wirePodBack's does — returnToMassVirtual there,
+  // goPodcastsIndex in the Catechesis home. Before v534 a
+  // press on the Mass-homed page closed the app.
+  if ((state.tab === 'podcasts' || (state.tab === 'mass' && massPodReturn)) && podLevel === 'series') {
+    if (massPodReturn) returnToMassVirtual(); else goPodcastsIndex();
     return;
   }
   // 4. Root (F-421-1): a top-level page — nothing in the
@@ -11512,7 +11587,7 @@ function resolveProfilePodcasts(day) {
     if (state.dayPayload === day) {
       extRebuildDescs(day);
       updateBlockCounts(day);
-      if (state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === 'Podcasts') paintPrayersView(day);
+      if (state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === 'Podcasts' && podLevel !== 'series') paintPrayersView(day); // v534 F1: never repaint the group page over a standing series page (a Pray-homed series paints into this same view); the group page repaints on return
     }
   };
   keys.forEach(function (k) {
