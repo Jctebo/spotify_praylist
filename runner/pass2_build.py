@@ -87,6 +87,8 @@ from _common import (  # noqa: E402
 ensure_repo_python()
 add_repo_paths()
 
+from transcript_guard import guard_episode  # noqa: E402  (2026-11-18 publish guard)
+
 TRIM = (
     "silenceremove=start_periods=1:start_silence=0.05:start_threshold=-50dB,areverse,"
     "silenceremove=start_periods=1:start_silence=0.05:start_threshold=-50dB,areverse"
@@ -419,6 +421,53 @@ def build(rundir: Path, cache: Path) -> dict:
             entry["head_ok"] = bool(head is not None and voice is not None and head < voice - 6 and head > -60)
         print(key, "verified", entry["duration_s"], flush=True)
 
+    # ---------------- transcript guard (2026-11-18, John's order) --------
+    # No episode publishes unless its AUDIO matches its SCRIPT. A failure
+    # marks the episode FAILED_GUARD; the day is then not fully built and
+    # publish_drop aborts (partial days never publish). Verdicts land in
+    # guard-<episode_id>.json in the rundir and in the report flags.
+    seam_texts: dict[str, str] = {}
+    provided_path = rundir / "texts-provided.json"
+    if provided_path.exists():
+        try:
+            seam_texts = (json.loads(provided_path.read_text()).get("blocks") or {})
+        except Exception:  # noqa: BLE001 - absence only weakens one screen
+            seam_texts = {}
+    for ep in episodes:
+        key = ep["key"]
+        if results[key]["status"] != "built":
+            continue
+        final = outdir / f"{ep['episode_id']}.mp3"
+        script_text = (outdir / f"{ep['file_base']}-script.txt").read_text()
+        seg_texts = [s["text"] for s in ep["segments_norm"] if "text" in s]
+        frags = [
+            (s["voice"], s["normalized"], frag_cache_path(cache, s["voice"], s["normalized"]))
+            for s in ep["segments_norm"] if "text" in s
+        ]
+        ep_seam = {k: v for k, v in seam_texts.items() if k.startswith(f"{key}/")}
+        verdict = guard_episode(
+            episode_id=ep["episode_id"],
+            mp3=final,
+            script_text=script_text,
+            segment_texts=seg_texts,
+            fragments=frags,
+            seam_texts=ep_seam,
+            context=plan.get("context") if key == "daily-rosary" else None,
+            workdir=rundir / "guard" / ep["episode_id"],
+        )
+        (rundir / f"guard-{ep['episode_id']}.json").write_text(json.dumps(verdict, indent=1))
+        results[key]["transcript_guard"] = {
+            "passed": verdict["passed"],
+            "problems": verdict["problems"][:6],
+            "metrics": verdict.get("metrics") or {},
+        }
+        if not verdict["passed"]:
+            results[key]["status"] = "FAILED_GUARD"
+            results[key]["failure_label"] = "TRANSCRIPT_GUARD_FAILED"
+            print(key, "FAILED_GUARD", verdict["problems"][:2], flush=True)
+        else:
+            print(key, "guard passed", verdict.get("metrics"), flush=True)
+
     built = [r for r in results.values() if r["status"] == "built"]
     failed_eps = [r for r in results.values() if r["status"] != "built"]
     report = {
@@ -434,7 +483,7 @@ def build(rundir: Path, cache: Path) -> dict:
             "spoken_chars": sum(r.get("spoken_chars", 0) for r in built),
         },
         "flags": list(plan.get("flags") or [])
-        + [f"{r['episode_id']}: TTS_FAILED — episode not built; publish is blocked for the whole day."
+        + [f"{r['episode_id']}: {r.get('failure_label', 'TTS_FAILED')} — episode not built; publish is blocked for the whole day."
            for r in failed_eps],
         "published": False,
     }
