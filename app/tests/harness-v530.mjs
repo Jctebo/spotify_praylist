@@ -120,8 +120,9 @@ if (PROBE) {
     'S2: F2 stands in the build (ownResolveFeed takes the revalidate set) and not in the base');
   ok(C_SRC.includes('c.delete(dlKey)') && !C_BASE.includes('c.delete(dlKey)'),
     'S3: F3 stands in the build (the changed-enclosure eviction seam) and not in the base');
-  ok(U_SRC === U_BASE && I_SRC === I_BASE,
-    'S4: ui.ts and index.ts are byte-identical to the base — the change is client-only');
+  const pinNorm = (u) => u.replace(/var CACHE = "ora-pro-nobis-v[0-9]+-[0-9]+"/, 'var CACHE = "PIN"');
+  ok(pinNorm(U_SRC) === pinNorm(U_BASE) && I_SRC === I_BASE,
+    'S4: ui.ts (past the standing SW pin) and index.ts are byte-identical to the base — the change is client-only');
   ok(FEED18.includes('daily-rosary-2026-11-18-corrected::c7e0f2c0') && FEED18.includes(CORRECTED_URL),
     'S5: the feed fixture carries the corrected item byte-as-published (GUID + enclosure)');
   const rosaryItems18 = (FEED18.match(/<item[\s\S]*?<\/item>/g) || []).filter((it) => it.includes('daily-rosary-2026-11-18'));
