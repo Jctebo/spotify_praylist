@@ -32,9 +32,10 @@
 //     the rss form) · the play disc
 //   The two arrival-equality legs compare the painted
 //     pages in the DOM with exactly two named transients
-//     normalized out: the rows' remote art <img> (it
+//     normalized out: the remote art images (img.rowart
+//     in the rows, img.coverimg in the page head — each
 //     removes itself when the sandbox network refuses
-//     the CDN fetch — whether it stands at capture is
+//     the CDN fetch, so whether it stands at capture is
 //     network luck, in either arrival) and the download-
 //     state icons' style (refreshPodDlStates settles it
 //     from the device cache, which the session itself
@@ -268,10 +269,15 @@ const homeRows = (page) => page.evaluate(() => Array.from(document.querySelector
 const pageHtmlNormalized = (page) => page.evaluate(() => {
   const host = document.createElement('div');
   host.innerHTML = document.querySelector('#view').innerHTML;
-  host.querySelectorAll('img.rowart').forEach((im) => im.remove());
+  host.querySelectorAll('img.rowart, img.coverimg').forEach((im) => im.remove());
   host.querySelectorAll('[data-poddlstate]').forEach((el) => el.removeAttribute('style'));
   return host.innerHTML;
 });
+const diffHint = (a, b) => {
+  if (a === b) return 'equal';
+  let i = 0; while (i < Math.min(a.length, b.length) && a[i] === b[i]) i++;
+  return 'DIFF at ' + i + ' len ' + a.length + ' vs ' + b.length + ' :: ' + JSON.stringify(a.slice(Math.max(0, i - 60), i + 120)) + ' || ' + JSON.stringify(b.slice(Math.max(0, i - 60), i + 120));
+};
 async function waitFor(page, fn, arg, timeout) {
   const t0 = Date.now();
   while (Date.now() - t0 < (timeout || 9000)) {
@@ -330,7 +336,7 @@ if (!PROBE) {
     const got = { ...gotState, html: await pageHtmlNormalized(page) };
     ok(arrived2 && got.tab === ref.tab && got.series === ref.series && got.level === ref.level && got.html === ref.html,
       'C5c: a tap on the group card\'s body lands on the series surface — the same state and the same painted page the Catechesis open produces (the two named transients normalized)',
-      'tab ' + got.tab + ' series ' + got.series + ' level ' + got.level + ' html ' + (got.html === ref.html ? 'equal' : ('DIFF len ' + got.html.length + ' vs ' + ref.html.length)));
+      'tab ' + got.tab + ' series ' + got.series + ' level ' + got.level + ' html ' + diffHint(got.html, ref.html));
   }
   /* C6: the exorcist-files card — the same equality, in the rss form */
   {
@@ -356,7 +362,7 @@ if (!PROBE) {
     const got = { ...gotState, html: await pageHtmlNormalized(page) };
     ok(arrived2 && got.tab === ref.tab && got.series === ref.series && got.kind === 'rss' && got.level === ref.level && got.html === ref.html,
       'C6c: a tap on the exorcist-files group card lands on its series surface — the same state and the same painted rss page the Catechesis open produces (the two named transients normalized)',
-      'tab ' + got.tab + ' series ' + got.series + ' kind ' + got.kind + ' level ' + got.level + ' html ' + (got.html === ref.html ? 'equal' : ('DIFF len ' + got.html.length + ' vs ' + ref.html.length)));
+      'tab ' + got.tab + ' series ' + got.series + ' kind ' + got.kind + ' level ' + got.level + ' html ' + diffHint(got.html, ref.html));
     await main.browser.close(); main.server.close();
   }
   /* C7–C8: the episode acts stand — the play disc plays, the ⋮ does not navigate */
