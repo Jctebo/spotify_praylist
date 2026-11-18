@@ -7950,13 +7950,63 @@ function dayAdditionCardHtml(d) {
   // trackCard dress with the play disc in the thumbDisc
   // form, so the standing [data-playkey] wiring plays it
   // from its slot through tapPlay + sectionQueueFrom. No
-  // played dot and no row menu: a prayer writes no marks
-  // and takes no row acts.
+  // played dot: a prayer writes no marks. v519: the card
+  // takes ONE row act — the overflow cluster stands at the
+  // title row's trailing end (the trackCard form), and its
+  // menu carries Remove (the v510 bound, closed).
   var disc = '<button class="playbtn thumbdisc" data-playkey="' + esc(d.episodeId) + '" data-url="' + esc(d.url) + '">&#9654;</button>';
   return '<div class="card trow prow addition" data-card="' + esc(d.episodeId) + '"><div class="row">'
     + rowArtHtml(d, disc)
-    + '<div class="grow"><div class="titlerow"><h3>' + esc(d.title) + '</h3></div>'
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(d.title) + '</h3>'
+    + '<span class="prow-cluster"><button class="iconbtn" data-addmenu="' + esc(d.episodeId) + '" aria-label="More options">\u22ee</button></span></div>'
     + '<div class="meta">' + (d.durationS ? fmtDur(d.durationS) + ' \\u00b7 ' : '') + 'Added to Praylist</div></div></div></div>';
+}
+/* v519: the addition's overflow menu + the Remove act.
+   One act only — Share / Download / Open in Spotify are
+   episode acts and a prayer addition is not an episode.
+   The act stands in both seats (the block-page card's
+   cluster, wired in wireRowActs; the prayer page's landed
+   row, wired in paintBookAudioRow) and nowhere on a
+   card's face. One tap, no confirm (John's decisions,
+   package 46 Part A). */
+function openAdditionMenu(d, anchorEl, afterOk) {
+  openSheetMenu(d.title || 'Options', [{ label: 'Remove from Praylist', act: function () { removeDayAddition(d, anchorEl, afterOk); } }], anchorEl);
+}
+function removeDayAddition(d, anchorEl, afterOk) {
+  // The removal rides the standing write discipline — the
+  // session PUT replaces the day's whole list (the v510
+  // pick's own shape, reversed): the list minus the one
+  // entry, matched by the episodeId the stored rows
+  // compose ('prayer:' + slug + ':' + lang).
+  var list = dayAdditionsNow().slice();
+  var kept = list.filter(function (a) { return 'prayer:' + a.slug + ':' + a.lang !== d.episodeId; });
+  if (kept.length === list.length) return; // nothing standing — no write
+  var payload = { date: todayChicago(), additions: kept.map(function (a) {
+    return { block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId === undefined ? null : a.afterId };
+  }) };
+  api('/api/player/day-additions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
+    if (!res || !res.ok || !Array.isArray(res.additions)) { additionRemoveFail(d, anchorEl, afterOk); return; }
+    adoptDayAdditions(res.date, res.additions);
+    if (state.dayPayload) {
+      // The standing payload's fold predates the PUT —
+      // bring it into agreement, then re-fold the day from
+      // the adopted list (a state-only rebuild; the
+      // caller's repaint decides what paints).
+      state.dayPayload.additions = res.additions;
+      extRebuildDescs(state.dayPayload);
+    }
+    if (afterOk) afterOk();
+    else if (state.dayPayload) paintPrayersView(state.dayPayload);
+  }).catch(function () { additionRemoveFail(d, anchorEl, afterOk); });
+}
+function additionRemoveFail(d, anchorEl, afterOk) {
+  // A failed removal adopts nothing and paints nothing
+  // removed (the slotFail posture): the menu reopens with
+  // the failure standing first, the act below it.
+  openSheetMenu(d.title || 'Options', [
+    { label: 'Could not remove \\u2014 try again', act: function () {} },
+    { label: 'Remove from Praylist', act: function () { removeDayAddition(d, anchorEl, afterOk); } }
+  ], anchorEl);
 }
 function appendBlockAdditionCards(block) {
   // §2.3: the block's addition cards take their slots in
@@ -8133,7 +8183,8 @@ function openPrayerPage(slug) {
     if (standing) {
       row.innerHTML = '<button class="btn gold" id="book-play">' + bookPlayLabel() + '</button>'
         + '<span class="btn ghost bookin">In today\\u2019s Praylist \\u2713 \\u2014 ' + esc(slotBlockLabel(standing.block)) + '</span>'
-        + '<button class="btn ghost" id="book-view">View</button>';
+        + '<button class="btn ghost" id="book-view">View</button>'
+        + '<button class="iconbtn" id="book-addmenu" aria-label="More options">\u22ee</button>';
     } else {
       row.innerHTML = '<button class="btn gold" id="book-play">' + bookPlayLabel() + '</button>'
         + '<button class="btn ghost" id="book-add">Add to Praylist</button>';
@@ -8154,6 +8205,17 @@ function openPrayerPage(slug) {
       praylistLanding = { block: st.block, episodeId: 'prayer:' + p.slug + ':' + pageLang };
       state.pendingBlock = st.block; // the standing seam: the day build opens the block page
       switchSide('prayers', 'prayers');
+    });
+    // v519: the prayer-page overflow seat (decision A1) —
+    // the same one-act menu; a successful removal repaints
+    // this row in place (the card returns to its Add
+    // state). Where the prayer no longer stands, the tap
+    // simply repaints the row — the truth, derived.
+    var mb = document.getElementById('book-addmenu');
+    if (mb) mb.addEventListener('click', function () {
+      var st2 = dayAdditionStanding(p.slug, pageLang);
+      if (!st2) { paintBookAudioRow(); return; }
+      openAdditionMenu(dayAdditionDesc(st2), mb, function () { paintBookAudioRow(); });
     });
   }
   paintBookAudioRow();
@@ -9149,6 +9211,16 @@ function wireRowActs(scope) {
       var key = b.getAttribute('data-rowmenu');
       var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
       if (t) openDayRowMenu(t, b);
+    });
+  });
+  // v519: the addition card's overflow — resolved from
+  // dayDescs exactly as the row menu resolves (an addition
+  // card's descriptor stands there by construction).
+  scope.querySelectorAll('[data-addmenu]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var key = b.getAttribute('data-addmenu');
+      var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0];
+      if (t) openAdditionMenu(t, b);
     });
   });
   scope.querySelectorAll('[data-rowshare]').forEach(function (b) {
