@@ -1287,6 +1287,32 @@ async function massPersonalWrite(env: Env, seat: string, slugs: string[]): Promi
   ).bind(seat, JSON.stringify(slugs), nowISO()).run();
 }
 
+// v527 §2.2/§2.3: the Universal Prayer intentions — John's
+// private intentions for ONE date (migration 0039), stored
+// as a JSON array of strings in standing order. A missing
+// table (pre-0039), a missing row, or an unparseable value
+// reads as an empty list, never an error (the bookFavorites
+// posture). No carry-forward: a date's list is its own.
+async function massUniversalIntentions(env: Env, date: string): Promise<string[]> {
+  try {
+    const row = await env.DB.prepare("SELECT intentions FROM mass_universal_prayer WHERE date = ?").bind(date).first<{ intentions: string }>();
+    if (!row) return [];
+    let arr: unknown = null;
+    try { arr = JSON.parse(row.intentions); } catch { arr = null; }
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((x): x is string => typeof x === "string");
+  } catch { return []; }
+}
+
+// v527 §2.3: one date's write — the row upserted whole
+// with its intentions array (the session PUT validates
+// first; a named 400 writes nothing).
+async function massUniversalWrite(env: Env, date: string, intentions: string[]): Promise<void> {
+  await env.DB.prepare(
+    "INSERT INTO mass_universal_prayer (date, intentions, updated_at) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET intentions = excluded.intentions, updated_at = excluded.updated_at",
+  ).bind(date, JSON.stringify(intentions), nowISO()).run();
+}
+
 // ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
 // The mapping as data: one row per source in player_source_settings,
 // seeded once by migration 0010 (the seed of record — the Worker
@@ -2721,6 +2747,17 @@ export default {
         // v328 posture).
         return json({ ok: true, ...(await massPersonalPrayers(env)) });
       }
+      if (seg[2] === "prayer" && seg[3] === "mass-universal-prayer" && request.method === "GET") {
+        // v527 §2.3: the door mirror of GET
+        // /api/prayer/mass-universal-prayer — the day's
+        // stored Universal Prayer intentions, read-only,
+        // so Review/Ship verify the stored list. No door
+        // write route exists; writes are John's,
+        // session-only (the v328 posture).
+        const date = url.searchParams.get("date") ?? "";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+        return json({ ok: true, date, intentions: await massUniversalIntentions(env, date) });
+      }
       if (seg[2] === "prayer" && seg[3] === "profiles" && request.method === "GET") {
         // v515 §2: the door mirror of GET /api/prayer/profiles
         // — the verification surface, read-only (writes are
@@ -3082,6 +3119,42 @@ export default {
           }
           await massPersonalWrite(env, seat, slugs);
           return json({ ok: true, ...(await massPersonalPrayers(env)) });
+        }
+        if (seg[2] === "mass-universal-prayer" && !seg[3] && request.method === "GET") {
+          // v527 §2.3: the day's Universal Prayer
+          // intentions read — the date's stored list,
+          // whole, in stored order. Session-gated like
+          // the book's own read; NO PIN (the Mass carries
+          // none). The date rides the query string and is
+          // format-validated.
+          const date = url.searchParams.get("date") ?? "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          return json({ ok: true, date, intentions: await massUniversalIntentions(env, date) });
+        }
+        if (seg[2] === "mass-universal-prayer" && !seg[3] && request.method === "PUT") {
+          // v527 §2.3: John's Universal Prayer intentions
+          // write, in the favorites PUT's discipline
+          // (v470 §2.2): { date, intentions: [...] }
+          // replaces the date's list whole. Every item is
+          // a string, trimmed, never empty; caps of 50
+          // items and 1000 chars per item. Every
+          // validation is a named 400 that writes nothing.
+          // The response is the stored list re-read.
+          const body = await request.json().catch(() => ({})) as { date?: unknown; intentions?: unknown };
+          const date = typeof body.date === "string" ? body.date : "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          if (!Array.isArray(body.intentions)) return err(400, "intentions must be an array");
+          if (body.intentions.length > 50) return err(400, "too many intentions (max 50)");
+          const list: string[] = [];
+          for (const raw of body.intentions) {
+            if (typeof raw !== "string") return err(400, "intentions must be strings");
+            const text = raw.trim();
+            if (!text) return err(400, "an intention must not be empty");
+            if (text.length > 1000) return err(400, "an intention is too long (max 1000 chars)");
+            list.push(text);
+          }
+          await massUniversalWrite(env, date, list);
+          return json({ ok: true, date, intentions: await massUniversalIntentions(env, date) });
         }
         if (seg[2] === "profiles" && !seg[3] && request.method === "GET") {
           // v515 §2: the Prayer Profiles read — the store, the

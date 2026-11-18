@@ -4577,7 +4577,7 @@ function paintMassScroll() {
      reset at paintMassLiturgy's entry beside the v502
      resets). */
   h += '<div class="mass-section mass-collapsible" id="mass-premass-head">Pre-Mass Prayers <span class="mass-collmark">' + (state.mass.preMassOpen ? '&#9662;' : '&#9656;') + '</span></div>';
-  h += '<div id="mass-personal-premass"' + (state.mass.preMassOpen ? '' : ' class="mass-personal-hidden"') + '>' + massPersonalListHtml('premass') + '</div>';
+  h += '<div id="mass-personal-premass"' + (state.mass.preMassOpen ? '' : ' class="mass-personal-hidden"') + '>' + massPremassHostHtml() + '</div>';
   h += massSectionHtml('Introductory Rites');
   h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
   h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
@@ -4596,6 +4596,11 @@ function paintMassScroll() {
   h += '<div id="mass-readings">' + massReadingsHtml() + '</div>';
   if (flags.creed) h += massPartHtml('creed', MASS_ORDER.creedEn, 'Creed');
   h += massLinesHtml(MASS_ORDER.creedOutro, MASS_ROLES.creedOutro);
+  /* v527: the Universal Prayer section stands here —
+     between the Liturgy of the Word and the Liturgy of
+     the Eucharist, in the fixed order (the Pope intention
+     · the referencing sentence · the day's intentions). */
+  h += '<div id="mass-universal-section">' + massUniversalSectionHtml() + '</div>';
   h += massSectionHtml('Liturgy of the Eucharist');
   h += massLinesHtml(MASS_ORDER.offertory, MASS_ROLES.offertory);
   h += massPrayerHtml('Prayer over the Offerings', f.prayerOverOfferings);
@@ -4659,6 +4664,7 @@ function paintMassScroll() {
   wireMassPen();
   wireMassChips();
   wireMassPersonal();
+  wireMassUniversalSection();
   /* v506: the Pre-Mass Prayers collapse — tapping its
      title opens or shuts the section in place; the
      state is view state only and resets at every
@@ -4672,6 +4678,7 @@ function paintMassScroll() {
     if (mark) mark.innerHTML = state.mass.preMassOpen ? '&#9662;' : '&#9656;';
   });
   if (typeof state.mass.personal === 'undefined') massPersonalLoad();
+  if (typeof state.mass.universal === 'undefined') massUniversalLoad();
 }
 /* ---------------- v495's seat, generalized by v501,
    one card system at four sections by v506:
@@ -4794,7 +4801,10 @@ function massPersonalLangHtml(key, lang) {
 function paintMassPersonalSeat(seat) {
   var host = document.getElementById(MASS_PERSONAL_SEATS[seat].host);
   if (!host) return;
-  host.innerHTML = massPersonalListHtml(seat);
+  /* v527: the premass host also carries the Universal
+     Prayer intentions block in its own child host, so a
+     seat repaint never wipes it (Plan §2.4's guard). */
+  host.innerHTML = seat === 'premass' ? massPremassHostHtml() : massPersonalListHtml(seat);
   wireMassPersonalSeat(seat);
 }
 function paintMassPersonal() {
@@ -4808,6 +4818,10 @@ function wireMassPersonalSeat(seat) {
   if (!host) return;
   var btn = document.getElementById(MASS_PERSONAL_SEATS[seat].btn);
   if (btn) btn.addEventListener('click', function () { openMassPersonalPicker(seat); });
+  /* v527: the premass seat's child host carries the
+     Universal Prayer intentions editor — wire it with
+     the seat. */
+  if (seat === 'premass') wireMassUniversalIn(document.getElementById('mass-universal-premass'));
   host.querySelectorAll('[data-mplang]').forEach(function (b) {
     b.addEventListener('click', function () {
       if (!state.mass.personalLang) state.mass.personalLang = {};
@@ -4971,6 +4985,251 @@ function massPersonalSave(payload, sheet) {
     paintMassPersonal();
   }).catch(function () {});
 }
+/* ---------------- v527: the Universal Prayer intentions
+   (Scope package 45, approval record 32 — John,
+   2026-11-17): a new section in the Mass scroll between
+   the Liturgy of the Word and the Liturgy of the
+   Eucharist, headed "The Universal Prayer" with the
+   smaller line "Prayer of the Faithful" under it. The
+   order is FIXED: an intention for the Pope, then the
+   referencing sentence as pinned in the package — the
+   app points to the Universal Prayer as published
+   locally in each parish and does not carry it — then
+   John's private intentions for the day, each reading
+   as its own intercession exactly as written, followed
+   by "Lord, hear our prayer." in bold, under a brief
+   invitation. On a day with none added the section
+   still stands, closing with the no-intentions line
+   (John's override). The list is stored per date
+   server-side (migration 0039); the viewed day only,
+   no carry-forward. ONE editor stands in two hosts:
+   its own block inside the Pre-Mass Prayers section
+   (the add home) and at the Universal Prayer point —
+   the same list, editable in both places. Adds come
+   from the intentions pool (a pick copies the text in;
+   the copy is the day's own, editable, and the pool
+   never changes) or free text. Every mutation writes
+   the whole list through the session route and adopts
+   the answered body; a failed write adopts nothing and
+   the list stands as it was. Written only: no audio,
+   no draw, no played marks. */
+var MASS_UP_POPE = 'For the Holy Father, Pope Leo XIV.';
+var MASS_UP_SENTENCE = 'We pray also for the intentions of the Universal Prayer as published locally in this parish';
+var MASS_UP_RESPONSE = 'Lord, hear our prayer.';
+var MASS_UP_EMPTY = 'No private intentions added for today';
+var MASS_UP_INVITATION = 'Brothers and sisters, let us pray.';
+function massUniversalState() {
+  var u = (state.mass && state.mass.universal) || null;
+  return (u && Array.isArray(u.intentions)) ? u.intentions : [];
+}
+function massUniversalSectionHtml() {
+  var h = '<div class="mass-section">The Universal Prayer</div>';
+  h += '<div class="mass-up-sub">Prayer of the Faithful</div>';
+  h += '<div class="mass-line">' + esc(MASS_UP_INVITATION) + '</div>';
+  h += '<div class="mass-line">' + esc(MASS_UP_POPE) + '</div>';
+  h += '<div class="mass-line mass-up-response">' + esc(MASS_UP_RESPONSE) + '</div>';
+  h += '<div class="mass-line">' + esc(MASS_UP_SENTENCE) + '</div>';
+  var list = massUniversalState();
+  if (!list.length) {
+    h += '<div class="mass-line">' + esc(MASS_UP_EMPTY) + '</div>';
+  } else {
+    list.forEach(function (t) {
+      h += '<div class="mass-line">' + esc(t) + '</div>';
+      h += '<div class="mass-line mass-up-response">' + esc(MASS_UP_RESPONSE) + '</div>';
+    });
+  }
+  h += '<p><button class="btn ghost" id="mass-universal-edit-btn">' + (state.mass.universalOpen ? 'Close the editor' : 'Edit intentions') + '</button></p>';
+  h += '<div id="mass-universal-point"' + (state.mass.universalOpen ? '' : ' class="mass-personal-hidden"') + '>' + massUniversalEditorHtml(false) + '</div>';
+  return h;
+}
+/* The one editor, painted into either host: withHead
+   carries the block heading (the Pre-Mass host); the
+   Universal Prayer host stands under the section's own
+   heading. Each intention stands as a card: its text
+   (a tap opens the inline edit), the v413 move buttons,
+   and a one-tap Remove. Below the list, the add acts:
+   a pool pick and a free-text line. */
+function massUniversalEditorHtml(withHead) {
+  var list = massUniversalState();
+  var editIdx = (state.mass && typeof state.mass.universalEditIdx === 'number') ? state.mass.universalEditIdx : -1;
+  var h = withHead ? '<div class="mass-h">Intentions for the Universal Prayer</div>' : '';
+  if (list.length) {
+    var panels = '';
+    list.forEach(function (t, i) {
+      if (i === editIdx) {
+        panels += '<div class="mass-panel"><div class="mu-addrow"><input type="text" class="mu-input mu-edit" value="' + esc(t) + '" autocomplete="off"></div>'
+          + '<div class="setcontrols">'
+          + '<button class="btn ghost" data-muedsave="' + i + '">Save</button>'
+          + '<button class="btn ghost" data-muedcancel="1">Cancel</button>'
+          + '</div></div>';
+      } else {
+        panels += '<div class="mass-panel"><div class="mass-line" data-mutext="' + i + '">' + esc(t) + '</div>'
+          + '<div class="setcontrols">'
+          + '<button class="mvbtn" data-muup="' + i + '" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>&#8593;</button>'
+          + '<button class="mvbtn" data-mudown="' + i + '" aria-label="Move down"' + (i === list.length - 1 ? ' disabled' : '') + '>&#8595;</button>'
+          + '<button class="btn ghost" data-muremove="' + i + '">Remove</button>'
+          + '</div></div>';
+      }
+    });
+    h += '<div class="mass-panels">' + panels + '</div>';
+  }
+  h += '<p><button class="btn ghost" data-muaddpool="1">Add from the pool</button></p>';
+  h += '<div class="mu-addrow"><input type="text" class="mu-input mu-free" placeholder="Write an intention" autocomplete="off">'
+    + '<button class="btn ghost" data-muaddfree="1">Add</button></div>';
+  return h;
+}
+/* The Pre-Mass host's whole paint: the premass seat list
+   plus the intentions block in its own child host, so a
+   seat repaint re-renders the block from the same state
+   and never wipes it (Plan §2.4's guard). */
+function massPremassHostHtml() {
+  return massPersonalListHtml('premass')
+    + '<div id="mass-universal-premass">' + massUniversalEditorHtml(true) + '</div>';
+}
+function paintMassUniversal() {
+  var pre = document.getElementById('mass-universal-premass');
+  if (pre) { pre.innerHTML = massUniversalEditorHtml(true); wireMassUniversalIn(pre); }
+  var sec = document.getElementById('mass-universal-section');
+  if (sec) { sec.innerHTML = massUniversalSectionHtml(); wireMassUniversalSection(); }
+}
+function wireMassUniversalSection() {
+  var sec = document.getElementById('mass-universal-section');
+  if (!sec) return;
+  var btn = document.getElementById('mass-universal-edit-btn');
+  if (btn) btn.addEventListener('click', function () {
+    state.mass.universalOpen = !state.mass.universalOpen;
+    paintMassUniversal();
+  });
+  wireMassUniversalIn(document.getElementById('mass-universal-point'));
+}
+function wireMassUniversalIn(host) {
+  if (!host) return;
+  host.querySelectorAll('[data-muup]').forEach(function (b) {
+    b.addEventListener('click', function () { massUniversalMove(parseInt(b.getAttribute('data-muup'), 10), -1); });
+  });
+  host.querySelectorAll('[data-mudown]').forEach(function (b) {
+    b.addEventListener('click', function () { massUniversalMove(parseInt(b.getAttribute('data-mudown'), 10), 1); });
+  });
+  host.querySelectorAll('[data-muremove]').forEach(function (b) {
+    b.addEventListener('click', function () { massUniversalRemove(parseInt(b.getAttribute('data-muremove'), 10)); });
+  });
+  host.querySelectorAll('[data-mutext]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      state.mass.universalEditIdx = parseInt(el.getAttribute('data-mutext'), 10);
+      paintMassUniversal();
+      var inp = document.querySelector('.mu-edit');
+      if (inp) { inp.focus(); inp.select(); }
+    });
+  });
+  host.querySelectorAll('[data-muedsave]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var idx = parseInt(b.getAttribute('data-muedsave'), 10);
+      var panel = b.closest('.mass-panel');
+      var inp = panel ? panel.querySelector('.mu-edit') : null;
+      var text = inp ? inp.value.trim() : '';
+      if (!text) { paintMassUniversal(); return; }
+      var list = massUniversalState().slice();
+      if (idx < 0 || idx >= list.length) { paintMassUniversal(); return; }
+      list[idx] = text;
+      massUniversalSave(list);
+    });
+  });
+  host.querySelectorAll('[data-muedcancel]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.mass.universalEditIdx = -1;
+      paintMassUniversal();
+    });
+  });
+  host.querySelectorAll('[data-muaddfree]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var inp = host.querySelector('.mu-free');
+      var text = inp ? inp.value.trim() : '';
+      if (!text) return;
+      massUniversalSave(massUniversalState().concat([text]));
+    });
+  });
+  host.querySelectorAll('[data-muaddpool]').forEach(function (b) {
+    b.addEventListener('click', function () { openMassUniversalPool(); });
+  });
+}
+function massUniversalMove(idx, dir) {
+  var list = massUniversalState().slice();
+  var j = idx + dir;
+  if (idx < 0 || idx >= list.length || j < 0 || j >= list.length) return;
+  var t = list[idx]; list[idx] = list[j]; list[j] = t;
+  massUniversalSave(list);
+}
+function massUniversalRemove(idx) {
+  var list = massUniversalState().slice();
+  if (idx < 0 || idx >= list.length) return;
+  list.splice(idx, 1);
+  massUniversalSave(list);
+}
+/* The whole-list write, in the massPersonalSave
+   discipline: the answered body is the truth adopted;
+   a failed write adopts nothing and both hosts repaint
+   from the state as it stood — no silent state. */
+function massUniversalSave(list) {
+  var date = state.mass.date;
+  api('/api/prayer/mass-universal-prayer', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: date, intentions: list }) }).then(function (res) {
+    if (!state.mass) return;
+    if (res && Array.isArray(res.intentions)) {
+      state.mass.universal = { date: date, intentions: res.intentions.filter(function (x) { return typeof x === 'string'; }) };
+      state.mass.universalEditIdx = -1;
+    }
+    paintMassUniversal();
+  }).catch(function () { paintMassUniversal(); });
+}
+function massUniversalLoad() {
+  if (!state.mass || state.mass.universalLoading) return;
+  state.mass.universalLoading = true;
+  var date = state.mass.date;
+  api('/api/prayer/mass-universal-prayer?date=' + date).then(function (res) {
+    if (!state.mass) return;
+    state.mass.universal = { date: date, intentions: (res && Array.isArray(res.intentions)) ? res.intentions.filter(function (x) { return typeof x === 'string'; }) : [] };
+    state.mass.universalLoading = false;
+    paintMassUniversal();
+  }).catch(function () {
+    if (!state.mass) return;
+    state.mass.universal = { date: date, intentions: [] };
+    state.mass.universalLoading = false;
+    paintMassUniversal();
+  });
+}
+/* The pool sheet: the standing drawer form over the
+   ACTIVE intentions pool (the Intentions view's own
+   read). A tap copies the text into the day's list —
+   the copy is the day's own and stays editable; the
+   pool is never written. */
+function openMassUniversalPool() {
+  var old = document.querySelector('.musheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet musheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add from the pool</h1></div>'
+    + '<div id="mu-pool"><p>Loading the pool\\u2026</p></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true); // v419: TALL drawer
+  api('/api/prayer/intentions').then(function (res) {
+    var host = sheet.querySelector('#mu-pool');
+    if (!host) return;
+    var items = (res && Array.isArray(res.intentions)) ? res.intentions.filter(function (i) { return i && i.status === 'active' && typeof i.text === 'string'; }) : [];
+    if (!items.length) { host.innerHTML = '<p>No intentions stand in the pool.</p>'; return; }
+    host.innerHTML = items.map(function (i, k) {
+      return '<p><button class="btn ghost mu-poolrow" data-mupooli="' + k + '">' + esc(i.text) + '</button></p>';
+    }).join('');
+    host.querySelectorAll('[data-mupooli]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pick = items[parseInt(b.getAttribute('data-mupooli'), 10)];
+        sheet.remove();
+        if (pick) massUniversalSave(massUniversalState().concat([pick.text]));
+      });
+    });
+  }).catch(function () {
+    var host = sheet.querySelector('#mu-pool');
+    if (host) host.innerHTML = '<p>The pool could not be loaded.</p>';
+  });
+}
 function wireMassEp() {
   var host = document.getElementById('mass-ep');
   if (!host) return;
@@ -5022,14 +5281,14 @@ function paintMassLiturgy() {
   // one entry every open passes through (tab open and
   // side switch alike); in-view switches repaint only
   // their own section hosts and never pass through it.
-  if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; state.mass.preMassOpen = false; }
+  if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; state.mass.preMassOpen = false; state.mass.universalOpen = false; state.mass.universalEditIdx = -1; }
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
   loadMassReadings(today);
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }
-    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', penform: 'A', preMassOpen: false, latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {} };
+    state.mass = { date: today, payload: p, version: p.defaultVersion || (p.versions && p.versions[0] && p.versions[0].key) || null, ep: 'II', penform: 'A', preMassOpen: false, latin: {}, rchoices: {}, textSize: massPrefs().size, dateLabel: shortDayLabel(today), personal: undefined, personalLang: {}, universal: undefined, universalOpen: false, universalEditIdx: -1 };
     if (tabSideNow.mass === 'liturgy' && !massPodReturn) paintMassScroll();
   }).catch(function () {
     if (state.tab !== 'mass') return;

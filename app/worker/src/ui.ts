@@ -822,6 +822,16 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-collapsible { cursor: pointer; }
 .mass-collmark { float: right; }
 .mass-personal-hidden { display: none; }
+/* v527: the Universal Prayer section — the smaller line
+   under its heading, the bold response after each
+   intercession, and the intentions editor's rows (the
+   free-text and inline-edit inputs ride one rule). */
+.mass-up-sub { font-size: 14px; opacity: .7; margin: -4px 0 8px; }
+.mass-up-response { font-weight: 700; }
+.mass-panel .mass-line[data-mutext] { cursor: pointer; }
+.mu-addrow { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; }
+.mu-input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; }
+.mu-poolrow { white-space: normal; text-align: left; height: auto; }
 .mass-h { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; opacity: .75; margin: 18px 0 6px; }
 .mass-line { font-size: 16.5px; line-height: 1.5; margin: 2px 0; }
 .mass-rubric { font-size: 13px; line-height: 1.45; opacity: .62; margin: 3px 0; }
