@@ -1059,6 +1059,35 @@ function profileBumpStmt(env: Env, ts: string): D1PreparedStatement {
   return env.DB.prepare("UPDATE prayer_profile_state SET version = version + 1, updated_at = ? WHERE id = 1").bind(ts);
 }
 
+// v517 §2: the layers normalization, factored out of the
+// v515 layers PUT so the layers route and the save route
+// validate through ONE helper. Returns {normalized} — the
+// seed form (on as 0/1, the series deduped in order) — or
+// {error} carrying the standing named 400 message.
+function validateProfileLayers(layers: unknown): { normalized: { novenas: { on: number }; podcasts: { on: number; series: string[] } } } | { error: string } {
+  const l = layers as { novenas?: unknown; podcasts?: unknown } | null;
+  if (!l || typeof l !== "object") return { error: "layers required" };
+  const nov = l.novenas as { on?: unknown } | null;
+  if (!nov || typeof nov !== "object") return { error: "layers.novenas required" };
+  if (typeof nov.on !== "boolean") return { error: "layers.novenas.on must be a boolean" };
+  const pod = l.podcasts as { on?: unknown; series?: unknown } | null;
+  if (!pod || typeof pod !== "object") return { error: "layers.podcasts required" };
+  if (typeof pod.on !== "boolean") return { error: "layers.podcasts.on must be a boolean" };
+  if (!Array.isArray(pod.series)) return { error: "layers.podcasts.series must be an array" };
+  const registry = new Set<string>([
+    ...POD_SERIES_LIST.map((d) => d.key),
+    ...POD_RSS_SERIES_LIST.map((d) => d.key),
+    ...POD_OWN_SERIES_LIST.map((d) => d.key),
+  ]);
+  const series: string[] = [];
+  for (const raw of pod.series) {
+    if (typeof raw !== "string") return { error: "layers.podcasts.series must be strings" };
+    if (!registry.has(raw)) return { error: `bad series ${raw || "(empty)"}` };
+    if (!series.includes(raw)) series.push(raw);
+  }
+  return { normalized: { novenas: { on: nov.on ? 1 : 0 }, podcasts: { on: pod.on ? 1 : 0, series } } };
+}
+
 // ---- Examination + Confession -------------------------------------------
 const COMMANDMENT_CATS = ["Commandment I", "Commandment II", "Commandment III", "Commandment IV", "Commandment V", "Commandment VI and IX", "Commandment VII", "Commandment VIII", "Commandment X"];
 async function examToday(env: Env) {
@@ -3134,36 +3163,104 @@ export default {
             ? store.profiles.find((p) => p.key === body.profileKey)
             : undefined;
           if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
-          const layers = body.layers as { novenas?: unknown; podcasts?: unknown } | null;
-          if (!layers || typeof layers !== "object") return err(400, "layers required");
-          const nov = layers.novenas as { on?: unknown } | null;
-          if (!nov || typeof nov !== "object") return err(400, "layers.novenas required");
-          if (typeof nov.on !== "boolean") return err(400, "layers.novenas.on must be a boolean");
-          const pod = layers.podcasts as { on?: unknown; series?: unknown } | null;
-          if (!pod || typeof pod !== "object") return err(400, "layers.podcasts required");
-          if (typeof pod.on !== "boolean") return err(400, "layers.podcasts.on must be a boolean");
-          if (!Array.isArray(pod.series)) return err(400, "layers.podcasts.series must be an array");
-          const registry = new Set<string>([
-            ...POD_SERIES_LIST.map((d) => d.key),
-            ...POD_RSS_SERIES_LIST.map((d) => d.key),
-            ...POD_OWN_SERIES_LIST.map((d) => d.key),
-          ]);
-          const series: string[] = [];
-          for (const raw of pod.series) {
-            if (typeof raw !== "string") return err(400, "layers.podcasts.series must be strings");
-            if (!registry.has(raw)) return err(400, `bad series ${raw || "(empty)"}`);
-            if (!series.includes(raw)) series.push(raw);
-          }
-          const normalized = {
-            novenas: { on: nov.on ? 1 : 0 },
-            podcasts: { on: pod.on ? 1 : 0, series },
-          };
+          // v517 §2: the normalization stands in the shared
+          // validateProfileLayers helper (the save route
+          // validates through it too); behavior and the named
+          // 400s are byte-identical to the v515 inline form.
+          const checked = validateProfileLayers(body.layers);
+          if ("error" in checked) return err(400, checked.error);
+          const normalized = checked.normalized;
           const ts = nowISO();
           await env.DB.batch([
             env.DB.prepare("UPDATE prayer_profiles SET layers = ?, updated_at = ? WHERE key = ?")
               .bind(JSON.stringify(normalized), ts, profile.key),
             profileBumpStmt(env, ts),
           ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "save" && request.method === "PUT") {
+          // v517 §2: the profile editor's one write — save
+          // over a custom (key present) or save as new (key
+          // absent/null, a kind 'custom' row under a generated
+          // key). The three defaults are read-only: a key
+          // naming one is refused. Same discipline as the
+          // state PUT above: every validation a named 400 that
+          // writes nothing; the write and the version bump in
+          // one batch; the response the store re-read.
+          const body = await request.json().catch(() => ({})) as { key?: unknown; name?: unknown; honorLine?: unknown; coreBlocks?: unknown; layers?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const name = typeof body.name === "string" ? body.name.trim() : "";
+          if (!name) return err(400, "name required");
+          if (name.length > 80) return err(400, "name too long");
+          const honorLine = typeof body.honorLine === "string" ? body.honorLine.trim() : "";
+          if (honorLine.length > 160) return err(400, "honor line too long");
+          if (!Array.isArray(body.coreBlocks)) return err(400, "coreBlocks must be an array");
+          const HOUR_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"];
+          const coreBlocks: string[] = [];
+          for (const raw of body.coreBlocks) {
+            if (typeof raw !== "string") return err(400, `bad block ${String(raw)}`);
+            if (raw === "Novenas" || raw === "Podcasts") return err(400, `${raw} is a layer, not a core block`);
+            if (!HOUR_BLOCKS.includes(raw)) return err(400, `bad block ${raw || "(empty)"}`);
+            if (!coreBlocks.includes(raw)) coreBlocks.push(raw);
+          }
+          if (!coreBlocks.length) return err(400, "a profile needs at least one core block");
+          const checked = validateProfileLayers(body.layers);
+          if ("error" in checked) return err(400, checked.error);
+          const layersJson = JSON.stringify(checked.normalized);
+          const coreJson = JSON.stringify(coreBlocks);
+          const ts = nowISO();
+          if (typeof body.key === "string" && body.key !== "") {
+            const profile = store.profiles.find((p) => p.key === body.key);
+            if (!profile) return err(400, `bad profile ${body.key}`);
+            if (profile.kind === "default") return err(400, "the named profiles cannot be changed — save as new");
+            await env.DB.batch([
+              env.DB.prepare("UPDATE prayer_profiles SET name = ?, honor_line = ?, core_blocks = ?, layers = ?, updated_at = ? WHERE key = ?")
+                .bind(name, honorLine, coreJson, layersJson, ts, profile.key),
+              profileBumpStmt(env, ts),
+            ]);
+            return json(await profilesPayload(env, prayerChicagoNow().date));
+          }
+          // Save as new: the generated key is the name
+          // slugified; a taken key gains -2, -3, …
+          let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+          if (!slug) slug = "profile";
+          let key = slug;
+          for (let n = 2; store.profiles.some((p) => p.key === key); n++) key = slug + "-" + n;
+          const maxRow = await env.DB.prepare("SELECT MAX(sort_order) AS m FROM prayer_profiles").first<{ m: number | null }>();
+          const sortOrder = (maxRow && typeof maxRow.m === "number" ? maxRow.m : 0) + 1;
+          await env.DB.batch([
+            env.DB.prepare("INSERT INTO prayer_profiles (key, name, honor_line, kind, core_blocks, layers, sort_order, updated_at) VALUES (?, ?, ?, 'custom', ?, ?, ?, ?)")
+              .bind(key, name, honorLine, coreJson, layersJson, sortOrder, ts),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "delete" && request.method === "PUT") {
+          // v517 §2: delete a custom profile. The three
+          // defaults cannot be deleted. One batch: the row,
+          // every day pick naming it, the standing reset to
+          // 'salesian' when the standing default names it,
+          // and the version bump — no day can resolve to a
+          // profile that does not stand.
+          const body = await request.json().catch(() => ({})) as { profileKey?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const profile = typeof body.profileKey === "string"
+            ? store.profiles.find((p) => p.key === body.profileKey)
+            : undefined;
+          if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
+          if (profile.kind === "default") return err(400, "the named profiles cannot be deleted");
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [
+            env.DB.prepare("DELETE FROM prayer_profiles WHERE key = ?").bind(profile.key),
+            env.DB.prepare("DELETE FROM prayer_profile_day_picks WHERE profile_key = ?").bind(profile.key),
+          ];
+          if (store.standingKey === profile.key) {
+            stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET standing_key = 'salesian', updated_at = ? WHERE id = 1").bind(ts));
+          }
+          stmts.push(profileBumpStmt(env, ts));
+          await env.DB.batch(stmts);
           return json(await profilesPayload(env, prayerChicagoNow().date));
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
