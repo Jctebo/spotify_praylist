@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "seriesList": [
+    {
+      "series": "catechism-in-a-year",
+      "title": "Catechism in a Year",
+      "available": true,
+      "listenedCount": 1,
+      "total": 369,
+      "currentKey": "ciy:day-2",
+      "currentLabel": "Day 2",
+      "showImageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/cdfbae20-3944-4880-bb6c-5860a901b00a/cover.jpg?v=1",
+      "showDesc": "In Ascension\u2019s The Catechism in a Year podcast, Fr. Mike Schmitz guides you through the entire Catechism of the Catholic Church in 365 episodes, providing explanation, insight, and encouragement along the way. Unlike any other Catechism pod",
+      "category": "courses"
+    },
+    {
+      "series": "bible-in-a-year",
+      "title": "Bible in a Year",
+      "available": true,
+      "listenedCount": 318,
+      "total": 372,
+      "currentKey": "biy:day-318",
+      "currentLabel": "Day 318",
+      "showImageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+      "showDesc": "In The Bible in a Year podcast, Fr. Mike Schmitz walks you through the entire Bible in 365 episodes, providing commentary, reflection, and prayer along the way. Unlike any other Bible podcast, Ascension\u2019s Bible in a Year podcast follows a r",
+      "category": "courses"
+    },
+    {
+      "series": "rosary-in-a-year",
+      "title": "The Rosary in a Year",
+      "available": true,
+      "listenedCount": 0,
+      "total": 371,
+      "currentKey": "riy:day-1",
+      "currentLabel": "Day 1",
+      "showImageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/f/f09029d8-40eb-49b0-a479-054c0ac20726/cover.jpg?v=4",
+      "showDesc": "In Ascension\u2019s Rosary in a Year podcast, Fr. Mark-Mary Ames, CFR, guides listeners in a step-by-step journey that will change the way you pray \u2013 no matter where you are in your spiritual life. By starting small and adding on over time, list",
+      "category": "courses"
+    },
+    {
+      "kind": "rss",
+      "series": "exorcist-files",
+      "title": "The Exorcist Files",
+      "category": "podcasts",
+      "available": true,
+      "listenedCount": 2,
+      "total": 50,
+      "latestLabel": "Nov 13, 2026",
+      "showImageUrl": "https://content.production.cdn.art19.com/images/78/6d/06/88/786d0688-1f88-42b6-b7d6-74bcd5c4006b/7b1c975d4c10763e4074cf47f8c4b8f1da3aeac85640550ff1023d619c72e0bf8259e44f0c3abf53fc33863846038e76f7bfd4af630435fa18cdb49e7c93cb86.jpeg"
+    },
+    {
+      "kind": "rss",
+      "series": "counsel-of-trent",
+      "title": "The Counsel of Trent",
+      "category": "podcasts",
+      "available": true,
+      "listenedCount": 0,
+      "total": 50,
+      "latestLabel": "Nov 16, 2026",
+      "showImageUrl": "https://i1.sndcdn.com/avatars-WFxsyNAtziM0yqez-AQPf5g-original.jpg"
+    },
+    {
+      "kind": "rss",
+      "series": "fr-mike-homilies",
+      "title": "Sunday Homilies with Fr. Mike Schmitz",
+      "category": "podcasts",
+      "available": true,
+      "listenedCount": 0,
+      "total": 50,
+      "latestLabel": "Nov 14, 2026",
+      "showImageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/1/1b1273a3-3711-4e9f-b187-36a4f8791359/cover.jpg?v=2"
+    },
+    {
+      "kind": "rss",
+      "series": "barron-sunday-sermons",
+      "title": "Bishop Barron's Sunday Sermons",
+      "category": "podcasts",
+      "available": true,
+      "listenedCount": 1,
+      "total": 50,
+      "latestLabel": "Nov 11, 2026",
+      "showImageUrl": "https://pbcdn1.podbean.com/imglogo/image-logo/1224144/Bishop_Barrons_Sunday_Sermon_Podcast_2022_bssyd8.jpg"
+    },
+    {
+      "kind": "own",
+      "series": "the-ai-signal",
+      "title": "The AI Signal",
+      "available": true,
+      "currentKey": "the-ai-signal-2026-11-17",
+      "currentLabel": "The AI Signal",
+      "showImageUrl": "/logo.png",
+      "category": "podcasts"
+    }
+  ]
+}
