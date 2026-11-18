@@ -285,17 +285,59 @@ const FEED_TTL_MS = 30 * 60 * 1000;
 // never stored anywhere.
 const memorialCache = new Map<string, { page: MemorialPage; at: number }>();
 
+// v531: a parse that found NOTHING — no lectionary, no
+// note, no parts — is not a memorial page's shape: even
+// a no-set memorial prints its Lectionary line (679A
+// stands on Duchesne's page, which carries no set). A
+// nothing-parse is the signature of the host's block
+// page. bible.usccb.org rate-blocks server-side fetches
+// (diagnosis, v531 §1: inside one 5-request burst the
+// Dedication page alternated 200/real and 403/block; a
+// spaced single request drew the real page again). A
+// nothing-parse is therefore a FAILED pull: it is never
+// cached and never merged as a set.
+function memorialParseIsReal(page: MemorialPage): boolean {
+  return !!page.lectionary || !!page.note || page.parts.length > 0;
+}
+
+// v531: the pull retries, spaced. The block wall trips
+// on bursts from an address and recovers with spacing,
+// so a failed attempt waits before the next — up to 5
+// attempts per page, the waits growing (~1.2 s, ~3 s,
+// ~6 s, ~12 s). The ladder is wide because the wall's
+// state is per address AND per page: a page an address
+// has hit repeatedly can stay blocked across a short
+// ladder while its sibling page answers at once (the
+// v531 live evidence, doc §3). The readings route is
+// async — the tab's Universalis backup paints in the
+// meantime — and a landed parse then rides the
+// standing 30-minute cache. Only a real parse is
+// cached, on that TTL.
+const MEMORIAL_RETRY_WAITS_MS = [1200, 3000, 6000, 12000];
+
+function sleepMs(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function memorialPage(url: string): Promise<MemorialPage> {
   const hit = memorialCache.get(url);
   const now = Date.now();
   if (hit && now - hit.at <= FEED_TTL_MS) return hit.page;
-  const r = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", Accept: "text/html" },
-  });
-  if (!r.ok) throw new Error(`usccb memorial ${r.status}`);
-  const page = parseMemorialPage(await r.text());
-  memorialCache.set(url, { page, at: now });
-  return page;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt <= MEMORIAL_RETRY_WAITS_MS.length; attempt++) {
+    if (attempt > 0) await sleepMs(MEMORIAL_RETRY_WAITS_MS[attempt - 1]);
+    try {
+      const r = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", Accept: "text/html" },
+      });
+      if (!r.ok) throw new Error(`usccb memorial ${r.status}`);
+      const page = parseMemorialPage(await r.text());
+      if (!memorialParseIsReal(page)) throw new Error("usccb memorial empty parse (block page)");
+      memorialCache.set(url, { page, at: Date.now() });
+      return page;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("usccb memorial pull failed");
 }
 
 export async function massReadingsPayload(date: string): Promise<MassReadingsPayload> {
@@ -316,14 +358,19 @@ export async function massReadingsPayload(date: string): Promise<MassReadingsPay
   // version. The feed fetch above keeps its standing
   // posture.
   if (payload.found && payload.memorials && payload.memorials.length) {
-    await Promise.all(payload.memorials.map(async (mem) => {
+    // v531: SEQUENTIAL, never concurrent — the v529
+    // fan-out raced the day's memorial pulls from one
+    // address at one instant, the burst shape the
+    // host's rate-block wall trips on (v531 §1). One
+    // memorial's pull settles before the next begins.
+    for (const mem of payload.memorials) {
       try {
         const page = await memorialPage(mem.url);
         mem.lectionary = page.lectionary;
         mem.note = page.note;
         mem.parts = page.parts;
       } catch { /* the memorial rides empty — see above */ }
-    }));
+    }
   }
   return payload;
 }

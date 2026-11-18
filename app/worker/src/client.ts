@@ -4472,20 +4472,79 @@ function massMemorialPartsHtml(mem) {
   }
   return seq.join('');
 }
+/* v531: the readings chip's label for a memorial —
+   the mention's name with its "Optional Memorial of "
+   / "Memorial of " prefix and any trailing "[…]"
+   segment off, case as printed (the match key above
+   folds case; the label keeps the day's own words). */
+function massMemorialChipLabel(name) {
+  var t = (name || '').replace(/^\\s*(Optional\\s+)?Memorial of\\s+/i, '');
+  t = t.replace(/\\s*\\[[^\\]]*\\]\\s*$/, '');
+  return t.replace(/\\s+/g, ' ').trim();
+}
+/* v531: the standing readings set. The readings no
+   longer follow the version pick directly (that was
+   v529's model, superseded by John's amendment): they
+   follow the READINGS CHIP — state.mass.rset, 'ferial'
+   or 'mem:<index>' — whose DEFAULT the version pick
+   sets. The default derives at read time: when the
+   stamp (state.mass.rsetFor) differs from the picked
+   version's key, the standing set re-derives from the
+   picked version (its matched memorial, else the
+   ferial set) and the stamp is written. A chip tap
+   sets rset under the standing version's stamp, so
+   the tap holds until the version itself changes. */
+function massStandingSetKey() {
+  var f = massFeed;
+  if (!f || !f.found || !f.memorials || !f.memorials.length) return 'ferial';
+  if (!state.mass) state.mass = {};
+  var vkey = state.mass.version || '';
+  if (state.mass.rsetFor !== vkey) {
+    var mem = massPickedMemorial();
+    state.mass.rset = mem ? ('mem:' + f.memorials.indexOf(mem)) : 'ferial';
+    state.mass.rsetFor = vkey;
+  }
+  return state.mass.rset || 'ferial';
+}
+/* v531: the readings chip row — a dedicated control
+   standing WITH the readings (the head of the
+   readings place), in the v497/v523 one-row
+   scrollable chip idiom (the segtoggle strip the
+   v497 option chips wear). One chip per set the day
+   carries: Weekday (the ferial set) first, then each
+   memorial. It stands only on a day whose feed
+   payload carries memorials; a mention-free day
+   renders no row and is byte-identical to before. */
+function massReadingsChipsHtml() {
+  var f = massFeed;
+  if (!f || !f.found || !f.memorials || !f.memorials.length) return '';
+  var setKey = massStandingSetKey();
+  var h = '<div class="segtoggle pill mass-seg mass-chips" role="group" aria-label="Readings">';
+  h += '<button type="button" data-rset="ferial"' + (setKey === 'ferial' ? ' class="on"' : '') + '>Weekday</button>';
+  for (var i = 0; i < f.memorials.length; i++) {
+    var k = 'mem:' + i;
+    h += '<button type="button" data-rset="' + k + '"' + (setKey === k ? ' class="on"' : '') + '>' + esc(massMemorialChipLabel(f.memorials[i].name)) + '</button>';
+  }
+  return h + '</div>';
+}
 function massReadingsHtml() {
   var f = massFeed, d = massReadings;
   if (!f && !d) return '<div class="mass-h">Readings</div><div class="mass-rubric">The day\u2019s readings load\u2026</div>';
   massUsedFallback = false;
-  /* v529: the readings place follows the picked
-     version. A picked memorial WITH its own set stands
-     that set alone; a picked memorial whose page
-     carries no set stands its Lectionary direction
-     above the ferial render below; the failure posture
-     (a memorial entry with neither) and every
-     no-memorial pick fall through to the standing
-     render, untouched. */
-  var mem = (f && f.found) ? massPickedMemorial() : null;
-  if (mem && mem.parts && mem.parts.length) return massMemorialPartsHtml(mem);
+  /* v531: the readings place follows the READINGS
+     CHIP (the standing set — see massStandingSetKey),
+     whose default the picked version sets. A standing
+     memorial WITH its own set stands that set alone;
+     a standing memorial whose page carries no set
+     stands its Lectionary direction above the ferial
+     render below; the failure posture (a memorial
+     entry with neither) and the ferial set fall
+     through to the standing render, untouched. */
+  var chips = massReadingsChipsHtml();
+  var setKey = massStandingSetKey();
+  var mem = null;
+  if (setKey.indexOf('mem:') === 0 && f && f.memorials) mem = f.memorials[parseInt(setKey.slice(4), 10)] || null;
+  if (mem && mem.parts && mem.parts.length) return chips + massMemorialPartsHtml(mem);
   var seq = [];
   var present = {};
   if (f && f.found && f.parts) {
@@ -4520,16 +4579,17 @@ function massReadingsHtml() {
     seq.splice(pos, 0, { slot: key, html: fb });
   }
   var out = seq.map(function (e) { return e.html; }).join('');
-  /* v529: a picked memorial with no set of its own
-     stands its direction line at the head of the
-     readings place — the Lectionary number and the
-     memorial page's own words, verbatim — and the
-     day's ferial readings stand beneath it. */
+  /* v529, as v531 stands it: a standing memorial with
+     no set of its own stands its direction line at
+     the head of the readings place — the Lectionary
+     number and the memorial page's own words,
+     verbatim — and the day's ferial readings stand
+     beneath it. */
   if (mem && mem.note) {
     var dir = (mem.lectionary ? 'Lectionary ' + mem.lectionary + ' \u2014 ' : '') + mem.note;
     out = '<div class="mass-h">Readings</div><div class="mass-rubric">' + esc(dir) + '</div>' + out;
   }
-  return out;
+  return chips + out;
 }
 function paintMassReadings() {
   var host = document.getElementById('mass-readings');
@@ -4552,6 +4612,20 @@ function wireMassChips() {
       if (!state.mass) state.mass = {};
       if (!state.mass.rchoices) state.mass.rchoices = {};
       state.mass.rchoices[v.slice(0, cut)] = parseInt(v.slice(cut + 1), 10) || 0;
+      paintMassReadings();
+    });
+  }
+  /* v531: the readings-set chips. A tap records the
+     standing set under the picked version's stamp and
+     repaints the readings host ONLY — the Mass
+     version, the propers, and the rest of the scroll
+     do not move. */
+  var sbtns = host.querySelectorAll('[data-rset]');
+  for (var j = 0; j < sbtns.length; j++) {
+    sbtns[j].addEventListener('click', function () {
+      if (!state.mass) state.mass = {};
+      state.mass.rset = this.getAttribute('data-rset') || 'ferial';
+      state.mass.rsetFor = state.mass.version || '';
       paintMassReadings();
     });
   }
