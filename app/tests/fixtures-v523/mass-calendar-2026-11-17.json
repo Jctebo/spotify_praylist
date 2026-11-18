@@ -1,0 +1,17 @@
+{
+ "date": "2026-11-17",
+ "name": "Saint Elizabeth of Hungary, Religious",
+ "defaultVersion": "saint-elizabethofhungary",
+ "versions": [
+  {
+   "key": "saint-elizabethofhungary",
+   "label": "Saint Elizabeth of Hungary, Religious",
+   "rank": "M"
+  },
+  {
+   "key": "ferial",
+   "label": "Weekday Mass",
+   "rank": "ferial"
+  }
+ ]
+}
