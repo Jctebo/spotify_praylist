@@ -202,6 +202,18 @@ def build_artifact(
     shutil.copy2(PODCAST_COVER, image_target)
     if wallpaper_bytes is not None:
         (output_dir / str(payload["wallpaper"])).write_bytes(wallpaper_bytes)
+    # v526: the desktop variant rides beside the phone wallpaper — the
+    # runner commits the day's wide composition to
+    # assets/daily-wallpaper-desktop.jpg nightly; stage the committed
+    # copy into the artifact at the same path so
+    # orapronobis.media/assets/daily-wallpaper-desktop.jpg always
+    # serves the current day's desktop image. Guarded: the file
+    # exists only once a desktop commit has landed.
+    desktop_committed = sorted((ROOT / "assets").glob("daily-wallpaper-desktop.*"))
+    if desktop_committed:
+        desktop_target = output_dir / "assets" / desktop_committed[0].name
+        desktop_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(desktop_committed[0], desktop_target)
     return payload
 
 
