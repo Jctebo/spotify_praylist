@@ -7845,7 +7845,13 @@ function openSlotPicker(p, lang, repaintRow) {
     chosenBlock = null;
     setTitle('Add to Praylist');
     var html = '<p class="sub">' + esc(p.title) + (lang === 'la' ? ' (Latin)' : '') + ' \\u2014 pick a part of today\\u2019s Praylist.</p>';
-    SLOT_BLOCKS.forEach(function (b) {
+    // v515 §2: step 1 offers the day's standing groups — the
+    // payload's block names (core + layer shells under a
+    // profile fold; the standing seven without one), falling
+    // back to SLOT_BLOCKS when no payload stands.
+    var stepBlocks = ((state.dayPayload && state.dayPayload.blocks) || []).map(function (x) { return x.block; });
+    if (!stepBlocks.length) stepBlocks = SLOT_BLOCKS;
+    stepBlocks.forEach(function (b) {
       var n = (state.dayDescs || []).filter(function (d) { return d.block === b; }).length;
       html += '<div class="card bookrow" data-slotblock="' + esc(b) + '"><div class="row"><span class="grow">' + esc(slotBlockLabel(b)) + '</span></div>'
         + (n ? '<div class="meta">' + n + ' standing</div>' : '') + '</div>';
@@ -10761,6 +10767,60 @@ function setupBackButton() {
 /* B2/B5: the 5 s tick — position refresh and the page's
    heartbeat in one. Pushes only while a current stands. */
 setInterval(function () { nativeMirrorTick(); if (state.current) pushNativeState(false); }, 5000); // v466: the mirror tick rides the standing interval (a no-op outside native mode)
+function podDayDesc(series, payload) {
+  // v515 §2 (P4): one series' CURRENT entry as the day's
+  // Podcasts-group descriptor — podDesc's shape with the
+  // series explicit (the open payload here is per-series, so
+  // state.podcasts cannot name it). The (podSeries, seriesKey)
+  // pair is the Catechesis episode's own identity: playing it
+  // in the day marks the series exactly as a Catechesis play
+  // does. streamUrl/enclosureUrl mirror ownSlotTrack's fields
+  // where trackCard reads them; a podcast episode carries no
+  // read-along text (hasText false, textUrl null).
+  if (!payload || !payload.currentKey || !payload.entries) return null;
+  var e = null;
+  payload.entries.forEach(function (x) { if (x.key === payload.currentKey) e = x; });
+  if (!e) return null;
+  return { episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: series, title: e.label + ': ' + e.title, url: e.url, available: !!e.url, block: 'Podcasts', _block: 'Podcasts', durationS: e.durationS || 0, listened: !!e.listened, podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null, imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, streamUrl: e.url || null, enclosureUrl: e.url || null, hasText: false, textUrl: null };
+}
+function resolveProfilePodcasts(day) {
+  // v515 §2 (P4): the Podcasts layer build — for each series
+  // in the fold's Podcasts layer, in layer order, the series
+  // payload's current entry becomes ONE descriptor in
+  // state.podGroups. A series with no current entry (or a
+  // failed read) contributes nothing. Each settle rebuilds
+  // the group list in layer order and re-runs the descriptor
+  // build + counts for the standing day; the Podcasts block
+  // page repaints when it stands.
+  state.podGroups = { series: [], descs: [] };
+  var fold = day && day.profile;
+  if (!fold || !fold.layers) return;
+  var podLayer = null;
+  fold.layers.forEach(function (l) { if (l.key === 'podcasts') podLayer = l; });
+  if (!podLayer || !podLayer.on || !podLayer.series || !podLayer.series.length) return;
+  var keys = podLayer.series.slice();
+  state.podGroups.series = keys.slice();
+  var settled = {};
+  var rebuild = function () {
+    var descs = [];
+    keys.forEach(function (k) { if (settled[k]) descs.push(settled[k]); });
+    state.podGroups.descs = descs;
+    if (state.dayPayload === day) {
+      extRebuildDescs(day);
+      updateBlockCounts(day);
+      if (state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === 'Podcasts') paintPrayersView(day);
+    }
+  };
+  keys.forEach(function (k) {
+    api('/api/player/podcasts?series=' + encodeURIComponent(k)).then(function (payload) {
+      settled[k] = podDayDesc(k, payload);
+      rebuild();
+    }).catch(function () {
+      settled[k] = null;
+      rebuild();
+    });
+  });
+}
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -10773,6 +10833,12 @@ function extRebuildDescs(day) {
   var date = day.presentedDay || day.date;
   (day.blocks || []).forEach(function (b) {
     (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
+    // v515 §2: the Podcasts layer shell emits the profile
+    // podcast group's descriptors in place — they are
+    // descriptors already (the podDesc precedent), so no
+    // expandDescs; the shell carries no tracks and no
+    // settings rows, so this segment is the whole segment.
+    if (b.layer === 'podcasts') { (state.podGroups ? state.podGroups.descs : []).forEach(function (d) { descs.push(d); }); }
     // v342/v348: the block's settings rows stand after any payload
     // tracks, merged across families in settings order (v348 §2.2).
     // A settled-missing family emits its one named-missing
@@ -11411,13 +11477,22 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     state.ownSlots = {};
     ownStanding.forEach(function (row) { state.ownSlots[row.sourceKey] = { state: 'loading', tracks: [] }; });
     // Day cache: valid only for this date AND this settings version.
+    // v515 §2: the day's profile fold joins the validity key —
+    // a record stands only when its stamped profileKey and
+    // profileVersion equal the fold's (both null when no fold
+    // stands), so a midday profile switch re-resolves the day
+    // whole, exactly as a settings change does. One rule serves
+    // the live cache and the snapshot record (the snapshot path
+    // compares against its own payload's fold).
+    var fold = day.profile || null;
     var cache = extCacheRead();
     // v392 W3: on the snapshot path the snapshot's externals
     // record stands when the live record does not cover the day.
     if ((!cache || cache.date !== date) && snapshotRec && snapshotRec.date === date && snapshotRec.slots) cache = snapshotRec;
-    var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
+    var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots
+      && (fold ? (cache.profileKey === fold.key && cache.profileVersion === fold.version) : (cache.profileKey == null && cache.profileVersion == null));
     if (cache && !cacheValid) { extDiscardCaches(); cache = null; }
-    var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {} };
+    var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {}, profileKey: fold ? fold.key : null, profileVersion: fold ? fold.version : null };
     // v342 §2.3: the record gains own + intentions sections. A
     // pre-v342 record (valid, but no such sections) reads as
     // sections-empty: those families resolve fresh this open —
@@ -11885,6 +11960,10 @@ function buildDayFromPayload(day, snap) {
     // hook (eviction + the completeness pass + mark drain).
     if (snap) resolveExternals(day, snap.settings, snap.extRec);
     else { resolveExternals(day); offlineOnOnlineOpen(day); }
+    // v515 §2: the profile Podcasts layer resolves beside the
+    // externals dispatch — its descriptors join the day
+    // through extRebuildDescs as each series settles.
+    resolveProfilePodcasts(day);
     // v344 §2.6: the played chrome's standing pass at render end
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
@@ -12645,6 +12724,16 @@ function wirePrayersView(day) {
   armAllEllipses();
   // v344: the marker wiring rides the same paints.
   wirePlayed(view);
+  // v515 §2: the profile surface acts ride every Prayers paint.
+  view.querySelectorAll('[data-profchange]').forEach(function (btn) {
+    btn.addEventListener('click', function () { openProfileSheet(); });
+  });
+  view.querySelectorAll('[data-proflayer]').forEach(function (btn) {
+    btn.addEventListener('click', function () { profileLayerToggle(btn.getAttribute('data-proflayer')); });
+  });
+  view.querySelectorAll('[data-podpick]').forEach(function (btn) {
+    btn.addEventListener('click', function () { openPodcastPicker(); });
+  });
   if (state.current) markPlaying(state.current.episodeId);
 }
 function blockRowHtml(b) {
@@ -12708,6 +12797,178 @@ function shortHomeDate(day) {
   }
   return (day && day.dateLabel) || 'the day&rsquo;s prayers';
 }
+/* ---------------- v515: Prayer Profiles ----------------
+   The profile surface at the head of the Pray tab home: a
+   card naming the day payload's effective profile fold, how
+   it resolved, and its honor line, with the layer acts
+   (Novenas on/off · Podcasts on/off + the series picker)
+   and the Change act (the profile sheet: today's pick, the
+   standing default, the day rule). Every act writes through
+   the session profiles routes and rebuilds the day whole
+   (profileRebuild — the renderPrayersSide path), so a
+   midday switch re-composes today from the new fold. No
+   fold stands (the pre-0038 posture), no card stands. */
+function profPut(path, body) { return api(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
+function profileRebuild() {
+  api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); }).catch(function () {});
+}
+function profileCardHtml(day) {
+  var fold = day && day.profile;
+  if (!fold) return '';
+  var resLine = 'Your standing default';
+  if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
+  else if (fold.resolvedBy === 'rule') resLine = fold.dayKind === 'sunday' ? 'The day rule \\u00b7 Sunday' : 'The day rule \\u00b7 a solemnity';
+  var novOn = false, podOn = false, podCount = 0;
+  (fold.layers || []).forEach(function (l) {
+    if (l.key === 'novenas') novOn = !!l.on;
+    if (l.key === 'podcasts') { podOn = !!l.on; podCount = (l.series || []).length; }
+  });
+  return '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
+    + '<div class="meta">' + esc(resLine) + '</div>'
+    + (fold.honorLine ? '<div class="meta">' + esc(fold.honorLine) + '</div>' : '')
+    + '</div><button class="btn ghost" data-profchange="1">Change</button></div>'
+    + '<div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-proflayer="novenas">' + (novOn ? 'On' : 'Off') + '</button></div>'
+    + '<div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-proflayer="podcasts">' + (podOn ? 'On' : 'Off') + '</button></div>'
+    + (podOn ? '<div class="row"><span class="grow">Podcast series</span><button class="btn ghost" data-podpick="1">Choose podcasts (' + podCount + ')</button></div>' : '')
+    + '</div>';
+}
+function profileLayerToggle(which) {
+  // The layer act on the CURRENT (effective) profile: read
+  // the store, deep-copy the profile's layers, flip the named
+  // layer's on, PUT the layers whole, rebuild the day. Any
+  // failure leaves the paint as it stands.
+  if (which !== 'novenas' && which !== 'podcasts') return;
+  api('/api/prayer/profiles').then(function (res) {
+    if (!res || !res.effective || !res.profiles) return;
+    var rec = null;
+    res.profiles.forEach(function (p) { if (p.key === res.effective.key) rec = p; });
+    if (!rec || !rec.layers) return;
+    var layers = JSON.parse(JSON.stringify(rec.layers));
+    if (which === 'novenas') layers.novenas.on = !layers.novenas.on;
+    else layers.podcasts.on = !layers.podcasts.on;
+    profPut('/api/prayer/profiles/layers', { profileKey: rec.key, layers: layers }).then(function () { profileRebuild(); }).catch(function () {});
+  }).catch(function () {});
+}
+function openProfileSheet() {
+  // The slot picker's dress: a .sheet on mountDrawer; a row
+  // tap is the one write, the sheet closes on its own close
+  // path and the day rebuilds; a cancel writes nothing; a
+  // failed save leaves the sheet open with its note line.
+  var old = document.querySelector('.profsheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profsheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Prayer profile</h1></div>'
+    + '<div class="profbody"><p class="sub">Loading \\u2026</p></div><p class="fieldnote profnote"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.profbody');
+  var note = sheet.querySelector('.profnote');
+  function fail() { if (note) note.textContent = 'Could not save \\u2014 try again.'; }
+  api('/api/prayer/profiles').then(function (res) {
+    if (!res || !res.profiles || !res.state || !body) return;
+    var eff = res.effective;
+    var html = '<p class="sub">For today</p>';
+    res.profiles.forEach(function (p) {
+      var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
+      html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '</div></div>';
+    });
+    if (eff && eff.resolvedBy === 'pick') {
+      html += '<div class="card bookrow" data-profpick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
+    }
+    html += '<p class="sub">Standing default</p>';
+    res.profiles.forEach(function (p) {
+      var mark = res.state.standingKey === p.key;
+      html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '</div></div>';
+    });
+    html += '<p class="sub">Day rule</p>';
+    html += '<div class="card bookrow" data-profrule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
+    body.innerHTML = html;
+    body.querySelectorAll('[data-profpick]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var key = row.getAttribute('data-profpick');
+        profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+      });
+    });
+    body.querySelectorAll('[data-profstand]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-profstand') }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+      });
+    });
+    var ruleRow = body.querySelector('[data-profrule]');
+    if (ruleRow) ruleRow.addEventListener('click', function () {
+      profPut('/api/prayer/profiles/state', { dayRule: !res.state.dayRule }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+    });
+  }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+}
+function openPodcastPicker() {
+  // The series picker for the effective profile's Podcasts
+  // layer: the series index in payload order, check state
+  // from the profile's chosen list. Each tap toggles the key
+  // and PUTs the layers whole (write-through, the block-order
+  // editor's discipline; the layer's on stands as it stands);
+  // the row's check repaints in place. Closing the sheet by
+  // any path rebuilds the day once if anything changed (the
+  // removal watch below catches Done, backdrop, and drag
+  // closes alike).
+  var old = document.querySelector('.podpick');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet podpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Choose podcasts</h1></div>'
+    + '<div class="podbody"><p class="sub">Loading \\u2026</p></div><p class="fieldnote podnote"></p>'
+    + '<div class="row"><button class="btn gold" data-poddone="1">Done</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.podbody');
+  var note = sheet.querySelector('.podnote');
+  var chosen = [], layersCopy = null, profileKey = null, changed = false;
+  function fail() { if (note) note.textContent = 'Could not save \\u2014 try again.'; }
+  var obs = new MutationObserver(function () {
+    if (!document.body.contains(sheet)) { obs.disconnect(); if (changed) profileRebuild(); }
+  });
+  obs.observe(document.body, { childList: true });
+  var doneBtn = sheet.querySelector('[data-poddone]');
+  if (doneBtn) doneBtn.addEventListener('click', function () { sheet.remove(); });
+  api('/api/prayer/profiles').then(function (res) {
+    if (!res || !res.effective || !res.profiles) { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; return; }
+    var rec = null;
+    res.profiles.forEach(function (p) { if (p.key === res.effective.key) rec = p; });
+    if (!rec || !rec.layers) { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; return; }
+    profileKey = rec.key;
+    layersCopy = JSON.parse(JSON.stringify(rec.layers));
+    chosen = (layersCopy.podcasts.series || []).slice();
+    return api('/api/player/podcasts').then(function (idx) {
+      var list = (idx && idx.seriesList) || [];
+      if (!body) return;
+      if (!list.length) { body.innerHTML = '<p class="sub">No podcast series stand.</p>'; return; }
+      var html = '';
+      list.forEach(function (s) {
+        html += '<div class="card bookrow" data-podseries="' + esc(s.series) + '"><div class="row"><span class="grow">' + esc(s.title || s.series) + '</span><span class="meta" data-podcheck="' + esc(s.series) + '">' + (chosen.indexOf(s.series) >= 0 ? '\\u2713' : '') + '</span></div></div>';
+      });
+      body.innerHTML = html;
+      body.querySelectorAll('[data-podseries]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var key = row.getAttribute('data-podseries');
+          var at = chosen.indexOf(key);
+          if (at >= 0) chosen.splice(at, 1); else chosen.push(key);
+          layersCopy.podcasts.series = chosen.slice();
+          profPut('/api/prayer/profiles/layers', { profileKey: profileKey, layers: layersCopy }).then(function () {
+            changed = true;
+            var chk = body.querySelector('[data-podcheck="' + key + '"]');
+            if (chk) chk.textContent = chosen.indexOf(key) >= 0 ? '\\u2713' : '';
+          }).catch(function () {
+            var back = chosen.indexOf(key);
+            if (at >= 0) { if (back < 0) chosen.splice(Math.min(at, chosen.length), 0, key); }
+            else if (back >= 0) chosen.splice(back, 1);
+            layersCopy.podcasts.series = chosen.slice();
+            fail();
+          });
+        });
+      });
+    });
+  }).catch(function () { if (body) body.innerHTML = '<p class="sub">Podcasts did not load.</p>'; });
+}
 function paintListenHome(day) {
   // v448: the home carries no bar — a returning paint
   // clears the pushed page's bar from its host.
@@ -12731,7 +12992,7 @@ function paintListenHome(day) {
   // paintPrayersBar(null) above paints it there.
   // v459 §2 Build 4: the Sort act retires from that row —
   // it stands in the universal menu's Prayers page group.
-  var html = '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  var html = profileCardHtml(day) + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
@@ -12760,6 +13021,19 @@ function homeBodyHtml(day) {
   orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b); });
   if ((day.episodes || []).length) html += episodesRowHtml(day);
   return html;
+}
+function appendBlockPodcastCards(b) {
+  // v515 §2: the Podcasts layer shell's cards — the profile
+  // podcast group's descriptors as trackCards, appended after
+  // the settings/addition appends (both empty for the shell),
+  // in the appendBlockSettingsCards temp-div pattern. The
+  // standing [data-playkey] wiring and the data-queue Play
+  // All read them from state.dayDescs unchanged.
+  (state.podGroups ? state.podGroups.descs : []).forEach(function (d) {
+    var tmp = document.createElement('div');
+    tmp.innerHTML = trackCard(d);
+    while (tmp.firstChild) view.appendChild(tmp.removeChild(tmp.firstChild));
+  });
 }
 function paintBlockPage(day, block) {
   if (block === '__episodes') { paintEpisodesPage(day); return; }
@@ -12852,6 +13126,7 @@ function paintBlockPage(day, block) {
   // menu read remains anywhere.
   appendBlockSettingsCards(day, b);
   appendBlockAdditionCards(b.block); // v510 §2.3: the day's slotted prayers stand at their slots
+  if (b.layer === 'podcasts') appendBlockPodcastCards(b); // v515 §2: the Podcasts layer group's cards
   // v374 §2 (site 1): the header span stands in the view now —
   // rewrite it from the current descriptor count, so a block page
   // painted after settlement reads the true count at first paint

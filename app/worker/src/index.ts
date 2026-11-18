@@ -81,6 +81,7 @@ export interface Env {
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
 import { APP_JS } from "./client";
+import { MASS_CALENDAR } from "./mass-calendar";
 import { massPayload } from "./mass";
 import { massReadingsPayload } from "./mass-readings";
 import { LOGO_PNG_B64 } from "./logo";
@@ -800,10 +801,35 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   const presented = dateOverride ?? prayerChicagoNow().date;
   const settings = await sourceSettingsPayload(env);
   const introTexts = await playerIntroTexts(env, presented);
-  const blocks = PRAYER_BLOCKS.map((block) => {
+  // v515 §2: the block shell builder, extracted whole — its
+  // output is byte-identical to the standing map; the profile
+  // fold below composes the day's shells through it.
+  const mkBlock = (block: string) => {
     const route = sources.find((x) => x.block === block && x.source_kind === "playlist");
     return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [] as unknown[], trackCount: 0 };
-  });
+  };
+  let blocks: { block: string; label: string; caption: string; spotifyUrl: string | null; tracks: unknown[]; trackCount: number; layer?: string }[] = PRAYER_BLOCKS.map(mkBlock);
+  // v515 §2 (P2): the profile fold — the effective profile
+  // resolves server-side for the presented day and the shell
+  // composes from it: the core blocks in profile order, then
+  // the layer groups (Novenas, then Podcasts), never
+  // interleaved. No fold (the pre-0038 posture) leaves the
+  // blocks exactly as they stand above.
+  const profileStore = await prayerProfileStore(env);
+  const profileFold = profileStore ? profileFoldOf(profileStore, presented) : null;
+  let profileCore: string[] = [];
+  let profileNovenasOn = false;
+  if (profileFold) {
+    const knownBlocks = new Set<string>(PRAYER_BLOCKS as readonly string[]);
+    profileCore = profileFold.coreBlocks.filter((b) => knownBlocks.has(b));
+    profileNovenasOn = profileFold.layers.some((l) => l.key === "novenas" && l.on);
+    const podcastsLayer = profileFold.layers.find((l) => l.key === "podcasts");
+    blocks = profileCore.map(mkBlock);
+    if (profileNovenasOn) blocks.push({ ...mkBlock("Novenas"), layer: "novenas" });
+    if (podcastsLayer && podcastsLayer.on) {
+      blocks.push({ block: "Podcasts", label: "Podcasts", caption: "the podcasts you added", spotifyUrl: null, tracks: [] as unknown[], trackCount: 0, layer: "podcasts" });
+    }
+  }
   // v412 Fix 10: the day-positions fold — the presented day's
   // partway day-track positions ride the payload beside the
   // blocks, keyed by episode id, exactly as the podcast payload
@@ -825,7 +851,10 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
     version: settings.version, introTexts, blocks, dayPositions, blockOrder,
-    additions: await dayAdditionsFold(env, presented),
+    additions: await dayAdditionsFold(env, presented, profileFold
+      ? new Set<string>([...profileCore, ...(profileNovenasOn ? ["Novenas"] : [])])
+      : null),
+    profile: profileFold,
   };
 }
 
@@ -862,8 +891,13 @@ async function dayAdditions(env: Env, date: string): Promise<DayAdditionRow[]> {
 // addition whose fold no longer resolves (the slug gone,
 // or its language's audio retired from the map) drops
 // from the fold, never an error.
-async function dayAdditionsFold(env: Env, date: string): Promise<{ block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[]> {
-  const rows = await dayAdditions(env, date);
+async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | null = null): Promise<{ block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[]> {
+  // v515 §2 (P2): when a profile fold stands, its standing
+  // set filters the read rows BEFORE resolution — an
+  // addition into a stood-down block drops from the fold;
+  // its row is never written here and stands for any later
+  // shape that restores the block.
+  const rows = (await dayAdditions(env, date)).filter((a) => !standing || standing.has(a.block));
   if (!rows.length) return [];
   const titles = new Map<string, string>();
   try {
@@ -879,6 +913,150 @@ async function dayAdditionsFold(env: Env, date: string): Promise<{ block: string
     out.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId, title, durationS: dur });
   }
   return out;
+}
+
+// ---- v515 Prayer Profiles ------------------------------------------------
+// Plan P1–P3: the profile store (migration 0038 — profiles,
+// the state singleton, the day picks), the server-side
+// resolution (per-date pick > the day-type rule > the
+// standing default), and the fold the day payload carries.
+// The whole read stands inside try/catch in the standing
+// fold posture: absent tables (the pre-0038 rollback
+// posture) read as NO store, never an error, and the day
+// stands exactly as it stood before profiles.
+
+interface PrayerProfileLayers { novenas: { on: boolean }; podcasts: { on: boolean; series: string[] } }
+interface PrayerProfile {
+  key: string; name: string; honorLine: string; kind: string;
+  coreBlocks: string[]; layers: PrayerProfileLayers;
+}
+interface PrayerProfileStore {
+  profiles: PrayerProfile[]; standingKey: string; dayRule: boolean;
+  version: number; picks: Record<string, string>;
+}
+
+// P3: the day-kind from MASS_CALENDAR — the date's DEFAULT
+// version (the version whose key === entry.default): rank
+// "Sunday" or part "sunday" → "sunday"; rank "S" or "s" →
+// "solemnity" (a holy day — ALL solemnities, settled in the
+// Plan); else "weekday". No entry (a date outside calendar
+// coverage) or no default version → "weekday", so the
+// standing default governs and the fold says so.
+function profileDayKind(date: string): "sunday" | "solemnity" | "weekday" {
+  const entry = (MASS_CALENDAR as Record<string, { name: string; default: string; versions: { key: string; rank?: string; part?: string }[] }>)[date];
+  if (!entry) return "weekday";
+  const v = (entry.versions ?? []).find((x) => x.key === entry.default);
+  if (!v) return "weekday";
+  if (v.rank === "Sunday" || v.part === "sunday") return "sunday";
+  if (v.rank === "S" || v.rank === "s") return "solemnity";
+  return "weekday";
+}
+
+async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> {
+  try {
+    const pr = await env.DB.prepare(
+      "SELECT key, name, honor_line, kind, core_blocks, layers FROM prayer_profiles ORDER BY sort_order",
+    ).all<{ key: string; name: string; honor_line: string; kind: string; core_blocks: string; layers: string }>();
+    const profiles: PrayerProfile[] = [];
+    for (const r of pr.results ?? []) {
+      try {
+        const coreBlocks = JSON.parse(r.core_blocks) as unknown;
+        const rawLayers = JSON.parse(r.layers) as { novenas?: { on?: unknown }; podcasts?: { on?: unknown; series?: unknown } };
+        if (!Array.isArray(coreBlocks) || !rawLayers || typeof rawLayers !== "object") continue;
+        profiles.push({
+          key: r.key, name: r.name, honorLine: r.honor_line, kind: r.kind,
+          coreBlocks: coreBlocks.filter((b): b is string => typeof b === "string"),
+          layers: {
+            novenas: { on: !!(rawLayers.novenas && rawLayers.novenas.on) },
+            podcasts: {
+              on: !!(rawLayers.podcasts && rawLayers.podcasts.on),
+              series: rawLayers.podcasts && Array.isArray(rawLayers.podcasts.series)
+                ? rawLayers.podcasts.series.filter((s): s is string => typeof s === "string")
+                : [],
+            },
+          },
+        });
+      } catch { /* an unparseable row does not stand */ }
+    }
+    if (!profiles.length) return null;
+    const st = await env.DB.prepare(
+      "SELECT standing_key, day_rule, version FROM prayer_profile_state WHERE id=1",
+    ).first<{ standing_key: string; day_rule: number; version: number }>();
+    if (!st) return null;
+    const pk = await env.DB.prepare(
+      "SELECT date, profile_key FROM prayer_profile_day_picks",
+    ).all<{ date: string; profile_key: string }>();
+    const picks: Record<string, string> = {};
+    for (const r of pk.results ?? []) picks[r.date] = r.profile_key;
+    return { profiles, standingKey: st.standing_key, dayRule: st.day_rule === 1, version: st.version, picks };
+  } catch { return null; }
+}
+
+// P2/P3: the resolution — a pick naming a standing profile
+// wins; else the day rule (on, and the day a Sunday or a
+// solemnity) seats benedictine when it stands; else the
+// standing default when it stands; else the first profile.
+// A pick or standing key naming no standing profile falls
+// through to the next leg — the fold never resolves to a
+// profile that does not stand.
+function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "pick" | "rule" | "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
+  const dayKind = profileDayKind(date);
+  const byKey = (k: string | undefined) => store.profiles.find((p) => p.key === k);
+  const pick = byKey(store.picks[date]);
+  if (pick) return { profile: pick, resolvedBy: "pick", dayKind };
+  if (store.dayRule && (dayKind === "sunday" || dayKind === "solemnity")) {
+    const benedictine = byKey("benedictine");
+    if (benedictine) return { profile: benedictine, resolvedBy: "rule", dayKind };
+  }
+  const standing = byKey(store.standingKey);
+  if (standing) return { profile: standing, resolvedBy: "standing", dayKind };
+  return { profile: store.profiles[0], resolvedBy: "standing", dayKind };
+}
+
+function profileFoldOf(store: PrayerProfileStore, date: string): {
+  key: string; name: string; honorLine: string; resolvedBy: "pick" | "rule" | "standing";
+  dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
+  layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
+  version: number;
+} {
+  const { profile, resolvedBy, dayKind } = profileResolve(store, date);
+  return {
+    key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy, dayKind,
+    coreBlocks: [...profile.coreBlocks],
+    layers: [
+      { key: "novenas", on: profile.layers.novenas.on },
+      { key: "podcasts", on: profile.layers.podcasts.on, series: [...profile.layers.podcasts.series] },
+    ],
+    version: store.version,
+  };
+}
+
+// The profiles read: the store's public shape + the state +
+// the effective fold for the date. A null store (the
+// pre-0038 posture) reads as empty, never an error.
+async function profilesPayload(env: Env, date: string) {
+  const store = await prayerProfileStore(env);
+  if (!store) return { ok: true, profiles: [], state: null, effective: null };
+  return {
+    ok: true,
+    profiles: store.profiles.map((p) => ({
+      key: p.key, name: p.name, honorLine: p.honorLine, kind: p.kind,
+      coreBlocks: [...p.coreBlocks],
+      layers: {
+        novenas: { on: p.layers.novenas.on },
+        podcasts: { on: p.layers.podcasts.on, series: [...p.layers.podcasts.series] },
+      },
+    })),
+    state: { standingKey: store.standingKey, dayRule: store.dayRule, version: store.version },
+    effective: profileFoldOf(store, date),
+  };
+}
+
+// Every profile write bumps the state version in the same
+// batch (P1: the version is the day fold's freshness key —
+// a switch invalidates the client's day cache whole).
+function profileBumpStmt(env: Env, ts: string): D1PreparedStatement {
+  return env.DB.prepare("UPDATE prayer_profile_state SET version = version + 1, updated_at = ? WHERE id = 1").bind(ts);
 }
 
 // ---- Examination + Confession -------------------------------------------
@@ -2514,6 +2692,15 @@ export default {
         // v328 posture).
         return json({ ok: true, ...(await massPersonalPrayers(env)) });
       }
+      if (seg[2] === "prayer" && seg[3] === "profiles" && request.method === "GET") {
+        // v515 §2: the door mirror of GET /api/prayer/profiles
+        // — the verification surface, read-only (writes are
+        // John's, session-only, the v328 posture). The ?date=
+        // form resolves the fold for a fixture date.
+        const dateParam = url.searchParams.get("date");
+        if (dateParam !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) return err(400, "date must be YYYY-MM-DD");
+        return json(await profilesPayload(env, dateParam ?? prayerChicagoNow().date));
+      }
       if (seg[2] === "prayer" && seg[3] === "book" && seg[4] === "favorites" && request.method === "GET") {
         // v470 §2.2: the door mirror of
         // GET /api/prayer/book/favorites — the same body,
@@ -2866,6 +3053,118 @@ export default {
           }
           await massPersonalWrite(env, seat, slugs);
           return json({ ok: true, ...(await massPersonalPrayers(env)) });
+        }
+        if (seg[2] === "profiles" && !seg[3] && request.method === "GET") {
+          // v515 §2: the Prayer Profiles read — the store, the
+          // state, and the presented day's effective fold.
+          // Session-gated like the book's own read; NO PIN.
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "state" && request.method === "PUT") {
+          // v515 §2: John's standing-default + day-rule write,
+          // in the mass-personal-prayer PUT's discipline: every
+          // validation is a named 400 that writes nothing; the
+          // write and the version bump land in one batch; the
+          // response is the store re-read.
+          const body = await request.json().catch(() => ({})) as { standingKey?: unknown; dayRule?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          if (body.standingKey === undefined && body.dayRule === undefined) return err(400, "standingKey or dayRule required");
+          let standingKey = store.standingKey;
+          if (body.standingKey !== undefined) {
+            if (typeof body.standingKey !== "string" || !store.profiles.some((p) => p.key === body.standingKey)) {
+              return err(400, `bad profile ${typeof body.standingKey === "string" ? body.standingKey : "(empty)"}`);
+            }
+            standingKey = body.standingKey;
+          }
+          let dayRule = store.dayRule;
+          if (body.dayRule !== undefined) {
+            if (typeof body.dayRule !== "boolean") return err(400, "dayRule must be a boolean");
+            dayRule = body.dayRule;
+          }
+          const ts = nowISO();
+          await env.DB.batch([
+            env.DB.prepare("UPDATE prayer_profile_state SET standing_key = ?, day_rule = ?, updated_at = ? WHERE id = 1")
+              .bind(standingKey, dayRule ? 1 : 0, ts),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "day-pick" && request.method === "PUT") {
+          // v515 §2: John's per-date pick — the pick IS the
+          // retreat-day declaration (P3). profileKey null
+          // clears the date's row and returns the date to the
+          // rule. Same discipline as the state PUT above.
+          const body = await request.json().catch(() => ({})) as { date?: unknown; profileKey?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const date = typeof body.date === "string" ? body.date : "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          const ts = nowISO();
+          if (body.profileKey === null) {
+            await env.DB.batch([
+              env.DB.prepare("DELETE FROM prayer_profile_day_picks WHERE date = ?").bind(date),
+              profileBumpStmt(env, ts),
+            ]);
+            return json(await profilesPayload(env, prayerChicagoNow().date));
+          }
+          if (typeof body.profileKey !== "string" || !store.profiles.some((p) => p.key === body.profileKey)) {
+            return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
+          }
+          await env.DB.batch([
+            env.DB.prepare(
+              `INSERT INTO prayer_profile_day_picks (date, profile_key, updated_at) VALUES (?, ?, ?)
+               ON CONFLICT(date) DO UPDATE SET profile_key = excluded.profile_key, updated_at = excluded.updated_at`,
+            ).bind(date, body.profileKey, ts),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "layers" && request.method === "PUT") {
+          // v515 §2 (P4): the layer acts — a profile's layer
+          // attachments (Novenas all-or-nothing; Podcasts on/off
+          // + its series, keys from the Catechesis registry —
+          // the three def lists). Same discipline as the state
+          // PUT above; the layers JSON stores on as 0/1, the
+          // seed form.
+          const body = await request.json().catch(() => ({})) as { profileKey?: unknown; layers?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const profile = typeof body.profileKey === "string"
+            ? store.profiles.find((p) => p.key === body.profileKey)
+            : undefined;
+          if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
+          const layers = body.layers as { novenas?: unknown; podcasts?: unknown } | null;
+          if (!layers || typeof layers !== "object") return err(400, "layers required");
+          const nov = layers.novenas as { on?: unknown } | null;
+          if (!nov || typeof nov !== "object") return err(400, "layers.novenas required");
+          if (typeof nov.on !== "boolean") return err(400, "layers.novenas.on must be a boolean");
+          const pod = layers.podcasts as { on?: unknown; series?: unknown } | null;
+          if (!pod || typeof pod !== "object") return err(400, "layers.podcasts required");
+          if (typeof pod.on !== "boolean") return err(400, "layers.podcasts.on must be a boolean");
+          if (!Array.isArray(pod.series)) return err(400, "layers.podcasts.series must be an array");
+          const registry = new Set<string>([
+            ...POD_SERIES_LIST.map((d) => d.key),
+            ...POD_RSS_SERIES_LIST.map((d) => d.key),
+            ...POD_OWN_SERIES_LIST.map((d) => d.key),
+          ]);
+          const series: string[] = [];
+          for (const raw of pod.series) {
+            if (typeof raw !== "string") return err(400, "layers.podcasts.series must be strings");
+            if (!registry.has(raw)) return err(400, `bad series ${raw || "(empty)"}`);
+            if (!series.includes(raw)) series.push(raw);
+          }
+          const normalized = {
+            novenas: { on: nov.on ? 1 : 0 },
+            podcasts: { on: pod.on ? 1 : 0, series },
+          };
+          const ts = nowISO();
+          await env.DB.batch([
+            env.DB.prepare("UPDATE prayer_profiles SET layers = ?, updated_at = ? WHERE key = ?")
+              .bind(JSON.stringify(normalized), ts, profile.key),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
         }
         if (seg[2] === "intentions" && !seg[3] && request.method === "GET") {
           const r = await env.DB.prepare(
