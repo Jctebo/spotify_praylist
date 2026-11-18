@@ -12993,6 +12993,24 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
   });
+  // v521: the Podcasts group's series act — on the group's
+  // page, a group card's body tap opens its FULL PODCAST:
+  // the series page through the standing goSeries route
+  // (the same view and the same state the Catechesis →
+  // Podcasts open produces). The card's own controls are
+  // not navigation (the [data-openblock] guard, verbatim):
+  // the play disc still plays the episode, the ⋮ keeps
+  // its menu, the played dot stands as it stood.
+  if (state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block === 'Podcasts') {
+    view.querySelectorAll('[data-card]').forEach(function (card) {
+      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === card.getAttribute('data-card'); })[0];
+      if (!d || d.kind !== 'podcast' || !d.podSeries) return;
+      card.addEventListener('click', function (ev) {
+        if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+        goSeries(d.podSeries);
+      });
+    });
+  }
   paintOfflineLine();
   // v343 §2.4: the expand wiring + arm pass ride every paint.
   wireExpand(view);
