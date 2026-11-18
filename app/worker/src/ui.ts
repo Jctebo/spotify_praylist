@@ -803,6 +803,15 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
 .mass-seg { flex-wrap: nowrap; margin: 8px 0 14px; max-width: 100%; width: fit-content; }
 .mass-chips { width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .mass-chips::-webkit-scrollbar { display: none; }
+/* v523: the version picker (.mass-vpicker) takes the same
+   one-row scroll as the readings chips — its labels run as
+   long as the day's saints (four versions, 138+ chars on
+   the longest days), and the standing .segtoggle clip cut
+   the trailing chips off, unreachable. The strip stays
+   fit-content on short days; the scroll engages only when
+   the day's options overflow the row. */
+.mass-vpicker { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mass-vpicker::-webkit-scrollbar { display: none; }
 .mass-panels { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 4px; }
 .mass-panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
 .segtoggle.pill.mass-seg button { white-space: nowrap; color: var(--navy); opacity: .72; }
