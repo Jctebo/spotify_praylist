@@ -11535,7 +11535,16 @@ function ownFamilyOfStem(stem) {
     if (dayAt <= 0) return null;
     return { family: 'novenas', episodeId: 'novena-' + rest.slice(0, dayAt) };
   }
-  var base = stem.slice(-(d.length + 1)) === '-' + d ? stem.slice(0, -(d.length + 1)) : null;
+  // v530 F1: a corrected edition — the standing defective-
+  // episode replacement, a NEW episode whose stem carries
+  // the edition marker after the date — names the same
+  // family. Without this the corrected episode can never
+  // place, and the app goes on serving the pulled episode
+  // (or nothing) for the day.
+  var tail = '-' + d;
+  var base = null;
+  if (stem.slice(-tail.length) === tail) base = stem.slice(0, -tail.length);
+  else if (stem.slice(-(tail.length + 10)) === tail + '-corrected') base = stem.slice(0, -(tail.length + 10));
   if (!base || !OWN_STEM_TO_ID[base]) return null;
   return { family: OWN_STEM_TO_ID[base], episodeId: OWN_STEM_TO_ID[base] };
 }
@@ -11814,10 +11823,11 @@ function ownFetchAudio(cacheKey, enclosureUrl, done) {
 // BEFORE the presented day, after presented-day items were seen,
 // closes the block. Bytes consumed are exposed for the gate
 // (window.__opnV342).
-function ownResolveFeed(day, needed) {
+function ownResolveFeed(day, needed, revalidate) {
   var date = day.presentedDay || day.date;
   var found = {};       // family -> [meta]
   var seenPresent = false;
+  var feedRead = false; // v530 F2: the feed actually answered
   var finished = false;
   state.ownFeedBytes = 0;
   var finishAll = function () {
@@ -11831,6 +11841,33 @@ function ownResolveFeed(day, needed) {
         else ownSettleMissing(day, row);
       });
     });
+    // v530 F2: the revalidate remainder. A fixed family the
+    // scan matched was settled (or confirmed) at consume
+    // time and deleted from the set; what remains here is
+    // the novenas family (its items settle whole, below)
+    // and any family the read day block did not carry. A
+    // family absent from a successfully read block is
+    // genuinely gone (its episode was pulled) and settles
+    // missing; a failed read changes nothing — the cached
+    // day stands exactly as it stood.
+    if (revalidate) {
+      Object.keys(revalidate).forEach(function (fam) {
+        var rows = revalidate[fam];
+        var items = found[fam] || [];
+        if (fam === 'novenas') {
+          if (items.length) {
+            var cur = state.ownSlots[rows[0].sourceKey];
+            var curUrls = cur && cur.tracks ? cur.tracks.map(function (t) { return t.enclosureUrl; }).join('|') : '';
+            var newUrls = items.map(function (t) { return t.enclosureUrl; }).join('|');
+            if (curUrls !== newUrls) rows.forEach(function (row) { ownSettlePresent(day, row, items); });
+          } else if (feedRead && seenPresent) {
+            rows.forEach(function (row) { ownSettleMissing(day, row); });
+          }
+        } else if (feedRead && seenPresent && !items.length) {
+          rows.forEach(function (row) { ownSettleMissing(day, row); });
+        }
+      });
+    }
     paintContinue(day);
     // v355 A1: the feed-settle tail is one of the two legs that can
     // complete restore-readiness — probe it (the settings
@@ -11850,7 +11887,10 @@ function ownResolveFeed(day, needed) {
     if (ownDateInStem(stem) !== date) return false; // disagreement: never placed (§2.1 ruling 1)
     seenPresent = true;
     var fam = ownFamilyOfStem(stem);
-    if (!fam || !needed[fam.family]) return false;
+    if (!fam) return false;
+    var inNeeded = !!needed[fam.family];
+    var inReval = !!(revalidate && revalidate[fam.family]);
+    if (!inNeeded && !inReval) return false;
     var meta = {
       episodeId: fam.episodeId, title: ownFeedTitle(it.title), state: 'present',
       enclosureUrl: it.url, streamUrl: null, durationS: it.durationS || 0, sizeBytes: it.length || 0,
@@ -11868,14 +11908,27 @@ function ownResolveFeed(day, needed) {
       // Every standing row of the family settles — the Antiphon
       // item places into each of its enabled rows (Morning,
       // Midday, Evening) from this one match.
-      var rows = needed[fam.family];
-      delete needed[fam.family];
-      rows.forEach(function (row) { ownSettlePresent(day, row, [meta]); });
+      if (inNeeded) {
+        var rows = needed[fam.family];
+        delete needed[fam.family];
+        rows.forEach(function (row) { ownSettlePresent(day, row, [meta]); });
+      }
+      // v530 F2: a revalidating family re-settles only when
+      // the feed's enclosure differs from the cached track —
+      // the same enclosure confirms the cache in silence.
+      if (inReval) {
+        var rrows = revalidate[fam.family];
+        delete revalidate[fam.family];
+        var cur = state.ownSlots[rrows[0].sourceKey];
+        var curUrl = cur && cur.tracks && cur.tracks[0] ? cur.tracks[0].enclosureUrl : null;
+        if (curUrl !== meta.enclosureUrl) rrows.forEach(function (row) { ownSettlePresent(day, row, [meta]); });
+      }
     }
     return false;
   };
   fetch(OWN_FEED_URL).then(function (res) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    feedRead = true;
     if (!res.body || !res.body.getReader) {
       return res.text().then(function (t) {
         state.ownFeedBytes = t.length;
@@ -11915,6 +11968,16 @@ function ownResolveFeed(day, needed) {
   }).catch(function () { finishAll(); });
 }
 function ownSettlePresent(day, row, metas) {
+  // v530 F3: the slot's previous tracks, by episode id. A
+  // track whose enclosure CHANGED (a pulled episode replaced
+  // by its corrected edition) must not keep serving the
+  // audio cached under its key — the download kick below
+  // evicts the stale entry first, so the corrected bytes
+  // land fresh. An unchanged enclosure evicts nothing.
+  var prevById = {};
+  ((state.ownSlots[row.sourceKey] || {}).tracks || []).forEach(function (t) {
+    if (t && t.episodeId) prevById[t.episodeId] = t.enclosureUrl;
+  });
   state.ownSlots[row.sourceKey] = { state: 'present', tracks: metas };
   if (row.sourceKey === 'novenas') catechesisNovenasSettled(); // v516: the Catechesis Novenas side repaints on the settle
   ownSwapRow(row, day);
@@ -11928,7 +11991,8 @@ function ownSettlePresent(day, row, metas) {
   metas.forEach(function (m) {
     if (seen[m.episodeId]) return;
     seen[m.episodeId] = true;
-    ownFetchAudio(offlineDayKey(day.presentedDay || day.date, m.episodeId), m.enclosureUrl, function (objUrl) {
+    var dlKey = offlineDayKey(day.presentedDay || day.date, m.episodeId);
+    var dlDone = function (objUrl) {
       if (!objUrl) return;
       (state.ownStanding || []).forEach(function (r2) {
         var st2 = state.ownSlots[r2.sourceKey];
@@ -11939,7 +12003,15 @@ function ownSettlePresent(day, row, metas) {
       });
       ownRegisterReadTracks();
       extRebuildDescs(day);
-    });
+    };
+    // v530 F3: the eviction seam — only on a changed
+    // enclosure, and the download waits for the delete so
+    // the fresh bytes are never raced by the stale entry.
+    if (prevById[m.episodeId] && prevById[m.episodeId] !== m.enclosureUrl && 'caches' in window) {
+      caches.open('opn-ext-audio-v1').then(function (c) { return c.delete(dlKey); }).catch(function () {}).then(function () { ownFetchAudio(dlKey, m.enclosureUrl, dlDone); });
+    } else {
+      ownFetchAudio(dlKey, m.enclosureUrl, dlDone);
+    }
     // v375 §2 step 3: no intro download is kicked here — the
     // paired intention is written-only (v388), read from the
     // text that already stands in day.intros.
@@ -12313,16 +12385,24 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // (their downloads restore cache-first inside ownFetchAudio);
     // the rest resolve from the podcast feed in this same pass.
     var ownNeeded = {};
+    var ownReval = {};
     ownStanding.forEach(function (row) {
       // v368 §2.5.3: a shellResolved row settled already in this
       // pass — the feed leg never claims it (no OWN_ROW_EPISODE
       // entry stands for it, §2.5.2, by the same rule).
       if (row.shellResolved) return;
       var st = state.ownSlots[row.sourceKey];
-      if (st.state === 'present') ownSettlePresent(day, row, st.tracks);
+      if (st.state === 'present') {
+        ownSettlePresent(day, row, st.tracks);
+        // v530 F2: a cache-seeded family also revalidates
+        // against the feed in this same pass — a pulled
+        // episode's replacement (or its absence) lands on
+        // this open, not on some later cache expiry.
+        (ownReval[row.episodeId] = ownReval[row.episodeId] || []).push(row);
+      }
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
-    if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
+    if (Object.keys(ownNeeded).length || Object.keys(ownReval).length) ownResolveFeed(day, ownNeeded, ownReval);
     else { paintContinue(day); renderQueueList(); maybeRestoreQueue(); }
     // Own watchdog: a row still unresolved after 9 s stands named
     // missing for this open (the resolve watchdog's posture).
