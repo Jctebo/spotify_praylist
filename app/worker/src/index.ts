@@ -2466,6 +2466,13 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   { key: "counsel-of-trent", title: "The Counsel of Trent", feedUrl: (env) => env.EXT_COUNSEL_TRENT_FEED_URL || RSS_COUNSEL_TRENT_FEED_URL },
   { key: "fr-mike-homilies", title: "Sunday Homilies with Fr. Mike Schmitz", feedUrl: (env) => env.EXT_FRMIKE_HOMILIES_FEED_URL || RSS_FRMIKE_HOMILIES_FEED_URL },
   { key: "barron-sunday-sermons", title: "Bishop Barron's Sunday Sermons", feedUrl: (env) => env.EXT_BARRON_SERMONS_FEED_URL || RSS_BARRON_SERMONS_FEED_URL },
+  // v536: Daily Gospel Exegesis (Logical Bible Study) joins the
+  // kind — the same anchor.fm feed the day build's ext-gospel-
+  // exegesis leg already reads (EXT_DGE_FEED_URL, the constant
+  // and the Env binding both standing since the resolver port).
+  // The day leg is untouched; this line gives the podcast its
+  // series page, its index card, and its Podcasts-layer key.
+  { key: "daily-gospel-exegesis", title: "Daily Gospel Exegesis", feedUrl: (env) => env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
