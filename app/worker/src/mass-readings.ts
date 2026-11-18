@@ -340,14 +340,71 @@ async function memorialPage(url: string): Promise<MemorialPage> {
   throw lastErr instanceof Error ? lastErr : new Error("usccb memorial pull failed");
 }
 
+// v537: the feed pull itself now carries the v531
+// ladder's shape. Diagnosis (release doc §1): the
+// memorial leg was hardened in v531 (sequential, spaced,
+// retried, nothing-parse gated) but the FEED fetch stayed
+// a single unretried attempt — and the whole payload
+// hangs on it: a refused feed fetch throws, the route's
+// standing catch answers found:false with no parts and
+// NO MEMORIALS, the chip row (which renders only when
+// the payload carries memorials) never stands, and the
+// client fills the day from the Universalis backup —
+// the weekday set, silently. On 2026-11-18 the feed
+// also moved: the standing www address now 301-redirects
+// to bible.usccb.org/readings.rss, the publisher's own
+// canonical address for the same feed. bible.usccb.org's
+// rate wall (v531 §1: per address AND per page, time-
+// varying) stands on the feed's new home, and from the
+// production Worker's egress the single attempt was
+// being refused outright — persistently, across a full
+// close-and-reopen (John's separator, 2026-11-18 11:33
+// CT) — while the same built pull from a quieter address
+// landed both of the day's memorials whole, twice,
+// burning most of the memorial ladder both times.
+// The fix, inside the standing constraint (serve-time
+// pull only, the same 30-minute in-isolate cache, no
+// stored dataset): the feed fetch retries spaced on
+// the same ladder as the memorial pull, alternating
+// the publisher's two addresses for the one feed (the
+// canonical bible.usccb.org address the www address
+// redirects to, then the standing www address), and a
+// response that parses to ZERO items is a failed pull —
+// the real feed always carries about ten items, so a
+// zero-item body is the block page's signature, never
+// cached and never served. A real feed that simply
+// does not carry the viewed date still answers
+// found:false at once, exactly as before: the gate is
+// on the feed's shape, not on the date's presence.
+const FEED_URLS = ["https://bible.usccb.org/readings.rss", FEED_URL];
+const FEED_RETRY_WAITS_MS = [1200, 3000, 6000, 12000];
+
+function feedParseIsReal(xml: string): boolean {
+  return /<item>[\s\S]*?<\/item>/.test(xml);
+}
+
+async function feedXml(): Promise<string> {
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt <= FEED_RETRY_WAITS_MS.length; attempt++) {
+    if (attempt > 0) await sleepMs(FEED_RETRY_WAITS_MS[attempt - 1]);
+    const url = FEED_URLS[attempt % FEED_URLS.length];
+    try {
+      const r = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", Accept: "application/rss+xml" },
+      });
+      if (!r.ok) throw new Error(`usccb feed ${r.status}`);
+      const xml = await r.text();
+      if (!feedParseIsReal(xml)) throw new Error("usccb feed empty parse (block page)");
+      return xml;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("usccb feed pull failed");
+}
+
 export async function massReadingsPayload(date: string): Promise<MassReadingsPayload> {
   const now = Date.now();
   if (!feedCache || now - feedCache.at > FEED_TTL_MS) {
-    const r = await fetch(FEED_URL, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", Accept: "application/rss+xml" },
-    });
-    if (!r.ok) throw new Error(`usccb feed ${r.status}`);
-    feedCache = { xml: await r.text(), at: now };
+    feedCache = { xml: await feedXml(), at: now };
   }
   const payload = parseUsccbFeed(feedCache.xml, date);
   // v529: pull each mentioned memorial's own readings
