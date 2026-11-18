@@ -53,6 +53,24 @@ export interface MassReadingsPayload {
   title?: string;
   parts: MassFeedPart[];
   copyright: string[];
+  // v529: the day's optional-memorial mentions, extracted
+  // from the feed item's own trailing link list. Absent on
+  // a day the feed mentions no memorial. parseUsccbFeed
+  // fills name + url only; massReadingsPayload pulls each
+  // linked page serve-time and merges lectionary, note
+  // and parts in. A memorial whose page carries no set
+  // (its Lectionary direction stands instead) or whose
+  // pull failed rides with parts [] — note null on a
+  // failed pull, the page's own direction otherwise.
+  memorials?: MassMemorial[];
+}
+
+export interface MassMemorial {
+  name: string; // as the feed prints it, e.g. "Optional Memorial of …"
+  url: string; // the feed's own link to the memorial's readings page
+  lectionary?: string; // the page's "Lectionary: X" value, as printed
+  note: string | null; // the page's direction line, verbatim (tag-stripped)
+  parts: MassFeedPart[]; // the memorial's own set; [] when its page carries none
 }
 
 const FEED_URL = "https://www.usccb.org/bible/readings/rss/index.cfm";
@@ -129,9 +147,27 @@ export function parseUsccbFeed(xml: string, date: string): MassReadingsPayload {
     if (!link.includes(linkKey)) continue;
     const title = stripTags((item.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "");
     const descRaw = (item.match(/<description>([\s\S]*?)<\/description>/) || [])[1] || "";
-    const desc = decodeEntities(descRaw);
+    let desc = decodeEntities(descRaw);
     out.found = true;
     out.title = title;
+    // v529: the item's trailing link list names the day's
+    // optional memorials and links each one's own readings
+    // page ("Readings for the <a href="…-memorial-….cfm">
+    // Optional Memorial of …</a>"). Extract the mentions,
+    // then cut the whole list out of the description: it
+    // stood at the tail of the Gospel part's body, where
+    // it reached the client as unclickable text inside the
+    // Gospel and the memorial readings never stood at all.
+    const mentions: MassMemorial[] = [];
+    const anchorRe = /Readings for the\s*<a href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+    let am: RegExpExecArray | null;
+    while ((am = anchorRe.exec(desc)) !== null) {
+      if (!am[1].includes("-memorial-")) continue;
+      const name = stripTags(am[2]);
+      if (name) mentions.push({ name, url: am[1], note: null, parts: [] });
+    }
+    if (mentions.length) out.memorials = mentions;
+    desc = desc.replace(/<ul class="nested">[\s\S]*?<\/ul>/, "");
     // Headed parts: split on the <h4>…</h4> headings.
     const h4 = /<h4>([\s\S]*?)<\/h4>/g;
     const heads: { name: string; source: string; at: number; end: number }[] = [];
@@ -171,11 +207,96 @@ export function parseUsccbFeed(xml: string, date: string): MassReadingsPayload {
   return out;
 }
 
+// v529: one memorial readings page (bible.usccb.org),
+// parsed into the standing shapes. The page prints its
+// Lectionary number in a header block ("Lectionary: 679"
+// / "Lectionary: 679A"), a direction line in the block
+// under it ("The readings for this memorial are proper."
+// — or, where the memorial has no proper set, the
+// Commons direction: "Readings for the Memorial may be
+// taken from the Common of Virgins, #731-736, …"), then
+// its parts under <h3 class="name"> headings, each with
+// its citation in a <p class="address"> anchor and the
+// body in the paragraphs that follow. A page with no
+// part headings yields parts [] and its direction line
+// stands as the note. Words ride as the page's own HTML,
+// unaltered — the client cleans presentation only, the
+// same v487 rule the feed parts ride under.
+export interface MemorialPage {
+  lectionary?: string;
+  note: string | null;
+  parts: MassFeedPart[];
+}
+
+export function parseMemorialPage(html: string): MemorialPage {
+  const out: MemorialPage = { note: null, parts: [] };
+  const lec = html.match(/<p>Lectionary:\s*([^<]+)<\/p>/);
+  if (lec) out.lectionary = stripTags(lec[1]);
+  // The direction line: the first emphasized paragraph
+  // after the Lectionary line, before the first part.
+  const afterLec = lec ? html.slice((lec.index || 0) + lec[0].length) : html;
+  const firstH3 = afterLec.indexOf("<h3");
+  const headZone = firstH3 >= 0 ? afterLec.slice(0, firstH3) : afterLec;
+  const em = headZone.match(/<p><em>([\s\S]*?)<\/em>/);
+  if (em) out.note = stripTags(em[1]) || null;
+  // Parts: split on the part headings; a part's body runs
+  // to the next heading, cut at its last paragraph so the
+  // page's wrapper and share blocks never ride along. The
+  // parse zone ends at the page's copyright paragraph —
+  // the blocks between the last part and it (share tools,
+  // sibling-memorial links) carry no part text.
+  const cut = html.indexOf("Lectionary for Mass for Use in the Dioceses");
+  const zone = cut >= 0 ? html.slice(0, cut) : html;
+  const h3 = /<h3 class="name">([\s\S]*?)<\/h3>/g;
+  const heads: { name: string; at: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = h3.exec(zone)) !== null) {
+    heads.push({ name: stripTags(m[1]), at: m.index, end: m.index + m[0].length });
+  }
+  const rawParts: MassFeedPart[] = [];
+  for (let i = 0; i < heads.length; i++) {
+    const seg = zone.slice(heads[i].end, i + 1 < heads.length ? heads[i + 1].at : zone.length);
+    const addr = seg.match(/<p class="address">([\s\S]*?)<\/p>/);
+    const source = addr ? stripTags(addr[1]) : "";
+    const headerEnd = seg.indexOf("</header>");
+    let body = headerEnd >= 0 ? seg.slice(headerEnd + "</header>".length) : seg;
+    const lastP = body.lastIndexOf("</p>");
+    if (lastP >= 0) body = body.slice(0, lastP + "</p>".length);
+    body = body.trim();
+    // A heading with no name is the page's empty part
+    // shell (a no-set memorial prints one); it is not a
+    // part, whatever wrapper text follows it.
+    if (!heads[i].name || !stripTags(body)) continue;
+    rawParts.push({ key: slotKey(heads[i].name), heading: heads[i].name, source, html: body });
+  }
+  out.parts = groupFeedParts(rawParts);
+  return out;
+}
+
 // Short in-isolate cache: the feed changes once a day; a
 // 30-minute ride keeps the tab fast without going stale
 // across the day turn in Chicago.
 let feedCache: { xml: string; at: number } | null = null;
 const FEED_TTL_MS = 30 * 60 * 1000;
+
+// v529: the memorial pages ride the feed cache's own
+// posture — in-isolate, per URL, 30 minutes, fetched
+// only at serve time for the viewed day's mentions and
+// never stored anywhere.
+const memorialCache = new Map<string, { page: MemorialPage; at: number }>();
+
+async function memorialPage(url: string): Promise<MemorialPage> {
+  const hit = memorialCache.get(url);
+  const now = Date.now();
+  if (hit && now - hit.at <= FEED_TTL_MS) return hit.page;
+  const r = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", Accept: "text/html" },
+  });
+  if (!r.ok) throw new Error(`usccb memorial ${r.status}`);
+  const page = parseMemorialPage(await r.text());
+  memorialCache.set(url, { page, at: now });
+  return page;
+}
 
 export async function massReadingsPayload(date: string): Promise<MassReadingsPayload> {
   const now = Date.now();
@@ -186,5 +307,23 @@ export async function massReadingsPayload(date: string): Promise<MassReadingsPay
     if (!r.ok) throw new Error(`usccb feed ${r.status}`);
     feedCache = { xml: await r.text(), at: now };
   }
-  return parseUsccbFeed(feedCache.xml, date);
+  const payload = parseUsccbFeed(feedCache.xml, date);
+  // v529: pull each mentioned memorial's own readings
+  // page serve-time and merge it in. A memorial pull
+  // NEVER throws and never touches the day: on failure
+  // the memorial rides with parts [] and note null, and
+  // the client falls back to the ferial render for that
+  // version. The feed fetch above keeps its standing
+  // posture.
+  if (payload.found && payload.memorials && payload.memorials.length) {
+    await Promise.all(payload.memorials.map(async (mem) => {
+      try {
+        const page = await memorialPage(mem.url);
+        mem.lectionary = page.lectionary;
+        mem.note = page.note;
+        mem.parts = page.parts;
+      } catch { /* the memorial rides empty — see above */ }
+    }));
+  }
+  return payload;
 }

@@ -4355,12 +4355,17 @@ function massOptionLabel(part, opts, i) {
   if (!info) return opts[i].source || part.heading;
   return (MASS_BOOK_ABBR[info.book] || info.book) + ' ' + info.rest;
 }
-function massFeedPartHtml(part, label, idx) {
+function massFeedPartHtml(part, label, idx, setKey) {
   var s = '<div class="mass-h">' + esc(label || part.heading) + '</div>';
   var opts = (part.options && part.options.length > 1) ? part.options : null;
   var opt = part, oi = 0;
   if (opts) {
-    var ckey = part.key + ':' + idx;
+    // v529: a memorial set's choices key under its own
+    // prefix (setKey), so a choice made in one set never
+    // lands on the other's same-keyed part. The ferial
+    // set passes no prefix — its keys stand as v497 made
+    // them.
+    var ckey = (setKey ? setKey + ':' : '') + part.key + ':' + idx;
     var choices = (state.mass && state.mass.rchoices) || {};
     oi = choices[ckey] || 0;
     if (oi < 0 || oi >= opts.length) oi = 0;
@@ -4409,10 +4414,78 @@ function massBackupPartHtml(key) {
   }
   return '';
 }
+/* v529: the memorial match. The feed payload carries
+   the day's optional-memorial mentions with each
+   memorial's own readings pulled serve-time (the
+   Worker's mass-readings route). A mention belongs to
+   a Mass version BY NAME: both sides normalize the
+   same way — a leading "Optional Memorial of " /
+   "Memorial of " and a trailing "[…]" segment come
+   off, whitespace collapses, case folds. On every day
+   checked against the live feed (2026-11-11 through
+   2026-11-18) the normalized mention name EQUALS the
+   version's normalized label; the comma-boundary
+   prefix tolerance stands behind it for a label that
+   drops a saint's style (", Religious" and its kin).
+   A mention matching no version is never rendered; a
+   version matching no mention renders as it always
+   has. */
+function massMemorialNameKey(s) {
+  var t = (s || '').replace(/^\\s*(Optional\\s+)?Memorial of\\s+/i, '');
+  t = t.replace(/\\s*\\[[^\\]]*\\]\\s*$/, '');
+  return t.replace(/\\s+/g, ' ').trim().toLowerCase();
+}
+function massPickedMemorial() {
+  var f = massFeed;
+  if (!f || !f.memorials || !f.memorials.length) return null;
+  if (!state.mass || !state.mass.payload || !state.mass.version) return null;
+  var vers = state.mass.payload.versions || [];
+  var picked = null;
+  for (var i = 0; i < vers.length; i++) if (vers[i].key === state.mass.version) picked = vers[i];
+  if (!picked) return null;
+  var want = massMemorialNameKey(picked.label);
+  if (!want) return null;
+  for (var j = 0; j < f.memorials.length; j++) {
+    var mk = massMemorialNameKey(f.memorials[j].name);
+    if (mk === want || mk.indexOf(want + ',') === 0 || want.indexOf(mk + ',') === 0) return f.memorials[j];
+  }
+  return null;
+}
+/* v529: a memorial's own set, rendered through the
+   standing part machinery in canonical slot order —
+   and NOTHING else: no ferial part mixes in, and the
+   Universalis backup does not fill a memorial slot
+   (the backup rule's terms cover the feed's day; a
+   memorial's readings stand as its own page prints
+   them, complete or partial). */
+function massMemorialPartsHtml(mem) {
+  var seq = [];
+  var present = {};
+  for (var i = 0; i < mem.parts.length; i++) {
+    var part = mem.parts[i];
+    if (part.key !== 'extra' && !present[part.key]) {
+      present[part.key] = true;
+      seq.push(massFeedPartHtml(part, MASS_SLOT_LABELS[part.key], i, 'mem'));
+    } else {
+      seq.push(massFeedPartHtml(part, null, i, 'mem'));
+    }
+  }
+  return seq.join('');
+}
 function massReadingsHtml() {
   var f = massFeed, d = massReadings;
   if (!f && !d) return '<div class="mass-h">Readings</div><div class="mass-rubric">The day\u2019s readings load\u2026</div>';
   massUsedFallback = false;
+  /* v529: the readings place follows the picked
+     version. A picked memorial WITH its own set stands
+     that set alone; a picked memorial whose page
+     carries no set stands its Lectionary direction
+     above the ferial render below; the failure posture
+     (a memorial entry with neither) and every
+     no-memorial pick fall through to the standing
+     render, untouched. */
+  var mem = (f && f.found) ? massPickedMemorial() : null;
+  if (mem && mem.parts && mem.parts.length) return massMemorialPartsHtml(mem);
   var seq = [];
   var present = {};
   if (f && f.found && f.parts) {
@@ -4446,7 +4519,17 @@ function massReadingsHtml() {
     }
     seq.splice(pos, 0, { slot: key, html: fb });
   }
-  return seq.map(function (e) { return e.html; }).join('');
+  var out = seq.map(function (e) { return e.html; }).join('');
+  /* v529: a picked memorial with no set of its own
+     stands its direction line at the head of the
+     readings place — the Lectionary number and the
+     memorial page's own words, verbatim — and the
+     day's ferial readings stand beneath it. */
+  if (mem && mem.note) {
+    var dir = (mem.lectionary ? 'Lectionary ' + mem.lectionary + ' \u2014 ' : '') + mem.note;
+    out = '<div class="mass-h">Readings</div><div class="mass-rubric">' + esc(dir) + '</div>' + out;
+  }
+  return out;
 }
 function paintMassReadings() {
   var host = document.getElementById('mass-readings');
