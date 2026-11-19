@@ -440,6 +440,17 @@ def build(rundir: Path, cache: Path) -> dict:
         final = outdir / f"{ep['episode_id']}.mp3"
         script_text = (outdir / f"{ep['file_base']}-script.txt").read_text()
         seg_texts = [s["text"] for s in ep["segments_norm"] if "text" in s]
+        # The branded audio opens with the shared welcome for EVERY
+        # episode: branding mixes the welcome fragment in (see the
+        # assembly above). Publish segment files carry it as segment 0;
+        # novena segment files do not, so their guard basis must add it —
+        # comparing novena audio against a welcome-less script counted
+        # the spoken welcome as extra content and held the three
+        # short-form novenas of 2026-11-21 (extra 0.15 on ~110-token
+        # scripts) on faithful audio (repair 2026-11-19).
+        if welcome_text and (not seg_texts or seg_texts[0] != welcome_text):
+            script_text = welcome_text + "\n\n" + script_text
+            seg_texts = [welcome_text] + seg_texts
         frags = [
             (s["voice"], s["normalized"], frag_cache_path(cache, s["voice"], s["normalized"]))
             for s in ep["segments_norm"] if "text" in s

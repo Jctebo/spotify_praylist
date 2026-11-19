@@ -91,9 +91,30 @@ RUNS_ROOT = Path.home() / "workspace" / "ora-runner-runs"
 
 _TOKEN_RE = re.compile(r"[a-z0-9']+")
 
+# Orthographic equivalences between script text and ASR output (repair
+# 2026-11-19, the blocked 2026-11-21 drop): faster-whisper writes "St."
+# where scripts write "Saint", spells day numbers as words where scripts
+# carry digits, and renders the vocative "O" as "Oh". These are the SAME
+# words in different dress — counting them as extra/missing content held
+# three faithful episodes (Morning Prayer extra 0.081 on 'st' x30 alone).
+# Canonicalizing both sides identically cannot hide inserted speech: the
+# Nov 18 gibberish class (invented words, invented sentences) shares no
+# tokens with the script under any of these mappings.
+_TOKEN_CANON = {
+    "st": "saint",
+    "oh": "o",
+    "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4",
+    "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9",
+    "ten": "10", "eleven": "11", "twelve": "12", "thirteen": "13",
+    "fourteen": "14", "fifteen": "15", "sixteen": "16", "seventeen": "17",
+    "eighteen": "18", "nineteen": "19", "twenty": "20", "thirty": "30",
+    "forty": "40", "fifty": "50", "sixty": "60", "seventy": "70",
+    "eighty": "80", "ninety": "90",
+}
+
 
 def tokens(text: str) -> list[str]:
-    return _TOKEN_RE.findall(text.lower().replace("\u2019", "'"))
+    return [_TOKEN_CANON.get(t, t) for t in _TOKEN_RE.findall(text.lower().replace("\u2019", "'"))]
 
 
 def _ngrams(toks: list[str], n: int) -> Counter:
@@ -328,16 +349,49 @@ def asr_compare(script_text: str, segment_texts: list[str], asr_text: str) -> tu
     anchors: dict[int, int] = {}
     cursor = 0
     unlocated = 0
+    prev_i: int | None = None
     for i in unique_idx:
-        pos = _find_anchor(a_toks, seg_toks[i][:5], cursor)
-        if pos < 0:
-            pos = _find_anchor(a_toks, seg_toks[i][:3], cursor)
+        # Candidate anchor positions, earliest first. A candidate that
+        # lands inside the PREVIOUS segment's own text starves it: the
+        # previous segment quotes this segment's opening phrase (repair
+        # 2026-11-19 — the 2026-11-21 rosary's fifth-decade intention
+        # contains the words 'in the Finding of Jesus in the Temple',
+        # the next segment's opening, and the first-match anchor sat
+        # 21 tokens into the intention instead of at the reflection's
+        # true start, forging span ratio 0.53 on faithful audio). When a
+        # later occurrence leaves the previous segment's window coverage
+        # intact, take it; if every occurrence starves it, keep the
+        # first — the coverage/interval checks below still judge the
+        # region, so genuinely missing speech is still caught.
+        cands: list[int] = []
+        for anchor in (seg_toks[i][:5], seg_toks[i][:3]):
+            s = cursor
+            while True:
+                p = _find_anchor(a_toks, anchor, s)
+                if p < 0:
+                    break
+                if p not in cands:
+                    cands.append(p)
+                s = p + 1
+            if cands:
+                break
+        pos = -1
+        if cands:
+            pos = cands[0]
+            if prev_i is not None:
+                prev_counts = Counter(seg_toks[prev_i])
+                for c in cands:
+                    window = Counter(a_toks[anchors[prev_i] : c])
+                    if sum((prev_counts & window).values()) / len(seg_toks[prev_i]) >= SEGMENT_WINDOW_COVERAGE_MIN:
+                        pos = c
+                        break
         if pos < 0:
             pos = _find_segment_soft(a_toks, seg_toks[i], cursor)
         if pos < 0:
             unlocated += 1
             continue
         anchors[i] = pos
+        prev_i = i
         cursor = pos + 1
     seg_problems: list[str] = []
     worst_span = 0.0
