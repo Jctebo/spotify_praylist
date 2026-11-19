@@ -2298,7 +2298,8 @@ function refreshTrackDrawSurfaces(repaintRows) {
   var bp = document.getElementById('book-track-intention');
   if (bp) {
     var bt = (state.trackDraws || {})[bp.getAttribute('data-trackkey')];
-    if (bt && intentionsOn()) { bp.textContent = 'Track intention: ' + bt; bp.style.display = ''; }
+    // v539: labeled simply "Intention: " — the one system.
+    if (bt && intentionsOn()) { bp.textContent = 'Intention: ' + bt; bp.style.display = ''; }
     else { bp.textContent = ''; bp.style.display = 'none'; }
   }
   if (repaintRows && state.dayPayload && state.tab === 'prayers' && state.prayersView
@@ -6612,7 +6613,7 @@ function paintPodcasts() {
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '</span></div>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
-      + ((state.trackDraws && state.trackDraws[e.key] && intentionsOn()) ? '<div class="intention-text track-draw-line">Track intention: ' + esc(state.trackDraws[e.key]) + '</div>' : '')
+      + ((state.trackDraws && state.trackDraws[e.key] && intentionsOn()) ? '<div class="intention-text track-draw-line">Intention: ' + esc(state.trackDraws[e.key]) + '</div>' : '')
       + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + (e.listened && e.listenDate ? ' \u00b7 Listened ' + shortDayLabel(e.listenDate) : '') + '</span>'
       + '<span class="dl-ico" data-poddlstate="' + esc(e.key) + '" style="display:none" title="Downloaded">\u2913</span></div></div>'
       + '</div>'
@@ -8742,7 +8743,8 @@ function openPrayerPage(slug) {
     var key = 'prayer:' + p.slug + ':' + pageLang;
     el.setAttribute('data-trackkey', key);
     var t = (state.trackDraws && state.trackDrawsDate === presentedDateStr()) ? state.trackDraws[key] : null;
-    if (t && intentionsOn()) { el.textContent = 'Track intention: ' + t; el.style.display = ''; }
+    // v539: labeled simply "Intention: " — the one system.
+    if (t && intentionsOn()) { el.textContent = 'Intention: ' + t; el.style.display = ''; }
     else { el.textContent = ''; el.style.display = 'none'; }
   }
   paintBookIntention();
@@ -9953,21 +9955,22 @@ function trackCard(t) {
   // line (the trackDesc stamping rule, applied at the row);
   // unpaired tracks resolve no text. A paired row grows past
   // the v363 uniform 76px by the line's height, as planned.
-  var intLine = '';
-  if (t.available && intentionsOn()) {
-    var intIntro = introForTrack(t);
-    if (intIntro && intIntro.text) intLine = '<div class="intention-text">Prayer Intention: ' + esc(intIntro.text) + '</div>';
-  }
+  // v539: that paired line RETIRES — the block-head draw has
+  // no painter left on any surface (John's one-intention
+  // direction, 2026-11-18: some tracks showed two intentions).
+  // The draw machinery stands in place, unpainted, on the
+  // v384 intention-row precedent.
   // v528 §2.3: the track's OWN drawn intention (decision B6)
   // — one additional line under the title, from the one
   // state.trackDraws map, whenever a draw stands for the
-  // card's key (the playedKey rule). The standing paired
-  // line above is the block-head draw and stands untouched;
-  // an unavailable track carries no line (the standing rule).
+  // card's key (the playedKey rule); an unavailable track
+  // carries no line (the standing rule).
+  // v539: the label is simply "Intention: " — the one
+  // intention system going forward.
   var drawLine = '';
   if (t.available && intentionsOn()) {
     var drawText = trackDrawTextFor(t);
-    if (drawText) drawLine = '<div class="intention-text track-draw-line">Track intention: ' + esc(drawText) + '</div>';
+    if (drawText) drawLine = '<div class="intention-text track-draw-line">Intention: ' + esc(drawText) + '</div>';
   }
   var wrap = function (wordsInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
@@ -10024,7 +10027,7 @@ function trackCard(t) {
       // v417 §2.7 (D2): the meta's day word is the presented
       // day's own — 'Today' only when the presented day IS
       // today, the short form otherwise; no clock stands.
-      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + intLine + drawLine + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + drawLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -10069,7 +10072,7 @@ function trackCard(t) {
     var readCtl = !noText ? readButton(t, key) : '';
     // v424 §2.3 (FD3): Read trails the meta line in the box,
     // after the ⤓ — v413's R4 stands (visible, not a menu item).
-    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + intLine + drawLine + '</div>');
+    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + drawLine + '</div>');
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -10200,7 +10203,6 @@ function openNowPlaying() {
     + '<div class="np-art" id="np-art"></div>'
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
-    + '<div class="np-intention" id="np-intention" style="display:none"></div>'
     + '<div class="np-intention" id="np-track-intention" style="display:none"></div>'
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
@@ -10272,20 +10274,10 @@ function updateNowPlaying() {
   sheet.querySelector('#np-meta').textContent = meta;
   npArtRender(sheet, cur); // v435 §2.1: the hero follows the playing descriptor, on open and on every track change
   var litEl = sheet.querySelector('#np-litday'); if (litEl) { var ln = (state.liturgical && state.liturgical.name) || ''; if (litEl.textContent !== ln) litEl.textContent = ln; }
-  var intEl = sheet.querySelector('#np-intention');
-  if (intEl) {
-    // v384 §2.5: the line reads the current prayer's own
-    // intentionText field, gated by the toggle store read at
-    // render time. ON with a text → the v372 line's exact string
-    // and place (hero, under the block/source line, above the
-    // liturgical day line); OFF or no text → emptied AND
-    // display:none — absent, not blank. The render runs at the
-    // start's bookkeeping, so the line already stands during
-    // the speech phase and while the prayer plays.
-    var intText = intentionsOn() ? (cur.intentionText || null) : null;
-    if (intText) { intEl.textContent = 'Prayer Intention: ' + intText; intEl.style.display = ''; }
-    else { intEl.textContent = ''; intEl.style.display = 'none'; }
-  }
+  // v539: the v384 paired line (#np-intention, "Prayer
+  // Intention: " from the descriptor's intentionText field)
+  // retires whole — element and paint. The one intention on
+  // this sheet is the track's own, painted just below.
   var tdEl = sheet.querySelector('#np-track-intention');
   if (tdEl) {
     // v528 §2.3: the track's OWN drawn intention stands on
@@ -10294,8 +10286,9 @@ function updateNowPlaying() {
     // play; the by-play draw (§2.4) lands it here mid-play
     // for tracks outside the build via
     // refreshTrackDrawSurfaces' re-run of this paint.
+    // v539: labeled simply "Intention: " — the one system.
     var tdText = intentionsOn() ? trackDrawTextFor(cur) : null;
-    if (tdText) { tdEl.textContent = 'Track intention: ' + tdText; tdEl.style.display = ''; }
+    if (tdText) { tdEl.textContent = 'Intention: ' + tdText; tdEl.style.display = ''; }
     else { tdEl.textContent = ''; tdEl.style.display = 'none'; }
   }
   sheet.querySelector('#np-play').innerHTML = transportEngaged() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport · v461 F1: the engaged read, as on the dock
@@ -10899,9 +10892,13 @@ function nativeStatePayload(stopped) {
   // prayer's intention text, read from its descriptor field.
   // v388 §2.3: the subtitle comes under the showing toggle —
   // OFF pushes an empty subtitle.
+  // v539: the subtitle reads the playing track's OWN draw
+  // (the one intention system) — the paired block-head read
+  // retires, so the lock screen / car display carry the same
+  // intention the app shows for the track, never a second one.
   var title = cur.title || '';
   var subtitle = '';
-  if (intentionsOn()) { var intro = introForTrack(cur); if (intro && intro.text) subtitle = intro.text; }
+  if (intentionsOn()) { var td = trackDrawTextFor(cur); if (td) subtitle = td; }
   // v388 §2.2: the face's kind is the descriptor's own at all
   // times and position/duration are the element's — the
   // 'spoken' kind and the estimated-position block retire
@@ -11196,7 +11193,10 @@ function playPos() {
 }
 function nativeContractItem(d) {
   var subtitle = '';
-  if (intentionsOn()) { var intro = introForTrack(d); if (intro && intro.text) subtitle = intro.text; }
+  // v539: the contract subtitle reads the track's OWN draw,
+  // as nativeStatePayload does — the paired block-head read
+  // (introForTrack) retires from every display surface.
+  if (intentionsOn()) { var td = trackDrawTextFor(d); if (td) subtitle = td; }
   if (d.kind === 'podcast') {
     var url = d.url || '';
     if (!url || url.indexOf('blob:') === 0) {
