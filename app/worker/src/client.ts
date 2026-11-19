@@ -4313,29 +4313,46 @@ function massPartHtml(part, enLines, head) {
     + '<button data-lt="' + part + ':la"' + (lang === 'la' ? ' class="active"' : '') + '>' + altLabel + '</button>'
     + '</div><div class="mass-partbody">' + body + '</div></div>';
 }
+/* v543: the heading and its toggle stand at the head of
+   the prayer itself, not at the head of the approach —
+   John (Ora thread, 2026-11-19): the Eucharistic Prayer
+   heading stood too high, at the top of a block whose
+   first parts are the Preface Dialogue, the Preface, and
+   the Sanctus, with the prayer's own lines hundreds of
+   pixels below it. For Prayers I-III the approach paints
+   first and the heading + toggle follow, immediately
+   before the prayer's own lines, where the Missal's own
+   title stands. Prayer IV's segment carries its own
+   dialogue, Preface, and Sanctus inside it and is
+   indivisible, so there the heading + toggle stand at
+   the block head as before, directly above that prayer's
+   own opening. Placement only: the toggle's options,
+   its default, and its repaint stand unchanged, and no
+   stored text moves or changes. */
 function massEpHtml() {
   var ep = (state.mass && state.mass.ep) || 'II';
   var f = massFormulary();
   var btns = ['I', 'II', 'III', 'IV'].map(function (k) {
     return '<button data-ep="' + k + '"' + (ep === k ? ' class="active"' : '') + '>Prayer ' + k + '</button>';
   }).join('');
+  var head = '<div class="mass-h">Eucharistic Prayer</div>'
+    + '<div class="segtoggle pill mass-seg mass-eptoggle">' + btns + '</div>';
   var body = '';
   if (ep === 'IV') {
     // EP IV carries its own invariable Preface (and its own
     // dialogue and Sanctus) inside its segment — choosing it
     // replaces the Preface block whole, per its rubric.
-    body = massLinesHtml(MASS_ORDER.epIV, MASS_ROLES.epIV);
+    body = head + massLinesHtml(MASS_ORDER.epIV, MASS_ROLES.epIV);
   } else {
     var preface = '';
     if (f.prefaceText) preface = '<div class="mass-h">Preface' + (f.prefaceName ? ' \u2014 ' + esc(f.prefaceName) : '') + '</div>' + massTextHtml(f.prefaceText);
     else preface = '<div class="mass-h">Preface</div>' + massLinesHtml(MASS_ORDER.commonPreface1, MASS_ROLES.commonPreface1);
     body = massLinesHtml(MASS_ORDER.prefaceDialogue, MASS_ROLES.prefaceDialogue) + preface
       + massPartHtml('sanctus', MASS_ORDER.sanctus, 'Sanctus')
+      + head
       + massLinesHtml(MASS_ORDER['ep' + ep], MASS_ROLES['ep' + ep]);
   }
-  return '<div class="mass-h">Eucharistic Prayer</div>'
-    + '<div class="segtoggle pill mass-seg mass-eptoggle">' + btns + '</div>'
-    + '<div id="mass-epbody">' + body + '</div>';
+  return '<div id="mass-epbody">' + body + '</div>';
 }
 /* v502: the Penitential Act in its three forms (John,
    2026-11-17) — a toggle at the head of the section in
