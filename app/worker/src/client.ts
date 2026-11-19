@@ -2453,6 +2453,14 @@ function tapPlay(d) {
   // behavior stands for it, unchanged.
   if (build === null) { playTrack(d); return; }
   if (!build.length) return;
+  // v542 §2 (Part 1): autoplay OFF — a selected track plays as
+  // a SINGLE track and stops at its end. The tap takes the
+  // standing single-play funnel on the re-resolved tapped
+  // descriptor (build[0] — sectionQueueFrom's own resolution
+  // in the fresh whole-day list); it never builds the block
+  // queue the 'ended' advance would then play through
+  // unconditionally. Autoplay ON stands exactly as before.
+  if (!autoplayOn()) { playTrack(build[0]); return; }
   startQueue(build, true);
 }
 function resumeCurrent() {
@@ -2478,6 +2486,14 @@ function resumeCurrent() {
     fadeRestore(); // v320 §2.6 restore point (3)
     reassertMediaSession();
     state.pendingStart = state.current;
+    // v542 §2: a queue mutation made while the engine stood
+    // paused (Add to queue / Clear queue) waits in the client
+    // queue as a divergence from the standing contract — the
+    // resume carries it into the engine as a contract re-send
+    // headed at the current track at its standing position,
+    // in place of the bare play, before any window end can
+    // play (or clear) what the queue no longer holds.
+    if (nativeQueueDiverged()) { nativeResendAtCurrent(); return; }
     nativeTransportSend({ command: 'play' });
     return;
   }
@@ -2682,6 +2698,142 @@ function advanceQueue(dir) {
   }
   if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); }
   return false;
+}
+function queueKindIsPod() {
+  // v542 §2: the standing queue's kind, read from its current
+  // (or its first entry when no current stands) — the kind
+  // bound's read for Add to queue. The kind read is the
+  // contract builder's own (kind 'podcast' against everything
+  // else — own-series descriptors carry the day form, exactly
+  // as nativeContractFor reads them). Nothing standing reads
+  // null: anything may form the queue.
+  var ref = state.current || state.queue[0] || null;
+  if (!ref) return null;
+  return ref.kind === 'podcast';
+}
+function nativeQueueExpected() {
+  // v542 §2: the descriptor list the standing engine contract
+  // is expected to head — the queue itself, or the single
+  // current when no queue stands, or nothing.
+  if (state.queue.length) return state.queue;
+  if (state.current) return [state.current];
+  return [];
+}
+function nativeQueueDiverged() {
+  // v542 §2: the client queue and the standing contract's
+  // queue part (its first nativeContractQueueEnd descriptors —
+  // the chain tail past queueEnd is the contract's own, never
+  // a divergence) read apart. A queue mutation made while the
+  // engine stood paused leaves exactly this divergence; the
+  // resume seam re-sends on it (see resumeCurrent).
+  if (!oraNativeMode()) return false;
+  var exp = nativeQueueExpected();
+  if (nativeContractQueueEnd !== exp.length) return true;
+  for (var i = 0; i < exp.length; i++) {
+    if (!nativeContractDescs[i] || nativeContractDescs[i].episodeId !== exp[i].episodeId) return true;
+  }
+  return false;
+}
+function nativeResendAtCurrent() {
+  // v542 §2: a queue mutation's native leg. The contract is
+  // the only queue channel to the engine, so the mutation
+  // re-sends it — rebuilt from the standing queue by
+  // nativeContractFor, headed at the current track at its
+  // LIVE position. The position rides the standing
+  // queueStartPos carry (pendingResume) for this one send;
+  // the carry that stood before is restored after — the
+  // hand-off is never left standing in place of it. The
+  // engine reloads its window at that position (the
+  // jumpQueueTo precedent: a deliberate act pays the reload)
+  // and the track continues from there. No current, no send:
+  // nothing stands loaded in the engine.
+  if (!oraNativeMode() || !state.current) return;
+  var cur = state.current;
+  var had = state.pendingResume;
+  var posS = Math.max(0, Math.floor(playPos().pos));
+  // A start still pending carries its own resume position in
+  // the standing carry — that carry is the truth for the
+  // pending track, not the not-yet-sounding mirror's zero.
+  if (state.pendingStart && had && had.episodeId === cur.episodeId && typeof had.positionS === 'number') posS = had.positionS;
+  state.pendingResume = { episodeId: cur.episodeId, positionS: posS };
+  nativeSendContract(cur);
+  state.pendingResume = had;
+}
+function nativeSendNow() {
+  // v542 §2: a queue mutation re-sends at once only while
+  // the engine sounds, or while a start pends whose track
+  // the engine has not yet reported (the re-send then
+  // replaces a load that has not landed). A standing mirror
+  // for the current track means the engine HOLDS it —
+  // paused — and a contract send is a play=true load, so
+  // the mutation waits for the resume seam instead.
+  if (!oraNativeMode() || !state.current) return false;
+  if (transportPlaying()) return true;
+  if (!state.pendingStart) return false;
+  return !(nativeMirror && nativeMirror.trackId === state.current.episodeId);
+}
+function addToQueue(desc) {
+  // v542 §2 (Part 2): the overflow menus' Add to queue act —
+  // the track appends to the CURRENT playback queue without
+  // interrupting what is playing. The descriptor re-resolves
+  // live first (queueLiveDesc, the standing seam). The kind
+  // bound (§1): a track joins only a standing queue of its
+  // own kind, or forms the queue when nothing stands; a
+  // mismatch or an unavailable track returns without act.
+  if (!desc) return;
+  var live = queueLiveDesc(desc);
+  if (!live || !live.available || !live.url) return;
+  var isPod = live.kind === 'podcast';
+  var standingKind = queueKindIsPod();
+  if (standingKind !== null && standingKind !== isPod) return;
+  if (state.queue.length) {
+    state.queue.push(live);
+  } else if (state.current) {
+    // A single play stands: the append FORMS the queue on it,
+    // so the appended track is what its end reaches.
+    state.queue = [state.current, live];
+    state.queueIdx = 0;
+  } else {
+    // Nothing stands: a waiting queue of the one track —
+    // nothing starts (Add to queue never starts playback).
+    state.queue = [live];
+    state.queueIdx = -1;
+  }
+  saveQueueSnapshot();
+  renderQueueList();
+  updateDock();
+  // The native leg: while the engine plays (or a start
+  // pends), the widened queue re-sends at once. While the
+  // engine stands paused, the append waits in the client
+  // queue and the resume seam carries it in (the divergence
+  // read above) — a contract send is a play=true load, and
+  // a paused engine is never force-started by a menu act.
+  if (nativeSendNow()) nativeResendAtCurrent();
+}
+function clearQueue() {
+  // v542 §2 (Part 3): the Now Playing overflow's Clear queue
+  // act — the playback queue empties; the standing current is
+  // NOT interrupted and NOT stopped: it re-seats as a single
+  // play, in the shape playTrack leaves, and its end follows
+  // the standing single-play rule (autoplay OFF — it finishes
+  // alone; autoplay ON — the day chain stands, as after any
+  // single play). No cleared track ever plays after it. The
+  // snapshot record and any restored-queue stand retire with
+  // the queue (saveQueueSnapshot removes the record when no
+  // queue stands).
+  if (!state.queue.length) return;
+  state.queue = [];
+  state.queueIdx = -1;
+  clearRestoredQueue();
+  saveQueueSnapshot();
+  renderQueueList();
+  updateDock();
+  // The native leg mirrors Part 2: playing (or a start
+  // pending) — the single-play contract re-sends at the live
+  // position at once; paused — the divergence stands and the
+  // resume seam re-sends the single-play form before any
+  // window end can play a cleared track.
+  if (nativeSendNow()) nativeResendAtCurrent();
 }
 function jumpQueueTo(i) {
   // v347 §2.4: jump inside the standing queue — never playTrack
@@ -9690,12 +9842,17 @@ function openPlayerMenu(anchorEl) {
   // standing act/sheet. Transport never enters the menu; the
   // intentions toggle does NOT move (ruling R1).
   // v419: the menu anchors at its control (the NP ⋮ button).
-  openSheetMenu('Playback', [
+  var playerItems = [
     { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
     { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
     { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } },
-    { label: 'Exit player', act: function () { exitPlayer(); } }
-  ], anchorEl);
+  ];
+  // v542 §2 (Part 3): Clear queue stands only while a queue
+  // stands (the dock menu's Previous-track precedent — no
+  // dead items); Exit player stands last (v491).
+  if (state.queue.length) playerItems.push({ label: 'Clear queue', act: function () { clearQueue(); } });
+  playerItems.push({ label: 'Exit player', act: function () { exitPlayer(); } });
+  openSheetMenu('Playback', playerItems, anchorEl);
 }
 function openDockMenu(anchorEl) {
   // v419 (G15): the dock menu anchors at the dock's own ⋮
@@ -9777,6 +9934,10 @@ function shareTrackSheet(t) {
    on the device — the cache read lands before the menu opens. */
 function openDayRowMenu(t, anchorEl) {
   var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
+  // v542 §2 (Part 2): Add to queue stands for an available
+  // track when no podcast queue stands (the kind bound, §1);
+  // the act re-resolves and appends without interrupting.
+  if (t.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(t); } });
   var build = function (standing) {
     if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
     var sp = spotifyUrlFor(t);
@@ -11102,6 +11263,7 @@ function exitPlayer() {
   if (oraNativeMode()) {
     nativeTransportSend({ command: 'stop' });
     nativeContractDescs = [];
+    nativeContractQueueEnd = 0; // v542 §2: the divergence measure retires with the contract
     nativeMirror = null;
     nativePendingWatch = null;
   }
@@ -11164,6 +11326,7 @@ function setupBridgeCommands() {
 var nativeMirror = null; // the last native state event, extrapolated by playPos: playing, positionS, durationS, rate, atMs, trackId, queueIndex
 var nativePendingWatch = null; // v468: the no-ack watch's memory — { desc, atMs, fired } for the standing native pending start (see nativeMirrorTick)
 var nativeContractDescs = []; // the standing contract's descriptors, parallel to its items
+var nativeContractQueueEnd = 0; // v542 §2: the standing contract's queueEnd — how many of nativeContractDescs are the queue itself (the rest is the chain tail); the divergence read's measure
 function oraNativeMode() {
   var p = oraBridgePlugin();
   return !!(p && p.setNativeQueue && p.nativeTransport);
@@ -11273,6 +11436,7 @@ function nativeSendContract(desc) {
   var built = nativeContractFor(desc);
   if (!built) return false;
   nativeContractDescs = built.descs;
+  nativeContractQueueEnd = built.contract.queueEnd;
   state.nativeRefusal = null; // v472 Step 5: a contract that sends retires any standing refusal
   try {
     var p = oraBridgePlugin();
@@ -11414,6 +11578,7 @@ function applyNativeState(json) {
     // the command (the stop already happened natively).
     nativeMirror = null;
     nativeContractDescs = [];
+    nativeContractQueueEnd = 0; // v542 §2: the divergence measure retires with the contract
     if (state.current || state.queue.length) {
       state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null;
       setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot(); clearRestoredQueue();
@@ -13574,6 +13739,13 @@ function openPodRowMenu(key, anchorEl) {
   if (!e) return;
   var st = podDlStateMap[key] || {};
   var items = [{ label: 'Share', act: function () { openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' }); } }];
+  // v542 §2 (Part 2): Add to queue stands for an available
+  // entry when no day queue stands (the kind bound, §1); the
+  // descriptor resolves exactly as the row's play act resolves
+  // it (podDesc / podOwnDesc by the open series' kind), and
+  // the act appends without interrupting.
+  var podMenuDesc = res.kind === 'own' ? podOwnDesc(e) : podDesc(e);
+  if (podMenuDesc.available && podMenuDesc.url && queueKindIsPod() !== false) items.push({ label: 'Add to queue', act: function () { addToQueue(podMenuDesc); } });
   // v464 §2.4: for an RSS entry Share stands alone above the
   // mark — the kind is streaming-only, so no Download item
   // stands in either state (the video kind's posture toward
