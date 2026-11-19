@@ -5265,7 +5265,16 @@ function massPersonalSave(payload, sheet) {
    the whole list through the session route and adopts
    the answered body; a failed write adopts nothing and
    the list stands as it was. Written only: no audio,
-   no draw, no played marks. */
+   no draw, no played marks.
+   v540 (John, Ora thread, 2026-11-18): the section
+   carries two labeled parts — "Parish Intentions"
+   over the parish side (the Pope's intention and the
+   referencing sentence) and "Private Intention" over
+   John's own intentions for the day, with a line
+   break between that header and the intentions under
+   it; the empty-day closing line stands under the
+   Private Intention header. Both labels ride the
+   standing .mass-h subheading dress. */
 var MASS_UP_POPE = 'For the Holy Father, Pope Leo XIV.';
 var MASS_UP_SENTENCE = 'We pray also for the intentions of the Universal Prayer as published locally in this parish';
 var MASS_UP_RESPONSE = 'Lord, hear our prayer.';
@@ -5279,9 +5288,12 @@ function massUniversalSectionHtml() {
   var h = '<div class="mass-section">The Universal Prayer</div>';
   h += '<div class="mass-up-sub">Prayer of the Faithful</div>';
   h += '<div class="mass-line">' + esc(MASS_UP_INVITATION) + '</div>';
+  h += '<div class="mass-h">Parish Intentions</div>';
   h += '<div class="mass-line">' + esc(MASS_UP_POPE) + '</div>';
   h += '<div class="mass-line mass-up-response">' + esc(MASS_UP_RESPONSE) + '</div>';
   h += '<div class="mass-line">' + esc(MASS_UP_SENTENCE) + '</div>';
+  h += '<div class="mass-h">Private Intention</div>';
+  h += '<br>';
   var list = massUniversalState();
   if (!list.length) {
     h += '<div class="mass-line">' + esc(MASS_UP_EMPTY) + '</div>';
