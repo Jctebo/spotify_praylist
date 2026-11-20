@@ -86,7 +86,7 @@ const SRC = APP + '/worker/src';
 const C_SRC = readFileSync(SRC + '/client.ts', 'utf8');
 const I_SRC = readFileSync(SRC + '/index.ts', 'utf8');
 const U_SRC = readFileSync(SRC + '/ui.ts', 'utf8');
-const BASE = 'f9461fe';
+const BASE = 'd370639';
 const gitShow = (p) => execFileSync('git', ['show', BASE + ':' + p], { cwd: ROOT, encoding: 'utf8' });
 const B_C = gitShow('app/worker/src/client.ts');
 
