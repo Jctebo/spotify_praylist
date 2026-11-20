@@ -3761,7 +3761,10 @@ function tabSideCfg(tab) {
   // intentions, read from the day's own resolution and
   // independent of the profiles and the Novenas layer.
   if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['novenas', 'Novenas']] };
-  if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass']] };
+  // v544: a third side joins — Adoration (the perpetual
+  // adoration live streams). The stored pick stands; an
+  // unknown stored value still falls back to Lectionary.
+  if (tab === 'mass') return { key: TAB_SIDE_MASS_KEY, def: 'liturgy', sides: [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass'], ['adoration', 'Adoration']] };
   return { key: TAB_SIDE_PRAYERS_KEY, def: 'prayers', sides: [['prayers', 'Praylist'], ['intentions', 'Intentions'], ['book', 'Prayers']] };
 }
 function readTabSide(tab) {
@@ -4070,8 +4073,11 @@ function paintTabSide(tab, side) {
     // container paint and on every switch (the v450
     // Conscience bar rule: a side switch re-reads the title).
     var mt = document.getElementById('hdr2-title');
-    if (mt) mt.textContent = side === 'virtual' ? 'Virtual Mass' : 'Lectionary';
-    if (side === 'virtual') paintMassVirtual(); else paintMassLiturgy();
+    if (mt) mt.textContent = side === 'virtual' ? 'Virtual Mass' : side === 'adoration' ? 'Adoration' : 'Lectionary';
+    // v544: a container repaint destroys the adoration
+    // stream's frame; its standing record never outlives it.
+    adorationWatch = null;
+    if (side === 'virtual') paintMassVirtual(); else if (side === 'adoration') paintMassAdoration(); else paintMassLiturgy();
   }
   else if (tab === 'wallpaper') { if (side === 'watch') paintWallpaperWatch(); else paintWallpaperPhone(); }
   else if (tab === 'prayers') { if (side === 'intentions') renderIntentions(); else if (side === 'book') renderPrayerBook(); else renderPrayersSide(); }
@@ -5756,6 +5762,7 @@ var MASS_VIRTUAL_ENTRIES = [
   { key: 'springfield-mass', title: 'Springfield Mass', meta: 'St. Thomas the Apostle · West Springfield', series: 'springfieldmass' }
 ];
 var massPodReturn = false;
+var adorationWatch = null; // v544: the standing Adoration stream record (the open entry), or null
 var podOrigin = null; // v534 F1: the series page's Pray homing — 'prayers' while a series page entered from Pray stands in the Pray stack; null in its Catechesis home (massPodReturn is the Mass homing's own record)
 function paintMassVirtual() {
   var html = '';
@@ -5781,6 +5788,72 @@ function openMassVirtualSeries(e) {
 }
 function returnToMassVirtual() {
   massPodReturn = false;
+  renderMass();
+}
+/* ---------------- v544: the Worship tab's Adoration side ----------------
+   The perpetual adoration live streams (John's approval of
+   scope package 47, 2026-11-19, decisions all A; the
+   Lourdes Grotto stream was struck at approval and stands
+   nowhere in this table). Data-shaped and ordered, in the
+   MASS_VIRTUAL_ENTRIES form: each record is one chapel's
+   standing live stream, its video the YouTube live id
+   verified at Scope and re-verified at build (oEmbed).
+   A tap opens the stream page — the §2.6 watch form (a
+   row-2 back bar over one frame) adapted to a single live
+   stream: no series, no episode list, no played marks. */
+var MASS_ADORATION_ENTRIES = [
+  { key: 'shalom', title: 'Shalom World Prayer Chapel', meta: 'Shalom World', video: 'GlGkFWPKomU' },
+  { key: 'ewtn', title: 'EWTN Adoration', meta: 'Irondale & Niepokalan\u00f3w', video: 'GBns1m4S1Xk' },
+  { key: 'birmingham', title: 'Our Lady of Sorrows', meta: 'Birmingham \u00b7 Adorecast', video: 'am72_e-h9d8' },
+  { key: 'vilnius', title: 'Shrine of Divine Mercy', meta: 'Vilnius', video: 'Upqned9fiMg' },
+  { key: 'tyburn', title: 'Tyburn Convent', meta: 'London', video: 'S3CU6rSx1aE' }
+];
+function paintMassAdoration() {
+  var html = '';
+  MASS_ADORATION_ENTRIES.forEach(function (e) {
+    var tile = '<span class="rowart tile tone-navy"><span>\u25ce</span></span>';
+    var art = '<span class="rowartwrap">' + tile + '</span>';
+    html += '<div class="card" data-massadentry="' + esc(e.key) + '"><div class="row">' + art
+      + '<div class="grow"><h3>' + esc(e.title) + '</h3><div class="meta">' + esc(e.meta) + '</div></div>'
+      + '</div></div>';
+  });
+  view.innerHTML = html;
+  view.querySelectorAll('[data-massadentry]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      var key = c.getAttribute('data-massadentry');
+      var e = MASS_ADORATION_ENTRIES.filter(function (x) { return x.key === key; })[0];
+      if (e) openMassAdoration(e);
+    });
+  });
+}
+function openMassAdoration(e) {
+  // The §2.6 rule, as on the watch view: opening a stream
+  // silences the audio first; nothing resumes it after.
+  if (!audioEl.paused) pauseTransport();
+  adorationWatch = e;
+  paintMassAdorationWatch();
+}
+function paintMassAdorationWatch() {
+  if (!adorationWatch) return;
+  var e = adorationWatch;
+  paintRow2Bar({ dest: 'Worship', title: e.title, backAttrs: 'data-adorationback' });
+  var html = '';
+  html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(e.video) + '?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(e.title) + '"></iframe></div>';
+  html += '<div class="meta">' + esc(e.meta) + ' \u00b7 Perpetual adoration \u00b7 live</div>';
+  view.innerHTML = html;
+  var wh = hdrRow2();
+  var b = wh ? wh.querySelector('[data-adorationback]') : null;
+  if (b) b.addEventListener('click', function () { closeMassAdoration(); });
+}
+function closeMassAdoration() {
+  // The one named teardown act (the bar's tap and the
+  // system-back dispatch alike): the frame element is
+  // removed, the record cleared, and the tab repaints on
+  // the Adoration side. A destroyed frame cannot sound.
+  if (!adorationWatch) return;
+  adorationWatch = null;
+  var f = view.querySelector('iframe.podwatch-frame');
+  if (f) f.remove();
   renderMass();
 }
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
@@ -6263,7 +6336,7 @@ function podSeriesDest() {
   // v534 F1: the series page's back names its actual home
   // — Mass while Mass hosts it (v493), the Podcasts group
   // page while Pray hosts it, else Catechesis.
-  if (massPodReturn) return 'Mass';
+  if (massPodReturn) return 'Worship'; // v544: the tab's label (Q1 — the name follows the rename)
   if (podOrigin === 'prayers') return 'Podcasts';
   return 'Catechesis';
 }
@@ -7223,7 +7296,7 @@ function renderSettings() {
   // (painted here, at entry, so the skeleton and the
   // failure paint carry it too); its back is wired by
   // paintSettings against the standing row.
-  paintRow2Bar({ dest: ({ prayers: 'Pray', mass: 'Mass', podcasts: 'Catechesis', conscience: 'Conscience', wallpaper: 'Sacred Art' })[settingsReturnTab] || 'Pray', title: 'Settings', backAttrs: 'data-settingsback' }); // v534 F3: the bar names the recorded origin tab
+  paintRow2Bar({ dest: ({ prayers: 'Pray', mass: 'Worship', podcasts: 'Catechesis', conscience: 'Conscience', wallpaper: 'Sacred Art' })[settingsReturnTab] || 'Pray', title: 'Settings', backAttrs: 'data-settingsback' }); // v534 F3: the bar names the recorded origin tab · v544: the mass origin reads Worship (Q1)
   view.innerHTML = skelHtml('settings');
   api('/api/player/source-settings').then(function (res) {
     settingsRows = res.sources || [];
@@ -9754,7 +9827,7 @@ function openHeaderMenu() {
   var standingKey = tab === 'prayers' ? 'prayers' : tab === 'mass' ? 'mass' : tab === 'conscience' ? 'conscience' : tab === 'podcasts' ? 'podcasts' : tab === 'wallpaper' ? 'wallpaper' : null;
   var sections = [
     { key: 'prayers', tab: 'prayers', name: 'Pray' },
-    { key: 'mass', tab: 'mass', name: 'Mass' },
+    { key: 'mass', tab: 'mass', name: 'Worship' },
     { key: 'conscience', tab: 'conscience', name: 'Conscience' },
     { key: 'podcasts', tab: 'podcasts', name: 'Catechesis' },
     { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
@@ -9768,7 +9841,8 @@ function openHeaderMenu() {
     if (sec.key === 'mass') {
       // v493: the Mass standing group lists its two sides,
       // in the Conscience/Wallpaper form.
-      [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass']].forEach(function (s) {
+      // v544: the group lists the tab's three sides.
+      [['liturgy', 'Lectionary'], ['virtual', 'Virtual Mass'], ['adoration', 'Adoration']].forEach(function (s) {
         var here = tabSideNow.mass === s[0];
         items.push({ label: s[1], state: here ? 'Here' : null, act: here ? function () {} : function () { goSide('mass', s[0]); } });
       });
@@ -11821,6 +11895,13 @@ function handleSystemBack() {
   // rides this same arm ('__episodes' is a block view).
   if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'block') {
     goListenHome(state.prayersView.block);
+    return;
+  }
+  // 3a0. Adoration arm (v544): the Adoration stream page's
+  // back act is closeMassAdoration — the same function the
+  // row-2 back bar's tap calls (one act, two triggers).
+  if (state.tab === 'mass' && adorationWatch) {
+    closeMassAdoration();
     return;
   }
   // 3a. Watch arm (v434 §2.6.2 seat 1): the Podcasts watch
