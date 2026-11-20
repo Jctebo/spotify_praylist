@@ -378,6 +378,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .bookrow { cursor:pointer; }
 .bookstar { flex:none; background:none; border:none; font-family:inherit; font-size:19px; line-height:1; color:var(--gold); cursor:pointer; padding:6px 4px; }
 .trackstar { flex:none; background:none; border:none; font-family:inherit; font-size:19px; line-height:1; color:var(--gold); cursor:pointer; padding:6px 4px; }
+/* v550 (Q4 A): the reorder mode's dress — the \u2261 handle
+   (a 44px box; touch-action none so a touch drag does not
+   scroll the page mid-drag) and the lifted row mid-drag. */
+.favhandle { flex:none; width:44px; height:44px; margin:-6px 0 -6px -6px; padding:0; background:none; border:0; color:var(--muted); font-size:20px; line-height:1; cursor:grab; touch-action:none; display:flex; align-items:center; justify-content:center; }
+.favreorder-row.dragging { position:relative; z-index:6; box-shadow:0 14px 24px rgba(42,38,32,.28); }
 .langswitch { margin:0; flex:none; }
 .langswitch button { flex:none; padding:6px 12px; }
 .hidden { display:none !important; }

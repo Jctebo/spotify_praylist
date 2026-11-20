@@ -8853,6 +8853,100 @@ function starredDescFor(entry) {
   }
   return { episodeId: entry.id, title: entry.title || '', url: entry.url || '', available: !!entry.url, block: entry.block || '', durationS: entry.durationS || 0, imageUrl: entry.imageUrl || '' };
 }
+/* v550 §2.2 (Q1 A): the Favorites row's mark act, routed by
+   kind — the episode kind takes the standing played dot (the
+   day store, bound by wirePlayed exactly as on a block page);
+   the podcast kind takes the standing podmark button, its
+   face read by favPodListenedOf (§2.2's resolution order). */
+var favPodListened = {}; // star key -> bool, session only (the warmed map)
+var favPodWarmed = {}; // series -> 1 once its warm read has fired
+function favPodListenedOf(e) {
+  if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries) {
+    var pe = state.podcasts.entries.filter(function (x) { return x.key === e.id; })[0];
+    if (pe) return !!pe.listened;
+  }
+  return !!favPodListened[starEntryKey(e)];
+}
+function favPodWarm(series) {
+  // The listened state of a starred podcast whose series does
+  // not stand open is not carried by the entry snapshot — the
+  // series payload read warms the session map, once per series,
+  // and the Favorites surfaces repaint on its landing. A failed
+  // read leaves the unlistened face standing (the mark act
+  // re-reads at tap time through favPodListenedOf's order).
+  if (!series || favPodWarmed[series]) return;
+  if (state.podcasts && state.podcasts.series === series) return;
+  favPodWarmed[series] = 1;
+  api('/api/player/podcasts?series=' + encodeURIComponent(series)).then(function (res) {
+    if (!res || !Array.isArray(res.entries)) return;
+    res.entries.forEach(function (en) { favPodListened[starKeyOf('podcast', en.key, series)] = !!en.listened; });
+    paintFavoritesSurfaces();
+  }).catch(function () {});
+}
+function favPodToggle(e) {
+  // v550 §2.2: the Favorites podmark act. With the series open
+  // the standing podToggleMark runs whole (payload flip, queue
+  // copies, the post) and the Favorites surfaces repaint after
+  // it. Otherwise the act posts the standing mark/unmark
+  // routes itself — the map flips first (the standing
+  // in-memory-first posture), a failed post enqueues through
+  // the standing pod-mark queue, and the queue copies flip
+  // through podSyncQueueListened, as in podToggleMark.
+  if (!e || e.k !== 'podcast') return;
+  if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) {
+    podToggleMark(e.id);
+    paintFavoritesSurfaces();
+    return;
+  }
+  var on = !favPodListenedOf(e);
+  favPodListened[starEntryKey(e)] = on;
+  podPosSlotDrop(e.series, e.id);
+  podSyncQueueListened(e.series, e.id, on);
+  paintFavoritesSurfaces();
+  var call = on
+    ? post('/api/player/podcasts/mark', { series: e.series, seqKey: e.id, source: 'manual' })
+    : post('/api/player/podcasts/unmark', { series: e.series, seqKey: e.id });
+  call.catch(function () {
+    podMarkEnqueue(on
+      ? { op: 'mark', series: e.series, seqKey: e.id, source: 'manual', queuedAt: new Date().toISOString() }
+      : { op: 'unmark', series: e.series, seqKey: e.id, queuedAt: new Date().toISOString() });
+  });
+}
+function favMarkHtml(e, desc) {
+  if (e.k === 'podcast') {
+    var on = favPodListenedOf(e);
+    return '<button class="podmark' + (on ? ' on' : '') + '" data-favpodmark="' + esc(starEntryKey(e)) + '" aria-label="' + (on ? 'Mark as not listened' : 'Mark as listened') + '">' + (on ? '&#10003;' : '&#9711;') + '</button>';
+  }
+  return playedDotHtml(desc || { episodeId: e.id, block: e.block || '' });
+}
+function openFavRowMenu(e, anchorEl) {
+  // v550 §2.3 (Q1 A): the Favorites row's \u22ee — the track's
+  // OWN home-screen menu wherever the live source stands (the
+  // identical openDayRowMenu / openPodRowMenu), the mirror
+  // menu where only the snapshot stands: Share \u00b7 Add to
+  // queue (the v542 kind bound) \u00b7 the kind's mark act on
+  // the podcast side. No Download on a mirror menu — its state
+  // belongs to the home surface and the act could not be
+  // honored from here.
+  var desc = starredDescFor(e);
+  if (e.k === 'podcast') {
+    if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) { openPodRowMenu(e.id, anchorEl); return; }
+    var pitems = [];
+    if (desc) pitems.push({ label: 'Share', act: function () { openShareSheet({ artHtml: rowArtHtml(desc), title: desc.title || e.title || '', line: 'Episode' + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''), url: desc.url || location.origin + '/' }); } });
+    if (desc && desc.available && desc.url && queueKindIsPod() !== false) pitems.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
+    pitems.push({ label: favPodListenedOf(e) ? 'Mark as not listened' : 'Mark as listened', act: function () { favPodToggle(e); } });
+    openSheetMenu(e.title || 'Options', pitems, anchorEl);
+    return;
+  }
+  var live = (state.dayDescs || []).filter(function (x) { return x.episodeId === e.id; })[0];
+  if (live) { openDayRowMenu(live, anchorEl); return; }
+  var items = [];
+  if (desc) items.push({ label: 'Share', act: function () { shareTrackSheet(desc); } });
+  if (desc && desc.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
+  var sp = desc ? spotifyUrlFor(desc) : null;
+  if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+  openSheetMenu(e.title || 'Options', items, anchorEl);
+}
 function starredRowHtml(e) {
   var key = starEntryKey(e);
   var title = e.title || '';
@@ -8861,10 +8955,22 @@ function starredRowHtml(e) {
   var meta = [e.sub || (e.k === 'podcast' ? 'Podcasts' : ''), e.durationS ? fmtDur(e.durationS) : '', e.date ? shortDayLabel(e.date) : '', !playable ? 'Not available' : ''].filter(Boolean).join(' \u00b7 ');
   var disc = playable ? '<button class="playbtn thumbdisc" data-starplay="' + esc(key) + '" aria-label="Play">&#9654;</button>' : '';
   var artDesc = { episodeId: e.id, kind: e.k, title: e.title, block: e.block || (e.k === 'podcast' ? 'Podcasts' : ''), imageUrl: e.imageUrl || '' };
+  // v550 (Q1 A): the cluster reads mark \u00b7 star \u00b7 \u22ee,
+  // the block-page order (mockup M1); the meta trail carries
+  // the downloaded indicator (live day rows) and Read where
+  // the track carries text — the trackCard form.
+  var cluster = '<span class="prow-cluster">' + favMarkHtml(e, desc)
+    + '<button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button>'
+    + '<button class="iconbtn" data-favmenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
+  var live = e.k !== 'podcast' ? (state.dayDescs || []).filter(function (x) { return x.episodeId === e.id; })[0] : null;
+  var raw = state.readTracks[e.id];
+  var readCtl = (e.k !== 'podcast' && playable && raw && raw.hasText && raw.textUrl) ? readButton(raw, e.id) : '';
+  var trail = (live ? '<span class="dl-ico" data-rowdl="' + esc(e.id) + '" style="display:none" title="Downloaded">\u2913</span>' : '') + readCtl;
+  var heard = e.k === 'podcast' ? '' : heardCls(desc || { episodeId: e.id, block: e.block || '' });
   return '<div class="card trow prow" data-card="' + esc(key) + '"' + '><div class="row">'
     + rowArtHtml(artDesc, disc)
-    + '<div class="grow"><div class="titlerow"><h3>' + esc(title) + '</h3><span class="prow-cluster"><button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button></span></div>'
-    + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
+    + '<div class="grow"><div class="titlerow"><h3' + heard + '>' + esc(title) + '</h3>' + cluster + '</div>'
+    + (meta || trail ? '<div class="meta metarow"><span>' + esc(meta) + '</span>' + trail + '</div>' : '')
     + '</div></div></div>';
 }
 function favoritesList() {
@@ -8898,6 +9004,111 @@ function paintFavoritesFolderRow() {
     + '<div class="blockcover tone-gold sm"><span class="blockcover-initial">\u2605</span></div>'
     + '<div class="grow"><h3>Favorites</h3><div class="meta">' + esc(meta) + '</div></div></div></div>';
 }
+/* v550 §2.4 (Q4 A): the reorder mode — module state only,
+   never persisted. favReorder = { keys } stands while the
+   mode stands; it is set only by the header menu's Reorder
+   act, cleared by Done (after the save), and cleared at the
+   head of any Prayers paint whose view is not the Favorites
+   page — leaving without Done discards, and a discard can
+   never leak into a later visit. Drags alone write nothing:
+   no PUT and no mirror write stands before Done. */
+var favReorder = null;
+function enterFavReorder() {
+  var list = favoritesList();
+  if (list.length < 2) return;
+  favReorder = { keys: list.map(starEntryKey) };
+  paintFavoritesPage(state.dayPayload);
+}
+function favReorderRowHtml(e) {
+  // Mockup M2: the handle + the standing art + the words —
+  // no play disc, no mark, no star, no menu.
+  var key = starEntryKey(e);
+  var meta = [e.sub || (e.k === 'podcast' ? 'Podcasts' : ''), e.durationS ? fmtDur(e.durationS) : '', e.date ? shortDayLabel(e.date) : ''].filter(Boolean).join(' \u00b7 ');
+  var artDesc = { episodeId: e.id, kind: e.k, title: e.title, block: e.block || (e.k === 'podcast' ? 'Podcasts' : ''), imageUrl: e.imageUrl || '' };
+  return '<div class="card trow prow favreorder-row" data-favrow="' + esc(key) + '"><div class="row">'
+    + '<button class="favhandle" data-favhandle="' + esc(key) + '" aria-label="Drag to reorder">\u2261</button>'
+    + rowArtHtml(artDesc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title || '') + '</h3></div>'
+    + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
+    + '</div></div></div>';
+}
+function favReorderDone() {
+  // Q2 A + Q4 A: Done saves the working order through the
+  // standing whole-list write (starredSet + starredSync —
+  // the array index becomes sort_order; no migration) and
+  // exits the mode; the full-control rows repaint from the
+  // saved list.
+  if (!favReorder) return;
+  var keys = favReorder.keys.slice();
+  favReorder = null;
+  var byKey = {};
+  favoritesList().forEach(function (e) { byKey[starEntryKey(e)] = e; });
+  var list = keys.map(function (k) { return byKey[k]; }).filter(Boolean);
+  favoritesList().forEach(function (e) { if (keys.indexOf(starEntryKey(e)) < 0) list.push(e); });
+  starredSet(list);
+  paintFavoritesSurfaces();
+  starredSync();
+}
+function wireFavDrag(scope) {
+  // The drag (new machinery, John's words): pointerdown on a
+  // handle captures the pointer; the row lifts (.dragging)
+  // and follows by transform; when its center crosses a
+  // sibling's center the two swap in the DOM and the
+  // transform origin adjusts by the measured layout delta,
+  // so the row never jumps. pointerup reads the working
+  // order off the DOM — the save stands at Done alone.
+  scope.querySelectorAll('[data-favhandle]').forEach(function (h) {
+    h.addEventListener('pointerdown', function (ev) {
+      var row = h.closest('[data-favrow]');
+      if (!row || !favReorder) return;
+      ev.preventDefault();
+      var listEl = row.parentElement;
+      var startY = ev.clientY;
+      row.classList.add('dragging');
+      try { h.setPointerCapture(ev.pointerId); } catch (err) {}
+      var move = function (mv) {
+        var dy = mv.clientY - startY;
+        row.style.transform = 'translateY(' + dy + 'px)';
+        var rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+        var idx = rows.indexOf(row);
+        if (idx < 0) return;
+        var center = row.offsetTop + dy + row.offsetHeight / 2;
+        while (idx < rows.length - 1) {
+          var next = rows[idx + 1];
+          if (center <= next.offsetTop + next.offsetHeight / 2) break;
+          var before = row.offsetTop;
+          listEl.insertBefore(next, row);
+          startY += row.offsetTop - before;
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+          idx = rows.indexOf(row);
+          center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
+        }
+        while (idx > 0) {
+          var prev = rows[idx - 1];
+          if (center >= prev.offsetTop + prev.offsetHeight / 2) break;
+          var before2 = row.offsetTop;
+          listEl.insertBefore(row, prev);
+          startY += row.offsetTop - before2;
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+          idx = rows.indexOf(row);
+          center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
+        }
+        row.style.transform = 'translateY(' + (mv.clientY - startY) + 'px)';
+      };
+      var end = function () {
+        h.removeEventListener('pointermove', move);
+        h.removeEventListener('pointerup', end);
+        h.removeEventListener('pointercancel', end);
+        row.classList.remove('dragging');
+        row.style.transform = '';
+        if (favReorder) favReorder.keys = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]')).map(function (r) { return r.getAttribute('data-favrow'); });
+      };
+      h.addEventListener('pointermove', move);
+      h.addEventListener('pointerup', end);
+      h.addEventListener('pointercancel', end);
+    });
+  });
+}
 function paintFavoritesPage(day) {
   // v547: the Favorites page — the v546 list (the acts row
   // + the rows in list order) standing as its own page in
@@ -8906,8 +9117,22 @@ function paintFavoritesPage(day) {
   // a prayer entry never renders here. Repaints on the
   // open, on the load's settle, and on every toggle while
   // it stands (paintFavoritesSurfaces).
-  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"' }), '__favorites');
+  // v550: in reorder mode the page paints the mode's own
+  // form — the bar reads Reorder with Done at its right,
+  // the rows carry handles alone (favReorderRowHtml).
   var list = favoritesList();
+  if (favReorder) {
+    paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Reorder', backAttrs: 'data-back="__favorites"', rightHtml: '<button class="btn ghost small" id="fav-done">Done</button>' }), '__favorites');
+    var byKey = {};
+    list.forEach(function (e) { byKey[starEntryKey(e)] = e; });
+    var rows = favReorder.keys.map(function (k) { return byKey[k]; }).filter(Boolean);
+    view.innerHTML = '<div id="favorites-list">' + (rows.length ? rows.map(favReorderRowHtml).join('') : '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>') + '</div>';
+    var dn = document.getElementById('fav-done');
+    if (dn) dn.addEventListener('click', favReorderDone);
+    wireFavDrag(view);
+    return;
+  }
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"' }), '__favorites');
   var html = '<div id="favorites-list">';
   if (!list.length) {
     html += '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
@@ -8929,6 +9154,30 @@ function paintFavoritesPage(day) {
       if (d) playTrack(d); // the standing single-play funnel
     });
   });
+  // v550 (Q1 A): the full controls' wiring — the played dot
+  // through the standing wirePlayed (its idempotence guard
+  // stands), the \u22ee and the podmark resolved from the
+  // store by key, Read through the standing [data-read] form.
+  wirePlayed(view);
+  view.querySelectorAll('[data-favmenu]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var e = starredEntryByKey(b.getAttribute('data-favmenu'));
+      if (e) openFavRowMenu(e, b);
+    });
+  });
+  view.querySelectorAll('[data-favpodmark]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var e = starredEntryByKey(b.getAttribute('data-favpodmark'));
+      if (e) favPodToggle(e);
+    });
+  });
+  view.querySelectorAll('[data-read]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = state.readTracks[b.getAttribute('data-read')];
+      if (t) openRead(t);
+    });
+  });
+  list.forEach(function (e) { if (e.k === 'podcast') favPodWarm(e.series); });
 }
 function paintFavoritesSurfaces() {
   // v547: the folder's paints after a store settle or
@@ -10309,7 +10558,14 @@ function openHeaderMenu() {
   var markBlock = null;
   var tab = state.tab;
   /* ---- (1) the page-action group (Build 3) ---- */
-  if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
+  if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'favorites') {
+    // v550 (Q4 A): the Favorites page gains its first page
+    // group — the single Reorder act (mockup M3). It stands
+    // only outside the mode itself and only while a drag
+    // can move something (the no-dead-items rule).
+    items.push({ head: true, label: 'Favorites' });
+    if (!favReorder && favoritesList().length >= 2) items.push({ label: 'Reorder', act: function () { enterFavReorder(); } });
+  } else if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
     // A block page: Sort · Mark all · Share · Open in
     // Spotify (where a URL stands) · Download all — the
     // retired page menu's acts, in its order. The episodes
@@ -14540,6 +14796,9 @@ window.addEventListener('online', function () { drainPodMarkQueue(); drainPodPos
    byte-identically — B changes where rows stand, never what a
    row is (§2.0.3). */
 function paintPrayersView(day) {
+  // v550 §2.4: any Prayers paint that is not the Favorites
+  // page retires a standing reorder mode — the discard.
+  if (!(state.prayersView && state.prayersView.kind === 'favorites')) favReorder = null;
   if (state.prayersView && state.prayersView.kind === 'block') paintBlockPage(day, state.prayersView.block);
   else if (state.prayersView && state.prayersView.kind === 'favorites') paintFavoritesPage(day);
   else paintListenHome(day);

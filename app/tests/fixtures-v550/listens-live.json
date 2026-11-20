@@ -1,0 +1,11 @@
+{
+ "ok": true,
+ "listens": [
+  {
+   "series": "daily-gospel-exegesis",
+   "seq_key": "f12a7182-b6fc-4de4-a0b8-e7c2a49c0e3b",
+   "source": "auto",
+   "listened_at": "2026-11-20T13:19:24.926Z"
+  }
+ ]
+}

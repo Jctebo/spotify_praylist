@@ -1,0 +1,57 @@
+ok - S1a: the tracked diff against the production base is confined to client.ts + ui.ts + the harness and its fixtures
+ok - S1b: the only untracked paths are the harness, its logs, and its fixtures
+ok - S2a: index.ts byte-identical to the base (client-only release)
+ok - S2b: the SW pin stands at v549-1 on the build tree (it moves only at Ship)
+ok - S2c: migration 0042 stands last (no new migration — Q2 A)
+ok - S2d-mass.ts: byte-identical to the production base
+ok - S2d-mass-calendar.ts: byte-identical to the production base
+ok - S2d-mass-order.ts: byte-identical to the production base
+ok - S2d-mass-readings.ts: byte-identical to the production base
+ok - S2d-logo.ts: byte-identical to the production base
+ok - S2d-logo512.ts: byte-identical to the production base
+ok - S3-favPodListenedOf: stands in client.ts
+ok - S3-favPodWarm: stands in client.ts
+ok - S3-favPodToggle: stands in client.ts
+ok - S3-favMarkHtml: stands in client.ts
+ok - S3-openFavRowMenu: stands in client.ts
+ok - S3-enterFavReorder: stands in client.ts
+ok - S3-favReorderRowHtml: stands in client.ts
+ok - S3-favReorderDone: stands in client.ts
+ok - S3-wireFavDrag: stands in client.ts
+ok - S4a: starredRowHtml carries the full cluster (the mark act + the ⋮)
+ok - S4b: the header menu carries the Favorites page group with Reorder
+ok - S4c: the save stands at Done alone — the drag writes nothing (Q4 A)
+ok - S5-starredSync: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-starredSet: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-toggleStar: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-starredPlayAll: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-starredAddAll: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-addToQueue: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-openDayRowMenu: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-openPodRowMenu: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-podToggleMark: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S6a: ui.ts carries the handle + lifted-row dress
+ok - S6b: the fixtures stand — the LIVE starred read (3 podcast entries, production D1 2026-11-20) and the LIVE listens read (the exegesis entry listened, source auto)
+ok - P0: the cooked APP_JS parses (the template-literal gate)
+ok - MAIN0: boot clean — no page errors
+ok - C1 (Q1 A): every Favorites row carries mark · star · ⋮ routed by kind — the played dot on episode rows, the podmark on podcast rows (day-1 listened ✓ from the warmed series read, day-2 open)
+ok - C6 (Q1 A): Read stands on the text-carrying favorite and opens the reader with its text
+ok - C2a (Q1 A): the Favorites dot marks the day track played in the standing day store at the presented date
+ok - C2b: a second tap unmarks — the dot is the standing toggle
+ok - C4a (Q1 A): the past-day (snapshot-only) episode's ⋮ is the mirror menu — Share · Add to queue · Open in Spotify (the standing spotifyUrlFor read, the block fallback included, exactly as openDayRowMenu reads it), no Download that could not be honored
+ok - C4b: Add to queue from the Favorites row forms the waiting queue — nothing starts
+ok - C5a (Q1 A): the podcast ⋮ with its series closed carries Share · Mark as listened (no Download — its state lives on the series page)
+ok - C5b: the menu's mark act posts the standing mark route and the row's podmark flips in place
+ok - C3 (Q1 A): the podmark toggles post the standing unmark route for both episodes — the mark lives in the server listens store, routed by kind
+ok - R1a (Q4 A): the top overflow on the Favorites page carries its first page group — Favorites · Reorder
+ok - R1b/R5 (Q3 A): Reorder stands on the Favorites page alone — the home menu and a day-built block page's menu carry Sort (blocks) and no Reorder; no handles stand on the block page
+ok - R2 (Q4 A): reorder mode — the bar reads Reorder with Done standing, a ≡ handle on every row, and no other row controls
+ok - R4a (Q4 A): the handle drag moves the row down the list in the DOM
+ok - R4b (Q4 A): leaving by Back DISCARDS — no starred PUT fired and the stored order stands untouched
+ok - R3 (Q2 A + Q4 A): Done saves the dragged order through the standing whole-list PUT (sort_order by array index, no migration) and exits to the full-control rows
+ok - MAIN9: the main page carries no page errors after every leg
+ok - PROD1: John's LIVE starred list (the production fixture: exegesis + two Bible in a Year episodes) renders with the full control set on every row
+ok - PROD2: the production-shaped page carries no page errors
+ok - G439 (recorded as-is, not a v550 pass): the standing v439 boot gate reads its standing 13 ok / 2 not-ok on this tree
+
+harness-v550: 55 ok / 0 not-ok

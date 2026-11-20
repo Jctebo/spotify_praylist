@@ -1,0 +1,41 @@
+{
+ "ok": true,
+ "starred": [
+  {
+   "k": "podcast",
+   "id": "f12a7182-b6fc-4de4-a0b8-e7c2a49c0e3b",
+   "series": "daily-gospel-exegesis",
+   "title": "Nov 19, 2026: Friday of Week 33 in Ordinary Time - Luke 19: 45-48",
+   "sub": "Daily Gospel Exegesis",
+   "durationS": 869,
+   "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_episode/2609215/2609215-1726271360183-f4ab7f6825418.jpg",
+   "block": "Podcasts",
+   "url": "https://anchor.fm/s/1025ef1c/podcast/play/22603643/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2025-7-30%2F9df27c2f-fd6c-e777-7c7c-a0053d5386d7.mp3",
+   "date": "2026-11-20"
+  },
+  {
+   "k": "podcast",
+   "id": "biy:day-321",
+   "series": "bible-in-a-year",
+   "title": "Day 321: Jesus' Prayer in the Garden",
+   "sub": "Bible in a Year",
+   "durationS": 1606,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "block": "Podcasts",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7501c288-f097-4d93-b550-706664e16ad2.mp3",
+   "date": "2026-11-20"
+  },
+  {
+   "k": "podcast",
+   "id": "biy:day-320",
+   "series": "bible-in-a-year",
+   "title": "Day 320: Peter's Denial Foretold",
+   "sub": "Bible in a Year",
+   "durationS": 1453,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "block": "Podcasts",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6784e3e6-e36d-483e-9ea9-060e1fddd67a.mp3",
+   "date": "2026-11-20"
+  }
+ ]
+}
