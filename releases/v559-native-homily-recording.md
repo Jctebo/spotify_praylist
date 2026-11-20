@@ -43,3 +43,14 @@ Plan record 2241 · contract 654 · Implement record 2242 · contract 655 · int
 - **Stop-rule check:** no code-level evidence against per-recorder routing — `setPreferredDevice` stands on MediaRecorder at API 31+, the SCO/communication-mode start is the documented device-class requirement, and the plugin compiled and passed the repo's tests. Whether the Fold 8 honors the routing for the glasses is the first field leg, named as such — not a harness claim, not a ship blocker under John's order.
 
 Review record 2244 · contract 657
+
+## 5 · Ship (2026-11-20)
+
+- **Merge + push (app repo):** GitHub main had moved one doc-only commit past the build base (d370639, v558's Ship section); release/v559 was rebased onto it, the harness BASE re-pointed to d370639, and the SW pin bumped to **ora-pro-nobis-v559-1** as the ship commit. Merged head **25b18fa** (fast-forward). Pushed via Git Data API replication (4 commits, byte-identical read-back): **main pushed · remote in sync**. Local branch release/v559 deleted after merge; never pushed.
+- **Harness on the merged tree:** 39 ok / 2 not-ok — both not-oks are the pin bump's own single line in ui.ts (S1a sees ui.ts in the diff; S2b's byte-identity check reads it), disclosed as in v557's and v558's ships; every functional leg green. Build tree and clean checkout both read 41 ok / 0 not-ok.
+- **Deploy:** Worker **5a48f2f7-efaa-4bc3-afa3-5634f3a2272c** at 100% · pin ora-pro-nobis-v559-1 · rollback = v558 Worker 9aa20d14-71d7-4f7d-9fa8-05c92f3afebc. Smoke on the new deployment: app agent door player day 2026-11-20 → 200.
+- **Android repo:** main **43634b34** (the v559 plugin section + version pair, pushed through the Git Data API helper before the build) — **main pushed · remote in sync** (ref read-back at push and at dispatch agree). APK **1.0.48** (versionCode 48) built by the build-apk workflow (two runs on 43634b34, both success), verified locally: aapt 48 / "1.0.48" · apksigner DN `CN=Ora Pro Nobis Test, O=Thibeaux, C=US` · SHA-256 `69275b64…8456` · 6,703,949 B · delivered in the Ora thread with this ship report.
+- **Registry:** row 1509 **Live** — shipped_at 2026-11-20T22:10:06Z · What's New **379** ("Native homily recording"). No migration (0042 stands last; 0043 stays free for the later homily cloud release).
+- **Field legs (John's):** install APK 1.0.48 · glasses connected, pick the glasses → record with the phone in another room → the take is clearly the glasses (**the steering proof this release exists for**) · pick Phone microphone → the take is clearly the phone · the take plays back in Homilies · the remembered pick survives an app restart · chosen mic absent → the notice stands and the take records from the default · browser form unchanged.
+
+Ship record 2245 · contract 658 · intake 1063 CLOSED
