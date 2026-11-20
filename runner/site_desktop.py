@@ -1,77 +1,83 @@
 #!/usr/bin/env python3
-"""Site DESKTOP wallpaper for the Ora Pro Nobis Muse-run pipeline (v526).
-
-The desktop variant of the daily-images production (John's direction,
-Ora thread, 2026-11-18): a new nightly job that makes the day's image
-fit for a wide screen desktop.
+"""Site DESKTOP wallpapers for the Ora Pro Nobis Muse-run pipeline.
 
     python3 runner/site_desktop.py [--date YYYY-MM-DD] [--apply]
                                    [--out PATH]
 
-Default is LOCAL-ONLY: the day's pick is composed and written to
-~/workspace/ora-runner-runs/<date>/desktop-wallpaper-<date>.jpg (or
---out); nothing external changes. With --apply the composition is also
-committed to assets/daily-wallpaper-desktop.jpg in
+Default is LOCAL-ONLY: the day's wide set is composed and written to
+~/workspace/ora-runner-runs/<date>/ (the pick at
+desktop-wallpaper-<date>.jpg, or --out); nothing external changes.
+With --apply the set is also committed to assets/ in
 Jctebo/spotify_praylist and the deploy-only Pages workflow is
-dispatched, so https://orapronobis.media/assets/daily-wallpaper-desktop.jpg
-serves it — the address always carries the CURRENT day's desktop
-image, overwritten each night. (The Pages artifact builder stages the
-committed asset into the artifact at the same path; the phone
-wallpaper rides the twin route through assets/daily-wallpaper.jpg →
-images/daily-wallpaper.jpg.)
+dispatched, so https://orapronobis.media/assets/daily-wallpaper-desktop*.jpg
+serve it — each address carries the CURRENT set, overwritten each
+night. (The Pages artifact builder stages the committed assets into
+the artifact at the same paths.)
 
-THE PICK is the site's pick, by construction: the same candidate rule
-as pass2_build._site_wallpaper_blob — the target date's stamped phone
-files in Drive phone-queue + phone-current, the saint subject first
-(slug starts "saint-"/"st-"), else first alphabetically. Same Drive
-file the site's square is composed from, every night.
-
-COMPOSITION (v526 spec, revised v535): landscape 1920×1080, wide
-framing, NO watch clock zone (the clock-zone rule binds watch/phone
-images only). The day's portrait phone art stands at full height,
-right-of-center, with feathered edges, over a full-bleed ground that
-is the art itself — cover-scaled across the whole frame, heavily
-blurred so no second subject forms, at its own full brightness and
-color, with NO added gradient and NO darkening — so the painting's
-own background and light paint the frame edge to edge and the saint
-subject stays the clear subject; never a naive center crop. (v526's
-ground — the cover layer darkened to 0.45 and blended 0.55 over the
-deep-blue gradient family — read as the art standing in dark space;
-John's field feedback, 2026-11-18: "Wide images should paint more
-of the background." v535 removes the gradient and the darkening.)
-The burned-in title at the foot of the phone art stays legible.
-
-A miss (no candidate, download failure) prints a WARN and exits 1 —
-never silent, and it never touches the audio publish, the feed, or
-the phone/watch wallpaper steps.
-
-THE WHOLE SET (v554, John's approval 2026-11-20 — Q1 A separate wide
-files, each named and standing · Q2 B EVERY image in the day's phone
-set gets a wide version · Q3 A fixed role names): the step now
-composes a wide version for every member of the day's phone set, not
-only the pick. The set is enumerated from the pick's own candidate
-pool (phone-queue + phone-current, date-stamped, deduped by name),
-under the rotator's standing rules: the daily members are the day's
-stamped subjects (one Gospel scene + the saint/devotion subjects),
-the monthly member is the month's extra standing in phone-current,
-and a daily-stamped file whose subject equals the monthly extra's
-subject is the v416 private-devotion duplicate — excluded, the
-monthly file being the set's one picture for that subject. Fixed
-asset names: the pick keeps assets/daily-wallpaper-desktop.jpg
-(unchanged); the Gospel member (the day's non-saint daily member,
-when exactly one stands) publishes as
+THE SET (v554, John's approval 2026-11-20 — Q1 A separate wide files,
+each named and standing · Q2 B EVERY image in the day's phone set
+gets a wide version · Q3 A fixed role names): one wide file for every
+member of the day's phone set. The set is enumerated from the pick's
+own candidate pool (phone-queue + phone-current, date-stamped,
+deduped by name), under the rotator's standing rules: the daily
+members are the day's stamped subjects (one Gospel scene + the
+saint/devotion subjects), the monthly member is the month's extra
+standing in phone-current, and a daily-stamped file whose subject
+equals the monthly extra's subject is the v416 private-devotion
+duplicate — excluded, the monthly file being the set's one picture
+for that subject. Fixed asset names: the pick keeps
+assets/daily-wallpaper-desktop.jpg; the Gospel member (the day's
+non-saint daily member, when exactly one stands) publishes as
 assets/daily-wallpaper-desktop-gospel.jpg; the monthly member as
 assets/daily-wallpaper-desktop-monthly.jpg; every further member as
 assets/daily-wallpaper-desktop-<subject-slug>.jpg. On a saintless
 day the Gospel member IS the pick and its composition publishes to
 both the pick and gospel assets. On a day with more than one
-non-saint daily member (a feast image beside the Gospel scene) no
-filename signal separates them, so each takes its subject name and
-the run WARNs the ambiguity. With --apply all composed members
-publish in ONE commit and one deploy dispatch. Failure posture is
-the step's standing rule, extended: a miss on any one member WARNs
-and never blocks the others or the pick publish; a miss on the pick
-keeps the standing behavior — WARN, exit 1, nothing published.
+non-saint daily member no filename signal separates them, so each
+takes its subject name and the run WARNs the ambiguity. With --apply
+all composed members publish in ONE commit and one deploy dispatch.
+
+THE WIDE IMAGE (v555, John's amendment 2026-11-20 13:41 CT, verdict
+"Perfect. Push this" 13:42 CT — supersedes the v526/v535 phone-edit
+composition and the rejected cover-fit crop of the original art):
+each member's wide image is a NEW, UNIQUE wide render of the
+member's subject — the way the watch gets its own unique image —
+with the subject's NAME standing in the image. The nightly agent
+generates one wide raw per set member with the image tool (16:9, a
+full-frame scene of the subject, NO text in the image — this
+pipeline never generates text) into the day's raw dir beside the
+phone/watch raws:
+
+    ora-runner-runs/<date>/wp-raw-<date>/wide-<subject-slug>.<ext>
+
+This step composes each final from its member's wide raw: cover-fit
+to 1920×1080, then the NAME BAND drawn in code — an opaque navy band
+at the foot of the frame, the subject's name centered in gold EB
+Garamond (the pipeline's pinned font), a gold double rule at the
+band's top edge, gold corner flourishes. The band constants are
+measured from John's three approved exemplars of 2026-11-20 (navy
+≈ RGB 10,28,60 · gold ≈ RGB 216,170,92 · band ≈ 13% of the frame
+height). The name is data (the member's subject, title-cased from
+its slug) and is exact every night because code draws it — the same
+discipline as the phone/watch titles in
+jobs/novena/devotional_wallpaper_render.py. The Drive phone file is
+no longer a composition source for any member; the pick rule below
+still names the pick, and the set enumeration is unchanged.
+
+STALE EXTRAS (v555, John's standing word on the v554 line): the
+publish deletes, in the same commit, every standing
+assets/daily-wallpaper-desktop-<subject>.jpg that is not in the
+day's published set — a prior multi-saint day's extras never linger.
+The three fixed role assets are standing addresses and are never
+deleted; a fixed asset whose member misses a night keeps its last
+image and the step WARNs.
+
+Failure posture (the step's standing rule, extended): a member with
+no wide raw standing WARNs and is skipped — the step never falls
+back to a phone-edit composition; the rejected shapes never publish
+again. A miss on the pick keeps the standing behavior — WARN, exit
+1, nothing published. A miss never touches the audio publish, the
+feed, or the phone/watch wallpaper steps.
 """
 
 from __future__ import annotations
@@ -98,12 +104,26 @@ DESKTOP_W, DESKTOP_H = 1920, 1080
 ASSET_PATH = "assets/daily-wallpaper-desktop.jpg"
 ASSET_GOSPEL_PATH = "assets/daily-wallpaper-desktop-gospel.jpg"
 ASSET_MONTHLY_PATH = "assets/daily-wallpaper-desktop-monthly.jpg"
+FIXED_ASSETS = {ASSET_PATH, ASSET_GOSPEL_PATH, ASSET_MONTHLY_PATH}
 RUNS_ROOT = Path.home() / "workspace" / "ora-runner-runs"
+
+# The v555 name band (measured from the approved exemplars — see the
+# module docstring). Band height is the exemplars' ~13% of the frame.
+BAND_H = 140
+BAND_NAVY = (10, 28, 60)
+BAND_GOLD = (216, 170, 92)
+FONT_PATH = (Path(__file__).resolve().parents[1]
+             / "config" / "devotional_images" / "fonts"
+             / "EBGaramond-Regular.ttf")
+WIDE_RAW_SUFFIXES = {".webp", ".jpg", ".jpeg", ".png"}
+_SMALL_WORDS = {"a", "and", "at", "de", "for", "in", "of", "on", "the", "to"}
 
 
 def pick_site_wallpaper(date_iso: str) -> tuple[str, bytes] | None:
     """(production name, raw bytes) of the site's pick for date_iso —
-    the identical rule to pass2_build._site_wallpaper_blob."""
+    the identical rule to pass2_build._site_wallpaper_blob. Since
+    v555 the bytes are no longer a composition source; the rule
+    stands as the pick's naming rule and its no-candidate gate."""
     stamp = re.compile(rf"__{re.escape(date_iso)}\.(?:jpg|jpeg|png|webp)$", re.I)
     candidates: dict[str, dict] = {}
     for item in wr.list_queue("phone") + wr.list_children(wr.FOLDERS["phone-current"]):
@@ -131,25 +151,6 @@ def pick_site_wallpaper(date_iso: str) -> tuple[str, bytes] | None:
                   f"{(res.stderr or res.stdout)[:200]}")
             return None
         return picked, local.read_bytes()
-
-
-def _download_drive_file(item: dict, name: str) -> bytes | None:
-    """Raw bytes of one Drive file — the pick's download route, word
-    for word in shape (v554: shared by every non-pick set member)."""
-    suffix = Path(name).suffix.lower() or ".jpg"
-    with tempfile.TemporaryDirectory() as td:
-        local = Path(td) / f"wallpaper{suffix}"
-        res = subprocess.run(
-            [wr.DRIVE_CLI, "drive", "files", "get",
-             "--params", json.dumps({"fileId": item["id"], "alt": "media"}),
-             "--output", str(local)],
-            capture_output=True, text=True,
-        )
-        if res.returncode != 0 or not local.exists() or local.stat().st_size == 0:
-            print(f"WARN site desktop: Drive download failed for {name}: "
-                  f"{(res.stderr or res.stdout)[:200]}")
-            return None
-        return local.read_bytes()
 
 
 def _is_saint_subject(subject: str) -> bool:
@@ -257,60 +258,123 @@ def phone_set_members(date_iso: str, pick_name: str) -> dict:
             "gospel_ambiguous": gospel_ambiguous}
 
 
-def composite_desktop(raw: bytes) -> bytes:
-    """Compose the day's portrait phone art into a 1920×1080 desktop
-    frame: a full-bleed ground of the art itself at full brightness
-    (v535), the art at full height right-of-center with feathered
-    edges and a gentle foot fade. No reserved clock zone anywhere."""
+def display_name(subject: str) -> str:
+    """The name that stands in the band, from the member's subject
+    slug: title-case, small words lowercase mid-name. Production
+    shapes: saint-felix-de-valois → Saint Felix de Valois ·
+    jesus-cleanses-the-temple → Jesus Cleanses the Temple ·
+    holy-souls-in-purgatory → Holy Souls in Purgatory."""
+    words = subject.split("-")
+    return " ".join(
+        w if (i > 0 and w in _SMALL_WORDS) else w.capitalize()
+        for i, w in enumerate(words)
+    )
+
+
+def wide_raw_for(date_iso: str, subject: str,
+                 runs_root: Path = RUNS_ROOT) -> Path | None:
+    """The member's wide raw in the day's raw dir —
+    wp-raw-<date>/wide-<subject-slug>.<ext> — or None when the
+    nightly generation has not stood one up. More than one match:
+    the first name alphabetically stands and the step WARNs."""
+    raw_dir = runs_root / date_iso / f"wp-raw-{date_iso}"
+    if not raw_dir.is_dir():
+        return None
+    hits = sorted(
+        p for p in raw_dir.glob(f"wide-{subject}.*")
+        if p.suffix.lower() in WIDE_RAW_SUFFIXES
+    )
+    if not hits:
+        return None
+    if len(hits) > 1:
+        print(f"WARN site desktop: {len(hits)} wide raws stand for "
+              f"{subject} in {raw_dir} — using {hits[0].name}")
+    return hits[0]
+
+
+def _band_font(size: int):
+    from PIL import ImageFont
+
+    if not FONT_PATH.is_file():
+        raise RuntimeError(f"Pinned EB Garamond font is missing: {FONT_PATH}")
+    return ImageFont.truetype(str(FONT_PATH), size=size)
+
+
+def _corner_flourish(draw, x: int, y: int, sx: int, sy: int) -> None:
+    """A gold corner flourish for the name band: an L rule running
+    right and down from the corner point, with a small diamond at
+    each arm's end. (sx, sy) mirror it into the band's corners."""
+    arm_x, arm_y = 64, 30
+    ex, ey = x + sx * arm_x, y + sy * arm_y
+    draw.line([x, y, ex, y], fill=BAND_GOLD, width=2)
+    draw.line([x, y, x, ey], fill=BAND_GOLD, width=2)
+    for cx, cy in ((ex, y), (x, ey)):
+        r = 5
+        draw.polygon([cx, cy - r, cx + r, cy, cx, cy + r, cx - r, cy],
+                     outline=BAND_GOLD, width=2)
+
+
+def compose_wide_member(raw: bytes, name: str) -> bytes:
+    """Compose one member's wide final (v555): the member's own wide
+    render cover-fit to 1920×1080, with the name band drawn at the
+    foot — navy band, the subject's name in gold EB Garamond, a gold
+    double rule at the band's top edge, gold corner flourishes."""
     from io import BytesIO
 
-    from PIL import Image, ImageChops, ImageDraw, ImageFilter
+    from PIL import Image, ImageDraw, ImageOps
 
     W, H = DESKTOP_W, DESKTOP_H
     art = Image.open(BytesIO(raw)).convert("RGB")
+    img = ImageOps.fit(art, (W, H), method=Image.Resampling.LANCZOS,
+                       centering=(0.5, 0.5))
+    draw = ImageDraw.Draw(img)
 
-    # Full-bleed ground (v535): the art cover-scaled across the whole
-    # wide frame, heavily blurred so no second subject forms, at its
-    # OWN full brightness and color — no gradient under it, no
-    # darkening, no blend. The frame is painted by the day's own
-    # background and light, edge to edge. The cover crop anchors
-    # toward the art's upper third (its lit scene). v526 darkened
-    # this layer to 0.45 and blended it over a deep-blue gradient;
-    # the gradient dominated and the frame read as dark space.
-    cover_scale = max(W / art.width, H / art.height)
-    cover = art.resize((round(art.width * cover_scale), round(art.height * cover_scale)))
-    cx = (cover.width - W) // 2
-    cy = round((cover.height - H) * 0.18)
-    cover = cover.crop((cx, cy, cx + W, cy + H))
-    canvas = cover.filter(ImageFilter.GaussianBlur(56))
+    top = H - BAND_H
+    draw.rectangle([0, top, W, H], fill=BAND_NAVY)
+    # Gold double rule at the band's top edge; a single rule at its foot.
+    draw.rectangle([0, top, W, top + 2], fill=BAND_GOLD)
+    draw.line([0, top + 6, W, top + 6], fill=BAND_GOLD, width=1)
+    draw.line([0, H - 3, W, H - 3], fill=BAND_GOLD, width=1)
+    # Corner flourishes, inset inside the band.
+    inset_x, inset_y = 26, 15
+    _corner_flourish(draw, inset_x, top + inset_y, 1, 1)
+    _corner_flourish(draw, W - inset_x, top + inset_y, -1, 1)
+    _corner_flourish(draw, inset_x, H - inset_y, 1, -1)
+    _corner_flourish(draw, W - inset_x, H - inset_y, -1, -1)
 
-    # Subject panel: full height, right-of-center (panel center at
-    # 63% of the width — desktop composition, clear space to the left).
-    panel = art.resize((round(art.width * (H / art.height)), H))
-    x0 = round(W * 0.63 - panel.width / 2)
-    x0 = max(0, min(x0, W - panel.width))
+    # The name, centered in the band, shrunk to fit 86% of the width.
+    size = 78
+    while size > 20:
+        font = _band_font(size)
+        if draw.textlength(name, font=font) <= W * 0.86:
+            break
+        size -= 2
+    bbox = draw.textbbox((0, 0), name, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x = (W - tw) / 2 - bbox[0]
+    y = top + (BAND_H - th) / 2 - bbox[1]
+    draw.text((x, y), name, font=font, fill=BAND_GOLD)
 
-    # Feathered frame mask (soft edges all round, gentler at the top
-    # so the art's head stays crisp — the _composite_site_square idiom).
-    m = Image.new("L", panel.size, 0)
-    d = ImageDraw.Draw(m)
-    d.rectangle([72, 16, panel.width - 72, panel.height], fill=255)
-    m = m.filter(ImageFilter.GaussianBlur(36))
-    # Foot fade: alpha ramps down over the bottom 18% — the panel
-    # grounds into the frame at its foot; the burned-in title sits
-    # above the fade's reach and stays legible.
-    fade = Image.new("L", panel.size, 255)
-    fd = ImageDraw.Draw(fade)
-    y_start = int(panel.height * 0.82)
-    for y in range(y_start, panel.height):
-        v = int(255 * (1 - 0.82 * (y - y_start) / (panel.height - y_start)))
-        fd.line([(0, y), (panel.width, y)], fill=v)
-    mask = ImageChops.multiply(m, fade)
-
-    canvas.paste(panel, (x0, 0), mask)
     out = BytesIO()
-    canvas.save(out, "JPEG", quality=88)
+    img.save(out, "JPEG", quality=88)
     return out.getvalue()
+
+
+def stale_extra_deletions(head_paths: list[str],
+                          published_paths: list[str]) -> list[str]:
+    """The v555 stale-extra cleanup, as a pure selection: standing
+    assets/daily-wallpaper-desktop-<subject>.jpg paths that are not
+    in the day's published set. The three fixed role assets are
+    standing addresses — never selected, even when absent today."""
+    published = set(published_paths)
+    return sorted(
+        p for p in head_paths
+        if p.startswith("assets/daily-wallpaper-desktop")
+        and p.endswith(".jpg")
+        and p.count("/") == 1
+        and p not in FIXED_ASSETS
+        and p not in published
+    )
 
 
 def publish_desktop_set(files: list[tuple[str, bytes]],
@@ -319,7 +383,9 @@ def publish_desktop_set(files: list[tuple[str, bytes]],
     Jctebo/spotify_praylist in ONE commit and dispatch the deploy-only
     workflow once — the refresh_site_wallpaper route, word for word
     in shape (v554: the whole wide set rides one commit, the pick's
-    asset among them). Returns (commit_sha, deploy_run_url)."""
+    asset among them). v555: the same commit also deletes the stale
+    subject-named extras (stale_extra_deletions). Returns
+    (commit_sha, deploy_run_url)."""
     import base64
 
     import pass2_build as p2  # lazy: the module's GitHub/deploy helpers
@@ -335,45 +401,27 @@ def publish_desktop_set(files: list[tuple[str, bytes]],
     ref = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/ref/heads/main")
     head_sha = ref["object"]["sha"]
     head_commit = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/commits/{head_sha}")
+    full_tree = p2._gh_request(
+        "GET", f"/repos/{p2.GH_REPO}/git/trees/{head_commit['tree']['sha']}?recursive=1")
+    head_paths = [e["path"] for e in full_tree.get("tree", [])
+                  if e.get("type") == "blob"]
+    deletions = stale_extra_deletions(head_paths, [path for path, _ in files])
+    for path in deletions:
+        tree_entries.append({"path": path, "mode": "100644",
+                             "type": "blob", "sha": None})
+        print(f"Site desktop: deleting stale extra {path} "
+              f"(not in the {date_iso} set)")
     tree = p2._gh_request(
         "POST", f"/repos/{p2.GH_REPO}/git/trees",
         {"base_tree": head_commit["tree"]["sha"], "tree": tree_entries},
     )
     names = ", ".join(path.rsplit("/", 1)[-1] for path, _ in files)
+    if deletions:
+        names += "; removed stale: " + ", ".join(
+            p.rsplit("/", 1)[-1] for p in deletions)
     commit = p2._gh_request(
         "POST", f"/repos/{p2.GH_REPO}/git/commits",
         {"message": f"Site desktop wallpapers {date_iso}: {names}",
-         "tree": tree["sha"], "parents": [head_sha]},
-    )
-    p2._gh_request("PATCH", f"/repos/{p2.GH_REPO}/git/refs/heads/main",
-                   {"sha": commit["sha"], "force": False})
-    run_url = p2._dispatch_deploy(commit["sha"])
-    return commit["sha"], run_url
-
-
-def publish_desktop(data: bytes, source_name: str, date_iso: str) -> tuple[str, str]:
-    """The standing single-file publish (v526 shape), kept for
-    callers that hold one composition: the pick alone, committed to
-    ASSET_PATH with the standing message."""
-    import base64
-
-    import pass2_build as p2  # lazy: the module's GitHub/deploy helpers
-
-    blob = p2._gh_request(
-        "POST", f"/repos/{p2.GH_REPO}/git/blobs",
-        {"content": base64.b64encode(data).decode(), "encoding": "base64"},
-    )
-    ref = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/ref/heads/main")
-    head_sha = ref["object"]["sha"]
-    head_commit = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/commits/{head_sha}")
-    tree = p2._gh_request(
-        "POST", f"/repos/{p2.GH_REPO}/git/trees",
-        {"base_tree": head_commit["tree"]["sha"],
-         "tree": [{"path": ASSET_PATH, "mode": "100644", "type": "blob", "sha": blob["sha"]}]},
-    )
-    commit = p2._gh_request(
-        "POST", f"/repos/{p2.GH_REPO}/git/commits",
-        {"message": f"Site desktop wallpaper {date_iso}: {source_name}",
          "tree": tree["sha"], "parents": [head_sha]},
     )
     p2._gh_request("PATCH", f"/repos/{p2.GH_REPO}/git/refs/heads/main",
@@ -400,7 +448,7 @@ def main() -> int:
     if not pick:
         print(f"Site desktop for {date_iso}: no candidate — nothing written.")
         return 1
-    picked, pick_raw = pick
+    picked, _pick_bytes = pick
 
     # The whole phone set (v554). Enumeration failure falls back to
     # the pick alone — it never blocks the pick's standing publish.
@@ -427,17 +475,18 @@ def main() -> int:
     run_dir = RUNS_ROOT / date_iso
     composed: list[tuple[dict, bytes]] = []
     for member in members:
-        if member["role"] == "pick":
-            raw = pick_raw
-        else:
-            if member["item"] is None:
-                print(f"WARN site desktop: set member {member['source_name']} "
-                      "not found in Drive — skipped")
-                continue
-            raw = _download_drive_file(member["item"], member["source_name"])
-            if raw is None:
-                continue  # WARN already printed; the others proceed
-        data = composite_desktop(raw)
+        subject = wr.subject_of(member["source_name"])
+        raw_path = wide_raw_for(date_iso, subject)
+        if raw_path is None:
+            print(f"WARN site desktop: no wide render standing for "
+                  f"{subject} [{member['role']}] in "
+                  f"{run_dir / f'wp-raw-{date_iso}'} — member skipped")
+            if member["role"] == "pick":
+                print(f"Site desktop for {date_iso}: the pick has no wide "
+                      "render — nothing published.")
+                return 1
+            continue
+        data = compose_wide_member(raw_path.read_bytes(), display_name(subject))
         if member["role"] == "pick" and args.out:
             out = Path(args.out)
         else:
@@ -447,8 +496,8 @@ def main() -> int:
         with Image.open(out) as im:
             size = im.size
         print(f"Site desktop for {date_iso}: {member['source_name']} "
-              f"[{member['role']}] -> {out} ({len(data)} bytes, "
-              f"{size[0]}x{size[1]})")
+              f"[{member['role']}] from {raw_path.name} -> {out} "
+              f"({len(data)} bytes, {size[0]}x{size[1]})")
         composed.append((member, data))
 
     if args.apply:

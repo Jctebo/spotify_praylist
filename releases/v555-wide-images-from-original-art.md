@@ -1,7 +1,7 @@
 # v555 — Wide daily images composed from the original artwork
 
 - **Line:** Ora Pro Nobis
-- **Status:** Scope — AMENDED 2026-11-20 13:41 CT: crop samples rejected; unique wide renders with the name in the image presented, held at John's verdict on the renders (nothing builds before the verdict)
+- **Status:** Plan — verdict received 2026-11-20 13:42 CT ("Perfect. Push this"); chain running to Ship under the amended shape
 - **Registry:** DevOps Board row 1499 · Scope record 2220 · Scope contract 633 (holder v555-scope)
 - **Relay intake:** Goals Board task 1056
 
@@ -34,3 +34,34 @@ RENDERS PRESENTED (made in the Ora thread 2026-11-20, saved under ~/workspace/yo
 - Monthly — holy-souls-in-purgatory: media-generation-gen-wide-holy-souls-in-purgato-0-1fc6ee8d-a591-40e9-bbfa-60d945065b60.jpg
 
 STATE: AWAITING JOHN'S VERDICT on the renders. The build shape (Plan → Implement → Review → Ship) follows his verdict; no production code changes, no desktop-step run, and no publish happen before it.
+
+## 2 · Plan
+
+VERDICT (John, Ora thread, 2026-11-20 13:42 CT, verbatim): "Perfect. Push this" — the amended shape builds and ships. Plan record 2228 · contract 641 (holder v555-chain).
+
+GENERATION ROUTE — decided from the code:
+- How phone and watch get their art (the standing route): the nightly agent generates one raw per subject with the image tool into the run dir (ora-runner-runs/<date>/wp-raw-<date>/media-generation-<stem>-0-*.webp); build_wallpapers.py then renders each variant from the raw through jobs/novena/devotional_wallpaper_render.overlay_wallpaper_text — fit plus deterministic text. Text is never generated in this pipeline: the render module's vision QA rejects lettering in generated art, and its OCR QA verifies the code-drawn title.
+- The wide member takes the same route one step further: the nightly agent generates ONE NEW wide raw per set member — 16:9, a full-frame scene of the member's subject, NO text in the image — into the same raw dir, named wide-<subject-slug>.<ext>, the subject slug being the member's production-filename slug (e.g. wide-saint-felix-de-valois.webp). This is exactly how the approved exemplars were produced (image-tool renders at 2048×1152, made in the Ora thread).
+- site_desktop.py composes each member's final from its wide raw: cover-fit to 1920×1080 plus the name band below. The Drive phone file stops being a composition source for every member; pick_site_wallpaper's Drive rule still names the pick and phone_set_members still enumerates the set — the v554 member/role contract is untouched.
+
+NAME BAND — composed deterministically in code, NOT generated in-image. Reasons: (1) the codebase's standing discipline — every name in this pipeline is drawn by code over generated art, because generated text garbles and the QA gates reject lettering in art; an unattended nightly step cannot re-roll a misspelled saint name. (2) The name is data — the member's subject — and must be exact every night. (3) The approved dress is flat and reproducible in code: an opaque navy band at the foot (measured on the three approved exemplars: navy ≈ RGB 10,28,60 · gold ≈ RGB 216,170,92), the name centered in EB Garamond — the pipeline's pinned font, config/devotional_images/fonts/EBGaramond-Regular.ttf — a gold double rule at the band's top edge, and gold corner flourishes drawn in the band. Band height 140 px at 1920×1080 (the exemplars' ~13% of frame height); the name auto-shrinks to fit 86% of the width.
+- Display name from the subject slug: title-case, with small words (de · in · of · the · and · on · for · at · to · a) lowercase mid-name. Production checks: saint-felix-de-valois → Saint Felix de Valois · jesus-cleanses-the-temple → Jesus Cleanses the Temple · holy-souls-in-purgatory → Holy Souls in Purgatory.
+
+MONTHLY MEMBER — the subject route is resolved: the amended step needs the monthly member's SUBJECT, not its original file. The subject stands in the monthly member's own production filename (holy-souls-in-purgatory__2026-11.jpg → holy-souls-in-purgatory), already extracted by wallpaper_rotate.subject_of inside phone_set_members. The nightly agent generates the monthly member's wide raw under that slug like any other member's. The Scope-stage blocker (no runner route to monthly originals) does not bind the amended shape.
+
+STALE-EXTRA CLEANUP (John's standing word on the v554 line — the seat now works this line, so the fix-forward rides here): publish_desktop_set deletes, in the same commit, every standing assets/daily-wallpaper-desktop-<subject>.jpg that is NOT in the day's published set. The three fixed role assets (the pick · gospel · monthly names) are standing addresses and are never deleted — the diagnosed gap names subject-named extras only; a fixed asset whose member misses a night keeps its last image and the step WARNs, per the standing failure posture.
+
+DEAD EXPECTATION — named plainly: v554's pick byte-identity is DEAD under the amended shape. The pick is now a new render plus band like every other member; no output of the new step is byte-comparable to v554's composition.
+
+FAILURE POSTURE (standing, extended): a member with no wide raw standing WARNs and is skipped — the step never falls back to the phone-edit composition; the rejected shape never publishes again. A missing pick raw WARNs and exits 1 with nothing published. More than one wide raw for a subject: the first name alphabetically stands and the step WARNs.
+
+HARNESS LEGS (new runner/test_site_desktop_wide.py, plus the v554 enumeration suite re-run):
+1. display_name — the three production subjects plus saint-margaret-of-scotland, our-lady-of-sorrows, dedication-of-the-basilicas-of-saints-peter-and-paul.
+2. wide_raw_for — a synthetic run dir: found per subject; a missing subject reads None.
+3. compose_wide_member — a synthetic 2048×1152 raw composes to a 1920×1080 JPEG; the band foot is navy; gold name pixels stand in the band; the scene above the band is the fitted raw, not navy.
+4. stale_extra_deletions — a synthetic head tree: exactly the stale subject-named extras are returned; fixed role names are never returned; today's extras are kept.
+5. v554 enumeration regression — test_site_desktop_set.py stays green; the member/role contract is untouched.
+
+FIXTURES FROM PRODUCTION SHAPES (Improvement D): the enumeration cases are the v554 harness's dated production days (2026-11-20 · 11-16 · 11-15 · 11-04 · 11-18); the band constants are measured from the three approved production exemplars in ~/workspace/your_files/v555-wide-samples/; the compose leg's raw is a synthetic image — a composition fixture, not a content fixture: the band geometry and dress are what stand under test.
+
+CALLER UPDATE: the nightly job's desktop step W(d) gains the wide-raw generation step ahead of the site_desktop.py run (one new wide render per set member, saved as wide-<subject-slug> in the day's raw dir), and its stale v526 composition description is replaced by the amended shape. The job body is updated through the cron route with everything else preserved.
