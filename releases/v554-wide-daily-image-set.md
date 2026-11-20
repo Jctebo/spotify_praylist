@@ -68,3 +68,11 @@ Landed in runner/site_desktop.py (the only production file touched), built in a 
 Harness: `runner/test_site_desktop_set.py` (new) — **22 ok / 0 not-ok**: standard day · two-saint day (Q2 B) · saintless day (pick carries both assets) · v416 exclusion · feast day (ambiguity flagged, subject names, gospel asset unused) · missing monthly.
 
 Live local run, 2026-11-20 (the known complete date), no --apply: pick saint-felix-de-valois__2026-11-20.jpg → desktop-wallpaper-2026-11-20.jpg (131,695 bytes, 1920×1080) — **byte-identical to the nightly production file the old code wrote**; Gospel jesus-cleanses-the-temple__2026-11-20.jpg → desktop-wallpaper-gospel-2026-11-20.jpg (149,703 bytes, 1920×1080); monthly holy-souls-in-purgatory__2026-11.jpg → desktop-wallpaper-monthly-2026-11.jpg (134,459 bytes, 1920×1080). Every member of the set produced a wide file.
+
+## 4 · Review
+
+Light review (streamlined path) of commit 7e1026e on release/v554. Diff against main: exactly three files — runner/site_desktop.py, runner/test_site_desktop_set.py (new), this document. runner/wallpaper_rotate.py and every phone/watch step are untouched.
+
+Function-level read: `pick_site_wallpaper` and `composite_desktop` are byte-identical to main; `publish_desktop`'s code is identical (docstring only, noting it stands for single-file callers). The new code is additive beside them: the set enumeration, the shared download helper, the one-commit set publish, and the set loop in main(). Q2 B holds in the code as written — every enumerated member composes and publishes; nothing narrows the set back to Gospel + monthly (the two-saint harness case carries the second saint as a full member). The pick's file, name, rule, and composition stand unchanged.
+
+Verification on a clean checkout of the committed HEAD (7e1026e), per the committed-tree rule: harness re-run **22 ok / 0 not-ok**; live local run for 2026-11-20 reproduced all three wide files at the same byte counts (131,695 · 149,703 · 134,459, each 1920×1080), and the pick output is again byte-identical to the nightly production file. PASS.
