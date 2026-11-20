@@ -102,7 +102,7 @@ His PC folder sync (daily-desktop-images-sync.ps1, run by the .cmd) still pulled
 
 SUPERSEDED (2026-11-20 12:26 CT): the three-fixed-addresses version above stands as history only. Per John's word in the Ora thread, the PC script was simplified: it now clears his Ora Daily Desktop folder, lists the repo's published assets through the GitHub API, and downloads every daily-wallpaper-desktop*.jpg under its own name. Delivered in the Ora thread as daily_images_download.txt.
 
-Field leg: OPEN — John's re-run of the simplified sync script is the verdict.
+Field leg: CLOSED (2026-11-20 12:32 CT) — John's verdict (Ora Pro Nobis thread, verbatim): "Got it". The simplified script stands in place in sync\daily_images_download.ps1 (pasted over the Nov 18 original, which the earlier file deliveries had never replaced), and its run lands the full published wide set in his Ora Daily Desktop folder. The v554 PC-sync leg is closed on his side.
 
 ## Known gap — found 2026-11-20 12:26 CT
 
