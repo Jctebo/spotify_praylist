@@ -27,3 +27,10 @@
 - **Change:** `app/worker/src/client.ts`, `starredRowHtml` only — the builder now resolves its standing descriptor's settled draw through `trackDrawTextFor(desc)` and, when the track is playable, a draw stands, and `intentionsOn()` is true, emits `<div class="intention-text track-draw-line">Intention: …</div>` inside the row's `.grow`, after the title row and before the meta row. No other function edited; no migration; no server change.
 - **Harness:** `app/tests/harness-v553.mjs` — 23 ok / 0 not-ok on the build tree (statics: diff confined to client.ts + this document + the harness · index.ts/ui.ts byte-identical · migration 0042 last · standing machinery byte-identical; Chromium legs: starred day track paints its draw · starred podcast track paints its own draw · no-draw tracks paint no line · Settings toggle off hides all, on restores).
 - **Concerns and Information Needs:** none.
+
+## 4 · Review
+
+- **Verdict:** PASS.
+- **Diff read-back:** base 4aed9b8 → f63da7a touches exactly `app/worker/src/client.ts` (+12 lines, `starredRowHtml` only), the harness and its log, and this document. The change reads the row descriptor's settled draw through the standing `trackDrawTextFor` seam and paints the standing `.intention-text track-draw-line` dress, gated on playable + draw standing + `intentionsOn()` — the fix shape as planned, nothing else.
+- **Harness:** harness-v553 re-run by this seat on a CLEAN checkout of the committed HEAD f63da7a (worktree status clean before and after): 23 ok / 0 not-ok, matching the build-tree run.
+- **Concerns and Information Needs:** none.
