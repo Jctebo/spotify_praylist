@@ -43,6 +43,10 @@ export interface Env {
   // the Summa in a Year series build. Production leaves it
   // unset; the pinned feed URL below governs.
   EXT_SUMMA_FEED_URL?: string;
+  // v549 harness seam, same rule: a fixture-feed override for
+  // the Daily Readings series build. Production leaves it
+  // unset; the pinned feed URL below governs.
+  EXT_DAILY_READINGS_FEED_URL?: string;
   EXT_SAINT_FEED_URL?: string;
   // v339 harness seams, same rule: fixture-feed overrides for the
   // Mass and Homilies block's four sources. Production leaves them
@@ -911,6 +915,21 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   // with no version check. An absent table (pre-0021 rollback
   // posture) or an empty one reads as null = contract order.
   const blockOrder = await playerBlockOrder(env);
+  // v549 §2.5: the Morning Prayer readings seat (John's Q5
+  // comment on package 50): when the effective profile is
+  // the Salesian Way or the Benedictine Way and its Podcasts
+  // layer carries daily-readings, the presented day's
+  // date-matched episode rides the payload for the client to
+  // stand in the Morning block immediately before the
+  // Rosary. The standing fold posture: any failure emits no
+  // seat and never errors the shell.
+  let readingsSeat: Awaited<ReturnType<typeof dailyReadingsSeat>> = null;
+  if (profileFold && (profileFold.key === "salesian" || profileFold.key === "benedictine")) {
+    const pl = profileFold.layers.find((l) => l.key === "podcasts");
+    if (pl && pl.key === "podcasts" && pl.on && pl.series.includes("daily-readings")) {
+      try { readingsSeat = await dailyReadingsSeat(env, presented); } catch { readingsSeat = null; }
+    }
+  }
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
@@ -919,6 +938,7 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
       ? new Set<string>([...profileCore, ...(profileNovenasOn ? ["Novenas"] : [])])
       : null),
     profile: profileFold,
+    readingsSeat,
   };
 }
 
@@ -940,11 +960,18 @@ async function playerBlockOrder(env: Env): Promise<string[] | null> {
 // 0037). The read is the stored rows in seq order; a
 // missing table (pre-0037) reads empty, never an error
 // (the dayPositions posture).
-interface DayAdditionRow { block: string; slug: string; lang: string; afterId: string | null }
+// v549 §2.6: a row is one of two kinds — a book prayer
+// (kind 'prayer', the v510 shape) or the day's Daily
+// Readings episode (kind 'reading', slug pinned to
+// 'daily-readings', ref carrying the episode's GUID, which
+// was date-matched when the row was written). Migration
+// 0042 carries the two columns; a pre-0042 store fails the
+// read and the day reads empty, the standing tolerance.
+interface DayAdditionRow { block: string; slug: string; lang: string; afterId: string | null; kind: string; ref: string | null }
 async function dayAdditions(env: Env, date: string): Promise<DayAdditionRow[]> {
   try {
-    const r = await env.DB.prepare("SELECT block, slug, lang, after_id FROM prayer_day_additions WHERE date=? ORDER BY seq, id").bind(date).all<{ block: string; slug: string; lang: string; after_id: string | null }>();
-    return (r.results ?? []).map((x) => ({ block: x.block, slug: x.slug, lang: x.lang, afterId: x.after_id }));
+    const r = await env.DB.prepare("SELECT block, slug, lang, after_id, kind, ref FROM prayer_day_additions WHERE date=? ORDER BY seq, id").bind(date).all<{ block: string; slug: string; lang: string; after_id: string | null; kind: string | null; ref: string | null }>();
+    return (r.results ?? []).map((x) => ({ block: x.block, slug: x.slug, lang: x.lang, afterId: x.after_id, kind: x.kind || "prayer", ref: x.ref ?? null }));
   } catch { return []; }
 }
 
@@ -955,7 +982,8 @@ async function dayAdditions(env: Env, date: string): Promise<DayAdditionRow[]> {
 // addition whose fold no longer resolves (the slug gone,
 // or its language's audio retired from the map) drops
 // from the fold, never an error.
-async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | null = null): Promise<{ block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[]> {
+interface DayAdditionFoldEntry { block: string; slug: string; lang: string; afterId: string | null; kind: string; ref: string | null; title: string; durationS: number; url?: string; imageUrl?: string | null; listened?: boolean }
+async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | null = null): Promise<DayAdditionFoldEntry[]> {
   // v515 §2 (P2): when a profile fold stands, its standing
   // set filters the read rows BEFORE resolution — an
   // addition into a stood-down block drops from the fold;
@@ -967,14 +995,37 @@ async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | 
   try {
     const r = await env.DB.prepare("SELECT slug, title FROM prayer_book").all<{ slug: string; title: string }>();
     for (const x of r.results ?? []) titles.set(x.slug, x.title);
-  } catch { /* no titles: every row drops below */ }
-  const out: { block: string; slug: string; lang: string; afterId: string | null; title: string; durationS: number }[] = [];
+  } catch { /* no titles: every prayer row drops below */ }
+  // v549 §2.6: reading rows resolve by GUID against the
+  // Daily Readings snapshot (exact key — the GUID was
+  // date-matched when the row was written, so no date logic
+  // stands at fold time), with the episode's mark folded in.
+  let readingByKey: Map<string, PodRssEntry> | null = null;
+  let readingListened: Set<string> = new Set();
+  if (rows.some((a) => a.kind === "reading")) {
+    try {
+      const def = podRssSeriesDef("daily-readings");
+      const seq = def ? await podRssSequence(env, def) : null;
+      if (def && seq) {
+        readingByKey = new Map(seq.snap.entries.map((e) => [e.key, e]));
+        const lr = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=?").bind(def.key).all<{ seq_key: string }>();
+        readingListened = new Set((lr.results ?? []).map((x) => x.seq_key));
+      }
+    } catch { readingByKey = null; }
+  }
+  const out: DayAdditionFoldEntry[] = [];
   for (const a of rows) {
+    if (a.kind === "reading") {
+      const e = a.ref && readingByKey ? readingByKey.get(a.ref) : undefined;
+      if (!e) continue;
+      out.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId, kind: "reading", ref: a.ref, title: e.title, durationS: e.durationS, url: e.url, imageUrl: e.imageUrl, listened: readingListened.has(e.key) });
+      continue;
+    }
     const audio = PRAYER_AUDIO[a.slug];
     const dur = audio ? (a.lang === "la" ? audio.la : audio.en) : undefined;
     const title = titles.get(a.slug);
     if (dur === undefined || !title) continue;
-    out.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId, title, durationS: dur });
+    out.push({ block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId, kind: "prayer", ref: null, title, durationS: dur });
   }
   return out;
 }
@@ -1880,6 +1931,14 @@ const POD_SERIES_LIST: PodSeriesDef[] = [
   { key: "catechism-in-a-year", title: "Catechism in a Year", prefix: "ciy", slugMode: "shortcuts", feedUrl: (env) => env.EXT_CIY_FEED_URL || POD_CIY_FEED_URL },
   { key: "bible-in-a-year", title: "Bible in a Year", prefix: "biy", slugMode: "generic", feedUrl: (env) => env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL },
   { key: "rosary-in-a-year", title: "The Rosary in a Year", prefix: "riy", slugMode: "generic", feedUrl: (env) => env.EXT_RIY_FEED_URL || EXT_RIY_FEED_URL },
+  // v549 §2.1 (Q1 A): Summa in a Year joins the SEQUENCE kind
+  // — a true course (all 307 days in order, first unlistened =
+  // current, progress counts), filed under Courses by the
+  // kind's construction. It leaves POD_RSS_SERIES_LIST below;
+  // its GUID-keyed marks carry onto the day keys at Ship
+  // (§2.2's guarded step). The feed seam and pinned constant
+  // are v548's, unchanged.
+  { key: "summa-in-a-year", title: "Summa in a Year", prefix: "sum", slugMode: "generic", feedUrl: (env) => env.EXT_SUMMA_FEED_URL || RSS_SUMMA_FEED_URL },
 ];
 function podSeriesDef(key: string): PodSeriesDef | null {
   return POD_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -1930,15 +1989,20 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef, channelImageU
   for (const it of items) {
     if (!it.url || it.pubMs == null) continue;
     const edition = new Date(it.pubMs).getUTCFullYear();
-    const dm = /^Day\s+(\d+)\s*:/i.exec(it.title);
+    // v549 §2.1: match and strip on the TRIMMED title — the
+    // Summa feed carries titles with leading spaces (Days 188,
+    // 189, 240) that the start-anchored match would otherwise
+    // drop whole. A title without stray space is unchanged.
+    const title = it.title.trim();
+    const dm = /^Day\s+(\d+)\s*:/i.exec(title);
     if (dm) {
       const k = edition + "|" + Number(dm[1]);
       const g = dayGroups.get(k);
       if (g) g.push(it); else dayGroups.set(k, [it]);
       continue;
     }
-    if (/^BONUS\s*:/i.test(it.title)) {
-      bonusItems.push({ it, edition, slug: podBonusSlug(podStripEditionSuffix(it.title.replace(/^BONUS\s*:\s*/i, "")), def.slugMode) });
+    if (/^BONUS\s*:/i.test(title)) {
+      bonusItems.push({ it, edition, slug: podBonusSlug(podStripEditionSuffix(title.replace(/^BONUS\s*:\s*/i, "")), def.slugMode) });
       continue;
     }
     // Everything else — the "Introducing…" trailer named in §2.1
@@ -1979,7 +2043,7 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef, channelImageU
       entry: {
         key: def.prefix + ":day-" + day, kind: special ? "special" : "day", day,
         label: special ? "Day 366 — Special" : "Day " + day,
-        title: podStripEditionSuffix(sup.it.title.replace(/^Day\s+\d+\s*:\s*/i, "")),
+        title: podStripEditionSuffix(sup.it.title.trim().replace(/^Day\s+\d+\s*:\s*/i, "")),
         url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
         imageUrl: sup.it.imageUrl || channelImageUrl || null, descText: sup.it.descText || null,
       },
@@ -2494,12 +2558,23 @@ const RSS_BARRON_SERMONS_FEED_URL = "https://feed.podbean.com/wordonfire/feed.xm
 // Plan (v548 doc §1: 307 items, newest "Day 307: You Made
 // It.", 2026-03-10). Same discipline as the v464 pair.
 const RSS_SUMMA_FEED_URL = "https://anchor.fm/s/e792b1ec/podcast/rss";
+// v549 §2.3: the USCCB Daily Readings Podcast (SoundCloud) —
+// the feed Scope verified live (500 items, 2025-09-04 →
+// 2026-12-31, zero date gaps; the reading date stands in the
+// episode title, pubDate is batch upload). Same discipline
+// as the v464 pair.
+const RSS_USCCB_READINGS_FEED_URL = "https://feeds.soundcloud.com/users/soundcloud:users:838970026/sounds.rss";
 const RSS_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
 const RSS_WINDOW = 50;
 
 interface PodRssSeriesDef {
   key: string; title: string;
   feedUrl: (env: Env) => string;
+  // v549 §2.3: a def may widen its snapshot window past the
+  // kind's standing 50 — the Daily Readings snapshot is
+  // feed-complete because the Praylist insert paths resolve
+  // the presented day's episode from it (§2.4).
+  window?: number;
 }
 const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   { key: "exorcist-files", title: "The Exorcist Files", feedUrl: (env) => env.EXT_EXORCIST_FEED_URL || RSS_EXORCIST_FEED_URL },
@@ -2513,12 +2588,19 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   // The day leg is untouched; this line gives the podcast its
   // series page, its index card, and its Podcasts-layer key.
   { key: "daily-gospel-exegesis", title: "Daily Gospel Exegesis", feedUrl: (env) => env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL },
-  // v548: Summa in a Year joins the kind — series page, index
-  // card, and Podcasts-layer admissibility from this one line.
-  // John's order names the series entry ONLY: no profile's
-  // Podcasts layer is written by this release (the layer lists
-  // stand byte-preserved; the key is admissible, never added).
-  { key: "summa-in-a-year", title: "Summa in a Year", feedUrl: (env) => env.EXT_SUMMA_FEED_URL || RSS_SUMMA_FEED_URL },
+  // v549 §2.1: Summa in a Year LEAVES this list — it stands in
+  // POD_SERIES_LIST as a true course (Q1 A). Its orphaned RSS
+  // snapshot stands unused; its marks carry at Ship (§2.2).
+  // v549 §2.3 (Q3 B): the Daily Readings series joins the
+  // kind. The display title is the feed channel's own <title>
+  // read verbatim from the live feed at Plan (2026-11-20) —
+  // John's pick against the recommended short name. The page
+  // pulls the feed as-is (John's refinement, 2026-11-20
+  // 07:01 CT): standing page shape, feed order, no date logic
+  // on the page; date-matching lives only in the Praylist
+  // insert paths (§2.4–§2.6). window 500 keeps the snapshot
+  // feed-complete for those inserts.
+  { key: "daily-readings", title: "USCCB Daily Readings Podcast", feedUrl: (env) => env.EXT_DAILY_READINGS_FEED_URL || RSS_USCCB_READINGS_FEED_URL, window: 500 },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -2600,7 +2682,7 @@ interface PodRssSnapshot { entries: PodRssEntry[]; builtAt: string; showImageUrl
 // (F-464-4). Key = the feed GUID, else the enclosure URL. Each
 // entry's imageUrl is its own art else the channel art (the
 // audio build's fallback rule, applied at build).
-function podRssBuild(items: PodRssItem[], channelImageUrl: string | null): PodRssEntry[] {
+function podRssBuild(items: PodRssItem[], channelImageUrl: string | null, window: number = RSS_WINDOW): PodRssEntry[] {
   const keyed: { it: PodRssItem; key: string }[] = [];
   for (const it of items) {
     if (!it.url) continue;
@@ -2617,7 +2699,7 @@ function podRssBuild(items: PodRssItem[], channelImageUrl: string | null): PodRs
       publishedMs: it.pubMs, durationS: it.durationS,
       imageUrl: it.imageUrl || channelImageUrl || null, descText: it.descText || null,
     });
-    if (entries.length >= RSS_WINDOW) break;
+    if (entries.length >= window) break;
   }
   return entries;
 }
@@ -2648,7 +2730,7 @@ async function podRssSequence(env: Env, def: PodRssSeriesDef): Promise<{ snap: P
   if (snap && Date.now() - Date.parse(snap.builtAt) < RSS_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
   try {
     const feed = await podRssFetchFeed(def.feedUrl(env));
-    const entries = podRssBuild(feed.items, feed.channelImageUrl);
+    const entries = podRssBuild(feed.items, feed.channelImageUrl, def.window ?? RSS_WINDOW);
     if (!entries.length) throw new Error("rss sequence build produced no entries");
     const builtAt = nowISO();
     const snapFull: PodRssSnapshot = { entries, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
@@ -2740,6 +2822,52 @@ async function podRssIndexEntry(env: Env, def: PodRssSeriesDef): Promise<unknown
     latestLabel: newest && newest.publishedMs != null ? videoDateLabel(newest.publishedMs) : null,
     showImageUrl: seq.snap.showImageUrl ?? null,
   };
+}
+
+// v549 §2.4: the Daily Readings date-match — the Praylist
+// insert paths' rule (the Morning seat §2.5, the Add act
+// §2.6), never the series page (John's refinement: the page
+// pulls the feed as-is). STRICT title-date match only —
+// extMatchUsccb's latest-by-release fallback does NOT ride:
+// a wrong day's reading must never seat. Preference among
+// strict matches: the plain title, then the "- Day" title,
+// then the first strict match in snapshot order (Christmas
+// carries Vigil · Dawn · Day · Night and no plain title —
+// the Day Mass reading is the seat). No match → null.
+function dailyReadingsMatch(entries: PodRssEntry[], y: number, mo: number, d: number): PodRssEntry | null {
+  const strict = entries.filter((e) => extMatchesMonthDay(e.title, y, mo, d));
+  if (!strict.length) return null;
+  const plain = "Daily Mass Reading Podcast for " + EXT_MONTHS_FULL[mo - 1] + " " + d + ", " + y;
+  return strict.find((e) => e.title.trim() === plain)
+    ?? strict.find((e) => e.title.trim() === plain + " - Day")
+    ?? strict[0];
+}
+
+// v549 §2.5: the Morning seat resolution — the presented
+// day's matched episode with its standing mark state, or
+// null (no def, no snapshot, no strict match). The caller
+// folds it in the standing try/catch posture.
+async function dailyReadingsSeat(env: Env, presented: string): Promise<{ series: string; seqKey: string; title: string; url: string; durationS: number; imageUrl: string | null; listened: boolean; positionS: number | null } | null> {
+  const def = podRssSeriesDef("daily-readings");
+  if (!def) return null;
+  const seq = await podRssSequence(env, def);
+  if (!seq) return null;
+  const parts = presented.split("-").map(Number);
+  const hit = dailyReadingsMatch(seq.snap.entries, parts[0], parts[1], parts[2]);
+  if (!hit) return null;
+  let listened = false;
+  let positionS: number | null = null;
+  try {
+    const l = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=? AND seq_key=?")
+      .bind(def.key, hit.key).first();
+    listened = !!l;
+    if (!listened) {
+      const p = await env.DB.prepare("SELECT position_s FROM podcast_positions WHERE series=? AND seq_key=?")
+        .bind(def.key, hit.key).first<{ position_s: number }>();
+      positionS = p ? p.position_s : null;
+    }
+  } catch { /* mark state degrades to unlistened, never an error */ }
+  return { series: def.key, seqKey: hit.key, title: hit.title, url: hit.url, durationS: hit.durationS, imageUrl: hit.imageUrl, listened, positionS };
 }
 
 // ---- Wallpaper library (v386 §2.3) -----------------------------------
@@ -3668,30 +3796,42 @@ export default {
           if (body.additions.length > 75) return err(400, "too many additions");
           const seen = new Set<string>();
           const rows: DayAdditionRow[] = [];
-          for (const raw of body.additions as { block?: unknown; slug?: unknown; lang?: unknown; afterId?: unknown }[]) {
+          for (const raw of body.additions as { block?: unknown; slug?: unknown; lang?: unknown; afterId?: unknown; kind?: unknown; ref?: unknown }[]) {
             const block = String(raw?.block ?? "");
             if (!(PRAYER_BLOCKS as readonly string[]).includes(block)) return err(400, `bad block ${block || "(empty)"}`);
             const slug = String(raw?.slug ?? "");
             const lang = String(raw?.lang ?? "");
-            const audio = PRAYER_AUDIO[slug];
-            if (!audio || (lang !== "en" && lang !== "la") || (lang === "la" ? audio.la : audio.en) === undefined) {
-              return err(400, `bad prayer ${slug || "(empty)"}/${lang || "(empty)"}`);
+            // v549 §2.6: a reading row pins its slug and
+            // carries the episode GUID in ref; a prayer row
+            // validates against the book's audio map exactly
+            // as v510 wrote it.
+            const kind = raw?.kind === "reading" ? "reading" : "prayer";
+            let ref: string | null = null;
+            if (kind === "reading") {
+              if (slug !== "daily-readings") return err(400, `bad reading ${slug || "(empty)"}`);
+              if (typeof raw?.ref !== "string" || !raw.ref || raw.ref.length > 200) return err(400, "bad reading ref");
+              ref = raw.ref;
+            } else {
+              const audio = PRAYER_AUDIO[slug];
+              if (!audio || (lang !== "en" && lang !== "la") || (lang === "la" ? audio.la : audio.en) === undefined) {
+                return err(400, `bad prayer ${slug || "(empty)"}/${lang || "(empty)"}`);
+              }
             }
             let afterId: string | null;
             if (raw?.afterId === null || raw?.afterId === undefined) afterId = null;
             else if (typeof raw.afterId === "string" && raw.afterId.length <= 200) afterId = raw.afterId;
             else return err(400, "bad afterId");
-            const key = slug + ":" + lang;
+            const key = kind === "reading" ? "reading:" + ref : slug + ":" + lang;
             if (seen.has(key)) continue;
             seen.add(key);
-            rows.push({ block, slug, lang, afterId });
+            rows.push({ block, slug, lang, afterId, kind, ref });
           }
           const ts = nowISO();
           const stmts: D1PreparedStatement[] = [env.DB.prepare("DELETE FROM prayer_day_additions WHERE date=?").bind(today)];
           rows.forEach((a, i) => {
             stmts.push(env.DB.prepare(
-              "INSERT INTO prayer_day_additions (date, block, slug, lang, after_id, seq, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            ).bind(today, a.block, a.slug, a.lang, a.afterId, i, ts));
+              "INSERT INTO prayer_day_additions (date, block, slug, lang, after_id, seq, created_at, kind, ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ).bind(today, a.block, a.slug, a.lang, a.afterId, i, ts, a.kind, a.ref));
           });
           await env.DB.batch(stmts);
           return json({ ok: true, date: today, additions: await dayAdditions(env, today) });

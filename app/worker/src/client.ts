@@ -6568,6 +6568,31 @@ function playPodOwnFrom(key) {
    playPodFrom · podDesc), which serve the kind unchanged but
    for the currentKey stand-down in the two mark acts (§2.4's
    one client seam). */
+function dailyReadingsTodayEntry(entries) {
+  // v549 §2.4's rule, client side, over the series page's
+  // own entries (the snapshot is feed-complete, so the
+  // presented day's episode stands on the page): a strict
+  // title-date match for the presented day — the month,
+  // day, and year the title names (extMatchesMonthDay's
+  // full-month leg, mirrored); preference the plain title,
+  // then the "- Day" title, then the first strict match.
+  // No match → null, and no Add act stands.
+  var dstr = state.presentedDay || todayChicago();
+  var parts = String(dstr).split('-');
+  if (parts.length !== 3) return null;
+  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var monName = months[Number(parts[1]) - 1];
+  var label = monName + ' ' + Number(parts[2]) + ', ' + parts[0];
+  var plain = 'Daily Mass Reading Podcast for ' + label;
+  var strict = (entries || []).filter(function (e) {
+    var m = /([A-Za-z]+)\\s+(\\d{1,2}),\\s*(\\d{4})/.exec(e.title || '');
+    return m && m[1] === monName && Number(m[2]) === Number(parts[2]) && m[3] === parts[0];
+  });
+  if (!strict.length) return null;
+  return strict.filter(function (e) { return e.title.trim() === plain; })[0]
+    || strict.filter(function (e) { return e.title.trim() === plain + ' - Day'; })[0]
+    || strict[0];
+}
 function paintPodcastRss() {
   var res = state.podcasts;
   if (!res || res.kind !== 'rss') { view.innerHTML = skelHtml('podseries'); return; }
@@ -6591,6 +6616,20 @@ function paintPodcastRss() {
     + '<div class="meta">' + res.listenedCount + ' of ' + res.total + ' listened'
     + (rssDurSum > 0 ? ' \u00b7 ' + fmtDurLong(rssDurSum) : '')
     + (rssLatest ? ' \u00b7 Latest: ' + esc(rssLatest.label) : '') + '</div></div>';
+  // v549 §2.6 (Q4 A): the Daily Readings page carries the
+  // one add act — today's reading into a block of today's
+  // Praylist. The insert is the only place date logic
+  // touches this series (the listing above pulls the feed
+  // as-is, John's refinement). A standing addition reads
+  // as its landed line; no date match → no act stands.
+  var readingsToday = res.series === 'daily-readings' ? dailyReadingsTodayEntry(res.entries) : null;
+  if (readingsToday) {
+    if (dayReadingStanding(readingsToday.key)) {
+      html += '<p class="sub">Today\u2019s reading stands in today\u2019s Praylist.</p>';
+    } else {
+      html += '<p><button class="btn ghost" id="readings-add">Add today\u2019s reading to Praylist</button></p>';
+    }
+  }
   var rssRowString = function (e) {
     // podRowString's form (v433's slim prow · v456's thumbnail
     // disc · the v395 partway bar at the row's bottom edge),
@@ -6617,6 +6656,8 @@ function paintPodcastRss() {
   };
   res.entries.forEach(function (e) { html += rssRowString(e); });
   view.innerHTML = html;
+  var rab = view.querySelector('#readings-add');
+  if (rab && readingsToday) rab.addEventListener('click', function () { openReadingSlotPicker(readingsToday, function () { paintPodcastRss(); }); });
   view.querySelectorAll('[data-podplay]').forEach(function (b) {
     b.addEventListener('click', function () { playPodFrom(b.getAttribute('data-podplay')); });
   });
@@ -9033,6 +9074,29 @@ function slotBlockLabel(block) {
   return block;
 }
 function dayAdditionDesc(a) {
+  // v549 §2.6: a reading row's descriptor is the episode's
+  // own podcast descriptor standing in the picked block —
+  // the standing podcast identity (series + GUID), so its
+  // played mark, position, and star are the series page's
+  // own (the v515 rule: a podcast descriptor's mark is its
+  // series listen, never a day-store row). Title, duration,
+  // and URL ride the payload fold; where an adopted raw row
+  // lacks them (the PUT's answer), they resolve from the
+  // open series payload in hand.
+  if (a.kind === 'reading') {
+    var rt = a.title, rd = a.durationS, ru = a.url, ri = a.imageUrl, rl = a.listened;
+    if (rt === undefined || rt === null || !ru) {
+      var pe = null;
+      if (state.podcasts && state.podcasts.series === 'daily-readings' && state.podcasts.entries) {
+        pe = state.podcasts.entries.filter(function (e) { return e.key === a.ref; })[0] || null;
+      }
+      if (pe) { rt = pe.title; rd = pe.durationS; ru = pe.url; ri = pe.imageUrl || state.podcasts.showImageUrl; rl = pe.listened; }
+    }
+    return { episodeId: a.ref, kind: 'podcast', seriesKey: a.ref, podSeries: 'daily-readings',
+      title: rt || 'Daily Reading', url: ru || null, enclosureUrl: null, available: !!ru, block: a.block, source: '',
+      durationS: rd || 0, listened: !!rl, podPositionS: null, imageUrl: ri || null, descText: null, spotifyUrl: null,
+      dayAddition: true, additionKind: 'reading' };
+  }
   // The addition's descriptor, in the trackDesc shape the
   // queue builds consume. kind 'prayer' is load-bearing
   // (the v484 §2.6 guards ride it: queueLiveDesc stands the
@@ -9053,7 +9117,28 @@ function dayAdditionDesc(a) {
     title: (title || a.slug) + (a.lang === 'la' ? ' (Latin)' : ''),
     url: '/api/prayer/book/audio/' + encodeURIComponent(a.slug) + '/' + a.lang,
     enclosureUrl: null, available: true, block: a.block, source: '',
-    durationS: dur || 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null };
+    durationS: dur || 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null,
+    dayAddition: true, additionKind: 'prayer' };
+}
+function dayAdditionIdOf(a) {
+  // The stored row's descriptor identity: a prayer keys by
+  // its composed id; a reading by the episode's GUID (the
+  // descriptor's own episodeId).
+  return a.kind === 'reading' ? a.ref : 'prayer:' + a.slug + ':' + a.lang;
+}
+function dayAdditionRowJson(a) {
+  // The whole-list PUT's row shape — kind and ref ride every
+  // write, so a prayer-side save can never strip a standing
+  // reading row (and the reverse).
+  return { block: a.block, slug: a.slug, lang: a.lang, kind: a.kind === 'reading' ? 'reading' : 'prayer', ref: a.kind === 'reading' ? (a.ref || null) : null, afterId: a.afterId === undefined ? null : a.afterId };
+}
+function dayReadingStanding(guid) {
+  if (!guid) return null;
+  var list = dayAdditionsNow();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].kind === 'reading' && list[i].ref === guid) return list[i];
+  }
+  return null;
 }
 function weaveAdditions(seg, adds) {
   // One block's segment with its additions woven in, by the
@@ -9088,14 +9173,38 @@ function weaveAdditions(seg, adds) {
   pending.forEach(function (a) { emit(dayAdditionDesc(a)); });
   return out;
 }
-function foldDayAdditions(descs, dateStr) {
+function foldReadingsSeat(descs, seat) {
+  // v549 §2.5: the Morning Prayer readings seat — the day
+  // payload's date-matched episode stands in the Morning
+  // block immediately before the Rosary descriptor (John's
+  // Q5 comment on package 50). No seat in the payload, or
+  // no Rosary standing in Morning today → the list stands
+  // as built: the seat never misplaces.
+  if (!seat || !seat.seqKey) return descs;
+  var idx = -1;
+  for (var i = 0; i < descs.length; i++) {
+    if (descs[i].block === 'Morning' && descs[i].episodeId === 'daily-rosary') { idx = i; break; }
+  }
+  if (idx < 0) return descs;
+  var d = { episodeId: seat.seqKey, kind: 'podcast', seriesKey: seat.seqKey, podSeries: 'daily-readings',
+    title: seat.title || 'Daily Reading', url: seat.url || null, enclosureUrl: null, available: !!seat.url,
+    block: 'Morning', source: '', durationS: seat.durationS || 0, listened: !!seat.listened,
+    podPositionS: (!seat.listened && seat.positionS > 0) ? Math.floor(seat.positionS) : null,
+    imageUrl: seat.imageUrl || null, descText: null, spotifyUrl: null, readingsSeat: true };
+  var out = descs.slice();
+  out.splice(idx, 0, d);
+  return out;
+}
+function foldDayAdditions(descs, dateStr, seat) {
   // §2.2: weave the day's additions into a descriptor list.
   // The list stands in block order (the canonical blocks,
   // then the unblocked group); segments are woven per block
   // and re-emitted in the canonical order, so an addition
   // to a block standing empty today still takes its block's
   // place in the day.
-  if (!state.dayAdditions || state.dayAdditionsDate !== dateStr || !state.dayAdditions.length) return descs;
+  // v549 §2.5: the readings seat weaves after the additions,
+  // on both exits — it stands even on a day with no additions.
+  if (!state.dayAdditions || state.dayAdditionsDate !== dateStr || !state.dayAdditions.length) return foldReadingsSeat(descs, seat);
   var byBlock = {};
   state.dayAdditions.forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
   var segs = {}, segOrder = [];
@@ -9111,7 +9220,7 @@ function foldDayAdditions(descs, dateStr) {
   segOrder.forEach(function (b) {
     if (segs[b]) { out = out.concat(segs[b]); delete segs[b]; }
   });
-  return out;
+  return foldReadingsSeat(out, seat);
 }
 function dayAdditionCardHtml(d) {
   // §2.3: the added prayer's card on its block page — the
@@ -9129,6 +9238,22 @@ function dayAdditionCardHtml(d) {
     + '<span class="prow-cluster"><button class="iconbtn" data-addmenu="' + esc(d.episodeId) + '" aria-label="More options">\u22ee</button></span></div>'
     + '<div class="meta">' + (d.durationS ? fmtDur(d.durationS) + ' \\u00b7 ' : '') + 'Added to Praylist</div></div></div></div>';
 }
+function readingAdditionCardHtml(d) {
+  // v549 §2.6: the added reading's card on its block page —
+  // the addition card's dress with the episode's own acts:
+  // the play disc in the thumbDisc form, the star (the
+  // standing track star — a podcast episode carries one,
+  // a prayer addition does not), the listened state in the
+  // meta, and the one overflow act, Remove, through the
+  // shared addition menu (openAdditionMenu).
+  var disc = '<button class="playbtn thumbdisc" data-playkey="' + esc(d.episodeId) + '" data-url="' + esc(d.url || '') + '">&#9654;</button>';
+  return '<div class="card trow prow addition" data-card="' + esc(d.episodeId) + '"><div class="row">'
+    + rowArtHtml(d, disc)
+    + '<div class="grow"><div class="titlerow"><h3' + (d.listened ? ' class="heard"' : '') + '>' + esc(d.title) + '</h3>'
+    + '<span class="prow-cluster">' + starBtnHtml(d)
+    + '<button class="iconbtn" data-addmenu="' + esc(d.episodeId) + '" aria-label="More options">\u22ee</button></span></div>'
+    + '<div class="meta">' + (d.durationS ? fmtDur(d.durationS) + ' \u00b7 ' : '') + (d.listened ? 'Listened \u00b7 ' : '') + 'Added to Praylist</div></div></div></div>';
+}
 /* v519: the addition's overflow menu + the Remove act.
    One act only — Share / Download / Open in Spotify are
    episode acts and a prayer addition is not an episode.
@@ -9145,13 +9270,12 @@ function removeDayAddition(d, anchorEl, afterOk) {
   // session PUT replaces the day's whole list (the v510
   // pick's own shape, reversed): the list minus the one
   // entry, matched by the episodeId the stored rows
-  // compose ('prayer:' + slug + ':' + lang).
+  // compose (dayAdditionIdOf: 'prayer:' + slug + ':' + lang
+  // for a prayer, the episode GUID for a v549 reading).
   var list = dayAdditionsNow().slice();
-  var kept = list.filter(function (a) { return 'prayer:' + a.slug + ':' + a.lang !== d.episodeId; });
+  var kept = list.filter(function (a) { return dayAdditionIdOf(a) !== d.episodeId; });
   if (kept.length === list.length) return; // nothing standing — no write
-  var payload = { date: todayChicago(), additions: kept.map(function (a) {
-    return { block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId === undefined ? null : a.afterId };
-  }) };
+  var payload = { date: todayChicago(), additions: kept.map(dayAdditionRowJson) };
   api('/api/player/day-additions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
     if (!res || !res.ok || !Array.isArray(res.additions)) { additionRemoveFail(d, anchorEl, afterOk); return; }
     adoptDayAdditions(res.date, res.additions);
@@ -9187,10 +9311,10 @@ function appendBlockAdditionCards(block) {
   // stands, before the page's first card; where the block
   // paints no cards at all, at the view's end.
   var list = state.dayDescs || [];
-  var adds = list.filter(function (d) { return d.kind === 'prayer' && d.block === block; });
+  var adds = list.filter(function (d) { return d.dayAddition && d.block === block; });
   adds.forEach(function (d) {
     var tmp = document.createElement('div');
-    tmp.innerHTML = dayAdditionCardHtml(d);
+    tmp.innerHTML = d.additionKind === 'reading' ? readingAdditionCardHtml(d) : dayAdditionCardHtml(d);
     var card = tmp.firstChild;
     if (!card) return;
     var idx = list.indexOf(d);
@@ -9277,9 +9401,7 @@ function openSlotPicker(p, lang, repaintRow) {
     if (dayAdditionStanding(p.slug, lang)) { sheet.remove(); if (repaintRow) repaintRow(); return; }
     var list = dayAdditionsNow().slice();
     list.push({ block: chosenBlock, slug: p.slug, lang: lang, afterId: afterId });
-    var payload = { date: todayChicago(), additions: list.map(function (a) {
-      return { block: a.block, slug: a.slug, lang: a.lang, afterId: a.afterId === undefined ? null : a.afterId };
-    }) };
+    var payload = { date: todayChicago(), additions: list.map(dayAdditionRowJson) };
     api('/api/player/day-additions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
       if (!res || !res.ok || !Array.isArray(res.additions)) { slotFail(); return; }
       adoptDayAdditions(res.date, res.additions);
@@ -9292,6 +9414,86 @@ function openSlotPicker(p, lang, repaintRow) {
     // it stood — no silent state (the massPersonalSave
     // posture).
     fieldNote('slot-note', 'Could not save \\u2014 try again.');
+  }
+  paintStep1();
+}
+function openReadingSlotPicker(entry, repaint) {
+  // v549 §2.6: the slot picker's reading form — the same
+  // two steps in the same sheet (block, then position);
+  // the position tap writes the day's whole list with the
+  // reading row appended (kind 'reading', ref = the
+  // date-matched episode's GUID, resolved by the caller
+  // under §2.4's rule). The drawer's standing closes write
+  // nothing.
+  var old = document.querySelector('.slotpick');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow" id="slot-title">Add today\u2019s reading</h1></div>'
+    + '<div id="slot-body"></div><p class="fieldnote" id="slot-note"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var chosenBlock = null;
+  function setTitle(t) { var el = sheet.querySelector('#slot-title'); if (el) el.textContent = t; }
+  function paintStep1() {
+    chosenBlock = null;
+    setTitle('Add today\u2019s reading');
+    var html = '<p class="sub">' + esc(entry.title) + ' \u2014 pick a part of today\u2019s Praylist.</p>';
+    var stepBlocks = ((state.dayPayload && state.dayPayload.blocks) || []).map(function (x) { return x.block; });
+    if (!stepBlocks.length) stepBlocks = SLOT_BLOCKS;
+    stepBlocks.forEach(function (b) {
+      var n = (state.dayDescs || []).filter(function (d) { return d.block === b; }).length;
+      html += '<div class="card bookrow" data-slotblock="' + esc(b) + '"><div class="row"><span class="grow">' + esc(slotBlockLabel(b)) + '</span></div>'
+        + (n ? '<div class="meta">' + n + ' standing</div>' : '') + '</div>';
+    });
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    host.querySelectorAll('[data-slotblock]').forEach(function (row) {
+      row.addEventListener('click', function () { chosenBlock = row.getAttribute('data-slotblock'); paintStep2(); });
+    });
+  }
+  function paintStep2() {
+    setTitle('In ' + slotBlockLabel(chosenBlock));
+    var built = !!(state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date) === todayChicago() && (state.dayDescs || []).length);
+    var list = built ? (state.dayDescs || []).filter(function (d) { return d.block === chosenBlock; }) : [];
+    var html = '<div class="card bookrow" data-slotback="1"><div class="row"><span class="grow">\u2190 All parts</span></div></div>';
+    html += '<div class="card bookrow" data-slotpos=""><div class="row"><span class="grow">At the start of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    list.forEach(function (d) {
+      html += '<div class="card bookrow" data-slotpos="' + esc(d.episodeId) + '"><div class="row"><span class="grow">After ' + esc(d.title) + '</span></div></div>';
+    });
+    html += '<div class="card bookrow" data-slotpos="end"><div class="row"><span class="grow">At the end of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    if (!built) html += '<p class="sub">The day\u2019s list is still loading \u2014 the start and end stand open.</p>';
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    var back = host.querySelector('[data-slotback]');
+    if (back) back.addEventListener('click', paintStep1);
+    host.querySelectorAll('[data-slotpos]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var v = row.getAttribute('data-slotpos');
+        pick(v === 'end' ? null : v);
+      });
+    });
+  }
+  function pick(afterId) {
+    if (dayReadingStanding(entry.key)) { sheet.remove(); if (repaint) repaint(); return; }
+    var list = dayAdditionsNow().slice();
+    list.push({ block: chosenBlock, slug: 'daily-readings', lang: 'en', kind: 'reading', ref: entry.key, afterId: afterId });
+    var payload = { date: todayChicago(), additions: list.map(dayAdditionRowJson) };
+    api('/api/player/day-additions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.additions)) { slotFail(); return; }
+      adoptDayAdditions(res.date, res.additions);
+      if (state.dayPayload) {
+        state.dayPayload.additions = res.additions;
+        extRebuildDescs(state.dayPayload);
+      }
+      sheet.remove();
+      if (repaint) repaint();
+    }).catch(function () { slotFail(); });
+  }
+  function slotFail() {
+    fieldNote('slot-note', 'Could not save \u2014 try again.');
   }
   paintStep1();
 }
@@ -11338,6 +11540,18 @@ function blockInsertCards(day, standing) {
           : (st && st.state === 'missing' ? trackCard(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, day.presentedDay || day.date)) : ownPlaceholderCard(row));
         var nodes = [];
         while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+        if (row.sourceKey === 'daily-rosary') {
+          var seatEl2 = readingsSeatCardEl();
+          if (seatEl2) {
+            view.appendChild(seatEl2);
+            seatEl2.querySelectorAll('[data-playkey]').forEach(function (b2) {
+              b2.addEventListener('click', function () {
+                var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+                if (d) tapPlay(d);
+              });
+            });
+          }
+        }
         nodes.forEach(function (el) {
           el.setAttribute('data-own-row', row.sourceKey);
           view.appendChild(el);
@@ -12444,7 +12658,7 @@ function extRebuildDescs(day) {
     });
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
-  descs = foldDayAdditions(descs, date); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood
+  descs = foldDayAdditions(descs, date, day.readingsSeat); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
@@ -13583,7 +13797,7 @@ function buildDayFromPayload(day, snap) {
     // and the day's descriptors for its play/pause control.
     // v510 §2.2: the additions fold weaves the day's slotted
     // prayers into the list at their anchors.
-    state.dayDescs = foldDayAdditions(allDescs, day.presentedDay || day.date);
+    state.dayDescs = foldDayAdditions(allDescs, day.presentedDay || day.date, day.readingsSeat);
     refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
     pushDaySnapshot(); // v359 §2.4: the initial build hands the native side the day shell's own tracks
     state.readTracks = {};
@@ -15114,6 +15328,22 @@ function paintEpisodesPage(day) {
   html += eps.map(function (t) { return trackCard(t); }).join('');
   view.innerHTML = html;
 }
+function readingsSeatCardEl() {
+  // v549 §2.5: the readings seat's card on the block page —
+  // the seat descriptor from the built day, in track-card
+  // form, standing immediately before the Rosary's own row
+  // in both paint paths (the settled append below and the
+  // settlement inserter). No seat descriptor (or one
+  // already painted) → nothing stands.
+  var d = (state.dayDescs || []).filter(function (x) { return x.readingsSeat; })[0];
+  if (!d) return null;
+  if (view.querySelector('[data-readings-seat]')) return null;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = trackCard(d);
+  var el = tmp.firstChild;
+  if (el) el.setAttribute('data-readings-seat', '1');
+  return el;
+}
 function appendBlockSettingsCards(day, b) {
   // The block's settings-row cards (own families + external
   // slots), in the same merged settings order blockInsertCards
@@ -15135,6 +15365,7 @@ function appendBlockSettingsCards(day, b) {
   entries.forEach(function (e) {
     if (e.own) {
       var row = e.own;
+      if (row.sourceKey === 'daily-rosary') { var seatEl = readingsSeatCardEl(); if (seatEl) view.appendChild(seatEl); }
       var st = state.ownSlots[row.sourceKey];
       var tmp = document.createElement('div');
       if (st && st.state === 'present') tmp.innerHTML = st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, date)); }).join('');
