@@ -9849,6 +9849,119 @@ function homilyLongDate(dateStr) {
   var dt = new Date(dateStr + 'T12:00:00Z');
   return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
+/* ---------------- v557 microphone control (Q1 A: native routing) ----------------
+   John's approval (Ora thread, 2026-11-20 14:44 CT;
+   package 55): the homily record card gains a microphone
+   pick — phone mic, Bluetooth glasses, or the system
+   default — remembered on the device (Q3 A), under
+   friendly names with "System default" first (Q4 A),
+   homily recording only (Q6 A). The pick is applied by
+   the Android shell: the OraDayBridge plugin lists the
+   system's audio inputs and steers the communication
+   route at record start (Plan D2/D3); the capture itself
+   — getUserMedia, MediaRecorder, the IndexedDB chunk
+   store — is v551's, unchanged. Where no steering bridge
+   stands (browser, old shell) the row reads "System
+   default", no Change act stands, and recording is
+   exactly v551's. A picked microphone that is not there
+   at record time falls back to the system route WITH a
+   notice on the card before capture starts (Q5 A):
+   never blocked, never silent. Like the homily module
+   around it, this module issues no network call. */
+var HOMILY_MIC_KEY = 'opn-homily-mic-v557';
+var homilyMicListOpen = false;
+var homilyMicDevices = null;
+var homilyMicNotice = '';
+var homilyMicInUse = '';
+function homilyMicPick() {
+  try { var v = JSON.parse(localStorage.getItem(HOMILY_MIC_KEY) || 'null'); return v && v.key ? v : null; } catch (e) { return null; }
+}
+function homilyMicPickSave(pick) {
+  try {
+    if (pick && pick.key && pick.key !== 'default') localStorage.setItem(HOMILY_MIC_KEY, JSON.stringify({ key: pick.key, name: pick.name || '' }));
+    else localStorage.removeItem(HOMILY_MIC_KEY);
+  } catch (e) {}
+  homilyMicNotice = '';
+}
+function homilyMicName() {
+  var p = homilyMicPick();
+  return p ? (p.name || 'Bluetooth microphone') : 'System default';
+}
+function homilyMicKindNote(kind) {
+  if (kind === 'bluetooth') return 'Bluetooth microphone \u00b7 Records at call quality.';
+  if (kind === 'builtin') return 'This device\u2019s built-in microphone.';
+  if (kind === 'wired') return 'Wired microphone.';
+  if (kind === 'usb') return 'USB microphone.';
+  return '';
+}
+function homilyMicListHtml() {
+  var pick = homilyMicPick();
+  var cur = pick ? pick.key : 'default';
+  var seen = {};
+  var rows = [{ key: 'default', name: 'System default', note: 'Android chooses the input.' }];
+  (homilyMicDevices || []).forEach(function (d) { rows.push({ key: d.key, name: d.name, note: homilyMicKindNote(d.kind) }); seen[d.key] = true; });
+  if (pick && !seen[pick.key]) rows.push({ key: pick.key, name: pick.name || 'Bluetooth microphone', note: 'Not connected.' });
+  var h = '<div class="homily-mic-list">';
+  rows.forEach(function (r) {
+    h += '<button class="homily-mic-item' + (r.key === cur ? ' on' : '') + '" data-homily-mic="' + esc(r.key) + '" data-homily-mic-name="' + esc(r.name) + '">'
+      + '<span class="homily-mic-item-name">' + (r.key === cur ? '\u2713 ' : '') + esc(r.name) + '</span>'
+      + (r.note ? '<span class="meta">' + esc(r.note) + '</span>' : '') + '</button>';
+  });
+  return h + '</div>';
+}
+function homilyMicRowHtml() {
+  var bridge = oraBridgePlugin();
+  var h = '<div class="homily-mic-row"><span class="homily-mic-label">Microphone</span>'
+    + '<span class="homily-mic-name">' + esc(homilyMicName()) + '</span>';
+  if (bridge && typeof bridge.listAudioInputs === 'function') h += '<button class="homily-mic-change" id="mass-homily-mic-change">Change</button>';
+  h += '</div>';
+  if (homilyMicNotice) h += '<div class="meta homily-mic-note">' + esc(homilyMicNotice) + '</div>';
+  if (homilyMicListOpen && bridge) h += homilyMicListHtml();
+  return h;
+}
+function homilyMicOpenList() {
+  var bridge = oraBridgePlugin();
+  if (!bridge || typeof bridge.listAudioInputs !== 'function') return;
+  var p = null;
+  try { p = bridge.listAudioInputs(); } catch (e) { p = null; }
+  Promise.resolve(p).then(function (r) {
+    homilyMicDevices = r && Array.isArray(r.devices) ? r.devices : [];
+    homilyMicListOpen = true;
+    paintMassHomilyCard();
+  }).catch(function () {
+    homilyMicDevices = [];
+    homilyMicListOpen = true;
+    paintMassHomilyCard();
+  });
+}
+function homilyMicRouteName(name) {
+  if (name === 'Phone microphone') return 'the phone microphone';
+  if (name === 'System default') return 'the system default';
+  return name || 'the system default';
+}
+function homilyMicPrepare() {
+  homilyMicInUse = 'System default';
+  var bridge = oraBridgePlugin();
+  var pick = homilyMicPick();
+  if (!bridge || typeof bridge.applyAudioInput !== 'function' || !pick) return Promise.resolve();
+  var p = null;
+  try { p = bridge.applyAudioInput({ key: pick.key }); } catch (e) { p = null; }
+  return Promise.resolve(p).then(function (r) {
+    var name = (r && r.name) || 'System default';
+    homilyMicInUse = name;
+    if (r && r.fellBack) homilyMicNotice = (pick.name || 'The picked microphone') + ' not connected \u2014 recording from ' + homilyMicRouteName(name) + '.';
+  }).catch(function () {
+    homilyMicInUse = 'System default';
+    homilyMicNotice = (pick.name || 'The picked microphone') + ' not connected \u2014 recording from the system default.';
+  });
+}
+function homilyMicRelease() {
+  homilyMicInUse = '';
+  var bridge = oraBridgePlugin();
+  if (bridge && typeof bridge.clearAudioInput === 'function') {
+    try { var p = bridge.clearAudioInput(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+}
 /* ---- capture: the Mass-scroll record card (P4) ---- */
 function homilyMimePick() {
   var cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
@@ -9860,11 +9973,13 @@ function massHomilyCardHtml() { return '<div id="mass-homily-host">' + massHomil
 function massHomilyCardInner() {
   if (homilyRec) {
     return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc rec" id="mass-homily-stop" aria-label="Stop recording"></button>'
-      + '<div class="grow"><div class="homily-rec-title">Recording the homily</div><div class="meta" id="mass-homily-timer">' + fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000)) + '</div></div></div></div>';
+      + '<div class="grow"><div class="homily-rec-title">Recording the homily</div><div class="meta" id="mass-homily-timer">' + fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000)) + (homilyMicInUse ? ' \u00b7 Microphone: ' + esc(homilyMicInUse) : '') + '</div></div></div>'
+      + (homilyMicNotice ? '<div class="meta homily-mic-note">' + esc(homilyMicNotice) + '</div>' : '') + '</div>';
   }
   return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc" id="mass-homily-rec" aria-label="Record the homily"></button>'
     + '<div class="grow"><div class="homily-rec-title">Record the homily</div><div class="meta">The take saves on this device only.</div>'
-    + (homilySavedNote ? '<div class="meta">' + esc(homilySavedNote) + '</div>' : '') + '</div></div></div>';
+    + (homilySavedNote ? '<div class="meta">' + esc(homilySavedNote) + '</div>' : '') + '</div></div>'
+    + homilyMicRowHtml() + '</div>';
 }
 function paintMassHomilyCard() {
   var host = document.getElementById('mass-homily-host');
@@ -9875,10 +9990,22 @@ function wireMassHomily() {
   if (rec) rec.addEventListener('click', homilyStartRecord);
   var stop = document.getElementById('mass-homily-stop');
   if (stop) stop.addEventListener('click', homilyStopRecord);
+  var ch = document.getElementById('mass-homily-mic-change');
+  if (ch) ch.addEventListener('click', function () {
+    if (homilyMicListOpen) { homilyMicListOpen = false; paintMassHomilyCard(); return; }
+    homilyMicOpenList();
+  });
+  document.querySelectorAll('[data-homily-mic]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      homilyMicPickSave({ key: b.getAttribute('data-homily-mic'), name: b.getAttribute('data-homily-mic-name') });
+      homilyMicListOpen = false;
+      paintMassHomilyCard();
+    });
+  });
 }
 function homilyTickTimer() {
   var el = document.getElementById('mass-homily-timer');
-  if (el && homilyRec) el.textContent = fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000));
+  if (el && homilyRec) el.textContent = fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000)) + (homilyMicInUse ? ' \u00b7 Microphone: ' + homilyMicInUse : '');
 }
 function homilyStartRecord() {
   if (homilyRec) return;
@@ -9888,11 +10015,21 @@ function homilyStartRecord() {
     paintMassHomilyCard();
     return;
   }
+  // v557 (Plan D5): the remembered pick is applied to the
+  // system route BEFORE capture opens, and a fallen-back
+  // pick's notice stands on the card (the repaint) before
+  // the take starts — never blocked, never silent (Q5 A).
+  homilyMicPrepare().then(function () {
+    paintMassHomilyCard();
+    homilyStartCapture();
+  });
+}
+function homilyStartCapture() {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
     var mime = homilyMimePick();
     var recorder = null;
     try { recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
-    catch (e) { stream.getTracks().forEach(function (t) { t.stop(); }); homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); return; }
+    catch (e) { stream.getTracks().forEach(function (t) { t.stop(); }); homilyMicRelease(); homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); return; }
     var dateKey = state.mass && state.mass.date ? state.mass.date : todayChicago();
     var p = (state.mass && state.mass.payload) || {};
     var entry = {
@@ -9921,11 +10058,12 @@ function homilyStartRecord() {
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (wl) { if (homilyRec) homilyRec.wakeLock = wl; }).catch(function () {});
     homilyRec.timer = setInterval(homilyTickTimer, 500);
     paintMassHomilyCard();
-  }).catch(function () { homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); });
+  }).catch(function () { homilyMicRelease(); homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); });
 }
 function homilyAbortRecord(note) {
   var rec = homilyRec;
   homilyRec = null;
+  homilyMicRelease();
   if (rec) {
     if (rec.timer) clearInterval(rec.timer);
     if (rec.stream) rec.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
@@ -9944,6 +10082,7 @@ function homilyFinishRecord() {
   var rec = homilyRec;
   if (!rec) return;
   homilyRec = null;
+  homilyMicRelease();
   if (rec.timer) clearInterval(rec.timer);
   if (rec.stream) rec.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
   if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }

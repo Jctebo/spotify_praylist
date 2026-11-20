@@ -283,6 +283,19 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .homily-disc.rec { background:#b03a2e; }
 .homily-rec-title { font-weight:600; font-size:16px; }
 .homily-rename-input { margin-top:8px; }
+/* v557: the record card's microphone row + input list —
+   the label stands fixed, the pick's name takes the row,
+   Change is a chip; the picked row in the list carries
+   the accent edge. */
+.homily-mic-row { display:flex; align-items:center; gap:10px; margin-top:10px; font-family:var(--sans); font-size:15px; }
+.homily-mic-label { font-weight:600; }
+.homily-mic-name { flex:1; color:var(--muted); }
+.homily-mic-change { font-family:var(--sans); font-size:14px; border:1px solid var(--line); background:var(--card); border-radius:999px; padding:6px 14px; min-height:36px; cursor:pointer; color:var(--ink); }
+.homily-mic-note { margin-top:8px; }
+.homily-mic-list { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.homily-mic-item { display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; font-family:var(--sans); font-size:15px; border:1px solid var(--line); background:var(--card); border-radius:10px; padding:9px 12px; cursor:pointer; color:var(--ink); }
+.homily-mic-item.on { border-color:var(--accent); }
+.homily-mic-item-name { font-weight:600; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent-text); }
 /* v363 §2.3: the .notavail rule retires with its last row use —
