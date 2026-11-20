@@ -6563,12 +6563,22 @@ function podOwnDesc(e) {
   // payload's show image. TODAY's entry takes the device-local
   // copy when the swap stands — aiSettleSwap's mint, read here
   // at tap time, so a copy landing after the paint is taken.
+  // v556: the descriptor ALSO carries the entry's own stream
+  // address as its enclosureUrl — the v475 discipline
+  // oraSnapshotTrack reads ("enclosureUrl stands first; a
+  // minted blob url is WebView-local and never crosses").
+  // Without it, a swapped today left the snapshot branch no
+  // address at all and its fallback synthesis keyed the
+  // Range route on the composite entry key (not a store id)
+  // — the route 404'd and the tap never played (the
+  // 2026-11-20 field failure). The element path reads url
+  // only, so the device-local copy still plays in the page.
   var url = e.streamUrl;
   if (e.date === todayChicago()) {
     var owner = ownBlobOwners[offlineDayKey(e.date, 'the-ai-signal')];
     if (owner && owner.blobUrl) url = owner.blobUrl;
   }
-  return { episodeId: e.key, title: e.label + ': ' + e.title, url: url, available: !!url, block: 'Podcasts', durationS: e.durationS || 0, imageUrl: (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: null };
+  return { episodeId: e.key, title: e.label + ': ' + e.title, url: url, enclosureUrl: e.streamUrl, available: !!url, block: 'Podcasts', durationS: e.durationS || 0, imageUrl: (state.podcasts ? state.podcasts.showImageUrl : null) || null, descText: null };
 }
 function playPodOwnFrom(key) {
   // The standing series play act (playPodFrom's shape): play
@@ -13007,6 +13017,25 @@ function nativeResolveStart(desc) {
   // descriptor — a superseded or cancelled start drops
   // silently (the v461 F4 discipline) — and the resolution
   // runs at most once per start.
+  if (desc.kind === 'homily') {
+    // v556: a homily start resolves through the element
+    // tail in EVERY pair, the one-engine pair included.
+    // The take is device-local by the v551 decided set
+    // (Q1 C) — oraSnapshotTrack excludes the kind from
+    // the native snapshot by design (P7.4), so no native
+    // contract can ever carry it, and the Step 5 refusal
+    // (written for starts the native engine CAN carry)
+    // left the take unplayable in the new pair: the
+    // 2026-11-20 field failure, "Couldn't play —
+    // unresolved-start". The element is the take's only
+    // engine; the tail is the standing one, no second
+    // copy. (A contract-carried route cannot stand: the
+    // audio never leaves the device, and the native
+    // engine fetches outside the page.)
+    if (state.pendingStart !== desc) return;
+    elementStartTail(desc);
+    return;
+  }
   if (desc.kind === 'podcast') {
     // Step 1 (H1a): the start item resolves only from the
     // OPEN series' entries; a standing queue's series may
