@@ -10024,6 +10024,160 @@ function homilyMicRelease() {
     try { var p = bridge.clearAudioInput(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   }
 }
+/* ---------------- v559 native homily recording ----------------
+   John's order (main chat, 2026-11-20 15:43 CT, verbatim:
+   "Build native recording"), on his field verdict the same
+   hour: under the v557 pick, recordings sound the same —
+   the shell steered the communication route, and the
+   WebView's getUserMedia capture does not follow it. So
+   where the shell offers native recording, the SHELL
+   records the take: the chosen input is the recorder's
+   own preferred device (per-recorder routing — the
+   mechanism that steers capture itself), and at stop the
+   page pulls the finished file across the bridge in
+   slices into the SAME IndexedDB chunk store v551
+   writes, so the Homilies list, playback, and every act
+   work on native takes unchanged. Local only (v551
+   Q1 C): the module issues no network call; the take
+   never leaves the device. A native start that fails
+   starts NO take — never a silent WebView substitute in
+   the shell (Plan D8): a WebView take there would record
+   the system route while wearing the picked mic's name,
+   the exact defect John reported. Where no native
+   bridge stands (old shell, browser), the v557/v551
+   paths below stand exactly as shipped. The bridge owns
+   the route end-to-end on this path: homilyMicPrepare /
+   homilyMicRelease are never called (a page-side
+   clearAudioInput mid-take would clear the communication
+   device under the recorder). */
+var HOMILY_NATIVE_CHUNK = 262144;
+function homilyNativeBridge() {
+  var bridge = oraBridgePlugin();
+  return bridge && typeof bridge.startNativeRecording === 'function' ? bridge : null;
+}
+function homilyNativeB64ToBlob(b64, mime) {
+  var bin = atob(b64 || '');
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime || 'audio/mp4' });
+}
+function homilyStartNative() {
+  var bridge = homilyNativeBridge();
+  var pick = homilyMicPick();
+  homilyMicNotice = '';
+  homilyMicInUse = 'System default';
+  var dateKey = state.mass && state.mass.date ? state.mass.date : todayChicago();
+  var p = (state.mass && state.mass.payload) || {};
+  var entry = {
+    id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
+    name: 'Homily \u2014 ' + homilyLongDate(dateKey),
+    dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
+    createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
+    mimeType: 'audio/mp4',
+    starred: false, played: false, state: 'recording', chunkCount: 0, partial: false
+  };
+  homilyEntrySave(entry);
+  homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
+  homilyRec = { id: entry.id, native: true, started: false, stopping: false, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null };
+  if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (wl) { if (homilyRec && homilyRec.id === entry.id) homilyRec.wakeLock = wl; }).catch(function () {});
+  homilyRec.timer = setInterval(homilyTickTimer, 500);
+  paintMassHomilyCard();
+  var call = null;
+  try { call = bridge.startNativeRecording({ key: pick ? pick.key : 'default' }); } catch (e) { call = null; }
+  Promise.resolve(call).then(function (r) {
+    if (!homilyRec || homilyRec.id !== entry.id) return;
+    if (!r || !r.started) { homilyNativeStartFailed(entry.id); return; }
+    homilyRec.started = true;
+    var name = r.name || 'System default';
+    homilyMicInUse = name;
+    if (r.fellBack && pick) homilyMicNotice = (pick.name || 'The picked microphone') + ' not connected \u2014 recording from ' + homilyMicRouteName(name) + '.';
+    paintMassHomilyCard();
+    if (homilyRec && homilyRec.stopping) homilyStopNative();
+  }).catch(function () {
+    if (homilyRec && homilyRec.id === entry.id) homilyNativeStartFailed(entry.id);
+  });
+}
+function homilyNativeStartFailed(id) {
+  var rec = homilyRec;
+  homilyRec = null;
+  homilyMicInUse = '';
+  if (rec) {
+    if (rec.timer) clearInterval(rec.timer);
+    if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }
+  }
+  homilyEntryRemove(id);
+  homilyDeleteTake(id);
+  homilySavedNote = 'Microphone not available on this device.';
+  paintMassHomilyCard();
+}
+function homilyStopNative() {
+  var rec = homilyRec;
+  if (!rec || !rec.native) return;
+  if (!rec.started) { rec.stopping = true; return; }
+  if (rec.stopping) return;
+  rec.stopping = true;
+  if (rec.timer) clearInterval(rec.timer);
+  var bridge = homilyNativeBridge();
+  var call = null;
+  try { call = bridge ? bridge.stopNativeRecording() : null; } catch (e) { call = null; }
+  Promise.resolve(call).then(function (info) {
+    if (!info) throw new Error('stop failed');
+    return homilyNativePull(rec).then(function () { homilyFinishNative(rec, info); });
+  }).catch(function () {
+    // The stop or the pull failed: the entry stands in
+    // 'recording' with the chunks that landed, and the
+    // standing finalization rule settles it next session
+    // (Plan D4). The card returns to rest.
+    if (homilyRec && homilyRec.id === rec.id) homilyRec = null;
+    homilyMicInUse = '';
+    if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }
+    homilySavedNote = 'The take could not be read from the recorder.';
+    paintMassHomilyCard();
+  });
+}
+function homilyNativePull(rec) {
+  var bridge = homilyNativeBridge();
+  var offset = 0;
+  function step() {
+    var call = null;
+    try { call = bridge.readNativeTakeChunk({ offset: offset, length: HOMILY_NATIVE_CHUNK }); } catch (e) { call = null; }
+    return Promise.resolve(call).then(function (r) {
+      if (!r || typeof r.data !== 'string') throw new Error('chunk read failed');
+      var blob = homilyNativeB64ToBlob(r.data, 'audio/mp4');
+      rec.seq += 1;
+      rec.sizeBytes += blob.size;
+      var seq = rec.seq, bytes = rec.sizeBytes;
+      return homilyIdbPut('chunks', { id: rec.id, seq: seq, blob: blob, mimeType: 'audio/mp4' }).then(function () {
+        var cur = homilyEntry(rec.id);
+        if (cur) { cur.chunkCount = seq; cur.sizeBytes = bytes; homilyEntrySave(cur); }
+        offset += blob.size;
+        if (r.eof || blob.size === 0) return undefined;
+        return step();
+      });
+    });
+  }
+  return step().then(function () {
+    if (bridge && typeof bridge.discardNativeTake === 'function') {
+      try { var d = bridge.discardNativeTake(); if (d && d.catch) d.catch(function () {}); } catch (e) {}
+    }
+  });
+}
+function homilyFinishNative(rec, info) {
+  if (homilyRec && homilyRec.id === rec.id) homilyRec = null;
+  homilyMicInUse = '';
+  if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }
+  var entry = homilyEntry(rec.id);
+  if (entry) {
+    entry.state = 'ready';
+    var bridgeS = info && info.durationMs ? Math.round(info.durationMs / 1000) : 0;
+    entry.durationS = Math.max(bridgeS, Math.round((Date.now() - rec.startedAt) / 1000));
+    entry.sizeBytes = rec.sizeBytes;
+    homilyEntrySave(entry);
+    homilyMint(rec.id);
+    homilySavedNote = 'Saved \u2014 ' + entry.name + ' (' + fmtDur(entry.durationS) + '). On this device only.';
+  }
+  paintMassHomilyCard();
+}
 /* ---- capture: the Mass-scroll record card (P4) ---- */
 function homilyMimePick() {
   var cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
@@ -10072,6 +10226,11 @@ function homilyTickTimer() {
 function homilyStartRecord() {
   if (homilyRec) return;
   homilySavedNote = '';
+  // v559: where the shell offers native recording, the
+  // take is the shell's (Plan D6) — the branch stands
+  // before the WebView availability guard, which does
+  // not govern the native path.
+  if (homilyNativeBridge()) { homilyStartNative(); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     homilySavedNote = 'Microphone not available on this device.';
     paintMassHomilyCard();
@@ -10136,6 +10295,8 @@ function homilyAbortRecord(note) {
   paintMassHomilyCard();
 }
 function homilyStopRecord() {
+  // v559: a native take stops through the bridge.
+  if (homilyRec && homilyRec.native) { homilyStopNative(); return; }
   if (homilyRec && homilyRec.recorder && homilyRec.recorder.state !== 'inactive') {
     try { homilyRec.recorder.stop(); } catch (e) { homilyFinishRecord(); }
   }
