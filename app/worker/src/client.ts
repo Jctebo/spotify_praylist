@@ -1846,7 +1846,7 @@ function saveQueueSnapshot(posS) {
   // its session and never restores. The record is removed,
   // so a starred queue born over a standing record retires
   // that record with it.
-  if (state.queueFrom === 'starred') { try { localStorage.removeItem(QUEUE_KEY); } catch (e) { /* storage unavailable — nothing persists */ } return; }
+  if (state.queueFrom === 'starred' || state.queueFrom === 'homilies') { try { localStorage.removeItem(QUEUE_KEY); } catch (e) { /* storage unavailable — nothing persists */ } return; }
   try {
     if (!state.queue.length || !state.current) { localStorage.removeItem(QUEUE_KEY); return; }
     // v412 Fix 9: a podcast queue snapshots in the podcast form —
@@ -2108,6 +2108,11 @@ function markCompleted(desc) {
   // so the completion seam returns for the prayer kind
   // exactly as it takes its own path for podcasts.
   if (desc.kind === 'prayer') return;
+  // v551 (P7.2): a homily's played mark is its index entry's
+  // flag — the local pattern. The day-played store is never
+  // written for a homily (its key would name a day track the
+  // day build does not carry).
+  if (desc.kind === 'homily') { if (desc.homilyId) homilySetPlayed(desc.homilyId, true); return; }
   var d = presentedDateStr();
   if (!d) return;
   writePlayed(desc.episodeId, d, 'played', desc.block);
@@ -2250,6 +2255,11 @@ function loadDescAudio(desc) {
    presented date and dropped when the date turns. */
 function trackKeyOf(t) {
   if (!t || !t.episodeId) return null;
+  // v551 (P7.3): no intention draw for a homily — the draw
+  // store is server-side (Q1 C: no server write of any kind
+  // for a recording) and a homily is not a day track. Its
+  // rows carry no Intention line.
+  if (t.kind === 'homily') return null;
   if (t.episodeId.indexOf('intro:') === 0 || t.episodeId.indexOf('seg:') === 0) return null;
   return playedKey(t.episodeId, t.block || t._block || '');
 }
@@ -2569,6 +2579,11 @@ function queueLiveDesc(d) {
   // fresh descriptor (blob URL once landed) substitutes; a fresh
   // descriptor standing unavailable (settled missing) passes over.
   if (!d) return null;
+  // v551 (P7.1): a homily re-resolves against the device-local
+  // store — the entry stands → a fresh descriptor with the
+  // session cache's blob URL; the entry is gone (deleted) →
+  // null, and the queue passes over it.
+  if (d.kind === 'homily') return homilyLiveDesc(d);
   if (queueLiveDescV384(d)) {
     // v384 §2.3: a dead pre-v384 entry resolves only against
     // the fresh build by (episodeId, block) — the paired prayer
@@ -3773,7 +3788,16 @@ function tabSideCfg(tab) {
   // day's active novenas with their days and
   // intentions, read from the day's own resolution and
   // independent of the profiles and the Novenas layer.
-  if (tab === 'podcasts') return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['novenas', 'Novenas']] };
+  if (tab === 'podcasts') {
+    var podSides = [['courses', 'Courses'], ['podcasts', 'Podcasts'], ['novenas', 'Novenas']];
+    // v551 (Q3 A + John's comment): a FOURTH side — Homilies —
+    // stands once a homily is recorded on this device; before
+    // any recording the pill reads exactly the three standing
+    // sides. A stored 'homilies' pick with an emptied list
+    // falls back to Courses by readTabSide's standing rule.
+    if (homilyIndexHas()) podSides.push(['homilies', 'Homilies']);
+    return { key: TAB_SIDE_PODCASTS_KEY, def: 'courses', sides: podSides };
+  }
   // v544: a third side joins — Adoration (the perpetual
   // adoration live streams). The stored pick stands; an
   // unknown stored value still falls back to Lectionary.
@@ -5036,6 +5060,12 @@ function paintMassScroll() {
   h += massPrayerHtml('Collect', f.collect);
   h += massSectionHtml('Liturgy of the Word');
   h += '<div id="mass-readings">' + massReadingsHtml() + '</div>';
+  // v551 (Q2 A + John's comment): the homily record card —
+  // INSIDE the Mass scroll at the homily's own place: after
+  // the Liturgy of the Word's readings (the Gospel stands
+  // last in massReadingsHtml), ahead of the Creed where it
+  // stands, in all cases before the Universal Prayer.
+  h += massHomilyCardHtml();
   if (flags.creed) h += massPartHtml('creed', MASS_ORDER.creedEn, 'Creed');
   h += massLinesHtml(MASS_ORDER.creedOutro, MASS_ROLES.creedOutro);
   /* v527: the Universal Prayer section stands here —
@@ -5081,6 +5111,7 @@ function paintMassScroll() {
   h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
   h += '</div>';
   view.innerHTML = h;
+  wireMassHomily(); // v551: the record card's controls
   view.querySelectorAll('[data-version]').forEach(function (b) {
     b.addEventListener('click', function () {
       state.mass.version = b.getAttribute('data-version');
@@ -6076,6 +6107,7 @@ function paintPodcastsIndex() {
   // resolution, not the series registry — branch before
   // the series guard (the side needs no series payload).
   if (tabSideNow.podcasts === 'novenas') { paintCatechesisNovenas(); return; }
+  if (tabSideNow.podcasts === 'homilies') { paintCatechesisHomilies(); return; }
   var res = state.podcastsIndex;
   if (!res || !res.seriesList) { paintRow2Home('podcasts'); view.innerHTML = skelHtml('podindex'); return; }
   podCollapse = { series: null, open: false }; // v419 (G31): the index paint resets the collapse
@@ -8671,6 +8703,11 @@ function starKeyOf(kind, id, series) {
 function starEntryKey(e) { return starKeyOf(e && e.k, e && e.id, e && e.series); }
 function starKeyForDesc(desc) {
   if (!desc) return null;
+  // v551 (P8): no server star key for a homily — the server
+  // starred store never sees a recording (Q1 C). The star
+  // stands on the device-local index flag; the Homilies row
+  // and Now Playing paint it through their own branches.
+  if (desc.kind === 'homily') return null;
   if (desc.kind === 'podcast') return starKeyOf('podcast', desc.seriesKey || desc.episodeId, desc.podSeries || '');
   if (desc.kind === 'prayer') return starKeyOf('prayer', String(desc.episodeId || '').split(':')[1] || '');
   return starKeyOf('episode', desc.episodeId);
@@ -8809,6 +8846,13 @@ function refreshStarChrome() {
 function refreshNpStar() {
   var b = document.getElementById('np-star');
   if (!b) return;
+  // v551 (P8): a playing homily's star reads its device-local
+  // index flag — the server store is never read for it.
+  if (state.current && state.current.kind === 'homily') {
+    var he = state.current.homilyId ? homilyEntry(state.current.homilyId) : null;
+    b.textContent = he && he.starred ? '\u2605' : '\u2606';
+    return;
+  }
   var key = state.current ? starKeyForDesc(state.current) : null;
   // v547: a prayer take's star reads the book's own list.
   if (key && key.indexOf('prayer:') === 0) { b.textContent = bookFavsList().indexOf(key.slice('prayer:'.length)) >= 0 ? '\u2605' : '\u2606'; return; }
@@ -9343,6 +9387,16 @@ function slotBlockLabel(block) {
   return block;
 }
 function dayAdditionDesc(a) {
+  // v551 (P10): a homily row's descriptor is the device-local
+  // take standing in the picked block — kind 'homily', its
+  // identity the local id; no server row names it anywhere.
+  if (a.kind === 'homily') {
+    var he = homilyEntry(a.homilyId);
+    if (!he) return { episodeId: 'homily:' + a.homilyId, kind: 'homily', homilyId: a.homilyId, title: 'Homily', url: null, enclosureUrl: null, available: false, block: a.block, source: '', durationS: 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null, dayAddition: true, additionKind: 'homily' };
+    var hd = homilyDescFor(he, a.block);
+    hd.dayAddition = true; hd.additionKind = 'homily';
+    return hd;
+  }
   // v549 §2.6: a reading row's descriptor is the episode's
   // own podcast descriptor standing in the picked block —
   // the standing podcast identity (series + GUID), so its
@@ -9473,9 +9527,13 @@ function foldDayAdditions(descs, dateStr, seat) {
   // place in the day.
   // v549 §2.5: the readings seat weaves after the additions,
   // on both exits — it stands even on a day with no additions.
-  if (!state.dayAdditions || state.dayAdditionsDate !== dateStr || !state.dayAdditions.length) return foldReadingsSeat(descs, seat);
   var byBlock = {};
-  state.dayAdditions.forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
+  if (state.dayAdditions && state.dayAdditionsDate === dateStr) state.dayAdditions.forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
+  // v551 (P10): today's device-local homily additions join
+  // the same fold — they join BEFORE the empty check, or a
+  // homily-only day would skip the weave entirely.
+  homilyAdditionsFor(dateStr).forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
+  if (!Object.keys(byBlock).length) return foldReadingsSeat(descs, seat);
   var segs = {}, segOrder = [];
   descs.forEach(function (d) {
     var b = d.block || '';
@@ -9532,6 +9590,12 @@ function readingAdditionCardHtml(d) {
    card's face. One tap, no confirm (John's decisions,
    package 46 Part A). */
 function openAdditionMenu(d, anchorEl, afterOk) {
+  // v551 (P10): a homily addition's removal writes the
+  // device-local store only — no request stands behind it.
+  if (d.additionKind === 'homily') {
+    openSheetMenu(d.title || 'Options', [{ label: 'Remove from Praylist', act: function () { removeHomilyAddition(d); } }], anchorEl);
+    return;
+  }
   openSheetMenu(d.title || 'Options', [{ label: 'Remove from Praylist', act: function () { removeDayAddition(d, anchorEl, afterOk); } }], anchorEl);
 }
 function removeDayAddition(d, anchorEl, afterOk) {
@@ -9583,7 +9647,7 @@ function appendBlockAdditionCards(block) {
   var adds = list.filter(function (d) { return d.dayAddition && d.block === block; });
   adds.forEach(function (d) {
     var tmp = document.createElement('div');
-    tmp.innerHTML = d.additionKind === 'reading' ? readingAdditionCardHtml(d) : dayAdditionCardHtml(d);
+    tmp.innerHTML = d.additionKind === 'reading' ? readingAdditionCardHtml(d) : d.additionKind === 'homily' ? homilyAdditionCardHtml(d) : dayAdditionCardHtml(d);
     var card = tmp.firstChild;
     if (!card) return;
     var idx = list.indexOf(d);
@@ -9600,6 +9664,505 @@ function appendBlockAdditionCards(block) {
       else view.appendChild(card);
     }
   });
+}
+/* ---------------- v551 homily recording (Q1 C: LOCAL ONLY) ----------------
+   John's words (approval record 39, package 52): the record
+   control stands "within the mass itself where the homily
+   is – after liturgy of the word, before universal prayer";
+   the Homilies list is "the 4th catechis tab once a homily
+   is recorded"; "Homilies can be deleted in this list";
+   "Homiliies can be renamed lster". Q1 C: LOCAL ONLY in this
+   release — no storage-choice UI, no cloud mode, no upload.
+   A recording lives on this device, plays from this device,
+   and issues NO network call of any kind: this module holds
+   no fetch, no api(), no PUT — the Plan's harness proves the
+   negative statically and at runtime.
+   The store (Plan §2 P3): two device-local stores kept in
+   step, the app's mirror discipline — IndexedDB 'opn-homilies'
+   (audio chunks + take records) and a localStorage index
+   'opn-homilies-v551' (metadata only), so every surface reads
+   the list synchronously while audio loads lazily.
+   The acts (Plan §2 P7/P8): the local pattern throughout —
+   played marks and the star are index flags (the server
+   starred store never sees a homily; a server row would
+   paint in Favorites as a row only this device could play),
+   no intention draw (trackKeyOf returns null for the kind),
+   no native snapshot entry (a blob URL is WebView-local). */
+var HOMILY_INDEX_KEY = 'opn-homilies-v551';
+var HOMILY_ADD_KEY = 'opn-homily-add-v551';
+var HOMILY_DB_NAME = 'opn-homilies';
+var homilyDbPromise = null;
+var homilyUrlCache = {};
+var homilyFinalizedOnce = false;
+var homilyRec = null;
+var homilySavedNote = '';
+var homilySettleBusy = false;
+function homilyIndexRaw() {
+  try { var v = JSON.parse(localStorage.getItem(HOMILY_INDEX_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+}
+function homilyIndexWrite(idx) { try { localStorage.setItem(HOMILY_INDEX_KEY, JSON.stringify(idx)); } catch (e) {} }
+function homilyIndex() {
+  var idx = homilyIndexRaw();
+  if (homilyFinalizedOnce) return idx;
+  homilyFinalizedOnce = true;
+  // P4 interruption rule: an entry left in 'recording' state
+  // belongs to a session that died mid-take (this session has
+  // written none yet — the flag runs before any capture can
+  // start). Its flushed chunks stand in IndexedDB and its
+  // duration/size stand from the last flush: the take
+  // finalizes here as a partial take. An entry with no chunk
+  // landed captured nothing and drops.
+  var kept = [], changed = false;
+  idx.forEach(function (e) {
+    if (e && e.state === 'recording') {
+      changed = true;
+      if ((e.chunkCount || 0) > 0) { e.state = 'ready'; e.partial = true; kept.push(e); }
+    } else if (e) kept.push(e);
+  });
+  if (changed) homilyIndexWrite(kept);
+  return kept;
+}
+function homilyIndexHas() { return homilyIndex().length > 0; }
+function homilyEntry(id) {
+  var idx = homilyIndex();
+  for (var i = 0; i < idx.length; i++) if (idx[i].id === id) return idx[i];
+  return null;
+}
+function homilyEntrySave(entry) {
+  var idx = homilyIndex();
+  for (var i = 0; i < idx.length; i++) if (idx[i].id === entry.id) { idx[i] = entry; homilyIndexWrite(idx); return; }
+  idx.push(entry); homilyIndexWrite(idx);
+}
+function homilyEntryRemove(id) { homilyIndexWrite(homilyIndex().filter(function (e) { return e.id !== id; })); }
+function homilySetPlayed(id, on) { var e = homilyEntry(id); if (!e) return; e.played = !!on; homilyEntrySave(e); }
+function homilySetStarred(id, on) { var e = homilyEntry(id); if (!e) return; e.starred = !!on; homilyEntrySave(e); }
+function homilyDb() {
+  if (homilyDbPromise) return homilyDbPromise;
+  homilyDbPromise = new Promise(function (resolve, reject) {
+    var req = indexedDB.open(HOMILY_DB_NAME, 1);
+    req.onupgradeneeded = function () {
+      var db = req.result;
+      if (!db.objectStoreNames.contains('takes')) db.createObjectStore('takes', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('chunks')) db.createObjectStore('chunks', { keyPath: ['id', 'seq'] });
+    };
+    req.onsuccess = function () { resolve(req.result); };
+    req.onerror = function () { reject(req.error); };
+  });
+  return homilyDbPromise;
+}
+function homilyIdbPut(store, value) {
+  return homilyDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(store, 'readwrite');
+      tx.objectStore(store).put(value);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
+    });
+  });
+}
+function homilyIdbDelete(store, key) {
+  return homilyDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(key);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
+    });
+  });
+}
+function homilyChunks(id) {
+  return homilyDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var range = IDBKeyRange.bound([id, -Infinity], [id, Infinity]);
+      var req = db.transaction('chunks', 'readonly').objectStore('chunks').getAll(range);
+      req.onsuccess = function () { var rows = (req.result || []).slice(); rows.sort(function (a, b) { return a.seq - b.seq; }); resolve(rows); };
+      req.onerror = function () { reject(req.error); };
+    });
+  });
+}
+function homilyDeleteTake(id) {
+  return homilyChunks(id).then(function (rows) {
+    return Promise.all(rows.map(function (r) { return homilyIdbDelete('chunks', [id, r.seq]); }));
+  }).then(function () { return homilyIdbDelete('takes', id); }).then(function () { return undefined; }).catch(function () { return undefined; });
+}
+function homilyTakeBlob(id) {
+  return homilyChunks(id).then(function (rows) {
+    if (!rows.length) return null;
+    var entry = homilyEntry(id);
+    var parts = rows.map(function (r) { return r.blob; });
+    return new Blob(parts, { type: (entry && entry.mimeType) || 'audio/webm' });
+  });
+}
+function homilyMint(id) {
+  var hit = homilyUrlCache[id];
+  if (hit) return Promise.resolve(hit.url);
+  return homilyTakeBlob(id).then(function (blob) {
+    if (!blob) return null;
+    var url = URL.createObjectURL(blob);
+    homilyUrlCache[id] = { blob: blob, url: url };
+    return url;
+  }).catch(function () { return null; });
+}
+function homilySettle() {
+  // The externals settle posture, for device-local takes:
+  // mint every standing take's blob URL once per session;
+  // when a URL newly stands, the day re-folds once (the
+  // woven descriptors pick it up) and the Homilies side
+  // repaints when it stands.
+  var pending = homilyIndex().filter(function (e) { return e.state === 'ready' && !homilyUrlCache[e.id]; });
+  if (!pending.length || homilySettleBusy) return;
+  homilySettleBusy = true;
+  Promise.all(pending.map(function (e) { return homilyMint(e.id); })).then(function () {
+    homilySettleBusy = false;
+    if (state.dayPayload) extRebuildDescs(state.dayPayload);
+    if (state.tab === 'podcasts' && tabSideNow.podcasts === 'homilies') paintPodcastsIndex();
+  }).catch(function () { homilySettleBusy = false; });
+}
+function homilyDescFor(entry, block) {
+  var hit = homilyUrlCache[entry.id];
+  return {
+    episodeId: 'homily:' + entry.id, kind: 'homily', homilyId: entry.id,
+    title: entry.name, url: hit ? hit.url : null, enclosureUrl: null,
+    available: entry.state === 'ready', block: block || 'Homilies', source: '',
+    durationS: entry.durationS || 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null
+  };
+}
+function homilyLiveDesc(d) {
+  var entry = d.homilyId ? homilyEntry(d.homilyId) : null;
+  if (!entry || entry.state !== 'ready') return null;
+  var fresh = homilyDescFor(entry, d.block);
+  if (d.dayAddition) { fresh.dayAddition = true; fresh.additionKind = 'homily'; }
+  if (!fresh.url) { homilyMint(entry.id); return null; }
+  return fresh;
+}
+function homilyLongDate(dateStr) {
+  var dt = new Date(dateStr + 'T12:00:00Z');
+  return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+/* ---- capture: the Mass-scroll record card (P4) ---- */
+function homilyMimePick() {
+  var cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  if (typeof MediaRecorder === 'undefined') return '';
+  for (var i = 0; i < cands.length; i++) { try { if (MediaRecorder.isTypeSupported(cands[i])) return cands[i]; } catch (e) {} }
+  return '';
+}
+function massHomilyCardHtml() { return '<div id="mass-homily-host">' + massHomilyCardInner() + '</div>'; }
+function massHomilyCardInner() {
+  if (homilyRec) {
+    return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc rec" id="mass-homily-stop" aria-label="Stop recording"></button>'
+      + '<div class="grow"><div class="homily-rec-title">Recording the homily</div><div class="meta" id="mass-homily-timer">' + fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000)) + '</div></div></div></div>';
+  }
+  return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc" id="mass-homily-rec" aria-label="Record the homily"></button>'
+    + '<div class="grow"><div class="homily-rec-title">Record the homily</div><div class="meta">The take saves on this device only.</div>'
+    + (homilySavedNote ? '<div class="meta">' + esc(homilySavedNote) + '</div>' : '') + '</div></div></div>';
+}
+function paintMassHomilyCard() {
+  var host = document.getElementById('mass-homily-host');
+  if (host) { host.innerHTML = massHomilyCardInner(); wireMassHomily(); }
+}
+function wireMassHomily() {
+  var rec = document.getElementById('mass-homily-rec');
+  if (rec) rec.addEventListener('click', homilyStartRecord);
+  var stop = document.getElementById('mass-homily-stop');
+  if (stop) stop.addEventListener('click', homilyStopRecord);
+}
+function homilyTickTimer() {
+  var el = document.getElementById('mass-homily-timer');
+  if (el && homilyRec) el.textContent = fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000));
+}
+function homilyStartRecord() {
+  if (homilyRec) return;
+  homilySavedNote = '';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+    homilySavedNote = 'Microphone not available on this device.';
+    paintMassHomilyCard();
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+    var mime = homilyMimePick();
+    var recorder = null;
+    try { recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream); }
+    catch (e) { stream.getTracks().forEach(function (t) { t.stop(); }); homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); return; }
+    var dateKey = state.mass && state.mass.date ? state.mass.date : todayChicago();
+    var p = (state.mass && state.mass.payload) || {};
+    var entry = {
+      id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
+      name: 'Homily \u2014 ' + homilyLongDate(dateKey),
+      dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
+      createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
+      mimeType: recorder.mimeType || mime || 'audio/webm',
+      starred: false, played: false, state: 'recording', chunkCount: 0, partial: false
+    };
+    homilyEntrySave(entry);
+    homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
+    homilyRec = { id: entry.id, stream: stream, recorder: recorder, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null };
+    recorder.ondataavailable = function (ev) {
+      if (!ev.data || !ev.data.size || !homilyRec || homilyRec.id !== entry.id) return;
+      homilyRec.seq += 1;
+      homilyRec.sizeBytes += ev.data.size;
+      var seq = homilyRec.seq, bytes = homilyRec.sizeBytes, started = homilyRec.startedAt;
+      homilyIdbPut('chunks', { id: entry.id, seq: seq, blob: ev.data, mimeType: entry.mimeType }).catch(function () {});
+      var cur = homilyEntry(entry.id);
+      if (cur) { cur.chunkCount = seq; cur.sizeBytes = bytes; cur.durationS = Math.round((Date.now() - started) / 1000); homilyEntrySave(cur); }
+    };
+    recorder.onstop = homilyFinishRecord;
+    try { recorder.start(5000); }
+    catch (e) { homilyAbortRecord('Microphone not available on this device.'); return; }
+    if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (wl) { if (homilyRec) homilyRec.wakeLock = wl; }).catch(function () {});
+    homilyRec.timer = setInterval(homilyTickTimer, 500);
+    paintMassHomilyCard();
+  }).catch(function () { homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); });
+}
+function homilyAbortRecord(note) {
+  var rec = homilyRec;
+  homilyRec = null;
+  if (rec) {
+    if (rec.timer) clearInterval(rec.timer);
+    if (rec.stream) rec.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+    homilyEntryRemove(rec.id);
+    homilyDeleteTake(rec.id);
+  }
+  homilySavedNote = note;
+  paintMassHomilyCard();
+}
+function homilyStopRecord() {
+  if (homilyRec && homilyRec.recorder && homilyRec.recorder.state !== 'inactive') {
+    try { homilyRec.recorder.stop(); } catch (e) { homilyFinishRecord(); }
+  }
+}
+function homilyFinishRecord() {
+  var rec = homilyRec;
+  if (!rec) return;
+  homilyRec = null;
+  if (rec.timer) clearInterval(rec.timer);
+  if (rec.stream) rec.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
+  if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }
+  var entry = homilyEntry(rec.id);
+  if (entry) {
+    entry.state = 'ready';
+    entry.durationS = Math.max(entry.durationS || 0, Math.round((Date.now() - rec.startedAt) / 1000));
+    entry.sizeBytes = rec.sizeBytes;
+    homilyEntrySave(entry);
+    homilyMint(rec.id);
+    homilySavedNote = 'Saved \u2014 ' + entry.name + ' (' + fmtDur(entry.durationS) + '). On this device only.';
+  }
+  paintMassHomilyCard();
+}
+/* ---- the Homilies side + list (P9) ---- */
+function homilyListEntries() {
+  return homilyIndex().filter(function (e) { return e.state === 'ready'; }).slice()
+    .sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
+}
+function paintCatechesisHomilies() {
+  paintRow2Home('podcasts');
+  var entries = homilyListEntries();
+  if (!entries.length) {
+    view.innerHTML = '<p class="sub">No homilies recorded yet. The record control stands in the Mass, at the homily\u2019s place.</p>';
+    return;
+  }
+  var h = '';
+  entries.forEach(function (e) { h += homilyRowHtml(e); });
+  view.innerHTML = h;
+  wireHomiliesList();
+  homilySettle();
+}
+function homilyRowHtml(e) {
+  var d = homilyDescFor(e);
+  var isCur = !!(state.current && state.current.episodeId === d.episodeId);
+  var playing = isCur && transportPlaying();
+  var meta = [];
+  if (e.durationS) meta.push(fmtDur(e.durationS));
+  meta.push(homilyLongDate(e.dateKey));
+  if (e.dayName) meta.push(e.dayName);
+  if (e.partial) meta.push('partial take');
+  var disc = '<button class="playbtn thumbdisc" data-homilyplay="' + esc(e.id) + '">' + (playing ? '\u275a\u275a' : '\u25b6') + '</button>';
+  return '<div class="card trow homily-row" data-homilyid="' + esc(e.id) + '"><div class="row">' + rowArtHtml(d, disc)
+    + '<div class="grow"><div class="ttl">' + esc(e.name) + '</div><div class="meta">' + esc(meta.join(' \u00b7 ')) + '</div></div>'
+    + '<span class="prow-cluster"><button class="podmark' + (e.played ? ' on' : '') + '" data-homilymark="' + esc(e.id) + '" aria-label="Played">' + (e.played ? '\u2713' : '\u25cb') + '</button>'
+    + '<button class="favstar' + (e.starred ? ' on' : '') + '" data-homilystar="' + esc(e.id) + '" aria-label="Favorite">' + (e.starred ? '\u2605' : '\u2606') + '</button>'
+    + '<button class="iconbtn" data-homilymenu="' + esc(e.id) + '" aria-label="More options">\u22ee</button></span></div></div>';
+}
+function wireHomiliesList() {
+  view.querySelectorAll('[data-homilyplay]').forEach(function (b) {
+    b.addEventListener('click', function () { homilyPlayFromList(b.getAttribute('data-homilyplay')); });
+  });
+  view.querySelectorAll('[data-homilymark]').forEach(function (b) {
+    b.addEventListener('click', function () { var e = homilyEntry(b.getAttribute('data-homilymark')); if (e) { homilySetPlayed(e.id, !e.played); paintPodcastsIndex(); } });
+  });
+  view.querySelectorAll('[data-homilystar]').forEach(function (b) {
+    b.addEventListener('click', function () { var e = homilyEntry(b.getAttribute('data-homilystar')); if (e) { homilySetStarred(e.id, !e.starred); paintPodcastsIndex(); } });
+  });
+  view.querySelectorAll('[data-homilymenu]').forEach(function (b) {
+    b.addEventListener('click', function () { var e = homilyEntry(b.getAttribute('data-homilymenu')); if (e) openHomilyMenu(e, b); });
+  });
+}
+function homilyPlayFromList(id) {
+  var entries = homilyListEntries();
+  var at = -1;
+  entries.forEach(function (e, i) { if (e.id === id) at = i; });
+  if (at < 0) return;
+  var ordered = entries.slice(at).concat(entries.slice(0, at));
+  Promise.all(ordered.map(function (e) { return homilyMint(e.id); })).then(function () {
+    var descs = ordered.map(function (e) { return homilyDescFor(e); }).filter(function (d) { return d.available && d.url; });
+    if (!descs.length) return;
+    startQueue(descs, true);
+    state.queueFrom = 'homilies';
+    saveQueueSnapshot();
+    paintPodcastsIndex();
+  });
+}
+function openHomilyMenu(e, anchorEl) {
+  openSheetMenu(e.name, [
+    { label: 'Play', act: function () { homilyPlayFromList(e.id); } },
+    { label: 'Add to queue', act: function () { homilyMint(e.id).then(function () { addToQueue(homilyDescFor(e)); }); } },
+    { label: 'Add to Praylist', act: function () { openHomilySlotPicker(e, function () { paintPodcastsIndex(); }); } },
+    { label: e.played ? 'Mark unplayed' : 'Mark played', act: function () { homilySetPlayed(e.id, !e.played); paintPodcastsIndex(); } },
+    { label: 'Rename', act: function () { openHomilyRename(e); } },
+    { label: 'Delete', act: function () { openConfirm({ line: 'Delete \u201c' + e.name + '\u201d? It is stored only on this device \u2014 deleting removes the only copy.', commitLabel: 'Delete', danger: true, act: function () { homilyDelete(e.id); } }); } }
+  ], anchorEl);
+}
+function openHomilyRename(e) {
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Rename homily</h1></div>'
+    + '<input type="text" class="homily-rename-input" id="homily-rename-field" value="' + esc(e.name) + '">'
+    + '<div class="row" style="margin-top:10px"><button class="btn ghost grow" data-ren-cancel>Cancel</button>'
+    + '<button class="btn gold grow" data-ren-save>Save</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var field = sheet.querySelector('#homily-rename-field');
+  if (field) { field.focus(); try { field.select(); } catch (err) {} }
+  sheet.querySelector('[data-ren-cancel]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-ren-save]').addEventListener('click', function () {
+    var name = field && field.value ? String(field.value).trim() : '';
+    if (name) { var cur = homilyEntry(e.id); if (cur) { cur.name = name; homilyEntrySave(cur); } }
+    sheet.remove();
+    paintPodcastsIndex();
+  });
+}
+function homilyDelete(id) {
+  var hit = homilyUrlCache[id];
+  if (hit) { try { URL.revokeObjectURL(hit.url); } catch (e) {} delete homilyUrlCache[id]; }
+  homilyEntryRemove(id);
+  homilyDeleteTake(id);
+  // Today's local additions naming the take go with it —
+  // no dead addition stands in the day.
+  var rows = homilyAdditionsRead();
+  var kept = rows.filter(function (r) { return r.homilyId !== id; });
+  if (kept.length !== rows.length) {
+    homilyAdditionsWrite(kept);
+    if (state.dayPayload) extRebuildDescs(state.dayPayload);
+  }
+  // An emptied list retires the side: a stored 'homilies'
+  // pick falls back to Courses at the next pill paint.
+  if (state.tab === 'podcasts') paintPodcastsIndex();
+}
+/* ---- device-local Praylist additions (P10) ---- */
+function homilyAdditionsRead() {
+  try { var v = JSON.parse(localStorage.getItem(HOMILY_ADD_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+}
+function homilyAdditionsWrite(rows) { try { localStorage.setItem(HOMILY_ADD_KEY, JSON.stringify(rows)); } catch (e) {} }
+function homilyAdditionsFor(dateStr) {
+  return homilyAdditionsRead().filter(function (r) { return r.date === dateStr; })
+    .map(function (r) { return { block: r.block, kind: 'homily', homilyId: r.homilyId, afterId: r.afterId === undefined ? null : r.afterId }; });
+}
+function homilyAdditionStanding(homilyId) {
+  var today = todayChicago();
+  return homilyAdditionsRead().some(function (r) { return r.date === today && r.homilyId === homilyId; });
+}
+function removeHomilyAddition(d) {
+  var today = todayChicago();
+  var rows = homilyAdditionsRead();
+  var kept = rows.filter(function (r) { return !(r.date === today && r.homilyId === d.homilyId); });
+  if (kept.length === rows.length) return;
+  homilyAdditionsWrite(kept);
+  if (state.dayPayload) {
+    extRebuildDescs(state.dayPayload);
+    paintPrayersView(state.dayPayload);
+  }
+}
+function homilyAdditionCardHtml(d) {
+  // The reading addition card's dress minus the server star
+  // (P10): a homily carries no server star — its star stands
+  // on the Homilies row and in Now Playing. The overflow
+  // carries Remove only, through the shared addition menu.
+  var disc = d.available
+    ? '<button class="playbtn thumbdisc" data-playkey="' + esc(d.episodeId) + '" data-url="' + esc(d.url || '') + '">&#9654;</button>'
+    : '';
+  return '<div class="card trow prow addition" data-card="' + esc(d.episodeId) + '"><div class="row">'
+    + rowArtHtml(d, disc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(d.title) + '</h3>'
+    + '<span class="prow-cluster"><button class="iconbtn" data-addmenu="' + esc(d.episodeId) + '" aria-label="More options">\u22ee</button></span></div>'
+    + '<div class="meta">' + (d.durationS ? fmtDur(d.durationS) + ' \u00b7 ' : '') + 'Added to Praylist</div></div></div></div>';
+}
+function openHomilySlotPicker(entry, repaint) {
+  // The slot picker's third form (P10): the openSlotPicker /
+  // openReadingSlotPicker mold — step 1 the block, step 2
+  // the position. The position tap writes the DEVICE-LOCAL
+  // store only: no request is issued, nothing leaves the
+  // device; the day re-folds from the local store and the
+  // block page repaints.
+  var old = document.querySelector('.slotpick');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow" id="slot-title">Add to Praylist</h1></div>'
+    + '<div id="slot-body"></div><p class="fieldnote" id="slot-note"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var chosenBlock = null;
+  function setTitle(t) { var el = sheet.querySelector('#slot-title'); if (el) el.textContent = t; }
+  function paintStep1() {
+    chosenBlock = null;
+    setTitle('Add to Praylist');
+    var html = '<p class="sub">' + esc(entry.name) + ' \u2014 pick a part of today\u2019s Praylist.</p>';
+    var stepBlocks = ((state.dayPayload && state.dayPayload.blocks) || []).map(function (x) { return x.block; });
+    if (!stepBlocks.length) stepBlocks = SLOT_BLOCKS;
+    stepBlocks.forEach(function (b) {
+      var n = (state.dayDescs || []).filter(function (d) { return d.block === b; }).length;
+      html += '<div class="card bookrow" data-slotblock="' + esc(b) + '"><div class="row"><span class="grow">' + esc(slotBlockLabel(b)) + '</span></div>'
+        + (n ? '<div class="meta">' + n + ' standing</div>' : '') + '</div>';
+    });
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    host.querySelectorAll('[data-slotblock]').forEach(function (row) {
+      row.addEventListener('click', function () { chosenBlock = row.getAttribute('data-slotblock'); paintStep2(); });
+    });
+  }
+  function paintStep2() {
+    setTitle('In ' + slotBlockLabel(chosenBlock));
+    var built = !!(state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date) === todayChicago() && (state.dayDescs || []).length);
+    var list = built ? (state.dayDescs || []).filter(function (d) { return d.block === chosenBlock; }) : [];
+    var html = '<div class="card bookrow" data-slotback="1"><div class="row"><span class="grow">\u2190 All parts</span></div></div>';
+    html += '<div class="card bookrow" data-slotpos=""><div class="row"><span class="grow">At the start of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    list.forEach(function (d) {
+      html += '<div class="card bookrow" data-slotpos="' + esc(d.episodeId) + '"><div class="row"><span class="grow">After ' + esc(d.title) + '</span></div></div>';
+    });
+    html += '<div class="card bookrow" data-slotpos="end"><div class="row"><span class="grow">At the end of ' + esc(slotBlockLabel(chosenBlock)) + '</span></div></div>';
+    if (!built) html += '<p class="sub">The day\u2019s list is still loading \u2014 the start and end stand open.</p>';
+    var host = sheet.querySelector('#slot-body');
+    if (!host) return;
+    host.innerHTML = html;
+    var back = host.querySelector('[data-slotback]');
+    if (back) back.addEventListener('click', paintStep1);
+    host.querySelectorAll('[data-slotpos]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var v = row.getAttribute('data-slotpos');
+        pick(v === 'end' ? null : v);
+      });
+    });
+  }
+  function pick(afterId) {
+    if (homilyAdditionStanding(entry.id)) { sheet.remove(); if (repaint) repaint(); return; }
+    var rows = homilyAdditionsRead();
+    rows.push({ date: todayChicago(), block: chosenBlock, homilyId: entry.id, afterId: afterId });
+    homilyAdditionsWrite(rows);
+    if (state.dayPayload) extRebuildDescs(state.dayPayload);
+    sheet.remove();
+    if (repaint) repaint();
+  }
+  paintStep1();
 }
 function openSlotPicker(p, lang, repaintRow) {
   // §2.4: the slot picker — the standing sheet drawer (the
@@ -11342,6 +11905,13 @@ function openNowPlaying() {
   // folder's store.
   sheet.querySelector('#np-star').addEventListener('click', function () {
     if (!state.current) return;
+    // v551 (P8): a playing homily's star toggles its
+    // device-local index flag — never the server store.
+    if (state.current.kind === 'homily') {
+      var he = state.current.homilyId ? homilyEntry(state.current.homilyId) : null;
+      if (he) { homilySetStarred(he.id, !he.starred); refreshNpStar(); }
+      return;
+    }
     var entry = starEntryForDesc(state.current);
     if (!entry) return;
     if (entry.k === 'prayer') { toggleBookFav(entry.id); refreshNpStar(); return; }
@@ -11911,6 +12481,10 @@ function artUriFor(desc) {
   return u.charAt(0) === '/' ? location.origin + u : u;
 }
 function oraSnapshotTrack(d, date) {
+  // v551 (P7.4): a homily never enters the native snapshot —
+  // its blob URL is WebView-local and meaningless off this
+  // page (the standing pre-blob rule).
+  if (d && d.kind === 'homily') return null;
   var origin = location.origin;
   // v384 §2.2: the intention snapshot branch retires with the
   // spoken descriptor — the day build carries no intention
@@ -12945,6 +13519,7 @@ function extRebuildDescs(day) {
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
   settleTrackDraws(); // v528 §2.2: a rebuild's newly settled tracks join the batch — only their missing keys are asked for
   starredLoad(); // v546: the star store settles with the day build (v547: the folder row and the Favorites page repaint on settle)
+  homilySettle(); // v551: the device-local takes' blob URLs settle with the day build (a newly settled URL re-folds once)
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------

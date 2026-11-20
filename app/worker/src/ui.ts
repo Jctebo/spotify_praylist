@@ -275,6 +275,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .podmark { flex:none; min-width:44px; min-height:44px; border-radius:50%; border:1px solid var(--line, #ccc); background:transparent; color:var(--ink); font-size:15px; cursor:pointer; padding:4px 8px; }
 .podmark.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 .podmark-wrap { flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; }
+/* v551: the Mass-scroll homily record card (mockups M1/M2) —
+   the standing card with the gold edge; the record disc is a
+   red ring at idle and solid red while recording. */
+.homily-rec-card { border:1px solid var(--accent); }
+.homily-disc { flex:none; width:46px; height:46px; border-radius:50%; border:3px solid #b03a2e; background:transparent; cursor:pointer; padding:0; }
+.homily-disc.rec { background:#b03a2e; }
+.homily-rec-title { font-weight:600; font-size:16px; }
+.homily-rename-input { margin-top:8px; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent-text); }
 /* v363 §2.3: the .notavail rule retires with its last row use —
