@@ -44,6 +44,34 @@ The burned-in title at the foot of the phone art stays legible.
 A miss (no candidate, download failure) prints a WARN and exits 1 —
 never silent, and it never touches the audio publish, the feed, or
 the phone/watch wallpaper steps.
+
+THE WHOLE SET (v554, John's approval 2026-11-20 — Q1 A separate wide
+files, each named and standing · Q2 B EVERY image in the day's phone
+set gets a wide version · Q3 A fixed role names): the step now
+composes a wide version for every member of the day's phone set, not
+only the pick. The set is enumerated from the pick's own candidate
+pool (phone-queue + phone-current, date-stamped, deduped by name),
+under the rotator's standing rules: the daily members are the day's
+stamped subjects (one Gospel scene + the saint/devotion subjects),
+the monthly member is the month's extra standing in phone-current,
+and a daily-stamped file whose subject equals the monthly extra's
+subject is the v416 private-devotion duplicate — excluded, the
+monthly file being the set's one picture for that subject. Fixed
+asset names: the pick keeps assets/daily-wallpaper-desktop.jpg
+(unchanged); the Gospel member (the day's non-saint daily member,
+when exactly one stands) publishes as
+assets/daily-wallpaper-desktop-gospel.jpg; the monthly member as
+assets/daily-wallpaper-desktop-monthly.jpg; every further member as
+assets/daily-wallpaper-desktop-<subject-slug>.jpg. On a saintless
+day the Gospel member IS the pick and its composition publishes to
+both the pick and gospel assets. On a day with more than one
+non-saint daily member (a feast image beside the Gospel scene) no
+filename signal separates them, so each takes its subject name and
+the run WARNs the ambiguity. With --apply all composed members
+publish in ONE commit and one deploy dispatch. Failure posture is
+the step's standing rule, extended: a miss on any one member WARNs
+and never blocks the others or the pick publish; a miss on the pick
+keeps the standing behavior — WARN, exit 1, nothing published.
 """
 
 from __future__ import annotations
@@ -68,6 +96,8 @@ import wallpaper_rotate as wr  # noqa: E402
 
 DESKTOP_W, DESKTOP_H = 1920, 1080
 ASSET_PATH = "assets/daily-wallpaper-desktop.jpg"
+ASSET_GOSPEL_PATH = "assets/daily-wallpaper-desktop-gospel.jpg"
+ASSET_MONTHLY_PATH = "assets/daily-wallpaper-desktop-monthly.jpg"
 RUNS_ROOT = Path.home() / "workspace" / "ora-runner-runs"
 
 
@@ -101,6 +131,130 @@ def pick_site_wallpaper(date_iso: str) -> tuple[str, bytes] | None:
                   f"{(res.stderr or res.stdout)[:200]}")
             return None
         return picked, local.read_bytes()
+
+
+def _download_drive_file(item: dict, name: str) -> bytes | None:
+    """Raw bytes of one Drive file — the pick's download route, word
+    for word in shape (v554: shared by every non-pick set member)."""
+    suffix = Path(name).suffix.lower() or ".jpg"
+    with tempfile.TemporaryDirectory() as td:
+        local = Path(td) / f"wallpaper{suffix}"
+        res = subprocess.run(
+            [wr.DRIVE_CLI, "drive", "files", "get",
+             "--params", json.dumps({"fileId": item["id"], "alt": "media"}),
+             "--output", str(local)],
+            capture_output=True, text=True,
+        )
+        if res.returncode != 0 or not local.exists() or local.stat().st_size == 0:
+            print(f"WARN site desktop: Drive download failed for {name}: "
+                  f"{(res.stderr or res.stdout)[:200]}")
+            return None
+        return local.read_bytes()
+
+
+def _is_saint_subject(subject: str) -> bool:
+    return subject.startswith(("saint-", "st-"))
+
+
+def phone_set_members(date_iso: str, pick_name: str) -> dict:
+    """The day's phone set as an ordered member list (v554).
+
+    Returns {"members": [...], "monthly_missing": bool,
+    "gospel_ambiguous": bool}. Each member: {"role", "source_name",
+    "item", "assets", "local_name"} — role in pick · gospel ·
+    monthly · extra; assets are the served paths its one composition
+    publishes to (two for the saintless-day pick, which is also the
+    Gospel member). Enumeration mirrors the rotator's rules from the
+    pick's own candidate pool; see the module docstring.
+    """
+    stamp = re.compile(rf"__{re.escape(date_iso)}\.(?:jpg|jpeg|png|webp)$", re.I)
+    pool: dict[str, dict] = {}
+    for item in wr.list_queue("phone") + wr.list_children(wr.FOLDERS["phone-current"]):
+        name = item.get("name") or ""
+        if stamp.search(name) and item.get("mimeType") != wr.FOLDER_MIME:
+            pool[name] = item
+
+    # Monthly member: the month's extra standing in phone-current,
+    # else the staged file in monthly-devotions/phone.
+    month = date_iso[:7]
+    mstamp = wr.monthly_stamp_re(month)
+    current = wr.list_children(wr.FOLDERS["phone-current"])
+    staged = wr.list_children(wr.FOLDERS["monthly-phone"])
+    monthly_item = None
+    for item in sorted(current, key=lambda x: x.get("name") or ""):
+        if mstamp.search(item.get("name") or "") and item.get("mimeType") != wr.FOLDER_MIME:
+            monthly_item = item
+            break
+    if monthly_item is None:
+        for item in sorted(staged, key=lambda x: x.get("name") or ""):
+            if mstamp.search(item.get("name") or "") and item.get("mimeType") != wr.FOLDER_MIME:
+                monthly_item = item
+                break
+    # v416 one-picture-per-subject: the monthly subjects (extra in
+    # current or staged) exclude their daily-stamped duplicates.
+    monthly_subjects = {
+        wr.subject_of(i.get("name") or "")
+        for i in current + staged
+        if wr.month_of(i.get("name") or "") is not None
+    }
+
+    daily = {
+        name: item for name, item in pool.items()
+        if wr.subject_of(name) not in monthly_subjects
+    }
+
+    members: list[dict] = []
+    pick_member = {
+        "role": "pick", "source_name": pick_name, "item": daily.get(pick_name),
+        "assets": [ASSET_PATH], "local_name": f"desktop-wallpaper-{date_iso}.jpg",
+    }
+    members.append(pick_member)
+
+    others = sorted(n for n in daily if n != pick_name)
+    non_saints = [n for n in others if not _is_saint_subject(wr.subject_of(n))]
+    gospel_ambiguous = False
+    gospel_name = None
+    if len(non_saints) == 1:
+        gospel_name = non_saints[0]
+    elif len(non_saints) > 1:
+        gospel_ambiguous = True
+    if pick_name not in daily or not _is_saint_subject(wr.subject_of(pick_name)):
+        # The pick itself is a non-saint member: when it is the day's
+        # only non-saint member it is the Gospel member too (the
+        # saintless day), and its composition serves both assets.
+        pick_non_saints = [n for n in daily
+                           if not _is_saint_subject(wr.subject_of(n))]
+        if len(pick_non_saints) == 1 and pick_non_saints[0] == pick_name:
+            gospel_name = pick_name
+            pick_member["assets"] = [ASSET_PATH, ASSET_GOSPEL_PATH]
+        elif len(pick_non_saints) > 1:
+            gospel_ambiguous = True
+
+    if gospel_name is not None and gospel_name != pick_name:
+        members.append({
+            "role": "gospel", "source_name": gospel_name,
+            "item": daily[gospel_name], "assets": [ASSET_GOSPEL_PATH],
+            "local_name": f"desktop-wallpaper-gospel-{date_iso}.jpg",
+        })
+    if monthly_item is not None:
+        members.append({
+            "role": "monthly", "source_name": monthly_item.get("name") or "",
+            "item": monthly_item, "assets": [ASSET_MONTHLY_PATH],
+            "local_name": f"desktop-wallpaper-monthly-{month}.jpg",
+        })
+    named = {pick_name} | ({gospel_name} if gospel_name else set())
+    for name in others:
+        if name in named:
+            continue
+        subject = wr.subject_of(name)
+        members.append({
+            "role": "extra", "source_name": name, "item": daily[name],
+            "assets": [f"assets/daily-wallpaper-desktop-{subject}.jpg"],
+            "local_name": f"desktop-wallpaper-{subject}-{date_iso}.jpg",
+        })
+    return {"members": members,
+            "monthly_missing": monthly_item is None,
+            "gospel_ambiguous": gospel_ambiguous}
 
 
 def composite_desktop(raw: bytes) -> bytes:
@@ -159,11 +313,48 @@ def composite_desktop(raw: bytes) -> bytes:
     return out.getvalue()
 
 
+def publish_desktop_set(files: list[tuple[str, bytes]],
+                        date_iso: str) -> tuple[str, str]:
+    """Commit every (asset path, composition) in `files` to main in
+    Jctebo/spotify_praylist in ONE commit and dispatch the deploy-only
+    workflow once — the refresh_site_wallpaper route, word for word
+    in shape (v554: the whole wide set rides one commit, the pick's
+    asset among them). Returns (commit_sha, deploy_run_url)."""
+    import base64
+
+    import pass2_build as p2  # lazy: the module's GitHub/deploy helpers
+
+    tree_entries = []
+    for asset_path, data in files:
+        blob = p2._gh_request(
+            "POST", f"/repos/{p2.GH_REPO}/git/blobs",
+            {"content": base64.b64encode(data).decode(), "encoding": "base64"},
+        )
+        tree_entries.append({"path": asset_path, "mode": "100644",
+                             "type": "blob", "sha": blob["sha"]})
+    ref = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/ref/heads/main")
+    head_sha = ref["object"]["sha"]
+    head_commit = p2._gh_request("GET", f"/repos/{p2.GH_REPO}/git/commits/{head_sha}")
+    tree = p2._gh_request(
+        "POST", f"/repos/{p2.GH_REPO}/git/trees",
+        {"base_tree": head_commit["tree"]["sha"], "tree": tree_entries},
+    )
+    names = ", ".join(path.rsplit("/", 1)[-1] for path, _ in files)
+    commit = p2._gh_request(
+        "POST", f"/repos/{p2.GH_REPO}/git/commits",
+        {"message": f"Site desktop wallpapers {date_iso}: {names}",
+         "tree": tree["sha"], "parents": [head_sha]},
+    )
+    p2._gh_request("PATCH", f"/repos/{p2.GH_REPO}/git/refs/heads/main",
+                   {"sha": commit["sha"], "force": False})
+    run_url = p2._dispatch_deploy(commit["sha"])
+    return commit["sha"], run_url
+
+
 def publish_desktop(data: bytes, source_name: str, date_iso: str) -> tuple[str, str]:
-    """Commit the composition to ASSET_PATH on main in
-    Jctebo/spotify_praylist and dispatch the deploy-only workflow —
-    the refresh_site_wallpaper route, word for word in shape.
-    Returns (commit_sha, deploy_run_url)."""
+    """The standing single-file publish (v526 shape), kept for
+    callers that hold one composition: the pick alone, committed to
+    ASSET_PATH with the standing message."""
     import base64
 
     import pass2_build as p2  # lazy: the module's GitHub/deploy helpers
@@ -196,8 +387,10 @@ def main() -> int:
     parser.add_argument("--date", default=None,
                         help="Site date YYYY-MM-DD (default: today, America/Chicago)")
     parser.add_argument("--apply", action="store_true",
-                        help="Commit the composition to assets/daily-wallpaper-desktop.jpg "
-                             "and dispatch the Pages deploy (default: local file only)")
+                        help="Commit every composed set member to its asset "
+                             "(the pick to assets/daily-wallpaper-desktop.jpg) "
+                             "in one commit and dispatch the Pages deploy "
+                             "(default: local files only)")
     parser.add_argument("--out", default=None,
                         help="Local output path (default: the date's run dir)")
     args = parser.parse_args()
@@ -207,23 +400,65 @@ def main() -> int:
     if not pick:
         print(f"Site desktop for {date_iso}: no candidate — nothing written.")
         return 1
-    picked, raw = pick
-    data = composite_desktop(raw)
+    picked, pick_raw = pick
 
-    out = Path(args.out) if args.out else (
-        RUNS_ROOT / date_iso / f"desktop-wallpaper-{date_iso}.jpg")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(data)
+    # The whole phone set (v554). Enumeration failure falls back to
+    # the pick alone — it never blocks the pick's standing publish.
+    try:
+        plan = phone_set_members(date_iso, picked)
+        members = plan["members"]
+        if plan["monthly_missing"]:
+            print(f"WARN site desktop: no monthly extra for {date_iso[:7]} "
+                  "in phone-current or staging — monthly wide skipped")
+        if plan["gospel_ambiguous"]:
+            print(f"WARN site desktop: more than one non-saint daily member "
+                  f"for {date_iso} — no filename signal separates the Gospel "
+                  "scene; each publishes under its subject name and the "
+                  "gospel role name is not used today")
+    except Exception as exc:  # Drive read failure mid-enumeration
+        print(f"WARN site desktop: set enumeration failed ({exc}) — pick only")
+        members = [{
+            "role": "pick", "source_name": picked, "item": None,
+            "assets": [ASSET_PATH],
+            "local_name": f"desktop-wallpaper-{date_iso}.jpg",
+        }]
+
     from PIL import Image
-    with Image.open(out) as im:
-        size = im.size
-    print(f"Site desktop for {date_iso}: {picked} -> {out} "
-          f"({len(data)} bytes, {size[0]}x{size[1]})")
+    run_dir = RUNS_ROOT / date_iso
+    composed: list[tuple[dict, bytes]] = []
+    for member in members:
+        if member["role"] == "pick":
+            raw = pick_raw
+        else:
+            if member["item"] is None:
+                print(f"WARN site desktop: set member {member['source_name']} "
+                      "not found in Drive — skipped")
+                continue
+            raw = _download_drive_file(member["item"], member["source_name"])
+            if raw is None:
+                continue  # WARN already printed; the others proceed
+        data = composite_desktop(raw)
+        if member["role"] == "pick" and args.out:
+            out = Path(args.out)
+        else:
+            out = run_dir / member["local_name"]
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(data)
+        with Image.open(out) as im:
+            size = im.size
+        print(f"Site desktop for {date_iso}: {member['source_name']} "
+              f"[{member['role']}] -> {out} ({len(data)} bytes, "
+              f"{size[0]}x{size[1]})")
+        composed.append((member, data))
 
     if args.apply:
-        commit_sha, run_url = publish_desktop(data, picked, date_iso)
-        print(f"Site desktop deployed: {picked} -> {ASSET_PATH} "
-              f"(commit {commit_sha}, run {run_url})")
+        files = [(asset, data) for member, data in composed
+                 for asset in member["assets"]]
+        commit_sha, run_url = publish_desktop_set(files, date_iso)
+        for member, _data in composed:
+            print(f"Site desktop deployed: {member['source_name']} "
+                  f"[{member['role']}] -> {', '.join(member['assets'])} "
+                  f"(commit {commit_sha}, run {run_url})")
     return 0
 
 
