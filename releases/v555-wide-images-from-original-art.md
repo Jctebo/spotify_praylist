@@ -1,7 +1,7 @@
 # v555 — Wide daily images composed from the original artwork
 
 - **Line:** Ora Pro Nobis
-- **Status:** Plan — verdict received 2026-11-20 13:42 CT ("Perfect. Push this"); chain running to Ship under the amended shape
+- **Status:** LIVE — shipped 2026-11-20 14:14 CT (row 1499 Live · What's New 376)
 - **Registry:** DevOps Board row 1499 · Scope record 2220 · Scope contract 633 (holder v555-scope)
 - **Relay intake:** Goals Board task 1056
 
@@ -90,3 +90,14 @@ Review record 2230 · contract 643 (holder v555-chain). PASS.
 - Harness re-run on a CLEAN CHECKOUT of the committed HEAD e50566b (fresh clone of release/v555, standing untracked runner/_common.py supplied as in production): runner/test_site_desktop_wide.py — 22 ok / 0 not-ok · runner/test_site_desktop_set.py — 22 ok / 0 not-ok. Identical counts to the build tree; the gate reads the committed tree, not the worktree.
 - Diff discipline: the branch touches runner/site_desktop.py (rebuilt), runner/test_site_desktop_wide.py (new), and this document. No app Worker file, no migration, no phone/watch step. The v554 enumeration suite passing unchanged proves the member/role contract is untouched.
 - The one judgment call stands as Plan recorded it: the name band is composed in code, not generated — the pipeline's standing text discipline (the render module's QA rejects generated lettering) and the name's exactness rest on it; the dress check at Implement matched the approved exemplars' family (navy band · gold EB Garamond name · gold rules and corner work).
+
+## 5 · Ship
+
+Ship record 2231 PASSED · contract 644 (holder v555-chain; expectations met, closed at ship).
+
+- **Merge + push (push-to-main):** release/v555 merged fast-forward to main and pushed — GitHub main **b237b3ea985e1ab7bc266dd65f321dcc18a5a355** · helper read-back OK · **main pushed · remote in sync**. The build branch stays local and is deleted after merge.
+- **Caller update:** the nightly job `ora-pro-nobis-nightly-run` step W(d) now reads the v555 shape — generate one NEW wide render per member of RUN_DATE's phone set (16:9, full-frame scene, NO text in the image; saved as `wide-<subject-slug>.webp` in the day's `wp-raw-<RUN_DATE>/`), then run the step, which composes each member from its wide raw with the name band drawn in code and deletes stale subject-named extras in the same commit. Verified in the saved job body; every other step of the body is unchanged. Next run: 2026-11-21 00:00 CT.
+- **Today's set (2026-11-20), published from the approved renders:** the three approved renders' own generated bands were cropped off and the scenes saved as the day's wide raws (`wide-saint-felix-de-valois.jpg` · `wide-jesus-cleanses-the-temple.jpg` · `wide-holy-souls-in-purgatory.jpg`); the step composed the finals with the deterministic band and published them in commit **708d8cb2b67aeae2a9d6b5446dd11949653e19a0** ("Site desktop wallpapers 2026-11-20").
+- **Deploy:** the first two deploy-only dispatches failed inside `actions/deploy-pages` with "Fetching artifact metadata failed" (runs 44806647935 · 44806898277) — a GitHub API-side read failure; the artifact upload itself succeeded both times. The third dispatch (run **44807931128**) succeeded. All three assets then verified **byte-equal** against the composed locals: daily-wallpaper-desktop.jpg 365,942 B · daily-wallpaper-desktop-gospel.jpg 457,979 B · daily-wallpaper-desktop-monthly.jpg 374,527 B.
+- **Registry:** row 1499 **Live** (shipped_at 2026-11-20T20:14:00Z) · What's New **376**. Relay intake 1056 closed Done.
+- **Field legs (open):** (1) John's desktop sync pulls the new wide set. (2) Tonight's nightly run generates fresh wide renders for the 2026-11-21 set under the updated W(d) — the generation route's first production proof.
