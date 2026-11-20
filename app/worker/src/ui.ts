@@ -296,6 +296,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .homily-mic-item { display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; font-family:var(--sans); font-size:15px; border:1px solid var(--line); background:var(--card); border-radius:10px; padding:9px 12px; cursor:pointer; color:var(--ink); }
 .homily-mic-item.on { border-color:var(--accent); }
 .homily-mic-item-name { font-weight:600; }
+/* v560: the homily note — the label + the note in full
+   under a list entry and at the record card after a
+   take; one quiet Add/Edit act; the box rides the
+   global textarea dress with the rename input's
+   top margin. */
+.homily-note { margin-top:10px; }
+.homily-note-label { font-family:var(--sans); font-size:13px; font-weight:600; color:var(--muted); }
+.homily-note-text { font-size:15px; margin-top:3px; white-space:pre-wrap; }
+.homily-note-act { display:block; text-align:left; font-family:var(--sans); font-size:14px; background:none; border:none; padding:6px 0; margin-top:6px; cursor:pointer; color:var(--accent-text); }
+.homily-note-input { margin-top:8px; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent-text); }
 /* v363 §2.3: the .notavail rule retires with its last row use —

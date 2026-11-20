@@ -9706,6 +9706,8 @@ var homilyUrlCache = {};
 var homilyFinalizedOnce = false;
 var homilyRec = null;
 var homilySavedNote = '';
+var homilyNoteCardId = '';
+var homilyNoteEdit = false;
 var homilySettleBusy = false;
 function homilyIndexRaw() {
   try { var v = JSON.parse(localStorage.getItem(HOMILY_INDEX_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
@@ -9746,6 +9748,18 @@ function homilyEntrySave(entry) {
 function homilyEntryRemove(id) { homilyIndexWrite(homilyIndex().filter(function (e) { return e.id !== id; })); }
 function homilySetPlayed(id, on) { var e = homilyEntry(id); if (!e) return; e.played = !!on; homilyEntrySave(e); }
 function homilySetStarred(id, on) { var e = homilyEntry(id); if (!e) return; e.starred = !!on; homilyEntrySave(e); }
+/* v560 (Q1 C · Q2 A): the homily's note — one brief text,
+   a field on the homily's own index entry, written through
+   the same homilyEntrySave step as the played mark and the
+   star. Entries recorded before v560 carry no field and
+   read as empty. Text only, on this device only — the
+   module's no-network rule stands (v551 Q1 C). */
+function homilyNoteOf(e) { return e && typeof e.note === 'string' ? e.note : ''; }
+function homilySetNote(id, text) {
+  var e = homilyEntry(id); if (!e) return;
+  e.note = String(text == null ? '' : text).trim();
+  homilyEntrySave(e);
+}
 function homilyDb() {
   if (homilyDbPromise) return homilyDbPromise;
   homilyDbPromise = new Promise(function (resolve, reject) {
@@ -10074,7 +10088,7 @@ function homilyStartNative() {
     dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
     createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
     mimeType: 'audio/mp4',
-    starred: false, played: false, state: 'recording', chunkCount: 0, partial: false
+    starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: ''
   };
   homilyEntrySave(entry);
   homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
@@ -10175,6 +10189,8 @@ function homilyFinishNative(rec, info) {
     homilyEntrySave(entry);
     homilyMint(rec.id);
     homilySavedNote = 'Saved \u2014 ' + entry.name + ' (' + fmtDur(entry.durationS) + '). On this device only.';
+    homilyNoteCardId = entry.id;
+    homilyNoteEdit = false;
   }
   paintMassHomilyCard();
 }
@@ -10195,7 +10211,29 @@ function massHomilyCardInner() {
   return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc" id="mass-homily-rec" aria-label="Record the homily"></button>'
     + '<div class="grow"><div class="homily-rec-title">Record the homily</div><div class="meta">The take saves on this device only.</div>'
     + (homilySavedNote ? '<div class="meta">' + esc(homilySavedNote) + '</div>' : '') + '</div></div>'
-    + homilyMicRowHtml() + '</div>';
+    + homilyMicRowHtml() + homilyNoteCardHtml() + '</div>';
+}
+/* v560 (Q1 C · Q6 A): the note box's record-card seat — it
+   stands only at rest, under the saved line, for the take
+   just saved (homilyNoteCardId, set by both finish paths);
+   the recording state above carries no box. One note, two
+   seats: this renders the entry's own note field, the same
+   field the Homilies list shows. No note yet → the box
+   itself stands (the M3 dress); a note standing → the note
+   in full + Edit note, which swaps in the prefilled box. */
+function homilyNoteCardHtml() {
+  if (!homilyNoteCardId) return '';
+  var e = homilyEntry(homilyNoteCardId);
+  if (!e || e.state !== 'ready') return '';
+  var note = homilyNoteOf(e);
+  if (note && !homilyNoteEdit) {
+    return '<div class="homily-note"><div class="homily-note-label">Note</div>'
+      + '<div class="homily-note-text">' + esc(note) + '</div>'
+      + '<button class="homily-note-act" id="mass-homily-note-edit">Edit note</button></div>';
+  }
+  return '<div class="homily-note"><div class="homily-note-label">Note</div>'
+    + '<textarea class="homily-note-input" id="mass-homily-note-field" rows="3" placeholder="Jot a note about this homily\u2026">' + esc(note) + '</textarea>'
+    + '<div class="row" style="margin-top:8px"><button class="btn gold" id="mass-homily-note-save">Save note</button></div></div>';
 }
 function paintMassHomilyCard() {
   var host = document.getElementById('mass-homily-host');
@@ -10206,6 +10244,15 @@ function wireMassHomily() {
   if (rec) rec.addEventListener('click', homilyStartRecord);
   var stop = document.getElementById('mass-homily-stop');
   if (stop) stop.addEventListener('click', homilyStopRecord);
+  var nsave = document.getElementById('mass-homily-note-save');
+  if (nsave) nsave.addEventListener('click', function () {
+    var f = document.getElementById('mass-homily-note-field');
+    homilySetNote(homilyNoteCardId, f ? f.value : '');
+    homilyNoteEdit = false;
+    paintMassHomilyCard();
+  });
+  var nedit = document.getElementById('mass-homily-note-edit');
+  if (nedit) nedit.addEventListener('click', function () { homilyNoteEdit = true; paintMassHomilyCard(); });
   var ch = document.getElementById('mass-homily-mic-change');
   if (ch) ch.addEventListener('click', function () {
     if (homilyMicListOpen) { homilyMicListOpen = false; paintMassHomilyCard(); return; }
@@ -10226,6 +10273,8 @@ function homilyTickTimer() {
 function homilyStartRecord() {
   if (homilyRec) return;
   homilySavedNote = '';
+  homilyNoteCardId = '';
+  homilyNoteEdit = false;
   // v559: where the shell offers native recording, the
   // take is the shell's (Plan D6) — the branch stands
   // before the WebView availability guard, which does
@@ -10259,7 +10308,7 @@ function homilyStartCapture() {
       dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
       createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
       mimeType: recorder.mimeType || mime || 'audio/webm',
-      starred: false, played: false, state: 'recording', chunkCount: 0, partial: false
+      starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: ''
     };
     homilyEntrySave(entry);
     homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
@@ -10317,6 +10366,8 @@ function homilyFinishRecord() {
     homilyEntrySave(entry);
     homilyMint(rec.id);
     homilySavedNote = 'Saved \u2014 ' + entry.name + ' (' + fmtDur(entry.durationS) + '). On this device only.';
+    homilyNoteCardId = entry.id;
+    homilyNoteEdit = false;
   }
   paintMassHomilyCard();
 }
@@ -10352,7 +10403,17 @@ function homilyRowHtml(e) {
     + '<div class="grow"><div class="ttl">' + esc(e.name) + '</div><div class="meta">' + esc(meta.join(' \u00b7 ')) + '</div></div>'
     + '<span class="prow-cluster"><button class="podmark' + (e.played ? ' on' : '') + '" data-homilymark="' + esc(e.id) + '" aria-label="Played">' + (e.played ? '\u2713' : '\u25cb') + '</button>'
     + '<button class="favstar' + (e.starred ? ' on' : '') + '" data-homilystar="' + esc(e.id) + '" aria-label="Favorite">' + (e.starred ? '\u2605' : '\u2606') + '</button>'
-    + '<button class="iconbtn" data-homilymenu="' + esc(e.id) + '" aria-label="More options">\u22ee</button></span></div></div>';
+    + '<button class="iconbtn" data-homilymenu="' + esc(e.id) + '" aria-label="More options">\u22ee</button></span></div>'
+    + homilyNoteRowHtml(e) + '</div>';
+}
+/* v560 (Q4 A · Q5 A): the note's list dress — a note
+   standing shows in full under the entry, readable at a
+   glance; no note yet → one quiet "Add a note" act, never
+   an empty box on every entry. */
+function homilyNoteRowHtml(e) {
+  var note = homilyNoteOf(e);
+  if (note) return '<div class="homily-note"><div class="homily-note-label">Note</div><div class="homily-note-text">' + esc(note) + '</div></div>';
+  return '<button class="homily-note-act" data-homilynote="' + esc(e.id) + '">\uFF0B Add a note</button>';
 }
 function wireHomiliesList() {
   view.querySelectorAll('[data-homilyplay]').forEach(function (b) {
@@ -10366,6 +10427,9 @@ function wireHomiliesList() {
   });
   view.querySelectorAll('[data-homilymenu]').forEach(function (b) {
     b.addEventListener('click', function () { var e = homilyEntry(b.getAttribute('data-homilymenu')); if (e) openHomilyMenu(e, b); });
+  });
+  view.querySelectorAll('[data-homilynote]').forEach(function (b) {
+    b.addEventListener('click', function () { var e = homilyEntry(b.getAttribute('data-homilynote')); if (e) openHomilyNoteEditor(e); });
   });
 }
 function homilyPlayFromList(id) {
@@ -10390,6 +10454,7 @@ function openHomilyMenu(e, anchorEl) {
     { label: 'Add to Praylist', act: function () { openHomilySlotPicker(e, function () { paintPodcastsIndex(); }); } },
     { label: e.played ? 'Mark unplayed' : 'Mark played', act: function () { homilySetPlayed(e.id, !e.played); paintPodcastsIndex(); } },
     { label: 'Rename', act: function () { openHomilyRename(e); } },
+    { label: homilyNoteOf(e) ? 'Edit note' : 'Add note', act: function () { openHomilyNoteEditor(e); } },
     { label: 'Delete', act: function () { openConfirm({ line: 'Delete \u201c' + e.name + '\u201d? It is stored only on this device \u2014 deleting removes the only copy.', commitLabel: 'Delete', danger: true, act: function () { homilyDelete(e.id); } }); } }
   ], anchorEl);
 }
@@ -10408,6 +10473,27 @@ function openHomilyRename(e) {
   sheet.querySelector('[data-ren-save]').addEventListener('click', function () {
     var name = field && field.value ? String(field.value).trim() : '';
     if (name) { var cur = homilyEntry(e.id); if (cur) { cur.name = name; homilyEntrySave(cur); } }
+    sheet.remove();
+    paintPodcastsIndex();
+  });
+}
+/* v560 (Q1 C): the note editor — the rename sheet's own
+   pattern with a brief multi-line box (Q3 A). Saving an
+   empty box clears the note (Q2 A: one editable note). */
+function openHomilyNoteEditor(e) {
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Homily note</h1></div>'
+    + '<textarea class="homily-note-input" id="homily-note-field" rows="4" placeholder="Jot a note about this homily\u2026">' + esc(homilyNoteOf(e)) + '</textarea>'
+    + '<div class="row" style="margin-top:10px"><button class="btn ghost grow" data-note-cancel>Cancel</button>'
+    + '<button class="btn gold grow" data-note-save>Save note</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var field = sheet.querySelector('#homily-note-field');
+  if (field) field.focus();
+  sheet.querySelector('[data-note-cancel]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-note-save]').addEventListener('click', function () {
+    homilySetNote(e.id, field ? field.value : '');
     sheet.remove();
     paintPodcastsIndex();
   });
