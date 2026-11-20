@@ -377,6 +377,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    dress, seated in the page's head row). */
 .bookrow { cursor:pointer; }
 .bookstar { flex:none; background:none; border:none; font-family:inherit; font-size:19px; line-height:1; color:var(--gold); cursor:pointer; padding:6px 4px; }
+.trackstar { flex:none; background:none; border:none; font-family:inherit; font-size:19px; line-height:1; color:var(--gold); cursor:pointer; padding:6px 4px; }
 .langswitch { margin:0; flex:none; }
 .langswitch button { flex:none; padding:6px 12px; }
 .hidden { display:none !important; }

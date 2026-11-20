@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -1839,6 +1839,14 @@ function queueStartPos(desc) {
     ? (state.pendingResume.positionS || 0) : 0;
 }
 function saveQueueSnapshot(posS) {
+  // v546 §2.9: a Starred-born queue is never snapshotted —
+  // neither standing form holds a mixed queue faithfully
+  // (the day form drops podcast entries at restore; the
+  // podcast form names one series), so the queue lives for
+  // its session and never restores. The record is removed,
+  // so a starred queue born over a standing record retires
+  // that record with it.
+  if (state.queueFrom === 'starred') { try { localStorage.removeItem(QUEUE_KEY); } catch (e) { /* storage unavailable — nothing persists */ } return; }
   try {
     if (!state.queue.length || !state.current) { localStorage.removeItem(QUEUE_KEY); return; }
     // v412 Fix 9: a podcast queue snapshots in the podcast form —
@@ -2418,6 +2426,7 @@ function playTrack(desc) {
   if (state.pendingStart && state.current && state.current.episodeId === desc.episodeId) { cancelPendingStart(); return; } // v461 F1: a toggle during this track's own start cancels the start — never a second startDesc
   if (state.current && state.current.episodeId === desc.episodeId && transportPlaying()) { pauseTransport(); return; }
   state.queue = []; state.queueIdx = -1;
+  state.queueFrom = null; // v546: a fresh single play clears the queue's provenance
   state.podRestoreProbe = null; // v412 Fix 9: a fresh play retires a standing podcast restore probe
   clearRestoredQueue(); // v355 §2.5: a single play retires any restored queue with the queue it clears
   startDesc(desc);
@@ -2665,6 +2674,7 @@ function startQueue(descs, force) {
   clearRestoredQueue(); // v355 §2.5: a new queue replaces a restored one, flag with it
   state.podRestoreProbe = null; // v412 Fix 9: a new queue birth retires a standing podcast restore probe
   state.queue = descs.slice();
+  state.queueFrom = null; // v546: a fresh birth clears the provenance (the Starred Play all sets it after this returns)
   var idx = -1;
   for (var i = 0; i < state.queue.length; i++) {
     var live = queueLiveDesc(state.queue[i]);
@@ -2696,7 +2706,7 @@ function advanceQueue(dir) {
     startDesc(live);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; state.pendingStart = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.queueFrom = null; state.current = null; state.pendingStart = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true); } // v546: the provenance clears with the exhausted queue
   return false;
 }
 function queueKindIsPod() {
@@ -2824,6 +2834,7 @@ function clearQueue() {
   if (!state.queue.length) return;
   state.queue = [];
   state.queueIdx = -1;
+  state.queueFrom = null; // v546: the provenance clears with the queue
   clearRestoredQueue();
   saveQueueSnapshot();
   renderQueueList();
@@ -3231,7 +3242,9 @@ audioEl.addEventListener('ended', function () {
     // The queue stands exhausted (advanceQueue has cleared to
     // the standing stop): autoplay ON chains forward through the
     // day; OFF keeps the stop exactly as it stood.
-    if (autoplayOn()) chainForward(endedDesc);
+    // v546 §2.9: a Starred-born queue stops at its own end —
+    // the day's chain never joins it, whatever autoplay reads.
+    if (autoplayOn() && state.queueFrom !== 'starred') chainForward(endedDesc);
     return;
   }
   // A single play's end: the same rule — autoplay ON chains from
@@ -6191,7 +6204,10 @@ function paintCatechesisNovenas() {
         + '<div class="grow"><h3' + (isPlayed(meta.episodeId, day.date, 'Novenas') ? ' class="heard"' : '') + '>' + esc(catechesisNovenasName(meta.title)) + '</h3>'
         + (info ? '<div class="meta">Day ' + info.n + '</div>' : '')
         + (intro ? '<div class="meta">' + esc(intro) + '</div>' : '')
-        + '</div>' + playedDotHtml({ episodeId: meta.episodeId, block: 'Novenas' }) + '</div></div>';
+        + '</div>' + playedDotHtml({ episodeId: meta.episodeId, block: 'Novenas' })
+        // v546 (Q1 A): the star joins the card beside the played dot — kind episode, keyed by the novena episode id (the star binds the episode across the novena's run).
+        + '<button class="trackstar" data-trackstar="' + esc(starKeyOf('episode', meta.episodeId)) + '" aria-label="Star">' + (starredHas(starKeyOf('episode', meta.episodeId)) ? '\u2605' : '\u2606') + '</button>'
+        + '</div></div>';
     }).join('');
   } else {
     // The named empty state (P6): painted before the
@@ -6208,6 +6224,7 @@ function wireCatechesisNovenas() {
   view.querySelectorAll('[data-novplay]').forEach(function (card) {
     card.addEventListener('click', function (ev) {
       if (ev.target.closest('[data-markplayed]')) return; // the dot's own act (wirePlayed)
+      if (ev.target.closest('[data-trackstar]')) return; // v546: the star's own act (the delegated handler)
       var day = state.dayPayload;
       var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
       if (!day || !slot || !slot.tracks) return;
@@ -6482,7 +6499,8 @@ function paintPodOwnSeries() {
     // keeping data-ownplay and its standing handler.
     html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
       + podRowArtHtml(e, '<button class="playbtn thumbdisc" data-ownplay="' + esc(e.key) + '">&#9654;</button>')
-      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3></div>'
+      // v546 (Q1 A): the star stands at the title line's right — no cluster stands on this page (v456 retired it); the button stands alone. The row's episodes are day-form: kind episode, keyed by entry key.
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>' + starBtnHtml(podOwnDesc(e)) + '</div>'
       + '<div class="meta metarow"><span>' + (e.key === res.currentKey ? 'Current episode \u00b7 ' : '') + esc(e.label) + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : '') + '</span></div></div>'
       + '</div></div>';
   });
@@ -6588,6 +6606,7 @@ function paintPodcastRss() {
       + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
       + '<span class="prow-cluster">'
       + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + starBtnHtml(podDesc(e))
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '</span></div>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
@@ -6852,6 +6871,7 @@ function paintPodcasts() {
       + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>'
       + '<span class="prow-cluster">'
       + '<button class="podmark' + (e.listened ? ' on' : '') + '" data-podmark="' + esc(e.key) + '" aria-label="' + (e.listened ? 'Mark as not listened' : 'Mark as listened') + '">' + (e.listened ? '&#10003;' : '&#9711;') + '</button>'
+      + starBtnHtml(podDesc(e))
       + '<button class="iconbtn" data-podmenu="' + esc(e.key) + '" aria-label="More options">\u22ee</button>'
       + '</span></div>'
       + (e.descText ? '<div class="snippet">' + esc(e.descText) + '</div>' : '')
@@ -8425,50 +8445,34 @@ function bookFavsWrite(favs) { try { localStorage.setItem(BOOK_FAVS_KEY, JSON.st
 /* v470 §2.3: the favorites' working copy is state.bookFavs.
    The server list is the truth; the device key stands as its
    mirror. Until the load's server read settles the copy, the
-   mirror stands as the copy (the offline paint never waits). */
+   mirror stands as the copy (the offline paint never waits).
+   v546 (scope package 49, Q4 A): the book star and the
+   starred list are ONE system — the favorites list DERIVES
+   from the unified starred store (its prayer entries, in
+   list order), and state.bookFavs / the opn-book-favs-v462
+   mirror retire as stores (bookFavsRead stands only as the
+   carry-in's read of last resort is unnecessary — the
+   carry-in reads the server's 0028 list through the API). */
 function bookFavsList() {
-  if (state && Array.isArray(state.bookFavs)) return state.bookFavs;
-  return bookFavsRead();
+  return (state.starred || []).filter(function (e) { return e.k === 'prayer'; }).map(function (e) { return e.id; });
 }
 function bookFavsSet(favs) {
+  // v546: retained as a seam for the book's older callers —
+  // the favorites are the unified store's prayer entries;
+  // nothing writes the retired copy any more.
   state.bookFavs = favs;
-  bookFavsWrite(favs);
 }
 function bookFavsSync() {
-  // The write-through: PUT the whole working copy; the stored
-  // list the server answers with is adopted whole (it is the
-  // truth — validated, deduped). A failed PUT keeps the
-  // mirror; the next toggle or the next open re-syncs.
-  var favs = bookFavsList().slice();
-  return api('/api/prayer/book/favorites', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ favorites: favs }) }).then(function (res) {
-    if (res && Array.isArray(res.favorites)) {
-      bookFavsSet(res.favorites);
-      if (document.getElementById('book-results')) paintBookResults();
-    }
-    return res;
-  }).catch(function () { return null; });
+  // v546: the write-through is the unified store's sync —
+  // the book's PUT retires with the one-system unification
+  // (the 0028 routes stand server-side, untouched).
+  return starredSync();
 }
 function bookFavsLoad() {
-  // The server read at book load. Where the server list
-  // stands, it is the truth and the mirror is rewritten from
-  // it. Where the server stands empty and the mirror holds
-  // slugs, the mirror carries up once — one-way and
-  // idempotent: a later open finds the server standing and
-  // carries nothing, and a failed carry-up leaves the mirror
-  // untouched for the next open to retry. A failed read
-  // leaves the mirror standing as the working copy.
-  state.bookFavs = bookFavsRead();
-  return api('/api/prayer/book/favorites').then(function (res) {
-    if (!res || !Array.isArray(res.favorites)) return;
-    if (res.favorites.length) {
-      bookFavsSet(res.favorites);
-      if (document.getElementById('book-results')) paintBookResults();
-    } else if (bookFavsRead().length) {
-      bookFavsSync();
-    } else {
-      bookFavsSet([]);
-    }
-  }).catch(function () {});
+  // v546: the book's load is the unified store's load — the
+  // server read, the mirror, and the one-time carry-in of
+  // the 0028 favorites all stand in starredLoad.
+  return starredLoad();
 }
 function bookFind(slug) {
   var found = null;
@@ -8558,15 +8562,318 @@ function renderPrayerBook() {
   });
 }
 function toggleBookFav(slug) {
-  var favs = bookFavsList().slice();
-  var at = favs.indexOf(slug);
-  if (at >= 0) favs.splice(at, 1); else favs.push(slug);
-  bookFavsSet(favs);
+  // v546 (scope package 49, Q4 A): the book star is the
+  // unified store's prayer toggle — one system: a prayer
+  // starred here stands in the Praylist Starred section,
+  // and a prayer un-starred there empties here. The entry
+  // is titled from the book where it stands loaded.
+  var f = bookFind(slug);
+  toggleStar({ k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' });
+}
+/* v546 (scope package 49 — Star any track; John's approval
+   37, run level To Ship): the ONE star system. John's
+   decisions: Q1 A — a star on the track row itself (day
+   cards, podcast rows, Catechesis Novenas cards) and in Now
+   Playing's control row, in the book's gold glyph · Q2 B —
+   no new Pray side: a 'Starred' SECTION at the HEAD of the
+   Praylist side, above today's blocks ("Top, not bottom") ·
+   Q3 A — the list PLAYS AS A LIST: Play all and queue acts
+   on the whole list, across kinds ("I just want it all to
+   play") · Q4 A — a new server table (migration 0041),
+   whole-list PUT in the v470 discipline, the book favorites
+   carried in: the book star and this list are one system.
+   The store: state.starred (entries in list order — most
+   recently starred first), mirrored on the device at
+   opn-starred-v546. An entry is the star's snapshot
+   { k, id, series?, title, sub, durationS, imageUrl, block,
+   url, date } — k in episode|podcast|prayer; the snapshot
+   is the play fallback for a track no live source still
+   carries; resolution always reads live sources first. */
+var STARRED_KEY = 'opn-starred-v546';
+var starredCarryDone = false;
+function starKeyOf(kind, id, series) {
+  if (kind === 'podcast') return 'podcast:' + (series || '') + ':' + (id || '');
+  if (kind === 'prayer') return 'prayer:' + (id || '');
+  return 'episode:' + (id || '');
+}
+function starEntryKey(e) { return starKeyOf(e && e.k, e && e.id, e && e.series); }
+function starKeyForDesc(desc) {
+  if (!desc) return null;
+  if (desc.kind === 'podcast') return starKeyOf('podcast', desc.seriesKey || desc.episodeId, desc.podSeries || '');
+  if (desc.kind === 'prayer') return starKeyOf('prayer', String(desc.episodeId || '').split(':')[1] || '');
+  return starKeyOf('episode', desc.episodeId);
+}
+function starredReadMirror() {
+  try {
+    var v = JSON.parse(localStorage.getItem(STARRED_KEY) || '[]');
+    return Array.isArray(v) ? v.filter(function (e) { return e && typeof e === 'object' && typeof e.id === 'string' && typeof e.k === 'string'; }) : [];
+  } catch (e) { return []; }
+}
+function starredWriteMirror() { try { localStorage.setItem(STARRED_KEY, JSON.stringify(state.starred || [])); } catch (e) {} }
+function starredSet(list) { state.starred = Array.isArray(list) ? list.slice() : []; starredWriteMirror(); }
+function starredHas(key) { return (state.starred || []).some(function (e) { return starEntryKey(e) === key; }); }
+function starredEntryByKey(key) {
+  var list = state.starred || [];
+  for (var i = 0; i < list.length; i++) { if (starEntryKey(list[i]) === key) return list[i]; }
+  return null;
+}
+function starBtnHtml(desc) {
+  var key = starKeyForDesc(desc);
+  if (!key) return '';
+  return '<button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button>';
+}
+function starEntryForDesc(desc) {
+  if (!desc) return null;
+  if (desc.kind === 'podcast') return { k: 'podcast', id: desc.seriesKey || desc.episodeId, series: desc.podSeries || '', title: desc.title || '', sub: (state.podcasts && state.podcasts.series === desc.podSeries && state.podcasts.title) || desc.podSeries || '', durationS: desc.durationS || 0, imageUrl: desc.imageUrl || '', block: 'Podcasts', url: desc.url || null, date: state.presentedDay || '' };
+  if (desc.kind === 'prayer') {
+    var slug = String(desc.episodeId || '').split(':')[1] || '';
+    var f = bookFind(slug);
+    return { k: 'prayer', id: slug, title: f ? f.prayer.title : (desc.title || slug), sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+  }
+  return { k: 'episode', id: desc.episodeId, title: desc.title || '', sub: desc.block || '', durationS: desc.durationS || 0, imageUrl: desc.imageUrl || '', block: desc.block || '', url: desc.url || null, date: state.presentedDay || '' };
+}
+function starEntryForKey(key) {
+  // A [data-trackstar] tap resolves its entry: the standing
+  // starred entry first (an un-star needs no live source),
+  // else the live track behind the key.
+  var standing = starredEntryByKey(key);
+  if (standing) return standing;
+  var kind = String(key || '').split(':')[0];
+  if (kind === 'prayer') {
+    var slug = String(key).slice('prayer:'.length);
+    var f = bookFind(slug);
+    return { k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+  }
+  if (kind === 'podcast') {
+    var rest = String(key).slice('podcast:'.length);
+    var series = rest.split(':')[0];
+    var seq = rest.slice(series.length + 1);
+    if (state.podcasts && state.podcasts.series === series) {
+      var pe = (state.podcasts.entries || []).filter(function (e) { return e.key === seq; })[0];
+      if (pe) return starEntryForDesc(podDesc(pe));
+    }
+    return { k: 'podcast', id: seq, series: series, title: seq, sub: series, durationS: 0, imageUrl: '', block: 'Podcasts', url: null, date: state.presentedDay || '' };
+  }
+  var id = String(key).slice('episode:'.length);
+  var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === id; })[0];
+  if (d) return starEntryForDesc(d);
+  var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+  if (slot && slot.tracks && state.dayPayload) {
+    var meta = slot.tracks.filter(function (m) { return m.episodeId === id; })[0];
+    var row = catechesisNovenasRow();
+    if (meta && row) return starEntryForDesc(trackDesc(ownSlotTrack(row, meta, state.dayPayload.date), state.dayPayload));
+  }
+  if (state.podcasts && state.podcasts.own) {
+    var oe = (state.podcasts.entries || []).filter(function (e) { return e.key === id; })[0];
+    if (oe) return starEntryForDesc(podOwnDesc(oe));
+  }
+  return { k: 'episode', id: id, title: id, sub: '', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+}
+function toggleStar(entry) {
+  if (!entry || !entry.id) return;
+  var key = starEntryKey(entry);
+  var list = (state.starred || []).slice();
+  var at = -1;
+  for (var i = 0; i < list.length; i++) { if (starEntryKey(list[i]) === key) { at = i; break; } }
+  if (at >= 0) list.splice(at, 1); else list.unshift(entry); // most recently starred first
+  starredSet(list);
+  refreshStarChrome();
+  paintStarredSection();
   if (document.getElementById('book-results')) paintBookResults();
   var ps = document.getElementById('book-page-star');
-  if (ps && ps.getAttribute('data-bookstar') === slug) ps.textContent = favs.indexOf(slug) >= 0 ? '\u2605' : '\u2606';
-  bookFavsSync();
+  if (ps && entry.k === 'prayer' && ps.getAttribute('data-bookstar') === entry.id) ps.textContent = starredHas(key) ? '\u2605' : '\u2606';
+  starredSync();
 }
+function starredSync() {
+  // The write-through (the v470 form): PUT the whole working
+  // copy; the stored list the server answers with is adopted
+  // whole. A failed PUT keeps the mirror; the next toggle or
+  // open re-syncs.
+  var list = (state.starred || []).slice();
+  return api('/api/prayer/starred', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ starred: list }) }).then(function (res) {
+    if (res && Array.isArray(res.starred)) {
+      starredSet(res.starred);
+      refreshStarChrome();
+      paintStarredSection();
+      if (document.getElementById('book-results')) paintBookResults();
+    }
+    return res;
+  }).catch(function () { return null; });
+}
+function starredLoad() {
+  // The server read (the bookFavsLoad posture, transposed):
+  // a standing server list is the truth and the mirror is
+  // rewritten from it; an empty server with a standing
+  // mirror carries the mirror up once; an empty server AND
+  // an empty mirror runs the CARRY-IN, once — the 0028 book
+  // favorites become prayer entries in their stored order
+  // (Q4 A: one system). A failed read leaves the mirror
+  // standing as the working copy.
+  if (!(state.starred || []).length) state.starred = starredReadMirror();
+  return api('/api/prayer/starred').then(function (res) {
+    if (!res || !Array.isArray(res.starred)) return;
+    if (res.starred.length) {
+      starredSet(res.starred);
+      refreshStarChrome();
+      paintStarredSection();
+      if (document.getElementById('book-results')) paintBookResults();
+      return;
+    }
+    if ((state.starred || []).length) { starredSync(); return; }
+    if (starredCarryDone) return;
+    starredCarryDone = true;
+    return api('/api/prayer/book/favorites').then(function (fres) {
+      var slugs = (fres && Array.isArray(fres.favorites)) ? fres.favorites : [];
+      if (!slugs.length) return;
+      starredSet(slugs.map(function (slug) {
+        var f = bookFind(slug);
+        return { k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+      }));
+      refreshStarChrome();
+      paintStarredSection();
+      if (document.getElementById('book-results')) paintBookResults();
+      return starredSync();
+    }).catch(function () {});
+  }).catch(function () {});
+}
+function refreshStarChrome() {
+  // Every standing star glyph re-reads the store (the
+  // refreshPlayedChrome pattern), plus Now Playing's.
+  document.querySelectorAll('[data-trackstar]').forEach(function (b) {
+    b.textContent = starredHas(b.getAttribute('data-trackstar')) ? '\u2605' : '\u2606';
+  });
+  refreshNpStar();
+}
+function refreshNpStar() {
+  var b = document.getElementById('np-star');
+  if (!b) return;
+  var key = state.current ? starKeyForDesc(state.current) : null;
+  b.textContent = key && starredHas(key) ? '\u2605' : '\u2606';
+}
+/* The one delegated star wiring (Q1 A): every star button on
+   every surface carries only its key; this handler — installed
+   once — resolves the entry and toggles. A card's own click
+   acts never see the tap (the propagation stops here; the
+   Catechesis Novenas card handler also exempts the star). */
+document.addEventListener('click', function (ev) {
+  var b = ev.target && ev.target.closest ? ev.target.closest('[data-trackstar]') : null;
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  var entry = starEntryForKey(b.getAttribute('data-trackstar'));
+  if (entry) toggleStar(entry);
+});
+function starredDescFor(entry) {
+  // A starred entry back to a playable descriptor — live
+  // sources first, the snapshot last (Plan §2.7). A prayer
+  // entry opens its page instead and builds nothing here.
+  if (!entry || entry.k === 'prayer') return null;
+  if (entry.k === 'podcast') {
+    if (state.podcasts && state.podcasts.series === entry.series) {
+      var pe = (state.podcasts.entries || []).filter(function (e) { return e.key === entry.id; })[0];
+      if (pe) return podDesc(pe);
+    }
+    return { episodeId: entry.id, seriesKey: entry.id, kind: 'podcast', podSeries: entry.series, title: entry.title || '', url: entry.url || '', available: !!entry.url, block: 'Podcasts', durationS: entry.durationS || 0, imageUrl: entry.imageUrl || '' };
+  }
+  var live = (state.dayDescs || []).filter(function (x) { return x.episodeId === entry.id; })[0];
+  if (live) return live;
+  var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+  if (slot && slot.tracks && state.dayPayload) {
+    var meta = slot.tracks.filter(function (m) { return m.episodeId === entry.id; })[0];
+    var row = catechesisNovenasRow();
+    if (meta && row) return trackDesc(ownSlotTrack(row, meta, state.dayPayload.date), state.dayPayload);
+  }
+  return { episodeId: entry.id, title: entry.title || '', url: entry.url || '', available: !!entry.url, block: entry.block || '', durationS: entry.durationS || 0, imageUrl: entry.imageUrl || '' };
+}
+function starredRowHtml(e) {
+  var key = starEntryKey(e);
+  // A prayer entry's title resolves live from the book
+  // where it stands loaded (the carry-in can land before
+  // the book's first load, titled by slug); the snapshot
+  // title stands otherwise.
+  var title = e.title || '';
+  if (e.k === 'prayer') { var bf = bookFind(e.id); if (bf) title = bf.prayer.title; }
+  var desc = e.k === 'prayer' ? null : starredDescFor(e);
+  var playable = !!(desc && desc.available);
+  var meta = [e.sub || (e.k === 'podcast' ? 'Podcasts' : e.k === 'prayer' ? 'Written prayer' : ''), e.durationS ? fmtDur(e.durationS) : '', e.date ? shortDayLabel(e.date) : '', (!playable && e.k !== 'prayer') ? 'Not available' : ''].filter(Boolean).join(' \u00b7 ');
+  var disc = playable ? '<button class="playbtn thumbdisc" data-starplay="' + esc(key) + '" aria-label="Play">&#9654;</button>' : '';
+  var artDesc = { episodeId: e.id, kind: e.k, title: e.title, block: e.block || (e.k === 'podcast' ? 'Podcasts' : ''), imageUrl: e.imageUrl || '' };
+  return '<div class="card trow prow" data-card="' + esc(key) + '"' + (e.k === 'prayer' ? ' data-staropen="' + esc(e.id) + '"' : '') + '><div class="row">'
+    + rowArtHtml(artDesc, disc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(title) + '</h3><span class="prow-cluster"><button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button></span></div>'
+    + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
+    + '</div></div></div>';
+}
+function paintStarredSection() {
+  // Q2 B: the section at the HEAD of the Praylist side — its
+  // slot stands between the profile card and the block rows
+  // (paintListenHome). Repaints on the day build, the load's
+  // settle, and every toggle while it stands.
+  var slot = document.getElementById('starred-slot');
+  if (!slot) return;
+  var list = state.starred || [];
+  var html = '<h2 class="sectionhead">\u2605 Starred</h2>';
+  if (!list.length) {
+    slot.innerHTML = html + '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
+    return;
+  }
+  html += '<div class="row" style="gap:8px;margin:0 2px 10px"><button class="btn ghost small" id="starred-playall">Play all</button><button class="btn ghost small" id="starred-addall">Add all to queue</button></div>';
+  html += list.map(starredRowHtml).join('');
+  slot.innerHTML = html;
+  var pa = document.getElementById('starred-playall');
+  if (pa) pa.addEventListener('click', starredPlayAll);
+  var aa = document.getElementById('starred-addall');
+  if (aa) aa.addEventListener('click', starredAddAll);
+  slot.querySelectorAll('[data-starplay]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var e = starredEntryByKey(b.getAttribute('data-starplay'));
+      var d = e && starredDescFor(e);
+      if (d) playTrack(d); // the standing single-play funnel
+    });
+  });
+  slot.querySelectorAll('[data-staropen]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-trackstar]')) return; // the star's own act (the delegated handler)
+      openPrayerPage(row.getAttribute('data-staropen'));
+    });
+  });
+}
+function starredPlayableDescs() {
+  var out = [];
+  (state.starred || []).forEach(function (e) { var d = starredDescFor(e); if (d && d.available) out.push(d); });
+  return out;
+}
+function starredPlayAll() {
+  // Q3 A: the whole list plays, in list order, across kinds.
+  // The act is explicit — autoplay's state does not gate it —
+  // and the queue it births carries the 'starred' provenance:
+  // it stops at its own end (the ended handler + the native
+  // tail both read it) and never snapshots.
+  var descs = starredPlayableDescs();
+  if (!descs.length) return;
+  startQueue(descs, true);
+  state.queueFrom = 'starred';
+  saveQueueSnapshot(); // the v546 guard retires any standing record for a starred queue
+}
+function starredAddAll() {
+  // Q3 A: the whole list joins the standing queue WITHOUT
+  // the v542 kind bound — the mixed act is the decision. The
+  // shapes are addToQueue's: appended behind a standing
+  // queue · [current, ...] on a single play · a waiting
+  // queue when nothing stands.
+  var descs = starredPlayableDescs();
+  if (!descs.length) return;
+  if (!state.queue.length && !state.current) { state.queue = descs.slice(); state.queueIdx = -1; }
+  else if (!state.queue.length) { state.queue = [state.current].concat(descs); state.queueIdx = 0; }
+  else { state.queue = state.queue.concat(descs); }
+  state.queueFrom = 'starred';
+  saveQueueSnapshot();
+  if (nativeSendNow()) nativeResendAtCurrent(); // addToQueue's native leg
+  updateDock();
+  renderQueueList();
+}
+
 /* Amendment 1: the language switch — the kind-switch mold
    (kindSwitchHtml), a two-way .segtoggle reading English ·
    Latin. Painted only where the open prayer carries a
@@ -10251,7 +10558,11 @@ function trackCard(t) {
   // [data-playkey] wiring site stand untouched. The unavailable
   // branches pass no fragment and stand byte-as-before.
   var cluster = function () {
-    return '<span class="prow-cluster">' + playedDotHtml(t)
+    // v546 (Q1 A): the star joins the cluster between the
+    // played dot and the ⋮ — the mockup's order (dot · star
+    // · ⋮). The unavailable branches carry no cluster and
+    // no star (no acts that cannot be honored).
+    return '<span class="prow-cluster">' + playedDotHtml(t) + starBtnHtml(t)
       + '<button class="iconbtn" data-rowmenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
   };
   var thumbDisc = '<button class="playbtn thumbdisc" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button>';
@@ -10460,7 +10771,7 @@ function openNowPlaying() {
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
-    + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue" class="liblist"></div>'
     + '</div>';
@@ -10483,6 +10794,15 @@ function openNowPlaying() {
     var t = state.current && state.readTracks[state.current.episodeId];
     if (t && t.hasText && t.textUrl) openRead(t); // stacks over this sheet; closing Read returns here
   });
+  // v546 (Q1 A): the Star act in the control row — it toggles
+  // the playing track's star (starEntryForDesc builds the
+  // entry from the current descriptor, every kind).
+  sheet.querySelector('#np-star').addEventListener('click', function () {
+    if (!state.current) return;
+    var entry = starEntryForDesc(state.current);
+    if (entry) toggleStar(entry);
+  });
+  refreshNpStar();
   var bar = sheet.querySelector('#np-seek');
   bar.addEventListener('input', function () {
     // The thumb follows the user's finger, not the player: the
@@ -10556,6 +10876,7 @@ function updateNowPlaying() {
   var readBtn = sheet.querySelector('#np-read');
   if (rt && rt.hasText && rt.textUrl) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
   else { readBtn.style.visibility = 'hidden'; readBtn.setAttribute('aria-hidden', 'true'); }
+  refreshNpStar(); // v546: the control row's star follows the playing track
   updateNpSeek();
   renderQueueList();
 }
@@ -11498,7 +11819,9 @@ function nativeContractFor(desc) {
   var newStart = kept.indexOf(desc);
   if (newStart < 0) return null;
   var queueEnd = items.length;
-  if (!isPod && autoplayOn()) {
+  // v546 §2.9: a Starred-born queue carries no day tail — the
+  // list ends at its own end in the native engine too.
+  if (!isPod && autoplayOn() && state.queueFrom !== 'starred') {
     var last = kept[kept.length - 1];
     var all = state.dayDescs || [];
     var li = -1;
@@ -12056,6 +12379,7 @@ function extRebuildDescs(day) {
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
   settleTrackDraws(); // v528 §2.2: a rebuild's newly settled tracks join the batch — only their missing keys are asked for
+  starredLoad(); // v546: the star store settles with the day build (its section repaints on settle)
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -14517,7 +14841,11 @@ function paintListenHome(day) {
   // paintPrayersBar(null) above paints it there.
   // v459 §2 Build 4: the Sort act retires from that row —
   // it stands in the universal menu's Prayers page group.
-  var html = profileCardHtml(day) + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  // v546 (Q2 B): the Starred section stands at the HEAD of
+  // the side — its slot sits between the profile card and
+  // the block rows ("Top, not bottom"); paintStarredSection
+  // fills it here and on every starred settle/toggle.
+  var html = profileCardHtml(day) + '<div id="starred-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
@@ -14527,6 +14855,7 @@ function paintListenHome(day) {
   // Prayers page group.
   html += offlineLineHtml();
   view.innerHTML = html;
+  paintStarredSection(); // v546: the Starred section fills its head slot
   // v459 §2 Build 4: the Sort button's wiring retires with
   // its emission (row2HomeHtml) — Sort stands in the
   // universal menu's Prayers page group.

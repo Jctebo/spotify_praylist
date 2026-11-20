@@ -1313,6 +1313,36 @@ async function bookFavorites(env: Env): Promise<string[]> {
   } catch { return []; }
 }
 
+// v546 (scope package 49, Q4 A): the starred tracks' read —
+// the stored entries in stored order (most recently starred
+// first; the client owns the order, the server stores it).
+// Each entry is the star's JSON snapshot as written; an
+// unparseable row is skipped. An empty table reads as an
+// empty list; a missing table (pre-0041) reads the same,
+// never an error (the bookFavorites posture).
+async function starredTracks(env: Env): Promise<Record<string, unknown>[]> {
+  try {
+    const r = await env.DB.prepare("SELECT entry FROM starred_tracks ORDER BY sort_order").all<{ entry: string }>();
+    const out: Record<string, unknown>[] = [];
+    for (const row of r.results ?? []) {
+      try {
+        const e = JSON.parse(row.entry) as Record<string, unknown>;
+        if (e && typeof e === "object") out.push(e);
+      } catch { /* an unparseable row is skipped, never served */ }
+    }
+    return out;
+  } catch { return []; }
+}
+
+// v546: the one star key — 'episode:<episodeId>' ·
+// 'podcast:<series>:<seqKey>' · 'prayer:<slug>'. The client
+// builds the same string; the PUT validates against it.
+function starKeyOfEntry(e: Record<string, unknown>): string {
+  if (e.k === "podcast") return "podcast:" + String(e.series ?? "") + ":" + String(e.id ?? "");
+  if (e.k === "prayer") return "prayer:" + String(e.id ?? "");
+  return "episode:" + String(e.id ?? "");
+}
+
 // v495 §2, generalized by v501 §2 and v506 §2: the Mass
 // personal prayers' read — every seat's stored list,
 // whole, in stored order (v506 converts the before/after
@@ -2844,6 +2874,14 @@ export default {
         // match would otherwise swallow the longer path.
         return json({ ok: true, favorites: await bookFavorites(env) });
       }
+      if (seg[2] === "prayer" && seg[3] === "starred" && request.method === "GET") {
+        // v546 (scope package 49, Q4 A): the door mirror of
+        // GET /api/prayer/starred — the same body, read-only,
+        // so Review/Ship verify the stored star list. No
+        // door write route exists; writes are John's,
+        // session-only (the v328 posture).
+        return json({ ok: true, starred: await starredTracks(env) });
+      }
       if (seg[2] === "prayer" && seg[3] === "book" && request.method === "GET") {
         // v462 §2.3: the door mirror of GET /api/prayer/book —
         // the same bookPayload, read-only, so Review/Ship
@@ -3146,6 +3184,55 @@ export default {
           });
           await env.DB.batch(stmts);
           return json({ ok: true, favorites: await bookFavorites(env) });
+        }
+        if (seg[2] === "starred" && !seg[3] && request.method === "GET") {
+          // v546 (scope package 49, Q4 A): the starred list's
+          // read — the stored entries in stored order; an
+          // empty store reads as an empty list. Session-gated
+          // like the book's own read; NO PIN.
+          return json({ ok: true, starred: await starredTracks(env) });
+        }
+        if (seg[2] === "starred" && !seg[3] && request.method === "PUT") {
+          // v546 (scope package 49, Q4 A): John's star write,
+          // in the favorites PUT's discipline (v470 §2.2) in
+          // form: every entry validated, deduped by star key
+          // preserving first occurrence, the rows replaced in
+          // one D1 batch with sort_order = index. Every
+          // validation is a named 400 that writes nothing. An
+          // empty array clears the list. The response is the
+          // stored list re-read. A prayer entry's id must
+          // stand in prayer_book, as the 0028 PUT validates
+          // slugs — the book star and this list are ONE
+          // system.
+          const body = await request.json().catch(() => ({})) as { starred?: unknown };
+          if (!Array.isArray(body.starred)) return err(400, "starred required");
+          if (body.starred.length > 500) return err(400, "starred list too long");
+          const bookRows = await env.DB.prepare("SELECT slug FROM prayer_book").all<{ slug: string }>();
+          const bookSlugs = new Set((bookRows.results ?? []).map((x) => x.slug));
+          const seen = new Set<string>();
+          const entries: { key: string; entry: Record<string, unknown> }[] = [];
+          for (const raw of body.starred) {
+            const e = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+            if (e.k !== "episode" && e.k !== "podcast" && e.k !== "prayer") return err(400, "bad star kind");
+            if (typeof e.id !== "string" || !e.id || e.id.length > 200) return err(400, "bad star id");
+            if (typeof e.title !== "string" || e.title.length > 300) return err(400, "bad star title");
+            if (e.k === "podcast" && (typeof e.series !== "string" || !e.series)) return err(400, "podcast star needs its series");
+            if (e.k === "prayer" && !bookSlugs.has(e.id)) return err(400, `bad prayer slug ${e.id}`);
+            if (e.url !== undefined && e.url !== null && (typeof e.url !== "string" || e.url.length > 2000)) return err(400, "bad star url");
+            const key = starKeyOfEntry(e);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            entries.push({ key, entry: e });
+          }
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [env.DB.prepare("DELETE FROM starred_tracks")];
+          entries.forEach((it, i) => {
+            stmts.push(env.DB.prepare(
+              "INSERT INTO starred_tracks (star_key, sort_order, entry, updated_at) VALUES (?, ?, ?, ?)",
+            ).bind(it.key, i, JSON.stringify(it.entry), ts));
+          });
+          await env.DB.batch(stmts);
+          return json({ ok: true, starred: await starredTracks(env) });
         }
         if (seg[2] === "mass-personal-prayer" && !seg[3] && request.method === "GET") {
           // v495 §2, generalized by v501 §2 and v506 §2:
