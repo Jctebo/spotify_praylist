@@ -93,3 +93,11 @@ Verification at the public addresses, after the fix deploy: all three serve byte
 - https://orapronobis.media/assets/daily-wallpaper-desktop-monthly.jpg — sha256 6932e904…
 
 The two new served images were also read visually: the Gospel frame carries "JESUS CLEANSES THE TEMPLE / TODAY'S GOSPEL" and the monthly frame "HOLY SOULS IN PURGATORY / NOVEMBER DEVOTION", each composed under the standing v535 shape (the art's own ground at full brightness, the portrait panel right-of-center). GitHub main stands at 5d7e31bb plus this document's Ship-section commit; the nightly job's step W(d) entry point and report field are unchanged, so no job-body change — from tonight forward the nightly production composes and publishes the whole wide set.
+
+## Post-ship note — 2026-11-20 12:21 CT
+
+John's report (Ora Pro Nobis thread, 2026-11-20 12:21 CT, verbatim): "Running the sync and only getting 1"
+
+His PC folder sync (daily-desktop-images-sync.ps1, run by the .cmd) still pulled only the pick file after this ship — the v554 ship covered the publishing side only; the PC-side pull list stood unchanged. Fixed in the Ora thread: the script now pulls all three standing addresses into the same folder as daily-desktop-<date>.jpg · daily-desktop-gospel-<date>.jpg · daily-desktop-monthly-<date>.jpg, with the same temp-download, JPEG check, and hash-skip per file. The updated script was delivered to John in the Ora thread to drop beside his .cmd.
+
+Field leg: OPEN — John's re-run of the sync is the verdict.
