@@ -9894,17 +9894,78 @@ function homilyMicKindNote(kind) {
   if (kind === 'usb') return 'USB microphone.';
   return '';
 }
+/* v558: the bridge enumerates the system's audio inputs
+   raw — one physical microphone can stand as several
+   entries (the built-in mic under several types, all
+   carrying the phone's model as their product name; John's
+   field list, 2026-11-20, showed SM-F971U1 four times).
+   The list shows one row per real input: every built-in
+   entry merges into a single "Phone microphone" row, and
+   an entry of an unmapped kind carrying a built-in entry's
+   name is the same phone mic under another type and
+   merges with it. Every other entry groups by its bridge
+   key — the key already names one device (a Bluetooth
+   device keys by its address across its SCO/BLE faces).
+   A row carries every raw key it covers, so a pick stored
+   against any merged entry still resolves to its row; the
+   row's own key is the entry the pick steers to (the first
+   true built-in entry for the phone row). The bridge, its
+   keys, and the steering calls are v557's, unchanged —
+   the grouping is a view rule over the raw list. */
+function homilyMicRows() {
+  var devs = homilyMicDevices || [];
+  var builtinNames = {};
+  devs.forEach(function (d) { if (d.kind === 'builtin') builtinNames[d.name] = true; });
+  var rows = [];
+  var phone = null;
+  var byKey = {};
+  devs.forEach(function (d) {
+    if (d.kind === 'builtin' || (d.kind === 'other' && builtinNames[d.name])) {
+      if (!phone) { phone = { key: '', name: 'Phone microphone', kind: 'builtin', keys: [], builtinKey: '' }; rows.push(phone); }
+      phone.keys.push(d.key);
+      if (d.kind === 'builtin' && !phone.builtinKey) phone.builtinKey = d.key;
+      return;
+    }
+    var row = byKey[d.key];
+    if (!row) { row = { key: d.key, name: d.name, kind: d.kind, keys: [] }; byKey[d.key] = row; rows.push(row); }
+    row.keys.push(d.key);
+  });
+  if (phone) phone.key = phone.builtinKey || phone.keys[0];
+  return rows;
+}
+/* v558: a pick stored against a raw entry the list now
+   merges (or under the entry's raw product name) migrates
+   in place to the row it resolves to — the canonical key
+   the row steers to, under the row's friendly name. A pick
+   that matches no row is left exactly as stored: it stands
+   as "Not connected" and falls back per Q5 A. Until the
+   list opens, the stored raw key still steers exactly —
+   the bridge resolves raw keys. */
+function homilyMicMigratePick() {
+  var pick = homilyMicPick();
+  if (!pick) return;
+  var rows = homilyMicRows();
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].keys.indexOf(pick.key) >= 0) {
+      if (pick.key !== rows[i].key || pick.name !== rows[i].name) homilyMicPickSave({ key: rows[i].key, name: rows[i].name });
+      return;
+    }
+  }
+}
 function homilyMicListHtml() {
   var pick = homilyMicPick();
-  var cur = pick ? pick.key : 'default';
-  var seen = {};
-  var rows = [{ key: 'default', name: 'System default', note: 'Android chooses the input.' }];
-  (homilyMicDevices || []).forEach(function (d) { rows.push({ key: d.key, name: d.name, note: homilyMicKindNote(d.kind) }); seen[d.key] = true; });
-  if (pick && !seen[pick.key]) rows.push({ key: pick.key, name: pick.name || 'Bluetooth microphone', note: 'Not connected.' });
+  var rows = [{ key: 'default', name: 'System default', note: 'Android chooses the input.', keys: ['default'] }];
+  var pickSeen = false;
+  homilyMicRows().forEach(function (r) {
+    if (pick && r.keys.indexOf(pick.key) >= 0) pickSeen = true;
+    rows.push({ key: r.key, name: r.name, note: homilyMicKindNote(r.kind), keys: r.keys });
+  });
+  if (pick && !pickSeen) rows.push({ key: pick.key, name: pick.name || 'Bluetooth microphone', note: 'Not connected.', keys: [pick.key] });
   var h = '<div class="homily-mic-list">';
   rows.forEach(function (r) {
-    h += '<button class="homily-mic-item' + (r.key === cur ? ' on' : '') + '" data-homily-mic="' + esc(r.key) + '" data-homily-mic-name="' + esc(r.name) + '">'
-      + '<span class="homily-mic-item-name">' + (r.key === cur ? '\u2713 ' : '') + esc(r.name) + '</span>'
+    var on = pick ? r.keys.indexOf(pick.key) >= 0 : r.key === 'default';
+    h += '<button class="homily-mic-item' + (on ? ' on' : '') + '" data-homily-mic="' + esc(r.key) + '" data-homily-mic-name="' + esc(r.name) + '">'
+      + '<span class="homily-mic-item-name">' + (on ? '\u2713 ' : '') + esc(r.name) + '</span>'
       + (r.note ? '<span class="meta">' + esc(r.note) + '</span>' : '') + '</button>';
   });
   return h + '</div>';
@@ -9926,6 +9987,7 @@ function homilyMicOpenList() {
   try { p = bridge.listAudioInputs(); } catch (e) { p = null; }
   Promise.resolve(p).then(function (r) {
     homilyMicDevices = r && Array.isArray(r.devices) ? r.devices : [];
+    homilyMicMigratePick();
     homilyMicListOpen = true;
     paintMassHomilyCard();
   }).catch(function () {
