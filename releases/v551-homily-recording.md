@@ -57,3 +57,24 @@ Harness `app/tests/harness-v551.mjs` — statics (diff confinement · index.ts i
 
 - Build tree: **49 ok / 0 not-ok**.
 - Clean checkout of the committed tree: **49 ok / 0 not-ok**.
+
+## 4 · Review
+
+**Verdict: PASS.** The build is the decided set and nothing else.
+
+- **Diff audit (against base e46593bf):** 4 files — `client.ts` +585 · `ui.ts` +8 (style rules only, SW pin unmoved) · `app/tests/harness-v551.mjs` +542 · this doc. `index.ts` byte-identical; migrations end at 0042. The diff's only deletions are the five standing lines the seam edits replaced (the queue-snapshot guard, the tabSideCfg podcasts return, the fold's early-return pair, the addition-card dispatch) — every other change is additive: the homily module plus one branch at each named seam. A grep of the added lines for cloud/upload/storage-choice shapes finds only the Q1 C negative statements in comments — **no cloud code path, no storage-choice UI, no upload exists in the build**.
+- **Decided set re-read:** Q1 C — capture issued zero fetches (C3d); the module holds no network call (S3); star/played are index flags (C5a/C5b, S7b/S8a); no intention draw (S7c); no native snapshot entry (S7d). Q2 A — the card stands after the readings block, before the Universal Prayer (S5, C1). Q3 A — three sides before any recording, four after, Homilies fourth, side retires when the list empties (C2, C4a, C8c). Q4 A — Play · Add to queue · Add to Praylist · Mark played/unplayed · Rename · Delete all stand and work (S10, C5c–C5f, C6, C8b). Q5 A — auto-name `Homily — <Mass date>` (C3b), rename in the list (C5d). Q6 A — 5 s chunk flush, no cap (S4b). Q7 A — one release, this branch.
+- **Harness:** Review's own re-run on a clean checkout of the committed branch HEAD (55b654c): **49 ok / 0 not-ok** — the third green run (build tree + Implement's clean checkout of 8de7468 + this one).
+- **Fixture check (Improvement D):** at least one fixture re-verified against its production source this phase — the day payload fixture is the live production payload (`fixtures-v522/day-live-2026-11-17.json`, drawn 2026-11-17) with only its date fields re-seated to the run day, as recorded in the harness header; the capture legs use the harness's in-page fake-device take, named as such in the Plan (no production recording exists to fixture).
+
+**What Ship requires, exactly (when John lifts the hold):**
+
+1. **Rebase** `release/v551` onto current GitHub main `a7742f8` — main moved under the branch by three doc-only v554 commits (`releases/v554-wide-daily-image-set.md` only; no file overlaps v551's surfaces, so the rebase is expected conflict-free) — then re-run harness-v551 on the rebased tree (must read 49 ok / 0 not-ok) before merging.
+2. **Merge to main and push main** (push-to-main rule); the ship report names the read-back "main pushed · remote in sync". The branch stays local until this step and is deleted after the merge.
+3. **SW pin bump** to `ora-pro-nobis-v551-1` in ui.ts — at Ship only (it does not move on the build tree).
+4. **Worker deploy** from a clean checkout of the merged HEAD; rollback stands at v552's Worker `cedc1915-3309-44e7-ab36-1037fab04bf8`.
+5. **What's New entry** + registry row 1492 flipped to Live.
+6. **The APK step (the Plan's P1 finding — stands between the web ship and in-app recording):** add `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS` to the Android shell's `AndroidManifest.xml`, rebuild the APK with a version bump from 1.0.45, and John installs it. The shell project stands outside this repo, so this is a separate Ship-side step, not part of this branch. Without it, `getUserMedia` inside the app's WebView is refused with no prompt (Capacitor's stock permission bridge requests exactly those two permissions at runtime); the web/browser form records as soon as the web deploy lands.
+7. **Field legs for John (post-ship):** in the app after the APK install — record a homily at Mass, confirm it stands in Catechesis → Homilies, play it back, add it to a Praylist block; on the web form — the same record flow in a browser.
+
+**Hold:** run level Stop before Ship — Ship stands unclaimed. The branch `release/v551` stands local at 55b654c (code at 8de7468), unmerged, unpublished.
