@@ -21,3 +21,9 @@
 - **Fixtures (Improvement D):** the LIVE starred fixture `app/tests/fixtures-v550/starred-live.json` (production D1 starred_tracks read, 2026-11-20) and the standing live day fixture `app/tests/fixtures-v522/day-live-2026-11-17.json`, on the v550 harness's mold; the track-draws stub answers the standing pool text, as in the v539/v550 harnesses.
 - **Ship:** merge release/v553 to main, push main (read-back "main pushed · remote in sync"), deploy from a clean checkout of the merged HEAD, What's New entry, registry flip Live, verify the served client carries the Favorites intention paint.
 - **Concerns and Information Needs:** none.
+
+## 3 · Implement
+
+- **Change:** `app/worker/src/client.ts`, `starredRowHtml` only — the builder now resolves its standing descriptor's settled draw through `trackDrawTextFor(desc)` and, when the track is playable, a draw stands, and `intentionsOn()` is true, emits `<div class="intention-text track-draw-line">Intention: …</div>` inside the row's `.grow`, after the title row and before the meta row. No other function edited; no migration; no server change.
+- **Harness:** `app/tests/harness-v553.mjs` — 23 ok / 0 not-ok on the build tree (statics: diff confined to client.ts + this document + the harness · index.ts/ui.ts byte-identical · migration 0042 last · standing machinery byte-identical; Chromium legs: starred day track paints its draw · starred podcast track paints its own draw · no-draw tracks paint no line · Settings toggle off hides all, on restores).
+- **Concerns and Information Needs:** none.

@@ -1,0 +1,25 @@
+ok - S1a: the tracked diff against the production base is confined to client.ts + the release document + the harness
+ok - S1b: the only untracked paths are the harness and its logs
+ok - S2a: index.ts byte-identical to the base (client-only release)
+ok - S2b: ui.ts byte-identical to the base on the build tree (the SW pin moves only at Ship)
+ok - S2c: migration 0042 stands last (no new migration)
+ok - S3: starredRowHtml paints the Intention line through the standing seam, under the toggle
+ok - S4: the reorder-mode row builder carries no intention paint (unchanged surface)
+ok - S5-trackDrawTextFor: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-trackKeyOf: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-settleTrackDraws: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-requestTrackDraws: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-starredDescFor: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-trackCard: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-paintFavoritesPage: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - S5-favReorderRowHtml: byte-identical to the base (the standing machinery is ridden, not edited)
+ok - P0: the cooked APP_JS parses (the template-literal gate)
+ok - MAIN0: boot clean — no page errors
+ok - C1: the starred DAY track paints its settled draw as "Intention: <text>" on the Favorites row
+ok - C2: the starred PODCAST track paints its own settled draw — the per-track rule, not a shared line
+ok - C3: a starred track with no settled draw paints no line (podcast day-2; the past-day snapshot track)
+ok - C4a: the Settings Intentions toggle OFF hides every Favorites intention line
+ok - C4b: the toggle back ON restores the two settled lines
+ok - MAIN9: the page carries no page errors after every leg
+
+harness-v553: 23 ok / 0 not-ok

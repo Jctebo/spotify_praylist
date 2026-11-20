@@ -8967,9 +8967,21 @@ function starredRowHtml(e) {
   var readCtl = (e.k !== 'podcast' && playable && raw && raw.hasText && raw.textUrl) ? readButton(raw, e.id) : '';
   var trail = (live ? '<span class="dl-ico" data-rowdl="' + esc(e.id) + '" style="display:none" title="Downloaded">\u2913</span>' : '') + readCtl;
   var heard = e.k === 'podcast' ? '' : heardCls(desc || { episodeId: e.id, block: e.block || '' });
+  // v553: the per-track Intention line — v539's one system,
+  // on the Favorites surface it missed. The row's own settled
+  // draw, read through the standing trackDrawTextFor seam
+  // (the one state.trackDraws map, the playedKey rule); an
+  // unavailable track carries no line (the trackCard rule);
+  // the Settings Intentions toggle governs showing.
+  var drawLine = '';
+  if (playable && intentionsOn()) {
+    var drawText = desc ? trackDrawTextFor(desc) : null;
+    if (drawText) drawLine = '<div class="intention-text track-draw-line">Intention: ' + esc(drawText) + '</div>';
+  }
   return '<div class="card trow prow" data-card="' + esc(key) + '"' + '><div class="row">'
     + rowArtHtml(artDesc, disc)
     + '<div class="grow"><div class="titlerow"><h3' + heard + '>' + esc(title) + '</h3>' + cluster + '</div>'
+    + drawLine
     + (meta || trail ? '<div class="meta metarow"><span>' + esc(meta) + '</span>' + trail + '</div>' : '')
     + '</div></div></div>';
 }
