@@ -76,3 +76,20 @@ Light review (streamlined path) of commit 7e1026e on release/v554. Diff against 
 Function-level read: `pick_site_wallpaper` and `composite_desktop` are byte-identical to main; `publish_desktop`'s code is identical (docstring only, noting it stands for single-file callers). The new code is additive beside them: the set enumeration, the shared download helper, the one-commit set publish, and the set loop in main(). Q2 B holds in the code as written — every enumerated member composes and publishes; nothing narrows the set back to Gospel + monthly (the two-saint harness case carries the second saint as a full member). The pick's file, name, rule, and composition stand unchanged.
 
 Verification on a clean checkout of the committed HEAD (7e1026e), per the committed-tree rule: harness re-run **22 ok / 0 not-ok**; live local run for 2026-11-20 reproduced all three wide files at the same byte counts (131,695 · 149,703 · 134,459, each 1920×1080), and the pick output is again byte-identical to the nightly production file. PASS.
+
+## 5 · Ship
+
+SHIPPED LIVE 2026-11-20 ~12:15 CT — ahead of the 14:00 CT hard deadline. Registry row 1496 Live · What's New 372.
+
+Code: Implement 7e1026e + Review 4892a9b merged to main (merge 7f09ac5) and replicated to GitHub with byte-identical SHAs — read-back: **main pushed · remote in sync** (GitHub main = 7f09ac5 at the push read-back).
+
+Production run: the extended step ran with `--apply` for the current production wallpaper date **2026-11-20** (the production run state stands at run dir 2026-11-22, episodes date+2; its rotation record rotation-2026-11-20.json stands the 2026-11-20 phone set). All three members composed and published in ONE commit (ed0c7b0e) with one deploy dispatch (run 44787249230): pick saint-felix-de-valois → assets/daily-wallpaper-desktop.jpg (131,695 bytes) · Gospel jesus-cleanses-the-temple → assets/daily-wallpaper-desktop-gospel.jpg (149,703 bytes) · monthly holy-souls-in-purgatory → assets/daily-wallpaper-desktop-monthly.jpg (134,459 bytes).
+
+SHIP-STAGE DISCOVERY AND FIX, recorded plainly: the first verification fetch showed the two new addresses at 404 — scripts/build_pages_artifact.py staged the desktop asset under a v526 glob (`daily-wallpaper-desktop.*`) that matches only the pick's filename, so the hyphenated role files could never enter the Pages artifact. Fix landed on main as commit 5d7e31bb (child of the asset commit, via the standing API publish route): the builder now globs `daily-wallpaper-desktop*` and stages EVERY committed desktop file at its own name, the pick's staging unchanged; proven locally first (a builder run stages all three files byte-equal). One more deploy dispatch (run 44788275020) carried it live. The publish_audio workflow rides the same builder, so the nightly publish stages the set too. This widened the shipped diff by the one builder file beyond the Plan's confinement note — the fix is inside the release's own publish path and was required for the approved outcome (the wide files serving at their addresses).
+
+Verification at the public addresses, after the fix deploy: all three serve byte-equal to the local compositions —
+- https://orapronobis.media/assets/daily-wallpaper-desktop.jpg — sha256 bb65c18c…
+- https://orapronobis.media/assets/daily-wallpaper-desktop-gospel.jpg — sha256 1f92d764…
+- https://orapronobis.media/assets/daily-wallpaper-desktop-monthly.jpg — sha256 6932e904…
+
+The two new served images were also read visually: the Gospel frame carries "JESUS CLEANSES THE TEMPLE / TODAY'S GOSPEL" and the monthly frame "HOLY SOULS IN PURGATORY / NOVEMBER DEVOTION", each composed under the standing v535 shape (the art's own ground at full brightness, the portrait panel right-of-center). GitHub main stands at 5d7e31bb plus this document's Ship-section commit; the nightly job's step W(d) entry point and report field are unchanged, so no job-body change — from tonight forward the nightly production composes and publishes the whole wide set.
