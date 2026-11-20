@@ -149,3 +149,28 @@ harness-v546 (app/tests/harness-v546.mjs, the v542/v544 Chromium mold, stubbed f
 ## 4 · Review
 
 Review contract 594. The harness re-ran over the COMMITTED tree — the worktree standing clean at build commit e5cbc1b01 (git status empty before the run; the harness reads its byte-comparison base from git at 030bbc91): harness-v546: 46 ok / 0 not-ok (app/tests/harness-v546-review.log), G439 again at its standing 13 ok / 2 not-ok, recorded as-is. The diff against the production base stands confined to client.ts · index.ts · ui.ts (one added CSS line) · app/migrations/0041_starred_tracks.sql · the harness and its fixtures · this document. The prayer seats stand byte-preserved: bookFavorites and massPersonalPrayers are byte-identical to the base, and the preMass seat — reading [prayer-before-mass] as flagged to John 2026-11-19 — is untouched and not re-seeded. Review passed on the row.
+
+## 5 · Ship
+
+Ship contract 595. Composed in the fresh worktree ~/workspace/.worktrees/v546-ship on local branch release/v546-ship: production as it stood at compose time (main 030bbc91 — v544 live, Worker 991cd16d-9d5c-4a00-ba7a-36d25de8085d, pin ora-pro-nobis-v544-1, re-read at Ship through the deployments list) plus only the reviewed build (e5cbc1b01 + the §§1–4 document commit d0a2efad2) plus the SW pin bump to ora-pro-nobis-v546-1 — ship commit cf5f05283, the ship worktree clean at deploy, the bundle parsing clean. Migration 0041 applied to the production D1 through the ship driver and read back (starred_tracks standing with its exact schema). Deployed 2026-11-19 23:26 CT: Worker 6734b4b8-07b6-4bd0-943b-fa8eae7b83f1 at 100%. Rollback: v544's Worker 991cd16d-9d5c-4a00-ba7a-36d25de8085d (a rollback leaves the 0041 table standing and unused; the book favorites stand in their own 0028 table throughout, so the book's stars survive any rollback untouched).
+
+Served-surface verification (the app's shell stands behind John's own Access session — the service token is admitted on door paths only, so the client half is proven by the harness over the exact composed tree, differing from the harness tree only by the pin line, and by the field legs below; the server half is proven live through the door):
+- GET /api/agent/prayer/starred → 200 { ok: true, starred: [] } — the new route serving from the new Worker; John's stored list stands empty until his first open, when the carry-in lands his book favorites as prayer entries (harness A1–A2 prove the act on the production favorites).
+- GET /api/agent/prayer/book/favorites → 200, [prayer-after-communion, prayer-before-mass, grace-after-meals] — the carry-in source untouched.
+- GET /api/agent/prayer/mass-personal-prayer → 200, before [prayer-before-communion] · after [prayer-after-communion] · afterMass [hail-holy-queen] · preMass [prayer-before-mass] — the prayer seats byte-preserved; the preMass flag stands exactly as read, not re-seeded.
+- GET /api/agent/prayer/book → 200, 9 groups / 77 prayers.
+- The deployments list reads the new Worker 6734b4b8 at 100%.
+
+Registry closeout: row 1479 flipped Live with shipped_at 2026-11-20T04:27:38Z · What's New 366 · the shipped record posted. Ship phase passed on the row; contract 595 judged met and closed.
+
+Check-in (push-to-main, John's rule of 2026-11-19 20:27 CT): release/v546-ship merged to main by fast-forward (main 030bbc91 → cf5f05283) in a clean merge worktree; GitHub main's head re-read immediately before the push stood at 030bbc91770207f14b84a0b19983c424dc21013a — the expected base, unmoved (tonight's 00:00 CT production run had not yet written); the commits replicated by the Git Data API route (byte-identical SHAs) and main's ref advanced as a fast-forward, never a force-push. The build branches release/v546 and release/v546-ship stayed local and are deleted after the merge; their worktrees are removed. Read-back: main pushed · remote in sync (GitHub main == local main at the tip recorded in the ship report). The devops-board repo takes this document's commit on its local main only — no push (its GitHub divergence is package 48's Q5 item).
+
+Field legs for John (fresh open, in order):
+1. Praylist stands with a '★ Starred' section at its head: your three book favorites (Prayer After Communion · Prayer Before Mass · Grace After Meals) stand in it — they carried in on this first open.
+2. On any track's card, the star stands between the played dot and the ⋮; a tap fills it gold and the track takes the Starred list's head.
+3. In Now Playing, the control row reads Intentions · Read · Star · ⋮; the star follows the playing track — tap it and the track joins (or leaves) the list.
+4. A podcast episode's row (Catechesis → Podcasts) and a Novenas card (Catechesis → Novenas) star the same way; the Novenas star does not start playback.
+5. Starred → Play all plays the whole list in order across kinds (prayers, podcasts, past days together) and stops at the list's end — it does not run on into the day.
+6. Starred → Add all to queue appends the whole list behind whatever stands playing, across kinds.
+7. In the prayer book, the stars read the same list: a prayer starred in the book stands in Starred, and un-starring it in Starred empties it in the book.
+8. Now Playing's queue rows carry no star (by design — the star stands on the track's own row and in the control row).
