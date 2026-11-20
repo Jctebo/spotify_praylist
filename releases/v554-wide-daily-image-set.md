@@ -100,4 +100,12 @@ John's report (Ora Pro Nobis thread, 2026-11-20 12:21 CT, verbatim): "Running th
 
 His PC folder sync (daily-desktop-images-sync.ps1, run by the .cmd) still pulled only the pick file after this ship — the v554 ship covered the publishing side only; the PC-side pull list stood unchanged. Fixed in the Ora thread: the script now pulls all three standing addresses into the same folder as daily-desktop-<date>.jpg · daily-desktop-gospel-<date>.jpg · daily-desktop-monthly-<date>.jpg, with the same temp-download, JPEG check, and hash-skip per file. The updated script was delivered to John in the Ora thread to drop beside his .cmd.
 
-Field leg: OPEN — John's re-run of the sync is the verdict.
+SUPERSEDED (2026-11-20 12:26 CT): the three-fixed-addresses version above stands as history only. Per John's word in the Ora thread, the PC script was simplified: it now clears his Ora Daily Desktop folder, lists the repo's published assets through the GitHub API, and downloads every daily-wallpaper-desktop*.jpg under its own name. Delivered in the Ora thread as daily_images_download.txt.
+
+Field leg: OPEN — John's re-run of the simplified sync script is the verdict.
+
+## Known gap — found 2026-11-20 12:26 CT
+
+The wide set is not a fixed three: extra saints publish as assets/daily-wallpaper-desktop-<subject-slug>.jpg (runner/site_desktop.py, verified on main). Gap in the shipped code: publish_desktop_set builds its tree from the head tree plus the day's blobs and never deletes prior days' extra slug files — after a multi-saint day, the extra files keep standing and serving stale.
+
+John's word (Ora thread, 2026-11-20 12:26 CT): a small fix-forward on the runner side — delete desktop-* assets not in the day's set, in the same commit — when the seat next works this line. NOT registered: no registry row, no intake task.
