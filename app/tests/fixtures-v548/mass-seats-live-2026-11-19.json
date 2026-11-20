@@ -1,0 +1,15 @@
+{
+ "ok": true,
+ "before": [
+  "prayer-before-communion"
+ ],
+ "after": [
+  "prayer-after-communion"
+ ],
+ "afterMass": [
+  "hail-holy-queen"
+ ],
+ "preMass": [
+  "prayer-before-mass"
+ ]
+}

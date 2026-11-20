@@ -39,6 +39,10 @@ export interface Env {
   // two new parity slots' pass-through matchers. Production leaves
   // them unset; the pinned feed URLs below govern.
   EXT_DGE_FEED_URL?: string;
+  // v548 harness seam, same rule: a fixture-feed override for
+  // the Summa in a Year series build. Production leaves it
+  // unset; the pinned feed URL below governs.
+  EXT_SUMMA_FEED_URL?: string;
   EXT_SAINT_FEED_URL?: string;
   // v339 harness seams, same rule: fixture-feed overrides for the
   // Mass and Homilies block's four sources. Production leaves them
@@ -2484,6 +2488,12 @@ const RSS_COUNSEL_TRENT_FEED_URL = "https://feeds.soundcloud.com/users/soundclou
 // dates. Same discipline as the v464 pair, clause for clause.
 const RSS_FRMIKE_HOMILIES_FEED_URL = "https://feeds.fireside.fm/fathermikehomilies/rss";
 const RSS_BARRON_SERMONS_FEED_URL = "https://feed.podbean.com/wordonfire/feed.xml";
+// v548: Summa in a Year (Austin Habash / Think Catholic, on
+// Anchor) joins the kind — the completed 307-episode walk
+// through the Summa Theologiae, proven from the live feed at
+// Plan (v548 doc §1: 307 items, newest "Day 307: You Made
+// It.", 2026-03-10). Same discipline as the v464 pair.
+const RSS_SUMMA_FEED_URL = "https://anchor.fm/s/e792b1ec/podcast/rss";
 const RSS_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
 const RSS_WINDOW = 50;
 
@@ -2503,6 +2513,12 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   // The day leg is untouched; this line gives the podcast its
   // series page, its index card, and its Podcasts-layer key.
   { key: "daily-gospel-exegesis", title: "Daily Gospel Exegesis", feedUrl: (env) => env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL },
+  // v548: Summa in a Year joins the kind — series page, index
+  // card, and Podcasts-layer admissibility from this one line.
+  // John's order names the series entry ONLY: no profile's
+  // Podcasts layer is written by this release (the layer lists
+  // stand byte-preserved; the key is admissible, never added).
+  { key: "summa-in-a-year", title: "Summa in a Year", feedUrl: (env) => env.EXT_SUMMA_FEED_URL || RSS_SUMMA_FEED_URL },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;

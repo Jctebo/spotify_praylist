@@ -1,0 +1,106 @@
+{
+ "ok": true,
+ "profiles": [
+  {
+   "key": "little-way",
+   "name": "The Little Way",
+   "honorLine": "named in honor of the tradition, not the order's own routine",
+   "kind": "default",
+   "coreBlocks": [
+    "Morning",
+    "Night"
+   ],
+   "layers": {
+    "novenas": {
+     "on": false
+    },
+    "podcasts": {
+     "on": false,
+     "series": []
+    }
+   }
+  },
+  {
+   "key": "salesian",
+   "name": "The Salesian Way",
+   "honorLine": "named in honor of the tradition, not the order's own routine",
+   "kind": "default",
+   "coreBlocks": [
+    "Morning",
+    "Midday",
+    "Evening",
+    "Night"
+   ],
+   "layers": {
+    "novenas": {
+     "on": true
+    },
+    "podcasts": {
+     "on": true,
+     "series": [
+      "bible-in-a-year",
+      "exorcist-files",
+      "daily-gospel-exegesis"
+     ]
+    }
+   }
+  },
+  {
+   "key": "benedictine",
+   "name": "The Benedictine Way",
+   "honorLine": "named in honor of the tradition, not the order's own routine",
+   "kind": "default",
+   "coreBlocks": [
+    "Morning",
+    "Midmorning",
+    "Midday",
+    "Afternoon",
+    "Evening",
+    "Night"
+   ],
+   "layers": {
+    "novenas": {
+     "on": true
+    },
+    "podcasts": {
+     "on": false,
+     "series": []
+    }
+   }
+  }
+ ],
+ "state": {
+  "standingKey": "salesian",
+  "dayRule": true,
+  "version": 5
+ },
+ "effective": {
+  "key": "salesian",
+  "name": "The Salesian Way",
+  "honorLine": "named in honor of the tradition, not the order's own routine",
+  "resolvedBy": "standing",
+  "dayKind": "weekday",
+  "coreBlocks": [
+   "Morning",
+   "Midday",
+   "Evening",
+   "Night"
+  ],
+  "layers": [
+   {
+    "key": "novenas",
+    "on": true
+   },
+   {
+    "key": "podcasts",
+    "on": true,
+    "series": [
+     "bible-in-a-year",
+     "exorcist-files",
+     "daily-gospel-exegesis"
+    ]
+   }
+  ],
+  "version": 5
+ }
+}
