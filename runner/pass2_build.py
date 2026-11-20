@@ -87,6 +87,8 @@ from _common import (  # noqa: E402
 ensure_repo_python()
 add_repo_paths()
 
+from transcript_guard import guard_episode  # noqa: E402  (2026-11-18 publish guard)
+
 TRIM = (
     "silenceremove=start_periods=1:start_silence=0.05:start_threshold=-50dB,areverse,"
     "silenceremove=start_periods=1:start_silence=0.05:start_threshold=-50dB,areverse"
@@ -105,6 +107,19 @@ CF_ACCOUNT = "19135db329e6018b318b33b72aa6e3f3"
 CF_BUCKET = "orapronobis-audio"
 CF_BASE = "https://api.cloudflare.com/client/v4"
 MANIFEST_KEY = ".audio-sync-manifest.json"
+# v370: Cloudflare's bot rule refuses Python urllib's default user-agent
+# on the Ora hosts (the transcript read-back 403'd two nights running).
+# Every bare fetch in this module rides ONE helper carrying a browser UA
+# — the estate string, verbatim from the DevOps door helper (app_door.py).
+# This helper is the ONLY transport seam: if Cloudflare ever challenges
+# past the UA, the curl-subprocess fallback (the door helpers' pattern)
+# lands inside this one function, with no call-site churn.
+_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0"
+
+
+def _urlopen_ua(url, timeout):
+    req = urllib.request.Request(url, headers={"User-Agent": _BROWSER_UA})
+    return urllib.request.urlopen(req, timeout=timeout)
 
 
 def run(cmd, **kw):
@@ -406,6 +421,64 @@ def build(rundir: Path, cache: Path) -> dict:
             entry["head_ok"] = bool(head is not None and voice is not None and head < voice - 6 and head > -60)
         print(key, "verified", entry["duration_s"], flush=True)
 
+    # ---------------- transcript guard (2026-11-18, John's order) --------
+    # No episode publishes unless its AUDIO matches its SCRIPT. A failure
+    # marks the episode FAILED_GUARD; the day is then not fully built and
+    # publish_drop aborts (partial days never publish). Verdicts land in
+    # guard-<episode_id>.json in the rundir and in the report flags.
+    seam_texts: dict[str, str] = {}
+    provided_path = rundir / "texts-provided.json"
+    if provided_path.exists():
+        try:
+            seam_texts = (json.loads(provided_path.read_text()).get("blocks") or {})
+        except Exception:  # noqa: BLE001 - absence only weakens one screen
+            seam_texts = {}
+    for ep in episodes:
+        key = ep["key"]
+        if results[key]["status"] != "built":
+            continue
+        final = outdir / f"{ep['episode_id']}.mp3"
+        script_text = (outdir / f"{ep['file_base']}-script.txt").read_text()
+        seg_texts = [s["text"] for s in ep["segments_norm"] if "text" in s]
+        # The branded audio opens with the shared welcome for EVERY
+        # episode: branding mixes the welcome fragment in (see the
+        # assembly above). Publish segment files carry it as segment 0;
+        # novena segment files do not, so their guard basis must add it —
+        # comparing novena audio against a welcome-less script counted
+        # the spoken welcome as extra content and held the three
+        # short-form novenas of 2026-11-21 (extra 0.15 on ~110-token
+        # scripts) on faithful audio (repair 2026-11-19).
+        if welcome_text and (not seg_texts or seg_texts[0] != welcome_text):
+            script_text = welcome_text + "\n\n" + script_text
+            seg_texts = [welcome_text] + seg_texts
+        frags = [
+            (s["voice"], s["normalized"], frag_cache_path(cache, s["voice"], s["normalized"]))
+            for s in ep["segments_norm"] if "text" in s
+        ]
+        ep_seam = {k: v for k, v in seam_texts.items() if k.startswith(f"{key}/")}
+        verdict = guard_episode(
+            episode_id=ep["episode_id"],
+            mp3=final,
+            script_text=script_text,
+            segment_texts=seg_texts,
+            fragments=frags,
+            seam_texts=ep_seam,
+            context=plan.get("context") if key == "daily-rosary" else None,
+            workdir=rundir / "guard" / ep["episode_id"],
+        )
+        (rundir / f"guard-{ep['episode_id']}.json").write_text(json.dumps(verdict, indent=1))
+        results[key]["transcript_guard"] = {
+            "passed": verdict["passed"],
+            "problems": verdict["problems"][:6],
+            "metrics": verdict.get("metrics") or {},
+        }
+        if not verdict["passed"]:
+            results[key]["status"] = "FAILED_GUARD"
+            results[key]["failure_label"] = "TRANSCRIPT_GUARD_FAILED"
+            print(key, "FAILED_GUARD", verdict["problems"][:2], flush=True)
+        else:
+            print(key, "guard passed", verdict.get("metrics"), flush=True)
+
     built = [r for r in results.values() if r["status"] == "built"]
     failed_eps = [r for r in results.values() if r["status"] != "built"]
     report = {
@@ -421,7 +494,7 @@ def build(rundir: Path, cache: Path) -> dict:
             "spoken_chars": sum(r.get("spoken_chars", 0) for r in built),
         },
         "flags": list(plan.get("flags") or [])
-        + [f"{r['episode_id']}: TTS_FAILED — episode not built; publish is blocked for the whole day."
+        + [f"{r['episode_id']}: {r.get('failure_label', 'TTS_FAILED')} — episode not built; publish is blocked for the whole day."
            for r in failed_eps],
         "published": False,
     }
@@ -1037,7 +1110,7 @@ def _verify_transcripts(plan: dict, info: dict) -> str:
 
     staged: dict[str, bytes] = info["staged"]
     try:
-        feed_text = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+        feed_text = _urlopen_ua(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
         root = ET.fromstring(feed_text)
     except Exception as exc:  # noqa: BLE001 - named in the failure string
         return f"live feed read-back failed ({exc})"
@@ -1068,7 +1141,7 @@ def _verify_transcripts(plan: dict, info: dict) -> str:
     if first_tagged is not None:
         ep_id, url = first_tagged
         try:
-            with urllib.request.urlopen(url, timeout=60) as resp:
+            with _urlopen_ua(url, timeout=60) as resp:
                 if resp.status != 200:
                     return f"{ep_id}: transcript fetch returned status {resp.status}"
                 body = resp.read().decode("utf-8")
@@ -1178,7 +1251,7 @@ def _verify_live_feed(plan: dict, date_iso: str) -> str:
     verification = ""
     deadline = time.time() + 300
     while time.time() < deadline:
-        text = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+        text = _urlopen_ua(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
         root = ET.fromstring(text)
         items = root.find("channel").findall("item")
         top_ids = []
@@ -1213,7 +1286,7 @@ def publish_drop(rundir: Path, report: dict) -> dict:
 
     # Feed backup: first time each new date is published, keep the pre-drop
     # live feed next to the ledger.
-    live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+    live_feed = _urlopen_ua(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
     _backup_feed_once(live_feed, date_iso)
 
     # (1)+(2) R2 uploads + manifest reconciliation (merged manifest LAST).
@@ -1369,7 +1442,7 @@ def _feed_state(rundir: Path, plan: dict):
     Returns (present_ids, missing_ids, total_items, feed_text)."""
     import xml.etree.ElementTree as ET
 
-    feed_text = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+    feed_text = _urlopen_ua(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
     root = ET.fromstring(feed_text)
     items = root.find("channel").findall("item")
     guids, urls = set(), set()
@@ -1507,7 +1580,7 @@ def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
             "staged": tfull_staged,
         }
         if not feed_ok:
-            live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+            live_feed = _urlopen_ua(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
             _backup_feed_once(live_feed, date_iso)
             tsub = _publish_transcripts(rundir, plan, only_episode_ids=set(missing_eps))
             live_feed = _ensure_podcast_namespace(live_feed)

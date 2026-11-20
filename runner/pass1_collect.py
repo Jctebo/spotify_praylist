@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -56,9 +57,9 @@ SEAM_PURPOSE = {
     "daily-intro": "Daily intro text for Morning Prayer (date, liturgical day, saint witness weave-in).",
     "prayer-intro": "Short prayer intro (saint-of-the-day weave-in) before the fixed prayer text.",
     "liturgical-announcement": "Liturgical announcement: date, weekday, and the day's celebration.",
-    "rosary-intro": "Rosary intro: date, mystery set, and saint witness weave-in.",
-    "rosary-overall-intention": "Rosary overall intention for the whole rosary.",
-    "rosary-intention": "Per-decade rosary intention (spoken before the 750 ms intention pause).",
+    "rosary-intro": "Rosary intro: date, mystery set, and the day's observances weave-in. MULTI-OBSERVANCE RULE (John, 2026-11-18): name ALL of the day's observances (context observances) — every memorial and optional memorial the day carries, e.g. both a Dedication feast and a saint's memorial — never only the single witness saint.",
+    "rosary-overall-intention": "Rosary overall intention for the whole rosary. MULTI-OBSERVANCE RULE (John, 2026-11-18): the intention incorporates ALL of the day's observances (context observances), not only the witness saint.",
+    "rosary-intention": "Per-decade rosary intention (spoken before the 750 ms intention pause). Across the decades, incorporate ALL of the day's observances (context observances), not only the witness saint.",
     "rosary-reflection": "Per-decade rosary reflection (spoken after the 750 ms intention pause).",
 }
 
@@ -159,6 +160,55 @@ def collect(target: dt.date, outdir: Path) -> dict:
         "music_season": season,
         "music_asset": music_asset,
     }
+
+    # Multi-observance days (John, 2026-11-18): the day's INTENTIONS must
+    # incorporate EVERY observance the day carries, not only the single
+    # witness saint. Root cause of the 2026-11-18 miss: the witness
+    # resolver deliberately keeps "Dedication of ..." feasts out of the
+    # Daily Reflection's saint list (devotional_calendar_saint
+    # ._names_saint), so the Dedication of the Basilicas of Saints Peter
+    # and Paul reached the seam only as feast_day — a field no seam
+    # instruction told the author to weave into intentions — and the
+    # rosary named Saint Rose Philippine Duchesne alone. observances is
+    # the seam-facing list of ALL of the day's observances: the feast_day
+    # headline first when it is a distinct observance, then every witness
+    # saint, never trimmed. (The Reflection's saint list itself is
+    # unchanged; this list governs intention-weaving only.)
+    def _obs_tokens(name: str) -> set[str]:
+        stop = {"the", "of", "saint", "saints", "st", "dedication", "basilicas",
+                "basilica", "virgin", "martyr", "martyrs", "apostle", "apostles",
+                "pope", "bishop", "abbot", "priest", "companions", "memorial",
+                "feast", "solemnity", "blessed"}
+        return {w.lower().strip("'-") for w in re.findall(r"[A-Z][a-zA-Z\u00C0-\u024F'\-]+", name or "")
+                if w.lower().strip("'-") not in stop}
+
+    def _observance_like(name: str) -> bool:
+        low = (name or "").lower()
+        if "dedication of" in low[:22]:
+            return True
+        if "blessed virgin mary" in low or "our lady" in low:
+            return True
+        return bool(re.search(r"\bsaints?\b", low)) or name.startswith(("Blessed ", "St. ", "Sts. "))
+
+    observances: list[str] = []
+    _saint_names = witness.get("saints") or (
+        [witness["witness_name"]] if witness.get("witness_name") else []
+    )
+    _feast = str(ctxd.get("feastDay", "")).strip()
+    if _feast and _observance_like(_feast):
+        _ft = _obs_tokens(_feast)
+        _same = False
+        for _s in _saint_names:
+            _st = _obs_tokens(_s)
+            if _ft and _st and len(_ft & _st) * 2 >= min(len(_ft), len(_st)):
+                _same = True
+                break
+        if not _same:
+            observances.append(_feast)
+    for _s in _saint_names:
+        if _s and _s not in observances:
+            observances.append(_s)
+    shared_context["observances"] = observances
 
     blocks: list[dict] = []
     episodes: list[dict] = []

@@ -344,11 +344,25 @@ PUB_GH_BASE = os.environ.get("OPN_PUB_GH_BASE", "https://api.github.com")
 PUB_SITE_BASE = os.environ.get("OPN_PUB_SITE_BASE", "https://orapronobis.media")
 PUB_AUDIO_BASE = os.environ.get("OPN_PUB_AUDIO_BASE", "https://audio.orapronobis.media")
 PUB_POLL_S = int(os.environ.get("OPN_PUB_POLL_S", "15"))
+# v370: the estate browser UA (app_door.py's string, verbatim). The
+# published site is Cloudflare-fronted; a verdict-bearing read of it
+# must not ride urllib's default user-agent (the bot rule 403s that
+# UA — the transcript verifier's defect, Item 1 of this release).
+_PUB_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0"
 
 
 class _PubNoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, *a):
         raise RuntimeError("redirect refused")
+
+
+def _pub_site_get(url: str) -> str:
+    """One GET of a published site file through the no-redirect opener
+    WITH the browser UA (v370). HTTP errors propagate to the caller —
+    the step-(1) live read keeps its 404 = first-publication rule."""
+    req = urllib.request.Request(url, headers={"User-Agent": _PUB_BROWSER_UA}, method="GET")
+    with urllib.request.build_opener(_PubNoRedirect()).open(req, timeout=60) as resp:
+        return resp.read().decode("utf-8", "replace")
 
 
 def _pub_cf_open(req, raw=False):
@@ -469,9 +483,7 @@ def publish_intentions(date: str, intro_files: list, segment_files: list) -> dic
     # which this step regenerates whole). 404 = first publication.
     live_items = []
     try:
-        req = urllib.request.Request(f"{PUB_SITE_BASE}/intentions.xml", method="GET")
-        with urllib.request.build_opener(_PubNoRedirect()).open(req, timeout=60) as resp:
-            live_xml = resp.read().decode("utf-8", "replace")
+        live_xml = _pub_site_get(f"{PUB_SITE_BASE}/intentions.xml")
         for m in _PUB_ITEM_RE.finditer(live_xml):
             gm = _PUB_GUID_RE.search(m.group(0))
             if not gm:
@@ -571,6 +583,49 @@ def publish_intentions(date: str, intro_files: list, segment_files: list) -> dic
         if len(parts) >= 2 and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", parts[1]) and parts[1] not in window:
             _pub_r2_delete(key)
     return {"intros": len(intro_files), "segments": len(segment_files)}
+
+
+def _pub_readback_standing(date: str, want_intros: int, want_segments: int) -> dict:
+    """v370: the live read-back that gates the MISSING verdict. Fetches
+    the published intentions.xml (browser UA, via _pub_site_get — the
+    file stands behind the same Cloudflare rule as the audio host)
+    and counts the items standing for `date`, split intro vs segment
+    by guid prefix, with the standing guid machinery. A just-
+    dispatched Pages deploy may still be propagating when the deploy
+    poll gives up, so the read re-polls: up to 3 attempts, 20 s
+    apart, returning as soon as the full wanted set stands. Returns
+    {"intros": n, "segments": n} with the counts of the last good
+    fetch; raises only when every attempt's fetch itself failed."""
+    counts = {"intros": 0, "segments": 0}
+    fetched = False
+    last_exc = None
+    for attempt in range(3):
+        if attempt:
+            time.sleep(20)
+        try:
+            xml = _pub_site_get(f"{PUB_SITE_BASE}/intentions.xml")
+        except Exception as exc:  # noqa: BLE001 - tallied, re-raised if all fail
+            last_exc = exc
+            continue
+        fetched = True
+        intros = segments = 0
+        for m in _PUB_ITEM_RE.finditer(xml):
+            gm = _PUB_GUID_RE.search(m.group(0))
+            if not gm:
+                continue
+            guid = gm.group(1).strip()
+            if _pub_item_date(guid) != date:
+                continue
+            if guid.startswith("intentions-intro-"):
+                intros += 1
+            elif guid.startswith("intentions-segment-"):
+                segments += 1
+        counts = {"intros": intros, "segments": segments}
+        if intros >= want_intros and segments >= want_segments:
+            return counts
+    if not fetched:
+        raise RuntimeError(f"intentions read-back fetch failed: {last_exc}") from last_exc
+    return counts
 
 
 def feed_presented_tracks(date: str):
@@ -815,12 +870,34 @@ def main() -> int:
         pub_names = list(failed_intros)
         pub_intros = 0
         pub_segs = 0
+        pub_note = ""
         try:
             res = publish_intentions(date, pub_intro_files, pub_segment_files)
             pub_intros = res["intros"]
             pub_segs = res["segments"]
         except Exception as exc:
-            pub_names.append(f"publish failed: {exc}")
+            # v370: a publish exception is not a verdict. Before
+            # MISSING may print, the live feed is read back: if the
+            # full attempted set stands for the date, the field
+            # reports published with the read-back counts and the
+            # exception is named as a note, not a missing item (the
+            # 2026-11-11 false MISSING — a deploy-poll timeout over
+            # a set that had in fact landed — is the defect this
+            # closes). MISSING prints only when the read-back also
+            # fails to find the full set; a read-back that itself
+            # fails names both failures.
+            try:
+                standing = _pub_readback_standing(date, len(pub_intro_files), len(pub_segment_files))
+                pub_intros = standing["intros"]
+                pub_segs = standing["segments"]
+                if pub_intros >= len(pub_intro_files) and pub_segs >= len(pub_segment_files):
+                    pub_note = (f" · note: publish raised ({exc}) — full set verified "
+                                f"standing by live read-back")
+                else:
+                    pub_names.append(f"publish failed: {exc}")
+            except Exception as rb_exc:
+                pub_names.append(f"publish failed: {exc}")
+                pub_names.append(f"read-back failed: {rb_exc}")
         seg_clause = "" if intros_only else f" · segments {pub_segs}/{seg_attempted}"
         if pub_names:
             print(f"Intentions feed (v342): MISSING — intros {pub_intros}/{len(eligible)} for presented {date}"
@@ -828,7 +905,7 @@ def main() -> int:
             rc = 1
         else:
             print(f"Intentions feed (v342): published — intros {pub_intros}/{len(eligible)} for presented {date}"
-                  f"{seg_clause} · missing: none")
+                  f"{seg_clause} · missing: none{pub_note}")
     return rc
 
 

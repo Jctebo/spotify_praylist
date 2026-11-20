@@ -24,6 +24,13 @@ Covers (v318 §2 T6):
      verify, ledger flip last) with the same transcript properties and
      the same computed field.
 
+v370 V1 extension: the stand-in host records the User-Agent of every
+request; fixtures A (publish leg) and C (reconcile leg) assert that
+EVERY fetch pass2 made — the feed reads and the transcript fetch —
+arrived with the module's browser UA (_BROWSER_UA), never a
+Python-urllib UA. That is the wire property whose absence 403'd the
+live transcript read-back two nights running.
+
 Run with the repo venv python (the pipeline's third-party deps live
 there):  ~/workspace/scratch-daybuild/nv-venv/bin/python runner/test_v318_transcripts.py
 """
@@ -93,11 +100,22 @@ class Fixture:
 
     def __init__(self) -> None:
         self.bucket: dict[str, bytes] = {}
+        self.app_bucket: dict[str, bytes] = {}  # v342's APP_TEXT_BUCKET puts land apart
         self.feed = ""
         self.commit_count = 0
+        self.seen: list[tuple[str, str]] = []  # (path, User-Agent) per request — v370 V1
 
-    def r2_put(self, key, data, ctype):
-        self.bucket[key] = bytes(data)
+    def r2_put(self, key, data, ctype, bucket=None):
+        # v370 fixture repair: the v342 app-texts leg calls _cf_r2_put
+        # with bucket=APP_TEXT_BUCKET; the pre-v342 fixture signature
+        # rejected the kwarg and the suite died in fixture A on trunk
+        # (verified identical on pristine 862bd9d, 2026-11-11). App-
+        # bucket objects are kept apart so the bucket assertions on
+        # the podcast bucket stay exact.
+        if bucket is not None:
+            self.app_bucket[key] = bytes(data)
+        else:
+            self.bucket[key] = bytes(data)
         return {"success": True}
 
     def r2_get(self, key):
@@ -118,6 +136,7 @@ class Fixture:
 def start_server(fx: Fixture) -> ThreadingHTTPServer:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):  # noqa: N802 - BaseHTTPRequestHandler shape
+            fx.seen.append((self.path, self.headers.get("User-Agent") or ""))
             if self.path == "/podcast.xml":
                 body = fx.feed.encode("utf-8")
             elif self.path.lstrip("/") in fx.bucket:
@@ -254,6 +273,21 @@ def assert_drop(fx: Fixture, base: str, original_feed: str, label: str) -> None:
     assert "novid-ep.txt" not in fx.bucket, f"{label}: novid-ep.txt must not upload"
 
 
+def assert_wire_uas(fx: Fixture, label: str, count: int) -> None:
+    """v370 V1: every fetch pass2 made over the first `count` recorded
+    requests rode the browser UA — the feed reads AND the transcript
+    fetch — and none rode a Python-urllib UA."""
+    seen = fx.seen[:count]
+    assert seen, f"{label}: no requests recorded"
+    paths = {p for p, _ in seen}
+    assert "/podcast.xml" in paths, f"{label}: no feed read recorded: {paths}"
+    assert "/clean-ep.txt" in paths, f"{label}: no transcript fetch recorded: {paths}"
+    for path, ua in seen:
+        assert ua == p2._BROWSER_UA, f"{label}: {path} arrived with UA {ua!r}"
+        assert "Python-urllib" not in ua, f"{label}: {path} rode the default UA"
+    print(f"  {label} wire UA OK — {len(seen)} requests, all browser UA (feed + transcript)")
+
+
 def fixture_a(tmp: Path):
     print("— Fixture A: publish_drop end to end")
     fx = Fixture()
@@ -272,6 +306,9 @@ def fixture_a(tmp: Path):
     assert [m["episode_id"] for m in missing] == ["poison-ep", "novid-ep"], missing
     assert "guard" in missing[0]["reason"], missing[0]["reason"]
     assert_drop(fx, base, original_feed, "A")
+    # v370 V1: the publish leg's wire UAs (snapshot BEFORE the test's
+    # own direct fetch below, which rides the default UA by design).
+    assert_wire_uas(fx, "A", len(fx.seen))
     # The transcript fetch against the local stand-in host, directly.
     with urllib.request.urlopen(f"{base}/clean-ep.txt", timeout=10) as resp:
         assert resp.status == 200
@@ -317,6 +354,8 @@ def fixture_c(tmp: Path) -> None:
     assert rc == 0, f"C: reconcile rc={rc}\n{text}"
     assert EXPECTED_FIELD in text, f"C: field missing from reconcile output\n{text}"
     assert_drop(fx, base, original_feed, "C")
+    # v370 V1: the reconcile leg's wire UAs (feed reads + transcript).
+    assert_wire_uas(fx, "C", len(fx.seen))
     led = json.loads(ledger.read_text())
     assert led[DATE]["status"] == "published", "C: ledger not flipped"
     print("  C OK — tail completed, same transcript properties + field")
