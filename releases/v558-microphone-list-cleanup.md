@@ -2,7 +2,7 @@
 
 - **Registry:** DevOps Board, ora-pro-nobis, row 1508 · version v558 · slug v558-microphone-list-cleanup
 - **Intake:** Goals Board task 1062 (Muse Jobs, goal 16)
-- **Status:** PLAN — production-defect fix-forward (standing v553/v556 precedent; no scope package — the approved v557 shape is the spec)
+- **Status:** LIVE — shipped 2026-11-20 (Worker 9aa20d14 · What's New 378)
 
 ## 1 · Fix brief
 
@@ -31,3 +31,13 @@
 - **Clean-checkout re-run:** a fresh clone checked out at the committed tree (fbb3ec3) re-ran harness-v558: **36 ok / 0 not-ok**, identical to the build tree.
 - **Diff audit (ba08a73..fbb3ec3):** exactly three files — app/worker/src/client.ts (+69/−7, the microphone module only), app/tests/harness-v558.mjs (new), this document. index.ts and ui.ts byte-identical; migrations end at 0042; the Android repo is untouched (no bridge change, no APK — Plan D1 stands).
 - **Verdict:** PASS. The list renders one row per real input under the approved friendly names; the stored pick resolves through the merge and migrates in place; steering, capture, and the Q5 A fallback are behavior-identical to v557.
+
+## 5 · Ship
+
+- **Merge + push:** release/v558 fast-forwarded into main (ba08a73 verified as the branch base) with the SW pin bump to ora-pro-nobis-v558-1 — merged head **f9461fe**. Pushed via Git Data API replication (the fresh clone holds no push credential; the helper's read-back and an independent ls-remote agree): **main pushed · remote in sync**. Local branch release/v558 deleted after merge; never pushed.
+- **Harness on the merged tree:** 34 ok / 2 not-ok — both not-oks are the pin bump's own single line in ui.ts (S1a sees ui.ts in the diff; S2b's byte-identity check reads it), disclosed here as in v557's ship; every functional leg green. Build tree and clean checkout both read 36 ok / 0 not-ok.
+- **Deploy:** Worker **9aa20d14-71d7-4f7d-9fa8-05c92f3afebc** at 100% · pin ora-pro-nobis-v558-1 · rollback = v557 Worker 4d1e9300-795a-4a27-90e1-fcf24c7f474e. Smoke on the new deployment: app agent door player day 2026-11-20 → 200 (6 blocks).
+- **No APK:** the bridge did not change (Plan D1) — APK 1.0.47 stands as the shell; nothing for John to install for this fix.
+- **Registry:** row 1508 **Live** — shipped_at 2026-11-20T21:47:00Z · What's New **378** ("Microphone list cleanup"). No migration (0042 stands last; 0043 stays free).
+- **Field leg (John's):** reopen the microphone list on the record card — one Phone microphone row, the glasses under their own name if the system gives it, System default first.
+- **Status:** LIVE 2026-11-20.
