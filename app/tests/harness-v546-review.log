@@ -1,0 +1,48 @@
+ok - S1a: migration 0041 stands last
+ok - S1b: 0041 creates starred_tracks in the additive mold
+ok - S2-mass.ts: byte-identical to the production base
+ok - S2-mass-calendar.ts: byte-identical to the production base
+ok - S2-mass-order.ts: byte-identical to the production base
+ok - S2-mass-readings.ts: byte-identical to the production base
+ok - S2-logo.ts: byte-identical to the production base
+ok - S2-logo512.ts: byte-identical to the production base
+ok - S3a: ui.ts is the base plus exactly one line — the .trackstar rule
+ok - S3b: the SW pin stands at v544-1 on the build tree (it moves only at Ship)
+ok - S4a: the book favorites PUT block stands byte-identical (the 0028 routes untouched)
+ok - S4b: bookFavorites and the Mass personal-prayer read stand byte-identical (the prayer seats untouched)
+ok - S4c: the starred session PUT and the door mirror GET stand in index.ts
+ok - S5-addToQueue: byte-identical to the base (a seam this release does not move)
+ok - S5-queueKindIsPod: byte-identical to the base (a seam this release does not move)
+ok - S5-renderQueueList: byte-identical to the base (a seam this release does not move)
+ok - S5-chainForward: byte-identical to the base (a seam this release does not move)
+ok - S5-openPlayerMenu: byte-identical to the base (a seam this release does not move)
+ok - S5d: the provenance clears at every standing queue birth/clear (playTrack · startQueue · advanceQueue's exhaustion · clearQueue) — the designed change, each a single line
+ok - S5b: renderQueueList carries no star (the package bound: queue rows carry no star)
+ok - S5c: the star seats and the starred-provenance reads stand in client.ts
+ok - S6: the fixtures stand — the production book (9 groups / 77), John's production favorites (3 slugs, in stored order), and every seated track id stands in the day fixture's own introTexts (production-drawn)
+ok - P0: the cooked APP_JS parses (the template-literal gate)
+ok - A0: boot clean — no page errors on the carry-in page
+ok - A1 (Q4 A): the empty unified store carries the production book favorites in as prayer entries, in their stored order
+ok - A2 (Q4 A): the carry-in lands through ONE whole-list PUT of the unified store
+ok - A3 (Q2 B): the Starred section stands at the head of the Praylist side (above the block rows) listing the carried prayers
+ok - A4 (Q4 A): the book's own stars read the unified store — the three carried favorites filled, another prayer open
+ok - A5: the section's prayer rows read the book's titles (not slugs) once the book stands loaded
+ok - A6: the carry-in page carries no page errors after the side switches
+ok - B0: boot clean — no page errors on the main page
+ok - B1 (Q2 B): the seeded list stands in the Starred section at the Praylist head, in list order, with Play all + Add all to queue
+ok - T1a (Q1 A): the day card's cluster reads played dot · star · ⋮, the star open
+ok - T1b (Q1 A/Q4 A): the tap fills the star, the track takes the list's head (most recent first), and the whole-list PUT carries it first
+ok - T1c (Q2 B): back home, the Starred section's head row is the just-starred track
+ok - T5a (Q3 A): Play all builds the queue in list order ACROSS kinds (live day · podcast snapshot · past-day snapshot), provenance starred, no queue snapshot written
+ok - T5b (Q3 A): the ended-walk plays each list track in turn and STOPS at the list's end with autoplay ON — the day chain never joins it
+ok - T3 (Q1 A): a podcast row's star fills; the entry stands at the list's head carrying its series (the key the seq_key alone cannot give)
+ok - T6a: a single podcast play stands alone (autoplay OFF, the v542 single-play rule — the tapped entry only, no series queue, no provenance)
+ok - T6b (Q3 A): Add all appends the whole mixed list behind the standing single play — [current, ...list] across kinds, no kind bound
+ok - T9a (Q1 A + the bound): Now Playing's queue rows carry NO star; the control row's star reads the playing track's standing star (ciy:day-2 stands starred)
+ok - T9b (Q1 A): the Now Playing star toggles the playing track OFF the list
+ok - T4 (Q1 A): the Catechesis Novenas card's star fills, the novena episode stands in the list, and the tap does NOT start playback
+ok - T8: un-starring from the section empties the list everywhere — the store, the section's empty line, and the final whole-list PUT all read empty
+ok - B9: the main page carries no page errors after every leg
+ok - G439 (recorded as-is, not a v546 pass): the standing v439 boot gate reads its standing 13 ok / 2 not-ok on this tree
+
+harness-v546: 46 ok / 0 not-ok
