@@ -34,3 +34,14 @@
 - **Diff read-back:** base 4aed9b8 → f63da7a touches exactly `app/worker/src/client.ts` (+12 lines, `starredRowHtml` only), the harness and its log, and this document. The change reads the row descriptor's settled draw through the standing `trackDrawTextFor` seam and paints the standing `.intention-text track-draw-line` dress, gated on playable + draw standing + `intentionsOn()` — the fix shape as planned, nothing else.
 - **Harness:** harness-v553 re-run by this seat on a CLEAN checkout of the committed HEAD f63da7a (worktree status clean before and after): 23 ok / 0 not-ok, matching the build-tree run.
 - **Concerns and Information Needs:** none.
+
+## 5 · Ship
+
+- **Verdict:** SHIPPED LIVE 2026-11-20 10:12 CT.
+- **Worker:** a89467b1-937a-4a41-98e8-7f5822049bc7 · pin ora-pro-nobis-v553-1 · rollback = v550's Worker (35cdd52b, pin ora-pro-nobis-v550-1) · no migration.
+- **Tree:** production main c814117e177f30285737dd46a7dbfa431cee0351 (reviewed build f63da7a + Review doc fb452b2 + the SW pin bump only), deployed from the clean v553 ship worktree (status clean, HEAD verified before deploy; dry-run clean).
+- **GitHub:** main pushed · remote in sync (c814117e, read back from the GitHub API after the push).
+- **Registry:** row 1494 Live · What's New 371 · shipped record posted.
+- **Served verification:** the live Worker answers the agent door 200 on the new deployment (player day for 2026-11-20 and the podcast progress read); the deployed tree is the harness-proven tree (harness-v553 23 ok / 0 not-ok on the build tree and on a clean checkout of the committed build HEAD).
+- **Field legs (John):** (1) Open Favorites — the Intention line stands under a starred track. (2) Turn the Settings Intentions switch off — the line hides on Favorites; back on — it returns.
+- **Concerns and Information Needs:** none.
