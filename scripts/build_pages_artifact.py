@@ -209,11 +209,17 @@ def build_artifact(
     # orapronobis.media/assets/daily-wallpaper-desktop.jpg always
     # serves the current day's desktop image. Guarded: the file
     # exists only once a desktop commit has landed.
-    desktop_committed = sorted((ROOT / "assets").glob("daily-wallpaper-desktop.*"))
-    if desktop_committed:
-        desktop_target = output_dir / "assets" / desktop_committed[0].name
+    # v554: the wide SET rides — every committed desktop file (the
+    # pick, the gospel and monthly role files, and any subject-named
+    # member) stages at its own name; the glob carries no dot after
+    # "desktop" so the hyphenated role names match too.
+    desktop_committed = sorted((ROOT / "assets").glob("daily-wallpaper-desktop*"))
+    for desktop_file in desktop_committed:
+        if not desktop_file.is_file():
+            continue
+        desktop_target = output_dir / "assets" / desktop_file.name
         desktop_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(desktop_committed[0], desktop_target)
+        shutil.copy2(desktop_file, desktop_target)
     return payload
 
 
