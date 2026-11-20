@@ -44,3 +44,14 @@
 - **Untouched, verified:** v550's row controls and reorder mode (`starredRowHtml` · `favReorderRowHtml` · `enterFavReorder` byte-identical; the Reorder push unedited) · v553's Intention line (it lives in `starredRowHtml`, byte-identical) · both acts (`starredPlayAll` · `starredAddAll`) byte-identical · index.ts/ui.ts byte-identical · no migration.
 - **Harness:** harness-v552 re-run by this seat on a CLEAN checkout of the committed HEAD 8779ffb (worktree status clean before and after): 29 ok / 0 not-ok, matching the build-tree run and Implement's clean-checkout run.
 - **Concerns and Information Needs:** none.
+
+## 5 · Ship
+
+- **Verdict:** SHIPPED LIVE 2026-11-20 12:07 CT.
+- **Worker:** cedc1915-3309-44e7-ab36-1037fab04bf8 · pin ora-pro-nobis-v552-1 · rollback = v553's Worker (a89467b1-937a-4a41-98e8-7f5822049bc7, confirmed at 100% before deploy) · no migration · no data writes.
+- **Tree:** production main 28aced326066191b489e8beb4360bef0e82bf680 (the reviewed build, rebased onto the then-current main 6046be9 — the v554 doc commit; the v552 files verified tree-identical across the rebase — + the SW pin bump only), deployed from the clean v552 ship worktree (status clean, HEAD verified before deploy; dry-run clean). The local build branch was deleted after the merge.
+- **GitHub:** main pushed · remote in sync (28aced32, read back from the GitHub API after the push — the three commits replicated byte-identically).
+- **Registry:** row 1493 Live · What's New 373 · shipped record posted.
+- **Served verification:** the live Worker answers the agent door 200 on the new deployment (player day for 2026-11-20); the deployed tree is the harness-proven tree (harness-v552 29 ok / 0 not-ok on the build tree and on a clean checkout of the committed build HEAD).
+- **Field legs (John):** (1) Open Favorites — the ▶ disc stands in the header bar at the right; the button row under the header is gone. (2) Tap the disc — the whole list plays in list order. (3) Open the top overflow — "Add all to queue" stands above Reorder in the Favorites group; tap it — the list joins the queue. (4) Reorder still enters from the same menu. (5) Empty-list case, if you clear a star down to none: no disc in the bar, and the menu group carries neither item.
+- **Concerns and Information Needs:** none.
