@@ -65,3 +65,28 @@ HARNESS LEGS (new runner/test_site_desktop_wide.py, plus the v554 enumeration su
 FIXTURES FROM PRODUCTION SHAPES (Improvement D): the enumeration cases are the v554 harness's dated production days (2026-11-20 · 11-16 · 11-15 · 11-04 · 11-18); the band constants are measured from the three approved production exemplars in ~/workspace/your_files/v555-wide-samples/; the compose leg's raw is a synthetic image — a composition fixture, not a content fixture: the band geometry and dress are what stand under test.
 
 CALLER UPDATE: the nightly job's desktop step W(d) gains the wide-raw generation step ahead of the site_desktop.py run (one new wide render per set member, saved as wide-<subject-slug> in the day's raw dir), and its stale v526 composition description is replaced by the amended shape. The job body is updated through the cron route with everything else preserved.
+
+## 3 · Implement
+
+Branch release/v555 (local) · commit e50566b on main bb979f8 · Implement record 2229 · contract 642 (holder v555-chain).
+
+WHAT CHANGED — runner/site_desktop.py only (plus the new harness); the app Worker is untouched:
+- compose_wide_member(raw, name): the member's own wide raw cover-fit to 1920×1080 (ImageOps.fit, the render module's fit discipline), then the name band drawn in code — opaque navy band (RGB 10,28,60) over the frame's foot 140 px, the name centered in gold (RGB 216,170,92) EB Garamond from the repo's pinned font (config/devotional_images/fonts/EBGaramond-Regular.ttf), auto-shrunk to fit 86% of the width, a gold double rule at the band's top edge, a gold rule at its foot, and drawn gold corner flourishes (L rules with diamond finials). Band constants measured from the three approved exemplars.
+- wide_raw_for(date, subject): finds wp-raw-<date>/wide-<subject-slug>.<ext> in the day's run dir; more than one match WARNs and takes the first name; none reads None.
+- display_name(subject): title-case from the slug, small words (a · and · at · de · for · in · of · on · the · to) lowercase mid-name.
+- main(): per member, the composition source is now the member's wide raw. A member with no wide raw WARNs and is skipped; the pick with no wide raw WARNs and exits 1, nothing published. The Drive phone file is no longer downloaded for composition (pick_site_wallpaper's rule still names the pick; _download_drive_file and composite_desktop are removed — the rejected phone-edit composition is gone from the code, not kept as a fallback). Local output names and the publish flow are unchanged.
+- publish_desktop_set: reads the head tree recursively and adds a sha-null tree entry for every stale subject-named extra (stale_extra_deletions — the fixed role assets are never selected), so the deletions ride the same commit as the day's set; each deletion is printed and named in the commit message.
+
+HARNESS (build tree): runner/test_site_desktop_wide.py — 22 ok / 0 not-ok (display_name production slugs · wide_raw_for found/missing/monthly · compose geometry + band dress on a synthetic 2048×1152 raw · stale-extra selection). runner/test_site_desktop_set.py (v554 enumeration regression) — 22 ok / 0 not-ok.
+
+DRESS CHECK: the deterministic band was composed over the approved Felix scene (its generated band cropped away first) and read visually — navy band, gold rules, corner flourishes, and "Saint Felix de Valois" in gold EB Garamond, correctly spelled, centered. The drawn corner flourishes are plainer than the exemplars' generated scrollwork; the dress family (navy · gold serif name · gold corner work) is the approved one.
+
+CALLER (nightly job W(d)) update lands at Ship with the code, so the route and its instructions change together.
+
+## 4 · Review
+
+Review record 2230 · contract 643 (holder v555-chain). PASS.
+
+- Harness re-run on a CLEAN CHECKOUT of the committed HEAD e50566b (fresh clone of release/v555, standing untracked runner/_common.py supplied as in production): runner/test_site_desktop_wide.py — 22 ok / 0 not-ok · runner/test_site_desktop_set.py — 22 ok / 0 not-ok. Identical counts to the build tree; the gate reads the committed tree, not the worktree.
+- Diff discipline: the branch touches runner/site_desktop.py (rebuilt), runner/test_site_desktop_wide.py (new), and this document. No app Worker file, no migration, no phone/watch step. The v554 enumeration suite passing unchanged proves the member/role contract is untouched.
+- The one judgment call stands as Plan recorded it: the name band is composed in code, not generated — the pipeline's standing text discipline (the render module's QA rejects generated lettering) and the name's exactness rest on it; the dress check at Implement matched the approved exemplars' family (navy band · gold EB Garamond name · gold rules and corner work).
