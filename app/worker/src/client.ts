@@ -8446,33 +8446,54 @@ function bookFavsWrite(favs) { try { localStorage.setItem(BOOK_FAVS_KEY, JSON.st
    The server list is the truth; the device key stands as its
    mirror. Until the load's server read settles the copy, the
    mirror stands as the copy (the offline paint never waits).
-   v546 (scope package 49, Q4 A): the book star and the
-   starred list are ONE system — the favorites list DERIVES
-   from the unified starred store (its prayer entries, in
-   list order), and state.bookFavs / the opn-book-favs-v462
-   mirror retire as stores (bookFavsRead stands only as the
-   carry-in's read of last resort is unnecessary — the
-   carry-in reads the server's 0028 list through the API). */
+   v547: v546's one-system derivation retires — John's
+   correction (2026-11-19) restores the book's favorites as
+   their OWN system on the 0028 routes, exactly as this block
+   stood before v546; the starred folder holds tracks only
+   and the two systems never read or write each other. */
 function bookFavsList() {
-  return (state.starred || []).filter(function (e) { return e.k === 'prayer'; }).map(function (e) { return e.id; });
+  if (state && Array.isArray(state.bookFavs)) return state.bookFavs;
+  return bookFavsRead();
 }
 function bookFavsSet(favs) {
-  // v546: retained as a seam for the book's older callers —
-  // the favorites are the unified store's prayer entries;
-  // nothing writes the retired copy any more.
   state.bookFavs = favs;
+  bookFavsWrite(favs);
 }
 function bookFavsSync() {
-  // v546: the write-through is the unified store's sync —
-  // the book's PUT retires with the one-system unification
-  // (the 0028 routes stand server-side, untouched).
-  return starredSync();
+  // The write-through: PUT the whole working copy; the stored
+  // list the server answers with is adopted whole (it is the
+  // truth — validated, deduped). A failed PUT keeps the
+  // mirror; the next toggle or the next open re-syncs.
+  var favs = bookFavsList().slice();
+  return api('/api/prayer/book/favorites', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ favorites: favs }) }).then(function (res) {
+    if (res && Array.isArray(res.favorites)) {
+      bookFavsSet(res.favorites);
+      if (document.getElementById('book-results')) paintBookResults();
+    }
+    return res;
+  }).catch(function () { return null; });
 }
 function bookFavsLoad() {
-  // v546: the book's load is the unified store's load — the
-  // server read, the mirror, and the one-time carry-in of
-  // the 0028 favorites all stand in starredLoad.
-  return starredLoad();
+  // The server read at book load. Where the server list
+  // stands, it is the truth and the mirror is rewritten from
+  // it. Where the server stands empty and the mirror holds
+  // slugs, the mirror carries up once — one-way and
+  // idempotent: a later open finds the server standing and
+  // carries nothing, and a failed carry-up leaves the mirror
+  // untouched for the next open to retry. A failed read
+  // leaves the mirror standing as the working copy.
+  state.bookFavs = bookFavsRead();
+  return api('/api/prayer/book/favorites').then(function (res) {
+    if (!res || !Array.isArray(res.favorites)) return;
+    if (res.favorites.length) {
+      bookFavsSet(res.favorites);
+      if (document.getElementById('book-results')) paintBookResults();
+    } else if (bookFavsRead().length) {
+      bookFavsSync();
+    } else {
+      bookFavsSet([]);
+    }
+  }).catch(function () {});
 }
 function bookFind(slug) {
   var found = null;
@@ -8562,35 +8583,45 @@ function renderPrayerBook() {
   });
 }
 function toggleBookFav(slug) {
-  // v546 (scope package 49, Q4 A): the book star is the
-  // unified store's prayer toggle — one system: a prayer
-  // starred here stands in the Praylist Starred section,
-  // and a prayer un-starred there empties here. The entry
-  // is titled from the book where it stands loaded.
-  var f = bookFind(slug);
-  toggleStar({ k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' });
+  var favs = bookFavsList().slice();
+  var at = favs.indexOf(slug);
+  if (at >= 0) favs.splice(at, 1); else favs.push(slug);
+  bookFavsSet(favs);
+  if (document.getElementById('book-results')) paintBookResults();
+  var ps = document.getElementById('book-page-star');
+  if (ps && ps.getAttribute('data-bookstar') === slug) ps.textContent = favs.indexOf(slug) >= 0 ? '\u2605' : '\u2606';
+  bookFavsSync();
 }
 /* v546 (scope package 49 — Star any track; John's approval
-   37, run level To Ship): the ONE star system. John's
+   37, run level To Ship): the star system. John's
    decisions: Q1 A — a star on the track row itself (day
    cards, podcast rows, Catechesis Novenas cards) and in Now
-   Playing's control row, in the book's gold glyph · Q2 B —
-   no new Pray side: a 'Starred' SECTION at the HEAD of the
-   Praylist side, above today's blocks ("Top, not bottom") ·
-   Q3 A — the list PLAYS AS A LIST: Play all and queue acts
-   on the whole list, across kinds ("I just want it all to
-   play") · Q4 A — a new server table (migration 0041),
-   whole-list PUT in the v470 discipline, the book favorites
-   carried in: the book star and this list are one system.
+   Playing's control row, in the book's gold glyph · Q3 A —
+   the list PLAYS AS A LIST: Play all and queue acts on the
+   whole list, across kinds ("I just want it all to play") ·
+   Q4 A — a new server table (migration 0041), whole-list
+   PUT in the v470 discipline.
+   v547 (John's correction, 2026-11-19 22:55 CT): Q2 B's
+   Starred SECTION at the Praylist head retires — the list
+   lives in its own FOLDER under Pray (a folder row on the
+   Listen home opening the Favorites page), and Q4 A's
+   unification reverses: this store holds TRACKS ONLY.
+   Written-prayer favorites stand in the prayer book's own
+   system again (the book block above); a prayer's star
+   seat (a book row, the prayer page, a prayer take's
+   cluster or Now Playing star) toggles the BOOK favorite,
+   never this store; and the v546 carry-in of the 0028
+   favorites into this store is removed whole.
    The store: state.starred (entries in list order — most
    recently starred first), mirrored on the device at
    opn-starred-v546. An entry is the star's snapshot
    { k, id, series?, title, sub, durationS, imageUrl, block,
-   url, date } — k in episode|podcast|prayer; the snapshot
-   is the play fallback for a track no live source still
-   carries; resolution always reads live sources first. */
+   url, date } — k in episode|podcast (a prayer entry is
+   filtered at every adoption and never written); the
+   snapshot is the play fallback for a track no live source
+   still carries; resolution always reads live sources
+   first. */
 var STARRED_KEY = 'opn-starred-v546';
-var starredCarryDone = false;
 function starKeyOf(kind, id, series) {
   if (kind === 'podcast') return 'podcast:' + (series || '') + ':' + (id || '');
   if (kind === 'prayer') return 'prayer:' + (id || '');
@@ -8606,11 +8637,19 @@ function starKeyForDesc(desc) {
 function starredReadMirror() {
   try {
     var v = JSON.parse(localStorage.getItem(STARRED_KEY) || '[]');
-    return Array.isArray(v) ? v.filter(function (e) { return e && typeof e === 'object' && typeof e.id === 'string' && typeof e.k === 'string'; }) : [];
+    return Array.isArray(v) ? v.filter(function (e) { return e && typeof e === 'object' && typeof e.id === 'string' && typeof e.k === 'string' && e.k !== 'prayer'; }) : [];
   } catch (e) { return []; }
 }
 function starredWriteMirror() { try { localStorage.setItem(STARRED_KEY, JSON.stringify(state.starred || [])); } catch (e) {} }
-function starredSet(list) { state.starred = Array.isArray(list) ? list.slice() : []; starredWriteMirror(); }
+function starredSet(list) {
+  // v547: the one adoption gate — every list entering the
+  // working copy (the server read, the mirror, the sync's
+  // answer) is filtered to track entries, so a prayer row
+  // standing anywhere can never render in the folder or
+  // ride a later PUT back.
+  state.starred = (Array.isArray(list) ? list.slice() : []).filter(function (e) { return e && e.k !== 'prayer'; });
+  starredWriteMirror();
+}
 function starredHas(key) { return (state.starred || []).some(function (e) { return starEntryKey(e) === key; }); }
 function starredEntryByKey(key) {
   var list = state.starred || [];
@@ -8639,11 +8678,6 @@ function starEntryForKey(key) {
   var standing = starredEntryByKey(key);
   if (standing) return standing;
   var kind = String(key || '').split(':')[0];
-  if (kind === 'prayer') {
-    var slug = String(key).slice('prayer:'.length);
-    var f = bookFind(slug);
-    return { k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
-  }
   if (kind === 'podcast') {
     var rest = String(key).slice('podcast:'.length);
     var series = rest.split(':')[0];
@@ -8671,6 +8705,10 @@ function starEntryForKey(key) {
 }
 function toggleStar(entry) {
   if (!entry || !entry.id) return;
+  // v547: the track store holds tracks only — a prayer
+  // entry builds nothing here (its star seats toggle the
+  // book favorite through toggleBookFav).
+  if (entry.k === 'prayer') return;
   var key = starEntryKey(entry);
   var list = (state.starred || []).slice();
   var at = -1;
@@ -8678,10 +8716,7 @@ function toggleStar(entry) {
   if (at >= 0) list.splice(at, 1); else list.unshift(entry); // most recently starred first
   starredSet(list);
   refreshStarChrome();
-  paintStarredSection();
-  if (document.getElementById('book-results')) paintBookResults();
-  var ps = document.getElementById('book-page-star');
-  if (ps && entry.k === 'prayer' && ps.getAttribute('data-bookstar') === entry.id) ps.textContent = starredHas(key) ? '\u2605' : '\u2606';
+  paintFavoritesSurfaces();
   starredSync();
 }
 function starredSync() {
@@ -8694,8 +8729,7 @@ function starredSync() {
     if (res && Array.isArray(res.starred)) {
       starredSet(res.starred);
       refreshStarChrome();
-      paintStarredSection();
-      if (document.getElementById('book-results')) paintBookResults();
+      paintFavoritesSurfaces();
     }
     return res;
   }).catch(function () { return null; });
@@ -8704,36 +8738,23 @@ function starredLoad() {
   // The server read (the bookFavsLoad posture, transposed):
   // a standing server list is the truth and the mirror is
   // rewritten from it; an empty server with a standing
-  // mirror carries the mirror up once; an empty server AND
-  // an empty mirror runs the CARRY-IN, once — the 0028 book
-  // favorites become prayer entries in their stored order
-  // (Q4 A: one system). A failed read leaves the mirror
-  // standing as the working copy.
+  // mirror carries the mirror up once. A failed read leaves
+  // the mirror standing as the working copy.
+  // v547: the v546 carry-in of the 0028 book favorites is
+  // removed whole — the two systems stand apart. Adoption
+  // filters any prayer entry out (starredSet), so a prayer
+  // row standing in the table (the carry-in's rows, cleaned
+  // at this release's Ship) never renders in the folder.
   if (!(state.starred || []).length) state.starred = starredReadMirror();
   return api('/api/prayer/starred').then(function (res) {
     if (!res || !Array.isArray(res.starred)) return;
     if (res.starred.length) {
       starredSet(res.starred);
       refreshStarChrome();
-      paintStarredSection();
-      if (document.getElementById('book-results')) paintBookResults();
+      paintFavoritesSurfaces();
       return;
     }
     if ((state.starred || []).length) { starredSync(); return; }
-    if (starredCarryDone) return;
-    starredCarryDone = true;
-    return api('/api/prayer/book/favorites').then(function (fres) {
-      var slugs = (fres && Array.isArray(fres.favorites)) ? fres.favorites : [];
-      if (!slugs.length) return;
-      starredSet(slugs.map(function (slug) {
-        var f = bookFind(slug);
-        return { k: 'prayer', id: slug, title: f ? f.prayer.title : slug, sub: 'Written prayer', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
-      }));
-      refreshStarChrome();
-      paintStarredSection();
-      if (document.getElementById('book-results')) paintBookResults();
-      return starredSync();
-    }).catch(function () {});
   }).catch(function () {});
 }
 function refreshStarChrome() {
@@ -8748,6 +8769,8 @@ function refreshNpStar() {
   var b = document.getElementById('np-star');
   if (!b) return;
   var key = state.current ? starKeyForDesc(state.current) : null;
+  // v547: a prayer take's star reads the book's own list.
+  if (key && key.indexOf('prayer:') === 0) { b.textContent = bookFavsList().indexOf(key.slice('prayer:'.length)) >= 0 ? '\u2605' : '\u2606'; return; }
   b.textContent = key && starredHas(key) ? '\u2605' : '\u2606';
 }
 /* The one delegated star wiring (Q1 A): every star button on
@@ -8760,7 +8783,11 @@ document.addEventListener('click', function (ev) {
   if (!b) return;
   ev.preventDefault();
   ev.stopPropagation();
-  var entry = starEntryForKey(b.getAttribute('data-trackstar'));
+  var key = b.getAttribute('data-trackstar');
+  // v547: a prayer's star seat toggles the BOOK favorite —
+  // the prayer's own system; the track store never sees it.
+  if (key && key.indexOf('prayer:') === 0) { toggleBookFav(key.slice('prayer:'.length)); return; }
+  var entry = starEntryForKey(key);
   if (entry) toggleStar(entry);
 });
 function starredDescFor(entry) {
@@ -8787,44 +8814,73 @@ function starredDescFor(entry) {
 }
 function starredRowHtml(e) {
   var key = starEntryKey(e);
-  // A prayer entry's title resolves live from the book
-  // where it stands loaded (the carry-in can land before
-  // the book's first load, titled by slug); the snapshot
-  // title stands otherwise.
   var title = e.title || '';
-  if (e.k === 'prayer') { var bf = bookFind(e.id); if (bf) title = bf.prayer.title; }
-  var desc = e.k === 'prayer' ? null : starredDescFor(e);
+  var desc = starredDescFor(e);
   var playable = !!(desc && desc.available);
-  var meta = [e.sub || (e.k === 'podcast' ? 'Podcasts' : e.k === 'prayer' ? 'Written prayer' : ''), e.durationS ? fmtDur(e.durationS) : '', e.date ? shortDayLabel(e.date) : '', (!playable && e.k !== 'prayer') ? 'Not available' : ''].filter(Boolean).join(' \u00b7 ');
+  var meta = [e.sub || (e.k === 'podcast' ? 'Podcasts' : ''), e.durationS ? fmtDur(e.durationS) : '', e.date ? shortDayLabel(e.date) : '', !playable ? 'Not available' : ''].filter(Boolean).join(' \u00b7 ');
   var disc = playable ? '<button class="playbtn thumbdisc" data-starplay="' + esc(key) + '" aria-label="Play">&#9654;</button>' : '';
   var artDesc = { episodeId: e.id, kind: e.k, title: e.title, block: e.block || (e.k === 'podcast' ? 'Podcasts' : ''), imageUrl: e.imageUrl || '' };
-  return '<div class="card trow prow" data-card="' + esc(key) + '"' + (e.k === 'prayer' ? ' data-staropen="' + esc(e.id) + '"' : '') + '><div class="row">'
+  return '<div class="card trow prow" data-card="' + esc(key) + '"' + '><div class="row">'
     + rowArtHtml(artDesc, disc)
     + '<div class="grow"><div class="titlerow"><h3>' + esc(title) + '</h3><span class="prow-cluster"><button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button></span></div>'
     + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
     + '</div></div></div>';
 }
-function paintStarredSection() {
-  // Q2 B: the section at the HEAD of the Praylist side — its
-  // slot stands between the profile card and the block rows
-  // (paintListenHome). Repaints on the day build, the load's
-  // settle, and every toggle while it stands.
-  var slot = document.getElementById('starred-slot');
+function favoritesList() {
+  // v547: the folder's list — the store's TRACK entries
+  // only. Adoption already filters prayer entries out of
+  // the working copy (starredSet); the filter stands here
+  // too, so no paint can ever carry one.
+  return (state.starred || []).filter(function (e) { return e && e.k !== 'prayer'; });
+}
+function paintFavoritesFolderRow() {
+  // v547: the folder row on the Listen home — ONE row in
+  // the block rows' own dress (the tile emitted directly,
+  // the episodes-row precedent: coverTileHtml's tables do
+  // not reach the '__favorites' key), standing where the
+  // v546 Starred section stood — between the profile card
+  // and the block rows. No play disc, no chevron (the
+  // block-row form); its tap opens the Favorites page
+  // through the standing [data-openblock] wiring.
+  var slot = document.getElementById('favorites-folder-slot');
   if (!slot) return;
-  var list = state.starred || [];
-  var html = '<h2 class="sectionhead">\u2605 Starred</h2>';
+  var list = favoritesList();
+  var dur = list.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
+  var meta = list.length ? (list.length + (list.length === 1 ? ' track' : ' tracks') + (dur > 0 ? ' \u00b7 ' + fmtDurLong(dur) : '')) : 'No starred tracks yet';
+  // The row paints ONCE (paintListenHome, before
+  // wirePrayersView's [data-openblock] pass wires it); a
+  // settle or toggle updates only its meta line — a
+  // repainted row would stand unwired.
+  var row = slot.querySelector('[data-openblock="__favorites"]');
+  if (row) { var m = row.querySelector('.meta'); if (m) m.textContent = meta; return; }
+  slot.innerHTML = '<div class="card blockrow" data-openblock="__favorites"><div class="row">'
+    + '<div class="blockcover tone-gold sm"><span class="blockcover-initial">\u2605</span></div>'
+    + '<div class="grow"><h3>Favorites</h3><div class="meta">' + esc(meta) + '</div></div></div></div>';
+}
+function paintFavoritesPage(day) {
+  // v547: the Favorites page — the v546 list (the acts row
+  // + the rows in list order) standing as its own page in
+  // the block page's pattern: the pushed bar (dest Pray,
+  // back to the Listen home) over the list. Tracks only —
+  // a prayer entry never renders here. Repaints on the
+  // open, on the load's settle, and on every toggle while
+  // it stands (paintFavoritesSurfaces).
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"' }), '__favorites');
+  var list = favoritesList();
+  var html = '<div id="favorites-list">';
   if (!list.length) {
-    slot.innerHTML = html + '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
-    return;
+    html += '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
+  } else {
+    html += '<div class="row" style="gap:8px;margin:0 2px 10px"><button class="btn ghost small" id="starred-playall">Play all</button><button class="btn ghost small" id="starred-addall">Add all to queue</button></div>';
+    html += list.map(starredRowHtml).join('');
   }
-  html += '<div class="row" style="gap:8px;margin:0 2px 10px"><button class="btn ghost small" id="starred-playall">Play all</button><button class="btn ghost small" id="starred-addall">Add all to queue</button></div>';
-  html += list.map(starredRowHtml).join('');
-  slot.innerHTML = html;
+  html += '</div>';
+  view.innerHTML = html;
   var pa = document.getElementById('starred-playall');
   if (pa) pa.addEventListener('click', starredPlayAll);
   var aa = document.getElementById('starred-addall');
   if (aa) aa.addEventListener('click', starredAddAll);
-  slot.querySelectorAll('[data-starplay]').forEach(function (b) {
+  view.querySelectorAll('[data-starplay]').forEach(function (b) {
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
       var e = starredEntryByKey(b.getAttribute('data-starplay'));
@@ -8832,12 +8888,13 @@ function paintStarredSection() {
       if (d) playTrack(d); // the standing single-play funnel
     });
   });
-  slot.querySelectorAll('[data-staropen]').forEach(function (row) {
-    row.addEventListener('click', function (ev) {
-      if (ev.target.closest('[data-trackstar]')) return; // the star's own act (the delegated handler)
-      openPrayerPage(row.getAttribute('data-staropen'));
-    });
-  });
+}
+function paintFavoritesSurfaces() {
+  // v547: the folder's paints after a store settle or
+  // toggle — the home's folder row (its count) and the
+  // Favorites page when it stands.
+  paintFavoritesFolderRow();
+  if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'favorites' && document.getElementById('favorites-list')) paintFavoritesPage(state.dayPayload);
 }
 function starredPlayableDescs() {
   var out = [];
@@ -10797,10 +10854,15 @@ function openNowPlaying() {
   // v546 (Q1 A): the Star act in the control row — it toggles
   // the playing track's star (starEntryForDesc builds the
   // entry from the current descriptor, every kind).
+  // v547: a prayer take's star toggles the BOOK favorite
+  // (the prayer's own system); a track's star toggles the
+  // folder's store.
   sheet.querySelector('#np-star').addEventListener('click', function () {
     if (!state.current) return;
     var entry = starEntryForDesc(state.current);
-    if (entry) toggleStar(entry);
+    if (!entry) return;
+    if (entry.k === 'prayer') { toggleBookFav(entry.id); refreshNpStar(); return; }
+    toggleStar(entry);
   });
   refreshNpStar();
   var bar = sheet.querySelector('#np-seek');
@@ -12220,6 +12282,14 @@ function handleSystemBack() {
     goListenHome(state.prayersView.block);
     return;
   }
+  // 2b. Favorites arm (v547): the Favorites page's back
+  // act is goListenHome('__favorites') — the same function
+  // the bar's [data-back] wiring calls (one act, two
+  // triggers).
+  if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'favorites') {
+    goListenHome('__favorites');
+    return;
+  }
   // 3a0. Adoration arm (v544): the Adoration stream page's
   // back act is closeMassAdoration — the same function the
   // row-2 back bar's tap calls (one act, two triggers).
@@ -12379,7 +12449,7 @@ function extRebuildDescs(day) {
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
   settleTrackDraws(); // v528 §2.2: a rebuild's newly settled tracks join the batch — only their missing keys are asked for
-  starredLoad(); // v546: the star store settles with the day build (its section repaints on settle)
+  starredLoad(); // v546: the star store settles with the day build (v547: the folder row and the Favorites page repaint on settle)
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -14257,11 +14327,21 @@ window.addEventListener('online', function () { drainPodMarkQueue(); drainPodPos
    row is (§2.0.3). */
 function paintPrayersView(day) {
   if (state.prayersView && state.prayersView.kind === 'block') paintBlockPage(day, state.prayersView.block);
+  else if (state.prayersView && state.prayersView.kind === 'favorites') paintFavoritesPage(day);
   else paintListenHome(day);
   wirePrayersView(day);
 }
 function openBlockPage(block) {
+  // v547: the Favorites folder row rides the standing
+  // [data-openblock] wiring under its '__favorites' key;
+  // its page is its own view kind.
+  if (block === '__favorites') { openFavoritesPage(); return; }
   state.prayersView = { kind: 'block', block: block };
+  paintPrayersView(state.dayPayload);
+  window.scrollTo(0, 0);
+}
+function openFavoritesPage() {
+  state.prayersView = { kind: 'favorites' };
   paintPrayersView(state.dayPayload);
   window.scrollTo(0, 0);
 }
@@ -14841,11 +14921,12 @@ function paintListenHome(day) {
   // paintPrayersBar(null) above paints it there.
   // v459 §2 Build 4: the Sort act retires from that row —
   // it stands in the universal menu's Prayers page group.
-  // v546 (Q2 B): the Starred section stands at the HEAD of
+  // v547: the Favorites folder row stands at the head of
   // the side — its slot sits between the profile card and
-  // the block rows ("Top, not bottom"); paintStarredSection
-  // fills it here and on every starred settle/toggle.
-  var html = profileCardHtml(day) + '<div id="starred-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  // the block rows, where v546's Starred section stood;
+  // paintFavoritesFolderRow fills it here and on every
+  // starred settle/toggle.
+  var html = profileCardHtml(day) + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
@@ -14855,7 +14936,7 @@ function paintListenHome(day) {
   // Prayers page group.
   html += offlineLineHtml();
   view.innerHTML = html;
-  paintStarredSection(); // v546: the Starred section fills its head slot
+  paintFavoritesFolderRow(); // v547: the Favorites folder row fills its head slot
   // v459 §2 Build 4: the Sort button's wiring retires with
   // its emission (row2HomeHtml) — Sort stands in the
   // universal menu's Prayers page group.

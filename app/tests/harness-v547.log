@@ -1,0 +1,60 @@
+ok - S1a: the tracked diff against the production base is confined to client.ts + the harness and its fixtures
+ok - S1b: the only untracked paths are the harness, its logs, and its fixtures
+ok - S2a: index.ts byte-identical to the base (no server change — the separation is client + data)
+ok - S2b: ui.ts byte-identical to the base — the SW pin stands at v546-1 on the build tree (it moves only at Ship)
+ok - S2c: migration 0041 stands last (no new migration)
+ok - S2d-mass.ts: byte-identical to the production base
+ok - S2d-mass-calendar.ts: byte-identical to the production base
+ok - S2d-mass-order.ts: byte-identical to the production base
+ok - S2d-mass-readings.ts: byte-identical to the production base
+ok - S2d-logo.ts: byte-identical to the production base
+ok - S2d-logo512.ts: byte-identical to the production base
+ok - S3-bookFavsList: restored byte-for-byte in function against the pre-v546 base (the book's own system on the 0028 routes)
+ok - S3-bookFavsSet: restored byte-for-byte in function against the pre-v546 base (the book's own system on the 0028 routes)
+ok - S3-bookFavsSync: restored byte-for-byte in function against the pre-v546 base (the book's own system on the 0028 routes)
+ok - S3-bookFavsLoad: restored byte-for-byte in function against the pre-v546 base (the book's own system on the 0028 routes)
+ok - S3-toggleBookFav: restored byte-for-byte in function against the pre-v546 base (the book's own system on the 0028 routes)
+ok - S4a: the carry-in is gone — no flag, and starredLoad never reads the book favorites
+ok - S4b: the head section is gone — no section paint, no slot, no prayer-row seam stands in client.ts
+ok - S4c: the tracks-only guards stand — toggleStar refuses a prayer entry, starredSet filters at adoption
+ok - S5-starredPlayAll: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-starredAddAll: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-starredDescFor: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-starredPlayableDescs: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-saveQueueSnapshot: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-addToQueue: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S5-renderQueueList: byte-identical to the base (the v546 list-playback machinery stands)
+ok - S6: the fixtures stand — the production book (9 groups / 77), John's production favorites (3 slugs), the BEFORE read (the same 3 standing in starred_tracks as prayer entries), and every seated track id in the day fixture's introTexts (production-drawn)
+ok - P0: the cooked APP_JS parses (the template-literal gate)
+ok - SEP0: boot clean — no page errors on the separation page
+ok - SEP1 (tracks only): the BEFORE read's three prayer entries never stand in the working copy — adoption filters them — and no starred PUT fires to clean them (the cleanup is the Ship's data act, not the client's)
+ok - SEP2 (folder, not a section): the folder row reads its empty line, no #starred-slot stands, and no Starred section head stands on the home
+ok - SEP3: the folder tap opens the Favorites page (the bar reads Favorites) on its empty line — the three book prayers never render there
+ok - SEP4 (the book's own system): the book's stars read prayer_book_favorites through its own load — the three favorites filled, another prayer open
+ok - SEP5 (the separation, book side): un-starring a prayer PUTs the book list alone — the starred store is never written and never holds it
+ok - SEP6 (the round-trip): re-starring restores the three production slugs through the book route, in order — and the folder's store still stands untouched
+ok - SEP7: the separation page carries no page errors after every leg
+ok - CARRY0: boot clean — no page errors on the carry page
+ok - CARRY1 (v546's A-world, inverted): starred stands empty and the book favorites stand — NO carry-in PUT fires, the folder reads empty (the two systems stand apart)
+ok - CARRY2: the book still reads its own three favorites on its own route — nothing was carried anywhere
+ok - CARRY3: the carry page carries no page errors
+ok - MAIN0: boot clean — no page errors on the main page
+ok - F1 (folder, not a section): no Starred section stands on the Praylist home; the Favorites folder row stands between the profile card and the block rows, its meta counting the two seeded TRACKS
+ok - F2: the folder tap opens the Favorites page in the block-page pattern — the bar reads Favorites with its back standing, the list in order, Play all + Add all at its head
+ok - F2b: the page's back returns to the Listen home
+ok - T1a: the day card's cluster reads played dot · star · ⋮, the star open (the v546 seat stands)
+ok - T1b: the tap fills the star, the track takes the list's head, and the whole-list PUT carries it first
+ok - T1c: in the folder, the head row is the just-starred track
+ok - T5a (the list plays as a list): Play all on the folder page builds the queue in list order ACROSS kinds, provenance starred, no queue snapshot written
+ok - T5b: the ended-walk plays each list track in turn and STOPS at the list's end with autoplay ON — the day chain never joins it
+ok - T3: a podcast row's star fills; the entry stands at the list's head carrying its series
+ok - T6a: a single podcast play stands alone (autoplay OFF, the v542 single-play rule)
+ok - T6b: Add all on the folder page appends the whole mixed list behind the standing single play — [current, ...list] across kinds, no kind bound
+ok - T9a: Now Playing's queue rows carry NO star; the control row's star reads the playing track's standing star (ciy:day-2 stands starred)
+ok - T9b: the Now Playing star toggles the playing track OFF the list
+ok - T4: the Catechesis Novenas card's star fills, the novena episode stands in the list, and the tap does NOT start playback
+ok - F7: un-starring from the folder page empties the list everywhere — the store, the page's empty line, and the final whole-list PUT all read empty
+ok - MAIN9: the main page carries no page errors after every leg
+ok - G439 (recorded as-is, not a v547 pass): the standing v439 boot gate reads its standing 13 ok / 2 not-ok on this tree
+
+harness-v547: 58 ok / 0 not-ok
