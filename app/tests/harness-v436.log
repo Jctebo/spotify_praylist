@@ -1,0 +1,23 @@
+ok 1 - W1 (static): the channel URL stands as ONE client constant of the video kind
+ok 2 - W1 (static): the act is a ghost-button anchor — href the channel constant, target _blank, rel noopener, label 'Full page on YouTube'
+ok 3 - W1 (static): the act is emitted in BOTH paints of paintPodcastVideos (available + unavailable)
+ok 4 - W1 (static): the guard reads Capacitor.Plugins.Browser in exactly the OraDayBridge guard's shape
+ok 5 - W1 (static): the open call carries the channel constant and the app's navy toolbarColor #16283f
+ok 6 - W1 (static): v434's watch-view 'Open in YouTube' line stands byte-identical to the base (F-436-2)
+ok 7 - app up on local wrangler (LOCAL_DEV)
+ok 8 - setup: the video series payload stands available for the client legs
+ok 9 - W1: the act stands in the available paint in its ruled form ({"stands":true,"href":"https://www.youtube.com/@catholictv","target":"_blank","rel":"noopener","cls":"btn ghost","text":"Full page on YouTube","afterHead":true,"beforeFirstCard":true})
+ok 10 - W1: the act's seat is directly under the .podpage-head block, before the first video card
+ok 11 - W4: no Capacitor global (the web) — the tap is NOT intercepted; the anchor's native new-tab default stands
+ok 12 - W5: oraInShell() true with Plugins.Browser absent (the 1.0.35 shell) — the tap is NOT intercepted, nothing throws, the anchor's default stands
+ok 13 - W2: in-shell, the tap preventDefaults and Browser.open fires exactly once with the channel URL and the navy toolbar ([{"url":"https://www.youtube.com/@catholictv","toolbarColor":"#16283f"}])
+ok 14 - W6: a rejected open falls back to window.open(channel, '_blank') exactly once ([["https://www.youtube.com/@catholictv","_blank"]])
+ok 15 - W3: an audio episode stands playing (the pause-order premise)
+ok 16 - W3: the audio still sounds on the video series page (navigation alone does not pause)
+ok 17 - W3: with audio sounding, the pause act runs BEFORE Browser.open — order ["pause","open"], the element reads paused
+ok 18 - W3: with audio already paused, no pause call stands and open still fires — order ["open"]
+ok 19 - W7: the watch view stands as v434 shipped it — the embed at its paint, the standing 'Open in YouTube' act external with the watch URL
+ok 20 - W7: the watch's back act returns to the series page, rows standing
+ok 21 - W1: the act stands in the UNAVAILABLE paint too, directly under the unavailable card ({"stands":true,"href":"https://www.youtube.com/@catholictv","text":"Full page on YouTube","afterCard":true})
+ok 22 - W1: the unavailable paint's act is wired — in-shell it opens the channel page through the same handler
+# harness-v436: 22 ok / 0 not-ok

@@ -1,0 +1,31 @@
+ok 1 - ST1 the worker-source diff vs the v457-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - ST2 D1: trackCard's cluster emits played dot · ⋮ and NO playbtn; the disc stands once, as the thumbDisc fragment (playbtn thumbdisc, data-playkey + data-url), passed to rowArtHtml by the two available branches only — the two unavailable branches call rowArtHtml(t) bare
+ok 3 - ST3 D2 B: podRowString's disc stands once, inside the podRowArtHtml fragment; its cluster carries podmark · ⋮ and no playbtn
+ok 4 - ST3 D2 B: paintPodOwnSeries' disc stands once, inside the podRowArtHtml fragment; the cluster span stands nowhere in the function (the title row keeps the title alone)
+ok 5 - ST4 the mechanism + the untouched seats: both art functions take the optional fragment (default-empty at both returns); markPlaying and the reading view (openRead) are byte-identical to the base
+ok 6 - ST5 ui.ts: the thumb-disc dress stands — 30px disc, translucent navy (the --navy token in rgba form), and a .playing form
+ok 7 - ST6 the whole worker bundles clean (esbuild)
+ok 8 - ST7 (housekeeping): the SW pin stands at ora-pro-nobis-v457-1 (Ship moves it)
+ok 9 - ST8 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 10 - ST8 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 11 - B1 D1: the available own rows carry the disc centered on the thumbnail (playbtn thumbdisc, data-playkey + data-url standing) and NO disc in the title line or the cluster; the ⋮ stands
+ok 12 - B1 D1: the available external row carries the disc the same way; the unavailable rows (own + external) carry NO disc
+ok 13 - B1 D1: the disc is a 30px disc centered on the 44px thumbnail, translucent navy with a white glyph
+ok 14 - B2 D1: a tap on the thumbnail disc plays — the audio runs, markPlaying dresses the disc .playing and swaps its glyph to ❚❚ (solid navy + the accent ring), and the bars mark stands on the row beneath the disc
+ok 15 - B4 standing surfaces: the dock stands while playing, with its own #dock-play control
+ok 16 - B4 standing surfaces: Now Playing opens from the dock and keeps its own controls — #np-play stands (not a thumbnail disc), reading the transport's pause glyph
+ok 17 - B2 D1: a second tap on the disc pauses (the standing toggle act) — the audio stands paused, the dock glyph reads ▶, the row's bars freeze; the disc keeps the current-track mark (.playing + ❚❚), exactly as the cluster disc did
+ok 18 - B2 D1: a third tap on the disc plays again — the toggle round-trips on the thumbnail seat
+ok 19 - B3 the row ⋮ menu opens as today (Share stands in it)
+ok 20 - B3 the mechanism's guard: the track Share sheet's art (rowArtHtml with no fragment) carries NO button
+ok 21 - B5 standing surfaces: the reading view's own play control stands as today — a plain playbtn in the sheet's head row, not a thumbnail disc
+ok 22 - F1 D2 B: the Formation index stands as today — the series cards (audio · video · The AI Signal) carry NO disc
+ok 23 - F2 D2 B: the podcast episode rows carry the disc on the thumbnail (data-podplay standing); the cluster keeps podmark · ⋮ with no disc — the listened row's mark reads on
+ok 24 - F2 D2 B: a tap on the episode row's thumbnail disc starts the queue from that entry (the standing act) — the audio runs and the bars mark stands on the row
+ok 25 - F2 the mechanism's guard: the podcast row's Share sheet art (podRowArtHtml with no fragment) carries NO button
+ok 26 - F3 D2 B: The AI Signal's rows carry the disc on the thumbnail (data-ownplay standing); NO cluster stands in the title row — it keeps the title alone
+ok 27 - F3 D2 B: a tap on the own row's thumbnail disc starts its queue from that entry (the standing act) — the audio runs and the bars mark stands on the row
+ok 28 - F4 D2 B: the video series page stands untouched — its rows' one act is open-and-watch; no disc stands anywhere on the page
+ok 29 - G360 block page at 360px: the disc stands centered on the thumbnail; no new horizontal overflow (362 is the base's own standing measure)
+ok 30 - browser: zero page errors across every leg
+# harness-v456: 30/30 passed

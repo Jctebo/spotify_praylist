@@ -1,0 +1,25 @@
+ok - setup: the Worker bundles clean (esbuild)
+ok - leg 10: the shipped client contains no Divine Office feed URL (no direct read is attempted)
+ok - setup: app up on local wrangler (port 8974) with the feed seams pointed at the fixture server
+ok - setup: the stored day 2026-11-08 commits with own episodes and NO externals (200)
+FAIL - leg 2: the courier returns the resolver's Divine Office outcome for the fixture feed
+ok - leg 2: the courier stores nothing (episode rows 2 -> 2)
+FAIL - leg 2: the courier reply carries Cache-Control private, max-age=300 (device response reuse)
+ok - leg 2: a non-stored date is refused 400 and a non-John session is refused by the gate (400/403)
+ok - leg 2: the retired agent-door externals POST answers 404 (404)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://feeds.castos.com/x8g54
+REQFAIL: https://feeds.buzzsprout.com/2216056.rss net::ERR_TUNNEL_CONNECTION_FAILED
+REQFAIL: https://anchor.fm/s/1025ef1c/podcast/rss net::ERR_TUNNEL_CONNECTION_FAILED
+RESP: 200 https://episodes.castos.com/5fc9b29bee76f8-62659591/2692510/c1e-n985u84wvnt3qzmg-3445v2dvh
+RESP: 200 https://episodes.castos.com/5fc9b29bee76f8-62659591/2692504/c1e-xp35ikdz4xtxk7jv-gppj1rrwh
+FAIL - leg 1: matcher parity — the merged system outcome (courier + direct legs) equals the Python resolver on the fixture set
+FAIL - leg 6: with both Divine Office primaries matched, the Sing the Hours feed is never fetched
+ok - leg 1: every slot's placeholder swapped in place after resolve (no Loading left standing)
+FAIL - leg 11: every resolved slot's AUDIO stands in the device cache (keys: ext-evening-prayer,ext-morning-prayer)
+RESULT harness-v334 8/14 ok
+HARNESS ERROR: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-card="ext-invitatory"] [data-playkey]')
+
+    at /home/hatch/workspace/.worktrees/v338-app/app/tests/harness-v334.mjs:345:15

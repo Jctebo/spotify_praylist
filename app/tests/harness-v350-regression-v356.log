@@ -1,0 +1,16 @@
+ok 1 - setup: the Worker bundles clean (esbuild)
+ok 2 - setup: the shipped client contains no Fireside feed URL (no on-device Bible feed read stands)
+ok 3 - setup: app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - setup: the presented day's draw stands (status=200)
+ok 5 - setup: the served /app.js parses (vm.Script)
+ok 6 - W1 courier provenance: the live payload carries the Bible entry present with the RAW item title and the pick enclosure, and the pass-through serves the same enclosure's bytes (entry={"slotId":"ext-bible-in-a-year","state":"present","title":"Day 314: Fixture Reading (2026)","streamUrl":"http://127.0.0.1:8959/audio/biay-today.mp3","durationSec":0,"sizeBytes":30983276,"block":"Morning","sortOrder":5}, ptStatus=200, ptBytesMatch=true)
+ok 7 - L1 courier resolution: with the browser's direct Fireside fetch aborted, the Bible slot settles present from the Worker payload with the constructed display title and the pick enclosure, and the page issued ZERO Fireside requests (state=present, title="Bible in a Year — Day 314: Fixture Reading", enc=http://127.0.0.1:8959/audio/biay-today.mp3, firesideReqs=0)
+ok 8 - L4 cache round-trip: the day-cache record carries the pick enclosure (not a pass-through URL) and a second open re-settles the Bible slot present from it (rec=http://127.0.0.1:8959/audio/biay-today.mp3, after={"state":"present","enc":"http://127.0.0.1:8959/audio/biay-today.mp3"})
+ok 9 - L2 watchdog: with the pick enclosure dripped over ~15 s, the Bible slot stands 'downloading' across the 9 s watchdog mark and settles present when the download lands — it never reads missing in flight (timeline=[{"at":9,"state":null},{"at":315,"state":"loading"},{"at":654,"state":"downloading"},{"at":15807,"state":"present"}])
+ok 10 - L3 prior-year pin: with no current-year Day 314 item standing, the slot stands named-missing for Day 314 and last year's episode is never presented (state=missing, title="Bible in a Year — Day 314", card=Bible in a Year — Day 314Not available today)
+not ok 11 - L5 SW pin: the served service worker carries CACHE 'ora-pro-nobis-v350-1' and no 'ora-pro-nobis-v348-1'
+ok 12 - evidence: the L1 browser run completed with zero page errors
+ok 13 - L6 live smoke setup: the node oracle finds today's Day 314 in the live Fireside bytes (Day 314: My Beloved Son (2026))
+ok 14 - L6 live smoke: the second instance is up over the live feed bytes
+ok 15 - L6 live smoke: against the REAL live feed bytes the Bible slot resolves present for 2026-11-10 with the Day 314 pick (state=present, title="Bible in a Year — Day 314: My Beloved Son", enc=https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6e9c4afe-e2f6-4f74-9010-a627fd2644ac.mp3)
+TALLY: 14 ok / 1 FAIL (15 checks)

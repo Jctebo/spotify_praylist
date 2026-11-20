@@ -1,0 +1,33 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - 11 served build parses and executes (construction proof deferred to the browser legs) and carries the standing seams (v361 re-point: + intentionRowCard)
+ok - 11 SW pin ora-pro-nobis-v361-1 with the opn-ext-audio-v1 purge exemption verbatim (v361 re-point)
+ok - 1 the presented-day DO courier fixture settles present (invitatory + morning prayer, not named-missing)
+ok - 1 the generated presented-day BIAY fixture settles present (current-year Day-N match)
+ok - 1 the intros fixture stands complete for the fixture day (all 10 ids in the built map)
+ok - 2 RETIRED (v361): no combined row stands anywhere — the 136px contract is gone with the form it governed
+ok - 2 RETIRED (v361): intention rows stand at natural heights (no fixed-height rule: the long-text row stands taller than the short-text row)
+ok - 3 RE-POINTED (v361): the clamped intention ROW (rosary, long text) stands its ellipsis
+ok - 3 RE-POINTED (v361): the short-text intention row (morning prayer) stands NO ellipsis — nothing is hidden (scrollHeight == clientHeight)
+ok - 3 RE-POINTED (v361): the one-line intention row (daily reflection) stands NO ellipsis
+ok - 4 RE-POINTED (v361): tapping the ellipsis expands that intention row only (height grows past its collapsed form, clamp released, full text visible, aria-expanded true)
+ok - 4 RE-POINTED (v361): every other intention row keeps its height while one row is expanded
+ok - 4 RE-POINTED (v361): the expansion survives the pair's settle re-render (session set re-renders the fresh row expanded)
+ok - 4 RE-POINTED (v361): tapping again on the re-rendered control collapses the row back to its natural collapsed height
+ok - 8 RETIRED (v361): no combined-row chrome stands (no panel, label, or panel-foot; no small playbtn) and the intention row's button is the standard 42px
+ok - 10 RE-POINTED (v361): the intention row's play button starts its intro descriptor (treatment A behavior preserved in the new form)
+ok - 7 RE-POINTED (v361): the settled courier pair's intention-row text equals that slot's drawn intention text
+ok - 7 RE-POINTED (v361): the settled external intention row's play button resolves its intro descriptor on click
+ok - 6 RE-POINTED (v361): cache-valid open: settled external cards render WITH their intention rows (courier slots included)
+ok - 6 RE-POINTED (v361): the DO pair's second slot stands present with NO intention row (its block's intention is keyed to the Invitatory row)
+ok - 5 RE-POINTED (v361): precondition: with intentions delayed, the settled courier + direct cards stand WITHOUT intention rows (the defect shape)
+ok - 5 RE-POINTED (v361): the settled courier card gains its intention row in the same session when the intro lands, no reopen
+ok - 5 RE-POINTED (v361): the settled client-direct card gains its intention row in the same session too
+ok - 9 RE-POINTED (v361): a no-intro own card keeps its standing shape (no combined class, no intention row before it, no fixed height)
+ok - 9 RE-POINTED (v361): an unavailable card keeps its standing shape (no combined class, no fixed height)
+
+regressions (v342 · v339 · v338 · v337 · v336 · v335 · v334) run separately — tallies in §3.
+
+harness-v343: 29 passed, 0 failed

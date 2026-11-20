@@ -1,0 +1,36 @@
+ok 1 - S1 buildIntroMap: entries build from introTexts only — text + spoken flag, NO streamUrl (D2); the 'novenas' key is skipped (prefix rule at the read seam)
+ok 2 - S2 renderPrayers: day.intros = buildIntroMap(day) stands BEFORE the first expandDescs build (rows at first paint)
+ok 3 - S3 step 3: ownFetchIntro is DELETED whole (definition + call sites); ownBuildIntentions assigns NO day.intros anywhere — the feed-failure catch clears segments only; the late-map completion leg (rebuild + swap) is gone
+ok 4 - S4 introDescFor emits the spoken form: spoken:true, url:null, intentionText set, title = the prayer's own title
+ok 5 - S5 start path: stopSpoken at startDesc's head, the spoken branch to startSpokenDesc, and playTrack's guard admits the spoken form
+ok 6 - S6 watchdog bounds stand as named constants (start 3000ms; cap min(90s, max(30s, len*90ms))) and the utterance text is exactly the standing intro script
+ok 7 - S7 step 7 call sites carry the transport predicates: mediaHandlers.pause, both play glyphs, fireTimedStop's spoken branch, the restore checkpoint, resumeCurrent's spoken branch
+not ok 8 - S8 SW pin ora-pro-nobis-v379-1 stands; the production v359 pin is gone
+ok 9 - S9 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+ok 10 - S10 v379 native route: speakIntro consults the bridge BEFORE the web support check; the plugin guard requires speakText; the three oraSpeech* events are wired
+not ok 11 - L14 committed range 8be95f0..HEAD, harness files excluded, is exactly client.ts + ui.ts (committed: app/migrations/0017_podcasts.sql, app/tests/harness-v377.log, app/tests/harness-v377.mjs, app/tests/harness-v379.mjs, app/worker/src/client.ts, app/worker/src/index.ts, app/worker/src/ui.ts)
+ok 12 - L1 every paired track lists its intention on an empty intentions feed — own, novena (x3), externals (x2), Mass and Homilies, The AI Signal, Antiphon occurrences: 11 spoken intro descriptors stand in the day build
+ok 13 - L1 the listed intention rows carry the drawn texts (intro:marian-antiphon-angelus, intro:morning-prayer, intro:ext-gospel-exegesis, intro:ext-midmorning-prayer, intro:marian-antiphon-angelus, intro:marian-antiphon-angelus, intro:novena-alpha, intro:novena-beta, intro:novena-gamma, intro:daily-mass-readings, intro:the-ai-signal)
+ok 14 - L1 block tallies count the listed tracks incl. intention rows (the v374 surface): Midmorning 4, Novenas 6, The AI Signal 2 — {"Morning":4,"Midmorning":4,"Midday":3,"Evening":2,"Novenas":6,"Mass and Homilies":2,"The AI Signal":2}
+ok 15 - L2 spoken descriptors stand per occurrence: the Antiphon's three dayparts pair three times (spoken, no url, drawn text); an unavailable prayer carries NO intro; every intro descriptor is spoken with url null
+ok 16 - L3 the feed's intro AUDIO is ignored under D2: the map entry stays text-only spoken (no streamUrl ever joins) while the segments map still resolves from the same fetch — calls=["https://fixture.invalid/intentions.xml"]
+ok 17 - L9 a rejected intentions fetch leaves day.intros text-built and the spoken intro descriptor standing (the defect-shape regression pin)
+ok 18 - L4 the utterance speaks the standing script, its end advances into the prayer on the element (src set, play called) — spoken="This prayer is for For Alice and her family.", current=morning-prayer
+ok 19 - L4 played state: the intro's end marks NOTHING, markCompleted refuses the intro descriptor itself, and the prayer marks only at its own end (the pair shares the prayer's record) — played={}, afterIntroMark={}, afterPrayerMark={"morning-prayer":{"2026-11-11":{"playedAt":"2026-11-12T12:51:23.198Z","via":"played"}}}
+ok 20 - L5 a never-starting utterance passes over inside the start bound (3000ms) — cancel fired, the prayer plays (current=morning-prayer)
+ok 21 - L6 a not-allowed utterance passes over inside the bound and the prayer plays — no stall, no error surface (current=morning-prayer)
+ok 22 - L7 pause = cancel (glyphs paused); resume re-speaks the SAME text from the start; a minutes-mode sleep stop landing mid-utterance pauses the speech
+ok 23 - L8 skip mid-speech cancels once and starts the prayer; the killed utterance's late interrupted error changes nothing (current=morning-prayer, idx=1)
+ok 24 - L10 hidden at the intro's turn: NO speak call — the intro passes over at once and the prayer starts (D5)
+ok 25 - L11 advance re-resolves the spoken descriptor against the fresh build — the FRESH drawn text is what speaks (spoken="This prayer is for Second drawn text.")
+ok 26 - L12 during a spoken intro, Now Playing shows 'Prayer Intention: ' + the drawn text (v372 reads the descriptor) and the queue lists the entry under its recomputed title; once the prayer stands played, the rebuilt queue drops BOTH (no orphan spoken intro)
+ok 27 - L13 the D6 pick: the default-flagged en-US wins (en_US normalized before comparison); with no default, the first en-US; the utterance carries that voice and lang en-US — a={"lang":"en_US","name":"US Voice Default","isDefault":true}, b={"lang":"en_US","name":"US Voice A","isDefault":false}, c={"voiceName":"US Voice A","lang":"en-US"}
+ok 28 - N1 in the shell the funnel routes to the bridge: speakText called once with the exact standing script and an opn- utterance id; the web engine (dead here) is never spoken to; the hook shows the native route live — {"hook":{"active":true,"paused":false,"descId":"intro:morning-prayer","voices":2,"native":true,"nativeId":"opn-20"},"bridgeSpeaks":1,"text":"This prayer is for For Alice and her family.","id":"opn-20","webSpeaks":0}
+ok 29 - N2 the native end event advances the funnel into the prayer (current=morning-prayer)
+ok 30 - N3 a native error (engine unavailable) passes over fast and the prayer plays (current=morning-prayer)
+ok 31 - N4 native silence is bounded by the same start watchdog (3000ms); the cancel reaches the native transport via stopSpeech (stops=1, current=morning-prayer)
+ok 32 - N5 pause stops the native speech; resume re-speaks the SAME text natively (speaks 1 -> 2)
+ok 33 - N6 a foreign utterance id's end event changes nothing (still on the intro); the live id's end advances (current=morning-prayer)
+ok 34 - N7 with the bridge absent the web path speaks and advances exactly as in v375 (webSpeaks=1, current=morning-prayer)
+ok 35 - browser: zero page errors
+# harness-v379: 33/35 passed

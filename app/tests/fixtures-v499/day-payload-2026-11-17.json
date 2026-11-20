@@ -1,0 +1,113 @@
+{
+ "ok": true,
+ "date": "2026-11-17",
+ "dateLabel": "Tuesday, November 17, 2026",
+ "presentedDay": "2026-11-17",
+ "liturgicalDay": {
+  "name": "Memorial of Saint Elizabeth of Hungary, Religious",
+  "color": "white"
+ },
+ "version": 8,
+ "introTexts": {
+  "morning-prayer": "For the successful gathering of Pam and her family in Mexico and for me to be attend Mass",
+  "daily-rosary": "For the successful gathering of Pam and her family in Mexico and for me to be attend Mass",
+  "marian-antiphon-angelus": "For Jennifer to study well, retain what she learns, and pass the California bar exam",
+  "auxilium-christianorum": "My kids for their vocation to consider religious life",
+  "daily-reflection": "For Pamela to sleep well",
+  "ext-invitatory": "For Pamela to sleep well",
+  "ext-morning-prayer": "For the institution of Marriage to thrive all over the world and in our extended family and my own marriage",
+  "ext-midmorning-prayer": "All my Family members to return to full participation in the Holy Catholic Church",
+  "ext-midday-prayer": "For Desiree to heal from all past broken relationships and the successful co-parenting of Levi with her ex Roy. And for the well being of all their family",
+  "ext-midafternoon-prayer": "For the successful gathering of Pam and her family in Mexico and for me to be attend Mass",
+  "ext-office-of-readings": "Andy's daughter that her crisis of faith lead her closer to the fullmess of truth in Jesus Christ and his one Holy, Catholic, and Apostolic Church",
+  "ext-evening-prayer": "Spiritual Protection for all our God-children (Liz, Danny, Abigail, and Levi)",
+  "ext-night-prayer": "Andy's daughter that her crisis of faith lead her closer to the fullmess of truth in Jesus Christ and his one Holy, Catholic, and Apostolic Church",
+  "ext-bible-in-a-year": "For Pamela to sleep well",
+  "ext-gospel-exegesis": "In thanksgiving for Dylan making the basketball team this year",
+  "ext-saint-of-the-day": "For the successful gathering of Pam and her family in Mexico and for me to be attend Mass",
+  "ext-usccb-readings": "All my Family members to return to full participation in the Holy Catholic Church",
+  "ext-daily-tv-mass": "All my Family members to return to full participation in the Holy Catholic Church",
+  "ext-fr-mike-homily": "All my Family members to return to full participation in the Holy Catholic Church",
+  "ext-barron-sermon": "All my Family members to return to full participation in the Holy Catholic Church",
+  "the-ai-signal": "For the successful gathering of Pam and her family in Mexico and for me to be attend Mass",
+  "novena-andrew_dung_lac_priest_and_companions_martyrs": "All my Family members to return to full participation in the Holy Catholic Church",
+  "novena-bl_miguel_agustin_pro": "For Desiree to heal from all past broken relationships and the successful co-parenting of Levi with her ex Roy. And for the well being of all their family",
+  "novena-christ_the_king": "For Desiree to heal from all past broken relationships and the successful co-parenting of Levi with her ex Roy. And for the well being of all their family",
+  "novena-clement_i_pope": "Perseverance to stay dedicated to God in every task",
+  "novena-columban_of_luxeuil_abbot": "Spiritual Protection for all our God-children (Liz, Danny, Abigail, and Levi)",
+  "novena-dedication_of_the_basilicas_of_saints_peter_and_paul_apostles": "For the institution of Marriage to thrive all over the world and in our extended family and my own marriage",
+  "novena-presentation_of_the_blessed_virgin_mary": "Dylan to recover from his sickness",
+  "novena-st_catherine_of_alexandria": "Andy's daughter that her crisis of faith lead her closer to the fullmess of truth in Jesus Christ and his one Holy, Catholic, and Apostolic Church",
+  "novena-st_cecilia": "Dylan to recover from his sickness",
+  "novena-st_rose_philippine_duchesne": "My kids for their vocation to consider religious life"
+ },
+ "blocks": [
+  {
+   "block": "Morning",
+   "label": "Morning",
+   "caption": "from midnight",
+   "spotifyUrl": "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Midmorning",
+   "label": "Midmorning",
+   "caption": "from 9 AM",
+   "spotifyUrl": "https://open.spotify.com/playlist/3EYFgLhMGEfILn6bRJgHJm",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Midday",
+   "label": "Midday",
+   "caption": "from 12 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/4gQAaPAMiezBaDaoqK6sFQ",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Afternoon",
+   "label": "Afternoon",
+   "caption": "from 3 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/7cyrM9f9LXEfmoqwZvUaXW",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Evening",
+   "label": "Evening",
+   "caption": "from 6 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/6HNvFLWRShih7lgtwHTqXU",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Night",
+   "label": "Night",
+   "caption": "from 9 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/1TAlNiKHMc41cT0fvkYxTD",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Mass and Homilies",
+   "label": "Mass and Homilies",
+   "caption": "the day's Mass and the week's homilies",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Novenas",
+   "label": "Novenas",
+   "caption": "the day's novenas",
+   "spotifyUrl": "https://open.spotify.com/playlist/2hclGC0JlP4tC51uohete6",
+   "tracks": [],
+   "trackCount": 0
+  }
+ ],
+ "dayPositions": {
+  "daily-rosary": 244
+ },
+ "blockOrder": null
+}

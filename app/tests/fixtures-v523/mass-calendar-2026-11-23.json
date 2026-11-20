@@ -1,0 +1,27 @@
+{
+ "date": "2026-11-23",
+ "name": "Monday in the 34ᵗʰ Week in Ordinary Time",
+ "defaultVersion": "saint-clementi",
+ "versions": [
+  {
+   "key": "saint-clementi",
+   "label": "Saint Clement I, Pope and Martyr",
+   "rank": "m"
+  },
+  {
+   "key": "saint-columban",
+   "label": "Saint Columban, Abbot",
+   "rank": "m"
+  },
+  {
+   "key": "saint-blessedmiguelagustnpro",
+   "label": "Blessed Miguel Agustín Pro, Priest and Martyr",
+   "rank": "m"
+  },
+  {
+   "key": "ferial",
+   "label": "Monday in the 34ᵗʰ Week in Ordinary Time",
+   "rank": "ferial"
+  }
+ ]
+}

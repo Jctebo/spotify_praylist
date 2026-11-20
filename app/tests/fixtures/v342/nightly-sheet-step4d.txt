@@ -1,0 +1,10 @@
+4D. INTENTIONS PUBLISH (v342; the v337 step as re-pointed at v342's Ship — this fixture is the shape Ship enacts in the nightly sheet; the harness asserts the two verbatim pins stand in it).
+
+This run publishes episodes for <TARGET> and intentions for the consumption date <RUN_DATE>; every date in this step's fields is the consumption date.
+
+Invoke: python3 jobs/compose_app_audio.py --publish-only (additive cycles before the Ship flip invoke --publish instead: push + publish in one run).
+
+Composes exactly as the standing step does — the consumption day's draw read through the app door, the Suite step-7b segment texts, one composition, bounded retry, shortfalls named, never a substitute — renders in voice avocado_v2:MAI_03, and publishes instead of pushing: the rendered intros and segments land in the rolling intentions feed (intentions.xml, 7-day window) in the same publish step.
+
+Mandatory report field, exact shape (the segments clause stands only on nights whose composed set includes segments; a shortfall opens the field with "Intentions feed (v342): MISSING — "):
+Intentions feed (v342): published — intros <n>/<m> for presented <date> · segments <n>/<m> · missing: <names, or "none">

@@ -1,0 +1,5321 @@
+{
+ "release": "v306",
+ "sweep": "all contracts with feast rules, windows computed for 2026+2027 under the resolver window rule",
+ "contracts_loaded": 397,
+ "total_windows": 776,
+ "distinct_identities": 377,
+ "unclassified": [],
+ "identities": [
+  {
+   "identity": "14 holy helpers",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "14_holy_helpers"
+   ],
+   "names": [
+    "14 Holy Helpers"
+   ],
+   "contracts": [
+    "14_holy_helpers"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "30 day novena to st joseph",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "30_day_novena_to_st_joseph"
+   ],
+   "names": [
+    "30 Day Novena to St Joseph"
+   ],
+   "contracts": [
+    "30_day_novena_to_st_joseph"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "54 day rosary",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "54_day_rosary"
+   ],
+   "names": [
+    "54 Day Rosary"
+   ],
+   "contracts": [
+    "54_day_rosary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "abigail",
+   "classification": "saint:Saint Abigail|key:abigail",
+   "saint_ids": [
+    "st_abigail"
+   ],
+   "names": [
+    "St Abigail"
+   ],
+   "contracts": [
+    "st_abigail"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "adalbert of prague bishop",
+   "classification": "saint:Saint Adalbert|key:adalbert of prague bishop",
+   "saint_ids": [
+    "adalbert_of_prague_bishop"
+   ],
+   "names": [
+    "Saint Adalbert, Bishop and Martyr"
+   ],
+   "contracts": [
+    "adalbert_of_prague_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "adelaide",
+   "classification": "saint:Saint Adelaide|key:adelaide",
+   "saint_ids": [
+    "st_adelaide"
+   ],
+   "names": [
+    "St Adelaide"
+   ],
+   "contracts": [
+    "st_adelaide"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "agatha",
+   "classification": "saint:Saint Agatha|key:agatha",
+   "saint_ids": [
+    "st_agatha"
+   ],
+   "names": [
+    "St. Agatha"
+   ],
+   "contracts": [
+    "st_agatha"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "agnes",
+   "classification": "saint:Saint Agnes|key:agnes",
+   "saint_ids": [
+    "st_agnes"
+   ],
+   "names": [
+    "St. Agnes"
+   ],
+   "contracts": [
+    "st_agnes"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "albert the great",
+   "classification": "member:patron:albert-the-great",
+   "saint_ids": [
+    "st_albert_the_great"
+   ],
+   "names": [
+    "St Albert the Great"
+   ],
+   "contracts": [
+    "st_albert_the_great"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "all saints",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "all_saints"
+   ],
+   "names": [
+    "All Saints"
+   ],
+   "contracts": [
+    "all_saints"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "aloysius gonzaga",
+   "classification": "saint:Saint Aloysius Gonzaga|key:aloysius gonzaga",
+   "saint_ids": [
+    "st_aloysius_gonzaga"
+   ],
+   "names": [
+    "St. Aloysius Gonzaga"
+   ],
+   "contracts": [
+    "st_aloysius_gonzaga"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "alphonsus liguori",
+   "classification": "saint:Saint Alphonsus Liguori|key:alphonsus liguori",
+   "saint_ids": [
+    "st_alphonsus_liguori"
+   ],
+   "names": [
+    "St Alphonsus Liguori"
+   ],
+   "contracts": [
+    "st_alphonsus_liguori"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ambrose",
+   "classification": "saint:Saint Ambrose|key:ambrose",
+   "saint_ids": [
+    "st_ambrose"
+   ],
+   "names": [
+    "St Ambrose"
+   ],
+   "contracts": [
+    "st_ambrose"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anastasia",
+   "classification": "saint:Saint Anastasia|key:anastasia",
+   "saint_ids": [
+    "st_anastasia"
+   ],
+   "names": [
+    "St. Anastasia"
+   ],
+   "contracts": [
+    "st_anastasia"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andre bessette",
+   "classification": "saint:Saint Andre Bessette|key:andre bessette",
+   "saint_ids": [
+    "st_andre_bessette"
+   ],
+   "names": [
+    "St. Andre Bessette"
+   ],
+   "contracts": [
+    "st_andre_bessette"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew avellino",
+   "classification": "saint:Saint Andrew Avellino|key:andrew avellino",
+   "saint_ids": [
+    "st_andrew_avellino"
+   ],
+   "names": [
+    "St Andrew Avellino"
+   ],
+   "contracts": [
+    "st_andrew_avellino"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew bobola",
+   "classification": "saint:Saint Andrew Bobola|key:andrew bobola",
+   "saint_ids": [
+    "st_andrew_bobola"
+   ],
+   "names": [
+    "St Andrew Bobola"
+   ],
+   "contracts": [
+    "st_andrew_bobola"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew christmas",
+   "classification": "saint:Saint Andrew|key:andrew the apostle",
+   "saint_ids": [
+    "st_andrew_christmas"
+   ],
+   "names": [
+    "St. Andrew Christmas"
+   ],
+   "contracts": [
+    "st_andrew_christmas"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew dung lac priest and companions martyrs",
+   "classification": "saint:Saint Andrew Dũng-Lạc and Companions|key:andrew dung lac priest and companions martyrs",
+   "saint_ids": [
+    "andrew_dung_lac_priest_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Andrew Dũng-Lạc, Priest, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "andrew_dung_lac_priest_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew kim tae gon priest paul chong ha sang and companions martyrs",
+   "classification": "saint:Saints Andrew Kim Tae-gŏn, Paul Chŏng Ha-sang and Companions|key:andrew kim tae gon priest paul chong ha sang and companions martyrs",
+   "saint_ids": [
+    "andrew_kim_tae_gon_priest_paul_chong_ha_sang_and_companions_martyrs"
+   ],
+   "names": [
+    "Saints Andrew Kim Tae-gŏn, Priest, Paul Chŏng Ha-sang and Companions, Martyrs"
+   ],
+   "contracts": [
+    "andrew_kim_tae_gon_priest_paul_chong_ha_sang_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "andrew the apostle",
+   "classification": "saint:Saint Andrew|key:andrew the apostle",
+   "saint_ids": [
+    "st_andrew_the_apostle"
+   ],
+   "names": [
+    "St Andrew the Apostle"
+   ],
+   "contracts": [
+    "st_andrew_the_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "angela merici",
+   "classification": "member:patron:angela-merici",
+   "saint_ids": [
+    "st_angela_merici"
+   ],
+   "names": [
+    "St Angela Merici"
+   ],
+   "contracts": [
+    "st_angela_merici"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "angelic warfare confraternity",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "angelic_warfare_confraternity"
+   ],
+   "names": [
+    "Angelic Warfare Confraternity"
+   ],
+   "contracts": [
+    "angelic_warfare_confraternity"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anne",
+   "classification": "saint:Saint Anne|key:anne",
+   "saint_ids": [
+    "st_anne"
+   ],
+   "names": [
+    "St. Anne"
+   ],
+   "contracts": [
+    "st_anne"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "annunciation",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "annunciation"
+   ],
+   "names": [
+    "Annunciation"
+   ],
+   "contracts": [
+    "annunciation"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anselm of canterbury bishop",
+   "classification": "saint:Saint Anselm|key:anselm of canterbury bishop",
+   "saint_ids": [
+    "anselm_of_canterbury_bishop"
+   ],
+   "names": [
+    "Saint Anselm, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "anselm_of_canterbury_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ansgar of hamburg bishop",
+   "classification": "saint:Saint Ansgar|key:ansgar of hamburg bishop",
+   "saint_ids": [
+    "ansgar_of_hamburg_bishop"
+   ],
+   "names": [
+    "Saint Ansgar, Bishop"
+   ],
+   "contracts": [
+    "ansgar_of_hamburg_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anthony",
+   "classification": "saint:Saint Anthony|key:anthony of egypt abbot",
+   "saint_ids": [
+    "st_anthony"
+   ],
+   "names": [
+    "St. Anthony"
+   ],
+   "contracts": [
+    "st_anthony"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anthony mary claret",
+   "classification": "saint:Saint Anthony Mary Claret|key:anthony mary claret",
+   "saint_ids": [
+    "st_anthony_mary_claret"
+   ],
+   "names": [
+    "St Anthony Mary Claret"
+   ],
+   "contracts": [
+    "st_anthony_mary_claret"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anthony of egypt abbot",
+   "classification": "saint:Saint Anthony|key:anthony of egypt abbot",
+   "saint_ids": [
+    "anthony_of_egypt_abbot"
+   ],
+   "names": [
+    "Saint Anthony, Abbot"
+   ],
+   "contracts": [
+    "anthony_of_egypt_abbot"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "anthony zaccaria priest",
+   "classification": "saint:Saint Anthony Zaccaria|key:anthony zaccaria priest",
+   "saint_ids": [
+    "anthony_zaccaria_priest"
+   ],
+   "names": [
+    "Saint Anthony Zaccaria, Priest"
+   ],
+   "contracts": [
+    "anthony_zaccaria_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "apollinaris of ravenna bishop",
+   "classification": "saint:Saint Apollinaris|key:apollinaris of ravenna bishop",
+   "saint_ids": [
+    "apollinaris_of_ravenna_bishop"
+   ],
+   "names": [
+    "Saint Apollinaris, Bishop and Martyr"
+   ],
+   "contracts": [
+    "apollinaris_of_ravenna_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "apollonia",
+   "classification": "saint:Saint Apollonia|key:apollonia",
+   "saint_ids": [
+    "st_apollonia"
+   ],
+   "names": [
+    "St Apollonia"
+   ],
+   "contracts": [
+    "st_apollonia"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ascension of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "ascension_of_the_lord"
+   ],
+   "names": [
+    "The Ascension of the Lord"
+   ],
+   "contracts": [
+    "ascension_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "assumption",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "assumption"
+   ],
+   "names": [
+    "Assumption"
+   ],
+   "contracts": [
+    "assumption"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "athanasius of alexandria bishop",
+   "classification": "saint:Saint Athanasius|key:athanasius of alexandria bishop",
+   "saint_ids": [
+    "athanasius_of_alexandria_bishop"
+   ],
+   "names": [
+    "Saint Athanasius, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "athanasius_of_alexandria_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "augustine",
+   "classification": "saint:Saint Augustine|key:augustine",
+   "saint_ids": [
+    "st_augustine"
+   ],
+   "names": [
+    "St. Augustine"
+   ],
+   "contracts": [
+    "st_augustine"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "augustine of canterbury bishop",
+   "classification": "saint:Saint Augustine of Canterbury|key:augustine of canterbury bishop",
+   "saint_ids": [
+    "augustine_of_canterbury_bishop"
+   ],
+   "names": [
+    "Saint Augustine of Canterbury, Bishop"
+   ],
+   "contracts": [
+    "augustine_of_canterbury_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "augustine zhao rong priest and companions martyrs",
+   "classification": "saint:Saint Augustine Zhao Rong and Companions|key:augustine zhao rong priest and companions martyrs",
+   "saint_ids": [
+    "augustine_zhao_rong_priest_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Augustine Zhao Rong, Priest, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "augustine_zhao_rong_priest_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "baptism of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "baptism_of_the_lord"
+   ],
+   "names": [
+    "The Baptism of the Lord"
+   ],
+   "contracts": [
+    "baptism_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "barbara",
+   "classification": "saint:Saint Barbara|key:barbara",
+   "saint_ids": [
+    "st_barbara"
+   ],
+   "names": [
+    "St. Barbara"
+   ],
+   "contracts": [
+    "st_barbara"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "barnabas apostle",
+   "classification": "saint:Saint Barnabas|key:barnabas apostle",
+   "saint_ids": [
+    "barnabas_apostle"
+   ],
+   "names": [
+    "Saint Barnabas, Apostle"
+   ],
+   "contracts": [
+    "barnabas_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bartholomew apostle",
+   "classification": "saint:Saint Bartholomew|key:bartholomew apostle",
+   "saint_ids": [
+    "bartholomew_apostle"
+   ],
+   "names": [
+    "Saint Bartholomew, Apostle"
+   ],
+   "contracts": [
+    "bartholomew_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "basil the great and gregory nazianzen bishops",
+   "classification": "saint:Saints Basil the Great and Gregory Nazianzen|key:basil the great and gregory nazianzen bishops",
+   "saint_ids": [
+    "basil_the_great_and_gregory_nazianzen_bishops"
+   ],
+   "names": [
+    "Saints Basil the Great and Gregory Nazianzen, Bishops and Doctors of the Church"
+   ],
+   "contracts": [
+    "basil_the_great_and_gregory_nazianzen_bishops"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bede the venerable priest",
+   "classification": "saint:Saint Bede the Venerable|key:bede the venerable priest",
+   "saint_ids": [
+    "bede_the_venerable_priest"
+   ],
+   "names": [
+    "Saint Bede the Venerable, Priest and Doctor of the Church"
+   ],
+   "contracts": [
+    "bede_the_venerable_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "benedict",
+   "classification": "saint:Saint Benedict|key:benedict",
+   "saint_ids": [
+    "st_benedict"
+   ],
+   "names": [
+    "St. Benedict"
+   ],
+   "contracts": [
+    "st_benedict"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "benedict joseph labre",
+   "classification": "saint:Saint Benedict Joseph Labre|key:benedict joseph labre",
+   "saint_ids": [
+    "st_benedict_joseph_labre"
+   ],
+   "names": [
+    "St Benedict Joseph Labre"
+   ],
+   "contracts": [
+    "st_benedict_joseph_labre"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bernadette",
+   "classification": "saint:Saint Bernadette|key:bernadette",
+   "saint_ids": [
+    "st_bernadette"
+   ],
+   "names": [
+    "St. Bernadette"
+   ],
+   "contracts": [
+    "st_bernadette"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bernadine of siena",
+   "classification": "saint:Saint Bernadine of Siena|key:bernadine of siena",
+   "saint_ids": [
+    "bernardine_of_siena_priest",
+    "st_bernadine_of_siena"
+   ],
+   "names": [
+    "Saint Bernardine of Siena, Priest",
+    "St Bernadine of Siena"
+   ],
+   "contracts": [
+    "bernardine_of_siena_priest",
+    "st_bernadine_of_siena"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "bernard of clairvaux",
+   "classification": "saint:Saint Bernard of Clairvaux|key:bernard of clairvaux",
+   "saint_ids": [
+    "st_bernard_of_clairvaux"
+   ],
+   "names": [
+    "St Bernard of Clairvaux"
+   ],
+   "contracts": [
+    "st_bernard_of_clairvaux"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "blaise",
+   "classification": "saint:Saint Blaise|key:blaise",
+   "saint_ids": [
+    "st_blaise"
+   ],
+   "names": [
+    "St. Blaise"
+   ],
+   "contracts": [
+    "st_blaise"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bonaventure",
+   "classification": "saint:Saint Bonaventure|key:bonaventure",
+   "saint_ids": [
+    "st_bonaventure"
+   ],
+   "names": [
+    "St Bonaventure"
+   ],
+   "contracts": [
+    "st_bonaventure"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "boniface of mainz bishop",
+   "classification": "saint:Saint Boniface|key:boniface of mainz bishop",
+   "saint_ids": [
+    "boniface_of_mainz_bishop"
+   ],
+   "names": [
+    "Saint Boniface, Bishop and Martyr"
+   ],
+   "contracts": [
+    "boniface_of_mainz_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "brendan",
+   "classification": "saint:Saint Brendan|key:brendan",
+   "saint_ids": [
+    "st_brendan"
+   ],
+   "names": [
+    "St Brendan"
+   ],
+   "contracts": [
+    "st_brendan"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bridget of sweden",
+   "classification": "saint:Saint Bridget of Sweden|key:bridget of sweden",
+   "saint_ids": [
+    "st_bridget_of_sweden"
+   ],
+   "names": [
+    "St. Bridget of Sweden"
+   ],
+   "contracts": [
+    "st_bridget_of_sweden"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "brigid of ireland",
+   "classification": "saint:Saint Brigid of Ireland|key:brigid of ireland",
+   "saint_ids": [
+    "st_brigid_of_ireland"
+   ],
+   "names": [
+    "St. Brigid of Ireland"
+   ],
+   "contracts": [
+    "st_brigid_of_ireland"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "bruno of cologne priest",
+   "classification": "saint:Saint Bruno|key:bruno of cologne priest",
+   "saint_ids": [
+    "bruno_of_cologne_priest"
+   ],
+   "names": [
+    "Saint Bruno, Priest"
+   ],
+   "contracts": [
+    "bruno_of_cologne_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cajetan",
+   "classification": "saint:Saint Cajetan|key:cajetan",
+   "saint_ids": [
+    "st_cajetan"
+   ],
+   "names": [
+    "St. Cajetan"
+   ],
+   "contracts": [
+    "st_cajetan"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "callistus i pope",
+   "classification": "saint:Saint Callistus I|key:callistus i pope",
+   "saint_ids": [
+    "callistus_i_pope"
+   ],
+   "names": [
+    "Saint Callistus I, Pope and Martyr"
+   ],
+   "contracts": [
+    "callistus_i_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "camillus de lellis",
+   "classification": "saint:Saint Camillus de Lellis|key:camillus de lellis",
+   "saint_ids": [
+    "st_camillus_de_lellis"
+   ],
+   "names": [
+    "St Camillus de Lellis"
+   ],
+   "contracts": [
+    "st_camillus_de_lellis"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cardinal burke our lady of guadalupe",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "cardinal_burke_our_lady_of_guadalupe"
+   ],
+   "names": [
+    "Cardinal Burke Our Lady of Guadalupe"
+   ],
+   "contracts": [
+    "cardinal_burke_our_lady_of_guadalupe"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "carlo acutis",
+   "classification": "member:patron:carlo-acutis",
+   "saint_ids": [
+    "st_carlo_acutis"
+   ],
+   "names": [
+    "St Carlo Acutis"
+   ],
+   "contracts": [
+    "st_carlo_acutis"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "casimir of poland",
+   "classification": "saint:Saint Casimir|key:casimir of poland",
+   "saint_ids": [
+    "casimir_of_poland"
+   ],
+   "names": [
+    "Saint Casimir"
+   ],
+   "contracts": [
+    "casimir_of_poland"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "catherine of alexandria",
+   "classification": "saint:Saint Catherine of Alexandria|key:catherine of alexandria",
+   "saint_ids": [
+    "st_catherine_of_alexandria"
+   ],
+   "names": [
+    "St Catherine of Alexandria"
+   ],
+   "contracts": [
+    "st_catherine_of_alexandria"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "catherine of bologna",
+   "classification": "saint:Saint Catherine of Bologna|key:catherine of bologna",
+   "saint_ids": [
+    "st_catherine_of_bologna"
+   ],
+   "names": [
+    "St Catherine of Bologna"
+   ],
+   "contracts": [
+    "st_catherine_of_bologna"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "catherine of siena",
+   "classification": "saint:Saint Catherine of Siena|key:catherine of siena",
+   "saint_ids": [
+    "st_catherine_of_siena"
+   ],
+   "names": [
+    "St. Catherine of Siena"
+   ],
+   "contracts": [
+    "st_catherine_of_siena"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cecilia",
+   "classification": "saint:Saint Cecilia|key:cecilia",
+   "saint_ids": [
+    "st_cecilia"
+   ],
+   "names": [
+    "St. Cecilia"
+   ],
+   "contracts": [
+    "st_cecilia"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "chair of saint peter the apostle",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "chair_of_saint_peter_the_apostle"
+   ],
+   "names": [
+    "The Chair of Saint Peter the Apostle"
+   ],
+   "contracts": [
+    "chair_of_saint_peter_the_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "charbel",
+   "classification": "saint:Saint Charbel|key:charbel",
+   "saint_ids": [
+    "sharbel_makhluf_priest",
+    "st_charbel"
+   ],
+   "names": [
+    "Saint Sharbel Makhlūf, Priest",
+    "St Charbel"
+   ],
+   "contracts": [
+    "sharbel_makhluf_priest",
+    "st_charbel"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "charles borromeo",
+   "classification": "saint:Saint Charles Borromeo|key:charles borromeo",
+   "saint_ids": [
+    "st_charles_borromeo"
+   ],
+   "names": [
+    "St Charles Borromeo"
+   ],
+   "contracts": [
+    "st_charles_borromeo"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "charles lwanga and companions martyrs",
+   "classification": "saint:Saints Charles Lwanga and Companions|key:charles lwanga and companions martyrs",
+   "saint_ids": [
+    "charles_lwanga_and_companions_martyrs"
+   ],
+   "names": [
+    "Saints Charles Lwanga and Companions, Martyrs"
+   ],
+   "contracts": [
+    "charles_lwanga_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "christ the king",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "christ_the_king"
+   ],
+   "names": [
+    "Christ the King"
+   ],
+   "contracts": [
+    "christ_the_king"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "christina the astonishing",
+   "classification": "saint:Saint Christina the Astonishing|key:christina the astonishing",
+   "saint_ids": [
+    "st_christina_the_astonishing"
+   ],
+   "names": [
+    "St. Christina the Astonishing"
+   ],
+   "contracts": [
+    "st_christina_the_astonishing"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "christopher",
+   "classification": "saint:Saint Christopher|key:christopher",
+   "saint_ids": [
+    "st_christopher"
+   ],
+   "names": [
+    "St Christopher"
+   ],
+   "contracts": [
+    "st_christopher"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "christopher magallanes priest and companions martyrs",
+   "classification": "saint:Saint Christopher Magallanes and Companions|key:christopher magallanes priest and companions martyrs",
+   "saint_ids": [
+    "christopher_magallanes_priest_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Christopher Magallanes, Priest, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "christopher_magallanes_priest_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "clare",
+   "classification": "saint:Saint Clare|key:clare",
+   "saint_ids": [
+    "st_clare"
+   ],
+   "names": [
+    "St. Clare"
+   ],
+   "contracts": [
+    "st_clare"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "clement i pope",
+   "classification": "saint:Saint Clement I|key:clement i pope",
+   "saint_ids": [
+    "clement_i_pope"
+   ],
+   "names": [
+    "Saint Clement I, Pope and Martyr"
+   ],
+   "contracts": [
+    "clement_i_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "colette",
+   "classification": "saint:Saint Colette|key:colette",
+   "saint_ids": [
+    "st_colette"
+   ],
+   "names": [
+    "St Colette"
+   ],
+   "contracts": [
+    "st_colette"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "columban of luxeuil abbot",
+   "classification": "saint:Saint Columban|key:columban of luxeuil abbot",
+   "saint_ids": [
+    "columban_of_luxeuil_abbot"
+   ],
+   "names": [
+    "Saint Columban, Abbot"
+   ],
+   "contracts": [
+    "columban_of_luxeuil_abbot"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "conversion of saint paul the apostle",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "conversion_of_saint_paul_the_apostle"
+   ],
+   "names": [
+    "The Conversion of Saint Paul the Apostle"
+   ],
+   "contracts": [
+    "conversion_of_saint_paul_the_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cornelius i pope and cyprian of carthage bishop martyrs",
+   "classification": "saint:Saints Cornelius|key:cornelius i pope and cyprian of carthage bishop martyrs",
+   "saint_ids": [
+    "cornelius_i_pope_and_cyprian_of_carthage_bishop_martyrs"
+   ],
+   "names": [
+    "Saints Cornelius, Pope, and Cyprian, Bishop, Martyrs"
+   ],
+   "contracts": [
+    "cornelius_i_pope_and_cyprian_of_carthage_bishop_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "corona",
+   "classification": "saint:Saint Corona|key:corona",
+   "saint_ids": [
+    "st_corona"
+   ],
+   "names": [
+    "St. Corona"
+   ],
+   "contracts": [
+    "st_corona"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "corona novena against pandemics",
+   "classification": "saint:Saint Corona|key:corona",
+   "saint_ids": [
+    "st_corona_novena_against_pandemics"
+   ],
+   "names": [
+    "St Corona Novena Against Pandemics"
+   ],
+   "contracts": [
+    "st_corona_novena_against_pandemics"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "corpus christi",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "corpus_christi"
+   ],
+   "names": [
+    "Corpus Christi"
+   ],
+   "contracts": [
+    "corpus_christi"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cosmas and damian",
+   "classification": "saint:Saints Cosmas and Damian|key:cosmas and damian",
+   "saint_ids": [
+    "cosmas_of_cilicia_and_damian_of_cilicia_martyrs",
+    "sts_cosmas_and_damian"
+   ],
+   "names": [
+    "Saints Cosmas and Damian, Martyrs",
+    "Sts Cosmas and Damian"
+   ],
+   "contracts": [
+    "cosmas_of_cilicia_and_damian_of_cilicia_martyrs",
+    "sts_cosmas_and_damian"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "cyril constantine the philosopher monk and methodius michael of thessaloniki bishop",
+   "classification": "saint:Saints Cyril|key:cyril constantine the philosopher monk and methodius michael of thessaloniki bishop",
+   "saint_ids": [
+    "cyril_constantine_the_philosopher_monk_and_methodius_michael_of_thessaloniki_bishop"
+   ],
+   "names": [
+    "Saints Cyril, Monk, and Methodius, Bishop"
+   ],
+   "contracts": [
+    "cyril_constantine_the_philosopher_monk_and_methodius_michael_of_thessaloniki_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cyril of alexandria bishop",
+   "classification": "saint:Saint Cyril of Alexandria|key:cyril of alexandria bishop",
+   "saint_ids": [
+    "cyril_of_alexandria_bishop"
+   ],
+   "names": [
+    "Saint Cyril of Alexandria, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "cyril_of_alexandria_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cyril of jerusalem",
+   "classification": "saint:Saint Cyril of Jerusalem|key:cyril of jerusalem",
+   "saint_ids": [
+    "st_cyril_of_jerusalem"
+   ],
+   "names": [
+    "St Cyril of Jerusalem"
+   ],
+   "contracts": [
+    "st_cyril_of_jerusalem"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "cyril of jerusalem bishop",
+   "classification": "saint:Saint Cyril of Jerusalem|key:cyril of jerusalem",
+   "saint_ids": [
+    "cyril_of_jerusalem_bishop"
+   ],
+   "names": [
+    "Saint Cyril of Jerusalem, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "cyril_of_jerusalem_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "damien of molokai",
+   "classification": "saint:Saint Damien of Molokai|key:damien of molokai",
+   "saint_ids": [
+    "st_damien_of_molokai"
+   ],
+   "names": [
+    "St Damien of Molokai"
+   ],
+   "contracts": [
+    "st_damien_of_molokai"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dedication of the basilicas of saints peter and paul apostles",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "dedication_of_the_basilicas_of_saints_peter_and_paul_apostles"
+   ],
+   "names": [
+    "The Dedication of the Basilicas of Saints Peter and Paul, Apostles"
+   ],
+   "contracts": [
+    "dedication_of_the_basilicas_of_saints_peter_and_paul_apostles"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dedication of the lateran basilica",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "dedication_of_the_lateran_basilica"
+   ],
+   "names": [
+    "The Dedication of the Lateran Basilica"
+   ],
+   "contracts": [
+    "dedication_of_the_lateran_basilica"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "denis of paris bishop and companions martyrs",
+   "classification": "saint:Saint Denis and Companions|key:denis of paris bishop and companions martyrs",
+   "saint_ids": [
+    "denis_of_paris_bishop_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Denis, Bishop, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "denis_of_paris_bishop_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "divine mercy",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "divine_mercy"
+   ],
+   "names": [
+    "Divine Mercy"
+   ],
+   "contracts": [
+    "divine_mercy_sunday"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dominic",
+   "classification": "saint:Saint Dominic|key:dominic",
+   "saint_ids": [
+    "st_dominic"
+   ],
+   "names": [
+    "St. Dominic"
+   ],
+   "contracts": [
+    "st_dominic"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dominic savio",
+   "classification": "saint:Saint Dominic Savio|key:dominic savio",
+   "saint_ids": [
+    "st_dominic_savio"
+   ],
+   "names": [
+    "St. Dominic Savio"
+   ],
+   "contracts": [
+    "st_dominic_savio"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dymphna",
+   "classification": "saint:Saint Dymphna|key:dymphna",
+   "saint_ids": [
+    "st_dymphna"
+   ],
+   "names": [
+    "St. Dymphna"
+   ],
+   "contracts": [
+    "st_dymphna"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "dymphna novena prayers for mental illnesses",
+   "classification": "saint:Saint Dymphna|key:dymphna",
+   "saint_ids": [
+    "st_dymphna_novena_prayers_for_mental_illnesses"
+   ],
+   "names": [
+    "St Dymphna Novena - Prayers for Mental Illnesses"
+   ],
+   "contracts": [
+    "st_dymphna_novena_prayers_for_mental_illnesses"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "easter sunday",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "easter_sunday"
+   ],
+   "names": [
+    "Easter Sunday of the Resurrection of the Lord"
+   ],
+   "contracts": [
+    "easter_sunday"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "edith stein",
+   "classification": "saint:Saint Teresa Benedicta of the Cross|key:edith stein",
+   "saint_ids": [
+    "st_edith_stein",
+    "teresa_benedicta_of_the_cross_stein_virgin"
+   ],
+   "names": [
+    "Saint Teresa Benedicta of the Cross Stein, Virgin and Martyr",
+    "St Edith Stein"
+   ],
+   "contracts": [
+    "st_edith_stein",
+    "teresa_benedicta_of_the_cross_stein_virgin"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "edmund campion",
+   "classification": "saint:Saint Edmund Campion|key:edmund campion",
+   "saint_ids": [
+    "st_edmund_campion"
+   ],
+   "names": [
+    "St Edmund Campion"
+   ],
+   "contracts": [
+    "st_edmund_campion"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "election",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "election"
+   ],
+   "names": [
+    "Election"
+   ],
+   "contracts": [
+    "election"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "election consecration 54 day",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "election_consecration_54_day"
+   ],
+   "names": [
+    "Election Consecration 54 Day"
+   ],
+   "contracts": [
+    "election_consecration_54_day"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "elizabeth",
+   "classification": "saint:Saint Elizabeth|key:elizabeth",
+   "saint_ids": [
+    "st_elizabeth"
+   ],
+   "names": [
+    "St Elizabeth"
+   ],
+   "contracts": [
+    "st_elizabeth"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "elizabeth ann seton",
+   "classification": "saint:Saint Elizabeth Ann Seton|key:elizabeth ann seton",
+   "saint_ids": [
+    "st_elizabeth_ann_seton"
+   ],
+   "names": [
+    "St. Elizabeth Ann Seton"
+   ],
+   "contracts": [
+    "st_elizabeth_ann_seton"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "elizabeth of hungary",
+   "classification": "member:patron:elizabeth-of-hungary",
+   "saint_ids": [
+    "st_elizabeth_of_hungary"
+   ],
+   "names": [
+    "St. Elizabeth of Hungary"
+   ],
+   "contracts": [
+    "st_elizabeth_of_hungary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "elizabeth of portugal",
+   "classification": "saint:Saint Elizabeth of Portugal|key:elizabeth of portugal",
+   "saint_ids": [
+    "st_elizabeth_of_portugal"
+   ],
+   "names": [
+    "St Elizabeth of Portugal"
+   ],
+   "contracts": [
+    "st_elizabeth_of_portugal"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "elizabeth of the trinity",
+   "classification": "saint:Saint Elizabeth of the Trinity|key:elizabeth of the trinity",
+   "saint_ids": [
+    "st_elizabeth_of_the_trinity"
+   ],
+   "names": [
+    "St. Elizabeth of the Trinity"
+   ],
+   "contracts": [
+    "st_elizabeth_of_the_trinity"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "english martyrs",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "english_martyrs"
+   ],
+   "names": [
+    "English Martyrs"
+   ],
+   "contracts": [
+    "english_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ephrem the syrian deacon",
+   "classification": "saint:Saint Ephrem|key:ephrem the syrian deacon",
+   "saint_ids": [
+    "ephrem_the_syrian_deacon"
+   ],
+   "names": [
+    "Saint Ephrem, Deacon and Doctor of the Church"
+   ],
+   "contracts": [
+    "ephrem_the_syrian_deacon"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "epiphany magi",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "epiphany_magi"
+   ],
+   "names": [
+    "Epiphany Magi"
+   ],
+   "contracts": [
+    "epiphany_magi"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "epiphany of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "epiphany_of_the_lord"
+   ],
+   "names": [
+    "The Epiphany of the Lord"
+   ],
+   "contracts": [
+    "epiphany_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "eusebius of vercelli bishop",
+   "classification": "saint:Saint Eusebius of Vercelli|key:eusebius of vercelli bishop",
+   "saint_ids": [
+    "eusebius_of_vercelli_bishop"
+   ],
+   "names": [
+    "Saint Eusebius of Vercelli, Bishop"
+   ],
+   "contracts": [
+    "eusebius_of_vercelli_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "expeditus",
+   "classification": "saint:Saint Expeditus|key:expeditus",
+   "saint_ids": [
+    "st_expeditus"
+   ],
+   "names": [
+    "St. Expeditus"
+   ],
+   "contracts": [
+    "st_expeditus"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fabian i pope",
+   "classification": "saint:Saint Fabian|key:fabian i pope",
+   "saint_ids": [
+    "fabian_i_pope"
+   ],
+   "names": [
+    "Saint Fabian, Pope and Martyr"
+   ],
+   "contracts": [
+    "fabian_i_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "faustina",
+   "classification": "saint:Saint Faustina|key:faustina",
+   "saint_ids": [
+    "st_faustina"
+   ],
+   "names": [
+    "St. Faustina"
+   ],
+   "contracts": [
+    "st_faustina"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fertility to conceive",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "fertility_to_conceive"
+   ],
+   "names": [
+    "Fertility to Conceive"
+   ],
+   "contracts": [
+    "fertility_to_conceive"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fidelis of sigmaringen priest",
+   "classification": "saint:Saint Fidelis of Sigmaringen|key:fidelis of sigmaringen priest",
+   "saint_ids": [
+    "fidelis_of_sigmaringen_priest"
+   ],
+   "names": [
+    "Saint Fidelis of Sigmaringen, Priest and Martyr"
+   ],
+   "contracts": [
+    "fidelis_of_sigmaringen_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "first martyrs of the holy roman church",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "first_martyrs_of_the_holy_roman_church"
+   ],
+   "names": [
+    "The First Martyrs of the Holy Roman Church"
+   ],
+   "contracts": [
+    "first_martyrs_of_the_holy_roman_church"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fr michael mcgivney",
+   "classification": "saint:Blessed Michael McGivney|key:fr michael mcgivney",
+   "saint_ids": [
+    "bl_fr_michael_mcgivney"
+   ],
+   "names": [
+    "Bl Fr Michael McGivney"
+   ],
+   "contracts": [
+    "bl_fr_michael_mcgivney"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fr vincent capodanno",
+   "classification": "saint:Father Vincent Capodanno|key:fr vincent capodanno",
+   "saint_ids": [
+    "fr_vincent_capodanno"
+   ],
+   "names": [
+    "Fr. Vincent Capodanno"
+   ],
+   "contracts": [
+    "fr_vincent_capodanno"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "frances of rome",
+   "classification": "saint:Saint Frances of Rome|key:frances of rome",
+   "saint_ids": [
+    "st_frances_of_rome"
+   ],
+   "names": [
+    "St Frances of Rome"
+   ],
+   "contracts": [
+    "st_frances_of_rome"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "frances xavier cabrini",
+   "classification": "saint:Saint Frances Cabrini|key:frances xavier cabrini",
+   "saint_ids": [
+    "st_frances_xavier_cabrini"
+   ],
+   "names": [
+    "St Frances Xavier Cabrini"
+   ],
+   "contracts": [
+    "st_frances_xavier_cabrini"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "francis de sales",
+   "classification": "member:patron:francis-de-sales",
+   "saint_ids": [
+    "st_francis_de_sales"
+   ],
+   "names": [
+    "St. Francis de Sales"
+   ],
+   "contracts": [
+    "st_francis_de_sales"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "francis of assisi",
+   "classification": "saint:Saint Francis of Assisi|key:francis of assisi",
+   "saint_ids": [
+    "st_francis_of_assisi"
+   ],
+   "names": [
+    "St. Francis of Assisi"
+   ],
+   "contracts": [
+    "st_francis_of_assisi"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "francis of paola hermit",
+   "classification": "saint:Saint Francis of Paola|key:francis of paola hermit",
+   "saint_ids": [
+    "francis_of_paola_hermit"
+   ],
+   "names": [
+    "Saint Francis of Paola, Hermit"
+   ],
+   "contracts": [
+    "francis_of_paola_hermit"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "francis xavier",
+   "classification": "saint:Saint Francis Xavier|key:francis xavier",
+   "saint_ids": [
+    "st_francis_xavier"
+   ],
+   "names": [
+    "St. Francis Xavier"
+   ],
+   "contracts": [
+    "st_francis_xavier"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "francis xavier seelos",
+   "classification": "saint:Blessed Francis Xavier Seelos|key:francis xavier seelos",
+   "saint_ids": [
+    "blessed_francis_xavier_seelos"
+   ],
+   "names": [
+    "Blessed Francis Xavier Seelos"
+   ],
+   "contracts": [
+    "blessed_francis_xavier_seelos"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "fulton sheen",
+   "classification": "saint:Fulton Sheen|key:fulton sheen",
+   "saint_ids": [
+    "fulton_sheen"
+   ],
+   "names": [
+    "Fulton Sheen"
+   ],
+   "contracts": [
+    "fulton_sheen"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gabriel",
+   "classification": "member:core:gabriel-the-archangel",
+   "saint_ids": [
+    "st_gabriel"
+   ],
+   "names": [
+    "St. Gabriel"
+   ],
+   "contracts": [
+    "st_gabriel"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gabriel of our lady of sorrows",
+   "classification": "saint:Saint Gabriel of Our Lady of Sorrows|key:gabriel of our lady of sorrows",
+   "saint_ids": [
+    "st_gabriel_of_our_lady_of_sorrows"
+   ],
+   "names": [
+    "St Gabriel of Our Lady of Sorrows"
+   ],
+   "contracts": [
+    "st_gabriel_of_our_lady_of_sorrows"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gemma galgani",
+   "classification": "saint:Saint Gemma Galgani|key:gemma galgani",
+   "saint_ids": [
+    "st_gemma_galgani"
+   ],
+   "names": [
+    "St. Gemma Galgani"
+   ],
+   "contracts": [
+    "st_gemma_galgani"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "genevieve",
+   "classification": "saint:Saint Genevieve|key:genevieve",
+   "saint_ids": [
+    "st_genevieve"
+   ],
+   "names": [
+    "St Genevieve"
+   ],
+   "contracts": [
+    "st_genevieve"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "george",
+   "classification": "saint:Saint George|key:george",
+   "saint_ids": [
+    "st_george"
+   ],
+   "names": [
+    "St George"
+   ],
+   "contracts": [
+    "st_george"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gerard majella",
+   "classification": "saint:Saint Gerard Majella|key:gerard majella",
+   "saint_ids": [
+    "st_gerard_majella"
+   ],
+   "names": [
+    "St. Gerard Majella"
+   ],
+   "contracts": [
+    "st_gerard_majella"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "germaine cousin",
+   "classification": "saint:Saint Germaine Cousin|key:germaine cousin",
+   "saint_ids": [
+    "st_germaine_cousin"
+   ],
+   "names": [
+    "St Germaine Cousin"
+   ],
+   "contracts": [
+    "st_germaine_cousin"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gertrude of nivelles",
+   "classification": "saint:Saint Gertrude of Nivelles|key:gertrude of nivelles",
+   "saint_ids": [
+    "st_gertrude_of_nivelles"
+   ],
+   "names": [
+    "St Gertrude of Nivelles"
+   ],
+   "contracts": [
+    "st_gertrude_of_nivelles"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gertrude prayer",
+   "classification": "saint:Saint Gertrude|key:gertrude",
+   "saint_ids": [
+    "st_gertrude_prayer"
+   ],
+   "names": [
+    "St. Gertrude Prayer"
+   ],
+   "contracts": [
+    "st_gertrude_prayer"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gianna molla",
+   "classification": "saint:Saint Gianna Molla|key:gianna molla",
+   "saint_ids": [
+    "st_gianna_molla"
+   ],
+   "names": [
+    "St. Gianna Molla"
+   ],
+   "contracts": [
+    "st_gianna_molla"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "giuseppe moscati",
+   "classification": "saint:Saint Giuseppe Moscati|key:giuseppe moscati",
+   "saint_ids": [
+    "st_giuseppe_moscati"
+   ],
+   "names": [
+    "St Giuseppe Moscati"
+   ],
+   "contracts": [
+    "st_giuseppe_moscati"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gratitude",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "gratitude"
+   ],
+   "names": [
+    "Gratitude"
+   ],
+   "contracts": [
+    "gratitude"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gregory of narek abbot",
+   "classification": "saint:Saint Gregory of Narek|key:gregory of narek abbot",
+   "saint_ids": [
+    "gregory_of_narek_abbot"
+   ],
+   "names": [
+    "Saint Gregory of Narek, Abbot and Doctor of the Church"
+   ],
+   "contracts": [
+    "gregory_of_narek_abbot"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gregory the great",
+   "classification": "saint:Saint Gregory the Great|key:gregory the great",
+   "saint_ids": [
+    "st_gregory_the_great"
+   ],
+   "names": [
+    "St Gregory the Great"
+   ],
+   "contracts": [
+    "st_gregory_the_great"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "gregory vii pope",
+   "classification": "saint:Saint Gregory VII|key:gregory vii pope",
+   "saint_ids": [
+    "gregory_vii_pope"
+   ],
+   "names": [
+    "Saint Gregory VII, Pope"
+   ],
+   "contracts": [
+    "gregory_vii_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "guardian angel",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "guardian_angel"
+   ],
+   "names": [
+    "Guardian Angel"
+   ],
+   "contracts": [
+    "guardian_angel"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "hedwig of silesia religious",
+   "classification": "saint:Saint Hedwig of Silesia|key:hedwig of silesia religious",
+   "saint_ids": [
+    "hedwig_of_silesia_religious"
+   ],
+   "names": [
+    "Saint Hedwig, Religious"
+   ],
+   "contracts": [
+    "hedwig_of_silesia_religious"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "helena",
+   "classification": "saint:Saint Helena|key:helena",
+   "saint_ids": [
+    "st_helena"
+   ],
+   "names": [
+    "St Helena"
+   ],
+   "contracts": [
+    "st_helena"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "henry ii emperor",
+   "classification": "saint:Saint Henry|key:henry ii emperor",
+   "saint_ids": [
+    "henry_ii_emperor"
+   ],
+   "names": [
+    "Saint Henry"
+   ],
+   "contracts": [
+    "henry_ii_emperor"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "hilary of poitiers bishop",
+   "classification": "saint:Saint Hilary|key:hilary of poitiers bishop",
+   "saint_ids": [
+    "hilary_of_poitiers_bishop"
+   ],
+   "names": [
+    "Saint Hilary, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "hilary_of_poitiers_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "hildegard of bingen",
+   "classification": "saint:Saint Hildegard of Bingen|key:hildegard of bingen",
+   "saint_ids": [
+    "st_hildegard_of_bingen"
+   ],
+   "names": [
+    "St Hildegard of Bingen"
+   ],
+   "contracts": [
+    "st_hildegard_of_bingen"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy cloak of st joseph",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "holy_cloak_of_st_joseph"
+   ],
+   "names": [
+    "Holy Cloak of St Joseph"
+   ],
+   "contracts": [
+    "holy_cloak_of_st_joseph"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy cross",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "holy_cross"
+   ],
+   "names": [
+    "Holy Cross"
+   ],
+   "contracts": [
+    "holy_cross"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy face of jesus",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "holy_face_of_jesus"
+   ],
+   "names": [
+    "Holy Face of Jesus"
+   ],
+   "contracts": [
+    "ash_wednesday"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy family",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "holy_family"
+   ],
+   "names": [
+    "Holy Family"
+   ],
+   "contracts": [
+    "holy_family_of_jesus_mary_and_joseph"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy guardian angels",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "holy_guardian_angels"
+   ],
+   "names": [
+    "The Holy Guardian Angels"
+   ],
+   "contracts": [
+    "holy_guardian_angels"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy innocents",
+   "classification": "saint:Holy Innocents|key:holy innocents",
+   "saint_ids": [
+    "holy_innocents"
+   ],
+   "names": [
+    "Holy Innocents"
+   ],
+   "contracts": [
+    "holy_innocents"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy name of jesus",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "holy_name_of_jesus"
+   ],
+   "names": [
+    "Holy Name of Jesus"
+   ],
+   "contracts": [
+    "holy_name_of_jesus"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "holy souls in purgatory",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "commemoration_of_all_the_faithful_departed",
+    "holy_souls_in_purgatory"
+   ],
+   "names": [
+    "Holy Souls in Purgatory",
+    "The Commemoration of All the Faithful Departed (All Soul’s Day)"
+   ],
+   "contracts": [
+    "commemoration_of_all_the_faithful_departed",
+    "holy_souls_in_purgatory"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "holy spirit novena powerful pentecost prayers",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "holy_spirit_novena_powerful_pentecost_prayers"
+   ],
+   "names": [
+    "Holy Spirit Novena - Powerful Pentecost Prayers"
+   ],
+   "contracts": [
+    "pentecost_sunday"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "homobonus",
+   "classification": "saint:Saint Homobonus|key:homobonus",
+   "saint_ids": [
+    "st_homobonus"
+   ],
+   "names": [
+    "St Homobonus"
+   ],
+   "contracts": [
+    "st_homobonus"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "hubert",
+   "classification": "saint:Saint Hubert|key:hubert",
+   "saint_ids": [
+    "st_hubert"
+   ],
+   "names": [
+    "St Hubert"
+   ],
+   "contracts": [
+    "st_hubert"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ignatius loyola",
+   "classification": "saint:Saint Ignatius Loyola|key:ignatius loyola",
+   "saint_ids": [
+    "st_ignatius_loyola"
+   ],
+   "names": [
+    "St. Ignatius Loyola"
+   ],
+   "contracts": [
+    "st_ignatius_loyola"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "ignatius of antioch bishop",
+   "classification": "saint:Saint Ignatius of Antioch|key:ignatius of antioch bishop",
+   "saint_ids": [
+    "ignatius_of_antioch_bishop"
+   ],
+   "names": [
+    "Saint Ignatius of Antioch, Bishop and Martyr"
+   ],
+   "contracts": [
+    "ignatius_of_antioch_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "immaculate conception",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "immaculate_conception"
+   ],
+   "names": [
+    "Immaculate Conception"
+   ],
+   "contracts": [
+    "immaculate_conception"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "immaculate heart of mary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "immaculate_heart_of_mary"
+   ],
+   "names": [
+    "Immaculate Heart of Mary"
+   ],
+   "contracts": [
+    "immaculate_heart_of_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "impossible requests annunciation",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "impossible_requests_annunciation"
+   ],
+   "names": [
+    "Impossible Requests Annunciation"
+   ],
+   "contracts": [
+    "impossible_requests_annunciation"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "infant of prague",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "infant_of_prague"
+   ],
+   "names": [
+    "Infant of Prague"
+   ],
+   "contracts": [
+    "infant_of_prague"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "irenaeus of lyon bishop",
+   "classification": "saint:Saint Irenaeus|key:irenaeus of lyon bishop",
+   "saint_ids": [
+    "irenaeus_of_lyon_bishop"
+   ],
+   "names": [
+    "Saint Irenaeus, Bishop, Martyr and Doctor of the Church"
+   ],
+   "contracts": [
+    "irenaeus_of_lyon_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "isidore of seville",
+   "classification": "member:patron:isidore-of-seville",
+   "saint_ids": [
+    "st_isidore_of_seville"
+   ],
+   "names": [
+    "St Isidore of Seville"
+   ],
+   "contracts": [
+    "st_isidore_of_seville"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "isidore the farmer",
+   "classification": "saint:Saint Isidore the Farmer|key:isidore the farmer",
+   "saint_ids": [
+    "st_isidore_the_farmer"
+   ],
+   "names": [
+    "St. Isidore the Farmer"
+   ],
+   "contracts": [
+    "st_isidore_the_farmer"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jacinta and francisco marto",
+   "classification": "saint:Saints Jacinta and Francisco Marto|key:jacinta and francisco marto",
+   "saint_ids": [
+    "sts_jacinta_and_francisco_marto"
+   ],
+   "names": [
+    "Sts Jacinta and Francisco Marto"
+   ],
+   "contracts": [
+    "sts_jacinta_and_francisco_marto"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "james the greater",
+   "classification": "saint:Saint James the Greater|key:james the greater",
+   "saint_ids": [
+    "st_james_the_greater"
+   ],
+   "names": [
+    "St. James the Greater"
+   ],
+   "contracts": [
+    "st_james_the_greater"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jane frances de chantal",
+   "classification": "saint:Saint Jane Frances de Chantal|key:jane frances de chantal",
+   "saint_ids": [
+    "st_jane_frances_de_chantal"
+   ],
+   "names": [
+    "St Jane Frances de Chantal"
+   ],
+   "contracts": [
+    "st_jane_frances_de_chantal"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "januarius gennaro",
+   "classification": "saint:Saint Januarius (Gennaro)|key:januarius gennaro",
+   "saint_ids": [
+    "st_januarius_gennaro"
+   ],
+   "names": [
+    "St. Januarius (Gennaro)"
+   ],
+   "contracts": [
+    "st_januarius_gennaro"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jerome",
+   "classification": "saint:Saint Jerome|key:jerome",
+   "saint_ids": [
+    "st_jerome"
+   ],
+   "names": [
+    "St. Jerome"
+   ],
+   "contracts": [
+    "st_jerome"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jerome emiliani",
+   "classification": "saint:Saint Jerome Emiliani|key:jerome emiliani",
+   "saint_ids": [
+    "jerome_emiliani"
+   ],
+   "names": [
+    "Saint Jerome Emiliani"
+   ],
+   "contracts": [
+    "jerome_emiliani"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joachim and anne",
+   "classification": "saint:Saints Joachim and Anne|key:joachim and anne",
+   "saint_ids": [
+    "sts_joachim_and_anne"
+   ],
+   "names": [
+    "Saints Joachim and Anne"
+   ],
+   "contracts": [
+    "sts_joachim_and_anne"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joan of arc",
+   "classification": "saint:Saint Joan of Arc|key:joan of arc",
+   "saint_ids": [
+    "st_joan_of_arc"
+   ],
+   "names": [
+    "St. Joan of Arc"
+   ],
+   "contracts": [
+    "st_joan_of_arc"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john baptist de la salle priest",
+   "classification": "saint:Saint John Baptist de la Salle|key:john baptist de la salle priest",
+   "saint_ids": [
+    "john_baptist_de_la_salle_priest"
+   ],
+   "names": [
+    "Saint John Baptist de la Salle, Priest"
+   ],
+   "contracts": [
+    "john_baptist_de_la_salle_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john bosco",
+   "classification": "member:patron:john-bosco",
+   "saint_ids": [
+    "st_john_bosco"
+   ],
+   "names": [
+    "St. John Bosco"
+   ],
+   "contracts": [
+    "st_john_bosco"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john chrysostom bishop",
+   "classification": "saint:Saint John Chrysostom|key:john chrysostom bishop",
+   "saint_ids": [
+    "john_chrysostom_bishop"
+   ],
+   "names": [
+    "Saint John Chrysostom, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "john_chrysostom_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john damascene",
+   "classification": "saint:Saint John Damascene|key:john damascene",
+   "saint_ids": [
+    "st_john_damascene"
+   ],
+   "names": [
+    "St John Damascene"
+   ],
+   "contracts": [
+    "st_john_damascene"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john eudes priest",
+   "classification": "saint:Saint John Eudes|key:john eudes priest",
+   "saint_ids": [
+    "john_eudes_priest"
+   ],
+   "names": [
+    "Saint John Eudes, Priest"
+   ],
+   "contracts": [
+    "john_eudes_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john henry newman",
+   "classification": "saint:Saint John Henry Newman|key:john henry newman",
+   "saint_ids": [
+    "st_john_henry_newman"
+   ],
+   "names": [
+    "St John Henry Newman"
+   ],
+   "contracts": [
+    "st_john_henry_newman"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john i pope",
+   "classification": "saint:Saint John I|key:john i pope",
+   "saint_ids": [
+    "john_i_pope"
+   ],
+   "names": [
+    "Saint John I, Pope and Martyr"
+   ],
+   "contracts": [
+    "john_i_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john leonardi priest",
+   "classification": "saint:Saint John Leonardi|key:john leonardi priest",
+   "saint_ids": [
+    "john_leonardi_priest"
+   ],
+   "names": [
+    "Saint John Leonardi, Priest"
+   ],
+   "contracts": [
+    "john_leonardi_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john neumann",
+   "classification": "saint:Saint John Neumann|key:john neumann",
+   "saint_ids": [
+    "st_john_neumann"
+   ],
+   "names": [
+    "St John Neumann"
+   ],
+   "contracts": [
+    "st_john_neumann"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john of avila priest",
+   "classification": "saint:Saint John of Ávila|key:john of avila priest",
+   "saint_ids": [
+    "john_of_avila_priest"
+   ],
+   "names": [
+    "Saint John of Ávila, Priest and Doctor of the Church"
+   ],
+   "contracts": [
+    "john_of_avila_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john of capistrano priest",
+   "classification": "saint:Saint John of Capistrano|key:john of capistrano priest",
+   "saint_ids": [
+    "john_of_capistrano_priest"
+   ],
+   "names": [
+    "Saint John of Capistrano, Priest"
+   ],
+   "contracts": [
+    "john_of_capistrano_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john of god",
+   "classification": "saint:Saint John of God|key:john of god",
+   "saint_ids": [
+    "st_john_of_god"
+   ],
+   "names": [
+    "St John of God"
+   ],
+   "contracts": [
+    "st_john_of_god"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john of the cross",
+   "classification": "saint:Saint John of the Cross|key:john of the cross",
+   "saint_ids": [
+    "st_john_of_the_cross"
+   ],
+   "names": [
+    "St. John of the Cross"
+   ],
+   "contracts": [
+    "st_john_of_the_cross"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john the apostle",
+   "classification": "member:core:john-the-apostle",
+   "saint_ids": [
+    "st_john_the_apostle"
+   ],
+   "names": [
+    "St. John the Apostle"
+   ],
+   "contracts": [
+    "st_john_the_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john the baptist",
+   "classification": "member:core:john-the-baptist",
+   "saint_ids": [
+    "st_john_the_baptist"
+   ],
+   "names": [
+    "St. John the Baptist"
+   ],
+   "contracts": [
+    "st_john_the_baptist"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john vianney",
+   "classification": "saint:Saint John Vianney|key:john vianney",
+   "saint_ids": [
+    "st_john_vianney"
+   ],
+   "names": [
+    "St. John Vianney"
+   ],
+   "contracts": [
+    "st_john_vianney"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "john xxiii pope",
+   "classification": "saint:Saint John XXIII|key:john xxiii pope",
+   "saint_ids": [
+    "john_xxiii_pope"
+   ],
+   "names": [
+    "Saint John XXIII, Pope"
+   ],
+   "contracts": [
+    "john_xxiii_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "josaphat kuntsevych bishop",
+   "classification": "saint:Saint Josaphat|key:josaphat kuntsevych bishop",
+   "saint_ids": [
+    "josaphat_kuntsevych_bishop"
+   ],
+   "names": [
+    "Saint Josaphat, Bishop and Martyr"
+   ],
+   "contracts": [
+    "josaphat_kuntsevych_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jose luis sanchez del rio",
+   "classification": "saint:Saint Jose Luis Sanchez del Rio|key:jose luis sanchez del rio",
+   "saint_ids": [
+    "st_jose_luis_sanchez_del_rio"
+   ],
+   "names": [
+    "St Jose Luis Sanchez del Rio"
+   ],
+   "contracts": [
+    "st_jose_luis_sanchez_del_rio"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "josemaria escriva",
+   "classification": "member:patron:josemaria-escriva",
+   "saint_ids": [
+    "st_josemaria_escriva"
+   ],
+   "names": [
+    "St. Josemaria Escriva"
+   ],
+   "contracts": [
+    "st_josemaria_escriva"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joseph",
+   "classification": "member:core:joseph",
+   "saint_ids": [
+    "st_joseph"
+   ],
+   "names": [
+    "St. Joseph"
+   ],
+   "contracts": [
+    "st_joseph"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joseph cupertino",
+   "classification": "saint:Saint Joseph Cupertino|key:joseph cupertino",
+   "saint_ids": [
+    "st_joseph_cupertino"
+   ],
+   "names": [
+    "St. Joseph Cupertino"
+   ],
+   "contracts": [
+    "st_joseph_cupertino"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joseph of calasanz priest",
+   "classification": "saint:Saint Joseph of Calasanz|key:joseph of calasanz priest",
+   "saint_ids": [
+    "joseph_of_calasanz_priest"
+   ],
+   "names": [
+    "Saint Joseph of Calasanz, Priest"
+   ],
+   "contracts": [
+    "joseph_of_calasanz_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "joseph the worker",
+   "classification": "member:core:joseph",
+   "saint_ids": [
+    "st_joseph_the_worker"
+   ],
+   "names": [
+    "St Joseph the Worker"
+   ],
+   "contracts": [
+    "st_joseph_the_worker"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "josephine bakhita",
+   "classification": "saint:Saint Josephine Bakhita|key:josephine bakhita",
+   "saint_ids": [
+    "st_josephine_bakhita"
+   ],
+   "names": [
+    "St. Josephine Bakhita"
+   ],
+   "contracts": [
+    "st_josephine_bakhita"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "juan diego",
+   "classification": "saint:Saint Juan Diego|key:juan diego",
+   "saint_ids": [
+    "st_juan_diego"
+   ],
+   "names": [
+    "St Juan Diego"
+   ],
+   "contracts": [
+    "st_juan_diego"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "jude",
+   "classification": "saint:Saint Jude|key:jude",
+   "saint_ids": [
+    "st_jude"
+   ],
+   "names": [
+    "St. Jude"
+   ],
+   "contracts": [
+    "st_jude"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "juliana falconieri",
+   "classification": "saint:Saint Juliana Falconieri|key:juliana falconieri",
+   "saint_ids": [
+    "st_juliana_falconieri"
+   ],
+   "names": [
+    "St Juliana Falconieri"
+   ],
+   "contracts": [
+    "st_juliana_falconieri"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "justin martyr",
+   "classification": "saint:Saint Justin Martyr|key:justin martyr",
+   "saint_ids": [
+    "st_justin_martyr"
+   ],
+   "names": [
+    "St Justin Martyr"
+   ],
+   "contracts": [
+    "st_justin_martyr"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "kateri",
+   "classification": "saint:Saint Kateri|key:kateri",
+   "saint_ids": [
+    "st_kateri"
+   ],
+   "names": [
+    "St Kateri"
+   ],
+   "contracts": [
+    "st_kateri"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "katharine drexel",
+   "classification": "saint:Saint Katharine Drexel|key:katharine drexel",
+   "saint_ids": [
+    "st_katharine_drexel"
+   ],
+   "names": [
+    "St. Katharine Drexel"
+   ],
+   "contracts": [
+    "st_katharine_drexel"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "kevin",
+   "classification": "saint:Saint Kevin|key:kevin",
+   "saint_ids": [
+    "st_kevin"
+   ],
+   "names": [
+    "St Kevin"
+   ],
+   "contracts": [
+    "st_kevin"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lapsed fallen away catholics",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "lapsed_fallen_away_catholics"
+   ],
+   "names": [
+    "Lapsed Fallen Away Catholics"
+   ],
+   "contracts": [
+    "lapsed_fallen_away_catholics"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lawrence",
+   "classification": "saint:Saint Lawrence|key:lawrence",
+   "saint_ids": [
+    "st_lawrence"
+   ],
+   "names": [
+    "St Lawrence"
+   ],
+   "contracts": [
+    "st_lawrence"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lawrence of brindisi priest",
+   "classification": "saint:Saint Lawrence of Brindisi|key:lawrence of brindisi priest",
+   "saint_ids": [
+    "lawrence_of_brindisi_priest"
+   ],
+   "names": [
+    "Saint Lawrence of Brindisi, Priest and Doctor of the Church"
+   ],
+   "contracts": [
+    "lawrence_of_brindisi_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lawrence ruiz and companions martyrs",
+   "classification": "saint:Saint Lawrence Ruiz and Companions|key:lawrence ruiz and companions martyrs",
+   "saint_ids": [
+    "lawrence_ruiz_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Lawrence Ruiz and Companions, Martyrs"
+   ],
+   "contracts": [
+    "lawrence_ruiz_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "louis and zelie martin",
+   "classification": "saint:Saints Louis and Zelie Martin|key:louis and zelie martin",
+   "saint_ids": [
+    "sts_louis_and_zelie_martin"
+   ],
+   "names": [
+    "Sts Louis and Zelie Martin"
+   ],
+   "contracts": [
+    "sts_louis_and_zelie_martin"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "louis de montfort",
+   "classification": "saint:Saint Louis de Montfort|key:louis de montfort",
+   "saint_ids": [
+    "st_louis_de_montfort"
+   ],
+   "names": [
+    "St. Louis de Montfort"
+   ],
+   "contracts": [
+    "st_louis_de_montfort"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "louis king of france",
+   "classification": "saint:Saint Louis King of France|key:louis king of france",
+   "saint_ids": [
+    "st_louis_king_of_france"
+   ],
+   "names": [
+    "St Louis King of France"
+   ],
+   "contracts": [
+    "st_louis_king_of_france"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "louise de marillac",
+   "classification": "saint:Saint Louise de Marillac|key:louise de marillac",
+   "saint_ids": [
+    "st_louise_de_marillac"
+   ],
+   "names": [
+    "St. Louise de Marillac"
+   ],
+   "contracts": [
+    "st_louise_de_marillac"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lucy",
+   "classification": "saint:Saint Lucy|key:lucy",
+   "saint_ids": [
+    "st_lucy"
+   ],
+   "names": [
+    "St. Lucy"
+   ],
+   "contracts": [
+    "st_lucy"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "luke",
+   "classification": "saint:Saint Luke|key:luke",
+   "saint_ids": [
+    "st_luke"
+   ],
+   "names": [
+    "St Luke"
+   ],
+   "contracts": [
+    "st_luke"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "lydwine",
+   "classification": "saint:Saint Lydwine|key:lydwine",
+   "saint_ids": [
+    "st_lydwine"
+   ],
+   "names": [
+    "St Lydwine"
+   ],
+   "contracts": [
+    "st_lydwine"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "marcellinus of rome and peter the exorcist martyrs",
+   "classification": "saint:Saints Marcellinus and Peter|key:marcellinus of rome and peter the exorcist martyrs",
+   "saint_ids": [
+    "marcellinus_of_rome_and_peter_the_exorcist_martyrs"
+   ],
+   "names": [
+    "Saints Marcellinus and Peter, Martyrs"
+   ],
+   "contracts": [
+    "marcellinus_of_rome_and_peter_the_exorcist_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "margaret mary",
+   "classification": "saint:Saint Margaret Mary|key:margaret mary",
+   "saint_ids": [
+    "st_margaret_mary"
+   ],
+   "names": [
+    "St. Margaret Mary"
+   ],
+   "contracts": [
+    "st_margaret_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "margaret of castello",
+   "classification": "saint:Saint Margaret of Castello|key:margaret of castello",
+   "saint_ids": [
+    "st_margaret_of_castello"
+   ],
+   "names": [
+    "St Margaret of Castello"
+   ],
+   "contracts": [
+    "st_margaret_of_castello"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "margaret of cortona",
+   "classification": "saint:Saint Margaret of Cortona|key:margaret of cortona",
+   "saint_ids": [
+    "st_margaret_of_cortona"
+   ],
+   "names": [
+    "St Margaret of Cortona"
+   ],
+   "contracts": [
+    "st_margaret_of_cortona"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "margaret of scotland",
+   "classification": "saint:Saint Margaret of Scotland|key:margaret of scotland",
+   "saint_ids": [
+    "st_margaret_of_scotland"
+   ],
+   "names": [
+    "St Margaret of Scotland"
+   ],
+   "contracts": [
+    "st_margaret_of_scotland"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "maria goretti",
+   "classification": "saint:Saint Maria Goretti|key:maria goretti",
+   "saint_ids": [
+    "st_maria_goretti"
+   ],
+   "names": [
+    "St. Maria Goretti"
+   ],
+   "contracts": [
+    "st_maria_goretti"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "marianne cope",
+   "classification": "saint:Saint Marianne Cope|key:marianne cope",
+   "saint_ids": [
+    "st_marianne_cope"
+   ],
+   "names": [
+    "St Marianne Cope"
+   ],
+   "contracts": [
+    "st_marianne_cope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mark evangelist",
+   "classification": "member:patron:mark",
+   "saint_ids": [
+    "mark_evangelist"
+   ],
+   "names": [
+    "Saint Mark, Evangelist"
+   ],
+   "contracts": [
+    "mark_evangelist"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mark ji tianxiang",
+   "classification": "saint:Saint Mark Ji Tianxiang|key:mark ji tianxiang",
+   "saint_ids": [
+    "st_mark_ji_tianxiang"
+   ],
+   "names": [
+    "St Mark Ji Tianxiang"
+   ],
+   "contracts": [
+    "st_mark_ji_tianxiang"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "martha of bethany",
+   "classification": "saint:Saint Martha of Bethany|key:martha of bethany",
+   "saint_ids": [
+    "st_martha_of_bethany"
+   ],
+   "names": [
+    "St Martha of Bethany"
+   ],
+   "contracts": [
+    "st_martha_of_bethany"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "martha of bethany mary of bethany and lazarus of bethany",
+   "classification": "saint:Saints Martha|key:martha of bethany mary of bethany and lazarus of bethany",
+   "saint_ids": [
+    "martha_of_bethany_mary_of_bethany_and_lazarus_of_bethany"
+   ],
+   "names": [
+    "Saints Martha, Mary and Lazarus"
+   ],
+   "contracts": [
+    "martha_of_bethany_mary_of_bethany_and_lazarus_of_bethany"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "martin de porres",
+   "classification": "saint:Saint Martin de Porres|key:martin de porres",
+   "saint_ids": [
+    "st_martin_de_porres"
+   ],
+   "names": [
+    "St. Martin de Porres"
+   ],
+   "contracts": [
+    "st_martin_de_porres"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "martin i pope",
+   "classification": "saint:Saint Martin I|key:martin i pope",
+   "saint_ids": [
+    "martin_i_pope"
+   ],
+   "names": [
+    "Saint Martin I, Pope and Martyr"
+   ],
+   "contracts": [
+    "martin_i_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "martin of tours",
+   "classification": "saint:Saint Martin of Tours|key:martin of tours",
+   "saint_ids": [
+    "st_martin_of_tours"
+   ],
+   "names": [
+    "St. Martin of Tours"
+   ],
+   "contracts": [
+    "st_martin_of_tours"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary help of christians",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "mary_help_of_christians"
+   ],
+   "names": [
+    "Mary, Help of Christians"
+   ],
+   "contracts": [
+    "mary_help_of_christians"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary mackillop",
+   "classification": "saint:Saint Mary MacKillop|key:mary mackillop",
+   "saint_ids": [
+    "st_mary_mackillop"
+   ],
+   "names": [
+    "St Mary MacKillop"
+   ],
+   "contracts": [
+    "st_mary_mackillop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary magdalene",
+   "classification": "saint:Saint Mary Magdalene|key:mary magdalene",
+   "saint_ids": [
+    "st_mary_magdalene"
+   ],
+   "names": [
+    "St. Mary Magdalene"
+   ],
+   "contracts": [
+    "st_mary_magdalene"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary magdalene de pazzi",
+   "classification": "saint:Saint Mary Magdalene de Pazzi|key:mary magdalene de pazzi",
+   "saint_ids": [
+    "st_mary_magdalene_de_pazzi"
+   ],
+   "names": [
+    "St Mary Magdalene de Pazzi"
+   ],
+   "contracts": [
+    "st_mary_magdalene_de_pazzi"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary mother of god",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "mary_mother_of_god"
+   ],
+   "names": [
+    "The Octave Day of the Nativity of the Lord: Solemnity of Mary, the Holy Mother of God"
+   ],
+   "contracts": [
+    "mary_mother_of_god"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary of egypt",
+   "classification": "saint:Saint Mary of Egypt|key:mary of egypt",
+   "saint_ids": [
+    "st_mary_of_egypt"
+   ],
+   "names": [
+    "St Mary of Egypt"
+   ],
+   "contracts": [
+    "st_mary_of_egypt"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary queen of the apostles",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "mary_queen_of_the_apostles"
+   ],
+   "names": [
+    "Mary, Queen of the Apostles"
+   ],
+   "contracts": [
+    "mary_queen_of_the_apostles"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mary undoer of knots",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "mary_undoer_of_knots"
+   ],
+   "names": [
+    "Mary, Undoer of Knots"
+   ],
+   "contracts": [
+    "mary_undoer_of_knots"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "matthew",
+   "classification": "saint:Saint Matthew|key:matthew",
+   "saint_ids": [
+    "st_matthew"
+   ],
+   "names": [
+    "St Matthew"
+   ],
+   "contracts": [
+    "st_matthew"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "matthias apostle",
+   "classification": "saint:Saint Matthias Apostle|key:matthias apostle",
+   "saint_ids": [
+    "st_matthias_apostle"
+   ],
+   "names": [
+    "St Matthias Apostle"
+   ],
+   "contracts": [
+    "st_matthias_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "maximilian kolbe",
+   "classification": "member:patron:maximilian-kolbe",
+   "saint_ids": [
+    "st_maximilian_kolbe"
+   ],
+   "names": [
+    "St. Maximilian Kolbe"
+   ],
+   "contracts": [
+    "st_maximilian_kolbe"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "michael",
+   "classification": "member:core:michael-the-archangel",
+   "saint_ids": [
+    "st_michael"
+   ],
+   "names": [
+    "St. Michael"
+   ],
+   "contracts": [
+    "st_michael"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "michael s lent",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "st_michael_s_lent"
+   ],
+   "names": [
+    "St Michael’s Lent"
+   ],
+   "contracts": [
+    "st_michael_s_lent"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "miguel agustin pro",
+   "classification": "saint:Blessed Miguel Agustín Pro|key:miguel agustin pro",
+   "saint_ids": [
+    "bl_miguel_agustin_pro"
+   ],
+   "names": [
+    "Bl Miguel Agustin Pro"
+   ],
+   "contracts": [
+    "bl_miguel_agustin_pro"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "miraculous medal",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "miraculous_medal"
+   ],
+   "names": [
+    "Miraculous Medal"
+   ],
+   "contracts": [
+    "miraculous_medal"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "monica",
+   "classification": "saint:Saint Monica|key:monica",
+   "saint_ids": [
+    "st_monica"
+   ],
+   "names": [
+    "St. Monica"
+   ],
+   "contracts": [
+    "st_monica"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "most holy body and blood of christ",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "most_holy_body_and_blood_of_christ"
+   ],
+   "names": [
+    "The Most Holy Body and Blood of Christ"
+   ],
+   "contracts": [
+    "most_holy_body_and_blood_of_christ"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "most holy name of mary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "most_holy_name_of_mary"
+   ],
+   "names": [
+    "The Most Holy Name of Mary"
+   ],
+   "contracts": [
+    "most_holy_name_of_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "most holy trinity",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "most_holy_trinity"
+   ],
+   "names": [
+    "The Most Holy Trinity"
+   ],
+   "contracts": [
+    "most_holy_trinity"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "mother teresa",
+   "classification": "member:patron:teresa-of-calcutta",
+   "saint_ids": [
+    "st_mother_teresa"
+   ],
+   "names": [
+    "St Mother Teresa"
+   ],
+   "contracts": [
+    "st_mother_teresa"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "nativity of mary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "nativity_of_mary"
+   ],
+   "names": [
+    "Nativity of Mary"
+   ],
+   "contracts": [
+    "nativity_of_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "nativity of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "nativity_of_the_lord"
+   ],
+   "names": [
+    "The Nativity of the Lord (Christmas)"
+   ],
+   "contracts": [
+    "nativity_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "nereus of terracina and achilleus of terracina martyrs",
+   "classification": "saint:Saints Nereus and Achilleus|key:nereus of terracina and achilleus of terracina martyrs",
+   "saint_ids": [
+    "nereus_of_terracina_and_achilleus_of_terracina_martyrs"
+   ],
+   "names": [
+    "Saints Nereus and Achilleus, Martyrs"
+   ],
+   "contracts": [
+    "nereus_of_terracina_and_achilleus_of_terracina_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "nicholas",
+   "classification": "saint:Saint Nicholas|key:nicholas",
+   "saint_ids": [
+    "st_nicholas"
+   ],
+   "names": [
+    "St. Nicholas"
+   ],
+   "contracts": [
+    "st_nicholas"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "norbert",
+   "classification": "saint:Saint Norbert|key:norbert",
+   "saint_ids": [
+    "st_norbert"
+   ],
+   "names": [
+    "St Norbert"
+   ],
+   "contracts": [
+    "st_norbert"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "north american martyrs",
+   "classification": "saint:Saints John de Brébeuf and Isaac Jogues and Companions|key:north american martyrs",
+   "saint_ids": [
+    "john_de_brebeuf_isaac_jogues_priests_and_companions_martyrs",
+    "north_american_martyrs"
+   ],
+   "names": [
+    "North American Martyrs",
+    "Saints John de Brébeuf and Isaac Jogues, Priests, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "john_de_brebeuf_isaac_jogues_priests_and_companions_martyrs",
+    "north_american_martyrs"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "odilia",
+   "classification": "saint:Saint Odilia|key:odilia",
+   "saint_ids": [
+    "st_odilia"
+   ],
+   "names": [
+    "St Odilia"
+   ],
+   "contracts": [
+    "st_odilia"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of champion",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_champion"
+   ],
+   "names": [
+    "Our Lady of Champion"
+   ],
+   "contracts": [
+    "our_lady_of_champion"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of charity",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_charity"
+   ],
+   "names": [
+    "Our Lady of Charity"
+   ],
+   "contracts": [
+    "our_lady_of_charity"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of czestochowa",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_czestochowa"
+   ],
+   "names": [
+    "Our Lady of Czestochowa"
+   ],
+   "contracts": [
+    "our_lady_of_czestochowa"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of fatima",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_fatima"
+   ],
+   "names": [
+    "Our Lady of Fatima"
+   ],
+   "contracts": [
+    "our_lady_of_fatima"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of good counsel",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_good_counsel"
+   ],
+   "names": [
+    "Our Lady of Good Counsel"
+   ],
+   "contracts": [
+    "our_lady_of_good_counsel"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of good health",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_good_health"
+   ],
+   "names": [
+    "Our Lady of Good Health"
+   ],
+   "contracts": [
+    "our_lady_of_good_health"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of good remedy",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_good_remedy"
+   ],
+   "names": [
+    "Our Lady of Good Remedy"
+   ],
+   "contracts": [
+    "our_lady_of_good_remedy"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of good success",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_good_success"
+   ],
+   "names": [
+    "Our Lady of Good Success"
+   ],
+   "contracts": [
+    "our_lady_of_good_success"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of graces",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_graces"
+   ],
+   "names": [
+    "Our Lady of Graces"
+   ],
+   "contracts": [
+    "our_lady_of_graces"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of guadalupe",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_guadalupe"
+   ],
+   "names": [
+    "Our Lady of Guadalupe"
+   ],
+   "contracts": [
+    "our_lady_of_guadalupe"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of hope",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_hope"
+   ],
+   "names": [
+    "Our Lady of Hope"
+   ],
+   "contracts": [
+    "our_lady_of_hope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of knock",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_knock"
+   ],
+   "names": [
+    "Our Lady of Knock"
+   ],
+   "contracts": [
+    "our_lady_of_knock"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of la leche",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_la_leche"
+   ],
+   "names": [
+    "Our Lady of La Leche"
+   ],
+   "contracts": [
+    "our_lady_of_la_leche"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of la salette",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_la_salette"
+   ],
+   "names": [
+    "Our Lady of La Salette"
+   ],
+   "contracts": [
+    "our_lady_of_la_salette"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of loreto",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_loreto"
+   ],
+   "names": [
+    "Our Lady of Loreto"
+   ],
+   "contracts": [
+    "our_lady_of_loreto"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of lourdes",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_lourdes"
+   ],
+   "names": [
+    "Our Lady of Lourdes"
+   ],
+   "contracts": [
+    "our_lady_of_lourdes"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of monte berico",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_monte_berico"
+   ],
+   "names": [
+    "Our Lady of Monte Berico"
+   ],
+   "contracts": [
+    "our_lady_of_monte_berico"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of mount carmel",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_mount_carmel",
+    "our_lady_of_mt_carmel"
+   ],
+   "names": [
+    "Our Lady of Mount Carmel",
+    "Our Lady of Mt. Carmel"
+   ],
+   "contracts": [
+    "our_lady_of_mount_carmel",
+    "our_lady_of_mt_carmel"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "of peace",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_peace"
+   ],
+   "names": [
+    "Our Lady of Peace"
+   ],
+   "contracts": [
+    "our_lady_of_peace"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of perpetual help",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_perpetual_help"
+   ],
+   "names": [
+    "Our Lady of Perpetual Help"
+   ],
+   "contracts": [
+    "our_lady_of_perpetual_help"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of sorrows",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_sorrows"
+   ],
+   "names": [
+    "Our Lady of Sorrows"
+   ],
+   "contracts": [
+    "our_lady_of_sorrows"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of the atonement",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_the_atonement"
+   ],
+   "names": [
+    "Our Lady of the Atonement"
+   ],
+   "contracts": [
+    "our_lady_of_the_atonement"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of the forsaken",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_the_forsaken"
+   ],
+   "names": [
+    "Our Lady of the Forsaken"
+   ],
+   "contracts": [
+    "our_lady_of_the_forsaken"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of the rosary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_the_rosary"
+   ],
+   "names": [
+    "Our Lady of the Rosary"
+   ],
+   "contracts": [
+    "our_lady_of_the_rosary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of the snows",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_the_snows"
+   ],
+   "names": [
+    "Our Lady of the Snows"
+   ],
+   "contracts": [
+    "our_lady_of_the_snows"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "of walsingham",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_of_walsingham"
+   ],
+   "names": [
+    "Our Lady of Walsingham"
+   ],
+   "contracts": [
+    "our_lady_of_walsingham"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "oliver plunkett",
+   "classification": "saint:Saint Oliver Plunkett|key:oliver plunkett",
+   "saint_ids": [
+    "st_oliver_plunkett"
+   ],
+   "names": [
+    "St Oliver Plunkett"
+   ],
+   "contracts": [
+    "st_oliver_plunkett"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "one year st bridget of sweden",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "one_year_st_bridget_of_sweden"
+   ],
+   "names": [
+    "One Year St. Bridget of Sweden"
+   ],
+   "contracts": [
+    "one_year_st_bridget_of_sweden"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "padre pio",
+   "classification": "saint:Saint Padre Pio|key:padre pio",
+   "saint_ids": [
+    "pius_francesco_forgione_priest",
+    "st_padre_pio"
+   ],
+   "names": [
+    "Saint Pius of Pietrelcina, Priest",
+    "St Padre Pio"
+   ],
+   "contracts": [
+    "pius_francesco_forgione_priest",
+    "st_padre_pio"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "palm sunday of the passion of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "palm_sunday_of_the_passion_of_the_lord"
+   ],
+   "names": [
+    "Palm Sunday of the Passion of the Lord"
+   ],
+   "contracts": [
+    "palm_sunday_of_the_passion_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pancras of rome martyr",
+   "classification": "saint:Saint Pancras|key:pancras of rome martyr",
+   "saint_ids": [
+    "pancras_of_rome_martyr"
+   ],
+   "names": [
+    "Saint Pancras, Martyr"
+   ],
+   "contracts": [
+    "pancras_of_rome_martyr"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "passion of saint john the baptist",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "passion_of_saint_john_the_baptist"
+   ],
+   "names": [
+    "The Passion of Saint John the Baptist"
+   ],
+   "contracts": [
+    "passion_of_saint_john_the_baptist"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "patrick",
+   "classification": "saint:Saint Patrick|key:patrick",
+   "saint_ids": [
+    "st_patrick"
+   ],
+   "names": [
+    "St. Patrick"
+   ],
+   "contracts": [
+    "st_patrick"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "paul miki and companions martyrs",
+   "classification": "saint:Saint Paul Miki and Companions|key:paul miki and companions martyrs",
+   "saint_ids": [
+    "paul_miki_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Paul Miki and Companions, Martyrs"
+   ],
+   "contracts": [
+    "paul_miki_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "paul of the cross",
+   "classification": "saint:Saint Paul of the Cross|key:paul of the cross",
+   "saint_ids": [
+    "st_paul_of_the_cross"
+   ],
+   "names": [
+    "St Paul of the Cross"
+   ],
+   "contracts": [
+    "st_paul_of_the_cross"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "paul of the cross priest",
+   "classification": "saint:Saint Paul of the Cross|key:paul of the cross",
+   "saint_ids": [
+    "paul_of_the_cross_priest"
+   ],
+   "names": [
+    "Saint Paul of the Cross, Priest"
+   ],
+   "contracts": [
+    "paul_of_the_cross_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "paul vi pope",
+   "classification": "saint:Saint Paul VI|key:paul vi pope",
+   "saint_ids": [
+    "paul_vi_pope"
+   ],
+   "names": [
+    "Saint Paul VI, Pope"
+   ],
+   "contracts": [
+    "paul_vi_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "paulinus of nola bishop",
+   "classification": "saint:Saint Paulinus of Nola|key:paulinus of nola bishop",
+   "saint_ids": [
+    "paulinus_of_nola_bishop"
+   ],
+   "names": [
+    "Saint Paulinus of Nola, Bishop"
+   ],
+   "contracts": [
+    "paulinus_of_nola_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pedro calungsod",
+   "classification": "saint:Saint Pedro Calungsod|key:pedro calungsod",
+   "saint_ids": [
+    "st_pedro_calungsod"
+   ],
+   "names": [
+    "St Pedro Calungsod"
+   ],
+   "contracts": [
+    "st_pedro_calungsod"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peregrine",
+   "classification": "saint:Saint Peregrine|key:peregrine",
+   "saint_ids": [
+    "st_peregrine"
+   ],
+   "names": [
+    "St. Peregrine"
+   ],
+   "contracts": [
+    "st_peregrine"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "perpetua and felicity",
+   "classification": "saint:Saints Perpetua and Felicity|key:perpetua and felicity",
+   "saint_ids": [
+    "perpetua_of_carthage_and_felicity_of_carthage_martyrs",
+    "sts_perpetua_and_felicity"
+   ],
+   "names": [
+    "Saints Perpetua and Felicity, Martyrs",
+    "Sts Perpetua and Felicity"
+   ],
+   "contracts": [
+    "perpetua_of_carthage_and_felicity_of_carthage_martyrs",
+    "sts_perpetua_and_felicity"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "peter",
+   "classification": "member:core:peter-and-paul",
+   "saint_ids": [
+    "st_peter"
+   ],
+   "names": [
+    "St Peter"
+   ],
+   "contracts": [
+    "st_peter"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter and paul",
+   "classification": "member:core:peter-and-paul",
+   "saint_ids": [
+    "st_peter_and_paul"
+   ],
+   "names": [
+    "St. Peter and Paul"
+   ],
+   "contracts": [
+    "st_peter_and_paul"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter chanel",
+   "classification": "saint:Saint Peter Chanel|key:peter chanel",
+   "saint_ids": [
+    "st_peter_chanel"
+   ],
+   "names": [
+    "St Peter Chanel"
+   ],
+   "contracts": [
+    "st_peter_chanel"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter chrysologus bishop",
+   "classification": "saint:Saint Peter Chrysologus|key:peter chrysologus bishop",
+   "saint_ids": [
+    "peter_chrysologus_bishop"
+   ],
+   "names": [
+    "Saint Peter Chrysologus, Bishop and Doctor of the Church"
+   ],
+   "contracts": [
+    "peter_chrysologus_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter claver priest",
+   "classification": "saint:Saint Peter Claver|key:peter claver priest",
+   "saint_ids": [
+    "peter_claver_priest"
+   ],
+   "names": [
+    "Saint Peter Claver, Priest"
+   ],
+   "contracts": [
+    "peter_claver_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter damian",
+   "classification": "saint:Saint Peter Damian|key:peter damian",
+   "saint_ids": [
+    "st_peter_damian"
+   ],
+   "names": [
+    "St Peter Damian"
+   ],
+   "contracts": [
+    "st_peter_damian"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "peter julian eymard",
+   "classification": "saint:Saint Peter Julian Eymard|key:peter julian eymard",
+   "saint_ids": [
+    "st_peter_julian_eymard"
+   ],
+   "names": [
+    "St Peter Julian Eymard"
+   ],
+   "contracts": [
+    "st_peter_julian_eymard"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "philip and james",
+   "classification": "saint:Saints Philip and James|key:philip and james",
+   "saint_ids": [
+    "sts_philip_and_james"
+   ],
+   "names": [
+    "Sts Philip and James"
+   ],
+   "contracts": [
+    "sts_philip_and_james"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "philip neri",
+   "classification": "saint:Saint Philip Neri|key:philip neri",
+   "saint_ids": [
+    "st_philip_neri"
+   ],
+   "names": [
+    "St. Philip Neri"
+   ],
+   "contracts": [
+    "st_philip_neri"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "philomena",
+   "classification": "saint:Saint Philomena|key:philomena",
+   "saint_ids": [
+    "st_philomena"
+   ],
+   "names": [
+    "St. Philomena"
+   ],
+   "contracts": [
+    "st_philomena"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pier giorgio frassati",
+   "classification": "member:patron:pier-giorgio-frassati",
+   "saint_ids": [
+    "st_pier_giorgio_frassati"
+   ],
+   "names": [
+    "St Pier Giorgio Frassati"
+   ],
+   "contracts": [
+    "st_pier_giorgio_frassati"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pius v pope",
+   "classification": "saint:Saint Pius V|key:pius v pope",
+   "saint_ids": [
+    "pius_v_pope"
+   ],
+   "names": [
+    "Saint Pius V, Pope"
+   ],
+   "contracts": [
+    "pius_v_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "polycarp of smyrna bishop",
+   "classification": "saint:Saint Polycarp|key:polycarp of smyrna bishop",
+   "saint_ids": [
+    "polycarp_of_smyrna_bishop"
+   ],
+   "names": [
+    "Saint Polycarp, Bishop and Martyr"
+   ],
+   "contracts": [
+    "polycarp_of_smyrna_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pontian i pope and hippolytus of rome priest",
+   "classification": "saint:Saints Pontian|key:pontian i pope and hippolytus of rome priest",
+   "saint_ids": [
+    "pontian_i_pope_and_hippolytus_of_rome_priest"
+   ],
+   "names": [
+    "Saints Pontian, Pope, and Hippolytus, Priest, Martyrs"
+   ],
+   "contracts": [
+    "pontian_i_pope_and_hippolytus_of_rome_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pope s repose and new pope",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "pope_s_repose_and_new_pope"
+   ],
+   "names": [
+    "Pope’s Repose and New Pope"
+   ],
+   "contracts": [
+    "pope_s_repose_and_new_pope"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pope st john paul ii",
+   "classification": "member:patron:john-paul-ii",
+   "saint_ids": [
+    "pope_st_john_paul_ii"
+   ],
+   "names": [
+    "Pope St. John Paul II"
+   ],
+   "contracts": [
+    "pope_st_john_paul_ii"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pope st leo the great",
+   "classification": "saint:Saint Leo the Great|key:pope st leo the great",
+   "saint_ids": [
+    "pope_st_leo_the_great"
+   ],
+   "names": [
+    "Pope St Leo the Great"
+   ],
+   "contracts": [
+    "pope_st_leo_the_great"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "pope st pius x",
+   "classification": "saint:Saint Pius X|key:pope st pius x",
+   "saint_ids": [
+    "pope_st_pius_x"
+   ],
+   "names": [
+    "Pope St Pius X"
+   ],
+   "contracts": [
+    "pope_st_pius_x"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "precious blood",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "precious_blood"
+   ],
+   "names": [
+    "Precious Blood"
+   ],
+   "contracts": [
+    "precious_blood"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "presentation of the blessed virgin mary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "presentation_of_the_blessed_virgin_mary"
+   ],
+   "names": [
+    "Presentation of the Blessed Virgin Mary"
+   ],
+   "contracts": [
+    "presentation_of_the_blessed_virgin_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "presentation of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "presentation_of_the_lord"
+   ],
+   "names": [
+    "The Presentation of the Lord"
+   ],
+   "contracts": [
+    "presentation_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "priscilla",
+   "classification": "saint:Saint Priscilla|key:priscilla",
+   "saint_ids": [
+    "st_priscilla"
+   ],
+   "names": [
+    "St Priscilla"
+   ],
+   "contracts": [
+    "st_priscilla"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "queenship of mary",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "queenship_of_mary"
+   ],
+   "names": [
+    "Queenship of Mary"
+   ],
+   "contracts": [
+    "queenship_of_mary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rafqa",
+   "classification": "saint:Saint Rafqa|key:rafqa",
+   "saint_ids": [
+    "st_rafqa"
+   ],
+   "names": [
+    "St Rafqa"
+   ],
+   "contracts": [
+    "st_rafqa"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "raphael",
+   "classification": "member:core:raphael-the-archangel",
+   "saint_ids": [
+    "st_raphael"
+   ],
+   "names": [
+    "St. Raphael"
+   ],
+   "contracts": [
+    "st_raphael"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "raymond nonnatus",
+   "classification": "saint:Saint Raymond Nonnatus|key:raymond nonnatus",
+   "saint_ids": [
+    "st_raymond_nonnatus"
+   ],
+   "names": [
+    "St Raymond Nonnatus"
+   ],
+   "contracts": [
+    "st_raymond_nonnatus"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "raymond of penyafort priest",
+   "classification": "saint:Saint Raymond of Penyafort|key:raymond of penyafort priest",
+   "saint_ids": [
+    "raymond_of_penyafort_priest"
+   ],
+   "names": [
+    "Saint Raymond of Penyafort, Priest"
+   ],
+   "contracts": [
+    "raymond_of_penyafort_priest"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "release from ancestral curses",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "release_from_ancestral_curses"
+   ],
+   "names": [
+    "Release from Ancestral Curses"
+   ],
+   "contracts": [
+    "release_from_ancestral_curses"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "respect life",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "respect_life"
+   ],
+   "names": [
+    "Respect Life"
+   ],
+   "contracts": [
+    "respect_life"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rita",
+   "classification": "saint:Saint Rita of Cascia|key:rita",
+   "saint_ids": [
+    "st_rita"
+   ],
+   "names": [
+    "St. Rita"
+   ],
+   "contracts": [
+    "st_rita"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rita of cascia novena powerful prayer for impossible causes",
+   "classification": "saint:Saint Rita of Cascia|key:rita",
+   "saint_ids": [
+    "st_rita_of_cascia_novena_powerful_prayer_for_impossible_causes"
+   ],
+   "names": [
+    "St Rita of Cascia Novena - Powerful Prayer for Impossible Causes"
+   ],
+   "contracts": [
+    "st_rita_of_cascia_novena_powerful_prayer_for_impossible_causes"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "robert bellarmine",
+   "classification": "saint:Saint Robert Bellarmine|key:robert bellarmine",
+   "saint_ids": [
+    "st_robert_bellarmine"
+   ],
+   "names": [
+    "St Robert Bellarmine"
+   ],
+   "contracts": [
+    "st_robert_bellarmine"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rocco novena against plague",
+   "classification": "saint:Saint Rocco|key:rocco novena against plague",
+   "saint_ids": [
+    "st_rocco_novena_against_plague"
+   ],
+   "names": [
+    "St. Rocco Novena Against Plague"
+   ],
+   "contracts": [
+    "st_rocco_novena_against_plague"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "romuald of ravenna abbot",
+   "classification": "saint:Saint Romuald|key:romuald of ravenna abbot",
+   "saint_ids": [
+    "romuald_of_ravenna_abbot"
+   ],
+   "names": [
+    "Saint Romuald, Abbot"
+   ],
+   "contracts": [
+    "romuald_of_ravenna_abbot"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rose of lima",
+   "classification": "saint:Saint Rose of Lima|key:rose of lima",
+   "saint_ids": [
+    "st_rose_of_lima"
+   ],
+   "names": [
+    "St. Rose of Lima"
+   ],
+   "contracts": [
+    "st_rose_of_lima"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "rose philippine duchesne",
+   "classification": "saint:Saint Rose Philippine Duchesne|key:rose philippine duchesne",
+   "saint_ids": [
+    "st_rose_philippine_duchesne"
+   ],
+   "names": [
+    "St Rose Philippine Duchesne"
+   ],
+   "contracts": [
+    "st_rose_philippine_duchesne"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "sacred heart",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "sacred_heart"
+   ],
+   "names": [
+    "Sacred Heart"
+   ],
+   "contracts": [
+    "sacred_heart"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "scholastica",
+   "classification": "saint:Saint Scholastica|key:scholastica",
+   "saint_ids": [
+    "st_scholastica"
+   ],
+   "names": [
+    "St Scholastica"
+   ],
+   "contracts": [
+    "st_scholastica"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "sebastian",
+   "classification": "member:patron:sebastian",
+   "saint_ids": [
+    "st_sebastian"
+   ],
+   "names": [
+    "St. Sebastian"
+   ],
+   "contracts": [
+    "st_sebastian"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "seven holy founders of the servite order",
+   "classification": "excluded:collective",
+   "saint_ids": [
+    "seven_holy_founders_of_the_servite_order"
+   ],
+   "names": [
+    "The Seven Holy Founders of the Servite Order"
+   ],
+   "contracts": [
+    "seven_holy_founders_of_the_servite_order"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "seven sorrows and joys of st joseph",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "seven_sorrows_and_joys_of_st_joseph"
+   ],
+   "names": [
+    "Seven Sorrows and Joys of St Joseph"
+   ],
+   "contracts": [
+    "seven_sorrows_and_joys_of_st_joseph"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "simon and jude apostles",
+   "classification": "saint:Saints Simon and Jude|key:simon and jude apostles",
+   "saint_ids": [
+    "simon_and_jude_apostles"
+   ],
+   "names": [
+    "Saints Simon and Jude, Apostles"
+   ],
+   "contracts": [
+    "simon_and_jude_apostles"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "sixtus ii pope and companions martyrs",
+   "classification": "saint:Saint Sixtus II and Companions|key:sixtus ii pope and companions martyrs",
+   "saint_ids": [
+    "sixtus_ii_pope_and_companions_martyrs"
+   ],
+   "names": [
+    "Saint Sixtus II, Pope, and Companions, Martyrs"
+   ],
+   "contracts": [
+    "sixtus_ii_pope_and_companions_martyrs"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "solanus casey",
+   "classification": "saint:Blessed Solanus Casey|key:solanus casey",
+   "saint_ids": [
+    "blessed_solanus_casey"
+   ],
+   "names": [
+    "Blessed Solanus Casey"
+   ],
+   "contracts": [
+    "blessed_solanus_casey"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "sophia of rome",
+   "classification": "saint:Saint Sophia of Rome|key:sophia of rome",
+   "saint_ids": [
+    "st_sophia_of_rome"
+   ],
+   "names": [
+    "St Sophia of Rome"
+   ],
+   "contracts": [
+    "st_sophia_of_rome"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "stanislaus of szczepanow bishop",
+   "classification": "saint:Saint Stanislaus|key:stanislaus of szczepanow bishop",
+   "saint_ids": [
+    "stanislaus_of_szczepanow_bishop"
+   ],
+   "names": [
+    "Saint Stanislaus, Bishop and Martyr"
+   ],
+   "contracts": [
+    "stanislaus_of_szczepanow_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "stanley rother",
+   "classification": "saint:Blessed Stanley Rother|key:stanley rother",
+   "saint_ids": [
+    "blessed_stanley_rother"
+   ],
+   "names": [
+    "Blessed Stanley Rother"
+   ],
+   "contracts": [
+    "blessed_stanley_rother"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "star of the sea",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "our_lady_star_of_the_sea"
+   ],
+   "names": [
+    "Our Lady Star of the Sea"
+   ],
+   "contracts": [
+    "our_lady_star_of_the_sea"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "stephen",
+   "classification": "saint:Saint Stephen|key:stephen",
+   "saint_ids": [
+    "st_stephen"
+   ],
+   "names": [
+    "St. Stephen"
+   ],
+   "contracts": [
+    "st_stephen"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "stephen i of hungary",
+   "classification": "saint:Saint Stephen of Hungary|key:stephen i of hungary",
+   "saint_ids": [
+    "stephen_i_of_hungary"
+   ],
+   "names": [
+    "Saint Stephen of Hungary"
+   ],
+   "contracts": [
+    "stephen_i_of_hungary"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "sunday of the word of god",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "sunday_of_the_word_of_god"
+   ],
+   "names": [
+    "Third Sunday in Ordinary Time, or Sunday of the Word of God"
+   ],
+   "contracts": [
+    "sunday_of_the_word_of_god"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "surrender",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "surrender"
+   ],
+   "names": [
+    "Surrender"
+   ],
+   "contracts": [
+    "surrender"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "teresa of avila",
+   "classification": "member:core:teresa-of-avila",
+   "saint_ids": [
+    "st_teresa_of_avila",
+    "teresa_of_jesus_of_avila_virgin"
+   ],
+   "names": [
+    "Saint Teresa of Jesus, Virgin and Doctor of the Church",
+    "St. Teresa of Avila"
+   ],
+   "contracts": [
+    "st_teresa_of_avila",
+    "teresa_of_jesus_of_avila_virgin"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "teresa of the andes",
+   "classification": "saint:Saint Teresa of the Andes|key:teresa of the andes",
+   "saint_ids": [
+    "st_teresa_of_the_andes"
+   ],
+   "names": [
+    "St Teresa of the Andes"
+   ],
+   "contracts": [
+    "st_teresa_of_the_andes"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "the divine infant king",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "the_divine_infant_king"
+   ],
+   "names": [
+    "The Divine Infant King"
+   ],
+   "contracts": [
+    "the_divine_infant_king"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "the three hail marys",
+   "classification": "excluded:devotion",
+   "saint_ids": [
+    "the_three_hail_marys"
+   ],
+   "names": [
+    "The Three Hail Marys"
+   ],
+   "contracts": [
+    "the_three_hail_marys"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "therese of lisieux rose",
+   "classification": "member:patron:therese-of-lisieux",
+   "saint_ids": [
+    "st_therese_of_lisieux_rose",
+    "therese_of_the_child_jesus_and_the_holy_face_of_lisieux_virgin"
+   ],
+   "names": [
+    "Saint Thérèse of the Child Jesus, Virgin and Doctor of the Church",
+    "St. Therese of Lisieux Rose"
+   ],
+   "contracts": [
+    "st_therese_of_lisieux_rose",
+    "therese_of_the_child_jesus_and_the_holy_face_of_lisieux_virgin"
+   ],
+   "windows_2026_2027": 4
+  },
+  {
+   "identity": "thomas apostle",
+   "classification": "saint:Saint Thomas|key:thomas apostle",
+   "saint_ids": [
+    "thomas_apostle"
+   ],
+   "names": [
+    "Saint Thomas, Apostle"
+   ],
+   "contracts": [
+    "thomas_apostle"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "thomas aquinas",
+   "classification": "saint:Saint Thomas Aquinas|key:thomas aquinas",
+   "saint_ids": [
+    "st_thomas_aquinas"
+   ],
+   "names": [
+    "St. Thomas Aquinas"
+   ],
+   "contracts": [
+    "st_thomas_aquinas"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "thomas becket",
+   "classification": "saint:Saint Thomas Becket|key:thomas becket",
+   "saint_ids": [
+    "st_thomas_becket"
+   ],
+   "names": [
+    "St Thomas Becket"
+   ],
+   "contracts": [
+    "st_thomas_becket"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "thomas more",
+   "classification": "member:patron:thomas-more",
+   "saint_ids": [
+    "st_thomas_more"
+   ],
+   "names": [
+    "St. Thomas More"
+   ],
+   "contracts": [
+    "st_thomas_more"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "timothy",
+   "classification": "saint:Saint Timothy|key:timothy",
+   "saint_ids": [
+    "st_timothy"
+   ],
+   "names": [
+    "St Timothy"
+   ],
+   "contracts": [
+    "st_timothy"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "timothy and maura",
+   "classification": "saint:Saints Timothy and Maura|key:timothy and maura",
+   "saint_ids": [
+    "sts_timothy_and_maura"
+   ],
+   "names": [
+    "Sts. Timothy and Maura"
+   ],
+   "contracts": [
+    "sts_timothy_and_maura"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "transfiguration of the lord",
+   "classification": "excluded:lords-feast",
+   "saint_ids": [
+    "transfiguration_of_the_lord"
+   ],
+   "names": [
+    "The Transfiguration of the Lord"
+   ],
+   "contracts": [
+    "transfiguration_of_the_lord"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "turibius of mogrovejo bishop",
+   "classification": "saint:Saint Turibius of Mogrovejo|key:turibius of mogrovejo bishop",
+   "saint_ids": [
+    "turibius_of_mogrovejo_bishop"
+   ],
+   "names": [
+    "Saint Turibius of Mogrovejo, Bishop"
+   ],
+   "contracts": [
+    "turibius_of_mogrovejo_bishop"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "valentine",
+   "classification": "saint:Saint Valentine|key:valentine",
+   "saint_ids": [
+    "st_valentine"
+   ],
+   "names": [
+    "St. Valentine"
+   ],
+   "contracts": [
+    "st_valentine"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "veronica giuliani",
+   "classification": "saint:Saint Veronica Giuliani|key:veronica giuliani",
+   "saint_ids": [
+    "st_veronica_giuliani"
+   ],
+   "names": [
+    "St Veronica Giuliani"
+   ],
+   "contracts": [
+    "st_veronica_giuliani"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "vincent de paul",
+   "classification": "saint:Saint Vincent de Paul|key:vincent de paul",
+   "saint_ids": [
+    "st_vincent_de_paul"
+   ],
+   "names": [
+    "St Vincent de Paul"
+   ],
+   "contracts": [
+    "st_vincent_de_paul"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "vincent ferrer",
+   "classification": "saint:Saint Vincent Ferrer|key:vincent ferrer",
+   "saint_ids": [
+    "st_vincent_ferrer"
+   ],
+   "names": [
+    "St. Vincent Ferrer"
+   ],
+   "contracts": [
+    "st_vincent_ferrer"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "vincent of saragossa deacon",
+   "classification": "saint:Saint Vincent|key:vincent of saragossa deacon",
+   "saint_ids": [
+    "vincent_of_saragossa_deacon"
+   ],
+   "names": [
+    "Saint Vincent, Deacon and Martyr"
+   ],
+   "contracts": [
+    "vincent_of_saragossa_deacon"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "virgin of revelation",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "virgin_of_revelation"
+   ],
+   "names": [
+    "Virgin of Revelation"
+   ],
+   "contracts": [
+    "virgin_of_revelation"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "visitation",
+   "classification": "excluded:marian",
+   "saint_ids": [
+    "visitation"
+   ],
+   "names": [
+    "Visitation"
+   ],
+   "contracts": [
+    "visitation"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "wenceslaus i of bohemia martyr",
+   "classification": "saint:Saint Wenceslaus|key:wenceslaus i of bohemia martyr",
+   "saint_ids": [
+    "wenceslaus_i_of_bohemia_martyr"
+   ],
+   "names": [
+    "Saint Wenceslaus, Martyr"
+   ],
+   "contracts": [
+    "wenceslaus_i_of_bohemia_martyr"
+   ],
+   "windows_2026_2027": 2
+  },
+  {
+   "identity": "zita",
+   "classification": "saint:Saint Zita|key:zita",
+   "saint_ids": [
+    "st_zita"
+   ],
+   "names": [
+    "St Zita"
+   ],
+   "contracts": [
+    "st_zita"
+   ],
+   "windows_2026_2027": 2
+  }
+ ]
+}

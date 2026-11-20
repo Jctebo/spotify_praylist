@@ -1,0 +1,40 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: the migration set runs through 0015 and NO 0016 stands (v361 carries no migration)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - setup: candidate app re-boots after the draw re-point
+ok 6 - setup: re-pointed draws carry the calibrated texts (rosary="For the repose of the soul of ", mp="For our son Dylan, for his exa")
+ok 7 - served build: the served /app.js parses (vm.Script)
+not ok 8 - served build: the served client carries intentionRowCard + the pinned title helper and NO intentionPanelHtml function
+not ok 9 - served build: SW pin ora-pro-nobis-v361-1 with the opn-ext-audio-v1 purge exemption verbatim
+not ok 10 - served build: the combined-row CSS is retired from the served stylesheet (no .card.intro-row rule, no 136px) and the re-scoped expanded rule stands
+ok 11 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 389 ms
+not ok 12 - L9 title fallback (track form): prayer title wins, then the intro's own title, then the bare "Prayer Intention" — never a fabricated name (={"missing":true})
+not ok 13 - L9 title fallback (descriptor form): the prayer resolves from state.dayDescs by the stripped prefix, then the intro descriptor's own title, then bare (={})
+ok 14 - L10 descriptor order stands [intro, prayer, …] for both families in a fresh build (={"ri":5,"rp":6,"ii":0,"ip":1})
+ok 15 - L10 block played counts read as before (Morning {"total":6,"played":0} -> {"total":6,"played":1} against 6 non-intention Morning descriptors; the intro never counts)
+ok 16 - L10 Continue reads as before (text="ContinueContinue — Morning · Invitatory1 of 18 heard todayContinuePlay everything instead · See queue", totals=18)
+not ok 17 - setup: the external pair stands on the Morning page (ext-invitatory settled with its intro)
+not ok 18 - L1 block page, single rows: the rosary renders exactly TWO cards — intention row first, prayer card immediately after — and no combined-row remnant stands anywhere in the document (remnants=20, intro=null, prayer=card intro-row)
+not ok 19 - L2 title form, own family: the rosary's intention row is titled exactly "Prayer Intention: Daily Rosary" (=null)
+not ok 20 - L2 title form, external family: the invitatory's intention row stands before its prayer, titled "Prayer Intention: " + the prayer track's own title, carrying the slot's drawn text (title=null, prayer="Invitatory")
+not ok 21 - L2 the intention row's play button is the STANDARD size (42px, not the panel's 30px small variant) (=null)
+not ok 22 - L3 the intention text stands as the row's second line under the clamp, and the >2-line text arms its ellipsis by measurement (textSH=null, textCH=null)
+not ok 23 - L3 a click expands the intention row in place (clamp released, full text visible, aria-expanded true) (textSH=null, textCH=null)
+not ok 24 - L6 ownSwapRow: when the rosary's held intro download lands, the swap replaces BOTH cards — fresh pair nodes in order, both carrying the row identity (ownKey=daily-rosary, swapped=null)
+not ok 25 - L6 the expansion survives the swap re-render (the session set re-renders the fresh intention row expanded)
+not ok 26 - L3 a second click collapses the row back under the clamp (aria-expanded false)
+not ok 27 - L3 the exact-two-line text (morning prayer) stands NO ellipsis — nothing is hidden (textSH=null, textCH=null)
+not ok 28 - setup: the reflection pair stands on the Night page
+not ok 29 - L3 the one-line text (daily reflection) stands NO ellipsis (textSH=null, textCH=null)
+ok 30 - L5 the prayer row keeps its played dot as the row's LAST element, and no dot stands on the intention row where one stands (prayer={"cls":"card intro-row","title":"Daily Rosary","ownRow":"daily-rosary","lastIsDot":true,"panel":true}, introDot=null)
+ok 31 - L5 a tap on the prayer row behaves as the standing rules (its intro pulled in as the pair head, v351) (q=["intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year"])
+ok 32 - L4 pair selection: a click on the intention row's play button selects the pair — queue [intro, prayer], the intro playing (the v351 decision-5 path) (q=["intro:morning-prayer","morning-prayer","ext-morning-prayer"], cur=intro:morning-prayer)
+not ok 33 - L7 search: a title hit renders the PAIR (intention row above its prayer), never a combined card (={"pair":false,"panel":true})
+not ok 34 - L7 search: an intro-text-only hit ("Margaret" stands only in the rosary's intention text) surfaces the prayer hit with its intention row above it (={"pair":false})
+not ok 35 - L8 queue titles: the queue's intro row carries the same "Prayer Intention: Daily Rosary" title with NO played dot (={"id":"intro:daily-rosary","title":"Intention — Daily Rosary","dot":false,"introCls":true})
+ok 36 - L8 queue titles: prayer rows are unchanged (bare title, played dot stands) (={"id":"daily-rosary","title":"Daily Rosary","dot":true,"introCls":false})
+ok 37 - L6 precondition: with intentions delayed, the settled invitatory card stands ALONE (no intention row yet) (pre={"day":true,"inv":"present","intros":0,"pair":false,"card":true})
+not ok 38 - L6 extSwapCard: when the intro lands, the pair replaces the settled card IN ORDER in the same session — exactly ONE intention row immediately before the prayer card, however many swaps run (={"adjacent":false,"title":null,"prayerTitle":"Invitatory","seq":["ext-invitatory","morning-prayer","ext-morning-prayer","daily-rosary","ext-bible-in-a-year","marian-antiphon-angelus"],"introCount":0,"session":"same-session"})
+ok 39 - browser: no page errors across the v361 legs (errors=[])
+# harness-v361: 17/39 ok

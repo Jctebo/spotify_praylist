@@ -1,0 +1,7 @@
+ok 1 - W398-10a: applyStatus lines render in the identical setrow/meta shape
+ok 2 - W398-10a: the block stands directly after the notices, lock line before home line
+ok 3 - W398-10b: payload without applyStatus paints byte-identical to the base client (notices render byte-unchanged)
+ok 4 - W398-10c: an empty applyStatus list renders nothing
+ok 5 - W398-10d: a failed-apply line renders verbatim in the meta shape
+
+harness-v398: 5/5 ok

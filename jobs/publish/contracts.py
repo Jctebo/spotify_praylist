@@ -17,6 +17,7 @@ from jobs.publish.devotional_intro import (
     normalize_intro_profile,
 )
 from jobs.publish.saint_centered_theme import build_saint_centered_theme_brief
+from jobs.publish.devotional_calendar_saint import resolve_saint_of_day as _resolve_saint_witness
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.daily_theme_runtime import (
     DailyThemeRuntimeCache as _PublishDailyThemeRuntimeCache,
@@ -416,6 +417,13 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["path"] = file_path
         if "audio_role" in normalized:
             normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
+    elif kind == "saints-litany":
+        fallback_path = str(normalized.get("fallback_file", "")).strip()
+        if not fallback_path:
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a saints-litany block without 'fallback_file'.")
+        normalized["fallback_file"] = fallback_path
+        if "audio_role" in normalized:
+            normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
     elif kind == "inline":
         normalized["text"] = str(normalized.get("text", ""))
         if "audio_role" in normalized:
@@ -620,6 +628,15 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
             if not resolved_path.exists():
                 raise RuntimeError(
                     f"Publish entry '{entry_id}' in '{path}' references missing template file '{resolved_path}'."
+                )
+        elif kind == "saints-litany":
+            fallback_path = str(block.get("fallback_file", "")).strip()
+            resolved_path = Path(fallback_path)
+            if not resolved_path.is_absolute():
+                resolved_path = ROOT / resolved_path
+            if not resolved_path.exists():
+                raise RuntimeError(
+                    f"Publish entry '{entry_id}' in '{path}' references missing saints-litany fallback file '{resolved_path}'."
                 )
         elif kind == "monthly-template":
             folder_path = str(block.get("folder", "")).strip()
@@ -1171,6 +1188,21 @@ def _entry_runtime_context(
         )
         runtime["daily_reflection_tone"] = str(context_payload.get("emotionalTone", "")).strip()
         runtime["daily_reflection_saint"] = str(context_payload.get("saintOfDay", "")).strip()
+        # Calendar-only saint (John, 2026-11-05): the description slot is
+        # filled from John's devotional calendar — the liturgical entries'
+        # saints, or the roster entry's Principal on ferial roster days.
+        # Sundays and other saintless days resolve to the explicit
+        # "gospel_only" state (empty name, source "gospel_only"), never a
+        # silently empty slot. (Out-of-range dates keep the old ladder
+        # behavior inside the resolver.)
+        _witness = _resolve_saint_witness(
+            target_date, calendar_saint=runtime["daily_reflection_saint"]
+        )
+        runtime["daily_reflection_saint"] = _witness["witness_name"]
+        runtime["daily_reflection_saint_source"] = _witness["witness_source"]
+        runtime["daily_reflection_saint_state"] = _witness["witness_state"]
+        runtime["daily_reflection_roster_bracket"] = _witness.get("roster_bracket", "")
+        runtime["daily_reflection_calendar_1962"] = _witness["calendar_1962"]
         runtime["daily_reflection_pause_ms"] = int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS))
     return runtime
 
@@ -1579,6 +1611,50 @@ def _resolve_rosary_decades_content(
 
 
 
+def _resolve_saints_litany_content(
+    block: Dict[str, Any],
+    *,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Resolve a saints-litany block through the v306 ladder resolver.
+
+    The fallback is structural: ANY failure — ladder data missing or
+    invalid, window or calendar resolution error, an implausibly short
+    result (fewer names than core + patrons) — returns the static
+    template file's text and prints a warning, so the episode never
+    blocks on the ladder. The run output names the source either way.
+    """
+    fallback_path = str(block.get("fallback_file", "")).strip()
+    try:
+        from jobs.publish import saints_ladder
+
+        injected = (runtime_context or {}).get("saints_ladder_windows")
+        if injected is not None:
+            names = saints_ladder.resolve_invocations(target_date, windows=injected)
+        else:
+            names = saints_ladder.resolve_invocations(target_date)
+        if len(names) < saints_ladder.minimum_invocation_count():
+            raise RuntimeError(
+                f"saints_ladder resolved implausibly few invocations ({len(names)}) "
+                f"for {target_date.isoformat()}"
+            )
+        print(
+            "INFO saints_litany source=resolver "
+            f"entry={entry.get('entry_id', '')} date={target_date.isoformat()} names={len(names)}",
+            file=sys.stderr,
+        )
+        return saints_ladder.render_litany_from_names(names)
+    except Exception as exc:
+        print(
+            "WARN saints_litany source=fallback "
+            f"entry={entry.get('entry_id', '')} date={target_date.isoformat()} reason={exc}",
+            file=sys.stderr,
+        )
+        return _read_text_file(fallback_path)
+
+
 def resolve_block_content(
     block: Any,
     *,
@@ -1603,6 +1679,13 @@ def resolve_block_content(
             return str(block.get("text", "")).strip()
         if kind == "file":
             return _read_text_file(str(block.get("path", "")).strip())
+        if kind == "saints-litany":
+            return _resolve_saints_litany_content(
+                block,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
         if kind == "monthly-template":
             month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
             folder = str(block.get("folder", "")).strip()
@@ -1774,6 +1857,10 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
     if kind == "file":
         path_text = str(block.get("path", "")).strip()
         return _humanize_slug(Path(path_text).stem) if path_text else "Fragment"
+
+    if kind == "saints-litany":
+        fallback_text = str(block.get("fallback_file", "")).strip()
+        return _humanize_slug(Path(fallback_text).stem) if fallback_text else "Intercessory Litany"
 
     if kind == "daily-intro":
         return explicit or "Daily Intro"
@@ -2151,6 +2238,7 @@ def _expand_audio_fragments_from_block(
 
     if kind in {
         "file",
+        "saints-litany",
         "inline",
         "daily-intro",
         "liturgical-announcement",
@@ -2410,6 +2498,67 @@ def _render_entry_metadata(
     if not title:
         title = str(entry.get("entry_id", "")).strip()
     description = render_publish_template(description_template, context) if description_template else title
+    _saint_source = str(context.get("daily_reflection_saint_source") or "").strip()
+    _saint_name = str(context.get("daily_reflection_saint") or "").strip()
+    _roster_bracket = str(context.get("daily_reflection_roster_bracket") or "").strip()
+    if not _saint_name and "praying with  and" in description:
+        # Calendar-only model (John, 2026-11-05): the devotional calendar
+        # names no saint for this date (state "gospel_only" — every Sunday,
+        # and saintless non-roster days), so the Daily Reflection
+        # description takes the day's Gospel as its focus — the empty
+        # saint slot never ships.
+        gospel_citation = str(context.get("daily_gospel_citation") or "").strip()
+        gospel_clause = (
+            f"praying with the day's Gospel, {gospel_citation}"
+            if gospel_citation
+            else "praying with the day's Gospel"
+        )
+        description = description.replace(
+            "praying with  and the saint's approved saying", gospel_clause
+        )
+    elif (
+        _saint_source == "roster"
+        and _roster_bracket != "m"
+        and " and the saint's approved saying" in description
+    ):
+        # The saint is the roster entry's Principal, framed as the calendar
+        # frames it: a private devotion. The wording follows the roster
+        # title's source bracket (John, 2026-11-05): [P2] the Principal is
+        # kept in the traditional calendar of 1962; [P3] (and a legacy
+        # unbracketed roster) names the Roman Martyrology. An [m] roster
+        # day is a ferial Saturday — Our Lady is the Principal and the
+        # description falls through to her "approved saying" below. (The
+        # old backup-attribution sentence is retired.)
+        if _roster_bracket == "P2":
+            description = description.replace(
+                " and the saint's approved saying",
+                ", kept today in the traditional calendar of 1962 (private devotion)",
+            )
+        else:
+            description = description.replace(
+                " and the saint's approved saying",
+                ", named today in the Roman Martyrology (private devotion)",
+            )
+    elif _saint_source == "backup" and " and the saint's approved saying" in description:
+        # Out-of-range fallback only (witness ladder): the description
+        # names the source, as before.
+        description = description.replace(
+            " and the saint's approved saying",
+            ", named today in the Roman Martyrology and the traditional calendar of 1962",
+        )
+    elif (
+        _saint_name
+        and all(
+            ("Blessed Virgin Mary" in part or "Our Lady" in part or "Mother of God" in part)
+            for part in _saint_name.split("; ")
+        )
+        and "the saint's approved saying" in description
+    ):
+        # The saint is Our Lady alone (a calendar Marian observance or a
+        # roster Principal) — her saying, not "the saint's".
+        description = description.replace(
+            "the saint's approved saying", "her approved saying"
+        )
     episode_id = derive_episode_id(context=context, template=episode_id_template)
     return {
         "context": context,

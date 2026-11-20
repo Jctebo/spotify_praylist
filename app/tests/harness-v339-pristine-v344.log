@@ -1,0 +1,50 @@
+ok - 2 fresh 0011 + 0012: the four rows stand placed in order 1–4
+ok - 2 day rules corrected: daily ×4 (TV Mass + both homilies off sundays)
+ok - 2 meta version incremented by exactly 1 (relative)
+ok - 3 the user-moved row stands untouched (held override: barron-sermon in Night at 9, no slot)
+ok - 3 the other three align under the same application
+ok - 3 second application changes nothing (no double-place)
+ok - setup: main app boots
+ok - setup: the day's draw stands
+ok - setup: the Mass item drew an intention
+FAIL - setup: the real push helper commits the day :: text staging failed for morning-prayer: {'error': 'unknown agent route'}
+
+FAIL - 10 compose run exits 0 :: e Office — Midmorning Prayer, Divine Office — Midday Prayer, Saint of the Day, Divine Office — Midafternoon Prayer, Divine Office — Office of Readings, Divine Office — Evening Prayer, Divine Office — Night Prayer, USCCB Daily Readings, Daily TV Mass, Fr. Mike Sunday Homily, Bp. Barron Sunday Sermon
+
+FAIL - 10 four intro files keyed by slot id stand at 'current' :: []
+ok - 10 each slot's intro renders from the Mass item's draw (template + for-join)
+FAIL - 10 Segments field reports the four standing (no block-slot missing) :: Segments (v337): MISSING — intros 0/15 for presented 2026-11-09 · missing: intros failed: Divine Office — Invitatory, Divine Office — Morning Prayer, Bible in a Year, Daily Gospel Exegesis, Divine Office — Midmorning Prayer, Divine Office — Midday Prayer, Saint of the Day, Divine Office — Midafternoon Prayer, Divine Office — Office of Readings, Divine Office — Evening Prayer, Divine Office — Night
+ok - 10 a forced render failure names the slot's title in the Segments field and blocks nothing (the run completes the rest; the helper's standing contract exits 1 on any missing)
+FAIL - 10 the other slots' intros survive the failed run (the step completes the rest)
+ok - 4 payload emits seven blocks, Mass and Homilies last
+FAIL - 4 the payload's intros map carries the four slot ids, titled for the Mass item :: []
+ok - 4 the block's four slots stand in settings order 1–4; the courier payload carries its three courier-class slots with their orders
+ok - 5 USCCB date discipline: the presented day's dated item, never the latest (feed publishes +10d)
+ok - 6 Sunday standing: the presented day presents the standing Sunday's homilies
+ok - 7 Barron courier UA: the fixture refused the bare UA posture and the browser-UA fetch succeeded
+ok - 6 oracle: Monday after the Sunday presents the same Sunday items (weekly standing)
+ok - 5 oracle agrees: USCCB pick is the dated item for the presented day
+ok - 8 pass-through parity: ext-usccb-readings serves the oracle/courier pick
+ok - 8 pass-through parity: ext-daily-tv-mass serves the oracle/courier pick
+ok - 8 pass-through parity: ext-fr-mike-homily serves the oracle/courier pick
+ok - 8 pass-through parity: ext-barron-sermon serves the oracle/courier pick
+ok - 8 oracle parity: TV Mass pick == the client/courier pick
+FAIL - 15 served SW pins ora-pro-nobis-v339-1
+ok - 15 the opn-ext-audio-v1 purge exemption stands verbatim in the served SW
+ok - 1 mirror parity: Worker + client block lists agree, seven, Mass and Homilies last
+ok - 1 EXTERNAL_SLOTS maps exactly the four new ids to the block; SET_SECTIONS carries the section
+ok - 1 served build parses (client bundle is valid JS)
+ok - 8 client half: the client's picks equal the courier/oracle picks (TV Mass direct; the rest via courier)
+ok - 8 client half: the block section stands last in the day list with its four cards
+ok - 9 downloads: the four items stand in the device audio cache for the day
+FAIL - 11 treatment A in the block: combined rows, panel first at ~25%, own play control :: {"ext-usccb-readings":{"combined":false,"panelFirst":false,"panelPct":-1,"ownBtn":false},"ext-daily-tv-mass":{"combined":false,"panelFirst":false,"panelPct":-1,"ownBtn":false},"ext-fr-mike-homily":{"combined":false,"panelFirst":false,"panelPct":-1,"ownBtn":false},"ext-barron-sermon":{"combined":false,"panelFirst":false,"panelPct":-1,"ownBtn":false}}
+harness-v339 crashed: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-card="ext-usccb-readings"] [data-playkey="intro:ext-usccb-readings"]')
+
+    at main (/home/hatch/workspace/.worktrees/v344-basecheck/app/tests/harness-v339.mjs:542:14) {
+  log: [
+    `  - waiting for locator('[data-card="ext-usccb-readings"] [data-playkey="intro:ext-usccb-readings"]')`
+  ],
+  name: 'TimeoutError'
+}

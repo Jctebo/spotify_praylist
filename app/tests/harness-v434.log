@@ -1,0 +1,57 @@
+ok 1 - S: migration 0023 stands in the tree
+ok 2 - S: 0023 creates video_snapshots (series PK, payload, built_at) mirroring podcast_sequences
+ok 3 - S: the channel feed URL stands as ONE pinned constant (channel UCORAZZmab8apqy2TMHZlZVQ)
+ok 4 - S: the video staleness bound is its own 2h constant; the audio 24h bound stands untouched
+ok 5 - S: the sibling video registry, the Atom parser, and the catholictv def stand
+ok 6 - V0 (static): no CSP frame-src/frame-ancestors and no X-Frame-Options stands in the Worker's served-document path
+ok 7 - S: the client carries the video page, the watch teardown act, and the refusal handler
+ok 8 - S: the watch frame's class stands in the client, and closeWatch rides the tab switch, the audio choke point, the sheet open, and the series re-entry
+ok 9 - migration 0023 applies clean — video_snapshots stands
+ok 10 - app up on local wrangler (LOCAL_DEV)
+ok 11 - V0: the served app document carries no CSP and no X-Frame-Options — a youtube.com embed is not blocked by the app's own headers
+ok 12 - V1/V2: a cold read builds the snapshot and serves the video payload (kind video, available, not stale)
+ok 13 - V2: the cold build fetched the feed exactly once (1)
+ok 14 - V1: the parse yields exactly the 5 identified entries — the entry without a yt:videoId is skipped (5)
+ok 15 - V1: the videos stand newest-first by publishedMs, regardless of the served order
+ok 16 - V1: id, title, the rel=alternate watch URL, the thumbnail, and publishedMs parse exactly
+ok 17 - V1: the LARGEST media:thumbnail the group carries wins (480 over 120)
+ok 18 - V1: media:description rides the standing extStripDesc discipline (entities decoded, whitespace collapsed, 240-char cap)
+ok 19 - V1/§2.5: dateLabel renders the published instant in America/Chicago — Nov 15 04:30 UTC is Nov 14 in Chicago, never the UTC date
+ok 20 - V2: the snapshot stands stored in migration 0023's table under the series key
+ok 21 - V2: a second read inside the 2h bound serves the snapshot with ZERO further fetches
+ok 22 - V5: the index lists four series — the three audio in registry order, CatholicTV fourth and last
+ok 23 - V5/F-434-I4: the audio entries' shape is byte-identical to the base's — the standing field set, no kind field (the video entry alone carries kind)
+ok 24 - V5: the audio entries' values stand as the base derives them from the same fixtures (counts, current, show art)
+ok 25 - V5: the video entry carries kind video, latestLabel in §2.5's form, the newest thumbnail as its art — and no audio facts
+ok 26 - V6: the video payload carries NO audio fields — no entries, no currentKey, no listens, no totals; no client branch can paint them
+ok 27 - V6: an unknown series key behaves exactly as the base (400)
+ok 28 - V6: an audio series payload stands in its standing shape beside the video route
+ok 29 - V3: a snapshot older than 2h rebuilds on read and serves the NEW list
+ok 30 - V3: the rebuild re-stamps the snapshot's built_at
+ok 31 - V4: feed mode fail404 with a standing snapshot — the standing list is served with stale: true, never emptied
+ok 32 - V4: feed mode fail500 with a standing snapshot — the standing list is served with stale: true, never emptied
+ok 33 - V4: feed mode garbage with a standing snapshot — the standing list is served with stale: true, never emptied
+ok 34 - V4: no snapshot and the feed down — available: false, the series' unavailable surface
+ok 35 - V4/V1: a zero-entry document is a FAILED rebuild (the parse throws), never an emptied list — still unavailable with no snapshot
+ok 36 - V4: the next good read recovers the series
+ok 37 - C1: four cards stand, CatholicTV fourth (["catechism-in-a-year","bible-in-a-year","rosary-in-a-year","catholictv"])
+ok 38 - C1: the CatholicTV card shows §2.5's meta form and the newest thumbnail as its art ("Video · Latest: Nov 15, 2026")
+ok 39 - C1: the audio cards paint in their standing form ("0 of 3 listened · Current: Day 1")
+ok 40 - C6: the Podcasts index keeps its standing offline line and button, unchanged
+ok 41 - C2: the video page lists the rows newest-first
+ok 42 - C2: each row carries its date in the meta position and a thumbnail referenced from YouTube's hosts
+ok 43 - C2: the page head's meta reads §2.5's form ("Video series · Updated Nov 15, 2026")
+ok 44 - C2/C6: no current-episode card, no marks, no ⋮ menu, no play cluster, no download cluster, no offline line stands on the video page
+ok 45 - C3: the series page stands scrolled before the tap (scrollY 150)
+ok 46 - C3: a row tap opens the watch view — the iframe stands at youtube.com/embed/<id> with enablejsapi=1 (https://www.youtube.com/embed/vidCharl333?enablejsapi=1&autoplay=1&rel=0)
+ok 47 - C3: back destroys the frame and returns to the series page at its standing place (scroll 150 vs 150)
+ok 48 - C5: the Open in YouTube act stands on a watch view with NO error, its href the video's watch URL
+ok 49 - C5: a transient error code (2) leaves the frame standing
+ok 50 - C5: error 150 empties the frame seat and stands the authored line ("YouTube won’t play this one inside the app — open it in YouTube instead.")
+ok 51 - C4: an audio episode stands playing (the forward direction's premise)
+ok 52 - C4: opening a video silences the audio through the standing pause act — the element reads paused as the frame stands
+ok 53 - C4/F-434-I5: starting audio destroys the frame BEFORE audioEl.play() runs — at the play call, no frame stands (act-level proof)
+ok 54 - C4: a tab switch away from Podcasts destroys the frame — the video sounds only while its surface stands open
+ok 55 - V7: the offline automatic set holds only the audio series' items (current + next 2 per series) with the video series present (6 items)
+ok 56 - V7: the offline pass's podcast set is byte-identical with the video series present and absent from the index
+# harness-v434: 56 ok / 0 not-ok

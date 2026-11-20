@@ -1,0 +1,13 @@
+ok 1 - app up on local wrangler (LOCAL_DEV), D1 through 0018
+not ok 2 - L1: no ?date answers today's payload in the standing shape
+not ok 3 - L1: ?date=tomorrow presents tomorrow throughout the payload
+ok 4 - L1: ?date=yesterday answers 400
+ok 5 - L1: ?date=+7d answers 400
+ok 6 - L1: a non-date ?date answers 400
+not ok 7 - L1: the agent-door day route is unchanged (today, no override)
+HARNESS ERROR: page.waitForSelector: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.blockcard') to be visible
+
+    at /home/hatch/workspace/.worktrees/v386/app/tests/harness-v392-regression-v395.mjs:206:14
+# harness-v392: 7 ok / 4 not-ok

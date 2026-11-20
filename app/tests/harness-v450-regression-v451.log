@@ -1,0 +1,25 @@
+not ok 1 - S1 the worker-source diff vs the v449-ship base is client.ts only (got: app/worker/src/client.ts, app/worker/src/index.ts, app/worker/src/ui.ts)
+ok 2 - S2 paintConscienceBar emits the title-only bar — no destination, no back attrs, no tab wiring in the function
+ok 3 - S3 the consback census stands at 0 across the worker source (the emission and its wiring retired whole)
+ok 4 - S4 iosBarHtml carries the no-dest title-only form AND the standing dest form (every standing caller's output unchanged)
+ok 5 - S5 followExamChip carries v444's follow math exactly (the smallest move; a wider-than-band chip aligns its left edge)
+ok 6 - S5 the paint's order stands: the v443 restore, then the v450 entry follow (head read null), then the v444 pager follow on its flag
+ok 7 - S6 the whole worker bundles clean (esbuild)
+not ok 8 - S6 (housekeeping): the SW pin stands at ora-pro-nobis-v449-1 (Ship moves it)
+ok 9 - S7 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 10 - S7 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 11 - P1 the PIN gate stands with NO bar anywhere (the gate is not a Conscience side)
+ok 12 - B1 Examination bar: the title "Examination" alone — no back act, no destination name, no "Prayers" text in the bar; the host still paints before the toggle
+ok 13 - B1 layer order at rest stands as v448 leaves it: brand bar · the (title-only) bar flush under it at 44px · the toggle wholly beneath
+ok 14 - B1 scrolled: the title-only bar sticks flush under the brand bar while the toggle scrolls away — the header alone is frozen, the toggle unfrozen (v448's C3 substance, re-proven on the new bar)
+ok 15 - E1 first entry (focus Commandment VIII, 13 categories): the active chip stands fully inside the visible band at first paint and the row's scrollLeft > 0 — the page opens on today's section
+ok 16 - E2 a chip tap repainted to Commandment I with the row's scrollLeft exactly the pre-tap value — a tap never auto-scrolls (v443/v444 exact)
+ok 17 - E3 Next section from VIII (row hand-scrolled to 0) crosses to Commandment IX and the row follows — the active chip inside the band, scrollLeft > 0 (v444's pager follow stands)
+ok 18 - E4 an entry saved under Commandment IX repainted with the row's place preserved (scrollLeft unchanged) — no entry follow on a standing row
+ok 19 - B2 Confession bar: the title "Confession" alone — no back act, no "Prayers" text; the Confession side paints beneath it
+ok 20 - E5 leaving to Confession and returning re-follows to the then-selected chip (Commandment IX inside the band, scrollLeft > 0) — re-entry is an entry paint
+ok 21 - B3 the bottom tab bar leaves Conscience for Prayers — the tab bar is the way between tabs, as on every tab home
+ok 22 - G360 at 360px: the title-only bar stands (no back), the selected chip stands inside the band, no new horizontal overflow (362 is the base's own standing measure)
+ok 23 - P2 with no PIN set, the setup prompt stands ("Set a PIN") and NO bar stands over it, as today
+ok 24 - browser: zero page errors across every leg
+# harness-v450: 22/24 passed

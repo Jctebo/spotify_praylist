@@ -1,0 +1,61 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - locked instance up (no LOCAL_DEV)
+ok 4 - pool lists the 11 synthetic active intentions
+ok 5 - pool split is 3 High / 7 Medium / 1 Low
+ok 6 - today's draw fills all 35 items
+ok 7 - add intention returns 201 + id
+ok 8 - adding an intention does NOT touch today's draws (v58 rule)
+ok 9 - agent day POST draws 35 and accepts the addendum
+ok 10 - agent day GET returns the addendum
+ok 11 - re-reading a drawn date returns the identical persisted draw
+ok 12 - weighted draw ordering holds (H avg 131.8 > M avg 70.9 > L avg 27.0 over 30 dates)
+ok 13 - edit priority succeeds
+ok 14 - retire succeeds
+ok 15 - retired intention is out of today's draw
+ok 16 - retire refills today's draw back to 35
+ok 17 - delete succeeds
+ok 18 - pool back to 11 after delete
+ok 19 - draw history rides the list (drawnCount + lastDrawn)
+ok 20 - day payload matches the captured board contract shape
+ok 21 - payload additions are exactly the Plan's audio record (extras: $.audioMissing, $.blocks[].audio)
+ok 22 - audio push without the agent token is refused
+ok 23 - audio push stores the segment (200, size read back)
+ok 24 - audio push with a bad block is refused (400)
+ok 25 - segment serves John-side at the app audio route
+ok 26 - day payload points Morning's segment at the app route
+ok 27 - audioMissing names the five missing blocks
+ok 28 - a missing block's segment 404s (the client shows the not-available line)
+ok 29 - stub: stored day committed for the segment check
+ok 30 - stub: player Intentions card plays the pushed segment (stored day)
+ok 31 - stub: the stored episode stands in its block
+ok 32 - examination opens tonight's run with the 23 seeded Lasance prompts
+ok 33 - Lasance's combined VI-and-IX examination stands as one category
+ok 34 - seed text is Lasance's own wording, every prompt carrying its citation
+ok 35 - tied entry saves against its prompt
+ok 36 - free entry saves
+ok 37 - entries flow to Confession grouped by category
+ok 38 - elapsed line stands before any recorded confession
+ok 39 - confession guide carries the five seeded steps
+ok 40 - Confession made closes the open entries onto the record
+ok 41 - preparation clears; history keeps the count
+ok 42 - penance records against the confession
+ok 43 - penance completion records
+ok 44 - penance card shows the text and its completion
+ok 45 - the night's examination closes
+ok 46 - a closed run refuses new entries
+ok 47 - prompts are editable data (Plan: edit the seed, never the code)
+ok 48 - no Access identity → the shell itself is refused (403)
+ok 49 - Pam's identity is refused — there is no Pam path
+ok 50 - any non-John identity is refused
+ok 51 - John's gmail identity is admitted
+ok 52 - a wrong agent token is refused
+ok 53 - no checklist machinery anywhere in the served client (Amendment 8)
+ok 54 - the shell carries exactly the four tabs (Amendment 9)
+ok 55 - brand bar with the podcast logo stands on the shell
+ok 56 - served /app.js parses (vm.Script)
+not ok 57 - harness crashed: page.waitForSelector: Timeout 20000ms exceeded.
+Call log:
+  - waiting for locator('.stats') to be visible
+
+TALLY: 56 ok / 1 FAIL (57 checks)

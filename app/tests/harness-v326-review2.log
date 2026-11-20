@@ -1,0 +1,63 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - gate identity: port 8971 is free before spawn (no foreign instance answers)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: episode audio staged for the fixture day
+ok 5 - fixture: ep-alpha's text staged
+ok 6 - fixture: day commit lands (rowCount 6)
+ok 7 - fixture: Morning slice serves Intentions-first (seg:Morning,ep-alpha,ep-missing,ep-beta)
+ok 8 - check 20: the served /sw.js reads ora-pro-nobis-v334-1 (v334's bump, named update — the pin follows the landed trunk's cache rename)
+ok 9 - seeded day rendered (21 cards)
+ok 10 - check 1: prayers tab — no dock before any load, .view pad exactly 96px
+ok 11 - check 1: intentions tab — no dock before any load, .view pad exactly 96px
+ok 12 - check 1: examination tab — no dock before any load, .view pad exactly 96px
+ok 13 - check 1: confession tab — no dock before any load, .view pad exactly 96px
+ok 14 - check 21: served /app.js parses (vm.Script), exactly one #dock stands in the booted shell, zero page errors
+ok 15 - check 2 setup: ep-alpha plays from its card
+ok 16 - check 2: dock appears with title 'Alpha Long' and the block name 'Morning' as meta
+ok 17 - check 19: standing clearance — pad = 96px + measured dock height, dock bottom edge sits exactly on the measured tab bar height
+ok 18 - check 3: dock pause actually pauses the element
+ok 19 - check 3: dock shows the paused glyph while the card keeps its playing (current-track) mark
+ok 20 - check 4: card play resumes
+ok 21 - check 4: dock glyph follows the card back to the playing mark (the app's own &#10073; pair, identical to the cards')
+ok 22 - check 4: card pause reflects in the dock (agreement both directions)
+ok 23 - check 8 setup: ep-beta playing
+ok 24 - check 8: progress fill advances on a 30 s track (3.4% -> 8.7%)
+ok 25 - check 9: clicking the progress line does not seek (2.6s -> 3.1s)
+ok 26 - check 8: track switch lands ep-alpha
+ok 27 - check 8: progress resets to ~0 on the track switch (0.0%)
+ok 28 - check 5 setup: Morning block queue plays from the Intentions card
+ok 29 - check 5: dock next advances to ep-alpha
+ok 30 - check 5: dock next skips the missing track and lands ep-beta
+ok 31 - check 5: the skipped track is named on its own card (inline outline set)
+ok 32 - check 6: dock persists on the intentions tab while playing
+ok 33 - check 6: dock persists on the examination tab while playing
+ok 34 - check 6: dock persists on the confession tab while playing
+ok 35 - check 6: dock persists on the prayers tab while playing
+ok 36 - check 7: Examination carries the dock alone and its play/pause pauses the track
+ok 37 - check 7: Confession carries the dock alone and its play/pause resumes the track
+ok 38 - check 17: dock body tap moves to the Prayers tab
+ok 39 - check 17: the playing track's card stands inside the viewport after the jump
+ok 40 - check 10 setup: Night queue starts on its Intentions card
+ok 41 - check 10: when the Night queue runs out the dock hides and current clears
+ok 42 - check 10: .view pad returns to exactly 96px with the dock gone
+ok 43 - check 11 setup: lone ep-mid-a raises the dock
+ok 44 - check 11: the lone track's end hides the dock
+ok 45 - check 12 setup: Play All is running
+ok 46 - check 12: the timed sleep stop fires and the held track stands
+ok 47 - check 12: dock shows the held track (seg:Morning) paused, mid-progress and static (10.3%)
+ok 48 - check 13 setup: Midday queue plays its Intentions card
+ok 49 - check 13 setup: dock next lands ep-mid-a playing
+ok 50 - check 13: at the track's end the hold loads the next track unstarted
+ok 51 - check 13: dock shows the held next track paused at progress 0
+ok 52 - check 14 setup: ep-alpha loaded
+ok 53 - check 14: the sleep sheet (z 50) covers the dock (z 40) — the point at the dock's center hits the sheet
+ok 54 - check 15: the Read view covers the dock too (z 50 over 40)
+ok 55 - check 15: the Read view's own play button drives the same track (play state flips, current unchanged)
+ok 56 - check 15: closing the Read view leaves the dock standing with the current track
+ok 57 - check 16 setup: an Intentions chip play is running
+ok 58 - check 16: chip play raises the dock titled 'Intentions', next disabled, meta falls back to the day label
+ok 59 - check 16: the dock's play/pause pauses the chip play
+ok 60 - check 16: and resumes it (restart through the standing path)
+ok 61 - check 18: a dock body tap during a chip play is a no-op — tab and scroll unchanged
+ok 62 - zero page errors across the whole run (0)
+# harness-v326: 62 checks, 0 FAIL

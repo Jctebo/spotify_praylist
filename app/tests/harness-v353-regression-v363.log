@@ -1,0 +1,58 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migration 0015 stands in the tree (the fixture set runs through it)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v361-1' (v361 re-point)
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 663 ms
+ok 8 - L1 home form: block cards stand in payload order, episodes card last (cards=["Morning","Midmorning","Midday","Afternoon","Evening","Night","Mass and Homilies","Novenas","__episodes"])
+ok 9 - L1: a card carries its gradient face, name, caption + settled count span, heard span, and a block play button
+ok 10 - L1: the Continue card stands in its slot BEFORE the block cards when its gate stands (Decision 2 order), See queue door standing
+ok 11 - L2 setup: re-boot with a liturgical day standing (the gradient head needs a color standing; without one the v352 flat-navy fallback stands)
+ok 12 - L2 block page: liturgical-gradient header with name, meta (dateLabel · caption · N · heard), Play All, Mark all played, Spotify link iff in payload (debug={"headBlock":"Morning","gradient":"linear-gradient(135deg, rgb(243, 233, 207), rgb(250, 245, 236))","title":"MORNING","meta":"Tuesday, November 10, 2026 · from midnight · 0 tracks · 0 prayed","queue":true,"mark":true,"spot":true,"spotExpected":true,"rosary":true,"invitatory":true,"auxilium":false,"viewKind":"block"})
+ok 13 - L2: rows are that block's tracks only (payload + settled settings cards; another block's track absent)
+ok 14 - L2: Back returns home with the returning block's card scrolled into view
+ok 15 - L3 RE-POINTED (v361; the 136px/panel geometry leg is RETIRED with the combined row): the intention row stands immediately before its prayer card, no panel stands, and the row carries its own play button
+ok 16 - L3 RE-POINTED (v361): the intention text is capped at two lines and the ellipsis stands because it is clamped; the played dot stands on the prayer card
+ok 17 - L3 RE-POINTED (v361): the ellipsis expands the intention row in place
+ok 18 - L3: the played dot toggles on and off
+ok 19 - L3: Read opens the reading sheet
+ok 20 - L3 [v363 supersession: .notavail retired, the fold stands in the meta]: an unavailable track shows its standing intro-free form (first found on Midmorning)
+ok 21 - L4 setup: clean re-boot reaches readiness
+ok 22 - L4: the card play button starts the block queue WITHOUT navigating (q=11 Morning descriptors, view=home)
+ok 23 - L4: the page Play All queues the same block from the page
+ok 24 - L4: whole-day Play All unchanged — it spans the blocks (39 descriptors, 9 blocks)
+ok 25 - L5: a mid-block tap queues from that track inclusive, intention intro first, stopping at the block's end (head=["intro:marian-antiphon-angelus","marian-antiphon-angelus"])
+ok 26 - L5: the tap queue stays inside the block
+ok 27 - L5 RE-POINTED (v361): tapping the intention row's own play button starts the pair
+ok 28 - L6 mini-player: the floating dock stands with every standing id, 10px inset, 12px radius, clearing the tab bar by 8px (debug={"hidden":false,"left":10,"radius":"12px","gap":8,"fill":true,"cur":"intro:daily-rosary","ids":true})
+ok 29 - L6: a dock tap (outside play/next) opens Now Playing
+ok 30 - L6: the dock play button toggles playback; the dock next button stands wired (ids check above)
+ok 31 - L6 setup: the app wrote its queue snapshot record during play
+ok 32 - L6: after a reload the restored queue stands paused in the mini-player (v355 restore, displayed by the restyle)
+ok 33 - L1 (restored rule): while a restored queue stands the Continue slot renders EMPTY — the restored queue wins
+ok 34 - L7 setup: clean re-boot reaches readiness
+ok 35 - L7: Continue's See queue opens the preview sheet from home (37 rows)
+ok 36 - L7: a preview row tap starts the queue at that row
+ok 37 - L7: Now Playing's queue list renders the standing queue (37 rows)
+ok 38 - L7: a queue-list row tap jumps the queue to that track
+ok 39 - L9 setup: a PIN stands set through the real Settings flow (recovery code shown once)
+ok 40 - L9: with a PIN set, the Examination tap paints the gate and issues NO /api/exam/* call while locked
+ok 41 - L9: the gate stands in the new chrome with every standing id (the seam is styling only)
+ok 42 - L9: the unlock paints the Examination content in the new chrome
+ok 43 - L9: Confession opens on the same unlock — one unlock opens both tabs
+ok 44 - L9: a reload re-locks — the gate stands again (memory-only token)
+ok 45 - L10: Settings rows render in list form inside shared section headers (27 rows, 10 sections); the PIN section stands at the end
+not ok 46 - harness exception: page.evaluate: TypeError: Cannot read properties of null (reading 'click')
+    at eval (eval at evaluate (:370:30), <anonymous>:1:77)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+page.evaluate: TypeError: Cannot read properties of null (reading 'click')
+    at eval (eval at evaluate (:370:30), <anonymous>:1:77)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ev (/home/hatch/workspace/.worktrees/v363-app/app/tests/harness-v353.mjs:369:34)
+    at main (/home/hatch/workspace/.worktrees/v363-app/app/tests/harness-v353.mjs:680:11) {
+  log: []
+}
+# harness-v353: 44/46 ok

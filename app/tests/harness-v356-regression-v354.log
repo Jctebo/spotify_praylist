@@ -1,0 +1,15 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - migration 0014 stands on the test D1 (pin_state + pin_tokens)
+ok 4 - L1: /api/pin/state answers pinSet:false with no PIN set
+ok 5 - L1: examination opens tonight's run with the 23 seeded prompts, no PIN
+ok 6 - L1: entry saves with no PIN set
+ok 7 - L1: free entry saves with no PIN set
+ok 8 - L1: confession payload open with no PIN (guide + the two entries in prep)
+ok 9 - L1: writes run their normal handlers with no PIN (penance without a confession = the standing 400, not a gate refusal)
+not ok 10 - harness crashed: page.waitForSelector: Timeout 20000ms exceeded.
+Call log:
+  - waiting for locator('.blockhead') to be visible
+
+    at /home/hatch/workspace/.worktrees/v354/app/tests/harness-v356.mjs:178:14
+TALLY: 9 ok / 1 FAIL (10 checks)

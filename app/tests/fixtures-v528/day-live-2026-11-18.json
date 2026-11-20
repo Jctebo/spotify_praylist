@@ -1,0 +1,128 @@
+{
+ "ok": true,
+ "date": "2026-11-18",
+ "dateLabel": "Wednesday, November 18, 2026",
+ "presentedDay": "2026-11-18",
+ "liturgicalDay": {
+  "name": "Memorial of the Dedication of the Basilicas of Saints Peter and Paul, Apostles",
+  "color": "red"
+ },
+ "version": 8,
+ "introTexts": {
+  "morning-prayer": "For my godchildren Liz, Danny, Abigail, and Levi, that God protect them in body and soul, keep them close to Him, and lead them to eternal life. Saint Michael the Archangel, pray for them.",
+  "daily-rosary": "For Desiree, that God heal every wound from past broken relationships, bless her co-parenting of Levi with Roy, and lead their whole family to peace in Him. Saint Rita, pray for them.",
+  "marian-antiphon-angelus": "For Dylan, that God heal his sickness, restore his strength, and use it to form him to love and serve Him all his life. Saint Raphael the Archangel, pray for us.",
+  "auxilium-christianorum": "For Desiree, that God heal every wound from past broken relationships, bless her co-parenting of Levi with Roy, and lead their whole family to peace in Him. Saint Rita, pray for them.",
+  "daily-reflection": "For Dylan, in thanksgiving that he made the basketball team this year, that God use the season to grow him in discipline, humility, and joy in Him. Saint Sebastian, pray for us.",
+  "ext-invitatory": "For Dylan, that God heal his sickness, restore his strength, and use it to form him to love and serve Him all his life. Saint Raphael the Archangel, pray for us.",
+  "ext-morning-prayer": "For Andy's daughter Mila, that her crisis of faith lead her to the fullness of truth in Jesus Christ and His Holy, Catholic, and Apostolic Church, and to eternal life with Him. Saint Monica, pray for them.",
+  "ext-midmorning-prayer": "For Tonio and his wife Andrea, that God bless them with a healthy child and make their home a place of faith, where their child grows toward eternal life. Saint Gerard Majella, pray for them.",
+  "ext-midday-prayer": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "ext-midafternoon-prayer": "For Pamela, that God grant her deep, peaceful sleep, restore her strength to love and serve her family, and keep her heart at rest in Him. Saint Joseph, pray for us.",
+  "ext-office-of-readings": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "ext-evening-prayer": "For my kids, that God make His call clear to them, give them generous hearts to consider religious life, and lead them in the vocation that brings them to heaven. Saint John Bosco, pray for us.",
+  "ext-night-prayer": "For Dylan, that God heal his sickness, restore his strength, and use it to form him to love and serve Him all his life. Saint Raphael the Archangel, pray for us.",
+  "ext-bible-in-a-year": "For Pamela, that God grant her deep, peaceful sleep, restore her strength to love and serve her family, and keep her heart at rest in Him. Saint Joseph, pray for us.",
+  "ext-gospel-exegesis": "For Andy's daughter Mila, that her crisis of faith lead her to the fullness of truth in Jesus Christ and His Holy, Catholic, and Apostolic Church, and to eternal life with Him. Saint Monica, pray for them.",
+  "ext-saint-of-the-day": "For Pamela, that God grant her deep, peaceful sleep, restore her strength to love and serve her family, and keep her heart at rest in Him. Saint Joseph, pray for us.",
+  "ext-usccb-readings": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "ext-daily-tv-mass": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "ext-fr-mike-homily": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "ext-barron-sermon": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "the-ai-signal": "For perseverance, that I stay dedicated to God in every task, do all my work for His glory, and hold fast to Him until eternal life. Saint Benedict, pray for us.",
+  "novena-andrew_dung_lac_priest_and_companions_martyrs": "For Andy's daughter Mila, that her crisis of faith lead her to the fullness of truth in Jesus Christ and His Holy, Catholic, and Apostolic Church, and to eternal life with Him. Saint Monica, pray for them.",
+  "novena-bl_miguel_agustin_pro": "For all my family members, that they return to full participation in the Holy Catholic Church and live in God's grace on the road to eternal life. Our Lady, Mother of the Church, pray for them.",
+  "novena-christ_the_king": "For the disruptions to flights, may people come together to restore order to the US flight network",
+  "novena-clement_i_pope": "For perseverance, that I stay dedicated to God in every task, do all my work for His glory, and hold fast to Him until eternal life. Saint Benedict, pray for us.",
+  "novena-columban_of_luxeuil_abbot": "For Pamela, that God grant her deep, peaceful sleep, restore her strength to love and serve her family, and keep her heart at rest in Him. Saint Joseph, pray for us.",
+  "novena-miraculous_medal": "For Pamela, that God grant her deep, peaceful sleep, restore her strength to love and serve her family, and keep her heart at rest in Him. Saint Joseph, pray for us.",
+  "novena-presentation_of_the_blessed_virgin_mary": "For the institution of marriage, that marriages all over the world, in our extended family, and in my own marriage grow in faithful love and lead spouses and children to heaven. Saints Louis and Z\u00e9lie Martin, pray for us.",
+  "novena-st_catherine_of_alexandria": "For my godchildren Liz, Danny, Abigail, and Levi, that God protect them in body and soul, keep them close to Him, and lead them to eternal life. Saint Michael the Archangel, pray for them.",
+  "novena-st_cecilia": "For perseverance, that I stay dedicated to God in every task, do all my work for His glory, and hold fast to Him until eternal life. Saint Benedict, pray for us."
+ },
+ "blocks": [
+  {
+   "block": "Morning",
+   "label": "Morning",
+   "caption": "from midnight",
+   "spotifyUrl": "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Midday",
+   "label": "Midday",
+   "caption": "from 12 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/4gQAaPAMiezBaDaoqK6sFQ",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Evening",
+   "label": "Evening",
+   "caption": "from 6 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/6HNvFLWRShih7lgtwHTqXU",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Night",
+   "label": "Night",
+   "caption": "from 9 PM",
+   "spotifyUrl": "https://open.spotify.com/playlist/1TAlNiKHMc41cT0fvkYxTD",
+   "tracks": [],
+   "trackCount": 0
+  },
+  {
+   "block": "Novenas",
+   "label": "Novenas",
+   "caption": "the day's novenas",
+   "spotifyUrl": "https://open.spotify.com/playlist/2hclGC0JlP4tC51uohete6",
+   "tracks": [],
+   "trackCount": 0,
+   "layer": "novenas"
+  },
+  {
+   "block": "Podcasts",
+   "label": "Podcasts",
+   "caption": "the podcasts you added",
+   "spotifyUrl": null,
+   "tracks": [],
+   "trackCount": 0,
+   "layer": "podcasts"
+  }
+ ],
+ "dayPositions": {
+  "daily-rosary": 217
+ },
+ "blockOrder": null,
+ "additions": [],
+ "profile": {
+  "key": "salesian",
+  "name": "The Salesian Way",
+  "honorLine": "named in honor of the tradition, not the order's own routine",
+  "resolvedBy": "standing",
+  "dayKind": "weekday",
+  "coreBlocks": [
+   "Morning",
+   "Midday",
+   "Evening",
+   "Night"
+  ],
+  "layers": [
+   {
+    "key": "novenas",
+    "on": true
+   },
+   {
+    "key": "podcasts",
+    "on": true,
+    "series": [
+     "bible-in-a-year",
+     "exorcist-files"
+    ]
+   }
+  ],
+  "version": 4
+ }
+}

@@ -1,0 +1,54 @@
+ok 1 - ST1 the diff vs the v452-ship base is migration 0025 + client.ts + index.ts + ui.ts only (got: app/migrations/0025_exam_entry_kind.sql, app/worker/src/client.ts, app/worker/src/index.ts, app/worker/src/ui.ts)
+ok 2 - ST2 migration 0025 is exactly the one additive ALTER (kind TEXT NOT NULL DEFAULT 'sin')
+ok 3 - ST3 (housekeeping): the SW pin stands at ora-pro-nobis-v452-1 (Ship moves it)
+ok 4 - ST4 the whole cooked APP_JS parses (vm.Script) — the v439 gate
+ok 5 - ST5 the APP_JS backslash census reads 0 (no non-escape sequence for cooking to rewrite)
+ok 6 - ST6 the whole worker bundles clean (esbuild)
+ok 7 - SS1 the entries POST folds kind ('reflection' stands; anything else 'sin') and the INSERT carries the column
+ok 8 - SS2 examToday's entry select names kind with the standing columns (the seat as found was SELECT *; §3 states it)
+ok 9 - SS3 confessionPayload's prep read takes sins only (AND e.kind='sin')
+ok 10 - SS4 the confession stamp takes sins only (AND kind='sin') — reflections are never swept
+ok 11 - SS5 the standing DELETE /api/exam/entries/:id stands untouched (the open-run select + its 409 — finding 3 preserved)
+ok 12 - SS6 both new routes stand below the exam/confession pinGate application (PIN-gated with their blocks)
+ok 13 - SS7 the Confession-side delete selects sins only, run state unconditioned; a reflection or missing id answers 404
+ok 14 - SS8 reflectionsPayload reads kind='reflection' joined to the run date, newest day first, written order within the day
+ok 15 - MG1 migration 0025 applies over a 0024-state DB — exam_entries.kind stands TEXT NOT NULL DEFAULT 'sin'
+ok 16 - MG1 a row standing before 0025 reads kind='sin' after it (standing entries are sins)
+ok 17 - MG2 a fresh full-migration DB's exam_entries schema agrees with the 0024→0025 path
+ok 18 - SV0 app up on local wrangler (LOCAL_DEV)
+ok 19 - SV0 the fixture D1 (all migrations) carries exam_entries.kind
+ok 20 - SV1 the day read stands with an open run
+ok 21 - SV2 all four entry posts land (201)
+ok 22 - SV2 D1 kinds: absent → 'sin' · 'reflection' stands · an unknown kind → 'sin' · 'sin' stands
+ok 23 - SV3 the day read's entry rows carry kind (sin + reflection ride the payload)
+ok 24 - SV4 Confession prep lists the sins (today's + yesterday's open ones) and NO reflection
+ok 25 - SV5 the reflections read groups by day, newest first, reflections only
+ok 26 - SV5 each reflections entry carries {id, text, category, created_at}
+ok 27 - SV6 the Confession-side delete removes a sin standing on a CLOSED run (200; the row is gone)
+ok 28 - SV6 the Confession-side delete answers 404 on a reflection — and the reflection stands
+ok 29 - SV6 the Confession-side delete removes a sin standing on an OPEN run (200)
+ok 30 - SV6 the Confession-side delete answers 404 on a missing id
+ok 31 - SV7 the standing exam DELETE still refuses a closed-run entry (409 — finding 3 preserved; the row stands)
+ok 32 - SV7 the standing exam DELETE still removes an open-run entry (200)
+ok 33 - SV8 recording a confession closes exactly the one standing open sin (entriesClosed 1)
+ok 34 - SV8 D1: the sin carries the confession id; the reflection's confession_id stays NULL (never swept)
+ok 35 - SV8 after the confession: the history count reads sins (1); prep stands empty of the closed sin; the reflection stands nowhere in prep
+ok 36 - EX1 the kind switch stands in all three entry forms (the prompt form's, the custom form's, the Anything-else form's) — two segments, Sin selected
+ok 37 - EX2 a reflection renders in place in the reflection dress (the REFLECTION tag, the remove link stands); a sin and a kind-less legacy entry render plain
+ok 38 - EX3 a prompt-form save with the switch on Reflection POSTs kind='reflection' and the saved entry repaints in the dress
+ok 39 - EX4 the custom form saves kind='sin' by default (the switch untouched)
+ok 40 - EX5 the Anything-else form with the switch flipped POSTs kind='reflection'
+ok 41 - CF1 step 2 paints composed (preamble + the elapsed clause + 'These are my sins:' + the sins grouped, each with Delete); the stored step-2 body and the PREPARATION section stand nowhere; steps 1/3, PENANCE, Confession made, HISTORY stand
+ok 42 - CF2 the Delete act opens the standing confirmation (its line names the entry) and no DELETE fires before the confirm
+ok 43 - CF2 the confirm fires DELETE /api/confession/entries/71 and the entry leaves the list; the other sin stands
+ok 44 - CF3 with no last confession the preamble drops the elapsed clause; with no sins step 2 carries the quiet empty line and no Delete stands
+ok 45 - CF4 the Guide editor shows the step-2 note in place of its fields; the other steps' fields stand
+ok 46 - CF4 the Guide editor's save payload omits step 2 (steps 1,3 only) — the stored step-2 row stands untouched
+ok 47 - DR1 the Conscience toggle reads three sides (Examination · Confession · Spiritual Direction), the standing side active
+ok 48 - DR2 the Spiritual Direction bar reads its title alone — no back act stands
+ok 49 - DR3 the Direction page groups reflections by day (long-form day heads, newest first), each in the reflection dress with its category; no delete stands
+ok 50 - DR4 the empty state stands (one quiet card: 'No reflections yet.')
+ok 51 - DR5 a PIN refusal routes through the standing pinRefusalGate (the conscience tab, the container repaint) as the other sides do
+ok 52 - DR6 at 360px the three-segment toggle + the Direction page stand with no horizontal overflow
+ok 53 - browser: zero page errors across all client legs
+# harness-v453: 53 ok / 0 not-ok

@@ -1,0 +1,28 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - locked instance up (no LOCAL_DEV)
+ok 4 - pool lists the 11 synthetic active intentions
+ok 5 - pool split is 3 High / 7 Medium / 1 Low
+ok 6 - today's draw fills all 35 items
+ok 7 - add intention returns 201 + id
+ok 8 - adding an intention does NOT touch today's draws (v58 rule)
+ok 9 - agent day POST draws 35 and accepts the addendum
+ok 10 - agent day GET returns the addendum
+ok 11 - re-reading a drawn date returns the identical persisted draw
+ok 12 - weighted draw ordering holds (H avg 131.8 > M avg 70.9 > L avg 27.0 over 30 dates)
+ok 13 - edit priority succeeds
+ok 14 - retire succeeds
+ok 15 - retired intention is out of today's draw
+ok 16 - retire refills today's draw back to 35
+ok 17 - delete succeeds
+ok 18 - pool back to 11 after delete
+ok 19 - draw history rides the list (drawnCount + lastDrawn)
+not ok 20 - day payload matches the captured board contract shape
+not ok 21 - payload additions are exactly the Plan's audio record (extras: $.liturgicalDay, $.blocks[].audio)
+ok 22 - audio push without the agent token is refused
+not ok 23 - audio push stores the segment (200, size read back)
+not ok 24 - audio push with a bad block is refused (400)
+not ok 25 - segment serves John-side at the app audio route
+not ok 26 - day payload points Morning's segment at the app route
+not ok 27 - harness crashed: Cannot read properties of undefined (reading 'length')
+TALLY: 20 ok / 7 FAIL (27 checks)

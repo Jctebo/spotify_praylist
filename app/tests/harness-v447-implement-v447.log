@@ -1,0 +1,43 @@
+ok 1 - S1 the worker-source diff vs the v445-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - S2 no backdisc stands anywhere in client.ts — the disc's five emissions are gone
+ok 3 - S2 every converted painter emits the shared bar: paintBlockPage · paintEpisodesPage · paintPodcasts · paintPodcastVideos · paintPodWatch · paintSettings · paintConscienceBar
+ok 4 - S3 the tab-home painters emit no bar: paintListenHome · paintPodcastsIndex · renderWallpaper · renderIntentions
+ok 5 - S4 (amendment) the .segtoggle rule carries no sticky seat — the toggle rows are not frozen
+ok 6 - S4 (amendment) the compact block head re-seats flush under the brand bar — the +46px toggle allowance is gone
+ok 7 - S4 the .iosbar rule stands sticky at the brand height and its back act reads var(--accent-text), the standing theme token
+ok 8 - S5 the whole worker bundles clean (esbuild)
+ok 9 - S5 (housekeeping): the SW pin stands at ora-pro-nobis-v445-1 (Ship moves it)
+ok 10 - S6 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 11 - S6 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 12 - H1 Prayers home (tab home): no bar stands; the Prayers | Intentions toggle stands
+ok 13 - H1 (amendment) the toggle's computed position is static — it is not frozen
+ok 14 - H1 (amendment) at rest the toggle stands beneath the frozen header — no content hidden under it
+ok 15 - H2 (amendment) scrolled: the toggle row scrolls away under the frozen header; the brand bar alone stays at the top
+ok 16 - B1 block page: the bar stands at the head's top — left reads Prayers (aria names it), the center names the page (Morning)
+ok 17 - B1 block page: Play All + the page menu ride the bar's right (D1 A); no disc stands; the head's title line retired; the coverrow keeps cover + meta
+note - block head measured height at 412px: 142px (bar 44 + cover row + pill line over the head padding)
+ok 18 - B2 block page frozen: scrolled, the head (bar inside) sticks flush under the brand bar — the header alone is frozen
+ok 19 - B3 Play All works from the bar: the queue starts and the dock stands with a track
+ok 20 - B4 block page back: the bar's back returns one level to the Prayers home (its standing data-back act)
+ok 21 - E1 episodes page: the bar takes the backrow's seat in the head — Prayers at the left, the page's name centered; the Play All row stands below as before; the old title line retired
+ok 22 - F1 Formation index (tab home): no bar stands
+ok 23 - F2 series page: the bar replaces the sticky backrow in its seat — Formation at the left, the series name centered, the right stands empty (no page menu stands today), the head's title line retired
+ok 24 - F3 video series page: the bar stands — CatholicTV centered
+ok 25 - F4 watch page: the bar stands — CatholicTV at the left, the video's name centered (its standing title line retired into the bar); the frame stands
+ok 26 - F4 watch back: the bar's back returns one level to the series page
+ok 27 - G1 Settings: the bar stands at the page top — Prayers at the left, Settings centered; the page below stands as before (Playback section, the footer's Back)
+ok 28 - G2 Settings back: the bar's back performs the page's standing back act — the Prayers home stands
+ok 29 - C1 Conscience entry (the PIN gate): no bar stands on the gate surface
+ok 30 - C2 Examination: the bar stands over the page (Prayers at the left, Examination centered); the chips row and the heading stand as shipped; the toggle above is not frozen
+ok 31 - C3 (amendment) Examination scrolled: the bar sticks flush under the brand bar while the toggle row scrolls away — the header alone is frozen
+ok 32 - C4 Examination under the bar: a chip tap crosses to the Precepts (v444 stands) and the bar stands through the repaint
+ok 33 - C5 Confession: the bar's center names Confession; the page below stands as before (the guide, its Guide act)
+ok 34 - C6 Conscience back: the bar's back returns to the Prayers home, the app's home tab (the sides' one-level return)
+ok 35 - W1 Sacred Art (tab home): no bar stands — and no wallpaper detail page stands in the client to carry one (census)
+ok 36 - L1 long-name rule: a destination name over the measure renders Back (the full name stands in the aria-label); a short name stands as itself
+ok 37 - F360 (amendment) at rest at 360px the toggle stands beneath the frozen header — nothing hidden under it
+ok 38 - F360 block page at 360px: no NEW horizontal overflow (scrollWidth 362 is the base's own measure on release/v445-ship — the standing head bleed, probed identical; the bar adds nothing); the centered title stands inside the bar; the bar measures 44px
+ok 39 - F360 block page frozen at 360px: the head sticks flush under the brand bar
+note - block head measured height at 360px: 142px
+ok 40 - browser: zero page errors across every leg
+# harness-v447: 40/40 passed

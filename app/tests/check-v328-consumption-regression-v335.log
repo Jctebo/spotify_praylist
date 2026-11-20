@@ -1,0 +1,23 @@
+ok a1 - seed blocks equal the golden on all 17 episodes
+ok a2 - check-v331 subset: every novena resolves to Midmorning
+ok a3 - check-v331 subset: marian-antiphon-angelus resolves to Morning
+ok a4 - seed stands nothing out and maps every family
+ok a5 - per-block own sequences equal the golden (settings sorts preserve manifest order)
+ok a6 - externals under the seed equal the golden (id, block, source, state), nothing stood out
+ok b1 - edited push exits 0
+FAIL b2 - Bible in a Year committed in Evening at its renumbered position (sort 500100) :: None
+ok b3 - Novenas off: no novena episode reaches the commit
+ok b4 - Daily Rosary fridays-only on a Sunday: excluded from the commit
+ok b5 - the App push line names the edited version: 'settings v2 (live read)'
+ok b6 - the stood-out line names Novenas (off) and Daily Rosary (day rule: fridays)
+ok b7 - the remaining own episodes stand in the commit (17 - 12 novenas - rosary = 4)
+ok c1 - read fails with a cache standing: the cache governs — blocks equal the golden in full
+ok c2 - the suffix names it: 'settings v1 (last-known cache)'
+ok c3 - read fails with no cache: settings None — the standing fallback governs
+ok c4 - the suffix names it: 'settings: standing fallback (read failed)'
+ok c5 - standing-fallback blocks equal the golden EXCEPT novenas + antiphon 'unblocked' (asserted openly)
+ok d1 - the resolver itself fills the missed slot with Sing the Hours (pre-settings fact)
+ok d2 - the filled fallback takes the primary's block + position (Morning, sort 100500), source named Sing the Hours
+ok d3 - primary OFF: the slot stands missing, the Sing the Hours fill is NOT consulted
+ok d4 - the stood-out list names the primary with (off)
+check-v328-consumption: 21 ok / 1 FAIL

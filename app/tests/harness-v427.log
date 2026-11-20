@@ -1,0 +1,35 @@
+ok 1 - S: migration 0022 stands in the tree
+ok 2 - S: 0022 creates prayer_episode_draws keyed (date, episode_id)
+ok 3 - S/F-427-I2: the feed URL stands as ONE named constant in index.ts (the LOCAL_DEV env override is the harness stub)
+ok 4 - S: the "novenas" family key emission is RETIRED from playerIntroTexts
+ok 5 - S: the episode draw stands, and the redraw joins it with forced enumeration inside prayerRedrawForDate
+ok 6 - S: the §2.3 gate (standing rows → no fetch) and the one-batch fill stand in the episode draw
+ok 7 - S/F-427-I3: drawHash is factored and BOTH seed shapes run through it
+ok 8 - migration 0022 applies clean — prayer_episode_draws stands
+ok 9 - app up on local wrangler (LOCAL_DEV)
+# F-427-I4: first-fill shell cost (2.1 MB feed fetch + enclosure scan + fill): 587 ms, feed fetches: 1
+ok 10 - E1: the first-fill day shell answers 200 over the big feed
+ok 11 - F-427-I4: the first-fill shell cost is bounded (587 ms)
+ok 12 - E1: the fill records exactly one row per enumerated episode (3 canonical ids — dedupe + the last-day- rule), each the LCG-expected pick for seed `${date}:${episodeId}`
+ok 13 - E2: the shell's introTexts carries NO "novenas" family key
+ok 14 - E2: introTexts carries one entry per drawn episode under its own id, with that episode's drawn text
+ok 15 - F-427-I3: today's per-item draws equal the PRE-REFACTOR algorithm's expected set — the shared-hash refactor moved no per-item pick
+ok 16 - E2: every per-item introTexts entry stands as before (daily-rosary carries item 102's drawn text)
+ok 17 - G1: a date with standing episode rows triggers NO feed fetch on re-read (the §2.3 gate)
+ok 18 - G1: a second read re-picks NOTHING — today's episode rows stand byte-identical
+ok 19 - F-427-5/§2.8: prayerDayPayload's per-item draws (the feed composer's read) are byte-identical — item 11's shape stands beside the episode store, never instead of it
+ok 20 - E3: a feed fetch failure on an unfilled date → no rows written, no episode keys, the shell never errors
+ok 21 - E3: the next read retries the fill — tomorrow's episodes stand drawn and emitted
+ok 22 - R1: POST /api/prayer/redraw re-draws the episode rows (forced enumeration) — the corrupted set returns to the expected set
+ok 23 - R1: the same redraw keeps the per-item set at its expected set (one endpoint, one algorithm)
+ok 24 - R2: an ADD's settle re-draws the episodes over the widened pool inside its own request
+ok 25 - R3: a forced fill failure answers 500 in the standing error shape
+ok 26 - R3: BOTH stores stand restored row for row after the failed re-run
+ok 27 - R4: a past date's episode rows stand byte-identical after today's redraws
+ok 28 - C1: buildIntroMap carries each episode's own entry and excludes the family key
+ok 29 - C1: introTextFor resolves each novena to its OWN text — the per-id entry wins (client delta ZERO, verified on the built client)
+ok 30 - C2: with the family key retired, an undrawn novena resolves null at BOTH seams — absence, never another text (§1.7 leg 5)
+ok 31 - C2: a non-novena paired id resolves per-id exactly as before
+HARNESS ERROR: page.waitForFunction: Timeout 30000ms exceeded.
+    at /home/hatch/workspace/.worktrees/v427/app/tests/harness-v427.mjs:342:14
+# harness-v427: 31 ok / 1 not-ok

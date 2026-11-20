@@ -1,0 +1,19 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - gate identity: port 8971 is free before spawn (no foreign instance answers)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: episode audio staged for the fixture day
+ok 5 - fixture: ep-alpha's text staged
+ok 6 - fixture: day commit lands (rowCount 6)
+not ok 7 - fixture: Morning slice serves Intentions-first (seg:Morning,morning-prayer,daily-rosary,marian-antiphon-angelus)
+not ok 8 - check 20: the served /sw.js reads ora-pro-nobis-v334-1 (v334's bump, named update — the pin follows the landed trunk's cache rename)
+ok 9 - seeded day rendered (25 cards)
+ok 10 - check 1: prayers tab — no dock before any load, .view pad exactly 96px
+ok 11 - check 1: intentions tab — no dock before any load, .view pad exactly 96px
+ok 12 - check 1: examination tab — no dock before any load, .view pad exactly 96px
+ok 13 - check 1: confession tab — no dock before any load, .view pad exactly 96px
+ok 14 - check 21: served /app.js parses (vm.Script), exactly one #dock stands in the booted shell, zero page errors
+HARNESS ERROR: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-playkey="ep-alpha"]')
+
+# harness-v326: 14 checks, 3 FAIL

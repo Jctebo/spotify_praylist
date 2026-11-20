@@ -1,0 +1,12 @@
+harness-v401 — 2026-11-13 (Implement seat, release/v401-changer-run)
+ok 1 - W401-7a: changerRun lines render in the identical setrow/meta shape
+ok 2 - W401-7a: the block stands directly after applyStatus (notices < applyStatus < run line < service line)
+ok 3 - W401-7b: payload without changerRun paints byte-identical to the base client
+ok 4 - W401-7c: an empty changerRun list renders nothing
+ok 5 - W401-7d: the never-ran line renders verbatim in the meta shape
+harness-v401: 5/5 ok
+Regression on the same tree: harness-v398 5/5 ok · harness-v395 47/48 —
+the one red is its own pin-statics leg asserting ora-pro-nobis-v395-1 in
+ui.ts on a tree pinned ora-pro-nobis-v400-1 by its base (the foreign-tree
+artifact the v400 Review confirmed); ui.ts is untouched by this release.
+Native: OK (180 tests) — see harness-v401-native.log on release/v401-android.

@@ -1,0 +1,31 @@
+ok 1 - S1 the worker-source diff vs the v450-ship base is index.ts + client.ts only — no ui.ts, no migration (got: app/worker/src/client.ts, app/worker/src/index.ts)
+ok 2 - S2 the own series kind stands in index.ts — its def list (key 'the-ai-signal'), its two builders, its def lookup, the kind 'own' wire field
+ok 3 - S2 both own wire forms carry showImageUrl '/logo.png'; the catalog read is the standing store read (present rows, newest first) and each entry's streamUrl is its own date's audio route
+ok 4 - S2 podIndexPayload appends the own entry AFTER the video loop (the seat: last), gated on the settings row's enabled flag read server-side
+ok 5 - S2 the podcasts GET routes 'the-ai-signal' to podOwnPayload BEFORE the audio def lookup (the v434 seat); the unknown-key 400 stands below it
+ok 6 - S3 the day lets go: 'The AI Signal' stands in neither PRAYER_BLOCKS nor BLOCK_CAPTION nor PRAYER_BLOCK_START, and the day build reads no player_episodes row (no aiRow fill)
+ok 7 - S3 the production hand-off route stands byte-untouched (its plant + validation), and the source-settings PUT accepts the own row's standing block value for its own row only
+ok 8 - S4 the client census: the shell claim machinery is retired whole (no definition, no call); 'The AI Signal' STANDS in SET_BLOCKS (its own row's assignment — the census outcome); the own painter + descriptor builder stand
+ok 9 - S5 the whole worker bundles clean (esbuild)
+ok 10 - S5 (housekeeping): the SW pin stands at ora-pro-nobis-v450-1 (Ship moves it)
+ok 11 - S5 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 12 - S5 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 13 - P1 Prayers home from a block-less day payload: the standing rows only (Morning · Novenas · episodes) — no AI Signal row, no show title, no AI intention text anywhere on the side
+ok 14 - P2 the whole-day Play All plays the day and its queue carries NO AI Signal track (the episode left the queue with the block)
+ok 15 - F1 the Formation index reads five entries in registry order — Catechism · Bible · Rosary · CatholicTV · The AI Signal, the own entry LAST
+ok 16 - F2 the own card is painted EXACTLY like every other — the plain .card form, its artwork an <img> of the show image ('/logo.png') through the standing art line, its meta the standing Current form naming today's episode; NO bolt glyph, NO counts
+ok 17 - F3 the tap FETCHED the series payload through the standing route (/api/player/podcasts?series=the-ai-signal — the fetch count rose from 0 to 1); no client special case stands
+ok 18 - F4 the series page stands in the standing grammar — the bar (‹ Formation · The AI Signal), the .podpage-head whose cover is the show image ('/logo.png') like every other series page, the meta line (3 episodes · the current episode named)
+ok 19 - F5 the rows stand newest-first in the standing episode-row dress — every row form-identical (.card.trow.prow, one play disc in the cluster, no mark, no menu — the kind carries none), every row's art the show image
+ok 20 - F6 the rows' meta lines: today's leads 'Current episode · Nov 15, 2026 · 10:00', a past row reads its own date — and NO row carries a written intention line (the day payload's AI intention text stands nowhere on the page)
+ok 21 - F7 today's row plays through the standing swap seat — the descriptor built from the entry takes the device-local copy (its url and the element's src are the mint), the dock names the episode
+ok 22 - F8 a past row streams its OWN date's audio route (no swap — the swap seat is today's alone)
+ok 23 - F9 back returns to the index with the own entry standing
+ok 24 - F10 the audio series page stands as shipped (its head meta: 0 of 2 listened) — the registry's standing members are untouched by the new kind
+ok 25 - F11 the video series page stands as shipped (its watch rows paint) — the dispatch by kind holds for every kind
+ok 26 - U1 with no present rows the own card stands with the standing unavailable line, like every unavailable series
+ok 27 - U2 the unavailable series page paints the standing unavailable card and no episode rows
+ok 28 - D1 the disabled-source index (the server gate's wire result: the payload carries no own entry) paints the four standing cards and NO AI Signal card
+ok 29 - G360 the own series page at 360px: its three rows stand, no new horizontal overflow (362 is the base's own standing measure)
+ok 30 - browser: zero page errors across every leg
+# harness-v451: 30/30 passed

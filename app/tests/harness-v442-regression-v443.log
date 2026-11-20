@@ -1,0 +1,22 @@
+ok 1 - S1 state.examCat stands (null = tonight's focus); the render resolves state.examCat || focusCategory || cats[0]
+ok 2 - S1 the wiring resolves the category the same way (the custom-add post keys off it)
+ok 3 - S1 the chips row emits between the header row and the heading, one chip per Commandment-prefixed category
+ok 4 - S1 the chip wiring stands: a tap sets examCat, resets deepIdx, repaints through renderExamination
+ok 5 - S2 index.ts is byte-identical to the base (client-only release)
+ok 6 - S2 examToday's return keys stand: { ok, date, dateLabel, run, prompts, entries, categories, focusCategory }
+ok 7 - S3 the worker-source diff vs the v441-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 8 - S3 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+not ok 9 - S3 (housekeeping): the SW pin stands at ora-pro-nobis-v441-1 (Ship moves it)
+ok 10 - S4 the scoped rule stands: .examchips nowrap + overflow-x auto, its chips flex-none — one row, sideways scroll
+ok 11 - P1 (paint): the chips row stands — nine chips, one per commandment category, in payload order (Preliminary · Precepts · Capital Sins are not chips)
+ok 12 - P1 (paint): on open the focus chip (Commandment IV) alone carries the active dress + aria-pressed; no chip is disabled on an open run
+ok 13 - P1 (paint): the page opens on tonight's focus — the heading names Commandment IV, its first question stands at "1 of 3", "Add your own" names it
+ok 14 - P2 (one row, 412px): every chip's top is equal (one chip tall, none wrapped below) and the row's scrollWidth exceeds its clientWidth — the later chips are reached by sideways scroll
+ok 15 - P2 (one row, 360px): the same at 360px — one row, sideways scroll, none wrapped
+ok 16 - N1 (navigation): a tap on the 3rd chip jumps — the heading names Commandment III, its first question stands, the pager resets to "1 of 2", "Add your own" names it, its chip alone is active
+ok 17 - N2 (navigation): a tap on the 1st chip jumps back — the heading, the question, the pager, and "Add your own" all follow to Commandment I
+ok 18 - G1 (pager): inside the selected commandment Next advances and stands disabled at its end; Back returns and stands disabled at its start — the pager never leaves the selected commandment
+ok 19 - E1 (entries): under the selected non-focus Commandment VII the standing custom entry paints, a prompt entry posts { promptId: 701, category: Commandment VII }, and "Add your own" posts { promptId: null, category: Commandment VII } — the wiring's resolved category, the Confession flow input
+ok 20 - C1 (closed run): with the run closed the nine chips stand disabled like the rest of the page, the closed note stands, and a tap on a disabled chip moves nothing
+ok 21 - browser: zero page errors
+# harness-v442: 20/21 passed

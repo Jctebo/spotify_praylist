@@ -1,0 +1,33 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode, schema incl. migration 0008)
+ok 3 - text staging POST accepted, size read back
+ok 4 - text staging refuses a bad X-Episode-Date (400)
+ok 5 - a wrong-size staged text aborts the commit 409 naming the track, in the named text shape
+ok 6 - the aborted commit wrote nothing — no stored day stands
+ok 7 - commit returns storedDate = D1, rowCount 3
+ok 8 - commit read-back perTrack text: verified / missing / verified exactly as the manifest
+ok 9 - stored-day counts texts beside tracks — 2 texts present / 1 missing, 3 tracks present
+ok 10 - payload: a text-carrying track carries hasText:true and its exact textUrl
+ok 11 - payload: the text-missing track stands named in its block, hasText:false, textUrl:null
+ok 12 - payload: the unblocked track carries its text fields like any other
+ok 13 - the text route serves the exact script bytes as text/plain
+ok 14 - the text route 404s a text-missing row by name
+ok 15 - the text route 404s an unknown episode
+ok 16 - the D2 replace-day commit lands
+ok 17 - replace-day: the prior day's text is gone with its row (404)
+ok 18 - replace-day: the new day's text serves exactly
+ok 19 - replace-day: stored-day shows one date only, texts 1 / 0
+ok 20 - helper: the App push field carries the texts clause (1 present / 2 missing)
+ok 21 - helper: clean script staged, guard script + scriptless episode named missing, stored-day counts agree
+ok 22 - browser: exactly one Read control stands — on the text-carrying card
+ok 23 - browser: the guard-missing card carries no Read control; the not-available line stands in its place
+ok 24 - browser: the audio+text-missing card stands named with the not-available line
+ok 25 - browser: the Read view renders the episode's full text, exactly
+ok 26 - browser: the reading view's body text stands at 17px (the font floor) — got 17px
+ok 27 - browser: play from the Read view starts the same track on the shell audio element
+ok 28 - browser: pause from the Read view pauses that same element
+ok 29 - browser: closing the Read view leaves playback state standing (no stop, no reset)
+ok 30 - the served /app.js parses (vm.Script)
+ok 31 - the SW cache name reads ora-pro-nobis-v328-1 (v328 Implement named update, §2.5: the pin follows the landed trunk's cache rename, v328's — the T9 bump's successor)
+ok 32 - the browser boot ran with zero page errors
+TALLY: 32 ok / 0 FAIL (32 checks)

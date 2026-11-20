@@ -1,0 +1,28 @@
+ok   - S1: the fixed paintListenHome carries no sortrow emission, no #sort-name, no order-name emission (the words stand only in the v441 comment)
+ok   - S2: exactly one #sort-btn emission stands in paintListenHome on each tree
+ok   - S3: the #sort-btn markup is byte-identical to base (id · classes · aria-label="Sort" · ↑↓ glyph)
+ok   - S4: the sort-btn listener line is byte-identical to base — the standing id wiring stands untouched
+ok   - S5: base sanity — the base paintListenHome emits the .sortrow with #sort-name (the mold reads the right base)
+ok   - E0c: base tree — no pageerror through boot + home paint
+ok   - E0: base sanity — the base home carries the .sortrow, its #sort-btn inside it, and the "Day order" name
+note - base measures @412: bodyTop=220 gridTop=300 continueCardH=70
+ok   - E0b: fixed tree — no pageerror through boot + home paint
+ok   - E1: the fixed home paint carries NO .sortrow and NO #sort-name
+ok   - E2: no "Day order" / "Manual order" text stands on the fixed home
+ok   - E3: exactly one #sort-btn stands on the fixed home, inside .searchrow, after #home-chips
+note - fixed measures @412: bodyTop=166 gridTop=246 continueCardH=70
+ok   - M1: #home-body top — base minus fixed = 54px banked (the 44px row + its 10px margin)
+ok   - M2: grid top (Continue standing, card height unchanged) — base minus fixed = 54px banked
+ok   - A1: tapping #sort-btn opens the order editor (.ordersheet, "Playlist order", the order list) via the standing wiring
+ok   - W360a: no horizontal overflow at 360px; every chip stands inside the searchrow; the button stands inside the viewport
+ok   - W360b: pill, chips and button share one line at 360px
+note - width 360 (fixed): pillW=12 btnW=44 btnRight=348 scrollW=360
+ok   - W412a: no horizontal overflow at 412px; every chip stands inside the searchrow; the button stands inside the viewport
+ok   - W412b: pill, chips and button share one line at 412px
+note - width 412 (fixed): pillW=64 btnW=44 btnRight=400 scrollW=412
+ok   - W412c: the pill keeps a non-zero text area at 412px (pill >= 54, the input’s own padding)
+note - width 360 (base): pillW=64 — the standing design’s own pill at 360 in this mold
+note - width 360 (fixed): pillW=12 — the button (44) + one gap (8) come out of the pill, the row’s only flexible member
+note - width 360 (probe, UNAPPLIED narrow-width compaction: gap 6 · chip padding 7px 5px · button padding 0 9px under 400px): pillW=56
+
+harness-v441: 19 ok / 0 not-ok

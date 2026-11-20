@@ -1,0 +1,23 @@
+=== v305 11:52:05
+v305 exit=1 
+=== v312 11:52:30
+v312 exit=1 
+=== v318 11:53:00
+v318 exit=1 
+=== v320 11:53:12
+v320 exit=1 
+=== v324 11:55:32
+v324 exit=1 RESULT harness-v324-worker 7/12 ok
+=== v325 11:55:43
+v325 exit=1 
+=== v326 11:55:59
+v326 exit=0 
+=== v327 11:56:53
+v327 exit=0 RESULT: 10 ok / 0 FAIL
+=== v328 11:57:08
+v328 exit=1 
+=== v333 11:57:09
+v333 exit=0 RESULT: 13 ok / 0 FAIL
+resolver-leg exit=0 RESULT harness-v324-resolver 15/15 ok
+check-v328 exit=1 check-v328-consumption: 21 ok / 1 FAIL
+SWEEP DONE 11:57:29

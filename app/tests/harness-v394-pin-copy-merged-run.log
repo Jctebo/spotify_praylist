@@ -1,0 +1,19 @@
+ok 1 - app up on local wrangler (LOCAL_DEV), D1 through 0018
+ok 2 - pin: the served service worker carries ora-pro-nobis-v395-1
+ok 3 - pin: ui.ts pin stands at ora-pro-nobis-v395-1
+ok 4 - presence: the client carries the bridge calls and the section host
+ok 5 - WV2: with no bridge the section renders the unavailable note
+ok 6 - WV2: with no bridge no controls are wired
+ok 7 - WV2: a rejecting get renders the unavailable note
+ok 8 - WV1: the Lock switch renders the payload's ON state
+ok 9 - WV1: the Home switch renders the payload's OFF state
+ok 10 - WV1: the phone folder row names the payload's root and its two subfolder paths
+ok 11 - WV1: the watch folder row names the payload's root and its subfolder paths
+ok 12 - WV1: both folder selects stand on the payload's roots over the four offered roots
+ok 13 - WV3: the Lock tap calls the bridge set with exactly {lockOn:false}
+ok 14 - WV3: the repaint follows the resolved payload (the Lock switch now reads Off)
+ok 15 - WV4: the phone-folder change calls the set with exactly {phoneRoot:'DCIM/Wallpapers'} — the watch root is not in the payload
+ok 16 - WV4: the repaint follows the resolved object (the phone row now names the DCIM paths)
+ok 17 - WV5: the mapping Save's payload is unchanged — {sources} only, no wallpaper keys ride it
+ok 18 - WV5: the Save click issued no wallpaper write — the section's writes stand on their own
+# harness-v394: 18 ok / 0 not-ok

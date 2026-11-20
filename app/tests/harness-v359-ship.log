@@ -1,0 +1,18 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+ok 5 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v359-1'
+ok 6 - A0 leg validity: no Capacitor global in the plain browser page (typeof=undefined)
+ok 7 - A1 absent plugin: the day builds identically (descs=44, presented=2026-11-11)
+ok 8 - A2 absent plugin: no page errors (errors=[])
+ok 9 - B1 stubbed plugin: 35 snapshot push(es) captured, the last non-empty
+ok 10 - B2 snapshot header: presentedDay=2026-11-11 dateLabel="Wednesday, November 11, 2026"
+ok 11 - B3 snapshot carries the day's available tracks (n=31)
+ok 12 - B4 no blob: URI anywhere in the snapshot (pre-blob URIs only)
+ok 13 - B5 every track: id/block/title present, kind in {episode,intention,external}, http mediaUri, boolean needsAuth
+ok 14 - B6 own episode class: Range route /api/player/audio/<day>/<id> with needsAuth
+ok 15 - B7 intention class: session-gated feed-audio pass-through of the pre-blob enclosure, needsAuth
+ok 16 - B8 external class: direct enclosures stand as-is with needsAuth false; on-origin externals carry needsAuth
+ok 17 - B9 stubbed plugin: no page errors (errors=[])
+# harness-v359: 17/17 ok

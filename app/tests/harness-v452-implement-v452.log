@@ -1,0 +1,38 @@
+ok 1 - S1 the worker-source diff vs the v451-ship base is client.ts + ui.ts only — no index.ts, no migration (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - S2 the retired seats' census in the paint (read as emitted markup forms — the build's own retirement comments carry the prose): the Add-card ids, the stats strip, the sub-line, the about paragraph, and the old Redraw button id all read 0 — the headrow (title + ☰), the note slot, and the FAB stand
+ok 3 - S2 the clean row form: no history read, no standing act buttons, no librow — the card row carries the text, the .pri tag, and its ☰ (data-intmenu)
+ok 4 - S3 both menus open through openSheetMenu (the heading's 'Intentions', the row's 'Intention'); the redraw runner and the standing confirm stand in the wiring; the retired data-act wiring is gone
+ok 5 - S3 the one sheet: entry-or-null (the add branch defaults Medium), the segmented priority control (data-pri, no <select> stands), the Add act, and both standing calls (POST add · PATCH edit)
+ok 6 - S4 the .intfab rule stands in ui.ts with its dock-on seat, dressed from the theme tokens (navy ground, the gold +)
+ok 7 - S4 the whole worker bundles clean (esbuild)
+ok 8 - S5 (housekeeping): the SW pin stands at ora-pro-nobis-v451-1 (Ship moves it)
+ok 9 - S5 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 10 - S5 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 11 - P0 the floating add button stands NOWHERE on the Prayers side — it is the Intentions paint's alone
+ok 12 - P1 the head reads in the new form: the headrow carries the title and the heading ☰ at its right
+ok 13 - P2 ONE flat list in High → Medium → Low order (the API's order within each priority — the fixture stood L·H·M·H), each row carrying its .pri tag; the retired row stands last
+ok 14 - P3 a row carries text + tag + ☰ and NOTHING else — no standing act buttons (no [data-act] in the paint), no meta line, no drawn-history text anywhere on a row (D2 B)
+ok 15 - P4 the Retired section stands at the bottom under its quiet head, its row in the same form with muted text
+ok 16 - P5 the retired chrome stands nowhere: no stats strip, no about paragraph, no Add card, no standing Redraw button, no 'the pool' sub-line (D4 A)
+ok 17 - P6 the FAB is the 56px disc, seated 14px above the tab bar with its right edge at the content edge (12px)
+ok 18 - P7 under the standing dock state (body.dock-on, --dockh set as the dock seats it) the FAB clears the dock too: its gap above the tab bar grows by the dock's height + the margin
+ok 19 - M1 the heading ☰ opens the anchored menu titled 'Intentions' carrying Redraw AND Add intention (D3 A, as John chose it)
+ok 20 - M2 the menu's Redraw fires the standing redraw POST and the side settles (the menu closed before the act, the paint stands fresh)
+ok 21 - M3 a refused redraw stands the failure line in the head's note slot and the heading ☰ is restored (its glyph back, enabled) — the busy seat unwound
+ok 22 - M4 a row's ☰ opens its anchored menu titled 'Intention' carrying Edit · Retire · Delete
+ok 23 - M5 Retire fires the standing status POST and settles — the row now stands under the RETIRED head
+ok 24 - M6 a retired row's menu reads Restore in Retire's seat
+ok 25 - M7 Restore fires the status POST again and settles — the row stands back in the flat list above the RETIRED head
+ok 26 - M8 Delete opens the standing confirm FIRST — its line stands, NO DELETE call has fired, and the row still stands
+ok 27 - M9 the confirm's commit fires the DELETE and settles — the row leaves the paint
+ok 28 - A1 the FAB opens the add sheet: empty text, the segmented priority control with Medium standing (the form's default), the 'Add to the pool' act, and the standing redraw note line — no facts line (that is the edit form's)
+ok 29 - A2 the add POSTs with the segment's priority (H, chosen in the sheet) and settles — the sheet closed and the new row stands in the High group with its High tag, at the API's order within the priority (the stub appends it; §2 seats the API's order, so it stands after the standing High rows)
+ok 30 - A3 the add failure branch stands as built: a refused POST leaves the sheet open, the draft intact, the button re-enabled, and the note naming the failure ('That did not add…') — and the menu's Add intention door opened this same sheet
+ok 31 - A4 the row menu's Edit opens the SAME sheet as the edit form: the text prefilled, its own priority (H) standing on the segment, the facts line (status · created · drawn) where D2 B seats the history
+ok 32 - A5 Save PATCHes with the segment's new priority and settles — the row's tag now reads Low
+ok 33 - R1 a mutation answered redrawn:false settles and stands the redraw failure line in the head's note slot (the v426 settle contract, unmoved)
+ok 34 - F1 the authored failure paint stands with its head in the new headrow form and its Ghost Retry — and no FAB stands on a failed paint
+ok 35 - F2 Retry repaints the side whole — the clean paint stands (rows + the FAB)
+ok 36 - G360 at 360px the clean paint stands: its five rows, the FAB inside the viewport, no new horizontal overflow
+ok 37 - browser: zero page errors across every leg
+# harness-v452: 37/37 passed

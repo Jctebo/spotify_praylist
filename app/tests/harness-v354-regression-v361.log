@@ -1,0 +1,33 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migrations stand through 0015 and NO 0016 exists (v354 claims none)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v354-1'
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 490 ms
+ok 8 - L2 setup: no liturgical record stands for the presented day yet (data-lit absent)
+ok 9 - L2 fallback: no record -> NO .np-litday line, the hero stands in the flat navy rgb(22, 40, 63), the title in #e9d9ae (debug={"hero":true,"litday":false,"bgColor":"rgb(22, 40, 63)","bgImage":"none","titleColor":"rgb(233, 217, 174)"})
+ok 10 - setup: the green liturgical record stands (door push)
+ok 11 - setup: re-boot presents the green day
+ok 12 - L1 hero form: .np-hero stands in the theme gradient; #np-title computes to --bar-fg (#e9d9ae), #np-meta to --bar-sub (#b7cdb9)
+ok 13 - L1: the artwork field measures >= 300px at the fixture viewport (w=309.6 of min(72vw, 340px) at 430px)
+ok 14 - L1: every standing NP id is present in the sheet; minimize/title/meta/day-line stand inside the hero
+ok 15 - L2: the hero's .np-litday carries the day's name exactly as pushed ("Fixture Memorial of Saint Fixture")
+ok 16 - L1: minimize removes the sheet with playback, position, and current track untouched
+ok 17 - L3: the position line reads "Track N of M" and the list renders the standing queue (Track 2 of 6, 6 rows)
+not ok 18 - L3: played dots match the seeded v344 store (seeded track on, unplayed track off)
+ok 19 - L3: a mid-list row tap jumps inside the standing queue — that track plays, the array and its order unchanged, the playing row marked + aria-current
+ok 20 - L3: no unavailable descriptor stands in this fixture's queue — the disabled-row rendering is asserted on the preview queue below / carried by harness-v347
+not ok 21 - harness exception: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#continue-queue') to be visible
+
+page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#continue-queue') to be visible
+
+    at main (/home/hatch/workspace/.worktrees/v361/app/tests/harness-v354.mjs:524:16) {
+  log: [ "  - waiting for locator('#continue-queue') to be visible" ],
+  name: 'TimeoutError'
+}
+# harness-v354: 18/21 ok

@@ -1,0 +1,47 @@
+ok - setup: the Worker bundles clean (esbuild)
+ok - leg 10: the shipped client contains no Divine Office feed URL (no direct read is attempted)
+ok - setup: app up on local wrangler (port 8974) with the feed seams pointed at the fixture server
+ok - setup: the stored day 2026-11-08 commits with own episodes and NO externals (200)
+ok - leg 2: the courier returns the resolver's Divine Office outcome for the fixture feed
+ok - leg 2: the courier stores nothing (episode rows 2 -> 2)
+ok - leg 2: the courier reply carries Cache-Control private, max-age=300 (device response reuse)
+ok - leg 2: a non-stored date is refused 400 and a non-John session is refused by the gate (400/403)
+ok - leg 2: the retired agent-door externals POST answers 404 (404)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
+ok - leg 1: matcher parity — the merged system outcome (courier + direct legs) equals the Python resolver on the fixture set
+ok - leg 6: with both Divine Office primaries matched, the Sing the Hours feed is never fetched
+ok - leg 1: every slot's placeholder swapped in place after resolve (no Loading left standing)
+ok - leg 11: every resolved slot's AUDIO stands in the device cache (keys: ext-bible-in-a-year,ext-invitatory,ext-morning-prayer,ext-midmorning-prayer,ext-midday-prayer,ext-midafternoon-prayer,ext-office-of-readings,ext-evening-prayer,ext-night-prayer)
+ok - leg 11: the external plays from a blob: (local) source and seeks within the local copy
+ok - leg 11: zero page errors on the full-fixture open
+ok - leg 3: second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+ok - leg 7: with only prior-year Day 312 items standing, Bible in a Year stands named-missing — last year's episode is never presented
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+ok - leg 14: a missing slot writes no cache record and downloads nothing
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
+ok - leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)
+REQFAIL: https://feeds.fireside.fm/bibleinayear/rss net::ERR_ABORTED
+ok - leg 8: the hanging Bible leg stands named-missing after the timeout (17 ms) while own episodes stand rendered and playable
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
+RESP: 200 https://feeds.castos.com/x8g54
+RESP: 200 https://episodes.castos.com/5fc9b29bee76f8-62659591/2692496/c1e-kxg1h8r6w8bzg40p-gppj173gh
+ok - leg 13: with the Divine Office Morning item gone, Sing the Hours fills the slot (through the pass-through download)
+ok - leg 13: the pass-through stored nothing server-side (stored rows still 2, externals 0)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
+ok - leg 5: the settings edit bumps the version (1 -> 2)
+ok - leg 5: after the settings edit the next open re-resolves and the moved slot stands in its new block (settings apply at open, courier + direct alike)
+ok - leg 12: the settings-change discard drops the cached audio (the re-resolve then re-downloads under the new version)
+ok - leg 5: the stored day rolling discards the record (new date stands) and the open re-resolves fresh
+ok - leg 9: a day payload carrying stored kind='external' rows serves none of them (0 served)
+ok - live smoke: the courier against the live Divine Office feed bytes matches the resolver for 2026-11-09 (present: ext-invitatory,ext-morning-prayer,ext-midmorning-prayer,ext-midday-prayer,ext-midafternoon-prayer,ext-office-of-readings,ext-evening-prayer,ext-night-prayer)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
+ok - live smoke: the client's direct Bible leg against the live feed bytes agrees with the resolver for 2026-11-09 (present)
+LIVE SMOKE detail: resolver on live feeds for 2026-11-09: 9/9 present · failed feeds: none
+ok - final: zero page errors across the gate's main browser context
+RESULT harness-v334 30/30 ok

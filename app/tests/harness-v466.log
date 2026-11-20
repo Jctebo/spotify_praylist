@@ -1,0 +1,29 @@
+ok - B0 statics: the mode is a capability read — the plugin stands AND carries both contract methods
+ok - B0 statics: still exactly ONE pendingStart set seat (startDesc) — the native start re-seats on the v461 model, never beside it
+ok - B0 statics: the contract send stands at the funnel tail — after the bookkeeping, ahead of the element load and the cache chain
+ok - B0 statics: the push gate stands at pushNativeState’s head — no engine-web push while native stands
+ok - B0 statics: the contract builder carries queueEnd and the send-time chain tail
+ok - B0 statics: the native state listener registers beside the bridge commands
+note - extraction dropped: nativeMirror, nativeContractDescs, offlineEvict
+note - registrations appended verbatim: 9 (1 play + 7 pause + 1 dock-play)
+ok - B1: the mode reads on with the contract shell standing, and one start sends exactly one contract
+ok - B1: the contract carries the day form — 3 items, queueEnd 3, startIndex 0
+ok - B1: items resolve through the standing snapshot resolution (the session route, needsAuth)
+ok - B1: the element is never touched — no load, no play
+ok - B1: the v461 bookkeeping stands — current set, the start pends on the one seat
+ok - B2: autoplay ON — the chain tail rides (3 items, queueEnd 1)
+ok - B2: autoplay OFF — the user queue alone (1 item)
+ok - B3: a pause in the window cancels the pending native start and sends the pause command
+ok - B3: a resume sends play and the start pends on it
+ok - B3: next/previous are commands to the engine
+ok - B3: a jump re-sends the contract at the new index — the element still untouched
+ok - B3: the rate rides a command
+ok - B3: the timed stop pauses the engine by command, then the disarm follows
+ok - B4: the playing event acks the pending start, the mirror reads playing, the position extrapolates
+ok - B4: an advance event moves the current and the queue index
+ok - B4: the stopped event runs the terminal clear
+ok - B5: no engine-web push leaves the page while the native engine stands
+ok - B6: a native day completion lands in the played map through the drain
+ok - B7: no contract method on the plugin — the mode reads off and the element starts as before
+---
+harness-v466: 25 passed, 0 failed

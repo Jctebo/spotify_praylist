@@ -1,0 +1,24 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - 11 served build parses and executes (construction proof deferred to the browser legs) and carries the v343 seams
+FAIL - 11 SW pin ora-pro-nobis-v343-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - 1 the presented-day DO courier fixture settles present (invitatory + morning prayer, not named-missing)
+ok - 1 the generated presented-day BIAY fixture settles present (current-year Day-N match)
+ok - 1 the intros fixture stands complete for the fixture day (all 10 ids in the built map)
+FAIL - 2 every combined row stands at exactly 136px (own + external, short + long intention, two-line novena title) :: []
+FAIL - 2 clip guard: no combined row's content exceeds the fixed height (scrollHeight <= 137 collapsed) :: []
+FAIL - 3 the >2-line panel (rosary, 8-line text) stands its ellipsis :: null
+FAIL - 3 the exact-two-line panel (morning prayer) stands NO ellipsis — nothing is hidden (scrollHeight == clientHeight) :: null
+FAIL - 3 the one-line panel (daily reflection) stands NO ellipsis :: null
+harness-v343 crashed: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-card="daily-rosary"] .ellipsis-btn')
+
+    at main (/home/hatch/workspace/.worktrees/v353/app/tests/harness-v343.mjs:527:15) {
+  log: [
+    `  - waiting for locator('[data-card="daily-rosary"] .ellipsis-btn')`
+  ],
+  name: 'TimeoutError'
+}

@@ -1,0 +1,27 @@
+ok 1 - S1 the paint reads the standing chips row's scrollLeft at its head, before the skeleton paint replaces view.innerHTML
+ok 2 - S1 the paint restores the read value onto the new row after view.innerHTML is replaced (and only when a row stood)
+ok 3 - S2 index.ts and ui.ts are byte-identical to the base (client-only release)
+ok 4 - S2 examToday's return keys stand: { ok, date, dateLabel, run, prompts, entries, categories, focusCategory }
+ok 5 - S3 the worker-source diff vs the v443-ship base is client.ts only (got: app/worker/src/client.ts)
+ok 6 - S3 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+ok 7 - S3 (housekeeping): the SW pin stands at ora-pro-nobis-v443-1 (Ship moves it)
+ok 8 - S4 the Commandment-prefix filter is gone from paint and wiring — the chips map over every payload category
+ok 9 - S4 the pager emits deep-next-cat after deep-next, in the solid btn dress, labeled "Next section", disabled when the resolved category is the LAST category in the full order
+ok 10 - S4 (amendment) the next-question button carries aria-label "Next question" and the arrow alone — the worded Next is gone from the emission
+ok 11 - S4 the next-section act resolves the full category order and sets examFollowActive; the paint consumes the flag AFTER the v443 restore, moving the row by the chip's right edge less the row's width at most
+ok 12 - S4 the standing Back/Next wiring lines stand byte-untouched (question-only, inside the category)
+ok 13 - C1 (chips): a chip stands for EVERY fixture category incl. the Precepts of the Church, in payload order, in exactly ONE row (one top for all chips) that scrolls sideways
+ok 14 - P1 (paint): deep-next-cat stands in the pager row — label "Next section", the solid btn dress, enabled at the focus commandment; the heading names the focus, the pager reads "1 of 3"
+ok 15 - AR (amendment, distinctness on the paint): the next-question act reads as an unlabeled arrow — text exactly "›", aria-label "Next question", the ghost dress (computed background transparent) — against the labeled solid Next section (filled background): the pair reads more distinct
+ok 16 - F412 (fit): the pager row at 412px reads Back · count · arrow · Next section in order, with no overflow (scrollWidth within clientWidth, last edge inside the view)
+ok 17 - SC1 (scroll, chip tap): the row scrolled to 150, a chip tap repainted to Commandment VII — the new row's scrollLeft is the pre-tap 150, not 0 (v443 stands)
+ok 18 - SC2 (scroll, arrow tap): the row scrolled to 200, an arrow tap flipped to VII's second question — the new row's scrollLeft is the pre-tap 200, not 0 (v443 stands)
+ok 19 - AR (clamp): at VII's last question the arrow stands disabled (the within-category clamp stands) while Next section stands enabled — the boundary stays crossable from the pager
+ok 20 - CAR2 (chip tap, no follow): the row stood at 200, a tap on the Commandment X chip — itself outside the visible band — repainted to Commandment X with the scrollLeft exactly 200 still: a chip tap never auto-scrolls (v443 exact)
+ok 21 - R1 (reach): a tap on the Precepts chip opens them — the heading names the Precepts of the Church, their questions page ("1 of 2", first question stands), and an entry saved at their first prompt posts under the Precepts and stands after the repaint
+ok 22 - PG1 (pager crossing): Next section from Commandment X lands on the next category in order — the heading names the Precepts of the Church, its first question stands, the pager reads "1 of 2", its chip alone is active, deepIdx reset
+ok 23 - CAR1 (carousel follows the pager): with the row at 0 the Precepts chip stood outside the visible band; after the Next section crossing the row moved (scrollLeft > 0) and the active chip stands fully inside the band
+ok 24 - PG2 (last category): Next section from the Precepts lands on the Capital Sins, and there Next section stands disabled — the clamp sits at the last category in the full order, not the last commandment
+ok 25 - F360 (fit): the pager row fits 360px — no overflow, the last edge inside the view (the count span flexes) — and the chips still stand in one row
+ok 26 - browser: zero page errors
+# harness-v444: 26/26 passed

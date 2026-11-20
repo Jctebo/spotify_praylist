@@ -1,0 +1,27 @@
+ok   - S1: openNowPlaying builds .np-art empty (id=np-art) and fills it through the one resolver — no unconditional logo img stands
+ok   - S2: updateNowPlaying carries the art drive (npArtRender) after the .np-preview early return — the queue-preview sheet gains no hero
+ok   - S2: the dock thumb line stands byte-unchanged (the fix is sheet-local)
+ok   - S3 (housekeeping): the SW pin stands at ora-pro-nobis-v436-1 (Ship moves it); no index.ts delta (client-only)
+note - extraction dropped: offlineEvict
+ok   - boot: the extracted client stands (openNowPlaying · npArtRender · realArtUrl · podDesc)
+ok   - H1 (adjusted — the ruling): open on the Invitatory (own, lowercase-casing logo URL) → the hero is the logo img, no tile stands
+ok   - H2 (adjusted — the ruling): the same under the capital-casing logo URL → the logo, not art (F-435-2, both casings)
+ok   - H3: open on a Podcasts episode carrying real art → the hero img is the episode art, standing over the tile
+ok   - H3: the hero art img actually loads (no broken-image state)
+ok   - F-435-I5: an episode with no art of its own takes the show art through the real podDesc chain (episode → show), and the hero shows it
+ok   - H4: sheet open on an own track → advance to a Podcasts episode → the hero swaps logo → episode art without the sheet reopening
+ok   - H5 (adjusted — the ruling): back to the own track → the hero swaps art → logo; no stale art img stands
+ok   - H6: Play All across a mixed queue (own → Podcasts → external) → the hero follows each advance
+ok   - H7 (setup): the broken-art hero starts as the art img over the tile
+ok   - H7: the art URL fails to load → the img removes itself; the glyph tile beneath stands; no broken-image glyph
+ok   - H8 (adjusted — the ruling): The AI Signal (no imageUrl stands on its descriptor) → the hero is the logo
+ok   - H9: a descriptor with no block and no art → the logo img stands, and only there
+ok   - H10: for an own track the dock thumb still resolves cur.imageUrl exactly as today (the full logo URL) — the fix is sheet-local
+ok   - H11 (adjusted — the ruling): an own track playing from its offline copy → the hero follows the descriptor: the logo
+ok   - F-435-I6: an external track with real art (Daily TV Mass) shows its art on the hero
+ok   - F-435-I6 (adjusted — the ruling): an external track with no art → the logo (no glyph-tile branch stands)
+ok   - F-435-I3: repeated updateNowPlaying calls on an unchanged track leave the hero DOM identical (no rebuild, no img reload)
+ok   - F-435-I1: the hero box is the same square in the logo form and the art form (min(72vw, 340px) at 412px)
+ok   - F-435-I1: the title’s top does not move between the logo form and the art form
+
+harness-v435: 24 ok / 0 not-ok

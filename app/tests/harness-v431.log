@@ -1,0 +1,29 @@
+ok   - S1: paintListenHome emits ONE .row.headrow holding h1.screen then p.sub (the short date via shortHomeDate) — it no longer emits day.dateLabel
+ok   - S2 (F-431-1): index.ts byte-untouched, prayerDateLabel stands at all three payload seats; the client derivation stands (UTC-noon Intl, short components) with its day.dateLabel fallback
+ok   - S3: #sort-btn carries ↑↓ + aria-label="Sort" and no word text; the #sort-name emission is byte-identical to base
+ok   - S4: paintContinue — no #continue-all emission or listener anywhere; the settled two-meta form stands; the gate/merge/restoredQueue code and the #continue-btn + #continue-queue listeners are byte-identical to base
+ok   - S5: limits — the pin stands at ora-pro-nobis-v428-1 (Ship moves it); no Spotify green; the ui.ts delta is the two .headrow rules only
+note - extraction dropped: offlineEvict
+pageerror: SyntaxError: Unexpected token '<'
+ok   - L1 (leg 1): the merged headrow measures 26px at 412 and at 690 (one line at every width)
+ok   - L1 (leg 1): #home-body’s top stands at 164 from the view’s top — exactly 19px above the standing 183
+ok   - L1 (leg 1): with the Continue card standing (the long target unwrapped), the card measures 70 and the grid’s top stands at 244 — exactly 73px above the standing 317
+ok   - L2 (leg 2): the home paints the short date "Sat, Nov 14, 2026" beside the standing title
+ok   - L2 (leg 2): the UTC-noon derivation returns the server’s America/Chicago calendar fields in short form across the date set (a Sunday · the 2026-03-08 DST day · year boundaries)
+ok   - L2 (leg 2): with no `date` in the payload, the home falls back to the standing long dateLabel — never a blank
+ok   - L3 (leg 3): the card stands in the settled form — two meta lines, no h3, no #continue-all in the DOM, the Continue button + See queue standing
+ok   - L3 (legs 3–5): line 1 names the resume target whole; line 2 reads "2 of 4 heard today" verbatim with See queue seated at its end
+ok   - L3 (leg 3): a Continue tap starts the continue build with the position carry intact — the resume record (at the first unplayed track) rides state.pendingResume into the start
+ok   - L3 (leg 5): See queue opens the queue preview of the same continue build
+ok   - L3 (leg 3): the gate stands — nothing played (no record) → no card · fully played → no card · a restored queue standing → the slot stands empty
+ok   - L4 (leg 6): the order label still names the standing order truthfully — "Day order" plain, "Manual order" with a stored order
+ok   - L4 (leg 6): the Sort button measures 44 × 44, icon-only (↑↓) in its standing dress, aria-label="Sort" keeping the word
+ok   - L4 (leg 6): the icon opens the standing order editor, and a move in the editor repaints the grid in the new order
+ok   - L5 (leg 7): typing filters the body in place (the Invitatory hit stands in the results paint)
+ok   - L5 (leg 7): the input node, focus, and value survive a chip tap with text standing (v425’s discipline, under the settled head)
+ok   - L5 (leg 7): clearing the query restores the standing body under the settled head (grid + Continue slot + headrow)
+ok   - L6 (leg 8): the grid’s cards and their order stand unchanged (nine blocks in contract order, the episodes card last)
+ok   - L6 (leg 8): Play All and the offline line stand in their standing dress below the region, untouched (v432 owns the Podcasts seat, not this one)
+ok   - L6 (leg 8, F-431-1’s consequence): the Examination head still paints the LONG date from the exam payload — only the home shortened
+note - pageerrors: 1
+harness-v431: 25 passed, 0 failed

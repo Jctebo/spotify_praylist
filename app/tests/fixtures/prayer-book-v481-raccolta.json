@@ -1,0 +1,487 @@
+{
+ "newRows": [
+  {
+   "no": 1,
+   "slug": "the-angelic-trisagion",
+   "title": "The Angelic Trisagion",
+   "category": "Daily",
+   "body": "Holy, Holy, Holy, Lord God of Hosts, earth is full of thy Glory. Glory be to the Father, Glory be to the Son, Glory be to the Holy Ghost.",
+   "latin": "Sanctus, Sanctus, Sanctus, Dominus Deus exercituum: Plena est terra gloria tua: Gloria Patri, Gloria Filio, Gloria Spiritui Sancto.",
+   "source": "The Raccolta (1910), No. 1 · Indulgence: i. 100 Days, once a day. ii. 100 Days, three times a day, on Sundays and during the Octave of Trinity Sunday. iii. Plenary, once a month. I, II, IV.",
+   "sort": 1140
+  },
+  {
+   "no": 8,
+   "slug": "the-sign-of-the-cross",
+   "title": "The Sign of the Cross",
+   "category": "Daily",
+   "body": "N.B.—The words must in either case be said.\n\nIn the name of the Father, and of the Son, and of the Holy Ghost.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 8 · Indulgence: i. 50 Days. T.Q. ii. 100 Days, if made with Holy Water. T.Q.",
+   "sort": 1150
+  },
+  {
+   "no": 20,
+   "slug": "an-offering",
+   "title": "An Offering",
+   "category": "Daily",
+   "body": "Eternal Father, we offer Thee the Blood, Passion, and Death of Jesus Christ, and the sorrows of the most holy Mary and St Joseph, in payment for our sins, in suffrage for the holy souls in purgatory, for the wants of our holy Mother the Church, and for the conversion of sinners. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 20 · Indulgence: 100 Days, once a day.",
+   "sort": 1160
+  },
+  {
+   "no": 24,
+   "slug": "prayer-for-perseverance",
+   "title": "Prayer for Perseverance",
+   "category": "Daily",
+   "body": "O LORD Almighty, who permittest evil to draw good therefrom, hear our humble prayers, and grant that we remain faithful to Thee unto death. Grant us also, through the intercession of most holy Mary, the strength ever to conform ourselves to thy most holy Will.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 24 · Indulgence: 100 Days, once a day.",
+   "sort": 1170
+  },
+  {
+   "no": 25,
+   "slug": "prayer-of-st-ignatius",
+   "title": "Prayer of St. Ignatius",
+   "category": "Daily",
+   "body": "TAKE, O LORD, all my liberty. Receive my memory, understanding, and entire will. Thou hast bestowed on me whatever I have or possess: I give all back to Thee, and deliver it to Thee to be entirely subject to thy will. Only grant me thy love and thy grace, and I am rich enough and ask for nothing more.",
+   "latin": "SUSCIPE DOMINE universam meam libertatem. Accipe memoriam, intellectum atque voluntatem omnem. Quidquid habeo vel possideo mihi largitus es: id tibi totum restituo, ac tuae prorsus voluntati trado gubernandum. Amorem tui solum cum gratia tua dones, et dives sum satis, nec aliud quidquam ultra posco.",
+   "source": "The Raccolta (1910), No. 25 · Indulgence: 300 Days, once a day.",
+   "sort": 1180
+  },
+  {
+   "no": 28,
+   "slug": "prayer-for-the-supreme-pontiff",
+   "title": "Prayer for the Supreme Pontiff",
+   "category": "Daily",
+   "body": "O LORD, in union with millions of believers, and prostrate here at thy feet, we pray Thee to save, defend, and long preserve the Vicar of CHRIST, the Father of the glorious society of souls, our own Father. To-day and every day he prays for us, fervently offering to Thee the sacred victim of love and peace. Turn then, O LORD, thy loving eyes upon us, who forgetful as it were of ourselves pray now above all things for him. Unite our prayers with his, and receive them into the bosom of thy infinite mercy, as a most sweet perfume of that living and efficacious charity, in which the children of the Church are united to their FATHER. All that he asks of Thee to-day we too ask for with him. Whether he sorrows or rejoices, or when he hopes or offers the victim of love for his people, we would be united with him. We desire that the utterance of our souls should be one with his. Mercifully grant, O LORD, that no one of us be far from his mind and heart during the hour of his prayer, and when he offers to Thee the sacrifice of thy blessed SON. And in the moment that he, our most revered Pontiff, holding in his hands the very body of JESUS CHRIST, shall say to the people over the Chalice of benediction the words: The peace of the Lord be ever with you, do Thou, O LORD, cause thy most sweet peace to descend with a new and manifest power into our hearts, and upon all the nations of mankind. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 28 · Indulgence: 200 Days, once a day.",
+   "sort": 1190
+  },
+  {
+   "no": 29,
+   "slug": "ejaculation-of-resignation",
+   "title": "Ejaculation of Resignation to the Will of God",
+   "category": "Daily",
+   "body": "MAY the most just, most high, and most adorable will of GOD be in all things done, praised, and magnified for ever.",
+   "latin": "FIAT, laudetur, atque in aeternum superexaltetur justissima, altissima, et amabilissima voluntas DEI in omnibus.",
+   "source": "The Raccolta (1910), No. 29 · Indulgence: i. 100 Days, once a day. ii. Plenary, once a year, to all who say it daily. I, II, IV. iii. Plenary, in articulo mortis (at the point of death), to those who, during life, shall have frequently recited this Ejaculation, provided that, worthily disposed, they accept death with resignation from the hands of GOD.",
+   "sort": 1200
+  },
+  {
+   "no": 32,
+   "slug": "my-god-my-only-good",
+   "title": "My God, My Only Good",
+   "category": "Daily",
+   "body": "My GOD, my only good, Thou art all mine; grant that I may be all thine.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 32 · Indulgence: i. 300 Days, once a day. ii. Plenary, once a month, during the month. I, II, III, IV.",
+   "sort": 1210
+  },
+  {
+   "no": 35,
+   "slug": "veni-creator",
+   "title": "Veni Creator",
+   "category": "Daily",
+   "body": "Hymn.\nCOME, O Creator SPIRIT blest!\nAnd in our souls take up thy rest;\nCome, with thy grace and heavenly aid,\nTo fill the hearts which Thou hast made.\n\nGreat PARACLETE! to Thee we cry:\nO highest gift of GOD most high!\nO fount of life! O fire of love!\nAnd sweet Anointing from above!\n\nThou in thy sevenfold gifts art known!\nThee, Finger of GOD's hand, we own;\nThe promise of the FATHER Thou!\nWho dost the tongue with pow'r endow.\n\nKindle our senses from above,\nAnd make our hearts o'erflow with love;\nWith patience firm, and virtue high,\nThe weakness of our flesh supply.\n\nFar from us drive the foe we dread,\nAnd grant us thy true peace instead;\nSo shall we not, with Thee for guide,\nTurn from the path of life aside.\n\nO, may thy grace on us bestow\nThe FATHER and the SON to know,\nAnd Thee, through endless times confess'd,\nOf Both th' eternal SPIRIT blest.\n\nAll glory, while the ages run,\nBe to the FATHER and the SON,\nThe same, O HOLY GHOST, to Thee,\nNow and through all eternity. Amen.\n\nPaschal Time.\nAll glory while the ages run\nBe to the FATHER and the SON,\nWho rose from death; the same to Thee,\nO HOLY GHOST, eternally.\n\nSequence.\nHOLY SPIRIT! LORD of light!\nFrom thy clear celestial height,\nThy pure beaming radiance give:\n\nCome, Thou FATHER of the poor!\nCome, with treasures which endure!\nCome, Thou Light of all that live!\n\nThou, of all consolers best,\nVisiting the troubled breast,\nDost refreshing peace bestow;\n\nThou in toil art comfort sweet;\nPleasant coolness in the heat;\nSolace in the midst of woe.\n\nLight immortal! Light Divine!\nVisit Thou these hearts of thine,\nAnd our inmost being fill:\n\nIf Thou take thy grace away,\nNothing pure in man will stay;\nAll his good is turn'd to ill.\n\nHeal our wounds—our strength renew;\nOn our dryness pour thy dew;\nWash the stains of guilt away:\n\nBend the stubborn heart and will;\nMelt the frozen, warm the chill;\nGuide the steps that go astray.\n\nThou, on those who evermore\nThee confess and Thee adore,\nIn thy sevenfold gifts, descend:\n\nGive them comfort when they die;\nGive them life with Thee on high;\nGive them joys which never end. Amen.",
+   "latin": "Hymn.\nVENI, Creator SPIRITUS,\nMentes tuorum visita,\nImple superna gratia\nQuae tu creasti pectora.\n\nQui diceris PARACLITUS,\nAltissimi Donum DEI,\nFons vivus, Ignis, Charitas,\nEt spiritalis Unctio.\n\nTu, septiformis munere,\nDigitus Paternae dexterae,\nTu rite promissum PATRIS,\nSermone ditans guttura.\n\nAccende lumen sensibus,\nInfunde amorem cordibus,\nInfirma nostri corporis\nVirtute firmans perpeti.\n\nHostem repellas longius,\nPacemque dones protinus;\nDuctore sic te praevio\nVitemus omne noxium.\n\nPer te sciamus da PATREM,\nNoscamus atque FILIUM,\nTeque utriusque SPIRITUM\nCredamus omni tempore.\n\nDeo PATRI sit gloria\nEjusque soli FILIO,\nCum SPIRITU Paraclito\nNunc et per omne saeculum. Amen.\n\nTemp. Pasch.\nDeo PATRI sit gloria,\nEt FILIO, qui a mortuis\nSurrexit, ac Paraclito,\nIn saeculorum saecula. Amen.\n\nSequence.\nVENI, SANCTE SPIRITUS,\nEt emitte coelitus\nLucis tuae radium.\n\nVeni, PATER pauperum;\nVeni, dator munerum;\nVeni, lumen cordium.\n\nConsolator optime,\nDulcis hospes animae,\nDulce refrigerium.\n\nIn labore requies,\nIn aestu temperies,\nIn fletu solatium.\n\nO lux beatissima,\nReple cordis intima\nTuorum fidelium.\n\nSine tuo numine\nNihil est in homine,\nNihil est innoxium.\n\nLava quod est sordidum,\nRiga quod est aridum,\nSana quod est saucium.\n\nFlecte quod est rigidum,\nFove quod est frigidum,\nRege quod est devium.\n\nDa tuis fidelibus\nIn te confidentibus\nSacrum septenarium.\n\nDa virtutis meritum,\nDa salutis exitum,\nDa perenne gaudium. Amen.",
+   "source": "The Raccolta (1910), No. 35 · Indulgence: i. 100 Days for each. IV. T.Q. ii. 300 Days, on Whit Sunday, and its octave for either. IV. iii. Plenary, once a month for one, or other. I, II, IV.",
+   "sort": 1220
+  },
+  {
+   "no": 438,
+   "slug": "prayer-to-the-father-of-mercies",
+   "title": "Prayer to the Father of Mercies",
+   "category": "Daily",
+   "body": "O FATHER of mercies, and source of every good! I humbly beg Thee, through the most sacred and most loving Heart of JESUS, thy well-beloved SON, our LORD and REDEEMER, in whom Thou art always well pleased, vouchsafe to grant me the grace of a lively faith, a firm hope, and an ardent charity for Thee and for my neighbour. Grant me, besides, the grace of a true sorrow for all my sins, together with a most firm purpose of never offending Thee in the future, that I may always live according to thy divine good pleasure, fulfil thy most holy will in all things with a generous and willing heart, and persevere in thy love unto the end of my life. Amen.\n\nO MOST blessed Virgin Mary, Mother of my LORD and REDEEMER, I entreat thee and beseech thee to effect by thy mercy that, in all the dangers and necessities of my soul, I may flee to thee, pray to thee, and call upon thee for help.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 438 · Indulgence: i. 40 Days, once a day. ii. Plenary, once a month. I, II, III, IV.",
+   "sort": 1230
+  },
+  {
+   "no": 449,
+   "slug": "for-the-sovereign-pontiff",
+   "title": "For the Sovereign Pontiff",
+   "category": "Daily",
+   "body": "℣. Let us pray for our Pontiff N.\n℟. The LORD preserve him and give him life, and make him blessed upon earth, and deliver him not up to the will of his enemies.\n\nPATER noster. Ave Maria.",
+   "latin": "℣. Oremus pro Pontifice nostro N.\n℟. DOMINUS conservet eum, et vivificet eum, et beatum faciat eum in terra, et non tradat eum in animam inimicorum ejus.\n\nPATER noster. Ave Maria.",
+   "source": "The Raccolta (1910), No. 449 · Indulgence: i. 300 Days, once a day. ii. Plenary, once a month. I, II, III, IV.",
+   "sort": 1240
+  },
+  {
+   "no": 19,
+   "slug": "offerings-for-the-beginning-of-the-day",
+   "title": "Offerings for the Beginning of the Day and for Mass",
+   "category": "Morning & evening",
+   "body": "At the Beginning of the Day.\n\nO Lord God Almighty, behold me prostrate before Thee in order to appease Thee, and to honour thy Divine Majesty, in the name of all creatures. But how can I do this who am myself but a poor sinner? Nay, but I both can and will, knowing that Thou dost make it thy boast to be called Father of mercies, and for love of us hast given thy only-begotten Son, who sacrificed Himself upon the Cross, and for our sake doth continually renew that sacrifice of Himself upon our altars. And therefore do I—sinner, but penitent; poor, but rich in Jesus Christ—present myself before Thee, and, with the love of angels and of all thy saints, and with the tender affection of the Immaculate Heart of Mary, I offer to Thee in the name of all creatures the Masses which are now being celebrated, together with all those which have been celebrated, and which shall be celebrated to the end of the world. Moreover, I intend to renew the offering of them every moment of this day and of all my life, that I may thereby render to thy infinite Majesty an honour and a glory worthy of Thee, thus to appease thy indignation, to satisfy thy justice for our many sins, to render Thee thanks in proportion to thy benefits, and to implore thy mercies for myself and for all sinners, for all the faithful, living and dead, for thy whole Church, and principally for its visible Head, the Sovereign Pontiff, and lastly for all poor schismatics, heretics, and infidels, that they also may be converted and save their souls.\n\nDuring, or (in the case of priests) before Mass.\n\nEternal Father, I offer to Thee the sacrifice which thy beloved Son Jesus made of Himself upon the Cross, and which He now renews upon this altar; I offer it to Thee in the name of all creatures, together with the Masses which have been celebrated, and which shall be celebrated in the whole world, in order to adore Thee, and to give Thee the honour which Thou dost deserve, to render to Thee due thanks for thy innumerable benefits, to appease thy anger, which our many sins have provoked, and to give Thee due satisfaction for them; to entreat Thee also for myself, for the Church, for the whole world, and for the blessed souls in purgatory. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 19 · Indulgence: i. Three Years, once a day for each prayer. ii. Plenary, to those who say both the prayers every day or a month. I, II, III, IV.",
+   "sort": 2050
+  },
+  {
+   "no": 84,
+   "slug": "act-of-adoration-during-the-elevation",
+   "title": "Act of Adoration during the Elevation",
+   "category": "Mass & Communion",
+   "body": "Kneeling in prayer, when the bell rings at a conventual or parochial Mass.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 84 · Indulgence: Two Years, if made in church. One Year, if made in any other place.",
+   "sort": 3060
+  },
+  {
+   "no": 88,
+   "slug": "prayers-before-the-blessed-sacrament",
+   "title": "Prayers before the Blessed Sacrament",
+   "category": "Mass & Communion",
+   "body": "V. We adore Thee, Christ, and we bless Thee.\nR. Because by thy holy Cross Thou has redeemed the world.\n\nI adore Thee, Eternal Father, and I give Thee thanks for the infinite love with which Thou didst deign to send thy only-begotten Son to redeem me, and to become the food of my soul. I offer Thee all the acts of adoration and thanksgiving that are offered to Thee by the angels and saints in heaven and by the just on earth. I praise, love, and thank Thee with all the praise, love, and thanksgiving that are offered to Thee by thine own Son in the Blessed Sacrament; and I beg Thee to grant that He may be known, loved, honoured, praised, and worthily received by all, in this most divine Sacrament. Pater, Ave, Gloria.\n\nI adore Thee, Eternal Son, and I thank Thee for the infinite love which caused Thee to become man for me, to be born in a stable, to live in poverty, to suffer hunger, thirst, heat, cold, fatigue, hardships, contempt, persecutions, the scourging, the crowning with thorns, and a cruel death upon the hard wood of the Cross. I thank Thee, with the Church militant and triumphant, for the infinite love with which Thou didst institute the most blessed Sacrament to be the food of my soul.\n\nI adore Thee in all the consecrated hosts throughout the whole world, and I return thanks for those who know Thee not, and who do not thank Thee. Would that I were able to give my life to make Thee known, loved, and honoured by all, in this sacrament of love, and to prevent the irreverences and sacrileges that are committed against Thee! I love Thee, divine Jesus, and I desire to receive Thee with all the purity, love, and affection of thy blessed Mother, and with the love and affection of thy own most pure Heart. Grant, O most amiable spouse of my soul, in coming to me in this most holy Sacrament, that I may receive all the graces and blessings which Thou dost come to bestow on us, and let me rather die than receive Thee unworthily. Pater, Ave, Gloria.\n\nI adore Thee, Eternal Spirit, and I give Thee thanks for the infinite love with which Thou didst work the ineffable mystery of the Incarnation, and for the infinite love with which Thou didst form the sacred body of our Lord Jesus Christ out of the most pure blood of the Blessed Virgin Mary, to become in this Sacrament the food of my soul. I beg Thee to enlighten my mind, and to purify my heart and the hearts of all men, that they all may know this great benefit of thy love, and receive worthily this most blessed Sacrament. Pater, Ave, Gloria.\n\nTantum ergo, with Versicle and Prayer (See p. 78).",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 88 · Indulgence: i. Plenary, on the first Thursday of every month. I, II, IV. ii. Seven Years and Seven Quarantines, on any other Thursday. I, II, IV. iii. 100 Days, on any other day.",
+   "sort": 3070
+  },
+  {
+   "no": 94,
+   "slug": "pange-lingua",
+   "title": "Pange Lingua",
+   "category": "Mass & Communion",
+   "body": "Sing, my tongue, the Saviour's glory,\nOf his Flesh the mystery sing;\nOf the Blood, all price exceeding,\nShed by our immortal King,\nDestin'd, for the world's redemption,\nFrom a noble womb to spring.\n\nOf a pure and spotless Virgin\nBorn for us on earth below,\nHe, as Man with man conversing,\nStay'd, the seeds of truth to sow;\nThen He clos'd in solemn order\nWondrously his life of woe.\n\nOn the night of that Last Supper,\nSeated with his chosen band,\nHe, the paschal victim eating,\nFirst fulfils the Law's command;\nThen as food to all his brethren\nGives himself with his own hand.\n\nWord made Flesh, the bread of nature\nBy his word to Flesh He turns;\nWine into his Blood He changes--\nWhat though sense no change discerns?\nOnly be the heart in earnest,\nFaith her lesson quickly learns.\n\nDown in adoration falling,\nLo! the sacred Host we hail;\nLo! o'er ancient forms departing,\nNewer rites of grace prevail;\nFaith for all defects supplying,\nWhere the feeble senses fail.\n\nTo the everlasting Father,\nAnd the Son who reigns on high,\nWith the Holy Ghost proceeding\nForth from each eternally,\nBe salvation, honour, blessing,\nMight, and endless majesty.\n\nV. Thou gavest them Bread from heaven,\nR. And therein was sweetness of every kind.\n\nLet us pray.\nO God, who under this wonderful Sacrament hast left unto us the memorial of thy Passion; grant us, we beseech Thee, so to venerate the sacred mysteries of thy Body and thy Blood that we may constantly experience within ourselves the fruit of thy redemption. Who livest and reignest, for ever and ever. Amen.",
+   "latin": "Pange lingua gloriosi\nCorporis Mysterium,\nSanguinisque pretiosi,\nQuem in mundi pretium,\nFructus ventris generosi,\nRex effudit gentium.\n\nNobis datus, nobis natus\nEx intacta Virgine,\nEt in mundo conversatus\nSparso verbi semine,\nSui moras incolatus\nMiro clausit ordine.\n\nIn supremæ nocte cœnæ\nRecumbens cum fratribus,\nObservata lege plene\nCibis in legalibus,\nCibum turbæ duodenæ\nSe dat suis manibus.\n\nVerbum caro, panem verum,\nVerbo carnem efficit:\nFitque Sanguis Christi merum,\nEt si sensus deficit:\nAd firmandum cor sincerum\nSola fides sufficit.\n\nTantum ergo Sacramentum\nVeneremur cernui:\nEt antiquum documentum\nNovo cedat ritui:\nPræstet fides supplementum\nSensuum defectui.\n\nGenitori, Genitoque\nLaus et jubilatio,\nSalus, honor, virtus quoque\nSit et benedictio:\nProcedenti ab utroque\nCompar sit laudatio. Amen.\n\nV. Panem de cœlo præstitisti eis.\nR. Omne delectamentum in se habentem.\n\nOremus.\nDeus, qui nobis sub Sacramento mirabili Passionis tuæ memoriam reliquisti: tribue, quæsumus, ita nos Corporis et Sanguinis tui sacra mysteria venerari, ut redemptionis tuæ fructum in nobis jugiter sentiamus. Qui vivis et regnas in sæcula sæculorum. Amen.",
+   "source": "The Raccolta (1910), No. 94 · Indulgence: i. 300 Days, once a day. ii. 100 Days, to those who say the Tantum ergo only, with the Versicle and Prayer. iii. Plenary, every year, on Holy Thursday, Corpus Christi, or one day in its octave, and any one other day in the year, for saying either Pange lingua, or Tantum ergo with V. and Prayer at least ten times a month. I, II, III, IV.",
+   "sort": 3080
+  },
+  {
+   "no": 96,
+   "slug": "prayer-of-st-alphonsus-visit",
+   "title": "Prayer of St. Alphonsus at a Visit to the Most Holy Sacrament",
+   "category": "Mass & Communion",
+   "body": "My Lord Jesus Christ, who for the love which Thou dost bear men dost remain night and day in this Sacrament, all full of tenderness and love, expecting, inviting, and receiving all those who come to visit Thee; I believe Thee present in the Sacrament of the Altar; I adore Thee in the depths of my own nothingness; and I thank Thee for all the graces which Thou hast granted me, especially for having vouchsafed to bestow thyself upon me in this Sacrament, for having given me thy own most holy Mother Mary for my advocate, and for having invited me to visit Thee in this church. I pay my homage this day to thy adorable Heart, and I do so for the following three intentions: first, in thanksgiving for this great gift itself; secondly, as a reparation for all the injuries which Thou hast received from all thy enemies in this Sacrament; thirdly, by this visit I intend to adore Thee in all those places where Thou, sacramentally present, art least reverenced and most abandoned. My Jesus, I love Thee with my whole heart. I repent of having so many times heretofore displeased thy infinite goodness. By thy grace I resolve never to offend Thee more for the time to come; and at this present moment, poor sinner as I am, I consecrate myself wholly to Thee. I renounce for myself, and I give to Thee, my will, my affections, my desires, everything that I call my own. From this day forth do Thou with me, and with everything that belongs to me, whatever pleases Thee. I ask Thee only, and I wish only, for thy holy love, for final perseverance, and the perfect fulfilment of thy will. I commend to Thee the souls in purgatory, especially those who were most devoted to the most holy Sacrament, and to Mary most holy. Moreover, I commend to Thee all poor sinners. For this intention, O my dear Saviour Jesus, I unite all my affections with the affections of thy most loving Heart; and thus united, I offer them to thy Eternal Father, and I entreat Him, in thy Name and for thy love, to accept and answer them.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 96 · Indulgence: i. 300 Days. T.Q. ii. Plenary, once a month. I, II, IV.",
+   "sort": 3090
+  },
+  {
+   "no": 102,
+   "slug": "prayer-during-the-elevation",
+   "title": "Prayer during the Elevation",
+   "category": "Mass & Communion",
+   "body": "Hail, saving victim, offered upon the scaffold of the Cross, for me, and for the whole human race.\n\nHail, Precious Blood streaming from the wounds of my crucified Lord Jesus Christ, washing away the sins of the whole world.\n\nRemember, O Lord, thy servant, the work of thy hands, whom Thou hast redeemed with thy Precious Blood.",
+   "latin": "Salve, salutaris victima, pro me et omni humano genere in patibulo crucis oblata.\n\nSalve, pretiose Sanguis, de vulneribus crucifixi Domini nostri Jesu Christi profluens, et peccata totius mundi abluens.\n\nRecordare, Domine, creaturæ tuæ, quam tuo pretioso sanguine redemisti.",
+   "source": "The Raccolta (1910), No. 102 · Indulgence: 60 Days, once a day.",
+   "sort": 3100
+  },
+  {
+   "no": 106,
+   "slug": "adoro-te-devote",
+   "title": "Adoro Te Devote",
+   "category": "Mass & Communion",
+   "body": "O Godhead hid, devoutly I adore Thee,\nWho truly art within the forms before me;\nTo Thee my heart I bow with bended knee,\nAs failing quite in contemplating Thee.\n\nSight, touch, and taste in Thee are each deceived;\nThe ear alone most safely is believed:\nI believe all the Son of God has spoken,\nThan truth's own word there is no truer token.\n\nGod only on the Cross lay hid from view;\nBut here lies hid at once the manhood too:\nAnd I, in both professing my belief,\nMake the same prayer as the repentant thief.\n\nThy wounds, as Thomas saw, I do not see:\nYet Thee confess my Lord and God to be:\nMake me believe Thee ever more and more;\nIn Thee my hope, in Thee my love to store.\n\nO Thou memorial of our Lord's own dying!\nO living bread, to mortals life supplying!\nMake Thou my soul henceforth on Thee to live;\nEver a taste of heavenly sweetness give.\n\nO loving Pelican! O Jesu Lord!\nUnclean I am, but cleanse me in thy blood!\nOf which a single drop, for sinners spilt,\nCan purge the entire world from all its guilt\n\nJesu! whom for the present veil'd I see,\nWhat I so thirst for, oh, vouchsafe to me:\nThat I may see thy countenance unfolding,\nAnd may be blest thy glory in beholding.",
+   "latin": "Adoro te devote, latens Deitas,\nQuæ sub his figuris vere latitas;\nTibi se cor meum totum subjicit,\nQuia te contemplans, totum deficit.\n\nVisus, tactus, gustus, in te fallitur,\nSed auditu solo tuto creditur;\nCredo quidquid dixit Dei Filius,\nNil hoc verbo veritatis verius.\n\nIn cruce latebat sola Deitas,\nAt hic latet simul et humanitas:\nAmbo tamen credens atque confitens,\nPeto quod petivit latro pœnitens.\n\nPlagas sicut Thomas non intueor,\nDeum tamen meum te confiteor:\nFac me tibi semper magis credere,\nIn te spem habere, te diligere.\n\nO memoriale mortis Domini,\nPanis vivus vitam præstans homini:\nPræsta meæ menti de te vivere,\nEt te illi semper dulce sapere.\n\nPie pelicane Jesu Domine,\nMe immundum munda tuo sanguine,\nCujus una stilla salvum facere\nTotum mundum quit ab omni scelere.\n\nJesum quem velatum nunc aspicio,\nOro, fiat illud, quod tam sitio,\nUt te revelata cernens facie,\nVisu sim beatus tuæ gloriæ. Amen.",
+   "source": "The Raccolta (1910), No. 106 · Indulgence: 100 Days, if said after Communion.",
+   "sort": 3110
+  },
+  {
+   "no": 213,
+   "slug": "ave-maris-stella",
+   "title": "Ave Maris Stella",
+   "category": "Our Lady",
+   "body": "Hail thou star of ocean!\nPortal of the sky!\nEver Virgin Mother\nOf the Lord most high!\n\nOh! by Gabriel's Ave,\nUtter'd long ago,\nEva's name reversing,\nStablish peace below.\n\nBreak the captive's fetters;\nLight on blindness pour;\nAll our ills expelling,\nEvery bliss implore.\n\nShow thyself a Mother\nOffer Him our sighs,\nWho for us incarnate\nDid not thee despise.\n\nVirgin of all virgins!\nTo thy shelter take us:\nGentlest of the gentle!\nChaste and gentle make us.\n\nStill as on we journey,\nHelp our weak endeavour;\nTill with thee and Jesus\nWe rejoice for ever.\n\nThrough the highest heaven,\nTo the Almighty Three,\nFather, Son, and Spirit,\nOne same glory be.\nAmen.",
+   "latin": "Ave maris stella,\nDei Mater alma\nAtque semper virgo,\nFelix cæli porta.\n\nSumens illud Ave\nGabrielis ore,\nFunda nos in pace,\nMutans Evæ nomen.\n\nSolve vincla reis,\nProfer lumen cæcis,\nMala nostra pelle,\nBona cuncta posce.\n\nMonstra te esse matrem,\nSumat per te preces,\nQui pro nobis natus,\nTulit esse tuus.\n\nVirgo singularis,\nInter omnes mitis,\nNos culpis solutos,\nMites fac et castos.\n\nVitam præsta puram,\nIter para tutum,\nUt videntes Jesum,\nSemper collætemur.\n\nSit laus Deo Patri,\nSummo Christo decus,\nSpiritui Sancto,\nTribus honor unus.\nAmen.",
+   "source": "The Raccolta (1910), No. 213 · Indulgence: 300 Days, once a day.",
+   "sort": 4070
+  },
+  {
+   "no": 215,
+   "slug": "the-magnificat",
+   "title": "The Magnificat",
+   "category": "Our Lady",
+   "body": "My soul doth magnify: the Lord. And my spirit hath rejoiced: in God my Saviour.\n\nFor He hath regarded the humility of his handmaid: for behold from henceforth all generations shall call me blessed.\n\nFor He that is mighty hath done great things unto me: and holy is his name.\n\nAnd his mercy is from generation to generation: unto them that fear Him.\n\nHe hath shewed strength with his arm: He hath scattered the proud in the imagination of their heart.\n\nHe hath put down the mighty from their seat: and hath exalted the humble.\n\nHe hath filled the hungry with good things: and the rich He hath sent empty away.\n\nHe hath upholden his servant Israel: being mindful of his mercy.\n\nAs He spake unto our fathers: to Abraham and his seed for ever.\n\nGlory be to the Father, etc.",
+   "latin": "Magnificat: * anima mea Dominum. Et exultavit spiritus meus: * in Deo salutari meo.\n\nQuia respexit humilitatem ancillæ suæ: * ecce enim ex hoc beatam me dicent omnes generationes.\n\nQuia fecit mihi magna qui potens est: * et sanctum nomen ejus.\n\nEt misericordia ejus a progenie in progenies: * timentibus eum.\n\nFecit potentiam in brachio suo: * dispersit superbos mente cordis sui.\n\nDeposuit potentes de sede: * et exaltavit humiles.\n\nEsurientes implevit bonis: * et divites dimisit inanes.\n\nSuscepit Israel puerum suum: * recordatus misericordiæ suæ.\n\nSicut locutus est ad patres nostros: * Abraham, et semini ejus in sæcula.\n\nGloria Patri, etc.",
+   "source": "The Raccolta (1910), No. 215 · Indulgence: i. 100 Days, once a day. ii. Seven Years and Seven Quarantines, once on Saturdays.",
+   "sort": 4080
+  },
+  {
+   "no": 230,
+   "slug": "rosary-of-the-seven-dolours",
+   "title": "Rosary of the Seven Dolours",
+   "category": "Our Lady",
+   "body": "This Chaplet consists of seven divisions, in memory of our Lady's seven sorrows, on which we are to meditate, if we can, saying the Pater noster once and the Ave Maria seven times at each division, then ending with Ave thrice in honour of our Lady's tears.\n\nWay of Saying the Chaplet.\nAct of Contrition.\nO My Lord, Thou who alone art most worthy of my love, behold me standing before thy Divine Presence utterly overwhelmed by the thought of the many grievous injuries I have done Thee. I ask thy pardon for them with my whole heart, repenting of them purely for love of Thee, and at the thought of thy great goodness hating and loathing them above every evil of this life. As I would rather have died a thousand times than have offended Thee, so now I am most firmly resolved to die a thousand deaths rather than offend Thee again. My crucified Jesus, I firmly purpose to cleanse my soul as soon as possible by thy most Precious Blood in the Sacrament of Penance. And thou, most tender Virgin, Mother of mercy and Refuge of sinners, do thou obtain for me by virtue of thy bitter pains, the pardon of sin which I desire; whilst, praying according to the mind of so many holy Pontiffs in order to obtain the Indulgences granted to this thy holy Rosary, I hope thereby to obtain remission of all pains due to my sins.\n\nWith this confidence in my heart, I meditate on the First Sorrow, when Mary, Virgin Mother of my God, presented Jesus her only Son in the Temple, laid Him in the arms of holy and aged Simeon, and heard his prophetic word, \"The sword of grief shall pierce thy soul,\" foretelling thereby the Passion and Death of her Son Jesus. Pater once, Ave seven times.\n\nThe Second Sorrow of the Blessed Virgin was when she was obliged to fly into Egypt by reason of the persecution of cruel Herod, who impiously sought to slay her well beloved Son. Pater once, Ave seven times.\n\nThe Third Sorrow of the Blessed Virgin was when, after having gone up to Jerusalem at the Paschal Feast with Joseph her spouse and Jesus her beloved Son, she lost Him on the way back to her poor house, and for three days bewailed the loss of her only Love. Pater once, Ave seven times.\n\nThe Fourth Sorrow of the Blessed Virgin was when she met her dear Son Jesus carrying to Mount Calvary on his tender shoulders the heavy Cross whereon He was to be crucified for our salvation. Pater once, Ave seven times.\n\nThe Fifth Sorrow of the Blessed Virgin was when she saw her Son Jesus raised upon the hard tree of the Cross, and blood flowing from every part of his sacred Body, and then beheld Him die after three hours' agony. Pater once, Ave seven times.\n\nThe Sixth Sorrow of the Blessed Virgin was when she saw the lance pierce the sacred Side of Jesus, her beloved Son, the nails withdrawn, and his holy Body laid in her purest bosom. Pater once, Ave seven times.\n\nThe Seventh and last Sorrow of the Blessed Virgin, Queen and Advocate of us, her servants, miserable sinners, was when she saw the holy Body of her Son buried in the grave. Pater once, Ave seven times.\n\nThen say Ave thrice in veneration of the tears which Mary shed in her sorrows, to obtain thereby true sorrow for sins and the holy Indulgences attached to this pious exercise.\n\nV. Pray for us, Virgin most sorrowful.\nR. That we may be made worthy of the promises of Christ.\nLet us pray.\nGrant, we beseech Thee, O Lord Jesus Christ, that the most blessed Virgin Mary, thy Mother, may intercede for us before the throne of thy mercy, now and at the hour of our death, whose most holy soul was transfixed with the sword of sorrow in the hour of thine own Passion. Through Thee, Jesus Christ, Saviour of the world, who livest and reignest, etc. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 230 · Indulgence: Seven Years and Seven Quarantines for the entire Chaplet (further grants as printed in the entry)",
+   "sort": 4090
+  },
+  {
+   "no": 410,
+   "slug": "league-of-perpetual-suffrage",
+   "title": "League of Perpetual Suffrage",
+   "category": "For the dead",
+   "body": "ETERNAL rest give unto them, O LORD, and let perpetual light shine upon them. May they rest in peace. Amen.",
+   "latin": "REQUIEM æternam dona eis DOMINE, et lux perpetua luceat eis. Requiescant in pace. Amen.",
+   "source": "The Raccolta (1910), No. 410 · Indulgence: 200 Days, once a day, to all who say thrice daily the versicle below.",
+   "sort": 7060
+  },
+  {
+   "no": 413,
+   "slug": "prayers-for-the-souls-in-purgatory",
+   "title": "Prayers for the Souls in Purgatory",
+   "category": "For the dead",
+   "body": "My Jesus, by that copious sweat of blood with which Thou didst bedew the ground in the garden, have mercy on the souls of my nearest relations who are suffering in purgatory. Pater, Ave, Requiem æternam.\n\nMy Jesus, by that cruel scourging which Thou didst suffer, bound to the column, have pity on the souls of my other relations and friends who are suffering in purgatory. Pater, Ave, Requiem æternam.\n\nMy Jesus, by that crown of sharpest thorns which pierced thy sacred temples, have mercy on that soul which is most neglected and least prayed for, and on that soul which is furthest from being released from the pains of purgatory. Pater, Ave, Requiem æternam.\n\nMy Jesus, by those sorrowful steps which Thou didst take with the Cross on thy shoulders, have mercy on that soul which is nearest to its departure from purgatory; and by the pains which Thou didst suffer together with thy most holy Mother Mary, when Thou didst meet her on the road to Calvary, deliver from the pains of purgatory those souls who were devout to this beloved Mother. Pater, Ave, Requiem æternam.\n\nMy Jesus, by thy most holy body stretched on the Cross, by thy most holy hands and feet pierced with hard nails, by thy most cruel death, and by thy most holy side laid open with a lance, have pity and mercy on those poor souls; free them from the awful pains they suffer, call and admit them to thy most sweet embrace in Paradise. Pater, Ave, Requiem æternam.\n\nO holy souls, tormented in most cruel pains, as one truly devoted to you, I promise never to forget you, and continually to pray to the Most High for your release. I beseech you to respond to this offering which I make to you, and obtain for me from God, with whom you are so powerful on behalf of the living, that I may be freed from all dangers of soul and body; I beg both for myself and for my relations and benefactors, friends and enemies, pardon for our sins, and the grace of perseverance in good, whereby we may save our souls. Set us free from all misfortunes, miseries, sicknesses, trials and labours. Obtain for us peace of heart; assist us in all our actions; succour us promptly in all our spiritual and temporal needs; console and defend us in our dangers. Pray for the supreme Pontiff, for the exaltation of holy Church, for peace between nations, for Christian princes, and for tranquillity among peoples; and obtain that we may one day all rejoice together in Paradise. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 413 · Indulgence: 100 Days, once a day.",
+   "sort": 7070
+  },
+  {
+   "no": 44,
+   "slug": "rosary-of-our-lord",
+   "title": "Rosary of Our Lord",
+   "category": "The Raccolta",
+   "body": "This Rosary is composed of the Pater, said thirty-three times in remembrance of the thirty-three years He lived on earth, and of the Ave five times in honour of his five most holy wounds; the first three of which are said, one at the beginning of each of the three divisions comprising the Pater said ten times; of the two remaining one Ave is said before saying Pater noster thrice in conclusion, and the other after saying them. This Rosary finishes with the Credo in honour of the holy Apostles.\n\nBegin with an act of contrition.\n\nFIRST DECADE.\nTHE Archangel Gabriel makes known to Mary the Incarnation of the Divine Word in her pure womb. Ave Maria.\n1. The SON of GOD made man is born of Mary the Virgin in a stable. PATER noster.\n2. The Angels rejoice and sing Gloria in excelsis Deo. PATER noster.\n3. The shepherds hear the Angels' tidings, and come and adore Him. PATER noster.\n4. He is circumcised the eighth day, and called by the most holy Name of JESUS. PATER noster.\n5. Is adored by the Magi with offerings of gold, frankincense, and myrrh. PATER noster.\n6. Is presented in the Temple, and foretold to be the SAVIOUR of the world. PATER noster.\n7. Flees from the persecution of Herod, and is carried into Egypt. PATER noster.\n8. Herod finds him not, and murders the Innocents. PATER noster.\n9. He is carried back by Joseph and his Mother into Nazareth, his home. PATER noster.\n10. Disputes in the Temple with the doctors, being twelve years old. PATER noster.\n(Add Eternal rest, etc., if said for the departed. See p. 361.)\n\nSECOND DECADE.\nJESUS is most obedient to the Blessed Virgin his Mother, and to St Joseph. Ave Maria.\n1. When thirty years old, He is baptized by John in the Jordan. PATER noster.\n2. Fasts forty days in the desert, and overcomes the tempter. PATER noster.\n3. Practises and preaches his own holy law, whereby is life eternal. PATER noster.\n4. Calls his disciples, who forthwith leave all and follow Him. PATER noster.\n5. Works his first miracle of changing water into wine. PATER noster.\n6. Heals the sick, makes the lame to walk, gives hearing to the deaf, sight to the blind, life to the dead. PATER noster.\n7. Converts sinful men and women, and pardons their sins. PATER noster.\n8. When the Jews persecute Him even unto death, He chastises them not, but sweetly chides them. PATER noster.\n9. Is transfigured on Mount Thabor, in the presence of Peter, James and John. PATER noster.\n10. Enters triumphant into Jerusalem sitting on an ass's colt, and drives the profaners from the Temple. PATER noster.\n(Eternal rest, etc., as above.)\n\nTHIRD DECADE.\nJESUS takes leave of his most holy Mother before He goes to die for our salvation. Ave Maria.\n1. Celebrates the last Paschal Supper, washes the Apostles' feet. PATER noster.\n2. Institutes the most holy Sacrament of the Eucharist. PATER noster.\n3. Prays in the garden, sweats blood, and is comforted by an angel. PATER noster.\n4. Is betrayed by Judas with a kiss, is taken and bound by the officers of justice as a great malefactor. PATER noster.\n5. Is falsely accused, is buffeted and spit upon, and shamefully used before four tribunals. PATER noster.\n6. Looks tenderly on Peter after he had thrice denied Him, and converts him; whilst Judas despairs, hangs himself, and is lost. PATER noster.\n7. Is cruelly scourged at the pillar, and receives innumerable blows. PATER noster.\n8. Is crowned with thorns, shown to the people, who cry, Crucify Him! Crucify Him! PATER noster.\n9. Is condemned to die, carries the heavy cross with grievous pain upon his shoulders to Mount Calvary. PATER noster.\n10. Is crucified between two thieves, dies after three hours' most painful agony, is wounded in the side with a lance, and is buried. PATER noster.\n(Eternal rest, etc., as above.)\n\nJESUS rises the third day, and visits first of all Mary his most holy Mother. Ave Maria.\n1. Appears to the three Marys, and bids them tell the disciples they have seen Him risen from the dead. PATER noster.\n2. Appears to the disciples, shows them his most holy Wounds, makes Thomas touch them. PATER noster.\n3. The fortieth day after his resurrection, blesses most holy Mary his Mother and all his disciples; then ascends into heaven. PATER noster.\n\nLet us pray to the most holy Virgin to obtain for us also the blessing of her divine Son JESUS CHRIST, now and at the hour of our death. Ave Maria.\n(Eternal rest, etc., as above.)\nThen say the Credo in honour of the holy Apostles.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 44 · Indulgence: 200 Years, every time (further grants as printed in the entry)",
+   "sort": 9010
+  },
+  {
+   "no": 138,
+   "slug": "chaplet-of-the-precious-blood",
+   "title": "Chaplet of the Precious Blood",
+   "category": "The Raccolta",
+   "body": "This Chaplet consists of seven Mysteries, in which we meditate upon the seven times in which Jesus Christ shed his Blood for us; at each Mystery except the last we say Pater noster five times, and Gloria Patri once; and at the last, Pater noster thrice, and Gloria Patri once; thus making up the number of 33, by saying the Pater noster thirty-three times in remembrance of the thirty-three years of our Lord's life. End with the prayer, \"Most Precious Blood,\" etc.\n\nN.B.—These Indulgences can be gained by merely saying thirty-three Pater nosters and, if the person is capable of meditating, reflecting on the Mysteries.\n\nTHE CHAPLET\n\n℣. O God, come to my assistance.\n℟. O Lord, make haste to help me.\n℣. Glory be to the Father, etc.\n℟. As it was in the beginning, etc.\n\nFirst Mystery.\n\nThe first time our loving Saviour shed his Precious Blood for us was on the eighth day after his birth, when he was circumcised in order to fulfil the law of Moses. While, then, we reflect that Jesus did this to satisfy the justice of God for our lax ways, let us rouse ourselves to sorrow for them, and promise, with the help of his all-powerful grace, to be henceforth truly chaste in body and in soul. Pater noster five times, and Gloria Patri once.\n℣. We beseech Thee, therefore, help thy servants, whom Thou hast redeemed with thy Precious Blood.\n\nSecond Mystery.\n\nNext, in the Garden of Olives, Jesus shed his Blood for us in such quantity that it bathed the earth around. He did this at the sight of the ingratitude with which men would meet his love. Let us, then, repent sincerely that we have hitherto corresponded so ill with the countless blessings of God, and resolve to make good use of his graces and inspirations. Pater noster five times, and Gloria Patri once.\n℣. We beseech, etc.\n\nThird Mystery.\n\nNext, in his cruel scourging, Jesus shed his Blood when his flesh was so torn that streams of Blood flowed from every part of his body, all of which he offered all the time to his Eternal Father in payment of our impatience and our softness. How comes it, then, that we do not curb our anger and love of self? Henceforth we will try our best to bear our troubles well, and, despising self, take peacefully the injuries which men may do us. Pater noster five times, and Gloria Patri once.\n℣. We beseech, etc.\n\nFourth Mystery.\n\nAgain, from the sacred Head of Jesus, Blood poured down when it was crowned with thorns, in punishment of our pride and evil thoughts. Shall we, then, continue to nurture haughtiness, foster foul imaginations, and feed the wayward will within us? Henceforth let there be ever before our eyes our utter nothingness, our misery, and our weakness; and with generous hearts let us resist all the temptations of the devil. Pater noster five times, and Gloria Patri once.\n℣. We beseech, etc.\n\nFifth Mystery.\n\nWhat streams of Precious Blood did not our loving Lord pour forth from his veins when laden with the heavy Cross on that most grievous journey to Calvary! The very streets and ways of Jerusalem, through which He passed, were watered with it! This He did in satisfaction for the scandals and bad example by which his own creatures had led others astray. Who can tell how many of us are of this unhappy number? Who knows how many he himself alone has, by his own bad example, brought down to hell? And what have we done to remedy this evil? Henceforth let us at least do all we can to save souls by word and by example, making ourselves a pattern to all of goodness and a holy life. Pater noster five times, and Gloria Patri once.\n℣. We beseech, etc.\n\nSixth Mystery.\n\nMore, and still more Precious Blood did the Redeemer of mankind shed in his barbarous Crucifixion; when, his veins being rent and arteries burst, there rushed forth in a torrent, from his hands and his feet, that saving balm of life eternal, to pay for all the crimes and enormities of a lost world. Who, after this, would continue in sin, and so renew the cruel crucifixion of the Son of God? Let us weep bitterly for our bad deeds done, and detest them before the feet of the sacred minister of God; let us amend our evil ways, and henceforth begin a truly Christian life, with the remembrance ever in our hearts of all the Blood which our salvation cost the Saviour of men. Pater noster five times, and Gloria Patri once.\n℣. We beseech, etc.\n\nSeventh Mystery.\n\nLast of all, after his death, when his sacred Side was opened by the lance, and his loving Heart was wounded, Jesus shed Blood, and with it there came forth water, to show us how his Blood was all poured out to the last drop for our salvation. Oh, the great goodness of our redeeming Lord! Who will not love Thee, Saviour of my soul? What heart will not consume itself away for love of Thee, who hast done all this for our redemption? The tongue wants words to praise Thee; so let us invite all creatures upon earth, all angels and all saints in Paradise, and most of all our dear Mother Mary, to bless, praise, and celebrate thy most Precious Blood. Glory to the Blood of Jesus! Now and ever throughout all ages. Amen. Pater noster thrice, and Gloria Patri once.\n℣. We beseech, etc.\n\nPrayer.\n\nMost Precious Blood of life eternal! price and ransom of the world! drink and bath of the soul! ever pleading the cause of man before the throne of Mercy; I adore Thee most profoundly; I would, if I were able, make Thee some compensation for the outrages and wrongs Thou dost ever suffer from men, and especially from those who dare in their rashness to blaspheme Thee. Who will not bless this Blood of value infinite? who does not feel himself on fire with the love of Jesus, who shed it all for us? What should I be but for this Blood, which hath redeemed me? And what drew Thee, Thou Precious Blood, from the veins of my Lord, even to the last drop? It was love. O boundless love, which gave to us this saving balsam! O balsam beyond all price, streaming forth from the fount of immeasurable love! Give to all hearts, all tongues, power to praise, celebrate, and thank Thee, now and ever, and throughout all eternity. Amen.\n\n℣. Thou hast redeemed us, O Lord, with thy Blood.\n℟. And hast made us a kingdom to our God.\n\nLet us pray.\n\nAlmighty and everlasting God, who hast appointed thine only-begotten Son the Saviour of the world, and hast willed to be appeased by his Blood; grant us, we beseech Thee, so to venerate this Blood, the price of our salvation, and so to be defended on earth by its power from the evils of this present life, that in heaven we may be made glad by its everlasting fruit. Who liveth and reigneth, etc. Amen.",
+   "latin": "℣. Deus, in adjutorium meum intende.\n℟. Domine, ad adjuvandum me festina.\n℣. Gloria Patri, etc.\n℟. Sicut erat, etc.\n\n℣. Te ergo quæsumus tuis famulis subveni quos pretioso Sanguine redemisti.\n\n℣. Te ergo quæsumus, etc. (repeated after the Second, Third, Fourth, Fifth, Sixth and Seventh Mysteries)\n\n℣. Redemisti nos, Domine, in Sanguine tuo:\n℟. Et fecisti nos Deo nostro regnum.\n\nOremus.\n\nOmnipotens sempiterne Deus, qui unigenitum Filium tuum mundi Redemptorem constituisti, ac ejus Sanguine placari voluisti; concede nobis, quæsumus, salutis nostræ pretium ita venerari, atque a præsentis vitæ malis ejus virtute defendi in terris, ut fructu perpetuo lætemur in cælis. Qui tecum vivit et regnat, etc. Amen.",
+   "source": "The Raccolta (1910), No. 138 · Indulgence: i. Seven Years and Seven Quarantines, once a day. ii. Plenary, once a month. I, II, IV.",
+   "sort": 9020
+  },
+  {
+   "no": 146,
+   "slug": "offering-of-the-precious-blood",
+   "title": "Offering of the Precious Blood",
+   "category": "The Raccolta",
+   "body": "Eternal Father! I offer Thee the Precious Blood of Jesus Christ in satisfaction for my sins, and for the wants of Holy Church.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 146 · Indulgence: 100 Days. T.Q.",
+   "sort": 9030
+  },
+  {
+   "no": 148,
+   "slug": "act-of-oblation-to-the-sacred-heart",
+   "title": "Act of Oblation to the Sacred Heart",
+   "category": "The Raccolta",
+   "body": "My loving Jesus, out of the grateful love I bear Thee, and to make reparation for my unfaithfulness to grace, I (N.N.) give Thee my heart, and I consecrate myself wholly to Thee; and with thy help I purpose never to sin again.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 148 · Indulgence: i. 100 Days, once a day. ii. Plenary, once a month. I, II, IV.",
+   "sort": 9040
+  },
+  {
+   "no": 303,
+   "slug": "memorare-to-st-joseph",
+   "title": "Memorare to St. Joseph",
+   "category": "The Raccolta",
+   "body": "Remember, most pure spouse of Mary ever-Virgin, my loving protector, St Joseph, that never has it been heard that anyone ever invoked thy protection, or besought aid of thee, without being consoled. In this confidence I come before thee, I fervently recommend myself to thee. Despise not my prayer, foster-father of our Redeemer, but do thou in thy pity receive it. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 303 · Indulgence: 300 Days, once a day.",
+   "sort": 9050
+  },
+  {
+   "no": 306,
+   "slug": "prayer-to-st-joseph-for-the-church",
+   "title": "Prayer to St. Joseph for the Church",
+   "category": "The Raccolta",
+   "body": "O Glorious St Joseph, chosen by God to be the reputed father of Jesus, the most pure spouse of Mary ever Virgin, and the head of the Holy Family, and then elected by the Vicar of Christ to be the heavenly Patron and Protector of the Church founded by Jesus Christ; with the greatest confidence I implore at this time thy powerful aid for the entire Church militant. Protect in a special manner with thy truly paternal love the Supreme Pontiff and all the bishops and priests united to the See of St Peter. Defend all those who labour for souls in the midst of the afflictions and tribulations of this life, and obtain the willing submission of every nation throughout the world to the Church, the necessary means of salvation for all.\n\nO dearest St Joseph, be pleased to accept the consecration which I make to thee of myself. I dedicate myself entirely to thee that thou mayest ever be my father, my protector, and my guide in the way of salvation. Obtain for me great purity of heart and a fervent love of the interior life. Grant that after thy example all my actions may be directed to the greater glory of God, in union with the divine Heart of Jesus and the immaculate heart of Mary, and with thee. Finally, pray for me that I may be able to share in the peace and joy of thy most holy death. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 306 · Indulgence: 300 Days, once a day.",
+   "sort": 9060
+  },
+  {
+   "no": 324,
+   "slug": "prayer-to-st-paul",
+   "title": "Prayer to St. Paul",
+   "category": "The Raccolta",
+   "body": "O Glorious St Paul, who from a persecutor of the Christian name didst become an Apostle of burning zeal, and who, in order that Jesus Christ might be known to the furthermost bounds of the earth, didst joyfully suffer imprisonment, scourging, stoning, shipwreck, and every kind of persecution, and who didst finally shed thy blood to the last drop; obtain for us the grace of accepting, as divine favours, the infirmities, torments and calamities of this life, so that we may not be drawn from the service of God by the vicissitudes of this our exile, but on the contrary may prove ourselves more and more faithful and fervent. Amen.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 324 · Indulgence: 300 Days, once a day.",
+   "sort": 9070
+  },
+  {
+   "no": 444,
+   "slug": "three-offerings-of-the-precious-blood",
+   "title": "Three Offerings of the Precious Blood",
+   "category": "The Raccolta",
+   "body": "ETERNAL FATHER, in union with the most holy and Immaculate Virgin, all the blessed in heaven and all the elect upon earth, I offer to Thee the most Precious Blood of JESUS CHRIST, in thanksgiving for the gifts and privileges with which Thou hast enriched Mary, thy most obedient daughter, particularly in her Immaculate Conception. I offer to Thee also this Precious Blood for the conversion of poor sinners, for the propagation and exaltation of thy Holy Church, for the safety and prosperity of our chief pastor, the Bishop of Rome, and according to his intentions. Gloria PATRI.\n\nETERNAL and Incarnate Word! in union with the most holy and Immaculate Virgin, all the blessed in heaven, and all the elect upon earth, I offer to thee thine own most Precious Blood, in thanksgiving for the gifts and privileges with which Thou hast enriched Mary, thy most loving Mother, particularly in her Immaculate Conception. I offer to thee also this Precious Blood for the conversion of poor sinners, for the propagation and exaltation of thy Holy Church, for the safety and prosperity of our chief pastor, the Bishop of Rome, and according to his intentions. Gloria PATRI.\n\nHOLY and Eternal Spirit! in union with the most holy and Immaculate Virgin, all the blessed in Heaven, and all the elect upon earth, I offer to Thee the most Precious Blood of JESUS, in thanksgiving for the gifts and privileges with which Thou hast enriched Mary, thy most faithful Spouse, particularly in her Immaculate Conception. I offer to Thee also this Precious Blood for the conversion of poor sinners, for the propagation and exaltation of thy Holy Church, for the safety and prosperity of our chief pastor, the Bishop of Rome, and according to his intentions. Gloria PATRI.\n\nPrayer to the Most Holy Virgin.\nMary, Mother of God, most holy and Immaculate Virgin, by the love thou dost ever bear to God, by the gratitude thou hast towards Him for the manifold graces and favours with which thou wast enriched by Him, particularly for the privilege of Immaculate Conception granted to thee alone, and by the infinite merits of Jesus Christ, thy Divine Son our Lord, we pray thee most earnestly to obtain for us a most perfect and constant devotion towards thyself, and a full trust that through thy most mighty intercession we shall receive all the graces which we ask. Certain henceforth of obtaining them from thy great goodness, with hearts overflowing with joy and thankfulness, we venerate thee, and say the salutation which the holy archangel Gabriel made to thee. Ave Maria.",
+   "latin": null,
+   "source": "The Raccolta (1910), No. 444 · Indulgence: i. 300 Days. T.Q. ii. Plenary, once a month. I, II, III, IV.",
+   "sort": 9080
+  }
+ ],
+ "folds": [
+  {
+   "no": 2,
+   "targets": [
+    "glory-be"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 2 — Indulgence: i. 100 Days, once a day. ii. Seven Years and Seven Quarantines, on Sundays. iii. Plenary, twice a month, on any two Sundays. I, II, IV.",
+   "latinFill": null
+  },
+  {
+   "no": 14,
+   "targets": [
+    "act-of-faith",
+    "act-of-hope",
+    "act-of-charity"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 14 — Indulgence: i. Seven Years and Seven Quarantines. T.Q. ii. Plenary, once a month. I, II, IV. iii. Plenary, in articulo mortis (at the point of death), if frequently used during life.",
+   "latinFill": null
+  },
+  {
+   "no": 21,
+   "targets": [
+    "morning-offering"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 21 — Indulgence: i. 100 Days, once a day. ii. Plenary, once a month, during the month. I, II, III, IV.",
+   "latinFill": null
+  },
+  {
+   "no": 22,
+   "targets": [
+    "act-of-faith"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 22 — Indulgence: 100 Days, once a day.",
+   "latinFill": null
+  },
+  {
+   "no": 60,
+   "targets": [
+    "parents-prayer-for-their-children"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 60 — Indulgence: 200 Days, once a day.",
+   "latinFill": "FAC nos, DOMINE JESU, Sanctae Familiae tuae exempla jugiter imitari, ut in hora mortis nostrae, occurrente gloriosa Virgine Matre tua cum beato Joseph, per te in aeterna tabernacula recipi mereamur."
+  },
+  {
+   "no": 95,
+   "targets": [
+    "anima-christi"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 95 — Indulgence: i. 300 Days. T.Q. ii. Seven Years, if said after Communion. iii. Plenary, once a month. I, II, III, IV.",
+   "latinFill": "Anima Christi, sanctifica me.\nCorpus Christi, salva me.\nSanguis Christi, inebria me.\nAqua lateris Christi, lava me.\nPassio Christi, conforta me.\nO bone Jesu, exaudi me.\nIntra tua vulnera absconde me.\nNe permittas me separari a te.\nAb hoste maligno defende me.\nIn hora mortis meæ voca me,\nEt jube me venire ad te,\nUt cum sanctis tuis laudem te,\nIn sæcula sæculorum. Amen."
+  },
+  {
+   "no": 104,
+   "targets": [
+    "act-of-spiritual-communion"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 104 — Indulgence: 60 Days, once a day.",
+   "latinFill": null
+  },
+  {
+   "no": 107,
+   "targets": [
+    "prayer-after-communion"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 107 — Indulgence: 300 Days, if said after Communion.",
+   "latinFill": null
+  },
+  {
+   "no": 115,
+   "targets": [
+    "prayer-before-mass"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 115 — Indulgence: i. 300 Days. T.Q. ii. Plenary once a month, if said on every Sunday and holiday of obligation. I, II.",
+   "latinFill": null
+  },
+  {
+   "no": 128,
+   "targets": [
+    "apostles-creed"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 128 — Indulgence: i. 60 Days, T.Q., provided that the faithful, while saying these prayers, known as the Five Credos of St Pius, intend to apply them according to the intention of the Pope. ii. Plenary, once a month. I, II, III, IV.",
+   "latinFill": null
+  },
+  {
+   "no": 182,
+   "targets": [
+    "angelus",
+    "regina-caeli"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 182 — Indulgence: i. Plenary, once a month, to all who, every day, at the sound of the bell, morning, noon, or evening, shall say on their knees the Angelus, I, II, IV. ii. 100 Days, every time that they say the Angelus.",
+   "latinFill": null
+  },
+  {
+   "no": 189,
+   "targets": [
+    "litany-of-loreto"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 189 — Indulgence: i. 300 Days. T.Q. ii. Plenary, to all who say it daily, on the Immaculate Conception, the Nativity, the Annunciation, the Purification, and the Assumption. I, II, III, IV.",
+   "latinFill": "Kyrie eleison.\nChriste eleison.\nKyrie eleison.\nChriste audi nos.\nChriste exaudi nos.\nPater de cœlis Deus, miserere nobis.\nFili Redemptor mundi Deus, miserere nobis.\nSpiritus Sancte Deus, miserere nobis.\nSancta Trinitas unus Deus, miserere nobis.\nSancta Maria, ora pro nobis.\nSancta Dei Genitrix, ora pro nobis.\nSancta Virgo virginum, ora pro nobis.\nMater Christi, ora pro nobis.\nMater divinæ gratiæ, ora pro nobis.\nMater purissima, ora pro nobis.\nMater castissima, ora pro nobis.\nMater inviolata, ora pro nobis.\nMater intemerata, ora pro nobis.\nMater amabilis, ora pro nobis.\nMater admirabilis, ora pro nobis.\nMater boni consilii, ora pro nobis.\nMater Creatoris, ora pro nobis.\nMater Salvatoris, ora pro nobis.\nVirgo prudentissima, ora pro nobis.\nVirgo veneranda, ora pro nobis.\nVirgo prædicanda, ora pro nobis.\nVirgo potens, ora pro nobis.\nVirgo clemens, ora pro nobis.\nVirgo fidelis, ora pro nobis.\nSpeculum justitiæ, ora pro nobis.\nSedes sapientiæ, ora pro nobis.\nCausa nostræ lætitiæ, ora pro nobis.\nVas spirituale, ora pro nobis.\nVas honorabile, ora pro nobis.\nVas insigne devotionis, ora pro nobis.\nRosa mystica, ora pro nobis.\nTurris Davidica, ora pro nobis.\nTurris eburnea, ora pro nobis.\nDomus aurea, ora pro nobis.\nFœderis arca, ora pro nobis.\nJanua cæli, ora pro nobis.\nStella matutina, ora pro nobis.\nSalus infirmorum, ora pro nobis.\nRefugium peccatorum, ora pro nobis.\nConsolatrix afflictorum, ora pro nobis.\nAuxilium Christianorum, ora pro nobis.\nRegina Angelorum, ora pro nobis.\nRegina Patriarcharum, ora pro nobis.\nRegina Prophetarum, ora pro nobis.\nRegina Apostolorum, ora pro nobis.\nRegina Martyrum, ora pro nobis.\nRegina Confessorum, ora pro nobis.\nRegina Virginum, ora pro nobis.\nRegina Sanctorum omnium, ora pro nobis.\nRegina sine labe originali concepta, ora pro nobis.\nRegina Sacratissimi Rosarii, ora pro nobis.\nAgnus Dei, qui tollis peccata mundi, parce nobis, Domine.\nAgnus Dei, qui tollis peccata mundi, exaudi nos, Domine.\nAgnus Dei, qui tollis peccata mundi, miserere nobis."
+  },
+  {
+   "no": 196,
+   "targets": [
+    "memorare"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 196 — Indulgence: i. 300 Days. T.Q. ii. Plenary, once a month. I, II, III, IV.",
+   "latinFill": null
+  },
+  {
+   "no": 292,
+   "targets": [
+    "st-michael"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 292 — Indulgence: 300 Days, once a day.",
+   "latinFill": null
+  },
+  {
+   "no": 296,
+   "targets": [
+    "guardian-angel"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 296 — Indulgence: i. 100 Days. T.Q. ii. Plenary on October 2, Feast of the Guardian Angels, if said daily, morning and evening, for a year. I, II, III, IV. iii. Plenary, once a month. I, II, III, IV. iv. Plenary in articulo mortis (at the point of death) if frequently used.",
+   "latinFill": "Angele Dei, qui custos es mei, me tibi commissum pietate superna illumina, custodi, rege, et guberna. Amen."
+  },
+  {
+   "no": 404,
+   "targets": [
+    "de-profundis"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 404 — Indulgence: i. 100 Days, to all the faithful, every time that, at the sound of the bell at nightfall, they say devotedly on their knees the Psalm De profundis or Pater, Ave and Requiem æternam. ii. Plenary, once a year, if said daily. I, II, IV. N.B.—In places where no bell is rung, these Indulgences may be gained by reciting the above at nightfall. iii. 50 Days, three times a day to all who say the De profundis with ℣. and ℟. Requiem æternam.",
+   "latinFill": null
+  },
+  {
+   "no": 415,
+   "targets": [
+    "eternal-rest"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 415 — Indulgence: 300 Days. T.Q. Applicable only to the dead.",
+   "latinFill": null
+  },
+  {
+   "no": 436,
+   "targets": [
+    "glory-be"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 436 — Indulgence: 100 Days, on every Sunday.",
+   "latinFill": null
+  },
+  {
+   "no": 457,
+   "targets": [
+    "prayer-for-the-family"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 457 — Indulgence: 200 Days, once a day.",
+   "latinFill": null
+  },
+  {
+   "no": 458,
+   "targets": [
+    "parents-prayer-for-their-children"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 458 — Indulgence: 300 Days, once a day.",
+   "latinFill": null
+  },
+  {
+   "no": 460,
+   "targets": [
+    "prayer-before-sleep"
+   ],
+   "append": " · Also in The Raccolta (1910), No. 460 — Indulgence: To be said before retiring to rest. 60 Days, once a day.",
+   "latinFill": null
+  }
+ ]
+}

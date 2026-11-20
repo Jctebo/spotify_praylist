@@ -1,0 +1,31 @@
+ok 1 - S1 the worker-source diff vs the v445-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - S2 no backdisc stands anywhere in client.ts — the disc's five emissions are gone
+ok 3 - S2 every converted painter emits the shared bar: paintBlockPage · paintEpisodesPage · paintPodcasts · paintPodcastVideos · paintPodWatch · paintSettings · paintConscienceBar
+ok 4 - S3 the tab-home painters emit no bar: paintListenHome · paintPodcastsIndex · renderWallpaper · renderIntentions
+ok 5 - S4 (amendment) the .segtoggle rule carries no sticky seat — the toggle rows are not frozen
+not ok 6 - S4 (amendment) the compact block head re-seats flush under the brand bar — the +46px toggle allowance is gone
+ok 7 - S4 the .iosbar rule stands sticky at the brand height and its back act reads var(--accent-text), the standing theme token
+ok 8 - S5 the whole worker bundles clean (esbuild)
+not ok 9 - S5 (housekeeping): the SW pin stands at ora-pro-nobis-v445-1 (Ship moves it)
+ok 10 - S6 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 11 - S6 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 12 - H1 Prayers home (tab home): no bar stands; the Prayers | Intentions toggle stands
+ok 13 - H1 (amendment) the toggle's computed position is static — it is not frozen
+ok 14 - H1 (amendment) at rest the toggle stands beneath the frozen header — no content hidden under it
+ok 15 - H2 (amendment) scrolled: the toggle row scrolls away under the frozen header; the brand bar alone stays at the top
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.waitForSelector: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator('.blockpage-head .iosbar') to be visible
+
+    at /home/hatch/workspace/.worktrees/v448/app/tests/harness-v447.mjs:238:14 {
+  log: [
+    "  - waiting for locator('.blockpage-head .iosbar') to be visible"
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.22.1

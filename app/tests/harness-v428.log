@@ -1,0 +1,22 @@
+ok 1 - S1 the retired seats are absent from client.ts (intro · focus line · data-cat · m-quick · m-deep · examMode · examCat · catChipLabel)
+ok 2 - S1 renderExaminationContent carries no .chips emit, no .segtoggle inflow emit, no Quick Review branch
+ok 3 - S1 the shared constructions stand elsewhere (the other .chips emits · the Conscience sidetoggle emit)
+ok 4 - S1 the category is a local in both the paint and the wiring, from the standing default rule (focus, else first category)
+ok 5 - S2 index.ts is byte-identical to the base (client-only release)
+ok 6 - S2 examToday's return keys stand: { ok, date, dateLabel, run, prompts, entries, categories, focusCategory }
+ok 7 - S3 the worker-source diff vs the v438-ship base is client.ts only (got: app/worker/src/client.ts)
+ok 8 - S3 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+ok 9 - S3 (housekeeping): the SW pin stands at ora-pro-nobis-v438-1 (Ship moves it)
+ok 10 - B1 (paint): title + date + Prompts button + the bare focus heading + exactly one prompt card at "1 of 3"
+ok 11 - B1 (paint): no chip filter, no segtoggle, no intro or focus text stands in the DOM
+ok 12 - B1 (paint): the working furniture stands entire — Lasance attribution · "Add your own — Commandment X" · "Anything else" · the Close button
+ok 13 - B2 (pager): Next walks the set, Next stands disabled at N, Back returns
+ok 14 - B2 (clamp): a repainted set shorter than deepIdx clamps back to the first prompt
+ok 15 - B3 (focus only): paging the whole set shows exactly the focus category's prompts, each once — no other category ever paints
+ok 16 - B4 (entries): tap opens the writer; Save posts { runId, promptId, category: focus }; the entry stands under its prompt; remove deletes it
+ok 17 - B5 (free entries): "Add your own" posts the focus category and paints; "Anything else" posts its own category and paints
+ok 18 - B6 (close): Close posts the close behind the confirm; the closed note stands, writing is disabled, and the pager still walks the set
+ok 19 - B7 (editor): the Prompts button opens the editor over every prompt of every category; Save PUTs the prompts; the edited focus text is what the deep set renders
+ok 20 - B8 (empty focus): a focus category with no prompts paints "No prompts in this category.", no pager, no error
+ok 21 - browser: zero page errors
+# harness-v428: 21/21 passed

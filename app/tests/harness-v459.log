@@ -1,0 +1,55 @@
+ok 1 - ST1 the worker-source diff vs the v458-ship base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 2 - ST2 retirement census: data-blockmenu = 0 on the served bundle (client.ts + ui.ts)
+ok 3 - ST2 retirement census: data-blockdl = 0 on the served bundle (client.ts + ui.ts)
+ok 4 - ST2 retirement census: blockpage-dlact = 0 on the served bundle (client.ts + ui.ts)
+ok 5 - ST2 retirement census: int-fab = 0 on the served bundle (client.ts + ui.ts)
+ok 6 - ST2 retirement census: intfab = 0 on the served bundle (client.ts + ui.ts)
+ok 7 - ST2 retirement census: int-menu = 0 on the served bundle (client.ts + ui.ts)
+ok 8 - ST2 retirement census: sort-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 9 - ST2 retirement census: offline-dl-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 10 - ST2 retirement census: pod-offline-btn = 0 on the served bundle (client.ts + ui.ts)
+ok 11 - ST2 retirement census: data-podfullpage = 0 on the served bundle (client.ts + ui.ts)
+ok 12 - ST2 retirement census: data-menuitem="1" = 0 on the served bundle (client.ts + ui.ts)
+ok 13 - ST3 the whole cooked APP_JS parses (vm.Script) — the v439 gate re-run on the new code
+ok 14 - ST3 the single-backslash census inside APP_JS stands at 0 (the v439/v440 rule)
+ok 15 - ST4 stands asserted present: data-menukey (openSheetMenu's additive key render, gated on it.key) · the [data-queue] discs · #play-all · the pages-menu pill markup · the player menu button (the Now Playing sheet's emission, in the cooked script) · the dock menu button (the shell)
+ok 16 - ST5 the stands are byte-identical to the base: openFullPage · wirePlayed · blockPlayedCounts · blockDownloadAll · openBlockOrderEditor · offlineCompleteness · settleIntentions · openIntentionEditor · paintEpisodesPage · paintSideToggle · openShareSheet · goBlock · goSide · goSeries · setTab
+ok 17 - ST5 the retired functions are gone whole: the offline-buttons wiring · the full-page anchor emission · its wiring
+ok 18 - ST6 by construction: the Full-page adapter's two branches (the plugin branch runs openFullPage(null); the no-plugin branch performs the native open by hand) · the mark-all row found BY KEY · the one-entry rows act through setTab
+ok 19 - ST7 the whole worker bundles clean (esbuild)
+ok 20 - ST7 (housekeeping): the SW pin stands at ora-pro-nobis-v458-1 (Ship moves it)
+ok 21 - C4 the Prayers home menu: the page group first (head 'Prayers': Sort · Download for offline), the standing Prayers group in full under its own 'Prayers' head (the two same-name heads of D5 A), the other three sections as one-entry rows (state ›), Settings alone at the foot
+ok 22 - A1 Sort from the Prayers home group opens the standing block order editor
+ok 23 - A8 Download for offline from the Prayers home group runs offlineCompleteness
+ok 24 - C1 (DOM) the block page after: the bar carries back · title · the Play All disc alone (no page-menu button); the one meta row keeps its text alone (no download act inside it)
+ok 25 - C1 the block page menu: the page group first (head = the block's name: Sort · Mark all played · Share · Open in Spotify · Download all, unsettled), the Prayers group in full with the standing block Here, the other sections one-entry, Settings at the foot; the mark-all row carries the key AND data-markblock already (the by-key wiring landed at open)
+ok 26 - A1 Sort from the block page group opens the standing block order editor
+ok 27 - A3 Share opens the standing share sheet with the block's title and line (Playlist · 3 episodes)
+ok 28 - A4 Open in Spotify calls window.open with the block's Spotify URL
+ok 29 - A2 the mark-all row is found BY KEY ([data-menukey="markall"]) and carries data-markblock for the block after open; no other row carries it
+ok 30 - A2 a tap on the by-key row writes the block's whole available set — at the next open the label reads Mark all unplayed
+ok 31 - A2 the second round marks unplayed — the label flips back to Mark all played
+ok 32 - A5 after the download runs, the reopened menu's Download all item carries the settled state 'On this device' (the v458 settlement, moved onto the item)
+ok 33 - A5 the settled item is inert — its tap closes the menu and writes nothing (no fetch fires)
+ok 34 - A11 the one-entry Conscience row lands the Conscience tab (setTab — the tab-bar landing)
+ok 35 - C5 the Conscience menu: NO page group (the Examination form is content, not a menu) — the Conscience group stands first and full (Exam Here · Confess · Direction), the other sections one-entry, Settings at the foot
+ok 36 - C2 the episodes page menu is the navigation form alone: no page group (its Play All row and its rows' menus stand untouched), Prayers in full, NO block marked Here
+ok 37 - C3 (DOM) the Intentions side after: no floating add disc and no heading menu button stand; the pages-menu pill stands in the header (John's settled keep)
+ok 38 - C3 the Intentions menu: the page group first (head 'Intentions': Redraw · Add intention), the Prayers group in full with Intentions Here, the other sections one-entry, Settings at the foot
+ok 39 - A6 Redraw POSTs the draw re-run and the side settles; the adapter's restore line stands the busy seat back (the header menu button enabled, its glyph restored)
+ok 40 - A7 Add intention opens the standing add sheet (the retired disc's and menu item's one act)
+ok 41 - C6 (DOM) the Formation home's row 2 carries no Download-for-offline button (title alone)
+ok 42 - C6 the Formation home menu: the page group first (head 'Formation': Download for offline), the Formation group in full (no Here at the index), the other sections one-entry, Settings at the foot
+ok 43 - A8 Download for offline from the Formation home group runs offlineCompleteness
+ok 44 - C7 (DOM) the CatholicTV page carries no full-page anchor (it retired from both paints)
+ok 45 - C7 the CatholicTV menu: the page group first (head 'CatholicTV': Full page on YouTube), the Formation group in full with CatholicTV Here, the other sections one-entry, Settings at the foot
+ok 46 - A9 with no Browser plugin the adapter performs the retired anchor's native open by hand, exactly once (window.open with the channel URL)
+ok 47 - C8 (DOM) the watch view carries no Open in YouTube anchor under the frame
+ok 48 - C8 the watch view menu: the page group first (head 'CatholicTV': Open in YouTube), the Formation group in full with CatholicTV Here (the watch extension of the Here rule), the other sections one-entry, Settings at the foot
+ok 49 - A10 Open in YouTube calls window.open with the standing video's watch URL
+ok 50 - C9 the Sacred Art menu: NO page group (its controls are in-body and stand) — the Sacred Art group stands first and full (Phone Here · Watch), the other sections one-entry, Settings at the foot
+ok 51 - A12 the foot's Settings item fires the standing renderSettings — the Settings screen paints
+ok 52 - C10 the Settings screen menu: no page group and NO standing group — all four sections stand as one-entry rows in tab order, Settings at the foot marked Here yet still acting
+ok 53 - A9 with the Browser plugin standing, the adapter runs openFullPage whole — the plugin's open fires with the channel URL (the Custom Tab branch)
+ok 54 - Z zero page errors across every leg
+# harness-v459: 54/54 passed

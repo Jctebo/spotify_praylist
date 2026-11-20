@@ -1,0 +1,71 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migration 0015 stands in the tree (the fixture set runs through it)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v353-1'
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 474 ms
+ok 8 - L1 home form: block cards stand in payload order, episodes card last (cards=["Morning","Midmorning","Midday","Afternoon","Evening","Night","Mass and Homilies","Novenas","__episodes"])
+ok 9 - L1: a card carries its gradient face, name, caption + settled count span, heard span, and a block play button
+ok 10 - L1: the Continue card stands in its slot BEFORE the block cards when its gate stands (Decision 2 order), See queue door standing
+ok 11 - L2 setup: re-boot with a liturgical day standing (the gradient head needs a color standing; without one the v352 flat-navy fallback stands)
+ok 12 - L2 block page: liturgical-gradient header with name, meta (dateLabel · caption · N · heard), Play All, Mark all played, Spotify link iff in payload (debug={"headBlock":"Morning","gradient":"linear-gradient(135deg, rgb(243, 233, 207), rgb(250, 245, 236))","title":"MORNING","meta":"Tuesday, November 10, 2026 · from midnight · 0 tracks","queue":true,"mark":true,"spot":true,"spotExpected":true,"rosary":true,"invitatory":true,"auxilium":false,"viewKind":"block"})
+ok 13 - L2: rows are that block's tracks only (payload + settled settings cards; another block's track absent)
+ok 14 - L2: Back returns home with the returning block's card scrolled into view
+ok 15 - L3: the combined row measures 136px, panel FIRST at ~25% with its own play button (h=136, panelW=0.243)
+ok 16 - L3: the intention text is capped at two lines and the ellipsis stands because it is clamped; the played dot stands
+ok 17 - L3: the ellipsis expands the row in place
+ok 18 - L3: the played dot toggles on and off
+ok 19 - L3: Read opens the reading sheet
+ok 20 - L3: an unavailable track shows its standing panel-free form (first found on Midmorning)
+ok 21 - L4 setup: clean re-boot reaches readiness
+ok 22 - L4: the card play button starts the block queue WITHOUT navigating (q=11 Morning descriptors, view=home)
+ok 23 - L4: the page Play All queues the same block from the page
+ok 24 - L4: whole-day Play All unchanged — it spans the blocks (39 descriptors, 9 blocks)
+ok 25 - L5: a mid-block tap queues from that track inclusive, intention intro first, stopping at the block's end (head=["intro:marian-antiphon-angelus","marian-antiphon-angelus"])
+ok 26 - L5: the tap queue stays inside the block
+ok 27 - L5: tapping the intention panel's own play button starts the pair
+ok 28 - L6 mini-player: the floating dock stands with every standing id, 10px inset, 12px radius, clearing the tab bar by 8px (debug={"hidden":false,"left":10,"radius":"12px","gap":8,"fill":true,"cur":"intro:daily-rosary","ids":true})
+ok 29 - L6: a dock tap (outside play/next) opens Now Playing
+ok 30 - L6: the dock play button toggles playback; the dock next button stands wired (ids check above)
+ok 31 - L6 setup: the app wrote its queue snapshot record during play
+ok 32 - L6: after a reload the restored queue stands paused in the mini-player (v355 restore, displayed by the restyle)
+ok 33 - L1 (restored rule): while a restored queue stands the Continue slot renders EMPTY — the restored queue wins
+ok 34 - L7 setup: clean re-boot reaches readiness
+ok 35 - L7: Continue's See queue opens the preview sheet from home (37 rows)
+ok 36 - L7: a preview row tap starts the queue at that row
+ok 37 - L7: Now Playing's queue list renders the standing queue (37 rows)
+ok 38 - L7: a queue-list row tap jumps the queue to that track
+ok 39 - L9 setup: a PIN stands set through the real Settings flow (recovery code shown once)
+ok 40 - L9: with a PIN set, the Examination tap paints the gate and issues NO /api/exam/* call while locked
+ok 41 - L9: the gate stands in the new chrome with every standing id (the seam is styling only)
+ok 42 - L9: the unlock paints the Examination content in the new chrome
+ok 43 - L9: Confession opens on the same unlock — one unlock opens both tabs
+ok 44 - L9: a reload re-locks — the gate stands again (memory-only token)
+ok 45 - L10: Settings rows render in list form inside shared section headers (26 rows, 9 sections); the PIN section stands at the end
+ok 46 - L10: a toggle + a move + Save round-trips — the settings version increments by the standing save rule and the rows re-read
+ok 47 - L8 Intentions: the pool renders in Library list language — 11 rows in 3 group lists, the stats strip standing
+ok 48 - L8: Edit opens the editor sheet and the save renders the new text in place
+ok 49 - L8: Retire moves the row to the Retired group
+ok 50 - L8: Restore returns the row to its priority group
+ok 51 - L8: Add posts a new intention and it renders in its group
+ok 52 - L8: Delete (confirmed) removes the row — every pool function stands in the list language
+ok 53 - L11 setup: the Prayers home stands ready
+ok 54 - L11 search: a block label paints its card in the Blocks group; the home body is the results paint
+ok 55 - L11: opening a block page from a result navigates
+ok 56 - L11: coming back returns to home WITH the query standing
+ok 57 - L11: a track title paints its row in the Prayers group (debug={"row":true,"groups":["PRAYERS"],"q":"Daily Rosary"})
+ok 58 - L11: a result row tap plays by the v351 rule within its block
+ok 59 - L11: an intention-text word paints the combined rows whose intros carry it (13 rows)
+ok 60 - L11: a query with no matches paints the one plain line
+ok 61 - L11: a title standing only in a NON-presented fixture day never appears (presented-day corpus only)
+ok 62 - L11: clearing the field restores the standing home paint (Continue + cards) from state, no refetch
+ok 63 - L12: body computes 17px; the new surfaces stand at the floors (cap 13px, card meta 13px, section head 16px)
+ok 64 - L12 white: on the home card faces + block header token pairs, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (min 4.88)
+ok 65 - L12 white: the face carries navy title text — never white/cream on cream
+ok 66 - L12 red: on the home card faces + block header token pairs, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (min 5.51)
+ok 67 - L12 green: on the home card faces + block header token pairs, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (min 5.76)
+ok 68 - L12 violet: on the home card faces + block header token pairs, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (min 6.66)
+ok 69 - L12 rose: on the home card faces + block header token pairs, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (min 4.92)
+ok 70 - browser: no page errors across the v353 legs (errors=[])
+# harness-v353: 69/70 ok

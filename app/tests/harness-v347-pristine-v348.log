@@ -1,0 +1,20 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+ok 5 - fixture: the presented day builds with the leg tracks available (qa=Daily Rosary, qb=Morning Prayer, qc=Novena to St. Jude — Day 5)
+ok 6 - L1 list order: rows equal the standing queue order exactly, intros at spliced positions (rows=intro:daily-rosary,daily-rosary,intro:morning-prayer,morning-prayer,novena-st-jude; pos=Track 1 of 5)
+ok 7 - L2 playing marker: marked row = queueIdx + current at open (0), and moves to the new index in the same sync at advance (idx=1, cur=daily-rosary)
+ok 8 - L3 played dots: presented-date seeding fills only that prayer's dot; a different-date seed does not fill; intro rows carry no dot element (rosary=true, jude=false)
+ok 9 - L4 dot in place: ended with the list open fills the finished row's dot, the marker advances, and the sheet node is not rebuilt (same=true, cur=auxilium-christianorum)
+ok 10 - L5 tap-to-jump: forward and back taps move queueIdx, queue order/length unchanged, playTrack not called (pt=0); an unavailable row stands disabled and jumpQueueTo leaves the index unmoved (idx=3->1)
+ok 11 - L6 resume follows jump: after the jump to row 3, the pause-path saveResume writes the jumped-to episode (rec=auxilium-christianorum)
+ok 12 - L7 Continue remaining: started queue = the filtered build (played prayers + intros absent) and the list shows that same array; fully-played day stands no Continue card and Play All's queue stands in full with every prayer dot filled (remaining=32, full=36, remainingOk=true, card=false, fullEq=true, dots=17/17)
+ok 13 - L8a See queue door: the Continue card carries #continue-queue
+ok 14 - L8 See queue preview: door starts nothing, preview lists the remaining build with the carry row marked Starts here (carryIdx=1, first=marian-antiphon-angelus); closing without a tap leaves queue/current untouched; tapping preview row 2 starts the build sliced there and the live sheet replaces the preview (q=30)
+ok 15 - L9 late settle: a queue built with the slot pre-settle/unavailable plays the live descriptor at advance via queueLiveDesc, and its row then reflects the settled title (before=Bible in a YearMorning · Not available; after=Day 999: Settled FixtureMorning · 1:00)
+ok 16 - L10 play-button guard: with a queue standing, #dock-play/#np-play resume/pause without clearing the queue or reloading src (idx=1 kept); with no queue, the standing playTrack behavior stands (cur=morning-prayer)
+ok 17 - L11 states: single play shows the single-prayer line with zero rows; a queue played to its end removes the sheet (no stale rows); the See queue door is absent when the Continue card is absent (single="No queue — playing a single prayer.", singleQ=0, singleRows=0, endedSheet=false, door=false, card=false)
+ok 18 - L12 SW pin + shell: the served service worker carries CACHE 'ora-pro-nobis-v347-1' and its SHELL still includes /logo-512.png
+ok 19 - evidence: the browser run completed with zero page errors
+TALLY: 19 ok / 0 FAIL (19 checks)

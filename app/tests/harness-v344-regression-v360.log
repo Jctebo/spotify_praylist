@@ -1,0 +1,18 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - 19 served build parses and carries the v344 seams (store key, markCompleted, unplayedOnly, paintContinue, refreshPlayedChrome)
+FAIL - 19 SW pin ora-pro-nobis-v344-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - 19 NO CHECKLIST source guard: no checkmark glyph in the served client or styles
+FAIL - 1 a corrupt stored value reads as empty — the day renders, dots stand hollow, no path throws :: dots=0
+harness-v344 crashed: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-card="daily-reflection"] [data-markplayed]')
+
+    at main (/home/hatch/workspace/.worktrees/v360/app/tests/harness-v344.mjs:469:16) {
+  log: [
+    `  - waiting for locator('[data-card="daily-reflection"] [data-markplayed]')`
+  ],
+  name: 'TimeoutError'
+}

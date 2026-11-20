@@ -1,0 +1,14 @@
+ok   - P0: the APP_JS template evaluates (cooks) without error
+ok   - P1: the whole cooked APP_JS parses (vm.Script)
+note - C census: single-backslash non-escape sequences inside APP_JS: 0
+ok   - C1: the census counts 0 on the fixed tree (the class is gone from APP_JS)
+ok   - R1: ISO-date pattern — intended \d form and fixed [0-9] form agree on 8 strings
+ok   - R2: wallpaper-match pattern — intended and fixed forms agree on 8 strings (incl. the Xjpg dot discriminator)
+ok   - R3: title-strip pattern — intended and fixed forms strip identically on 5 strings
+ok   - F0: the four functions evaluate out of the cooked script
+ok   - F1: shortDayLabel — ISO days shorten, rendered forms pass through, on 9 cases (expected values + intended-regex reference)
+ok   - F2: wallpaperLiveState — daily + monthly drawn names parse, off form reads off, unmatched lines keep the guarded posture, on 7 cases
+ok   - F3: wallpaperTitleFromName — the date suffix strips (daily + monthly forms) and the title humanizes, on 6 cases
+ok   - F4: shortHomeDate — the short form derives (incl. DST days 2026-03-08 + 2026-11-01), fallbacks stand, on 7 cases
+
+harness-v440: 11 ok / 0 not-ok

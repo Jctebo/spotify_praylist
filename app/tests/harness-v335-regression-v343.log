@@ -1,0 +1,37 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+not ok 3 - setup: D1 episodes commit lands (stored day D1)
+not ok 4 - leg 1: push_audio('current', block) -> 200 for all six blocks, sizes read back
+not ok 5 - leg 1: exactly six standing rows, r2_key segments/current/<Block>.mp3, size_bytes = file size
+not ok 6 - leg 1: the standing name /api/prayer/audio/current/<Block> serves the pushed bytes for all six blocks
+not ok 7 - leg 1: stored-day read-back segmentBlocks names all six standing blocks
+not ok 8 - leg 1: a non-date, non-'current' X-Prayer-Date is still refused 400
+not ok 9 - leg 7: a dated push still lands beside the standing family
+not ok 10 - leg 7: dated serving returns the dated bytes byte-exact
+not ok 11 - leg 7: the prayer payload reads the STANDING row (size + standing name), not the dated row standing beside it
+not ok 12 - leg 2: second standing push of Morning accepted with the new size
+not ok 13 - leg 2: still exactly one standing Morning row, at the new size
+not ok 14 - leg 2: the standing name serves the NEW bytes (replaced in place)
+not ok 15 - leg 2: the payload's audio.sizeBytes follows the replacement
+not ok 16 - leg 3: the D2 replace-day commit lands
+not ok 17 - leg 3: the commit reply's segmentsHeld names all six standing blocks
+not ok 18 - leg 3: all six standing rows survive the commit, sizes untouched
+not ok 19 - leg 3: standing objects survive the sweep (Evening serves its bytes after the commit)
+not ok 20 - leg 3: the new stored day's payload splices all six Intentions cards FIRST in their blocks, each streamUrl the standing name (v325 order intact)
+not ok 21 - leg 3: audioMissing is empty with the standing family complete
+ok 22 - leg 4: the prior day's episode audio is retired by the commit (404)
+ok 23 - leg 4: the prior stored date's dated segment row is deleted by the commit (404)
+ok 24 - leg 4: a dated segment row for a non-stored date is deleted by the same commit
+not ok 25 - leg 4: the new stored date's dated segment row follows the existing rule (kept)
+not ok 26 - leg 5: the player payload's Night card stands available:false, streamUrl:null
+not ok 27 - leg 5: audioMissing names exactly the missing block in the player payload
+not ok 28 - leg 5: the prayer payload reads the missing segment plainly (available:false, url null, segmentAudioUrl null — no fallback)
+ok 29 - leg 5: no 'devotional-suite' string appears anywhere in either payload body
+ok 30 - leg 5: the Worker source carries no SUITE_AUDIO_BASE and no Suite URL (purge leg)
+ok 31 - leg 5: the standing serving route 404s for the missing block
+not ok 32 - leg 6: the on-request refresh push lands for the missing block with changed bytes
+not ok 33 - leg 6: still exactly one standing row per block; Night stands at the refreshed size
+not ok 34 - leg 6: the standing name serves the refreshed bytes
+not ok 35 - leg 6: the stored-day read-back again names all six blocks after the refresh (the §2.7 verify)
+RESULT: 8 ok / 27 FAIL
+EXIT=1

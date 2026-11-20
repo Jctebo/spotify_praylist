@@ -1,0 +1,34 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migration 0015 stands in the tree and applies to the test D1
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v352-1'
+ok 7 - L1 route: a valid POST returns 200 {ok, date} (status=200)
+ok 8 - L1 store: the row stands in prayer_liturgical_days (rows=[{"date":"2026-11-10","day_name":"Memorial of Saint Fixture","color":"white"}])
+ok 9 - L1 upsert: a second POST for the same date overwrites name + color (rows=[{"date":"2026-11-10","day_name":"Feast of Saint Fixture","color":"red"}])
+ok 10 - L1 validation: color 'blue' refused 400 (status=400)
+ok 11 - L1 validation: a non-ISO date refused 400 (status=400)
+ok 12 - L1 validation: an empty dayName refused 400 (status=400)
+ok 13 - L1 validation: a whitespace-only dayName refused 400 after trim (status=400)
+ok 14 - L1 validation: a dayName over 160 chars refused 400 (status=400)
+ok 15 - L1 validation: a dayName of exactly 160 chars stands (status=200)
+ok 16 - L1 door: no agent token → 403 (status=403)
+ok 17 - L2 player payload: liturgicalDay stands exactly as pushed (got={"name":"Memorial of Saint Fixture","color":"white"})
+ok 18 - L2 prayer payload: liturgicalDay stands exactly as pushed (got={"name":"Memorial of Saint Fixture","color":"white"})
+ok 19 - L2 same-day pin: a record standing ONLY for tomorrow reads null on both of today's payloads — no leak across dates
+ok 20 - L2 own-date keying: the prayer payload for tomorrow carries tomorrow's own record
+ok 21 - L3 independence: one payload carries the private-fallback addendum AND the ferial liturgical name side by side — neither derives from the other in the app
+ok 22 - L10 hygiene: player/day with vs without a record is identical except liturgicalDay
+ok 23 - L10 hygiene: prayer/day with vs without a record is identical except liturgicalDay
+ok 24 - L3 header: with a private-fallback addendum standing, the header shows the FERIAL liturgical name, never the private saint (text="Fixtureday of the 99th Week in Ordinary Time", data-lit=green)
+ok 25 - L4 fallback: no record for today (yesterday's stands) → the header shows the plain date label, no data-lit, the bar is flat navy (text="Tuesday, November 10, 2026", label="Tuesday, November 10, 2026", attr=null, bg=rgb(22, 40, 63), img=none)
+ok 26 - L-white theme: data-lit=white, header="Fixture white Day", playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=true over solid var=#f3e9cf; contrast fg=12.32/13.72 sub=4.88/5.43 · white leg: wordmark=rgb(22, 40, 63), litday=rgb(22, 40, 63), tabbar gradient=true, dock gradient=true, tab=rgb(109, 99, 83), tabActive=rgb(22, 40, 63), gold pairs REPORTED (brand exception): accent-on-cream=3.15, ink-on-accent=3.42
+ok 27 - L-red theme: data-lit=red, header="Fixture red Day", playbtn=rgb(158, 43, 37), dock fill=rgb(158, 43, 37) (dock painted=true), blockhead border=rgb(158, 43, 37), bar gradient=true over solid var=#5d1616; contrast fg=10.96/8.27 sub=7.31/5.51 accent-vs-ink=7.43 accent-vs-cream=6.84
+ok 28 - L-green theme: data-lit=green, header="Fixture green Day", playbtn=rgb(46, 125, 70), dock fill=rgb(46, 125, 70) (dock painted=true), blockhead border=rgb(46, 125, 70), bar gradient=true over solid var=#173a22; contrast fg=9.01/6.95 sub=7.48/5.76 accent-vs-ink=5.07 accent-vs-cream=4.67
+ok 29 - L-violet theme: data-lit=violet, header="Fixture violet Day", playbtn=rgb(106, 74, 158), dock fill=rgb(106, 74, 158) (dock painted=true), blockhead border=rgb(106, 74, 158), bar gradient=true over solid var=#2c1e40; contrast fg=10.98/9.02 sub=8.11/6.66 accent-vs-ink=6.80 accent-vs-cream=6.27
+ok 30 - L-rose theme: data-lit=rose, header="Fixture rose Day", playbtn=rgb(163, 74, 95), dock fill=rgb(163, 74, 95) (dock painted=true), blockhead border=rgb(163, 74, 95), bar gradient=true over solid var=#6d3441; contrast fg=8.03/5.87 sub=6.73/4.92 accent-vs-ink=5.67 accent-vs-cream=5.22
+ok 31 - L10 floors: body computed font-size = 17px and #litday >= 13px under a theme (body=17, litday=13)
+ok 32 - L11 no-break: Examination, Confession, Intentions, and Settings render their standing forms under a white record, then a violet one (white={"examination":true,"confession":true,"intentions":true,"settings":true}, violet={"examination":true,"confession":true,"intentions":true,"settings":true})
+ok 33 - browser: no page errors across the v352 legs (errors=[])
+# harness-v352: 33/33 ok

@@ -1,0 +1,30 @@
+ok - setup: the Worker bundles clean (esbuild) — migration 0009's tree compiles
+ok - setup: app up on local wrangler (port 8961), this instance answering
+ok - own-instance proof: the empty stored-day shape carries the v324 externals counts at 0
+ok - check 16: a v312-shaped manifest (no kind fields) still commits (200)
+ok - check 16: the committed row reads back kind 'episode' (the 0009 default)
+ok - check 16: migration 0009 stands — the externals route writes kind='external' rows (200)
+ok - check 16: the external rows render in the payload with kind 'external'
+ok - check 17: a day whose external rows carry NO staged objects commits (200)
+ok - check 17: an own episode claiming a wrong staged size still refuses the whole commit 409, nothing written (409, stored 2026-11-13)
+ok - check 18: Morning order — Intentions card, own episodes, externals in slot order (card,f2-morning,ext-invitatory,ext-morning-prayer,ext-bible-in-a-year)
+ok - check 18: Midmorning order — Intentions card, own, external (card,f2-mid,ext-midmorning-prayer)
+ok - check 19: a present external's payload shape (kind, source, streamUrl = the enclosure URL, hasText false)
+ok - check 19: a missing external stands unavailable with streamUrl null and its primary source named
+ok - check 23: stored-day counts own + 9 (episodes 11, externals 8/1)
+ok - check 21: the externals route fills exactly the missing slot (200, filled ["ext-bible-in-a-year"])
+ok - check 21: after the fill-in the slot stands available on its enclosure URL
+ok - check 21: own episode rows and the day's segments are untouched by the swap
+ok - check 23: after the fill-in the counts move by the filled count only (episodes 11, externals 9/0)
+ok - check 22: guards — wrong date 409, wrong slot set 400, a body's kind field ignored (stored rows stay 'external') (409/400/200)
+ok - check 24: the next day's commit retires the prior day entire — external rows included (stored 2026-11-14, served 2026-11-14, prior-day audio 404)
+ok - check 20: the served client parses and carries the external render branch
+ok - check 20: a missing external's card reads 'Not available today'
+ok - check 20: a present external's card names its source in the meta line
+ok - check 20: Play All's queue holds the externals in payload order, the missing one standing in place (seg:Morning,f3-morning,ext-invitatory,ext-morning-prayer,ext-bible-in-a-year,seg:Midmorning,f3-mid,ext-midmorning-prayer,seg:Midday,ext-midday-prayer,seg:Afternoon,ext-midafternoon-prayer,seg:Evening,ext-office-of-readings,ext-evening-prayer,seg:Night,ext-night-prayer)
+ok - check 20: autoplay advanced own → external, passing over the missing external at reach (the enclosure URL plays here)
+ok - check 20: the sleep stop lands on an external track as on any track (held at ext-bible-in-a-year)
+ok - check 20: zero page errors across the browser leg
+ok - check 25: no external-slot object stands anywhere in the store (persist scan hits 0, audio route 404)
+ok - check 26: no feed host is named in the Worker or the client — payloads build from D1 alone
+RESULT harness-v324-worker 29/29 ok

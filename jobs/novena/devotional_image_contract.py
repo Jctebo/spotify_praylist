@@ -84,6 +84,7 @@ class DailyImageSpec:
     sequence_day: Optional[int] = None
     iconography: str = ""
     monthly_fallback: bool = False
+    gospel_scene: bool = False
 
     def __post_init__(self) -> None:
         if self.classification not in CLASSIFICATION_ORDER:
@@ -99,6 +100,8 @@ class DailyImageSpec:
 
     @property
     def image_subtitle(self) -> str:
+        if self.gospel_scene:
+            return "TODAY'S GOSPEL"
         if self.monthly_fallback:
             base = f"{self.date.strftime('%B').upper()} DEVOTION"
         elif self.classification == "PRIVATE DEVOTION" and self.sequence_kind:

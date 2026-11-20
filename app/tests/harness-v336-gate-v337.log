@@ -1,0 +1,10 @@
+ok - setup: stored day 2026-11-08 committed through the agent door
+ok - leg 14: served /app.js parses, carries the speed key + Now Playing, and no dock-jump remnant anywhere
+FAIL - leg 14: served SW carries CACHE = ora-pro-nobis-v336-1 AND the opn-ext-audio-v1 purge exemption verbatim
+ok - leg 1: fresh profile boots at rate 1 (state + element, before any play)
+HARNESS ERROR: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-playkey="ep-alpha"]')
+
+
+harness-v336: 3/5 checks passed

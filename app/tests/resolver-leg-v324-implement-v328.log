@@ -1,0 +1,16 @@
+ok 1 - Divine Office invitatory match
+ok 2 - Divine Office morning match
+ok 3 - no-enclosure items never match (announcement trap)
+ok 4 - Evening Prayer II (today) wins; Evening Prayer I (yesterday) never selected
+ok 5 - full Divine Office day — all DO-primary slots present
+ok 6 - Bible in a Year Day 312 (2026) match + rendered title
+ok 7 - Bible current-year rule — last year's Day N never selected
+ok 8 - Bible Day pattern matches the zero-padded form
+ok 9 - Sing the Hours fallback fills Morning on a Divine Office miss
+ok 10 - fallback order — Divine Office present means Sing the Hours unused
+ok 11 - Sing the Hours yesterday-prefix trap never matches
+ok 12 - per-feed failure isolation
+ok 13 - slot-set shape — nine pinned entries, missing carries primary source, no r2_key
+ok 14 - tokens parity with the Spotify contracts (DEFAULT_TOKENS)
+LIVE SMOKE (check 15, non-gating): date 2026-11-08 · present 9/9 ['ext-invitatory', 'ext-morning-prayer', 'ext-bible-in-a-year', 'ext-midmorning-prayer', 'ext-midday-prayer', 'ext-midafternoon-prayer', 'ext-office-of-readings', 'ext-evening-prayer', 'ext-night-prayer'] · missing [] · resolver error: None · failed feeds: []
+RESULT harness-v324-resolver 15/15 ok

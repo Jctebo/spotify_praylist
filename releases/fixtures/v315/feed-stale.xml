@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- v315 rehearsal fixture: STALE case.
+     feed-fresh.xml with every pubDate shifted -3 days; same stated check date 2026-11-13,
+     expected = 2026-11-15, newest = 2026-11-12.
+     Required output: RSS feed: STALE — newest 2026-11-12, expected 2026-11-15 + the canonical link -->
+<rss version="2.0">
+  <channel>
+    <title>Ora Pro Nobis (fixture)</title>
+    <link>https://orapronobis.media/</link>
+    <description>v315 rehearsal fixture — not a real feed.</description>
+    <item>
+      <title>Fixture Episode One — November 12, 2026</title>
+      <pubDate>Thu, 12 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+    <item>
+      <title>Fixture Episode Two — November 12, 2026</title>
+      <pubDate>Thu, 12 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+    <item>
+      <title>Fixture Episode Three — November 11, 2026</title>
+      <pubDate>Wed, 11 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+  </channel>
+</rss>

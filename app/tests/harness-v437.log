@@ -1,0 +1,29 @@
+ok   - S (G1/G6): the boot segment stands in client.ts — the guarded in-shell class add BEFORE the first measureBars(), the rAF-throttled resize listener between them
+ok   - S (G6): the unthrottled resize form (standing since v326) is retired — no direct resize→measureBars registration stands
+ok   - G8 (static): the in-shell override stands exactly once in ui.ts, unconditional — no media query, no inset-size condition keys on it
+ok   - G2 (static): the base .tabbar rule keeps padding-bottom: env(safe-area-inset-bottom) byte-unchanged — the web branch is the base rule itself
+ok   - G3 (static): the dock bottom reads var(--tabh, 0px) exactly — the + 8px survives nowhere
+ok   - G4 (static): the reserve reads calc(var(--tabh, 0px) + var(--dockh, 60px)) — the hardcoded 96px bar allowance is retired
+ok   - G7: the Now Playing sheet padding declaration stands byte-identical (14px 14px 40px — it keys off nothing in this change set)
+ok   - G7: the .view standing 96px bottom pad stands byte-identical (the dock-absent form, §2.3)
+ok   - G7: tab order and labels stand (Prayers · Conscience · Podcasts · Wallpaper)
+ok   - G7: the v419 G18 comment stands byte-identical — its premise (the standing --tabh measurement governs) survives: the measurement still governs, the measured value is now the true one
+ok   - S (housekeeping): the SW pin stands at ora-pro-nobis-v435-1 (Ship moves it); no index.ts delta (client-only)
+note - extraction dropped: offlineEvict
+ok   - boot: the extracted client stands; before the boot segment runs, no measure has landed and no class stands (the segment is the first measure)
+ok   - G1: the bridge stub stands → the boot adds in-shell to <html>
+ok   - G1: in-shell, the bar’s computed padding-bottom is 0px — the override takes the stand-in inset out
+ok   - G1 (F-437-I5): the in-shell bar stands at the design stack — tab segment + border; the mold’s measured stack is recorded in §3
+ok   - G1 (order, F-437-I2): --tabh read immediately after the boot segment equals the CORRECTED bar — the class add stood before the segment’s measureBars(); after it, --tabh would read stack + 30
+ok   - G3: with a track standing, the dock’s bottom rect meets the bar’s top rect (±0.5px) — the strip is closed, live rects
+ok   - G3: --tabh and --dockh read back as the elements’ own measured heights
+ok   - G4: under dock-on, the view’s computed padding-bottom equals --tabh + --dockh exactly (the measured footprint)
+ok   - G4: at scroll end the last card’s bottom edge stands exactly its own 10px margin above the dock’s top edge — no overlap, no dead band beyond the margin
+ok   - G6: a burst of three resizes lands ONE rAF-throttled measureBars(), and --tabh re-reads the bar’s current height (the F-437-4 staleness path is closed)
+ok   - G5: no track → dock-on absent, the reserve rule does not apply, the view’s standing 96px pad is what stands
+ok   - G2: no bridge → no in-shell class stands
+ok   - G2: on the web the override is inert — the bar keeps the stand-in inset in full (computed padding 30px; --tabh measures the bar WITH it, §2.9’s web column)
+ok   - G2 (CSSOM): the served stylesheet’s .tabbar declaration still reads env(safe-area-inset-bottom), and the override rule stands beside it at 0px
+ok   - G2 (the mold limit, §2.5 — recorded, not rounded): desktop Chromium computes env(safe-area-inset-bottom) to 0, so the mold proves the declaration + the gate, not a nonzero web value; the nonzero web value is field leg 6
+
+harness-v437: 26 ok / 0 not-ok

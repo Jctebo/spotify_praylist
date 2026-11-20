@@ -1,0 +1,40 @@
+ok 1 - app up on local wrangler (LOCAL_DEV), D1 through 0018
+ok 2 - L1: no ?date answers today's payload in the standing shape
+ok 3 - L1: ?date=tomorrow presents tomorrow throughout the payload
+ok 4 - L1: ?date=yesterday answers 400
+ok 5 - L1: ?date=+7d answers 400
+ok 6 - L1: a non-date ?date answers 400
+ok 7 - L1: the agent-door day route is unchanged (today, no override)
+ok 8 - online open renders the Listen home (block cards stand)
+ok 9 - L2: an online build stands the day snapshot (payload + settings + externals record) in opn-offline-meta-v1
+ok 10 - L2: the snapshot index carries today with its settings version
+ok 11 - L4: the completeness pass reaches have == total for today (4/4) and tomorrow (4/4)
+ok 12 - L4: the standing USCCB external's audio stands under today's day key
+ok 13 - L4: today's own Morning Prayer audio stands under today's day key
+ok 14 - L4: tomorrow's set stands under tomorrow's day keys before its day arrives
+ok 15 - L2: tomorrow's snapshot stands in the meta store (fetched through the dated route)
+ok 16 - L6: the automatic set stands for Catechism — current (Day 1) + the next 2 under pod keys
+ok 17 - L6: the automatic set stands across all three series (9 episode files)
+ok 18 - L6: a downloaded podcast episode plays from its cached blob, not the stream
+ok 19 - L7: four episodes beyond the automatic set stand ready to pick (ciy:bonus-pray, ciy:day-4, ciy:day-5, ciy:day-6)
+ok 20 - L7: four by-hand downloads land with four registry entries — no cap leg engages
+ok 21 - L9: the readiness line counts the by-hand episodes ('+ 4 by hand')
+ok 22 - L7: rolling eviction spares every registered by-hand key
+ok 23 - L7: removing a hand episode deletes its bytes and its registry entry in one act
+ok 24 - L9: the readiness line reads have/total per set plus the by-hand count, from standing state only
+ok 25 - L2: a cold offline open renders the day from the snapshot — no error stands
+ok 26 - L3: the offline build stands externals from the snapshot record (ext-gospel-exegesis, ext-usccb-readings, ext-fr-mike-homily, ext-barron-sermon)
+ok 27 - L2: the offline build makes zero /api/ calls beyond the one failed day read that triggered it (attempts: 1)
+ok 28 - L8: a mark that cannot post offline enqueues instead of vanishing
+ok 29 - L8: the drained mark lands as exactly one listen row
+ok 30 - L8: a second drain is a no-op — replay is safe against the idempotent routes
+ok 31 - L5: the day before yesterday is evicted from both stores at the open sweep
+ok 32 - L5: yesterday + today + tomorrow stand — the rolling two-day window plus its eve
+ok 33 - L10: Clear offline downloads empties the audio store's offline keys
+ok 34 - L10: Clear offline downloads empties the snapshot store
+ok 35 - L10: the next online open refills the automatic set after a clear
+ok 36 - L11: the served service worker carries the v392 pin
+ok 37 - L11: the activate purge preserves BOTH offline stores
+ok 38 - L11: ui.ts pin stands at ora-pro-nobis-v392-1
+ok 39 - L11: the client carries the snapshot store, the mark queue, and the by-hand registry
+# harness-v392: 39 ok / 0 not-ok

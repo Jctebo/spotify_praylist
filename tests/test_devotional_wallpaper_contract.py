@@ -44,5 +44,60 @@ class WallpaperContractTests(unittest.TestCase):
         self.assertIn("every identity-defining symbol comfortably inside the centered circular safe area", prompt)
 
 
+class GospelSceneSubtitleTests(unittest.TestCase):
+    def test_gospel_scene_subtitle_ignores_classification_and_subtitle(self):
+        empty = DailyImageSpec(
+            dt.date(2026, 11, 10), "THE UNPROFITABLE SERVANT", "MEMORIAL",
+            "gospel", "", gospel_scene=True,
+        )
+        self.assertEqual(empty.image_subtitle, "TODAY'S GOSPEL")
+        filled = DailyImageSpec(
+            dt.date(2026, 11, 10), "THE UNPROFITABLE SERVANT", "SOLEMNITY",
+            "gospel", "A BORROWED LINE", gospel_scene=True,
+        )
+        self.assertEqual(filled.image_subtitle, "TODAY'S GOSPEL")
+        sequenced = DailyImageSpec(
+            dt.date(2026, 11, 10), "THE UNPROFITABLE SERVANT", "PRIVATE DEVOTION",
+            "gospel", "", sequence_kind="OCTAVE", sequence_day=2, gospel_scene=True,
+        )
+        self.assertEqual(sequenced.image_subtitle, "TODAY'S GOSPEL")
+
+    def test_gospel_scene_keeps_production_filename(self):
+        spec = DailyImageSpec(
+            dt.date(2026, 11, 10), "THE UNPROFITABLE SERVANT", "MEMORIAL",
+            "gospel", "", gospel_scene=True,
+        )
+        self.assertEqual(build_filename(spec, "phone"), "the-unprofitable-servant__2026-11-10.jpg")
+        self.assertEqual(build_filename(spec, "watch"), "the-unprofitable-servant__2026-11-10.jpg")
+
+    def test_non_gospel_subtitles_are_unchanged(self):
+        solemnity = DailyImageSpec(dt.date(2026, 12, 8), "IMMACULATE CONCEPTION", "SOLEMNITY", "calendar", "")
+        self.assertEqual(solemnity.image_subtitle, "SOLEMNITY")
+        memorial = DailyImageSpec(
+            dt.date(2026, 11, 10), "SAINT MARTIN OF TOURS", "MEMORIAL", "calendar", "SOLDIER OF CHRIST",
+        )
+        self.assertEqual(memorial.image_subtitle, "MEMORIAL · SOLDIER OF CHRIST")
+        devotion = DailyImageSpec(
+            dt.date(2026, 11, 10), "HOLY SOULS", "PRIVATE DEVOTION", "devotion", "",
+            sequence_kind="OCTAVE", sequence_day=3,
+        )
+        self.assertEqual(devotion.image_subtitle, "PRIVATE DEVOTION · OCTAVE DAY 3")
+        devotion_filled = DailyImageSpec(
+            dt.date(2026, 11, 10), "HOLY SOULS", "PRIVATE DEVOTION", "devotion", "FOR THE FAITHFUL DEPARTED",
+            sequence_kind="TRIDUUM", sequence_day=1,
+        )
+        self.assertEqual(devotion_filled.image_subtitle, "PRIVATE DEVOTION · TRIDUUM DAY 1 · FOR THE FAITHFUL DEPARTED")
+        monthly = DailyImageSpec(
+            dt.date(2026, 11, 10), "HOLY SOULS IN PURGATORY", "PRIVATE DEVOTION", "monthly", "",
+            monthly_fallback=True,
+        )
+        self.assertEqual(monthly.image_subtitle, "NOVEMBER DEVOTION")
+        monthly_filled = DailyImageSpec(
+            dt.date(2026, 11, 10), "HOLY SOULS IN PURGATORY", "PRIVATE DEVOTION", "monthly",
+            "HOPE OF ETERNAL LIFE", monthly_fallback=True,
+        )
+        self.assertEqual(monthly_filled.image_subtitle, "NOVEMBER DEVOTION · HOPE OF ETERNAL LIFE")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,25 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+not ok 5 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v351-1'
+DBG: {"descs":39,"payload":true,"tab":"prayers","bodyHasPlayAll":true,"cards":0,"extKeys":15,"ownKeys":8}
+R1 seq: ["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year"]
+ok 6 - R1 Play All advances across >=2 pair boundaries (seq=["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year"], stall=null)
+R2' blockplay: ok seq: ["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus"]
+ok 7 - R2' advance reaches the rosary pair whose download was in flight at queue build (seq=["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus"], stall=null)
+ok 8 - A1 autoplay reads ON (stored=null, dock="Autoplay On")
+A2 seq: ["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus","marian-antiphon-angelus","intro:ext-gospel-exegesis","ext-gospel-exegesis","intro:marian-antiphon-angelus"]
+ok 9 - A2 block queue chains past the block end into Midmorning (seq=["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus","marian-antiphon-angelus","intro:ext-gospel-exegesis","ext-gospel-exegesis","intro:marian-antiphon-angelus"])
+ok 10 - A3 dock toggle turns autoplay OFF and the label follows (on=false, stored="off", dock="Autoplay Off")
+A3 seq: ["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus","marian-antiphon-angelus",null] stop: {"cur":null,"qlen":0}
+ok 11 - A3 with autoplay OFF the block queue stops at the block end (seq=["intro:ext-invitatory","ext-invitatory","intro:morning-prayer","morning-prayer","ext-morning-prayer","intro:daily-rosary","daily-rosary","intro:ext-bible-in-a-year","ext-bible-in-a-year","intro:marian-antiphon-angelus","marian-antiphon-angelus",null])
+ok 12 - A4 autoplay OFF persists across reload (on=false)
+ok 13 - A4 Settings toggle turns autoplay back ON (on=true, stored="on")
+A5 dbg: {"tA5":"played","avail":true,"url":"http://127.0.0.1:8953/audio/auxilium-chr","cur":"ext-office-of-readings","paused":false,"err":null}
+A5 seq: ["ext-office-of-readings","intro:marian-antiphon-angelus","marian-antiphon-angelus"] np toggle: "Autoplay On"
+A5 post: {"cur":"marian-antiphon-angelus","paused":true,"err":4,"q":["intro:marian-antiphon-angelus","marian-antiphon-angelus","ext-evening-prayer","intro:daily-reflection","daily-reflection","ext-night-prayer","ext-usccb-readings","ext-daily-tv-mass","ext-fr-mike-homily","ext-barron-sermon","intro:novena-st-jude","novena-st-jude","intro:novena-st-anne","novena-st-anne","intro:novena-st-rita","novena-st-rita","podcast-ep-1"],"idx":1,"played":"{\"ext-office-of-readings\":{\"2026-11-10\":{\"playedAt\":\"2026-11-10T22:53:40.561Z\",\"via\":\"played\"}}}"}
+A5 post2: {"freshUrl":"http://127.0.0.1:8953/audio/auxilium-chr","slotState":"present","slotUrl":"","dlKeys":["intro/marian-antiphon-angelus","intro/daily-reflection","intro/novena-st-jude","intro/novena-st-anne","intro/novena-st-rita","intro/morning-prayer","intro/auxilium-christianorum","intro/daily-rosary","marian-antiphon-angelus","daily-reflection","novena-st-jude","novena-st-anne","novena-st-rita","morning-prayer","auxilium-christianorum","daily-rosary"],"errWait":["marian-antiphon-angelus@1",19]}
+ok 14 - A5 single play (Office of Readings) chains into the Evening Antiphon pair and Now Playing carries the toggle (seq=["ext-office-of-readings","intro:marian-antiphon-angelus","marian-antiphon-angelus"], np="Autoplay On")
+ok 15 - browser: no page errors across the v351 legs (errors=[])
+# harness-v358: 14/15 ok

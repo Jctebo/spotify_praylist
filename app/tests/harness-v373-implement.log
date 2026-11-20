@@ -1,0 +1,27 @@
+ok 1 - S1 gatedTabRender: contentFn is invoked on the two token paths ONLY (standing token + token landed during the fetch)
+ok 2 - S1 gatedTabRender: the cached no-PIN branch and the fresh no-PIN branch both render renderPinSetupPrompt
+ok 3 - S1 gatedTabRender: the fetch-failure catch renders the fail-closed unreadable variant — the old fail-open catch is gone
+ok 4 - S2 renderPinSetupPrompt stands directly after renderPinGate in the source
+ok 5 - S2 the prompt carries the spec's exact copy, the Set a PIN button into the standing sheet, and the Try again re-invocation
+ok 6 - S2 the prompt never invokes contentFn and carries no close/dismiss/skip control
+ok 7 - S3 SW pin ora-pro-nobis-v373-1 stands; the v372 pin is gone
+ok 8 - S4 tracked diff vs the v372 base is client.ts + ui.ts only (got: app/worker/src/client.ts, app/worker/src/ui.ts)
+ok 9 - S4 the ui.ts diff is the CACHE pin line only — no new CSS (got: -var CACHE = "ora-pro-nobis-v372-1"; | +var CACHE = "ora-pro-nobis-v373-1";)
+ok 10 - S5 consequential copy: both old strings are gone from the client; both new strings stand (Settings card + Remove-PIN confirm)
+ok 11 - S6 the whole worker bundles clean (esbuild) — no syntax break anywhere in the client
+ok 12 - S7 (g, static) Prayers and Intentions never touch the gate or the prompt; Examination and Confession route through gatedTabRender exactly as before
+ok 13 - (a) Examination with no PIN set: the set-a-PIN prompt stands in the tab (gate heading + .card.pingate shell)
+ok 14 - (a) the prompt's explanation line is the spec copy, verbatim
+ok 15 - (a) the examination content is absent from the DOM, the content render never ran, and the ONLY call was the state read — no gated fetch
+ok 16 - (b) Confession with no PIN set: the same prompt with the Confession heading; content absent; no gated fetch
+ok 17 - (c) no dismiss path: the prompt's only button is Set a PIN, there are no links, clicking the heading/card/line renders no content, and re-entry (cached branch) re-renders the prompt with no second fetch
+ok 18 - (d) Set a PIN at the prompt opens the standing sheet unchanged; a matching pair POSTs the set and the recovery sheet shows the code once, token standing
+ok 19 - (d) dismissing the recovery sheet lands on Settings (the sheet's standing onDone); the next gated entry renders the content through the unchanged token path
+ok 20 - (e) PIN set + locked session (token gone after close): renderPinGate stands exactly as today — pad, Unlock, Forgot line — and no content is fetched
+ok 21 - (f) PIN set + unlocked session (token standing): the content renders exactly as today
+ok 22 - (h) the Settings no-PIN card reads the new copy and still offers its own Set a PIN
+ok 23 - (h) the Remove-PIN confirm reads the new copy, verbatim
+ok 24 - (i) a failed state read fails CLOSED: the unreadable variant stands (copy + Try again), no content in the DOM, no Set a PIN offered against an unknown state
+ok 25 - (i) Try again re-invokes the gate and, with the read restored to pinSet:false, lands on the set-a-PIN prompt
+ok 26 - browser: zero page errors
+# harness-v373: 26/26 passed

@@ -1,0 +1,88 @@
+ok - setup: stored day 2026-11-08 committed through the agent door
+ok - leg 14: served /app.js parses, carries the speed key + Now Playing, and no dock-jump remnant anywhere
+ok - leg 14: served SW carries CACHE = ora-pro-nobis-v336-1 AND the opn-ext-audio-v1 purge exemption verbatim
+ok - leg 1: fresh profile boots at rate 1 (state + element, before any play)
+ok - leg 1 setup: ep-alpha plays from its card
+ok - leg 1: the dock tap opens Now Playing
+ok - leg 1: NP speed button reads '1×' at the default, title is the track's
+ok - leg 4: the speed sheet opens from Now Playing
+ok - leg 4: chips are exactly the seven rates in ladder order (0.5× 0.75× 1× 1.25× 1.5× 1.75× 2×)
+ok - leg 4: the current rate's chip (1×) carries the active mark
+ok - leg 4: choosing 1.75× applies it, persists it, re-marks the chip — and the sheet stays standing
+ok - leg 4: the sheet closes on its Close button
+ok - leg 2: after reload the stored 1.75 is the boot rate — applied with nothing playing
+ok - leg 2: a corrupt stored value falls back to 1 rather than wedging the player
+ok - context A: zero page errors (0)
+ok - context B setup: Bible in a Year settled present (client-side, at open)
+ok - context B setup: ep-alpha playing
+ok - context B setup: Now Playing open
+ok - leg 7 setup: the own episode's duration is known
+ok - leg 7: seek to the middle of a PLAYING own episode lands (30.3 of 60.0), labels 0:30 / -0:30
+ok - leg 7 setup: paused from Now Playing
+ok - leg 7: seek to a quarter of a PAUSED own episode lands (15.0 of 60.0) and stands paused
+ok - leg 3 setup: playing again
+ok - leg 3: mid-track change to 1.25× — same track playing, position continuous (2.4 -> 3.3)
+ok - leg 3: the Media Session position state reports playbackRate 1.25 (saw 1.25)
+ok - leg 3: the crossing queue starts on the own episode
+ok - leg 3: Now Playing stands for the crossings
+ok - leg 3: next crosses own -> downloaded external
+ok - leg 3: the rate survives the own -> external crossing (startDesc re-asserts it)
+ok - leg 3: next crosses external -> Intentions segment
+ok - leg 3: the rate survives the external -> segment crossing
+ok - leg 6: minimize removes only the sheet — playback, position, and the armed sleep state are untouched
+ok - leg 5: the dock tap opens Now Playing from another tab
+ok - leg 5: the tab does NOT switch (the v326 jump is retired) and no dockjump mark exists anywhere
+ok - leg 5: #dock-next advances only — no sheet opens (the crossings queue ends, the dock clears)
+ok - leg 5 setup: ep-alpha playing again
+ok - leg 5: #dock-play toggles pause only — no sheet opens
+ok - leg 5: #dock-play resumes — still no sheet
+ok - leg 10 setup: the skip queue starts on ep-alpha
+ok - leg 10: Now Playing open
+ok - leg 10: at the queue's head, Previous is disabled and Next is enabled
+ok - leg 10: Next skips the unavailable middle track and lands ep-beta
+ok - leg 10: Previous returns to ep-alpha
+ok - leg 10: the Media Session nexttrack handler lands the same skip (one advance rule)
+ok - leg 10 setup: a single-track card play (queue empty)
+ok - leg 10: Now Playing opens in full for the single-track play
+ok - leg 10: with no queue, both Previous and Next are disabled — the surface still opens in full
+ok - leg 11: Now Playing's sleep button opens the shared sleep sheet
+ok - leg 11: arming 15 minutes from Now Playing sets the one sleep state
+ok - leg 11: Now Playing reopens over the Prayers view
+ok - leg 11: both surfaces read the same armed label (Sleep · 14:59)
+ok - leg 11: disarming from the Play All row clears the one state
+ok - leg 11: Now Playing reopens
+ok - leg 11: Now Playing's label follows the row's disarm (Sleep · Off)
+ok - leg 11: end-of-track armed from Now Playing
+ok - leg 11: the track's end fires the sleep stop (state disarmed, playback cleared)
+ok - leg 11: Now Playing removes itself when the current track clears
+ok - leg 12 setup: ep-alpha (with text) current
+ok - leg 12: Now Playing open
+ok - leg 12: Read stands on Now Playing for a track with text
+ok - leg 12: Read stacks OVER Now Playing (both sheets stand)
+ok - leg 12: closing Read returns to Now Playing with playback untouched
+ok - leg 12 setup: the external is current
+ok - leg 12: Now Playing reopens on the external
+ok - leg 12: Read is absent for an external track
+ok - leg 12 setup: the segment is current
+ok - leg 12: Now Playing reopens on the segment
+ok - leg 12: Read is absent for an Intentions segment
+ok - context B: zero page errors (0)
+ok - leg 8 setup: Bible in a Year settled present
+ok - leg 8 setup: the downloaded external plays (blob-local)
+ok - leg 8: Now Playing open
+ok - leg 8 setup: the external's duration is known
+ok - leg 8: seek to the middle of the downloaded external lands (30.3 of 60.0) — blob-local seeking is exact
+ok - leg 9 setup: the Midday Intentions segment plays
+ok - leg 9: Now Playing opens on the segment
+ok - leg 9 setup: the segment's duration is known and its body is buffering in
+ok - leg 9: an in-buffer scrub of the segment lands (9.3 of 30.0) over the full-body route
+ok - context C: zero page errors (0)
+ok - leg 13 setup: an Intentions chip play is running
+ok - leg 13: the dock tap opens Now Playing for a chip play
+ok - leg 13: NP for a chip play — titled 'Intentions', prev/next disabled, Read absent, speed (1×) and sleep (Sleep · Off) live
+ok - leg 13 setup: the chip play's duration is known
+ok - leg 13: the chip play ends
+ok - leg 13: Now Playing removes itself at the queue's end (visibility derived from state.current)
+ok - context D: zero page errors (0)
+
+harness-v336: 86/86 checks passed

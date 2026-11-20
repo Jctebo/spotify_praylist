@@ -1,0 +1,32 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode, schema incl. migration 0008)
+ok 3 - text staging POST accepted, size read back
+ok 4 - text staging refuses a bad X-Episode-Date (400)
+ok 5 - a wrong-size staged text aborts the commit 409 naming the track, in the named text shape
+ok 6 - the aborted commit wrote nothing — no stored day stands
+ok 7 - commit returns storedDate = D1, rowCount 3
+ok 8 - commit read-back perTrack text: verified / missing / verified exactly as the manifest
+ok 9 - stored-day counts texts beside tracks — 2 texts present / 1 missing, 3 tracks present
+ok 10 - payload: a text-carrying track carries hasText:true and its exact textUrl
+ok 11 - payload: the text-missing track stands named in its block, hasText:false, textUrl:null
+ok 12 - payload: the unblocked track carries its text fields like any other
+ok 13 - the text route serves the exact script bytes as text/plain
+ok 14 - the text route 404s a text-missing row by name
+ok 15 - the text route 404s an unknown episode
+ok 16 - the D2 replace-day commit lands
+ok 17 - replace-day: the prior day's text is gone with its row (404)
+ok 18 - replace-day: the new day's text serves exactly
+ok 19 - replace-day: stored-day shows one date only, texts 1 / 0
+Traceback (most recent call last):
+  File "/home/hatch/workspace/.worktrees/v334/app/.wrangler-test-v318-helper-driver.py", line 33, in <module>
+    assert stored["storedDate"] == "2027-04-03" and stored["episodeCount"] == 12, stored
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'ok': True, 'storedDate': '2027-04-03', 'episodeCount': 3, 'tracksPresent': 2, 'tracksMissing': 1, 'textsPresent': 1, 'textsMissing': 2, 'externalsPresent': 0, 'externalsMissing': 0, 'segmentBlocks': []}
+not ok 20 - harness crashed: Command failed: python3 /home/hatch/workspace/.worktrees/v334/app/.wrangler-test-v318-helper-driver.py
+Traceback (most recent call last):
+  File "/home/hatch/workspace/.worktrees/v334/app/.wrangler-test-v318-helper-driver.py", line 33, in <module>
+    assert stored["storedDate"] == "2027-04-03" and stored["episodeCount"] == 12, stored
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'ok': True, 'storedDate': '2027-04-03', 'episodeCount': 3, 'tracksPresent': 2, 'tracksMissing': 1, 'textsPresent': 1, 'textsMissing': 2, 'externalsPresent': 0, 'externalsMissing': 0, 'segmentBlocks': []}
+
+TALLY: 19 ok / 1 FAIL (20 checks)

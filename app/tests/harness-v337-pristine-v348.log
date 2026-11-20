@@ -1,0 +1,30 @@
+ok - 7 fresh D1: Morning contract order
+ok - 7 fresh D1: Midmorning contract order
+ok - 7 fresh D1: Midday contract order
+ok - 7 fresh D1: Afternoon contract order
+ok - 7 fresh D1: Evening contract order
+ok - 7 fresh D1: Night unchanged
+ok - 7 fresh D1: fallbacks follow their slots
+ok - 7 fresh D1: saint converted to external
+ok - 7 fresh D1: exegesis inserted external
+ok - 7 fresh D1: antiphon rows stand own
+ok - 7 fresh D1: meta version bumped exactly +1 (1 -> 2)
+ok - 7 fresh D1: prayer_intros table stands
+ok - 7 fresh D1: player_episodes PK widened to (date, episode_id, block)
+ok - 7 moved D1: the user-moved row stands untouched (held override)
+ok - 7 moved D1: every unmoved row still aligns
+ok - 1 payload date == presentedDay == real Chicago today
+FAIL - 1 storedDay stays the produced fact (+2) :: storedDay=undefined
+FAIL - 1 presentedMissing false on a standing day
+FAIL - 1 today's own rows served in Morning :: []
+ok - 1 no other date's title leaks into the payload
+ok - 1 pre-commit: the dated segment row for the old date stands in D1 (the floor leg's target)
+FAIL - 4 presentedMissing true when the presented day has no rows :: missing=undefined presented=2026-11-09 stored=undefined
+FAIL - 4 Morning named-missing set :: []
+FAIL - 4 Antiphon named-missing in Midday and Evening too :: midday=[] evening=[]
+FAIL - 4 novenas named-missing once in Midmorning :: []
+FAIL - 4 Intentions card stands first in Morning from 'current'
+ok - 4 no +2 title anywhere in the missing payload
+HARNESS ERROR Error: current segment stage Morning -> 404
+    at main (file:///home/hatch/workspace/.worktrees/v348-pristine/app/tests/harness-v337.mjs:417:35)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
