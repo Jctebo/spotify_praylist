@@ -1,6 +1,6 @@
 # v560 — Homily note box — a brief note under each homily recording
 
-Registry row 1511 · Intake: Goals Board task 1065 · Status: PLAN — approved by John 2026-11-20 16:06 CT (Q1 C · Q2 A · Q3 A · Q4 A · Q5 A · Q6 A · Q7 B · TO SHIP); chain running to Ship
+Registry row 1511 · Intake: Goals Board task 1065 · Status: LIVE — shipped 2026-11-20 22:27Z (see §5)
 
 ## 1 · Scope
 
@@ -48,3 +48,11 @@ Registry row 1511 · Intake: Goals Board task 1065 · Status: PLAN — approved 
 - **Harness, three runs, identical counts:** build tree **47 ok / 0 not-ok** · clean checkout of the committed tree (b2a1f01) **47 ok / 0 not-ok** · Review's independent clean checkout of b2a1f01 **47 ok / 0 not-ok**. Every decided answer has a leg: Q1 C (W1 card seat + W2 list seat, one field — W1j reads the card-saved note in the list) · Q2 A (W1i, W2f) · Q3 A (S4j — the multi-line sheet box) · Q4 A (W1j, W2d) · Q5 A (W2c, W2g) · Q6 A (W1b, S4f) · Local only (S3, W1g, W3d — zero fetches).
 - **Diff audit (6d538dd..b2a1f01):** 4 files — `app/worker/src/client.ts` (+94/−4, 13 hunks, every hunk inside the homily module, lines 9706–10504) · `app/worker/src/ui.ts` (+10/−0, the `.homily-note` block only) · `app/tests/harness-v560.mjs` (new) · this doc. `index.ts` diff: zero lines. No migration (0042 last). The Plan D6 fences verified byte-identical by S4l.
 - **Disclosed, standing:** the Implement §3 harness-build note (the S2b predicate fix between the first and second build-tree runs; no app code changed). Nothing else outstanding. The note's look on John's phone is a field leg, not a harness claim.
+
+## 5 · Ship
+
+- **SHIPPED LIVE 2026-11-20 22:27Z.** Merge: `release/v560` fast-forwarded to main at **05b698d** (Plan doc 90fdbd8 · Implement b2a1f01 · Review doc 10f7517 · SW pin bump 05b698d). GitHub: all four commits replicated byte-identically through the Git Data API — **main pushed · remote in sync** (origin/main = 05b698d, verified by the pusher's ref read-back). The local `release/v560` branch was deleted after the merge; it was never pushed.
+- **Deploy:** Worker **70f93698-91c1-4fd3-9f8b-411c39e03017** at 100% · pin **ora-pro-nobis-v560-1** · rollback = the v559 Worker 5a48f2f7-efaa-4bc3-afa3-5634f3a2272c. Smoke: the app agent door's player day (2026-11-20) answered **200, 6 blocks** on the new deployment.
+- **Harness on the merged tree: 45 ok / 2 not-ok — disclosed.** Both not-oks are the SW pin bump's own single line, the standing ship shape (v557/v558 precedent): S2c (the pin now reads v560-1, as it must) and S2b (the ui.ts diff against the base now includes that one changed pin line beside the added note rules). Every functional leg is green; the build tree and both clean checkouts read 47 ok / 0 not-ok.
+- **Registry:** row **1511 Live**, read back (shipped_at 2026-11-20T22:27:11Z · whats_new_id 380). **What's New 380** — "Homily notes — jot a note under a homily recording". No migration (0042 stands last). **No APK built** — the decided set is web-only; the Android repo is untouched and APK 1.0.48 / versionCode 48 stands. Nothing for John to install; the note box arrives with the app itself.
+- **Field legs (John's):** (1) record a homily → after the take, jot a note in the box at the record card → the same note stands in full under that homily in Catechesis → Homilies; (2) edit it later from the list (⋮ → Edit note) — one note, the change is the note in both seats; (3) a homily with no note shows "＋ Add a note", never an empty box; (4) no box stands while recording; (5) delete a homily → its note is gone with it.
