@@ -9144,20 +9144,28 @@ function paintFavoritesPage(day) {
     wireFavDrag(view);
     return;
   }
-  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"' }), '__favorites');
+  // v552 (Q1 A · Q4 A): Play all stands in the bar's
+  // right slot in the block pages' form — the
+  // .playbtn.small disc alone — and only while the list
+  // holds a track. The disc carries the standing
+  // starred-playall id, so the wiring below finds it in
+  // the bar host unchanged; it carries no data-queue
+  // (that key is the block pages' day-descriptor wiring,
+  // which never runs on this page). The in-page acts row
+  // retires whole; Add all to queue stands in the
+  // universal menu's Favorites group (openHeaderMenu).
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"',
+    rightHtml: list.length ? '<button class="playbtn small" id="starred-playall" aria-label="Play all of Favorites">&#9654;</button>' : '' }), '__favorites');
   var html = '<div id="favorites-list">';
   if (!list.length) {
     html += '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
   } else {
-    html += '<div class="row" style="gap:8px;margin:0 2px 10px"><button class="btn ghost small" id="starred-playall">Play all</button><button class="btn ghost small" id="starred-addall">Add all to queue</button></div>';
     html += list.map(starredRowHtml).join('');
   }
   html += '</div>';
   view.innerHTML = html;
   var pa = document.getElementById('starred-playall');
   if (pa) pa.addEventListener('click', starredPlayAll);
-  var aa = document.getElementById('starred-addall');
-  if (aa) aa.addEventListener('click', starredAddAll);
   view.querySelectorAll('[data-starplay]').forEach(function (b) {
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
@@ -10576,6 +10584,11 @@ function openHeaderMenu() {
     // only outside the mode itself and only while a drag
     // can move something (the no-dead-items rule).
     items.push({ head: true, label: 'Favorites' });
+    // v552 (Q2 A): Add all to queue stands in the group
+    // ABOVE Reorder — the act unchanged (starredAddAll),
+    // seated under the no-dead-items rule: outside the
+    // mode itself, and only while the list holds a track.
+    if (!favReorder && favoritesList().length) items.push({ label: 'Add all to queue', act: function () { starredAddAll(); } });
     if (!favReorder && favoritesList().length >= 2) items.push({ label: 'Reorder', act: function () { enterFavReorder(); } });
   } else if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
     // A block page: Sort · Mark all · Share · Open in
