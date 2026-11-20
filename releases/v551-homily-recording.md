@@ -43,7 +43,7 @@
 - **Ship will require (named now, restated at Review):** merge release/v551 to main + push main (read-back "main pushed · remote in sync") · SW pin bump to ora-pro-nobis-v551-1 · Worker deploy from a clean checkout of the merged HEAD · What's New entry · registry row 1492 Live · **the shell step: add `RECORD_AUDIO` + `MODIFY_AUDIO_SETTINGS` to the shell's AndroidManifest.xml, rebuild the APK with a version bump from 1.0.45, John installs it — without it, recording inside the Android app is refused by the platform (the browser form works)** · field legs for John: record a homily at Mass in the app (post-APK), play it back from Homilies, add it to a Praylist block.
 - **Concerns and Information Needs:** the one named risk stands in P1 (the shell permission) — bounded, shell-side, no web-build impact. IndexedDB persistence: the store persists in the app's WebView storage (the package's verified fact); clearing app data loses the takes — the decided mode's named cost, restated on the Delete confirm.
 
-## 3. Implement
+## 3 · Implement
 
 Built on local branch `release/v551` off GitHub main `e46593bf` (the v552 ship tree), in a fresh clone — the branch stays local and unmerged (Ship is the merge step). Files: `app/worker/src/client.ts` (the homily module + the seam branches) · `app/worker/src/ui.ts` (style rules only — record card, record disc, rename input; the SW pin does not move on the build tree) · `app/tests/harness-v551.mjs` · this doc. `index.ts` byte-identical; no migration (the P2 call).
 
