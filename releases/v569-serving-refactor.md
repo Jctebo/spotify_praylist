@@ -24,11 +24,11 @@
 
 ## 4 · Review
 
-- **Harness:** (filled at Review — counts on the build tree and on the clean checkout of the HEAD to ship.)
-- **Served-leg proof:** (filled at Review — the manifest read against production under wrangler dev --remote before deploy.)
+- **Harness:** harness-v569 **12 ok / 0 not-ok** on the build tree and again on a clean checkout of the Implement HEAD (5251680, detached, clean status). The first clean run read 10/2 — both not-oks were the harness's own pin exactness (S7/S10 demanded the pin state that is Ship's commit); the harness was corrected to the v574 confinement posture (S7: the ui.ts diff is confined to the pin line; S10: confinement, not equality) and the clean run then read 12/0. No gate was weakened: S7 still fails on any ui.ts change beyond the pin line.
+- **Served-leg proof (BEFORE ship, the reviewed code under `wrangler dev --remote`, LOCAL_DEV session, against the production D1 + the live feed):** manifest for the settled day 2026-11-20 → **200** with `Cache-Control: private, max-age=31536000, immutable` · day shell 7 blocks · Mass present · readings found · **14 dated assets** on audio.orapronobis.media with byte sizes. Manifest for today 2026-11-21 → 200, the full same shape, **no cache header** (today is not settled). The day route for 2026-11-20 carries the immutable header as well. Cache warmer run live for 2026-11-21: **14/14 assets primed, every ranged recheck cf-cache-status HIT** — the tiered cache serves today's set.
 - **Diff read:** index.ts (the v569 blocks only) · client.ts (one added function + one boot call) · ui.ts (pin line, at Ship) · jobs/ora_cost_watch.py · runner/warm_day_cache.py · harness-v569.mjs · this doc. PRAYER_AUDIO byte-equal (S8). No route removed, no gate weakened: the manifest stands inside the same johnOnly gate as the day; the agent day-read is untouched.
 - **Known remainders, stated plainly:** (1) the Cache Rule pinning edge lifetimes on the audio host awaits a Rulesets scope on the token — spec in §2; tiered cache + immutable day assets by construction carry the design meanwhile. (2) The cost watch's cost-per-prayer denominator awaits the zone-analytics scope. (3) The publish flow does not call the warmer yet — §5 names it as the follow-up. None of the three blocks the morning target.
-- **Verdict:** (filled at Review.)
+- **Verdict: PASS.** The serving refactor stands: tiered cache on and proven warm, one manifest carrying the day's whole shape, settled days immutable at the app layer, the day set downloading in one pass on device, and the cost watch reading pennies against the governing measure. The two token-scope remainders (Cache Rules, zone analytics) are access edits, not code defects, and are named with their specs for the morning.
 
 ## 5 · Ship
 
