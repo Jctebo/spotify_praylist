@@ -201,11 +201,11 @@ const BOOK = { groups: [{ category: 'Foundations', prayers: [
   const W = makeWorld(true);
   const X = W.__x;
   X.starredSet([epA, folderDef]);
-  check('L1 no order key reads the standing order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['praylist', 'catechesis', 'prayers', 'podcasts', 'fkeep']), X.favFolders().map((f) => f.id));
+  check('L1 no order key reads the standing order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['praylist', 'catechesis', 'prayers', 'podcasts', 'novenas', 'fkeep']), X.favFolders().map((f) => f.id)); // v581: the pin gains the fifth default (novenas, standing place)
   X.favFolderOrderSave(['podcasts', 'fkeep', 'praylist', 'catechesis', 'prayers']);
-  check('L1 a saved order sorts the folder list', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['podcasts', 'fkeep', 'praylist', 'catechesis', 'prayers']), X.favFolders().map((f) => f.id));
+  check('L1 a saved order sorts the folder list', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['podcasts', 'fkeep', 'praylist', 'catechesis', 'prayers', 'novenas']), X.favFolders().map((f) => f.id)); // v581 pin
   X.favFolderOrderSave(['zzz-dead', 'prayers', 'praylist']);
-  check('L1 dead ids drop out, unlisted follow standing order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['prayers', 'praylist', 'catechesis', 'podcasts', 'fkeep']), X.favFolders().map((f) => f.id));
+  check('L1 dead ids drop out, unlisted follow standing order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['prayers', 'praylist', 'catechesis', 'podcasts', 'novenas', 'fkeep']), X.favFolders().map((f) => f.id)); // v581 pin
   check('L2 folders stand expanded by default', X.favAnyExpanded() === true && X.favAnyCollapsed() === false);
   X.favCollapseAll();
   check('L2 collapse all folds every standing folder', X.favFolders().every((f) => X.favCollapsed(f.id)) && X.favAnyExpanded() === false && X.favAnyCollapsed() === true);
@@ -230,7 +230,7 @@ const BOOK = { groups: [{ category: 'Foundations', prayers: [
   const read = await X.api('/api/prayer/starred');
   check('L3 the new order persists through the standing sync', JSON.stringify((read.starred || []).map((e) => e.id)) === JSON.stringify(['day-ep-2', 'ep-42', 'bible-in-a-year', 'day-ep-1']), (read.starred || []).map((e) => e.id));
   check('L4 Done writes the folder order to the device key', (W.__storage.get('opn-favfolderorder-v579') || '') === JSON.stringify(['podcasts', 'praylist', 'catechesis']), W.__storage.get('opn-favfolderorder-v579'));
-  check('L4 favFolders reads the saved folder order back', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['podcasts', 'praylist', 'catechesis', 'prayers']), X.favFolders().map((f) => f.id));
+  check('L4 favFolders reads the saved folder order back', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['podcasts', 'praylist', 'catechesis', 'prayers', 'novenas']), X.favFolders().map((f) => f.id)); // v581 pin
   check('L4 the mode is cleared after Done', X.favReorder === null);
 }
 

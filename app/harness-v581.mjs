@@ -81,8 +81,8 @@ const git = (args) => execFileSync('git', args, { cwd: APP + '..', encoding: 'ut
 const changed = git(['diff', '--name-only', BASE, '--', 'app'])
   .split('\n').filter(Boolean)
   .map((p) => p.replace(/^app\//, ''));
-const allowed = new Set(['worker/src/client.ts', 'worker/src/index.ts', 'harness-v581.mjs', 'harness-v576.mjs']);
-check('S1 diff confined to client.ts + index.ts + harness-v581.mjs + harness-v576.mjs', changed.every((p) => allowed.has(p)), changed);
+const allowed = new Set(['worker/src/client.ts', 'worker/src/index.ts', 'harness-v581.mjs', 'harness-v576.mjs', 'harness-v579.mjs']);
+check('S1 diff confined to client.ts + index.ts + harness-v581.mjs + harness-v576.mjs + harness-v579.mjs', changed.every((p) => allowed.has(p)), changed);
 const migChanged = git(['diff', '--name-only', BASE, '--', 'app/migrations']).trim();
 check('S2 migrations unchanged vs BASE', migChanged === '', migChanged);
 const migList = execFileSync('ls', [APP + 'migrations'], { encoding: 'utf8' }).split('\n').filter((f) => f.endsWith('.sql')).sort();
