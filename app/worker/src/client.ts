@@ -20028,18 +20028,28 @@ function openDayMappingScreen593(fromLadder) {
 }
 function openEditTodayScreen594(fromLadder) {
   // v594 Part 2 (doc §2.4): EDIT TODAY — today's composed
-  // day, edited for today only. No draft, no Save: every
-  // edit writes the today layer at once through the
-  // today-edit route (Q1=A) and the day rebuilds. The pick
-  // chips at the head write today's pick through the
-  // standing day-pick route; changing the pick clears the
-  // layer first, and the row says so before it writes
-  // (Q2=A). Divergences badge in place in fact language,
-  // removed items stand as a trace line with restore acts,
-  // and ONE clear act deletes the layer whole (Q4=A). The
-  // surface stands behind the same locked-vault gate as
-  // the other Configure surfaces (Part 1's discipline):
-  // its load and every write wait for the unlock.
+  // day, edited for today only. Divergences badge in place
+  // in fact language, removed items stand as a trace line
+  // with restore acts (Q4=A). The surface stands behind
+  // the same locked-vault gate as the other Configure
+  // surfaces (Part 1's discipline): its load and every
+  // write wait for the unlock.
+  // v600 (doc §2.2): DRAFT-UNTIL-SAVE — John's word
+  // ("Today's edits wait for the Save today button")
+  // REVERSES Part 2's Q1=A at-once writes. The screen
+  // holds every change — block toggles, contents edits,
+  // removals/restores AND the pick chips — as a screen
+  // draft {pick, td, cleared}; nothing writes, and the
+  // Praylist keeps composing from the standing state,
+  // until the frozen SAVE TODAY bar at the top is
+  // pressed. The pick's clearing rule applies in-draft
+  // at the chip tap (the draft's layer edits drop; the
+  // standing warning words stand in the paint before
+  // both the tap and the save). The Clear act resets the
+  // DRAFT to the standing state and never writes; a
+  // saved layer is cleared by drafting its removal and
+  // saving. Closing with a differing draft fires the
+  // Q1=B prompt shape: Save today · Discard · Stay.
   var old = document.querySelector('.proftoday594');
   if (old) old.remove();
   var sheet = document.createElement('div');
@@ -20051,21 +20061,35 @@ function openEditTodayScreen594(fromLadder) {
   var body = sheet.querySelector('.proftodaybody594');
   var note = sheet.querySelector('.proftodaynote594');
   var scroller = sheet.querySelector('.panelbody');
+  // v600: the frozen Save today bar — a flex sibling
+  // above the scroller in the editor's own frozen dress
+  // (no new CSS), standing always once the screen loads.
+  var frozenT = document.createElement('div');
+  frozenT.className = 'proffrozen593 proftodayfrozen600';
+  frozenT.hidden = true;
+  frozenT.innerHTML = '<div class="profbar593" data-p600todaybar="1"><div class="row"><button class="btn gold" data-p600savetoday="1" disabled>Save today</button></div><p class="sub profbarline593" data-p600todayline="1"></p></div>';
+  var innerEl = sheet.querySelector('.inner');
+  if (innerEl && scroller) innerEl.insertBefore(frozenT, scroller);
+  var saveBtnT = frozenT.querySelector('[data-p600savetoday]');
+  var lineT = frozenT.querySelector('[data-p600todayline]');
+  if (saveBtnT) saveBtnT.addEventListener('click', function () { saveToday().catch(fail); });
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
   var res = null, td = null, seriesList = null, bookList = null;
+  var pickD = null, clearedD = false;
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
   function prof() { return res && res.effective ? byKey(res.effective.key) : null; }
+  function standPick() { return res && res.effective ? res.effective.key : null; }
+  function dprof() { return byKey(pickD) || prof(); }
   function closeScreen() { sheet.remove(); if (fromLadder) openConfigureLadder593(); }
-  function buildTodayDraft() {
-    var p = prof();
+  function buildDraftFor(key, layer) {
+    var p = byKey(key);
     if (!p) return null;
     var d = { key: p.key, kind: p.kind, name: p.name, honor: p.honorLine || '',
       core: (p.coreBlocks || []).slice(), layers: JSON.parse(JSON.stringify(p.layers)), contents: {} };
     d.core.concat(['Novenas']).forEach(function (b) {
       d.contents[b] = (p.contents && p.contents[b]) ? opnClone(p.contents[b]) : null;
     });
-    var layer = res.todayEdit;
     if (layer) {
       if (Array.isArray(layer.coreBlocks)) d.core = layer.coreBlocks.slice();
       if (layer.layers) d.layers = JSON.parse(JSON.stringify(opnLayersOut(layer.layers)));
@@ -20073,32 +20097,103 @@ function openEditTodayScreen594(fromLadder) {
     }
     return d;
   }
-  function layerFromDraft() {
-    // The layer is recomputed from the draft-vs-profile
-    // diff at every write: an aspect the draft holds
-    // exactly as the profile stands it is NOT carried, so
-    // undoing the last divergence deletes the entry whole.
-    var p = prof();
+  function buildTodayDraft() { return buildDraftFor(standPick(), res ? res.todayEdit : null); }
+  function layerJsonOf(d) {
+    // The canonical layer a draft describes, from the
+    // draft-vs-profile diff: an aspect the draft holds
+    // exactly as its profile stands it is NOT carried,
+    // so undoing the last divergence empties the layer.
+    // One machinery for the live draft and for the
+    // standing snapshot the dirty check compares with.
+    var p = byKey(d.key);
     var layer = { baseProfileKey: p.key };
-    if (JSON.stringify(td.core) !== JSON.stringify(p.coreBlocks || [])) layer.coreBlocks = td.core.slice();
-    var pLay = opnLayersOut(p.layers), tLay = opnLayersOut(td.layers);
+    if (JSON.stringify(d.core) !== JSON.stringify(p.coreBlocks || [])) layer.coreBlocks = d.core.slice();
+    var pLay = opnLayersOut(p.layers), tLay = opnLayersOut(d.layers);
     if (JSON.stringify(pLay) !== JSON.stringify(tLay)) layer.layers = tLay;
     var contents = {}, anyC = false;
-    Object.keys(td.contents).forEach(function (b) {
-      var list = td.contents[b];
+    Object.keys(d.contents).forEach(function (b) {
+      var list = d.contents[b];
       if (!list) return;
+      // v600 ship fix: contents stand only for a block
+      // the draft itself stands — a block toggled off
+      // leaves the draft's core, and its inherited
+      // contents entry must drop here, or the today-edit
+      // route's validator refuses the whole save
+      // ("contents for a block that does not stand").
+      if (b !== 'Novenas' && d.core.indexOf(b) < 0) return;
       if (JSON.stringify(list) !== JSON.stringify(opnTodayComposedContents594(p, b))) { contents[b] = list; anyC = true; }
     });
     if (anyC) layer.contents = contents;
-    return layer;
+    return JSON.stringify(layer);
   }
-  function persist() {
-    var layer = layerFromDraft();
-    var has = layer.coreBlocks !== undefined || layer.layers !== undefined || layer.contents !== undefined;
-    return profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: has ? layer : null })
-      .then(function (r) { if (r) res = r; });
+  function layerFromDraft() { return JSON.parse(layerJsonOf(td)); }
+  function layerHasFields(layer) {
+    return !!(layer && (layer.coreBlocks !== undefined || layer.layers !== undefined || layer.contents !== undefined));
   }
-  function divs() { var p = prof(); return p ? opnTodayDivergence594(p, res.todayEdit) : []; }
+  function draftLayerObj() {
+    // The layer the DRAFT describes: a cleared draft
+    // reads as the empty layer (follow the profile
+    // whole — zero divergences by definition).
+    if (clearedD) return { baseProfileKey: pickD };
+    return layerFromDraft();
+  }
+  var standJson = null;
+  function draftDirtyT() {
+    // Dirty = the draft differs from the STANDING state
+    // (not merely from the profile: a draft that simply
+    // restates the standing layer is clean).
+    if (!res || !td || pickD === null) return false;
+    if (pickD !== standPick()) return true;
+    if (clearedD) return !!res.todayEdit;
+    return layerJsonOf(td) !== standJson;
+  }
+  function saveToday() {
+    // The one write path: the whole draft lands at once
+    // through the standing routes. A changed pick clears
+    // the standing layer first, then writes the pick
+    // (Part 2's clearing rule, at the save); an unchanged
+    // pick writes the layer as drafted — a draft equal
+    // to the profile whole, and a cleared draft alike,
+    // write NO layer (the entry deletes).
+    if (!draftDirtyT()) return Promise.resolve();
+    var chain;
+    if (pickD !== standPick()) {
+      chain = (res.todayEdit
+        ? profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null })
+        : Promise.resolve(null)
+      ).then(function () {
+        return profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: pickD });
+      });
+    } else {
+      var layer = clearedD ? null : layerFromDraft();
+      chain = profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: layerHasFields(layer) ? layer : null });
+    }
+    return chain.then(function (r) {
+      if (r) res = r;
+      pickD = standPick();
+      clearedD = false;
+      td = buildTodayDraft();
+      standJson = layerJsonOf(td);
+      paint();
+      profileRebuild();
+    });
+  }
+  function divs() { var p = dprof(); return p ? opnTodayDivergence594(p, draftLayerObj()) : []; }
+  function paintFrozenT() {
+    if (!frozenT) return;
+    if (!res || !td) { frozenT.hidden = true; return; }
+    frozenT.hidden = false;
+    var dirty = draftDirtyT();
+    if (saveBtnT) saveBtnT.disabled = !dirty;
+    if (lineT) {
+      var p = dprof();
+      var dv = divs();
+      var txt = dv.length
+        ? 'Today differs from ' + (p ? p.name : '') + ' in ' + dv.length + (dv.length === 1 ? ' place.' : ' places.')
+        : 'Today stands as ' + (p ? p.name : '') + ' stands it.';
+      lineT.textContent = txt + (dirty ? ' · unsaved changes' : '');
+    }
+  }
   function prayerTitle(slug) {
     if (bookList) for (var i = 0; i < bookList.length; i++) if (bookList[i].slug === slug) return bookList[i].title;
     return slug;
@@ -20109,19 +20204,19 @@ function openEditTodayScreen594(fromLadder) {
     profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
     return u ? u.label : (it.key || it.kind);
   }
-  function effList(block) { return td.contents[block] || opnTodayComposedContents594(prof(), block); }
+  function effList(block) { return td.contents[block] || opnTodayComposedContents594(dprof(), block); }
   function materializeT(block) {
     if (td.contents[block]) return td.contents[block];
-    var mat = opnTodayComposedContents594(prof(), block);
+    var mat = opnTodayComposedContents594(dprof(), block);
     td.contents[block] = mat;
     return mat;
   }
   function paintContentsT(block) {
-    var p = prof();
+    var p = dprof();
     var comp = opnTodayComposedContents594(p, block);
     var compIds = comp.map(opnTodayItemId594);
     var list = effList(block);
-    var carried = !!(res.todayEdit && res.todayEdit.contents && res.todayEdit.contents[block]);
+    var carried = !clearedD && !!((layerFromDraft().contents || {})[block]);
     var html = '<div class="profcontents591" data-p594anchor="' + esc(block) + '">'
       + '<p class="sub">' + (carried
         ? 'Set for today — stands as listed · new prayers added to ' + esc(p.name) + ' will not join today'
@@ -20143,7 +20238,7 @@ function openEditTodayScreen594(fromLadder) {
     return html + '</div>';
   }
   function paintSeriesT() {
-    var p = prof();
+    var p = dprof();
     var pSer = (opnLayersOut(p.layers).podcasts.series) || [];
     var html = '<div class="profcontents591" data-p594anchor="Podcasts"><p class="sub">Podcast series in the day</p>';
     if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
@@ -20158,7 +20253,7 @@ function openEditTodayScreen594(fromLadder) {
     return html + '</div>';
   }
   function paintBlocksT() {
-    var p = prof();
+    var p = dprof();
     var pCore = p.coreBlocks || [];
     var html = '';
     var order = td.core.slice();
@@ -20189,25 +20284,31 @@ function openEditTodayScreen594(fromLadder) {
   }
   function paint() {
     if (!body || !res || !res.profiles || !td) return;
-    var p = prof();
-    if (!p) { body.innerHTML = '<p class="sub">No profiles stand.</p>'; return; }
+    var sp = prof();
+    var p = dprof();
+    if (!p || !sp) { body.innerHTML = '<p class="sub">No profiles stand.</p>'; return; }
     var dv = divs();
-    var html = '<p class="sub">Today follows ' + esc(p.name) + ' — the chips change today’s pick.</p>';
+    var html = '<p class="sub">Today follows ' + esc(sp.name) + ' — the chips change today’s pick.</p>';
     html += '<div class="profchips591">';
     res.profiles.forEach(function (pp) {
-      html += '<button class="chip591' + (pp.key === p.key ? ' on' : '') + '" data-p594tchip="' + esc(pp.key) + '">' + esc(pp.name) + '</button>';
+      html += '<button class="chip591' + (pp.key === pickD ? ' on' : '') + '" data-p594tchip="' + esc(pp.key) + '">' + esc(pp.name) + '</button>';
     });
     html += '</div>';
     html += '<p class="sub">Change for today only.</p>';
-    if (res.todayEdit) html += '<p class="sub" data-p594tpickwarn="1">Changing the pick clears today’s edits.</p>';
+    // The clearing warning stands whenever a pick change
+    // would clear anything — a standing layer, or layer
+    // edits the draft carries — before the tap and the
+    // save alike, in the standing words.
+    if (res.todayEdit || layerHasFields(layerFromDraft())) html += '<p class="sub" data-p594tpickwarn="1">Changing the pick clears today’s edits.</p>';
     if (dv.length) html += '<p class="sub" data-p594tdivline="1">Today differs from ' + esc(p.name) + ' in ' + dv.length + (dv.length === 1 ? ' place.' : ' places.') + '</p>';
     else html += '<p class="sub" data-p594tdivline="1">Today stands as ' + esc(p.name) + ' stands it.</p>';
-    if (res.todayEdit) html += '<div class="row"><button class="btn ghost" data-p594tclear="1">Clear today’s edits — follow the profile whole</button></div>';
+    if (res.todayEdit || draftDirtyT()) html += '<div class="row"><button class="btn ghost" data-p594tclear="1">Clear today’s edits — follow the profile whole</button></div>';
     html += '<p class="sub">Changes here stand for today only. To change every day, use Edit profiles.</p>';
     html += paintBlocksT();
     html += '<div class="row"><button class="btn ghost" data-p594tclose="1">Close</button></div>';
     body.innerHTML = html;
     wire();
+    paintFrozenT();
   }
   function anchoredRepaintT(btn) {
     var a = btn && btn.closest ? btn.closest('[data-p594anchor]') : null;
@@ -20220,39 +20321,62 @@ function openEditTodayScreen594(fromLadder) {
     }
   }
   function afterEdit(btn) {
-    persist().then(function () { anchoredRepaintT(btn); profileRebuild(); }).catch(fail);
+    // v600: a draft edit repaints only — nothing writes,
+    // and the day does not rebuild, until Save today.
+    anchoredRepaintT(btn);
+  }
+  function requestClose() {
+    if (!draftDirtyT()) { closeScreen(); return; }
+    openTodayPrompt600();
+  }
+  function openTodayPrompt600() {
+    // The standing Q1=B prompt shape, for the close:
+    // Save today · Discard · Stay.
+    var oldP = document.querySelector('.profprompt593');
+    if (oldP) oldP.remove();
+    var sh = document.createElement('div');
+    sh.className = 'sheet profprompt593';
+    sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Unsaved changes</h1></div>'
+      + '<p class="sub">You have unsaved changes for today. Save them before you close?</p>'
+      + '<div class="row"><button class="btn gold" data-p600prompt="save">Save today</button><button class="btn ghost" data-p600prompt="discard">Discard</button><button class="btn ghost" data-p600prompt="stay">Stay</button></div></div>';
+    document.body.appendChild(sh);
+    mountDrawer(sh, false);
+    sh.querySelectorAll('[data-p600prompt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var act = btn.getAttribute('data-p600prompt');
+        if (act === 'stay') { sh.remove(); return; }
+        if (act === 'discard') { sh.remove(); closeScreen(); return; }
+        saveToday().then(function () { sh.remove(); closeScreen(); }).catch(fail);
+      });
+    });
   }
   function wire() {
     body.querySelectorAll('[data-p594tchip]').forEach(function (chip) {
       chip.addEventListener('click', function () {
         var key = chip.getAttribute('data-p594tchip');
-        if (!res.effective || key === res.effective.key) return;
-        // Q2=A: the pick writes at once through the
-        // standing day-pick route — and changing it clears
-        // today's edits FIRST (the warning stood above the
-        // chips before the tap), so a stale layer can never
-        // land on the new profile.
-        var clearFirst = res.todayEdit
-          ? profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null })
-          : Promise.resolve(null);
-        clearFirst.then(function () {
-          return profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key });
-        }).then(function (r) {
-          if (r) res = r;
-          td = buildTodayDraft();
-          paint();
-          profileRebuild();
-        }).catch(fail);
+        if (key === pickD) return;
+        // v600: the clearing rule, applied in-draft at
+        // the tap (Part 2 cleared at the tap; the pick
+        // itself now waits for Save today): the draft's
+        // layer edits drop and the draft reopens on the
+        // tapped profile whole. The warning stood above
+        // the chips before the tap.
+        pickD = key;
+        clearedD = false;
+        td = buildDraftFor(key, null);
+        paint();
       });
     });
     var clearBtn = body.querySelector('[data-p594tclear]');
     if (clearBtn) clearBtn.addEventListener('click', function () {
-      profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null }).then(function (r) {
-        if (r) res = r;
-        td = buildTodayDraft();
-        paint();
-        profileRebuild();
-      }).catch(fail);
+      // v600: the Clear act resets the DRAFT to the
+      // standing state and never writes. With a saved
+      // layer standing, the reset drafts its removal
+      // (cleared) — Save today then writes the clear.
+      pickD = standPick();
+      td = buildDraftFor(pickD, null);
+      clearedD = !!res.todayEdit;
+      paint();
     });
     body.querySelectorAll('[data-p594tblock]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -20331,7 +20455,7 @@ function openEditTodayScreen594(fromLadder) {
       btn.addEventListener('click', function () {
         var parts = cPartsT(btn, 'data-p594trestore');
         var block = parts[0], id = parts[1];
-        var comp = opnTodayComposedContents594(prof(), block);
+        var comp = opnTodayComposedContents594(dprof(), block);
         var cur = effList(block);
         var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
         if (restored) {
@@ -20346,7 +20470,7 @@ function openEditTodayScreen594(fromLadder) {
       btn.addEventListener('click', function () { openAddPickerT(btn.getAttribute('data-p594tadd')); });
     });
     var closeBtn = body.querySelector('[data-p594tclose]');
-    if (closeBtn) closeBtn.addEventListener('click', closeScreen);
+    if (closeBtn) closeBtn.addEventListener('click', requestClose);
   }
   function openAddPickerT(block) {
     loadBookT(function () {
@@ -20407,7 +20531,10 @@ function openEditTodayScreen594(fromLadder) {
   function load() {
     return api('/api/prayer/profiles').then(function (r) {
       res = r;
+      pickD = standPick();
+      clearedD = false;
       td = buildTodayDraft();
+      standJson = layerJsonOf(td);
       paint();
     }).catch(function () { if (body) body.innerHTML = '<p class="sub">Today did not load.</p>'; });
   }
@@ -20442,18 +20569,20 @@ function openProfilesScreen(openKey, opts) {
   // remain a draft until Save writes them (the v591
   // semantics stand). A chip tap while the standing draft
   // is dirty fires the prompt first (Q1=B): Save · Discard
-  // · Stay. The acts bar stands at the top ONLY while the
-  // draft is dirty (Q3=C), carrying Save · Save New + the
-  // status line; Save New also stands always in the This
-  // profile zone (its clean-state home). The chips row +
+  // · Stay. The acts bar stands at the top frozen ALWAYS
+  // (v600 — John's word REVERSES the Q3=C dirty-only bar):
+  // Save · Save New + the status line stand whether the
+  // draft is dirty or clean, Save greyed while clean;
+  // Save New also stands always in the This profile zone
+  // (its clean-state home). The chips row +
   // block jump strip + progress hairline stand frozen
   // always (Q4=A). The frozen zone is a flex sibling above
-  // the .panelbody scroller, so the bar appearing shrinks
-  // only the scroller's height — never its content offset;
-  // every edit repaint is anchored to the edited block, so
-  // an edit never moves his place (W6 repaired). Reached
-  // from the Configure ladder, the labeled Close returns
-  // to the ladder.
+  // the .panelbody scroller; with the bar permanent its
+  // height never changes, so an edit can never move the
+  // scroller's content — and every edit repaint is
+  // anchored to the edited block besides (W6 repaired).
+  // Reached from the Configure ladder, the labeled Close
+  // returns to the ladder.
   var fromLadder = !!(opts && opts.ladder);
   var old = document.querySelector('.profplan590');
   if (old) old.remove();
@@ -20758,8 +20887,13 @@ function openProfilesScreen(openKey, opts) {
     if (!res || !ed) return;
     var dirty = draftDirty(ed);
     var eff = res.effective;
-    if (barEl) barEl.hidden = !dirty;
-    if (dirty && barLine) barLine.textContent = ed.name + ' · unsaved changes';
+    // v600: the bar stands frozen ALWAYS (Q3=C reversed) —
+    // Save is greyed while the draft is clean, live while
+    // dirty; Save New stands live always.
+    if (barEl) barEl.hidden = false;
+    var saveBtn = barEl ? barEl.querySelector('[data-p593save="profile"]') : null;
+    if (saveBtn) saveBtn.disabled = !dirty;
+    if (barLine) barLine.textContent = dirty ? ed.name + ' · unsaved changes' : 'No unsaved changes';
     if (chipsEl) {
       var html = '';
       res.profiles.forEach(function (p) {
