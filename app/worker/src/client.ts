@@ -7312,7 +7312,7 @@ function novenaCatalogListHtml(cat) {
     if (!novenaSearchMatch(n, novenaSearchText)) return;
     shown++;
     var t = todayById['novena-' + n.slug];
-    html += '<div class="card" data-novena="' + esc(n.slug) + '"><div class="row"><div class="grow"><h3>' + esc(n.name) + '</h3>'
+    html += '<div class="card" data-novena="' + esc(n.slug) + '"><div class="row"><div class="grow"><div class="titlerow"><h3>' + esc(n.name) + '</h3>' + seriesStarBtnHtml('novena-' + n.slug) + '</div>'
       + '<div class="meta">' + n.total + ' episode' + (n.total === 1 ? '' : 's')
       + (n.latestLabel ? ' · Latest: ' + esc(n.latestLabel) : '')
       + (t ? ' · Day ' + t.n + ' today' : '')
@@ -7323,7 +7323,10 @@ function novenaCatalogListHtml(cat) {
 }
 function wireNovenaCatalogCards() {
   view.querySelectorAll('[data-novena]').forEach(function (c) {
-    c.addEventListener('click', function () { massPodReturn = false; openPodSeries('novena-' + c.getAttribute('data-novena')); });
+    c.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-trackstar]')) return; // the star's own act (the delegated handler)
+      massPodReturn = false; openPodSeries('novena-' + c.getAttribute('data-novena'));
+    });
   });
 }
 function paintCatechesisNovenas() {
@@ -10054,6 +10057,13 @@ function starEntryForKey(key) {
     var srow = state.podcastsIndex && Array.isArray(state.podcastsIndex.seriesList)
       ? state.podcastsIndex.seriesList.filter(function (x) { return x.series === skey; })[0] : null;
     if (srow) return { k: 'series', id: skey, title: srow.title || skey, sub: 'Podcast', durationS: 0, imageUrl: srow.showImageUrl || '', block: '', url: null, date: state.presentedDay || '' };
+    // v577: a novena series star (seated on the grouping
+    // card) resolves from the novena catalog, so its door
+    // carries the novena's own name.
+    if (skey.indexOf('novena-') === 0 && state.novenasCatalog && Array.isArray(state.novenasCatalog.novenas)) {
+      var nrow = state.novenasCatalog.novenas.filter(function (x) { return 'novena-' + x.slug === skey; })[0];
+      if (nrow) return { k: 'series', id: skey, title: nrow.name || skey, sub: 'Podcast', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+    }
     return { k: 'series', id: skey, title: skey, sub: 'Podcast', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
   }
   var id = String(key).slice('episode:'.length);

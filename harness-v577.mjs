@@ -177,6 +177,7 @@ check("S4 novena routes stand in BOTH read routes", (idxSrc.match(/await podNove
 const clientSrc = readFileSync(APP + "app/worker/src/client.ts", "utf8");
 check("S5 novena dispatch + painters stand", clientSrc.includes("state.podcasts.kind === 'novena') paintPodNovenaSeries()") && clientSrc.includes("function paintPodNovenaSeries") && clientSrc.includes("function podNovenaDesc") && clientSrc.includes("function playNovenaFrom"));
 check("S5 catalog page stands (search at top, saint order from payload)", clientSrc.includes('id="nov-search"') && clientSrc.includes("function novenaSearchMatch") && clientSrc.includes("api('/api/player/podcasts?series=novenas')") && clientSrc.includes("openPodSeries('novena-' +"));
+check("S5 novena series star seats stand (v576 interface)", clientSrc.includes("seriesStarBtnHtml('novena-' + n.slug)") && clientSrc.includes("state.novenasCatalog.novenas") && clientSrc.includes("if (ev.target.closest('[data-trackstar]')) return; // the star's own act"));
 
 // ---------- rendered client (S6 + C-legs) ----------
 const tplStart = clientSrc.indexOf("= `") + 3;
@@ -209,6 +210,26 @@ function sliceFn(src, name) {
   const desc = x.podNovenaDesc({ key: ep.stem, title: "T", url: ep.url, durationS: 0 });
   check("C2 desc is day-form, keyed by the stem", x.starKeyOf("episode", desc.episodeId) === "episode:" + ep.stem, desc.episodeId);
   check("C2 desc carries the enclosure for the star snapshot", desc.enclosureUrl === ep.url && desc.url === ep.url && desc.block === "Novenas" && desc.available === true);
+}
+{
+  // C3: a novena series star resolves its Favorite Podcasts
+  // door entry from the novena catalog — the door carries
+  // the novena's own name, not the raw key.
+  const world = {
+    console,
+    starredEntryByKey: () => null,
+    state: {
+      podcasts: null, podcastsIndex: null, presentedDay: "2026-11-21",
+      novenasCatalog: { novenas: censusOrder.map((c) => ({ slug: c.slug, name: c.name, saint: c.saint })) },
+    },
+  };
+  vm.createContext(world);
+  const slice = [sliceFn(appJs, "starEntryForKey"), sliceFn(appJs, "starKeyOf")].filter(Boolean).join("\n");
+  vm.runInContext(slice + "\n;this.__y = { starEntryForKey };", world);
+  const slug = fullest[0];
+  const entry = world.__y.starEntryForKey("series:novena-" + slug);
+  check("C3 novena series star files its door under the novena's name",
+    !!entry && entry.k === "series" && entry.id === "novena-" + slug && entry.title === census.get(slug).name, entry && entry.title);
 }
 
 // ---------- L-legs (wrangler dev, fixture feed) ----------
