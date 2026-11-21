@@ -64,6 +64,44 @@ Fixtures drawn from production shapes (Improvement D): the starred entries ride 
 - L7 regression: harness-v576 and harness-v577 run on this tree; a leg that pins the four-folder count moves to five with the change named in §3, never silently.
 - Ship proof (standing rule): the SERVED client script is fetched and parsed whole after deploy; the live `?series=novenas` payload carries `startDate`.
 
+## 3 · Implement
+
+Built on release/v581 (commits 4ac1045 + 6c1650d), all in the standing surfaces — `app/worker/src/client.ts`, `app/worker/src/index.ts`, the new `app/harness-v581.mjs`, and two sibling harness pin moves (§3.4). No migration, no store change, the v578 vault untouched.
+
+### 3.1 The fifth folder and the derivation (Q1 A · Q3 A)
+
+- `FAV_FOLDER_DEFAULTS` gains `{ id: 'novenas', name: 'Favorite Novenas' }` fifth, after Favorite Podcasts. `favFolders()` is otherwise exactly as derived (v579's device-local folder order sorts inside it — §3.3), so the page, the Move menus, and the reorder machinery all cover the fifth folder with no further change.
+- `favDerivedFolder`: a `series` entry whose id starts with `novena-` (the v577 canon, read by the new `favIsNovenaDoor`) derives to `novenas`; any other series derives to `podcasts`. No entry is rewritten — already-starred novenas re-derive on the next paint, and a standing assignment still governs through `favFolderOf` (a door the user moved stays where the user put it; harness L2 proves both directions).
+
+### 3.2 The novena object (Q2 A)
+
+- `favDoorRowHtml` branches on the novena door: its meta line is `favNovenaStanding(e)` — "Day n today" from the presented day's Novenas slot (the slot track whose episodeId is the door's id, read through `novenaInfo`, the catalog card's own resolution), else "Starts <label>" from the catalog row's new `startLabel`, else the plain line "Novena". A podcast door's meta stands unchanged.
+- The door menu's first item reads "Open novena" for a novena door; the tap still routes `goSeries(e.id)` → `openPodSeries('novena-…')`, the proven catalog path.
+- Server (index.ts): `podNovenasIndexPayload` adds `startDate` + `startLabel` per novena — the Day-1 episode's date where a Day 1 stands, else the earliest episode's (episodes stand newest-first in the snapshot). No new store; the snapshot already carries every episode.
+- The Favorites paint kicks the two loads a novena door needs, in the standing pattern, only when novena doors stand: the novenas catalog fetch (settle repaints through `paintFavoritesSurfaces`) and `catechesisNovenasResolve()`. The wiring the Plan promised to name: the resolution's settle hook `catechesisNovenasSettled` now also calls `paintFavoritesSurfaces()` (a no-op unless the Favorites page stands), so a "Day n today" line lands when the slot settles.
+
+### 3.3 Empty folders don't show (added rule)
+
+- `favFolderCount(folderId)` (tracks + doors, or the book's favorites for Prayers) and `favVisibleFolders()` = `favFolders()` filtered to count > 0 are the single derivation. `paintFavoritesPage` paints sections from `favVisibleFolders()` only — defaults and customs alike; when none stands, the list area carries the one settled card ("No favorites yet — tap ☆ on a track, a prayer, a podcast, or a novena and it will stand here."). `favFolderSectionHtml` counts through the same helper. Move menus still offer every folder (a destination need not be visible to receive an item).
+- **Sequencing fact, stated plainly:** v582 and v579 shipped to main while this build was in flight; the branch rebased onto main a49dc6d with no conflicts, and the harness suite re-ran green on the rebased tree (§4). v579's folder-order machinery composes with the fifth folder as its own comment anticipates — the stored order sorts inside `favFolders()`, and a later default stands in its standing place until the person reorders.
+- **One divergence, named (not silently folded in):** v579's reorder mode, shipped hours before this build landed, enumerates its folders through its own `favReorderVisibleFolders` — empty DEFAULT folders are absent there (the added rule holds), but empty CUSTOM folders stand in the reorder mode by v579's shipped design (management access: an empty custom folder can still be renamed, deleted, or reordered there). The Favorites PAGE follows the added rule for defaults and customs alike, exactly as directed. Aligning the reorder mode for customs is a separate small fix-forward if John wants it; it is not folded into this release.
+
+### 3.4 Harness and the named pin moves
+
+- harness-v581 (new): S-legs (diff confinement · migrations unchanged, newest 0042 · SW pin unmoved pre-Ship · surface strings · the payload's start fields · the RENDERED client parses whole · the paint reads the visible folders) + L-legs over the rendered client (five folders in order · derivation both ways + assignment governs · the page list partition — novena under Favorite Novenas, never under Favorite Podcasts · the standing line in all three states · empty-folder invisibility + Move still offers + the all-empty world · the payload's own text over a fixture catalog for the Day-1 and no-Day-1 cases).
+- Named pin moves (the release that changes the folder count moves the pins that enumerate folders): harness-v576's L1 folder-order pin and harness-v579's L1/L4 folder-order pins now carry 'novenas' in its standing place. No other sibling assertion was touched.
+
+## 4 · Review
+
+Review ran on a CLEAN checkout of the exact committed tree — worktree ~/workspace/.worktrees/v581/review, detached at the branch HEAD 6c1650d, `git status` clean — never on the build worktree's word.
+
+- **harness-v581: 31 ok / 0 not ok** on the clean checkout (and the same on the build tree before the commit).
+- **harness-v576: 44 ok / 1 not ok.** The one not-ok is its S1 diff-confinement leg: its allowed-file set predates harness-v581.mjs, so the leg structurally fails on any tree carrying this release's harness. Every functional leg passes, including the folder partition and the moved L1 pin.
+- **harness-v579: 33 ok / 2 not ok.** The two not-oks are its S1/S3 legs, which are pinned to its ship parent (175b857) and structurally include v579's own shipped change and pin bump — they can only pass on v579's own pre-ship tree. Every functional leg passes, including all folder-order legs with the fifth folder standing in its standing place.
+- **harness-v577: 37 ok / 1 not-ok.** The one not-ok is the same S1 class (its allowed set predates the sibling harness files and this release doc). Its served legs pass against the modified payload builder — the novena grouping and series payloads answer in both shapes (private + public), with the new start fields standing consistently in both.
+- Gate honesty: the three S-leg artifacts above are named with their causes; no failed leg is counted as a pass, and no functional leg failed anywhere in the suite.
+- Diff audit: the change is confined to the folder derivation, the door row's meta, the section visibility, two payload fields, and the settle-hook line — the starred store, the sweep, the vault, and the Prayers folder's definitional content are untouched (the diff stat: client.ts +102/−9 in the favorites span, index.ts +9).
+
 ### 2.8 Ship shape
 
 Client change + one server payload addition; SW pin `ora-pro-nobis-v581-1`; merge release/v581 back to main and push (read-back "main pushed · remote in sync"); deploy from the merged main tree; rollback target = v578 Worker be60f487. Sequencing with v579/v582: re-read main before merging and before deploying, rebase onto standing main, never force-push.
