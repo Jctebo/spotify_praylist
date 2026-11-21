@@ -21107,53 +21107,64 @@ function openProfileSheet() {
   var body = sheet.querySelector('.profbody');
   var note = sheet.querySelector('.profnote');
   function fail() { if (note) note.textContent = 'Could not save \\u2014 try again.'; }
-  api('/api/prayer/profiles').then(function (res) {
-    if (!res || !res.profiles || !res.state || !body) return;
-    var eff = res.effective;
-    var html = '<p class="sub">For today</p>';
-    res.profiles.forEach(function (p) {
-      var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
-      html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
-    });
-    if (eff && eff.resolvedBy === 'pick') {
-      html += '<div class="card bookrow" data-profpick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
-    }
-    html += '<p class="sub">Standing default</p>';
-    res.profiles.forEach(function (p) {
-      var mark = res.state.standingKey === p.key;
-      html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
-    });
-    html += '<p class="sub">Day rule</p>';
-    html += '<div class="card bookrow" data-profrule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
-    body.innerHTML = html;
-    body.querySelectorAll('[data-profpick]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var key = row.getAttribute('data-profpick');
-        profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+  function startLoad() {
+    api('/api/prayer/profiles').then(function (res) {
+      if (!res || !res.profiles || !res.state || !body) return;
+      var eff = res.effective;
+      var html = '<p class="sub">For today</p>';
+      res.profiles.forEach(function (p) {
+        var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
+        html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
       });
-    });
-    body.querySelectorAll('[data-profstand]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-profstand') }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+      if (eff && eff.resolvedBy === 'pick') {
+        html += '<div class="card bookrow" data-profpick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
+      }
+      html += '<p class="sub">Standing default</p>';
+      res.profiles.forEach(function (p) {
+        var mark = res.state.standingKey === p.key;
+        html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
       });
-    });
-    var ruleRow = body.querySelector('[data-profrule]');
-    if (ruleRow) ruleRow.addEventListener('click', function () {
-      profPut('/api/prayer/profiles/state', { dayRule: !res.state.dayRule }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
-    });
-    // v517 §2: each row's Edit act — its tap is not the
-    // row's pick act (stopPropagation), the sheet closes,
-    // and the editor opens for that key (a default opens
-    // it in copy mode).
-    body.querySelectorAll('[data-profedit]').forEach(function (btn) {
-      btn.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var k = btn.getAttribute('data-profedit');
-        sheet.remove();
-        openProfileEditor(k);
+      html += '<p class="sub">Day rule</p>';
+      html += '<div class="card bookrow" data-profrule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
+      body.innerHTML = html;
+      body.querySelectorAll('[data-profpick]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var key = row.getAttribute('data-profpick');
+          profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+        });
       });
-    });
-  }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+      body.querySelectorAll('[data-profstand]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-profstand') }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+        });
+      });
+      var ruleRow = body.querySelector('[data-profrule]');
+      if (ruleRow) ruleRow.addEventListener('click', function () {
+        profPut('/api/prayer/profiles/state', { dayRule: !res.state.dayRule }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
+      });
+      // v517 §2: each row's Edit act — its tap is not the
+      // row's pick act (stopPropagation), the sheet closes,
+      // and the editor opens for that key (a default opens
+      // it in copy mode).
+      body.querySelectorAll('[data-profedit]').forEach(function (btn) {
+        btn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          var k = btn.getAttribute('data-profedit');
+          sheet.remove();
+          openProfileEditor(k);
+        });
+      });
+    }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+  }
+  // v596: a locked device vault gates the slot picker
+  // too -- its day-pick rows write through the same
+  // local layer and refused silently (423 vault_locked)
+  // while the sheet painted from the ephemeral default
+  // document. The standing unlock card stands in the
+  // body and the sheet loads only once unlocked (the
+  // v594 pattern); the gate's close is the sheet's own
+  // removal -- the picker has no ladder to return to.
+  if (!profVaultGate594(body, startLoad, function () { sheet.remove(); })) startLoad();
 }
 function openProfileEditor(key) {
   // v517 §2: the profile editor — a .sheet in the slot
