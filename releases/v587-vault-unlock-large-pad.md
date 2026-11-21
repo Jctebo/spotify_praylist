@@ -114,3 +114,36 @@ fails with the standing message and clears the entry; the pad discipline (cap 8,
 submit gating); the unlock recovery form posts typed code + pad PIN to the recover route; the
 gate recovery form and the set sheet drive their match validations and post to the recover /
 set routes, each showing the fresh recovery code once.
+
+## §4 Review (light, streamlined path)
+
+The whole diff re-read (client.ts: 75 insertions / 18 deletions in 5 hunks — the factory, the
+unlock card's HTML + bind, the gate recovery form, the set sheet — plus harness-v587.mjs and
+this doc). Findings:
+
+- **Against the approval:** Q1 A stands — the pad is the unlock screen's PIN entry and the
+  typed field is gone from that screen. Q2 A stands — the pad also stands on the unlock
+  recovery new-PIN, the gate recovery form, and the set/change sheet; the recovery-code inputs
+  stay typed on both recovery forms. Nothing beyond the picks was built: no route, body,
+  message, or success/error path changed anywhere.
+- **Behavior invariance, proven not just inspected:** the gate slice (renderPinGate through
+  submitPinVerify) is byte-identical to base (S6); no added/removed line touches a vault or
+  PIN-machinery symbol (S7); index.ts and ui.ts are byte-identical (S4/S5). The same PIN
+  verifies through the same route — John's vault is neither migrated nor reset by this change.
+- **Harness on the committed tree:** harness-v587 **39 ok / 0 not ok** on a clean checkout of
+  50ffeb8 (and on the working tree before commit). Sibling regressions on the same tree:
+  harness-v585 **41 ok / 1 not ok** — the one failure is its own S1 confinement leg reading
+  this release's file set; every functional leg (fold, card, Q3 rule) passes. harness-v584
+  **14 ok / 3 not ok** — its S1/S3 confinement legs reading this release's deliberate client.ts
+  change, and its R11, which asserted the pre-v587 fact ("the vault unlock paints no pad")
+  that Q1 A deliberately reverses; all of v584's dress legs (R1–R10) pass, so the large dress
+  the pads wear stands exactly as v584 built it.
+- **Noted, not defects:** the recovery submit buttons now enable at ≥4 pad digits (the gate's
+  standing discipline) where the typed forms validated on click; the entry clears after a
+  failed unlock verify, as the gate's does. Both are the pad component's own behavior, carried
+  with it as approved.
+- Historical browser tests under app/tests (v353/v354/v356/v373) still reference the retired
+  typed-field ids; they are per-release artifacts of their own shapes and are not gates for
+  this tree — named here rather than silently left.
+
+Verdict: **pass** — ready to ship.
