@@ -1436,9 +1436,19 @@ var OPN_RECOVERY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 function opnShape() {
   try { return window.__OPN_SHAPE__ === 'public' ? 'public' : 'private'; } catch (e) { return 'private'; }
 }
+function opnInstalledPwa() {
+  // v578 Q1 A: an installed PWA (home-screen / standalone
+  // display) IS a device — personal data stands there, under
+  // the same vault encryption. A plain browser tab is not.
+  try {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.navigator && window.navigator.standalone === true) return true; // iOS home-screen form
+  } catch (e) {}
+  return false;
+}
 function opnMode() {
   if (opnShape() !== 'public') return 'server';
-  return oraInShell() ? 'device' : 'web';
+  return (oraInShell() || opnInstalledPwa()) ? 'device' : 'web';
 }
 function opnNowISO() { return new Date().toISOString(); }
 function opnErr(status, message) {
@@ -1456,6 +1466,93 @@ function opnDateLabel(date) {
 function opnPointerHtml() {
   return '<div class="card opn-pointer"><h3>Your prayers live in the app</h3>'
     + '<p>Intentions, your examination of conscience, profiles and favorites are kept on your phone, in the Ora Pro Nobis app — never on this website, and never behind an account. Open the app on your phone to see and change them.</p></div>';
+}
+/* ---- v578: the unlock card ----
+   Stands on the personal surfaces while the vault is
+   locked: the PIN entry (the standing verify route, which
+   now also decrypts), a biometric button when the shell
+   holds an enrolment, a passkey button when a passkey
+   wrap stands, and a compact recovery form (the standing
+   recover route). A successful unlock re-renders the
+   surface through the caller's rerender. */
+function opnUnlockCardHtml() {
+  var env = opnVaultPeek();
+  var hasPasskey = !!(env && env.wraps && env.wraps.passkey);
+  var html = '<div class="card opn-unlock"><h3>Your data on this phone is locked</h3>'
+    + '<p class="meta">Your intentions, examination of conscience, profiles and favorites are encrypted on this phone. Unlock with your PIN to see them.</p>'
+    + '<label class="f">PIN</label><input type="password" id="opn-unlock-pin" inputmode="numeric" autocomplete="off">'
+    + '<p class="pinmsg" id="opn-unlock-msg"></p>'
+    + '<div class="row"><button class="btn gold" id="opn-unlock-go">Unlock</button>'
+    + '<button class="btn ghost" id="opn-unlock-bio" style="display:none">Use fingerprint / face</button>'
+    + (hasPasskey ? '<button class="btn ghost" id="opn-unlock-passkey">Use a passkey</button>' : '')
+    + '<button class="btn ghost" id="opn-unlock-rec-open">Use recovery code</button></div>'
+    + '<div id="opn-unlock-rec" style="display:none"><label class="f">Recovery code</label><input type="text" id="opn-rec-code" autocomplete="off" style="text-transform:uppercase">'
+    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="opn-rec-pin" inputmode="numeric" autocomplete="off">'
+    + '<p class="pinmsg" id="opn-rec-msg"></p>'
+    + '<div class="row"><button class="btn gold" id="opn-rec-go">Set new PIN and unlock</button></div></div>'
+    + '</div>';
+  return html;
+}
+function opnBindUnlockCard(rerender) {
+  var go = document.getElementById('opn-unlock-go');
+  if (!go) return;
+  var msg = document.getElementById('opn-unlock-msg');
+  var done = function (res) {
+    if (res && res.token) pinToken = res.token;
+    pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
+    if (res && res.migrated && res.recoveryCode) { showRecoverySheet(res.recoveryCode, function () { rerender(); }); return; }
+    rerender();
+  };
+  go.addEventListener('click', function () {
+    var pin = document.getElementById('opn-unlock-pin').value.trim();
+    if (!/^[0-9]{4,8}$/.test(pin)) { msg.textContent = 'Enter your PIN — 4 to 8 digits.'; return; }
+    post('/api/pin/verify', { pin: pin }).then(done).catch(function (e) {
+      var d = (e && e.data) || {};
+      if (e.status === 429 || d.retryAfterSeconds) { msg.textContent = 'Too many attempts — try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
+      var rem = typeof d.attemptsRemaining === 'number' ? d.attemptsRemaining : null;
+      msg.textContent = rem === null ? 'Wrong PIN' : ('Wrong PIN — ' + rem + (rem === 1 ? ' attempt' : ' attempts') + ' before a short wait');
+    });
+  });
+  var bio = document.getElementById('opn-unlock-bio');
+  if (bio) {
+    opnBiometricStatus().then(function (st) {
+      if (st && st.available && st.enrolled) bio.style.display = '';
+    }).catch(function () {});
+    bio.addEventListener('click', function () {
+      opnBiometricUnlock().then(function () { done({}); }).catch(function () {
+        msg.textContent = 'Biometric unlock did not complete. Use your PIN.';
+      });
+    });
+  }
+  var pk = document.getElementById('opn-unlock-passkey');
+  if (pk) pk.addEventListener('click', function () {
+    opnPasskeyUnlock().then(function () { done({}); }).catch(function (e) {
+      msg.textContent = (e && e.message) ? e.message : 'Passkey unlock did not complete. Use your PIN.';
+    });
+  });
+  var recOpen = document.getElementById('opn-unlock-rec-open');
+  if (recOpen) recOpen.addEventListener('click', function () {
+    var box = document.getElementById('opn-unlock-rec');
+    if (box) box.style.display = box.style.display === 'none' ? '' : 'none';
+  });
+  var recGo = document.getElementById('opn-rec-go');
+  if (recGo) recGo.addEventListener('click', function () {
+    var code = document.getElementById('opn-rec-code').value.trim();
+    var npin = document.getElementById('opn-rec-pin').value.trim();
+    var rmsg = document.getElementById('opn-rec-msg');
+    if (!code) { rmsg.textContent = 'Enter the recovery code.'; return; }
+    if (!/^[0-9]{4,8}$/.test(npin)) { rmsg.textContent = 'The new PIN must be 4-8 digits.'; return; }
+    post('/api/pin/recover', { code: code, newPin: npin }).then(function (res) {
+      if (res && res.token) pinToken = res.token;
+      pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
+      showRecoverySheet(res.recoveryCode, function () { rerender(); });
+    }).catch(function (e) {
+      var d = (e && e.data) || {};
+      if (e.status === 429 || d.retryAfterSeconds) { rmsg.textContent = 'Too many attempts — try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
+      var rem = typeof d.attemptsRemaining === 'number' ? d.attemptsRemaining : null;
+      rmsg.textContent = rem === null ? 'Wrong code' : ('Wrong code — ' + rem + (rem === 1 ? ' attempt' : ' attempts') + ' before a short wait');
+    });
+  });
 }
 function opnDefaultDoc() {
   return {
@@ -1486,6 +1583,13 @@ function opnDoc() {
       var raw = localStorage.getItem(OPN_DATA_KEY);
       if (raw) {
         var d = JSON.parse(raw);
+        // v578: a vault envelope at rest — the layer stands
+        // LOCKED over an ephemeral empty document (the proven
+        // web-mode read shape) until an unlock decrypts the
+        // real document into the cache. opnSave() below is a
+        // no-op while locked, so the ciphertext is never
+        // overwritten by the ephemeral document.
+        if (d && d.format === 'orapronobis-personal-data-encrypted' && d.wraps && d.ct) { opnVaultEnv = d; opnDocCache = opnDefaultDoc(); return opnDocCache; }
         if (d && d.format === 'orapronobis-personal-data' && d.sections) { opnDocCache = d; return d; }
       }
     } catch (e) {}
@@ -1496,6 +1600,8 @@ function opnDoc() {
 }
 function opnSave() {
   if (opnMode() === 'web') return; // web never stores personal data
+  if (opnVaultLocked()) return; // v578: locked — never write over the ciphertext
+  if (opnVaultRawKey) { opnVaultPersist(); return; } // v578: write the envelope
   try { localStorage.setItem(OPN_DATA_KEY, JSON.stringify(opnDocCache)); } catch (e) {}
 }
 /* ---- on-device PIN (never in the personal-data file) ---- */
@@ -1567,9 +1673,9 @@ function opnPinHashPair(secret) {
     return { hash: hash, salt: salt, iterations: 100000 };
   });
 }
-function opnPinSet(pin) {
+function opnPinSet(pin, givenCode) {
   return opnPinHashPair(pin).then(function (pc) {
-    var recoveryCode = opnRecoveryCode();
+    var recoveryCode = givenCode || opnRecoveryCode();
     return opnPinHashPair(opnNormalizeRecovery(recoveryCode)).then(function (rc) {
       opnPinSave({
         pinHash: pc.hash, pinSalt: pc.salt, pinIterations: pc.iterations,
@@ -1584,6 +1690,307 @@ function opnPinSet(pin) {
 function opnPinGateCheck() {
   var st = opnPinLoad();
   if (st && !opnPinTokenValid()) throw opnErr(403, 'pin_required');
+}
+/* ---- v578: the vault — the PIN becomes the key ----
+   The personal-data store (OPN_DATA_KEY) holds either the
+   plain document (a store with no PIN — the standing v568
+   behavior) or a VAULT ENVELOPE:
+   { format:'orapronobis-personal-data-encrypted',
+     formatVersion:1, wraps:{ pin:{salt,iterations,iv,ct},
+     recovery:{salt,iterations,iv,ct},
+     passkey:{credId,prfSalt,iv,ct} (optional) }, iv, ct }
+   A random 256-bit vault key AES-GCM-encrypts the document
+   JSON (ct). Each wrap slot holds that key encrypted under
+   one key-encrypting key: PBKDF2-derived for the PIN and
+   the recovery code (the standing opnPbkdf2 machinery), the
+   WebAuthn PRF output for a passkey, and — in the shell —
+   an Android-Keystore-wrapped copy unlocked by the device
+   biometric (the bridge holds that wrap; it never stands
+   in web storage). The vault key stands only in memory.
+   Locked: reads ride the ephemeral empty document (the
+   web-mode shape), writes refuse 423, and opnSave() never
+   overwrites the ciphertext. */
+var opnVaultEnv = undefined; // undefined = unpeeked, null = no vault stands
+var opnVaultRawKey = null; // Uint8Array, memory only
+var opnVaultKeyObj = null; // imported AES-GCM key for the raw key
+var opnVaultWriteChain = Promise.resolve();
+function opnB64(bytes) {
+  var s = '';
+  var CH = 0x8000;
+  for (var i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+  return btoa(s);
+}
+function opnUnB64(s) {
+  var bin = atob(String(s || ''));
+  var out = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function opnHexBytes(hex) {
+  var out = new Uint8Array(hex.length / 2);
+  for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+function opnVaultPeek() {
+  if (opnVaultEnv !== undefined) return opnVaultEnv;
+  opnVaultEnv = null;
+  if (opnMode() === 'web') return null;
+  try {
+    var raw = localStorage.getItem(OPN_DATA_KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && d.format === 'orapronobis-personal-data-encrypted' && d.wraps && d.ct) opnVaultEnv = d;
+    }
+  } catch (e) {}
+  return opnVaultEnv;
+}
+function opnVaultLocked() { return !!opnVaultPeek() && !opnVaultRawKey; }
+function opnVaultImportRaw(raw) {
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+function opnVaultKekFromSecret(secret, saltHex, iterations) {
+  return opnPbkdf2(secret, saltHex, iterations).then(function (hex) {
+    return crypto.subtle.importKey('raw', opnHexBytes(hex), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  });
+}
+function opnVaultWrapWith(kekObj, rawKey) {
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, kekObj, rawKey).then(function (ct) {
+    return { iv: opnB64(iv), ct: opnB64(new Uint8Array(ct)) };
+  });
+}
+function opnVaultUnwrapWith(kekObj, slot) {
+  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: opnUnB64(slot.iv) }, kekObj, opnUnB64(slot.ct))
+    .then(function (raw) { return new Uint8Array(raw); });
+}
+function opnVaultMakeSlot(secret) {
+  var salt = opnRandomHex(16);
+  var slot = { salt: salt, iterations: 100000 };
+  return opnVaultKekFromSecret(secret, salt, 100000).then(function (kek) {
+    return opnVaultWrapWith(kek, opnVaultRawKey).then(function (w) { slot.iv = w.iv; slot.ct = w.ct; return slot; });
+  });
+}
+function opnVaultWriteEnvelope() {
+  try { localStorage.setItem(OPN_DATA_KEY, JSON.stringify(opnVaultEnv)); } catch (e) {}
+}
+function opnVaultPersist() {
+  // Serialize the standing document under the vault key.
+  // Saves chain so rapid successive writes land in order;
+  // each carries its own snapshot of the document JSON.
+  var snapshot = JSON.stringify(opnDocCache);
+  opnVaultWriteChain = opnVaultWriteChain.then(function () {
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, opnVaultKeyObj, new TextEncoder().encode(snapshot))
+      .then(function (ct) {
+        if (!opnVaultEnv) return;
+        opnVaultEnv.iv = opnB64(iv);
+        opnVaultEnv.ct = opnB64(new Uint8Array(ct));
+        opnVaultWriteEnvelope();
+      });
+  }).catch(function () {});
+  return opnVaultWriteChain;
+}
+function opnVaultApplyKey(rawKey) {
+  opnVaultRawKey = rawKey;
+  return opnVaultImportRaw(rawKey).then(function (keyObj) {
+    opnVaultKeyObj = keyObj;
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: opnUnB64(opnVaultEnv.iv) }, keyObj, opnUnB64(opnVaultEnv.ct));
+  }).then(function (plain) {
+    var doc = JSON.parse(new TextDecoder().decode(plain));
+    if (!doc || doc.format !== 'orapronobis-personal-data' || !doc.sections) throw opnErr(500, 'vault_unreadable');
+    opnDocCache = doc;
+    return doc;
+  }).catch(function (e) {
+    opnVaultRawKey = null; opnVaultKeyObj = null;
+    throw e;
+  });
+}
+function opnVaultUnlockWithSlot(slotName, kekObj) {
+  var env = opnVaultPeek();
+  if (!env || !env.wraps || !env.wraps[slotName]) return Promise.reject(opnErr(409, 'no such unlock'));
+  return opnVaultUnwrapWith(kekObj, env.wraps[slotName]).then(function (rawKey) {
+    return opnVaultApplyKey(rawKey);
+  }).catch(function () { throw opnErr(401, 'unlock failed'); });
+}
+function opnVaultUnlockWithPin(pin) {
+  // Already unlocked this session: the in-memory document
+  // is ahead of the stored envelope by at most the persist
+  // chain's last tick — never re-decrypt over it.
+  if (opnVaultRawKey) return Promise.resolve(opnDocCache);
+  var env = opnVaultPeek();
+  if (!env || !env.wraps.pin) return Promise.reject(opnErr(409, 'no vault'));
+  return opnVaultKekFromSecret(pin, env.wraps.pin.salt, env.wraps.pin.iterations).then(function (kek) {
+    return opnVaultUnlockWithSlot('pin', kek);
+  });
+}
+function opnVaultUnlockWithRecovery(code) {
+  var env = opnVaultPeek();
+  if (!env || !env.wraps.recovery) return Promise.reject(opnErr(409, 'no vault'));
+  return opnVaultKekFromSecret(opnNormalizeRecovery(code), env.wraps.recovery.salt, env.wraps.recovery.iterations).then(function (kek) {
+    return opnVaultUnlockWithSlot('recovery', kek);
+  });
+}
+function opnVaultCreate(pin, recoveryCode) {
+  // Create the vault over the standing (plain) document:
+  // a fresh vault key, pin + recovery wraps, the document
+  // encrypted in place. Called from the PIN set flow.
+  if (opnMode() !== 'device') return Promise.resolve();
+  var rawKey = crypto.getRandomValues(new Uint8Array(32));
+  opnVaultRawKey = rawKey;
+  return opnVaultImportRaw(rawKey).then(function (keyObj) {
+    opnVaultKeyObj = keyObj;
+    opnVaultEnv = { format: 'orapronobis-personal-data-encrypted', formatVersion: 1, wraps: {}, iv: null, ct: null };
+    return opnVaultMakeSlot(pin).then(function (pinSlot) {
+      opnVaultEnv.wraps.pin = pinSlot;
+      return opnVaultMakeSlot(opnNormalizeRecovery(recoveryCode));
+    }).then(function (recSlot) {
+      opnVaultEnv.wraps.recovery = recSlot;
+      return opnVaultPersist();
+    });
+  });
+}
+function opnVaultRewrap(pin, recoveryCode) {
+  // PIN change / recover: the vault key never changes; the
+  // pin + recovery wraps are re-struck under the new pair.
+  // A passkey slot, when one stands, is kept.
+  if (!opnVaultEnv || !opnVaultRawKey) return Promise.resolve();
+  var keepPasskey = opnVaultEnv.wraps.passkey || null;
+  return opnVaultMakeSlot(pin).then(function (pinSlot) {
+    return opnVaultMakeSlot(opnNormalizeRecovery(recoveryCode)).then(function (recSlot) {
+      opnVaultEnv.wraps = { pin: pinSlot, recovery: recSlot };
+      if (keepPasskey) opnVaultEnv.wraps.passkey = keepPasskey;
+      opnVaultWriteEnvelope();
+    });
+  });
+}
+function opnVaultMigrate(pin) {
+  // Q4 A: a plain store + a standing PIN record migrates at
+  // the first successful verify. The recovery wrap needs
+  // the recovery CODE, of which only the hash survives —
+  // so migration re-issues the PIN record's recovery pair
+  // for the same PIN and returns the NEW code for its one
+  // showing (the standing showRecoverySheet).
+  var newCode = opnRecoveryCode();
+  return opnPinSet(pin, newCode).then(function () {
+    return opnVaultCreate(pin, newCode);
+  }).then(function () { return newCode; });
+}
+function opnVaultDissolve() {
+  // PIN remove: the document returns to its plain standing
+  // form; the wraps die with the envelope; a shell
+  // biometric enrolment is cleared through the bridge.
+  if (!opnVaultEnv) return;
+  try { localStorage.setItem(OPN_DATA_KEY, JSON.stringify(opnDocCache)); } catch (e) {}
+  opnVaultEnv = null;
+  opnVaultRawKey = null;
+  opnVaultKeyObj = null;
+  var p = oraBridgePlugin();
+  if (p && p.vaultBiometricClear) { try { p.vaultBiometricClear(); } catch (e) {} }
+  var st = opnPinLoad();
+  if (st && st.biometricEnrolled) { st.biometricEnrolled = false; opnPinSave(st); }
+}
+/* ---- v578: passkey unlock (WebAuthn PRF) ----
+   Enrolment stores a third wrap slot whose KEK is the
+   passkey's PRF output — the platform's own biometric
+   (Face ID / Touch ID / fingerprint) gates the passkey,
+   so the biometric IS the unlock on the PWA form. Where
+   PRF is unavailable, enrolment refuses plainly and the
+   PIN path stands. */
+function opnPasskeySupported() {
+  try { return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create && navigator.credentials.get); } catch (e) { return false; }
+}
+function opnPasskeyEnroll() {
+  if (!opnVaultRawKey || !opnVaultEnv) return Promise.reject(opnErr(409, 'vault_locked'));
+  if (!opnPasskeySupported()) return Promise.reject(opnErr(400, 'Passkeys are not available on this device.'));
+  var prfSalt = crypto.getRandomValues(new Uint8Array(32));
+  var challenge = crypto.getRandomValues(new Uint8Array(32));
+  var userId = crypto.getRandomValues(new Uint8Array(16));
+  return navigator.credentials.create({
+    publicKey: {
+      challenge: challenge, rp: { id: location.hostname, name: 'Ora Pro Nobis' },
+      user: { id: userId, name: 'ora-pro-nobis', displayName: 'Ora Pro Nobis' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { userVerification: 'required', residentKey: 'required' },
+      extensions: { prf: { eval: { first: prfSalt } } }
+    }
+  }).then(function (cred) {
+    var ext = cred.getClientExtensionResults ? cred.getClientExtensionResults() : {};
+    var first = ext.prf && ext.prf.results && ext.prf.results.first;
+    var credId = cred.id;
+    var finish = function (prfBytes) {
+      return crypto.subtle.importKey('raw', prfBytes, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']).then(function (kek) {
+        return opnVaultWrapWith(kek, opnVaultRawKey).then(function (w) {
+          opnVaultEnv.wraps.passkey = { credId: credId, prfSalt: opnB64(prfSalt), iv: w.iv, ct: w.ct };
+          opnVaultWriteEnvelope();
+          return { ok: true };
+        });
+      });
+    };
+    if (first) return finish(first);
+    // Some platforms enable PRF at create but only answer
+    // its value at get — take the value now, same salt.
+    return navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname,
+        allowCredentials: [{ id: cred.rawId, type: 'public-key' }], userVerification: 'required',
+        extensions: { prf: { eval: { first: prfSalt } } }
+      }
+    }).then(function (assertion) {
+      var ext2 = assertion.getClientExtensionResults ? assertion.getClientExtensionResults() : {};
+      var f2 = ext2.prf && ext2.prf.results && ext2.prf.results.first;
+      if (!f2) throw opnErr(400, 'This device passkey cannot unlock the vault. Your PIN stands.');
+      return finish(f2);
+    });
+  });
+}
+function opnPasskeyUnlock() {
+  var env = opnVaultPeek();
+  if (!env || !env.wraps.passkey) return Promise.reject(opnErr(409, 'no passkey'));
+  if (!opnPasskeySupported()) return Promise.reject(opnErr(400, 'Passkeys are not available on this device.'));
+  var slot = env.wraps.passkey;
+  var prfSalt = opnUnB64(slot.prfSalt);
+  var credIdBytes = opnUnB64(String(slot.credId).replace(/-/g, '+').replace(/_/g, '/'));
+  return navigator.credentials.get({
+    publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)), rpId: location.hostname,
+      allowCredentials: [{ id: credIdBytes.buffer, type: 'public-key' }], userVerification: 'required',
+      extensions: { prf: { eval: { first: prfSalt.buffer } } }
+    }
+  }).then(function (assertion) {
+    var ext = assertion.getClientExtensionResults ? assertion.getClientExtensionResults() : {};
+    var first = ext.prf && ext.prf.results && ext.prf.results.first;
+    if (!first) throw opnErr(400, 'This device passkey cannot unlock the vault. Use your PIN.');
+    return crypto.subtle.importKey('raw', first, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']).then(function (kek) {
+      return opnVaultUnlockWithSlot('passkey', kek);
+    });
+  });
+}
+/* ---- v578: shell biometric unlock (Android Keystore) ----
+   The bridge holds a Keystore-wrapped copy of the vault
+   key, released only behind the device biometric prompt.
+   The raw key crosses the bridge inside the enrol and
+   unlock calls only; it is never written to web storage. */
+function opnBiometricStatus() {
+  var p = oraBridgePlugin();
+  if (!p || !p.vaultBiometricStatus) return Promise.resolve({ available: false, enrolled: false });
+  return p.vaultBiometricStatus().catch(function () { return { available: false, enrolled: false }; });
+}
+function opnBiometricEnroll() {
+  var p = oraBridgePlugin();
+  if (!p || !p.vaultBiometricEnroll || !opnVaultRawKey) return Promise.reject(opnErr(409, 'not available'));
+  return p.vaultBiometricEnroll({ keyB64: opnB64(opnVaultRawKey) }).then(function () {
+    var st = opnPinLoad();
+    if (st) { st.biometricEnrolled = true; opnPinSave(st); }
+    return { ok: true };
+  });
+}
+function opnBiometricUnlock() {
+  var p = oraBridgePlugin();
+  if (!p || !p.vaultBiometricUnlock) return Promise.reject(opnErr(409, 'not available'));
+  return p.vaultBiometricUnlock().then(function (res) {
+    if (!res || !res.keyB64) throw opnErr(401, 'unlock failed');
+    return opnVaultApplyKey(opnUnB64(res.keyB64));
+  });
 }
 /* ---- device playback state (outside the file) ---- */
 function opnPlayback() {
@@ -1682,12 +2089,31 @@ function opnValidateImport(text) {
   d.counts = actual;
   return d;
 }
+function opnSnapshotWrite() {
+  // v578: the pre-restore snapshot is personal data — while
+  // a vault stands it is written encrypted under the same
+  // vault key; with no vault it keeps its plain form.
+  var plain = JSON.stringify(opnDoc());
+  if (!opnVaultRawKey || !opnVaultKeyObj) {
+    try { localStorage.setItem(OPN_SNAPSHOT_KEY, plain); } catch (e) {}
+    return Promise.resolve();
+  }
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, opnVaultKeyObj, new TextEncoder().encode(plain))
+    .then(function (ct) {
+      try { localStorage.setItem(OPN_SNAPSHOT_KEY, JSON.stringify({ vaultSnapshot: true, iv: opnB64(iv), ct: opnB64(new Uint8Array(ct)) })); } catch (e) {}
+    }).catch(function () {});
+}
 function opnRestoreFromText(text) {
   var doc = opnValidateImport(text);
-  try { localStorage.setItem(OPN_SNAPSHOT_KEY, JSON.stringify(opnDoc())); } catch (e) {}
-  opnDocCache = doc;
-  opnSave();
-  return opnCountsOf(doc);
+  var counts = opnCountsOf(doc);
+  // The restore completes when the snapshot stands written
+  // (encrypted under the vault when one stands).
+  return opnSnapshotWrite().then(function () {
+    opnDocCache = doc;
+    opnSave();
+    return counts;
+  });
 }
 function opnHasSnapshot() {
   try { return !!localStorage.getItem(OPN_SNAPSHOT_KEY); } catch (e) { return false; }
@@ -1695,14 +2121,28 @@ function opnHasSnapshot() {
 function opnUndoRestore() {
   var raw = null;
   try { raw = localStorage.getItem(OPN_SNAPSHOT_KEY); } catch (e) {}
-  if (!raw) return false;
-  var snap = null;
-  try { snap = JSON.parse(raw); } catch (e) { snap = null; }
-  if (!snap || snap.format !== 'orapronobis-personal-data' || !snap.sections) return false;
-  opnDocCache = snap;
-  opnSave();
-  try { localStorage.removeItem(OPN_SNAPSHOT_KEY); } catch (e) {}
-  return true;
+  if (!raw) return Promise.resolve(false);
+  var parsed = null;
+  try { parsed = JSON.parse(raw); } catch (e) { parsed = null; }
+  var adopt = function (snap) {
+    if (!snap || snap.format !== 'orapronobis-personal-data' || !snap.sections) return false;
+    opnDocCache = snap;
+    opnSave();
+    try { localStorage.removeItem(OPN_SNAPSHOT_KEY); } catch (e) {}
+    return true;
+  };
+  // v578: an encrypted snapshot decrypts under the standing
+  // vault key (Undo is only offered on the unlocked card).
+  if (parsed && parsed.vaultSnapshot) {
+    if (!opnVaultKeyObj) return Promise.resolve(false);
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: opnUnB64(parsed.iv) }, opnVaultKeyObj, opnUnB64(parsed.ct))
+      .then(function (plain) {
+        var snap = null;
+        try { snap = JSON.parse(new TextDecoder().decode(plain)); } catch (e) { snap = null; }
+        return adopt(snap);
+      }).catch(function () { return false; });
+  }
+  return Promise.resolve(adopt(parsed));
 }
 var OPN_SEED_PROFILES = [{"key": "little-way", "name": "The Little Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Night"], "layers": {"novenas": {"on": false}, "podcasts": {"on": false, "series": []}}}, {"key": "salesian", "name": "The Salesian Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midday", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}, {"key": "benedictine", "name": "The Benedictine Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}];
 var OPN_SEED_SOURCES = [{"sourceKey": "morning-prayer", "name": "Morning Prayer", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-rosary", "name": "Daily Rosary", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 6, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "novenas", "name": "Novenas", "family": "own", "block": "Novenas", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "auxilium-christianorum", "name": "Auxilium Christianorum", "family": "own", "block": "Afternoon", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-reflection", "name": "Daily Reflection", "family": "own", "block": "Night", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "do-invitatory", "name": "Divine Office \\u2014 Invitatory", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-invitatory", "role": "primary"}, {"sourceKey": "do-morning-prayer", "name": "Divine Office \\u2014 Morning Prayer", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "primary"}, {"sourceKey": "sth-lauds", "name": "Sing the Hours \\u2014 Lauds", "family": "external", "block": "Morning", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "fallback"}, {"sourceKey": "do-midmorning-prayer", "name": "Divine Office \\u2014 Midmorning Prayer", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midmorning-prayer", "role": "primary"}, {"sourceKey": "do-midday-prayer", "name": "Divine Office \\u2014 Midday Prayer", "family": "external", "block": "Midday", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-midday-prayer", "role": "primary"}, {"sourceKey": "do-midafternoon-prayer", "name": "Divine Office \\u2014 Midafternoon Prayer", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midafternoon-prayer", "role": "primary"}, {"sourceKey": "saint-of-the-day", "name": "Saint of the Day", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-saint-of-the-day", "role": "primary"}, {"sourceKey": "do-office-of-readings", "name": "Divine Office \\u2014 Office of Readings", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-office-of-readings", "role": "primary"}, {"sourceKey": "do-evening-prayer", "name": "Divine Office \\u2014 Evening Prayer", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "primary"}, {"sourceKey": "sth-vespers", "name": "Sing the Hours \\u2014 Vespers", "family": "external", "block": "Evening", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "fallback"}, {"sourceKey": "do-night-prayer", "name": "Divine Office \\u2014 Night Prayer", "family": "external", "block": "Night", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-night-prayer", "role": "primary"}, {"sourceKey": "usccb-daily-readings", "name": "USCCB Daily Readings", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-usccb-readings", "role": "primary"}, {"sourceKey": "daily-tv-mass", "name": "Daily TV Mass", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-daily-tv-mass", "role": "primary"}, {"sourceKey": "fr-mike-homily", "name": "Fr. Mike Sunday Homily", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-fr-mike-homily", "role": "primary"}, {"sourceKey": "barron-sermon", "name": "Bp. Barron Sunday Sermon", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": "ext-barron-sermon", "role": "primary"}, {"sourceKey": "stations-of-the-cross", "name": "Stations of the Cross / Lenten Devotion", "family": "unplaced", "block": "", "dayRule": "fridays", "sortOrder": null, "enabled": 0, "slotId": null, "role": "primary"}, {"sourceKey": "daily-gospel-exegesis", "name": "Daily Gospel Exegesis", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-gospel-exegesis", "role": "primary"}, {"sourceKey": "marian-antiphon-midday", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Midday", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon-evening", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Evening", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "the-ai-signal", "name": "The AI Signal", "family": "own", "block": "The AI Signal", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}];
@@ -1873,6 +2313,12 @@ function opnLocalApi(path, opts, mode) {
     var write = method !== 'GET';
     if (mode === 'web' && write && p.indexOf('/api/player/podcasts/') !== 0 && p !== '/api/player/day-position' && p !== '/api/player/track-draws') {
       throw opnErr(403, 'Your personal prayer data lives in the app on your phone — open Ora Pro Nobis there to change it.');
+    }
+    // v578: while the vault stands locked, personal writes
+    // refuse — reads ride the ephemeral empty document (the
+    // web-mode shape); the PIN and vault routes stay open.
+    if (mode === 'device' && write && p.indexOf('/api/pin/') !== 0 && opnVaultLocked()) {
+      throw opnErr(423, 'vault_locked');
     }
     var D = opnDoc(), S = D.sections;
     /* intentions */
@@ -2158,7 +2604,12 @@ function opnLocalApi(path, opts, mode) {
       var spin = typeof body.pin === 'string' ? body.pin : '';
       if (!/^\\d{4,8}$/.test(spin)) throw opnErr(400, 'pin must be 4-8 digits');
       if (opnPinLoad()) throw opnErr(409, 'pin already set');
-      return opnPinSet(spin);
+      // v578: setting the PIN creates the vault in the same
+      // action — the standing document encrypts under it.
+      return opnPinSet(spin).then(function (res) {
+        if (mode !== 'device') return res;
+        return opnVaultCreate(spin, res.recoveryCode).then(function () { return res; });
+      });
     }
     if (p === '/api/pin/verify' && method === 'POST') {
       var vst = opnPinLoad();
@@ -2178,7 +2629,21 @@ function opnLocalApi(path, opts, mode) {
         vst.failedAttempts = 0;
         vst.nextAllowedAt = null;
         opnPinSave(vst);
-        return opnPinIssueToken();
+        var issued = opnPinIssueToken();
+        if (mode !== 'device') return issued;
+        // v578: a standing vault unlocks on the same verify.
+        if (opnVaultPeek()) {
+          return opnVaultUnlockWithPin(vpin).then(function () { return issued; });
+        }
+        // v578 Q4 A: a plain store under a standing PIN
+        // record migrates in place at this first unlock —
+        // and the migration's fresh recovery code rides the
+        // result for its one showing.
+        return opnVaultMigrate(vpin).then(function (newCode) {
+          issued.migrated = true;
+          issued.recoveryCode = newCode;
+          return issued;
+        });
       });
     }
     if (p === '/api/pin/change' && method === 'POST') {
@@ -2188,11 +2653,20 @@ function opnLocalApi(path, opts, mode) {
       var cpin = typeof body.pin === 'string' ? body.pin : '';
       if (!/^\\d{4,8}$/.test(cpin)) throw opnErr(400, 'pin must be 4-8 digits');
       opnPinTokens = {};
-      return opnPinSet(cpin);
+      // v578: the vault key never changes — the pin +
+      // recovery wraps are re-struck under the new pair.
+      return opnPinSet(cpin).then(function (res) {
+        if (mode !== 'device' || !opnVaultPeek()) return res;
+        return opnVaultRewrap(cpin, res.recoveryCode).then(function () { return res; });
+      });
     }
     if (p === '/api/pin/remove' && method === 'POST') {
       if (!opnPinLoad()) throw opnErr(409, 'no pin set');
       if (!opnPinTokenValid()) throw opnErr(403, 'pin_required');
+      // v578: removing the PIN dissolves the vault — the
+      // PIN is the key, so the document returns to its
+      // plain standing form (named in the doc, §2.3).
+      if (mode === 'device' && opnVaultPeek()) opnVaultDissolve();
       opnPinSave(null);
       opnPinTokens = {};
       return { ok: true };
@@ -2215,6 +2689,19 @@ function opnLocalApi(path, opts, mode) {
           throw we2;
         }
         opnPinTokens = {};
+        // v578: the code that just verified also unwraps
+        // the vault (its wrap was struck from the same
+        // normalized code); only then is the PIN re-set
+        // and both wraps re-struck under the new pair. An
+        // unwrap failure here means a corrupt envelope —
+        // refuse rather than strand the vault.
+        if (mode === 'device' && opnVaultPeek()) {
+          return opnVaultUnlockWithRecovery(code).then(function () {
+            return opnPinSet(npin).then(function (res) {
+              return opnVaultRewrap(npin, res.recoveryCode).then(function () { return res; });
+            });
+          });
+        }
         return opnPinSet(npin);
       });
     }
@@ -2611,6 +3098,10 @@ function submitPinVerify() {
   post('/api/pin/verify', { pin: pin }).then(function (res) {
     pinToken = res.token;
     clearPinWait();
+    // v578 Q4 A: a first-unlock migration issues a fresh
+    // recovery code — it gets its one showing before the
+    // gated content paints.
+    if (res.migrated && res.recoveryCode) { showRecoverySheet(res.recoveryCode, function () { ctx.contentFn(); }); return; }
     ctx.contentFn();
   }).catch(function (e) {
     ctx.entry = '';
@@ -8645,10 +9136,12 @@ function paintSettings() {
     html += '<h2 class="sectionhead">MY DATA ON THIS PHONE</h2><div class="liblist"><div class="setrow">'
       + '<div class="setname">My data on this phone</div>'
       + '<div class="meta">Your intentions, examination of conscience, profiles and favorites live only on this phone — there is no account and no server copy. Save a copy to keep them safe, and restore it on a new phone or after a reinstall. Your PIN does not travel in the copy; a restored phone sets a fresh PIN.</div>'
-      + '<div class="setcontrols"><button class="btn ghost" id="set-mydata-save">Save a copy</button>'
-      + '<button class="btn ghost" id="set-mydata-restore">Restore from a copy</button>'
-      + (opnHasSnapshot() ? '<button class="btn ghost" id="set-mydata-undo">Undo last restore</button>' : '')
-      + '</div>'
+      + (opnVaultLocked()
+        ? opnUnlockCardHtml()
+        : '<div class="setcontrols"><button class="btn ghost" id="set-mydata-save">Save a copy</button>'
+          + '<button class="btn ghost" id="set-mydata-restore">Restore from a copy</button>'
+          + (opnHasSnapshot() ? '<button class="btn ghost" id="set-mydata-undo">Undo last restore</button>' : '')
+          + '</div>')
       + '<div class="meta" id="set-mydata-note"></div>'
       + '<input type="file" id="set-mydata-file" accept=".json,application/json" style="display:none">'
       + '</div></div>';
@@ -8798,14 +9291,19 @@ function paintSettings() {
     if (!f) return;
     var reader = new FileReader();
     reader.onload = function () {
-      try {
-        var counts = opnRestoreFromText(String(reader.result || ''));
+      var text = String(reader.result || '');
+      try { opnValidateImport(text); } catch (e) {
+        if (mdNote) mdNote.textContent = (e && e.opnRefusal) ? e.message : 'That file could not be read. Nothing was changed.';
+        mdFile.value = '';
+        return;
+      }
+      opnRestoreFromText(text).then(function (counts) {
         paintSettings();
         var freshNote = document.getElementById('set-mydata-note');
         if (freshNote) freshNote.textContent = 'Your copy is restored — ' + counts.intentions + ' intentions, ' + counts.conscienceRuns + ' examinations, ' + counts.profiles + ' profiles and ' + counts.favoritesBook + ' favorite prayers now stand on this phone. If this was a mistake, undo the restore below.';
-      } catch (e) {
-        if (mdNote) mdNote.textContent = (e && e.opnRefusal) ? e.message : 'That file could not be read. Nothing was changed.';
-      }
+      }).catch(function () {
+        if (mdNote) mdNote.textContent = 'That file could not be read. Nothing was changed.';
+      });
       mdFile.value = '';
     };
     reader.onerror = function () { if (mdNote) mdNote.textContent = 'That file could not be read. Nothing was changed.'; };
@@ -8813,8 +9311,9 @@ function paintSettings() {
   });
   var mdUndo = document.getElementById('set-mydata-undo');
   if (mdUndo) mdUndo.addEventListener('click', function () {
-    if (opnUndoRestore()) { paintSettings(); }
+    opnUndoRestore().then(function (done) { if (done) paintSettings(); });
   });
+  opnBindUnlockCard(function () { paintSettings(); fillPinSection(); });
   fillPinSection();
   snapshotSettings(); // v419 (G28): the paint IS the saved state — the unsaved line starts clean
   refreshUnsaved();
@@ -9604,7 +10103,42 @@ function fillPinSection() {
       document.getElementById('pin-set-open').addEventListener('click', function () { openPinSetSheet('set'); });
     } else if (pinToken) {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set, and this session is unlocked.</p><button class="btn gold" id="pin-change-open">Change PIN</button> <button class="btn ghost" id="pin-remove">Remove PIN</button></div>';
+      // v578: vault unlock options — the shell biometric
+      // (Android Keystore) and, on an installed PWA, a
+      // passkey. Shown only in the public device shapes
+      // while a vault stands and the session is unlocked.
+      if (opnMode() === 'device' && opnVaultPeek()) {
+        html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">Your data on this phone is encrypted with your PIN. You can also unlock it with this device:</p>'
+          + '<p class="meta" id="pin-vault-note"></p>'
+          + '<button class="btn ghost" id="pin-bio-enrol" style="display:none">Use fingerprint / face unlock</button> '
+          + '<button class="btn ghost" id="pin-passkey-enrol" style="display:none">Add a passkey unlock</button></div>';
+      }
       host2.innerHTML = html;
+      var bioBtn = document.getElementById('pin-bio-enrol');
+      if (bioBtn) {
+        opnBiometricStatus().then(function (bst) {
+          var note = document.getElementById('pin-vault-note');
+          if (bst && bst.available && !bst.enrolled) { bioBtn.style.display = ''; }
+          else if (bst && bst.enrolled && note) { note.textContent = 'Fingerprint / face unlock is on for this phone.'; }
+        }).catch(function () {});
+        bioBtn.addEventListener('click', function () {
+          opnBiometricEnroll().then(function () { fillPinSection(); }).catch(function () {
+            var note2 = document.getElementById('pin-vault-note');
+            if (note2) note2.textContent = 'Biometric enrolment did not complete. Your PIN stands.';
+          });
+        });
+      }
+      var pkBtn = document.getElementById('pin-passkey-enrol');
+      if (pkBtn) {
+        var envNow = opnVaultPeek();
+        if (opnInstalledPwa() && opnPasskeySupported() && !(envNow && envNow.wraps && envNow.wraps.passkey)) pkBtn.style.display = '';
+        pkBtn.addEventListener('click', function () {
+          opnPasskeyEnroll().then(function () { fillPinSection(); }).catch(function (e) {
+            var note3 = document.getElementById('pin-vault-note');
+            if (note3) note3.textContent = (e && e.message) ? e.message : 'Passkey enrolment did not complete. Your PIN stands.';
+          });
+        });
+      }
       document.getElementById('pin-change-open').addEventListener('click', function () { openPinSetSheet('change'); });
       document.getElementById('pin-remove').addEventListener('click', function () {
         // v419 (G23): the native confirm retires into the one
@@ -10762,6 +11296,15 @@ function paintFavoritesPage(day) {
   // v550: in reorder mode the page paints the mode's own
   // form — the bar reads Reorder with Done at its right,
   // the rows carry handles alone (favReorderRowHtml).
+  // v578: while the vault stands locked, the unlock card
+  // stands in place of the folders — favorites are
+  // encrypted on this phone.
+  if (opnVaultLocked()) {
+    paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"', rightHtml: '' }), '__favorites');
+    view.innerHTML = opnUnlockCardHtml();
+    opnBindUnlockCard(function () { paintFavoritesPage(day); });
+    return;
+  }
   // v576: the Praylist reset sweep runs at the head of the
   // paint (its Q6 B form lives in favPraylistSweep), and
   // the book loads are kicked so the Prayers folder's rows
@@ -12761,6 +13304,9 @@ function renderIntentions() {
   // v568: on the public web build the intentions pool lives
   // in the app — this surface points there, never dead-ends.
   if (opnMode() === 'web') { view.innerHTML = opnPointerHtml(); return; }
+  // v578: while the vault stands locked, the unlock card
+  // stands here — the pool is encrypted on this phone.
+  if (opnVaultLocked()) { view.innerHTML = opnUnlockCardHtml(); opnBindUnlockCard(renderIntentions); return; }
   // v457: the side's head (title + the heading menu act)
   // stands in the header's row 2 — the paintPrayersBar(null)
   // above paints it there; the body opens on the skeleton.
