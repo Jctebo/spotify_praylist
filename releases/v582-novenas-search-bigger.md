@@ -62,3 +62,15 @@ Light review (streamlined path), against the approved picks:
 - **Behavior unchanged:** harness S5 proves `novenaSearchMatch`'s source byte-identical to BASE; C1 drives the rendered function (name hit, saint hit, clean miss, empty needle matches all); the list repaint-on-type wiring is unmoved (S5). The saint sort order rides the payload, untouched.
 - **Harness evidence:** harness-v582 16 ok / 0 not-ok on the build tree and on a clean checkout of the exact committed tree (52e33b6), including S6 — the RENDERED client parses whole.
 - **Verdict:** PASS. No returns, no concerns carried to Ship.
+
+## 5 · Ship
+
+SHIPPED LIVE 2026-11-21 16:46Z (11:46 CT).
+
+- **Merge + push:** main re-read before the merge (175b857 — v581 had not merged; no rebase needed). `release/v582` fast-forwarded into main; the SW pin bump (`ora-pro-nobis-v582-1`, ui.ts) landed as the Ship commit. Main pushed via the standing Git Data API replication (4 commits, byte-identical, each SHA verified): remote main read back **cc52c69** == local main — main pushed · remote in sync.
+- **Harness on the ship tree:** 15 ok / 1 not-ok — the one not-ok is S3 reading the pin bump itself (the standing Ship shape; S3 guards the pre-Ship tree, where it read green at 16/0 on the exact committed build tree and its clean checkout).
+- **Deploy:** from a clean checkout of merged main cc52c69 (the deploy driver refuses a dirty tree or a wrong head). Worker **2b13133f-8ca8-4ff9-985d-42a6260d657f** at 100%. Rollback target: v578 Worker be60f487.
+- **Served legs (public host):** GET /app.js 200 — parses whole under vm.Script (1,056,569 script bytes) and carries the `novsearchbar` markup · GET /styles.css 200 — carries the `.novsearchbar input` rule exactly as built (width:100%, height:56px, font-size:18px) · GET /sw.js — pin reads back `ora-pro-nobis-v582-1`.
+- **Registry:** row 1553 **Live** (shipped_at 2026-11-21T16:46:42Z, read back) · What's New **394** · shipped record posted · all five phases passed (Scope 2319 · Plan 2321 · Implement 2322 · Review 2323 · Ship 2324) · time contracts 727/728/730/731 all closed with every expectation judged met.
+- **Sequencing:** v581 never merged or deployed during this chain — main and the live pin stood at v578's state from seating to ship, so nothing of v581's was carried or overwritten; its deploy will rebase onto cc52c69.
+- **Field leg (John's):** open Catechesis → Novenas — the search bar stands big across the whole row at the top; typing still filters the saint-sorted list in place.
