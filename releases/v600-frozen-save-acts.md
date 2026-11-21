@@ -217,3 +217,43 @@ pick + layer together · profile-whole writes no layer ·
 clear resets without writing · the close prompt's three
 acts · the ladder head unmarked by a draft · the
 both-paths equivalence · the locked-vault world).
+
+## §4 Review
+
+PASS. The diff against main (5482e19) is four files:
+client.ts (the two halves), ui.ts (a comment), the new
+harness, this doc. index.ts untouched; marker grep 0;
+the rendered client parses whole (T8).
+
+Regression, every delta named:
+- harness-v594p2: 28 ok / 6 not ok. T4 asserts the chip
+  path's literal day-pick write (moved into saveToday —
+  retired code shape) · R3/R4 assert Q1=A at-once
+  semantics (retired by John's reversal) · R5's
+  noPick precondition was R4's landed pick (a cascade
+  of R4's red; the decoupling itself stands — the
+  editor switched, and v600's legs cover the surface) ·
+  R8/R9 assert the at-once land + at-once clear in the
+  locked world (v600's R19/R9–R10 prove the same world
+  under the draft model). All six by-design.
+- harness-v598: 13 ok / 2 not ok. T4 asserts client.ts
+  byte-identical to main (v598's presentation-only
+  static; v600 changes the client deliberately) · R3c
+  asserts the at-once flow in the locked world
+  (retired; v600 R19 covers it). Both by-design.
+- harness-v597: not landed (still at Scope) — nothing
+  to run; the Ship rebase re-checks if it lands first.
+
+Equivalence, both forms: with no draft saved, the
+carried A1/A2 legs prove every composed day
+byte-identical to the pre-Part-2 ship (the fold is
+untouched); R16 proves a saved draft lands exactly the
+layer the at-once route write lands for the same edits.
+
+Ship stands HELD at the gate: a production break in
+the server fold is being fixed forward by the v601
+chain (rollback + corrected re-land in flight). Per
+the standing serialization rule this chain does not
+merge or deploy over that work; on v601's landing it
+rebases onto the new main, re-verifies the merged tree
+whole, and ships.
