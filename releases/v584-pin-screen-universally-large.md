@@ -47,3 +47,28 @@ Grounding at Scope (served stylesheet, 2026-11-21): keys 64px circles · digits 
 - The PIN still verifies: the gate's verify path and the vault unlock path run
   in the harness against the rendered client (the dress touched no behavior).
 - Sibling regression: a standing sibling harness passes its functional legs.
+
+## §3 Implement
+
+Commit f4065a7 on release/v584 (base 6307094, the standing clone's main
+incl. the v586 merge). The change is the ui.ts APP_CSS pin dress block
+only, exactly as planned in §2:
+
+- `.pinpad button`: 64px → 88px keys; font-size 20px → 30px digits.
+- `.pinpad`: grid columns 76px → 88px.
+- `.pindot`: 14px → 18px; `.pindots` min-height 16px → 20px.
+- `.pingate .lockline` (hint): 17px → 19px.
+- `@media (max-width:340px)`: columns `repeat(3, 1fr)` across the row,
+  buttons `width:100%; height:auto; aspect-ratio:1` — the pad scales to
+  the row width and keeps its proportions.
+- No JS changed: client.ts and index.ts stand byte-identical to base.
+
+harness-v584: **17 ok / 0 not ok** on the working tree AND on a clean
+checkout of the committed tree (f4065a7). The legs prove the rendered
+stylesheet carries each large value and the scaling rule, the old dress
+is gone, the diff is confined to the pin dress block, the rendered
+client parses whole, and the gate painter + PIN verify seams stand.
+
+Sibling regression (harness-v586 on the clean tree): 22 ok / 1 not-ok —
+the single failure is v586's own S1 diff-confinement leg reading this
+release's file set (ui.ts + harness-v584.mjs); every functional leg passes.
