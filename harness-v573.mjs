@@ -22,7 +22,7 @@ const check = (name, cond, extra = "") => {
 
 function parseMap(text) {
   const start = text.indexOf("const PRAYER_AUDIO");
-  const open = text.indexOf("{", start);
+  const open = text.indexOf("= {", start) + 2;
   let depth = 0, end = -1;
   for (let i = open; i < text.length; i++) {
     if (text[i] === "{") depth++;
