@@ -1428,6 +1428,7 @@ function presentedDayWord() {
 var OPN_DATA_KEY = 'opn-personal-data-v1';
 var OPN_PIN_KEY = 'opn-pin-local-v1';
 var OPN_PLAYBACK_KEY = 'opn-playback-local-v1';
+var OPN_PODCAST_CORE_KEY = 'opn-podcast-core-v1';
 var OPN_DRAWS_KEY = 'opn-draws-local-v1';
 var OPN_BLOCKS = ['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
 var OPN_DAY_RULES = ['daily', 'weekdays', 'weekends', 'sundays', 'fridays', 'fallback-only'];
@@ -2056,6 +2057,163 @@ function opnPlayback() {
 function opnPlaybackSave(p) {
   try { localStorage.setItem(OPN_PLAYBACK_KEY, JSON.stringify(p)); } catch (e) {}
 }
+/* ---- v589: the core podcast model ----
+   ONE core for every podcast surface: canonical series and
+   episode identity (the registry series key; the payload
+   entry's own key, canonical per kind) and the played state
+   held once, in this store, under the compound key
+   series|episodeKey. Every surface is a VIEW: the api()
+   seat projects each podcasts payload through the one fold
+   (opnFoldPlaybackIntoPodcasts, at its standing seat),
+   which ingests identity into the core and paints state
+   FROM the core — counts and current are recomputed from
+   the same core listens the rows read, so a count and a
+   row can never disagree. The legacy playback store keeps
+   only its day-form positions; its podcast listens and
+   positions move into the core at first load (the §2.5
+   migration leg 1). */
+function opnPodCoreEmpty() {
+  return { format: 'opn-podcast-core', version: 1, series: {}, episodes: {}, listens: {}, positions: {}, migration: {} };
+}
+function opnPodCore() {
+  var core = null;
+  try {
+    var r = localStorage.getItem(OPN_PODCAST_CORE_KEY);
+    if (r) { var p = JSON.parse(r); if (p && p.format === 'opn-podcast-core' && p.listens && p.series) core = p; }
+  } catch (e) {}
+  if (!core) core = opnPodCoreEmpty();
+  if (!core.migration.fromPlaybackV1) {
+    var pb = opnPlayback();
+    var movedL = 0, movedP = 0;
+    Object.keys(pb.listens || {}).forEach(function (k) { if (!core.listens[k]) { core.listens[k] = pb.listens[k]; movedL++; } });
+    Object.keys(pb.positions || {}).forEach(function (k) { if (!core.positions[k]) { core.positions[k] = pb.positions[k]; movedP++; } });
+    if (movedL || movedP) opnPlaybackSave({ listens: {}, positions: {}, dayPositions: pb.dayPositions || {} });
+    core.migration.fromPlaybackV1 = { at: new Date().toISOString(), movedListens: movedL, movedPositions: movedP };
+    opnPodCoreSave(core);
+  }
+  return core;
+}
+function opnPodCoreSave(core) {
+  try { localStorage.setItem(OPN_PODCAST_CORE_KEY, JSON.stringify(core)); } catch (e) {}
+}
+function opnPodCoreIngestSeries(core, seriesKey, title, kind, entries) {
+  if (!seriesKey || !Array.isArray(entries)) return;
+  var reg = core.series[seriesKey] || { series: seriesKey, title: title || '', kind: kind || '', episodeKeys: [] };
+  reg.title = title || reg.title; if (kind) reg.kind = kind;
+  var keys = [];
+  entries.forEach(function (e) {
+    if (!e || typeof e.key !== 'string') return;
+    keys.push(e.key);
+    core.episodes[seriesKey + '|' + e.key] = { series: seriesKey, key: e.key, kind: e.kind || reg.kind || '', day: (typeof e.day === 'number' ? e.day : null), label: e.label || '', title: e.title || '', url: e.url || e.streamUrl || '', durationS: e.durationS || 0 };
+  });
+  reg.episodeKeys = keys;
+  core.series[seriesKey] = reg;
+  // The standing discipline, enforced at the moment identity
+  // is known: a core listen or position for this series
+  // naming no standing episode is dropped, never guessed
+  // onto another episode.
+  var dropped = core.migration.dropped || [];
+  Object.keys(core.listens).forEach(function (lk) {
+    var i = lk.indexOf('|');
+    if (lk.slice(0, i) === seriesKey && keys.indexOf(lk.slice(i + 1)) < 0) { delete core.listens[lk]; dropped.push(lk); }
+  });
+  Object.keys(core.positions).forEach(function (lk) {
+    var i = lk.indexOf('|');
+    if (lk.slice(0, i) === seriesKey && keys.indexOf(lk.slice(i + 1)) < 0) delete core.positions[lk];
+  });
+  if (dropped.length) core.migration.dropped = dropped;
+}
+function opnPodCurrentKey(entries) {
+  // The standing derivation (podCurrentKey's rule), seated
+  // in the core: current = the first unlistened day-kind
+  // entry; a bonus only when no unlistened day entry stands.
+  var day = null, bonus = null;
+  entries.forEach(function (e) {
+    if (e.listened) return;
+    if (e.kind === 'bonus') { if (!bonus) bonus = e; }
+    else if (!day) day = e;
+  });
+  var cur = day || bonus;
+  return cur ? cur.key : null;
+}
+function opnPodProjectSeries(core, holder) {
+  if (!holder || typeof holder.series !== 'string' || !Array.isArray(holder.entries)) return holder;
+  opnPodCoreIngestSeries(core, holder.series, holder.title, holder.kind, holder.entries);
+  holder.entries.forEach(function (e) {
+    if (!e || typeof e.key !== 'string') return;
+    var lk = holder.series + '|' + e.key;
+    var l = core.listens[lk];
+    if (l) { e.listened = true; e.listenDate = l.listenDate; e.listenedAt = l.listenedAt; e.source = l.source; e.positionS = null; }
+    else if (core.positions[lk]) { e.listened = false; e.positionS = core.positions[lk].positionS; }
+    else e.listened = false;
+  });
+  holder.listenedCount = holder.entries.filter(function (e) { return e.listened; }).length;
+  holder.total = holder.entries.length;
+  if (holder.kind !== 'rss') {
+    holder.currentKey = opnPodCurrentKey(holder.entries);
+    var cur = holder.entries.filter(function (e) { return e.key === holder.currentKey; })[0];
+    holder.currentLabel = cur ? (cur.label || null) : null;
+  }
+  return holder;
+}
+function opnPodCoreCounts(core, seriesKey) {
+  // The index view's facts, from the core alone: with the
+  // series registry standing, the count is the registry's
+  // episodes ∩ the core listens and current derives from
+  // the registry order + the listens; before first ingest
+  // the count is the series' core listens — the same set
+  // the rows will read when the series is opened.
+  var reg = core.series[seriesKey];
+  if (!reg) {
+    var n = 0;
+    Object.keys(core.listens).forEach(function (lk) { if (lk.indexOf(seriesKey + '|') === 0) n++; });
+    return { count: n, currentKey: undefined, currentLabel: undefined };
+  }
+  var inReg = 0;
+  reg.episodeKeys.forEach(function (k) { if (core.listens[seriesKey + '|' + k]) inReg++; });
+  var day = null, bonus = null;
+  reg.episodeKeys.forEach(function (k) {
+    if (core.listens[seriesKey + '|' + k]) return;
+    var ep = core.episodes[seriesKey + '|' + k] || {};
+    if (ep.kind === 'bonus') { if (!bonus) bonus = ep; } else if (!day) day = ep;
+  });
+  var cur = day || bonus;
+  return { count: inReg, currentKey: cur ? cur.key : null, currentLabel: cur ? (cur.label || null) : null };
+}
+function opnPodCoreSetListen(series, seqKey, on, meta) {
+  var core = opnPodCore();
+  var lk = String(series || '') + '|' + String(seqKey || '');
+  if (on) core.listens[lk] = { listenDate: (meta && meta.listenDate) || todayChicago(), listenedAt: (meta && meta.listenedAt) || opnNowISO(), source: (meta && meta.source) || 'manual' };
+  else delete core.listens[lk];
+  if (on) delete core.positions[lk];
+  opnPodCoreSave(core);
+  return core;
+}
+function opnPodCoreSetPosition(series, seqKey, positionS, durationS) {
+  var core = opnPodCore();
+  var lk = String(series || '') + '|' + String(seqKey || '');
+  if (!core.listens[lk] && positionS > 0) core.positions[lk] = { positionS: positionS, durationS: durationS || 0 };
+  opnPodCoreSave(core);
+  return core;
+}
+function opnPodCoreImportListens(rows) {
+  // The §2.4 seam: server listen rows land in the core only
+  // where each matches an episode identity — refused and
+  // counted where the standing registry names no such
+  // episode; rows for an un-ingested series land pending
+  // and are validated at that series' first ingest.
+  var core = opnPodCore();
+  var landed = 0, refused = 0;
+  (Array.isArray(rows) ? rows : []).forEach(function (r) {
+    if (!r || typeof r.series !== 'string' || typeof r.seqKey !== 'string') { refused++; return; }
+    var reg = core.series[r.series];
+    if (reg && reg.episodeKeys.indexOf(r.seqKey) < 0) { refused++; return; }
+    core.listens[r.series + '|' + r.seqKey] = { listenDate: r.listenDate || null, listenedAt: r.listenedAt || null, source: r.source || 'seed' };
+    landed++;
+  });
+  opnPodCoreSave(core);
+  return { landed: landed, refused: refused };
+}
 /* ---- local per-track intention draws (outside the file) ---- */
 function opnDraws() {
   try {
@@ -2226,6 +2384,7 @@ function opnIsPersonalPath(path) {
     || p === '/api/player/podcasts/mark'
     || p === '/api/player/podcasts/unmark'
     || p === '/api/player/podcasts/position'
+    || p === '/api/player/podcasts/import-listens'
     || p === '/api/player/day-position';
 }
 var opnBookSlugs = null; // learned from the book read, for local slug validation
@@ -2903,21 +3062,20 @@ function opnLocalApi(path, opts, mode) {
       return { ok: true, date: dkey, draws: out };
     }
     if (p === '/api/prayer/redraw') return { ok: true, redrawn: false };
-    /* playback state stays on the device */
+    /* playback state stays on the device — v589: podcast
+       listens and positions write the CORE (the legacy
+       playback store keeps only its day-form positions) */
     if (p === '/api/player/podcasts/mark' || p === '/api/player/podcasts/unmark') {
-      var pb = opnPlayback();
-      var lk = String(body.series || '') + '|' + String(body.seqKey || '');
-      if (p === '/api/player/podcasts/mark') pb.listens[lk] = { listenDate: todayChicago(), listenedAt: opnNowISO(), source: body.source || 'manual' };
-      else delete pb.listens[lk];
-      opnPlaybackSave(pb);
+      opnPodCoreSetListen(body.series, body.seqKey, p === '/api/player/podcasts/mark', { source: body.source || 'manual' });
       return { ok: true };
     }
     if (p === '/api/player/podcasts/position') {
-      var pb2 = opnPlayback();
-      var lk2 = String(body.series || '') + '|' + String(body.seqKey || '');
-      if (!pb2.listens[lk2]) pb2.positions[lk2] = { positionS: body.positionS || 0, durationS: body.durationS || 0 };
-      opnPlaybackSave(pb2);
+      opnPodCoreSetPosition(body.series, body.seqKey, body.positionS || 0, body.durationS || 0);
       return { ok: true };
+    }
+    if (p === '/api/player/podcasts/import-listens' && method === 'POST') {
+      var imp = opnPodCoreImportListens(body.rows);
+      return { ok: true, landed: imp.landed, refused: imp.refused };
     }
     if (p === '/api/player/day-position') {
       var pb3 = opnPlayback();
@@ -2945,37 +3103,32 @@ function opnScrubDayPayload(j) {
   return j;
 }
 function opnFoldPlaybackIntoPodcasts(j) {
-  var pb = opnPlayback();
-  var walk = function (o, seriesCtx) {
-    if (!o || typeof o !== 'object') return;
-    if (Array.isArray(o)) { o.forEach(function (x) { walk(x, seriesCtx); }); return; }
-    var ctx = typeof o.series === 'string' ? o.series : seriesCtx;
-    // v585: the gate is the entry's IDENTITY, never a state
-    // field. The public shape's stripListenState removes
-    // 'listened' from every entry server-side (by design — the
-    // server serves no personal state publicly), so the
-    // standing 'listened' in o test could never pass on a
-    // public payload: the fold was dead and a device-stored
-    // mark showed only as the writing session's in-memory
-    // flip, never on the next open — no mark stood isolated
-    // to its episode. A markable entry is an object with a
-    // string key, a string series context, and an episode
-    // shape (a url or a streamUrl standing); series/index
-    // card objects carry neither and stay untouched. A mark
-    // keeps only when its key names a standing entry here
-    // (Q3 A) — a key naming none is never applied, never
-    // guessed onto another episode.
-    if (typeof o.key === 'string' && typeof ctx === 'string' && ctx
-        && (typeof o.url === 'string' || typeof o.streamUrl === 'string')) {
-      var lk = ctx + '|' + o.key;
-      var l = pb.listens[lk];
-      if (l) { o.listened = true; o.listenDate = l.listenDate; o.listenedAt = l.listenedAt; o.source = l.source; o.positionS = null; }
-      else if (pb.positions[lk]) { o.listened = false; o.positionS = pb.positions[lk].positionS; }
-      else o.listened = false;
-    }
-    Object.keys(o).forEach(function (k) { walk(o[k], ctx); });
-  };
-  walk(j, null);
+  // v589: THE one fold — every podcasts payload is a view
+  // over the core podcast model. A markable entry is
+  // identified by its identity: typeof o.key === 'string',
+  // a string series context, and an episode shape (typeof
+  // o.url === 'string' || typeof o.streamUrl === 'string').
+  // The projection ingests that identity into the core and
+  // paints the entry's state from the core alone; counts
+  // and current are recomputed from the same core listens
+  // the rows read. (v585's gate lesson stands: the gate is
+  // the entry's identity, never a state field — the public
+  // shape strips the state fields by design.)
+  if (!j || typeof j !== 'object') return j;
+  var core = opnPodCore();
+  var isEntry = function (o, ctx) { return !!o && typeof o.key === 'string' && typeof ctx === 'string' && !!ctx && (typeof o.url === 'string' || typeof o.streamUrl === 'string'); };
+  if (Array.isArray(j.entries) && typeof j.series === 'string' && j.entries.some(function (e) { return isEntry(e, j.series); })) {
+    opnPodProjectSeries(core, j);
+  }
+  if (Array.isArray(j.seriesList)) {
+    j.seriesList.forEach(function (s) {
+      if (!s || typeof s.series !== 'string') return;
+      var c = opnPodCoreCounts(core, s.series);
+      s.listenedCount = c.count;
+      if (c.currentKey !== undefined && s.kind !== 'rss') { s.currentKey = c.currentKey; s.currentLabel = c.currentLabel; }
+    });
+  }
+  opnPodCoreSave(core);
   return j;
 }
 
@@ -7646,6 +7799,13 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
   // server write it rides went out regardless of which page
   // stands open.
   podSyncQueueListened(seriesKey, seqKey, true);
+  // v589: in the device/web shapes the mark writes the CORE
+  // and the open payload's counts are taken back from the
+  // projection — the painter keeps no derivation of its own.
+  if (typeof opnMode === 'function' && opnMode() !== 'server') {
+    opnPodCoreSetListen(seriesKey, seqKey, true, { source: source });
+    if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.entries) opnPodProjectSeries(opnPodCore(), state.podcasts);
+  }
 }
 function renderPodcasts() {
   readTabSide('podcasts'); // v464 §2.5: the standing side stands before any paint reads tabSideNow.podcasts
@@ -8862,6 +9022,13 @@ function podToggleMark(key) {
   // currentKey stays the payload's (the latest episode), the
   // counts still update, and the repaint is the kind's own.
   if (res.kind !== 'rss') res.currentKey = podCurrentKey(res.entries);
+  // v589: in the device/web shapes the toggle writes the
+  // CORE and the payload's counts are taken back from the
+  // projection — the painter keeps no derivation of its own.
+  if (typeof opnMode === 'function' && opnMode() !== 'server') {
+    opnPodCoreSetListen(res.series, key, entry.listened, { source: 'manual' });
+    opnPodProjectSeries(opnPodCore(), res);
+  }
   if (state.tab === 'podcasts') { if (res.kind === 'rss') paintPodcastRss(); else paintPodcasts(); }
   var call = wasListened
     ? post('/api/player/podcasts/unmark', { series: res.series, seqKey: key })
