@@ -133,4 +133,65 @@ gated too.
 
 ## §5 Ship
 
-(Ship read-back lands here at Ship.)
+- **Merge + push (this chain):** release/v594 rebased over
+  the concurrent v595 merge (deaef71), merged to main at
+  **a271310**, replicated via the GitHub Git Data API,
+  byte-identical, SHA-asserted — at that moment: main
+  pushed · remote in sync (Jctebo/spotify_praylist).
+- **⚠ INCIDENT — conflict markers shipped in sw.js (this
+  chain's error, named plainly):** the rebase's pin
+  conflict was resolved by a string replace that set both
+  CACHE sides to ora-pro-nobis-v594-1 but LEFT THE MARKER
+  LINES (`<<<<<<< HEAD` · `=======` · `>>>>>>> 341d5cb`)
+  standing in ui.ts's SW_JS template, and the tree was
+  committed (32f982b), merged, and deployed that way
+  (Worker 88032d46). The served sw.js therefore failed to
+  parse — a service-worker update could not install while
+  it stood (~21:44–21:48Z). The gate-carrying app.js
+  served correctly throughout (it parses whole; the
+  markers stood only in the SW template). How it slipped
+  the gates: the harness pin legs compare the pin STRING,
+  and both sides read v594-1 after the replace; no leg
+  greps the served sw.js for marker text. Standing lesson
+  recorded for the line: a conflict resolution is verified
+  by a marker grep over the whole tree, never by the
+  resolved line alone.
+- **Repair (the v595 seat's fix-forward):** the v595 ship
+  seat found the markers in 32f982b, resolved them in
+  **f7ecc93** (pin ora-pro-nobis-v595-1, on their
+  refinement merge 5373858 over a271310), pushed it, and
+  deployed **Worker 4fadc0e9-7582-4013-b91f-fa5611dc1483**
+  (2026-11-21T21:48:29Z). That is the SERVING state,
+  verified from production after the repair: served sw.js
+  clean (`var CACHE = "ora-pro-nobis-v595-1"`, no markers)
+  · served app.js parses whole (1,150,333 chars) carrying
+  `profVaultGate594` and both call sites, no markers
+  anywhere · public `/api/prayer/profiles` reads empty as
+  designed. GitHub main stands at f7ecc93 + this doc
+  commit — main pushed · remote in sync.
+- **Gates:** harness-v594 **9/0** on the working tree, a
+  clean checkout, and the merged tree (the v594 pin bump
+  superseded by the v595 pin in the serving tree — the
+  gate legs are pin-independent) · on the merged tree
+  harness-v593 19/1 · harness-v595 16/1 (their reds: the
+  pin legs only, the standing disclosed shape) ·
+  harness-v591 29/3 · harness-v592 10/2 (the v593 ship's
+  named by-design pop-up assertions). Equivalence stands
+  (harness-v593/v592 A legs green).
+- **Records:** phase records Plan · Implement · Review ·
+  Ship all passed (Scope 2391 stands from registration) ·
+  contracts 808 (Plan) · 809 (Implement) · 810 (Review) ·
+  811 (Ship), every expectation met — read with this §5:
+  the Ship contract's deploy note names this chain's
+  88032d46 deploy; the serving deploy is 4fadc0e9 per the
+  incident + repair above (judgments are uneditable; the
+  correction stands here and on the row). **What's New
+  409** · row 1568 **Live** (shipped_at
+  2026-11-21T21:47:37Z).
+- **Intake 1110 stays OPEN** — Part 1's outcome (with the
+  incident) is appended to its notes; Part 2 (today vs
+  everything) stands at Scope for its package.
+- **Field leg (John's):** open Configure plan → Profile
+  edit — with the vault locked, the unlock pad stands
+  first; after the PIN, tapping The Benedictine Way
+  switches today to it.
