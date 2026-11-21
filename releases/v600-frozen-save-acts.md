@@ -162,3 +162,58 @@ lands. Regression: harness-v594p2 · harness-v598 ·
 harness-v597 if landed — every delta named; the retired
 at-once assertions (v594p2's R3/R4/R8/R9 class) are
 by-design reds under John's reversal, named per leg.
+
+## §3 Implement
+
+Client only (app/worker/src/client.ts; ui.ts carries a
+comment update only — the frozen dress is reused, no new
+CSS; index.ts untouched, no migration).
+
+Edit profiles: `paintFrozen()` no longer hides the bar —
+`barEl.hidden = false` always; the Save button carries
+`disabled` while the draft is clean; the bar line paints
+always ("{name} · unsaved changes" / "No unsaved
+changes"). The frozen zone's height is now constant, so
+the first edit cannot move the scroller's content.
+
+Edit today, per §2.2: the draft {pickD, td, clearedD}
+generalizes Part 2's draft builder (`buildDraftFor(key,
+layer)`); every edit handler mutates the draft and
+repaints only (`afterEdit` is repaint-only; the at-once
+`persist()` is deleted — every `profPut` in the screen
+lives inside `saveToday()`). The frozen Save today bar
+(`.proffrozen593 .profbar593` dress, `data-p600savetoday`)
+stands above the scroller, unhidden at first paint, its
+button enabled exactly when the draft is dirty and its
+line stating the draft's divergence sentence in the
+standing words + " · unsaved changes" while dirty.
+Divergences, badges, trace lines and the materialize
+sentence all compute on the DRAFT (`draftLayerObj()`).
+The pick warning stands whenever a standing layer
+stands or the draft carries layer edits. The Clear act
+resets the draft (pick := standing, td := the profile
+whole, cleared := a layer stands) and never writes.
+Close routes through `requestClose()` → the prompt
+(`data-p600prompt`: Save today · Discard · Stay).
+
+One defect caught by the harness during Implement
+(R5's first run): the dirty check first compared the
+draft against the PROFILE — a draft restating the
+standing layer read dirty forever. The check now
+compares against a standing snapshot (`standJson`,
+taken whenever the draft is built from the standing
+state) through the one diff machinery (`layerJsonOf`).
+A tap away and back to the standing pick leaves the
+draft without the standing layer applied — dirty, and
+saving writes the profile whole: the clearing rule's
+honest outcome, the warning having stood before the
+first tap.
+
+harness-v600: 33 ok / 0 not ok on the working tree AND
+on a clean checkout of the committed tree (16eb7d6) —
+T statics · the carried A/L equivalence legs · R1–R19
+(the permanent bar + offset leg · draft writes nothing ·
+pick + layer together · profile-whole writes no layer ·
+clear resets without writing · the close prompt's three
+acts · the ladder head unmarked by a draft · the
+both-paths equivalence · the locked-vault world).
