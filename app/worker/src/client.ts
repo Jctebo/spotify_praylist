@@ -20588,8 +20588,8 @@ function paintListenHome(day) {
   // starred settle/toggle.
   // v590 (Amendment 4): the Configure plan button stands
   // on the FIRST ROW of the Praylist — the door to the
-  // Profiles screen, standing whether or not a profile
-  // card paints below it.
+  // Configure ladder (v593), and since v595 the only
+  // profile surface at the head of the side.
   var html = '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>'
     + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
