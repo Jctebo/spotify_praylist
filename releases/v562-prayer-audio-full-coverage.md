@@ -68,4 +68,10 @@ Registry row 1516 · Intake: Goals Board task 1080 · Status: IN CHAIN — appro
 
 ## 5 · Ship
 
-_(not yet written)_
+- **Seating:** Ship record 2265 · contract 678 · holder v562-chain.
+- **Commits:** `cc21811` (PRAYER_AUDIO extension + harness + doc §§1–3) · `a86c95e` (SW pin bump to `ora-pro-nobis-v562-1`, its own commit) · `20d6873` (doc §4). Branch `release/v562` fast-forward-merged to main; **main pushed · remote in sync** (push read-back: Jctebo/spotify_praylist main = `20d6873`). Harness re-run in the clean ship worktree at the merged HEAD: 26 ok / 0 not-ok.
+- **Deploy:** Worker **8fd17be5-2819-4412-8bf3-5d839e934e5b** (deploy driver deploy-app-v562-ship.py, EXPECTED_HEAD 20d6873, clean-worktree guard passed). Rollback: v561 Worker ca096cac-ce8f-4162-b54e-0bce1602647c. No migration (0043 stays free) · no APK.
+- **Production verification:** app agent door book read 200 — **77/77 prayers carry audio folds** with the shipped durations (veni-creator {en 149.4, la 140.2}; memorare {en 31.3, la 38.9}); bucket under prayer-audio/ stands at **108 objects**, every v562 file sha256-verified in place (§3/§4).
+- **Counts:** 36 restored + 61 rendered = 97 files shipped (the Q7 C re-render of veni-creator.la accounts for the shift from the planned 37 + 60). Transcript check: 97/97 pass — 3 genuine derailments caught and re-rendered (rosary-of-our-lord.en, three-offerings-of-the-precious-blood.en, veni-creator.la restore), method disclosures in §3.
+- **Registry:** row 1516 → **Live**, shipped_at 2026-11-21T05:05:37Z, whats_new_id **382** ("Prayer audio for every prayer"). Relay Intake 1080 closed (state line ends SHIPPED LIVE → CLOSED).
+- **Field legs for John:** play a restored prayer (Our Father, EN and LA) · play a newly covered prayer (Memorare) · play a two-voice prayer (Litany of Loreto or Grace After Meals) and confirm the responses come in the second voice · play Veni Creator (Latin) — the re-recorded file.
