@@ -638,6 +638,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .searchpill { margin:0 0 12px; position:relative; }
 .searchpill::before { content:'⌕'; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); font-family:var(--sans); font-size:17px; pointer-events:none; }
 .searchpill input { width:100%; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--card); padding:0 16px 0 38px; font-family:inherit; font-size:16px; color:var(--ink); -webkit-appearance:none; appearance:none; }
+/* v582: the Novenas page search stands BIGGER than the
+   standing pill (John's word: the box takes the entire
+   row) — a full-width bar, 56px tall with 18px text, so
+   finding one novena among the catalog is the first
+   thing a person can do on the page. Scoped to the
+   Novenas head; the .searchpill dress stands untouched
+   for its standing pages. */
+.novsearchbar { margin:0 0 14px; position:relative; }
+.novsearchbar::before { content:'⌕'; position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--muted); font-family:var(--sans); font-size:21px; pointer-events:none; }
+.novsearchbar input { width:100%; height:56px; border-radius:14px; border:1px solid var(--line); background:var(--card); padding:0 18px 0 46px; font-family:inherit; font-size:18px; color:var(--ink); -webkit-appearance:none; appearance:none; }
 /* v425 §2.2: the merged home line — the search pill and the
    filter chips share one 44px row (the chips row retires;
    56px banked). Scoped to .searchrow only: the global

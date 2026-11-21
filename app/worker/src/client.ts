@@ -7837,8 +7837,10 @@ function paintCatechesisNovenas() {
   // The search stands at the TOP of the page (the
   // clarification's seat); typing filters the list in place
   // — only the list container repaints, so the input keeps
-  // its focus and its text.
-  view.innerHTML = '<p><input type="search" id="nov-search" placeholder="Search novenas" value="' + esc(novenaSearchText) + '" autocomplete="off"></p>'
+  // its focus and its text. v582: the input stands in the
+  // .novsearchbar dress — full width, 56px, 18px text
+  // (John's word: the box takes the entire row).
+  view.innerHTML = '<div class="novsearchbar"><input type="search" id="nov-search" placeholder="Search novenas" value="' + esc(novenaSearchText) + '" autocomplete="off"></div>'
     + '<div id="nov-list">' + novenaCatalogListHtml(cat) + '</div>';
   var inp = document.getElementById('nov-search');
   if (inp) inp.addEventListener('input', function () {
