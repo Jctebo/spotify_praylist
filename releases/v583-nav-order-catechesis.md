@@ -22,3 +22,16 @@ John's direction (main chat, 2026-11-21 10:49 CT): "Let's put catechsis next to 
 - **Server:** index.ts carries no tab-order logic.
 
 **Harness plan:** a new `harness-v583.mjs` in the v582 pattern — build the client bundle from the worktree, render the shell, and assert (a) the tab bar's data-tab order reads mass · prayers · podcasts · conscience · wallpaper with labels Worship · Pray · Catechesis · Conscience · Sacred Art, (b) the page-menu sections order matches, (c) the bundle parses whole. Run on the committed tree in a clean checkout before Ship. Served proof after deploy: fetch the live shell, read the nav order from the served markup, parse the served app.js whole.
+
+## §3 Implement (passed)
+
+Two line swaps, nothing else:
+
+- `app/worker/src/ui.ts` — in `SHELL_HTML`'s tab bar, the podcasts (Catechesis) button now stands third and the conscience (Conscience) button fourth; each button moved whole, with its own icon and label.
+- `app/worker/src/client.ts` — the page menu's `sections` array swaps its podcasts/conscience entries, so the menu's section list stays in tab order.
+
+Commits on release/v583: `816ab6d` (the swaps + harness + this doc §2) and `d7d3a1c` (harness fix: `SHELL_HTML` closes on its own line, so the harness's template renderer takes its end marker per template — found on the first harness run, before any green was claimed).
+
+**Harness (harness-v583.mjs, BASE 6307094): 23 ok / 0 not-ok** on the committed tree, and **23 ok / 0 not-ok again in a clean checkout** of the branch HEAD (d7d3a1c) — the committed-tree rule. Legs: diff confined to the four named files · migrations untouched (newest 0042) · SW pin unmoved pre-Ship · the new data-tab and label orders stand in source and in the RENDERED shell · each moved button keeps its icon · `setTab`, the last-tab write, and the boot validation are byte-identical to BASE · the rendered APP_JS parses whole · the boot validation, run in a slice world, resolves a stored `podcasts` and a stored `conscience` to themselves and an unknown value to `mass` — saved last-tab state survives the swap by name.
+
+Record blemish, named: the Plan contract's judgment note (contract 754) misstated the Plan phase record id as 2336; the record is **2343**. A recorded judgment cannot be edited (the door answered 409), so the correction stands here and in the chain's ship report.
