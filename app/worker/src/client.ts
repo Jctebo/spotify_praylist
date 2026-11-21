@@ -10909,18 +10909,53 @@ function paintFavoritesFolderRow() {
     + '<div class="grow"><h3>Favorites</h3><div class="meta">' + esc(meta) + '</div></div></div></div>';
 }
 /* v550 §2.4 (Q4 A): the reorder mode — module state only,
-   never persisted. favReorder = { keys } stands while the
-   mode stands; it is set only by the header menu's Reorder
-   act, cleared by Done (after the save), and cleared at the
-   head of any Prayers paint whose view is not the Favorites
-   page — leaving without Done discards, and a discard can
-   never leak into a later visit. Drags alone write nothing:
-   no PUT and no mirror write stands before Done. */
+   never persisted. It is set only by the header menu's
+   Reorder act, cleared by Done (after the save), and
+   cleared at the head of any Prayers paint whose view is
+   not the Favorites page — leaving without Done discards,
+   and a discard can never leak into a later visit. Drags
+   alone write nothing: no PUT and no mirror write stands
+   before Done.
+   v579 (Q1 A · Q2 A): the mode is rebuilt PER-FOLDER. It
+   paints the folder sections in their standing order;
+   each folder that stands on the page carries a handle
+   on its head (the folder drag) and its items as drag
+   rows inside it. favReorder = { folders, items } stands
+   while the mode stands: folders = the visible folder
+   ids in working order; items = per folder, the working
+   item keys (a prayer stands as 'prayer:<slug>', any
+   other item as its star key). A folder stands in the
+   mode when it holds an item or it is a custom folder
+   (the page paints a custom folder even empty); an empty
+   default folder is absent, the v581 rule. Done saves:
+   the folder order to the device key, each starred
+   folder's items spliced back into the positions that
+   folder's items already occupy in the whole list (the
+   standing whole-list write), the Prayers folder's slug
+   array rewritten in the dragged order. */
 var favReorder = null;
+function favReorderFolderItems(folder) {
+  // A folder's content in its standing order: the Prayers
+  // folder reads the book favorites (slugs); any other
+  // folder reads its doors, then its tracks (the page's
+  // own order in favFolderSectionHtml).
+  if (folder.id === 'prayers') return bookFavsList().map(function (slug) { return { prayerSlug: slug }; });
+  return favDoorsIn(folder.id).concat(favTracksIn(folder.id));
+}
+function favReorderVisibleFolders() {
+  return favFolders().filter(function (f) { return f.custom || favReorderFolderItems(f).length > 0; });
+}
+function favReorderAvailable() {
+  var vis = favReorderVisibleFolders();
+  return vis.length >= 2 || vis.some(function (f) { return favReorderFolderItems(f).length >= 2; });
+}
 function enterFavReorder() {
-  var list = favoritesList();
-  if (list.length < 2) return;
-  favReorder = { keys: list.map(starEntryKey) };
+  if (!favReorderAvailable()) return;
+  var vis = favReorderVisibleFolders();
+  favReorder = { folders: vis.map(function (f) { return f.id; }), items: {} };
+  vis.forEach(function (f) {
+    favReorder.items[f.id] = favReorderFolderItems(f).map(function (it) { return it.prayerSlug ? 'prayer:' + it.prayerSlug : starEntryKey(it); });
+  });
   paintFavoritesPage(state.dayPayload);
 }
 function favReorderRowHtml(e) {
@@ -10936,34 +10971,72 @@ function favReorderRowHtml(e) {
     + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
     + '</div></div></div>';
 }
-function favReorderDone() {
-  // Q2 A + Q4 A: Done saves the working order through the
-  // standing whole-list write (starredSet + starredSync —
-  // the array index becomes sort_order; no migration) and
-  // exits the mode; the full-control rows repaint from the
-  // saved list.
-  if (!favReorder) return;
-  var keys = favReorder.keys.slice();
-  favReorder = null;
-  var byKey = {};
-  favoritesList().forEach(function (e) { byKey[starEntryKey(e)] = e; });
-  var list = keys.map(function (k) { return byKey[k]; }).filter(Boolean);
-  favoritesList().forEach(function (e) { if (keys.indexOf(starEntryKey(e)) < 0) list.push(e); });
-  starredSet(list);
-  paintFavoritesSurfaces();
-  starredSync();
+function favReorderPrayerRowHtml(slug) {
+  // A Prayers folder row in the mode: the handle + the
+  // prayer's art + its name — no play disc, no star.
+  var f = bookFind(slug);
+  var title = f ? f.prayer.title : slug;
+  var artDesc = { episodeId: 'prayer:' + slug + ':en', kind: 'prayer', title: title, block: '', imageUrl: '/logo.png' };
+  return '<div class="card trow prow favreorder-row" data-favrow="prayer:' + esc(slug) + '"><div class="row">'
+    + '<button class="favhandle" data-favhandle="prayer:' + esc(slug) + '" aria-label="Drag to reorder">\u2261</button>'
+    + rowArtHtml(artDesc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(title) + '</h3></div>'
+    + (f && f.category ? '<div class="meta">' + esc(f.category) + '</div>' : '')
+    + '</div></div></div>';
 }
-function wireFavDrag(scope) {
-  // The drag (new machinery, John's words): pointerdown on a
-  // handle captures the pointer; the row lifts (.dragging)
-  // and follows by transform; when its center crosses a
-  // sibling's center the two swap in the DOM and the
-  // transform origin adjusts by the measured layout delta,
-  // so the row never jumps. pointerup reads the working
-  // order off the DOM — the save stands at Done alone.
-  scope.querySelectorAll('[data-favhandle]').forEach(function (h) {
+function favReorderDone() {
+  // v579 (Q1 A · Q2 A): Done saves the working orders and
+  // exits the mode. Folder order writes to the
+  // device-local key. A starred folder's items splice
+  // back into the positions that folder's items already
+  // occupy in the whole list — other folders' entries,
+  // folder definitions and assignments never move — and
+  // the standing whole-list write carries the result
+  // (starredSet + starredSync; the array index is the
+  // order; no migration). The Prayers folder's slug array
+  // rewrites in the dragged order through its own sync.
+  // A folder whose membership changed mid-mode keeps its
+  // standing order (its splice is skipped whole).
+  if (!favReorder) return;
+  var work = favReorder;
+  favReorder = null;
+  favFolderOrderSave(work.folders);
+  var starredTouched = false;
+  Object.keys(work.items).forEach(function (fid) {
+    if (fid === 'prayers') return;
+    var want = work.items[fid];
+    var list = (state.starred || []).slice();
+    var positions = [];
+    list.forEach(function (e, i) { if (e && e.k !== 'folder' && favFolderOf(e) === fid) positions.push(i); });
+    var byKey = {};
+    list.forEach(function (e) { byKey[starEntryKey(e)] = e; });
+    var ordered = want.map(function (k) { return byKey[k]; }).filter(Boolean);
+    if (ordered.length !== positions.length) return;
+    positions.forEach(function (pos, j) { list[pos] = ordered[j]; });
+    starredSet(list);
+    starredTouched = true;
+  });
+  if (work.items.prayers) {
+    var wantSlugs = work.items.prayers.map(function (k) { return k.slice('prayer:'.length); });
+    var cur = bookFavsList().slice();
+    var sameSet = wantSlugs.length === cur.length && wantSlugs.slice().sort().join('\\n') === cur.sort().join('\\n');
+    if (sameSet) { bookFavsSet(wantSlugs); bookFavsSync(); }
+  }
+  paintFavoritesSurfaces();
+  if (starredTouched) starredSync();
+}
+function wireFavDragList(scope, handleAttr, rowAttr, onEnd) {
+  // The drag (v550 machinery, generalized by v579 to any
+  // row list): pointerdown on a handle captures the
+  // pointer; the row lifts (.dragging) and follows by
+  // transform; when its center crosses a sibling's center
+  // the two swap in the DOM and the transform origin
+  // adjusts by the measured layout delta, so the row
+  // never jumps. pointerup reads the working order off
+  // the DOM — the save stands at Done alone.
+  scope.querySelectorAll('[' + handleAttr + ']').forEach(function (h) {
     h.addEventListener('pointerdown', function (ev) {
-      var row = h.closest('[data-favrow]');
+      var row = h.closest('[' + rowAttr + ']');
       if (!row || !favReorder) return;
       ev.preventDefault();
       var listEl = row.parentElement;
@@ -10973,7 +11046,7 @@ function wireFavDrag(scope) {
       var move = function (mv) {
         var dy = mv.clientY - startY;
         row.style.transform = 'translateY(' + dy + 'px)';
-        var rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+        var rows = Array.prototype.slice.call(listEl.querySelectorAll('[' + rowAttr + ']'));
         var idx = rows.indexOf(row);
         if (idx < 0) return;
         var center = row.offsetTop + dy + row.offsetHeight / 2;
@@ -10983,7 +11056,7 @@ function wireFavDrag(scope) {
           var before = row.offsetTop;
           listEl.insertBefore(next, row);
           startY += row.offsetTop - before;
-          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[' + rowAttr + ']'));
           idx = rows.indexOf(row);
           center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
         }
@@ -10993,7 +11066,7 @@ function wireFavDrag(scope) {
           var before2 = row.offsetTop;
           listEl.insertBefore(row, prev);
           startY += row.offsetTop - before2;
-          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]'));
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[' + rowAttr + ']'));
           idx = rows.indexOf(row);
           center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
         }
@@ -11005,12 +11078,25 @@ function wireFavDrag(scope) {
         h.removeEventListener('pointercancel', end);
         row.classList.remove('dragging');
         row.style.transform = '';
-        if (favReorder) favReorder.keys = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]')).map(function (r) { return r.getAttribute('data-favrow'); });
+        if (favReorder) onEnd(listEl);
       };
       h.addEventListener('pointermove', move);
       h.addEventListener('pointerup', end);
       h.addEventListener('pointercancel', end);
     });
+  });
+}
+function wireFavDrag(scope) {
+  // Item rows: the working order lands in the folder's
+  // own items list, read off its container.
+  wireFavDragList(scope, 'data-favhandle', 'data-favrow', function (listEl) {
+    var fid = listEl.getAttribute('data-favitems');
+    if (fid && favReorder.items[fid]) favReorder.items[fid] = Array.prototype.slice.call(listEl.querySelectorAll('[data-favrow]')).map(function (r) { return r.getAttribute('data-favrow'); });
+  });
+  // Folder rows: the section heads' handles drag the
+  // whole section within the page list.
+  wireFavDragList(scope, 'data-favfolderhandle', 'data-favfolder', function (listEl) {
+    favReorder.folders = Array.prototype.slice.call(listEl.querySelectorAll('[data-favfolder]')).map(function (r) { return r.getAttribute('data-favfolder'); });
   });
 }
 /* ============================================================
@@ -11053,13 +11139,43 @@ var FAV_FOLDER_DEFAULTS = [
   { id: 'podcasts', name: 'Favorite Podcasts' }
 ];
 var FAV_COLLAPSE_KEY = 'opn-favcollapse-v576';
+var FAV_FOLDER_ORDER_KEY = 'opn-favfolderorder-v579';
+function favFolderOrderRead() {
+  // Folder order is device-local UI state (the collapse
+  // map's precedent): it is not personal data and never
+  // syncs.
+  try { var v = JSON.parse(localStorage.getItem(FAV_FOLDER_ORDER_KEY) || '[]'); return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string'; }) : []; } catch (e) { return []; }
+}
+function favFolderOrderSave(ids) {
+  try { localStorage.setItem(FAV_FOLDER_ORDER_KEY, JSON.stringify(ids || [])); } catch (e) {}
+}
 function favFolders() {
   // The folder list: the four defaults, then the custom
   // folders in store order (their definition entries).
+  // v579 (Q2 A): the person's folder order — the
+  // device-local order key — sorts the list: named
+  // folders first in the stored order, the rest in their
+  // standing order; an id that no longer names a folder
+  // drops out. The machinery reads this list itself, so
+  // a folder added later (a new default, a new custom)
+  // stands in its standing place until the person
+  // reorders again.
   var out = FAV_FOLDER_DEFAULTS.map(function (f) { return { id: f.id, name: f.name, custom: false }; });
   (state.starred || []).forEach(function (e) {
     if (e && e.k === 'folder' && typeof e.id === 'string' && e.id) out.push({ id: e.id, name: e.title || 'Folder', custom: true });
   });
+  var order = favFolderOrderRead();
+  if (order.length) {
+    var rank = {};
+    order.forEach(function (id, i) { if (rank[id] === undefined) rank[id] = i; });
+    out = out.map(function (f, i) { return { f: f, i: i }; }).sort(function (a, b) {
+      var ra = rank[a.f.id], rb = rank[b.f.id];
+      if (ra !== undefined && rb !== undefined) return ra - rb;
+      if (ra !== undefined) return -1;
+      if (rb !== undefined) return 1;
+      return a.i - b.i;
+    }).map(function (x) { return x.f; });
+  }
   return out;
 }
 function favDerivedFolder(e) {
@@ -11100,6 +11216,22 @@ function favToggleCollapse(folderId) {
   // precedent): it is not personal data and never syncs.
   var map = favCollapseRead();
   if (map[folderId]) delete map[folderId]; else map[folderId] = 1;
+  try { localStorage.setItem(FAV_COLLAPSE_KEY, JSON.stringify(map)); } catch (e) {}
+  paintFavoritesSurfaces();
+}
+function favAnyCollapsed() { return favFolders().some(function (f) { return favCollapsed(f.id); }); }
+function favAnyExpanded() { return favFolders().some(function (f) { return !favCollapsed(f.id); }); }
+function favExpandAll() {
+  // v579: one tap unfolds every folder — the collapse
+  // map clears whole and the page repaints.
+  try { localStorage.setItem(FAV_COLLAPSE_KEY, JSON.stringify({})); } catch (e) {}
+  paintFavoritesSurfaces();
+}
+function favCollapseAll() {
+  // v579: one tap folds every folder — every standing
+  // folder's id stands in the collapse map.
+  var map = {};
+  favFolders().forEach(function (f) { map[f.id] = 1; });
   try { localStorage.setItem(FAV_COLLAPSE_KEY, JSON.stringify(map)); } catch (e) {}
   paintFavoritesSurfaces();
 }
@@ -11298,6 +11430,7 @@ function paintFavoritesPage(day) {
   // v550: in reorder mode the page paints the mode's own
   // form — the bar reads Reorder with Done at its right,
   // the rows carry handles alone (favReorderRowHtml).
+  // v579: the mode's form is the folder sections (below).
   // v578: while the vault stands locked, the unlock card
   // stands in place of the folders — favorites are
   // encrypted on this phone.
@@ -11331,11 +11464,29 @@ function paintFavoritesPage(day) {
   }
   var list = favoritesList();
   if (favReorder) {
+    // v579: the mode paints the FOLDER SECTIONS in their
+    // working order — a handle on each section head (the
+    // folder drag) and drag rows for the folder's items.
     paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Reorder', backAttrs: 'data-back="__favorites"', rightHtml: '<button class="btn ghost small" id="fav-done">Done</button>' }), '__favorites');
-    var byKey = {};
-    list.forEach(function (e) { byKey[starEntryKey(e)] = e; });
-    var rows = favReorder.keys.map(function (k) { return byKey[k]; }).filter(Boolean);
-    view.innerHTML = opnFavCard + '<div id="favorites-list">' + (rows.length ? rows.map(favReorderRowHtml).join('') : '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>') + '</div>';
+    var foldersById = {};
+    favFolders().forEach(function (f) { foldersById[f.id] = f; });
+    var rhtml = opnFavCard + '<div id="favorites-list">';
+    favReorder.folders.forEach(function (fid) {
+      var f = foldersById[fid];
+      if (!f) return;
+      rhtml += '<div class="favfolder" data-favfolder="' + esc(fid) + '">'
+        + '<div class="favfolder-head"><button class="favhandle" data-favfolderhandle="' + esc(fid) + '" aria-label="Drag to reorder folder">\u2261</button>'
+        + '<h2 class="sectionhead grow">' + esc(f.name) + '</h2></div>'
+        + '<div class="favreorder-items" data-favitems="' + esc(fid) + '">'
+        + (favReorder.items[fid] || []).map(function (k) {
+          if (k.indexOf('prayer:') === 0) return favReorderPrayerRowHtml(k.slice('prayer:'.length));
+          var e = starredEntryByKey(k);
+          return e ? favReorderRowHtml(e) : '';
+        }).join('')
+        + '</div></div>';
+    });
+    rhtml += '</div>';
+    view.innerHTML = rhtml;
     var dn = document.getElementById('fav-done');
     if (dn) dn.addEventListener('click', favReorderDone);
     wireFavDrag(view);
@@ -14000,12 +14151,17 @@ function openHeaderMenu() {
     // seated under the no-dead-items rule: outside the
     // mode itself, and only while the list holds a track.
     if (!favReorder && favoritesList().length) items.push({ label: 'Add all to queue', act: function () { starredAddAll(); } });
-    if (!favReorder && favoritesList().length >= 2) items.push({ label: 'Reorder', act: function () { enterFavReorder(); } });
+    if (!favReorder && favReorderAvailable()) items.push({ label: 'Reorder', act: function () { enterFavReorder(); } });
     // v576: New folder — the page overflow's folder act
     // (John, 09:03 CT: more folders are added from the
     // overflow menu). It stands outside the reorder mode;
     // the name sheet mints the folder.
     if (!favReorder) items.push({ label: 'New folder', act: function () { openFavNameSheet(null); } });
+    // v579: Expand all / Collapse all — each stands only
+    // while it can change something (the no-dead-items
+    // rule), outside the reorder mode.
+    if (!favReorder && favAnyCollapsed()) items.push({ label: 'Expand all', act: function () { favExpandAll(); } });
+    if (!favReorder && favAnyExpanded()) items.push({ label: 'Collapse all', act: function () { favCollapseAll(); } });
   } else if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
     // A block page: Sort · Mark all · Share · Open in
     // Spotify (where a URL stands) · Download all — the

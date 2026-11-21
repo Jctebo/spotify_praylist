@@ -581,6 +581,8 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .favfolder-head { display:flex; align-items:center; gap:6px; }
 .favfolder-head .sectionhead { flex:1; }
 .favfolder-chev { flex:none; background:none; border:none; font-family:inherit; font-size:15px; line-height:1; color:var(--navy); cursor:pointer; padding:6px 4px; }
+.favfolder-head .favhandle { width:36px; height:36px; margin:0 0 0 -6px; }
+.favfolder.dragging { position:relative; z-index:6; box-shadow:0 14px 24px rgba(42,38,32,.28); }
 /* v449 §2 Build 1: the square-card family stands down
    whole — the two-column grid and its card dress retire
    with the home's re-form to one series row per line
