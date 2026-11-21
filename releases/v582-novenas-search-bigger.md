@@ -39,3 +39,16 @@ APPROVED (John, Ora thread, 2026-11-21 10:37 CT — picks pasted from package 72
 ### 2.4 Ship plan
 
 Branch `release/v582` off main; harness green on a clean checkout of the exact committed tree; merge to main and push (read-back "main pushed · remote in sync"); SW pin bump to `ora-pro-nobis-v582-1` as the Ship commit; deploy the Worker from a clean ship checkout of the merged main; served legs — the live app.js parses whole, the served /styles.css carries the `.novsearchbar` rules, the pin reads back in the served sw.js; What's New entry; row 1553 flips Live; intake 1096 closes. Sequencing: v581 is in flight on the same client — main and the live pin are re-read before the merge and before the deploy, and the branch rebases onto whatever main stands; never force-push.
+
+## 3 · Implement
+
+Built on branch `release/v582` off main 175b857 (fresh clone verified whole before building: HEAD on main at 175b857, clean tree). Commit 52e33b6.
+
+- `app/worker/src/ui.ts` — the `.novsearchbar` rule set stands in APP_CSS directly after the `.searchpill` rules: the bar is full-width (block, `position:relative`, margin 0 0 14px) with the leading ⌕ glyph seat at 21px; its input stands at width:100%, height:56px, font-size:18px, padding 0 18px 0 46px, border-radius 14px, the standing `var(--line)` border and `var(--card)` background, `appearance:none` so the height holds on every browser. The `.searchpill` dress is untouched.
+- `app/worker/src/client.ts` — in `paintCatechesisNovenas`, the head markup's wrapper changed from `<p>` to `<div class="novsearchbar">`; the input element itself (type, id `nov-search`, placeholder, value binding, autocomplete) and the `input` event wiring are byte-identical, and a comment names the v582 dress. Nothing else in the client moved.
+- No server change, no migration, no data write. `novenaSearchMatch`'s source is identical to BASE (harness S5 proves it byte-for-byte), and the saint order still rides the payload order.
+
+Harness: harness-v582 **16 ok / 0 not-ok** on the build tree and again on a clean checkout (git worktree) of the exact committed tree 52e33b6 — S1 diff confined · S2 migrations unchanged, newest 0042 · S3 pin unmoved pre-Ship · S4 the dress and the wrapper stand, the old bare form gone · S5 behavior source identical + wiring stands · S6 the RENDERED client parses whole · C1 matching behavior unchanged (name hit, saint hit, miss, empty needle) · C2 the rendered head markup carries the bar.
+
+- **Trunk-drift rework:** 0 — main stood at 175b857 from clone through the build; v581 had not merged.
+- **Concerns and Information Needs:** none. The one harness defect found was in the harness itself (a `git show` of the 1MB+ client.ts overflowed the default exec buffer; fixed with an explicit maxBuffer before the first full run).
