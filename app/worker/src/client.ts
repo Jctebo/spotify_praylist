@@ -2897,11 +2897,28 @@ function opnFoldPlaybackIntoPodcasts(j) {
     if (!o || typeof o !== 'object') return;
     if (Array.isArray(o)) { o.forEach(function (x) { walk(x, seriesCtx); }); return; }
     var ctx = typeof o.series === 'string' ? o.series : seriesCtx;
-    if (typeof o.key === 'string' && 'listened' in o) {
-      var lk = String(ctx || '') + '|' + o.key;
+    // v585: the gate is the entry's IDENTITY, never a state
+    // field. The public shape's stripListenState removes
+    // 'listened' from every entry server-side (by design — the
+    // server serves no personal state publicly), so the
+    // standing 'listened' in o test could never pass on a
+    // public payload: the fold was dead and a device-stored
+    // mark showed only as the writing session's in-memory
+    // flip, never on the next open — no mark stood isolated
+    // to its episode. A markable entry is an object with a
+    // string key, a string series context, and an episode
+    // shape (a url or a streamUrl standing); series/index
+    // card objects carry neither and stay untouched. A mark
+    // keeps only when its key names a standing entry here
+    // (Q3 A) — a key naming none is never applied, never
+    // guessed onto another episode.
+    if (typeof o.key === 'string' && typeof ctx === 'string' && ctx
+        && (typeof o.url === 'string' || typeof o.streamUrl === 'string')) {
+      var lk = ctx + '|' + o.key;
       var l = pb.listens[lk];
       if (l) { o.listened = true; o.listenDate = l.listenDate; o.listenedAt = l.listenedAt; o.source = l.source; o.positionS = null; }
       else if (pb.positions[lk]) { o.listened = false; o.positionS = pb.positions[lk].positionS; }
+      else o.listened = false;
     }
     Object.keys(o).forEach(function (k) { walk(o[k], ctx); });
   };
@@ -8163,6 +8180,15 @@ function paintPodOwnSeries() {
   view.querySelectorAll('[data-ownplay]').forEach(function (b) {
     b.addEventListener('click', function () { playPodOwnFrom(b.getAttribute('data-ownplay')); });
   });
+  // v585: a tap on the episode row's body opens its title
+  // card (Q1 A); the row's own controls keep their acts.
+  view.querySelectorAll('[data-podrow]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var e = res.entries.filter(function (x) { return x.key === row.getAttribute('data-podrow'); })[0];
+      if (e) openEpisodeCard({ desc: podOwnDesc(e), entry: null, titleText: e.title, seriesTitle: res.title || 'The AI Signal', dateLabel: e.label || '', descText: null, onPlay: function () { playPodOwnFrom(e.key); } }, row);
+    });
+  });
   // Trigger A (v430, re-seated): a device-local copy of today's
   // episode already standing swaps in at this paint.
   var todayEntry = null;
@@ -8258,6 +8284,15 @@ function paintPodNovenaSeries() {
   wirePodBack();
   view.querySelectorAll('[data-novplay]').forEach(function (b) {
     b.addEventListener('click', function () { playNovenaFrom(b.getAttribute('data-novplay')); });
+  });
+  // v585: a tap on the episode row's body opens its title
+  // card (Q1 A); the row's own controls keep their acts.
+  view.querySelectorAll('[data-podrow]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var e = res.entries.filter(function (x) { return x.key === row.getAttribute('data-podrow'); })[0];
+      if (e) openEpisodeCard({ desc: podNovenaDesc(e), entry: null, titleText: e.title, seriesTitle: res.title || '', dateLabel: (e.dayN ? 'Day ' + e.dayN + ' \\u00b7 ' : '') + (e.label || ''), descText: null, onPlay: function () { playNovenaFrom(e.key); } }, row);
+    });
   });
 }
 function podNovenaDesc(e) {
@@ -8395,6 +8430,15 @@ function paintPodcastRss() {
   });
   view.querySelectorAll('[data-podmenu]').forEach(function (b) {
     b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu'), b); });
+  });
+  // v585: a tap on the episode row's body opens its title
+  // card (Q1 A); the row's own controls keep their acts.
+  view.querySelectorAll('[data-podrow]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var e = res.entries.filter(function (x) { return x.key === row.getAttribute('data-podrow'); })[0];
+      if (e) openEpisodeCard({ desc: podDesc(e), entry: e, titleText: e.title, seriesTitle: res.title || '', dateLabel: e.label || '', descText: e.descText || null, onPlay: function () { playPodFrom(e.key); } }, row);
+    });
   });
   wirePodBack();
 }
@@ -8683,6 +8727,15 @@ function paintPodcasts() {
   view.querySelectorAll('[data-podmenu]').forEach(function (b) {
     b.addEventListener('click', function () { openPodRowMenu(b.getAttribute('data-podmenu'), b); });
   });
+  // v585: a tap on the episode row's body opens its title
+  // card (Q1 A); the row's own controls keep their acts.
+  view.querySelectorAll('[data-podrow]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var e = res.entries.filter(function (x) { return x.key === row.getAttribute('data-podrow'); })[0];
+      if (e) openEpisodeCard({ desc: podDesc(e), entry: e, titleText: e.title, seriesTitle: res.title || '', dateLabel: e.label || '', descText: e.descText || null, onPlay: function () { playPodFrom(e.key); } }, row);
+    });
+  });
   // v433 §2.3 (F-433-3): the [data-podshare] wiring retires
   // with the standalone share emission — it binds nothing
   // after; the menu's Share is wired inside openPodRowMenu,
@@ -8763,6 +8816,136 @@ function podToggleMark(key) {
       ? { op: 'unmark', series: res.series, seqKey: key, queuedAt: new Date().toISOString() }
       : { op: 'mark', series: res.series, seqKey: key, source: 'manual', queuedAt: new Date().toISOString() });
   });
+}
+
+/* ---------------- Episode title card (v585) ----------------
+   Q1 A / Q2 A (John, 2026-11-21): tapping an EPISODE row —
+   on a series page, in the Praylist, in Favorites — opens
+   the episode's TITLE CARD instead of playing through or
+   clicking through (the v576 Q5 C reversal, built as
+   approved). The row's play disc keeps its standing
+   direct-play act; Play on the card runs the surface's
+   standing play act for that episode. ONE builder for every
+   surface, fed by the surface's standing descriptor; the
+   card carries the full Q2 set: title · series · date +
+   description · its Intention line · Play · star · played
+   state with mark played / mark unplayed. Prayer and book
+   rows are not episodes and keep their standing acts. */
+function epCardIsEpisode(d) {
+  if (!d || !d.episodeId) return false;
+  if (d.kind === 'podcast' || d.kind === 'homily' || d.kind === 'external') return true;
+  if (d.episodeId === 'the-ai-signal' || d.episodeId.indexOf('the-ai-signal-') === 0) return true;
+  if (novenaInfo(d.episodeId, d.title)) return true;
+  // The catalog stem form (the v577 canon, the server's
+  // novenaEpisodeOfStem rule): a dated stem ending in
+  // -day-<n> is a novena episode wherever it stands. The
+  // pattern is built from BS_CH, the standing construction —
+  // this client ships inside a template literal, where a
+  // written backslash cooks.
+  var stemRe = new RegExp('^' + BS_CH + 'd{4}-' + BS_CH + 'd{2}-' + BS_CH + 'd{2}-.+-day-' + BS_CH + 'd+$');
+  return stemRe.test(d.episodeId);
+}
+function epCardSeriesTitle(seriesKey) {
+  if (!seriesKey) return '';
+  if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.title) return state.podcasts.title;
+  var list = (state.podcastsIndex && state.podcastsIndex.seriesList) || [];
+  var hit = list.filter(function (s) { return s.series === seriesKey; })[0];
+  if (hit && hit.title) return hit.title;
+  if (state.podGroups && state.podGroups.payloads && state.podGroups.payloads[seriesKey] && state.podGroups.payloads[seriesKey].title) return state.podGroups.payloads[seriesKey].title;
+  if (seriesKey === 'the-ai-signal') return 'The AI Signal';
+  return seriesKey.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+}
+function epCardDayPlayed(d, anyDate) {
+  if (anyDate) { var m = playedMap()[playedKey(d.episodeId, d.block)]; return !!(m && Object.keys(m).length); }
+  return isPlayed(d.episodeId, presentedDateStr(), d.block);
+}
+function epCardPlayedOf(model) {
+  var d = model.desc;
+  if (model.favEntry) return model.favEntry.k === 'podcast' ? favPodListenedOf(model.favEntry) : epCardDayPlayed(d, true);
+  if (d.kind === 'podcast') return model.entry ? !!model.entry.listened : !!d.listened;
+  if (d.kind === 'homily') { var he = d.homilyId ? homilyEntry(d.homilyId) : null; return !!(he && he.played); }
+  return epCardDayPlayed(d, model.surface !== 'praylist');
+}
+function epCardTogglePlayed(model, on, refresh) {
+  var d = model.desc;
+  if (model.favEntry && model.favEntry.k === 'podcast') { favPodToggle(model.favEntry); refresh(); return; }
+  if (d.kind === 'podcast') {
+    if (model.entry && state.podcasts && state.podcasts.series === d.podSeries) { podToggleMark(d.seriesKey); }
+    else if (on) { writePodMarkQuiet(d.seriesKey, d.podSeries, 'manual'); }
+    else {
+      post('/api/player/podcasts/unmark', { series: d.podSeries, seqKey: d.seriesKey }).catch(function () {
+        podMarkEnqueue({ op: 'unmark', series: d.podSeries, seqKey: d.seriesKey, queuedAt: new Date().toISOString() });
+      });
+      podSyncQueueListened(d.podSeries, d.seriesKey, false);
+    }
+    d.listened = on;
+    refresh();
+    return;
+  }
+  if (d.kind === 'homily') { if (d.homilyId) homilySetPlayed(d.homilyId, on); refresh(); return; }
+  writePlayed(d.episodeId, presentedDateStr(), on ? 'played' : null, d.block);
+  refresh();
+}
+function openEpisodeCard(model, anchorEl) {
+  document.querySelectorAll('.anchmenu, .menucatcher').forEach(function (n) { n.remove(); });
+  var d = model.desc;
+  var catcher = document.createElement('div');
+  catcher.className = 'menucatcher';
+  var card = document.createElement('div');
+  card.className = 'menusheet anchmenu epcard';
+  var drawText = intentionsOn() ? trackDrawTextFor(d) : null;
+  var dateLine = model.dateLabel || '';
+  card.innerHTML = '<h1 class="screen">' + esc(model.titleText || d.title || 'Episode') + '</h1>'
+    + '<div class="epcard-body">'
+    + '<h3 class="epcard-title">' + esc(model.titleText || d.title || '') + '</h3>'
+    + (model.seriesTitle ? '<div class="meta epcard-series">' + esc(model.seriesTitle) + '</div>' : '')
+    + (dateLine || d.durationS ? '<div class="meta">' + esc(dateLine) + (dateLine && d.durationS ? ' \\u00b7 ' : '') + (d.durationS ? fmtDur(d.durationS) : '') + '</div>' : '')
+    + (model.descText ? '<p class="sub epcard-desc">' + esc(model.descText) + '</p>' : '')
+    + (drawText ? '<div class="intention-text track-draw-line">Intention: ' + esc(drawText) + '</div>' : '')
+    + '<div class="epcard-acts">'
+    + '<button class="playbtn epcard-play" data-epplay="1" aria-label="Play episode">&#9654; Play</button>'
+    + starBtnHtml(d)
+    + '<button class="podmark" data-epmark="1" aria-label="Mark as played">&#9711;</button>'
+    + '</div>'
+    + '<div class="meta" data-epstate="1"></div>'
+    + '</div>';
+  document.body.appendChild(catcher);
+  document.body.appendChild(card);
+  // The placement is openSheetMenu's anchor math, in its form:
+  // below the anchor when it fits, above when it does not, the
+  // right edge aligned, clamped to the 12px margins.
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var ar = anchorEl ? anchorEl.getBoundingClientRect() : null;
+  var width = ar ? Math.min(Math.max(232, ar.width), vw - 24) : vw - 24;
+  card.style.width = width + 'px';
+  card.style.visibility = 'hidden';
+  var h = card.offsetHeight;
+  var left, top;
+  if (ar) {
+    left = Math.max(12, Math.min(ar.right - width, vw - width - 12));
+    if (ar.bottom + 6 + h <= vh - 12) top = ar.bottom + 6;
+    else if (ar.top - 6 - h >= 12) top = ar.top - 6 - h;
+    else if (vh - ar.bottom >= ar.top) { top = ar.bottom + 6; card.style.maxHeight = (vh - 12 - top) + 'px'; }
+    else { card.style.maxHeight = (ar.top - 18) + 'px'; top = ar.top - 6 - Math.min(h, ar.top - 18); }
+  } else { left = 12; top = vh - 76 - h; }
+  card.style.left = left + 'px';
+  card.style.top = top + 'px';
+  card.style.visibility = '';
+  var close = function () { catcher.remove(); card.remove(); };
+  catcher.addEventListener('click', close);
+  var stateEl = card.querySelector('[data-epstate]');
+  var markBtn = card.querySelector('[data-epmark]');
+  var refresh = function () {
+    var on = epCardPlayedOf(model);
+    stateEl.textContent = on ? 'Played' : 'Not played yet';
+    markBtn.className = 'podmark' + (on ? ' on' : '');
+    markBtn.innerHTML = on ? '&#10003;' : '&#9711;';
+    markBtn.setAttribute('aria-label', on ? 'Mark as not played' : 'Mark as played');
+  };
+  refresh();
+  markBtn.addEventListener('click', function () { epCardTogglePlayed(model, !epCardPlayedOf(model), refresh); });
+  card.querySelector('[data-epplay]').addEventListener('click', function () { close(); if (model.onPlay) model.onPlay(); });
+  return card;
 }
 
 /* ---------------- Podcast position memory (v395) ----------------
@@ -11613,6 +11796,20 @@ function paintFavoritesPage(day) {
       var e = starredEntryByKey(b.getAttribute('data-starplay'));
       var d = e && starredDescFor(e);
       if (d) playTrack(d); // the standing single-play funnel
+    });
+  });
+  // v585: a tap on a Favorites EPISODE row's body opens its
+  // title card (Q1 A) — starred episodes and podcast
+  // episodes; doors and prayer rows keep their acts. The
+  // row's own controls keep theirs.
+  view.querySelectorAll('[data-card]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var e = starredEntryByKey(row.getAttribute('data-card'));
+      if (!e || (e.k !== 'episode' && e.k !== 'podcast')) return;
+      var d = starredDescFor(e);
+      if (!d) return;
+      openEpisodeCard({ desc: d, entry: null, favEntry: e, titleText: e.title || d.title, seriesTitle: e.k === 'podcast' ? epCardSeriesTitle(e.series) : (e.sub || ''), dateLabel: e.date ? shortDayLabel(e.date) : '', descText: d.descText || null, onPlay: function () { playTrack(d); } }, row);
     });
   });
   // v550 (Q1 A): the full controls' wiring — the played dot
@@ -18610,6 +18807,19 @@ function wirePrayersView(day) {
     btn.addEventListener('click', function () {
       var t = state.readTracks[btn.getAttribute('data-read')];
       if (t) openRead(t);
+    });
+  });
+  // v585: a tap on an EPISODE row's body opens its title
+  // card (Q1 A) — podcast inserts, novena episodes, the AI
+  // Signal, homily takes, external episodes. The row's own
+  // controls (the play disc, the played dot, the star, the
+  // ⋮) keep their acts; prayer rows are not episodes and
+  // stand untouched.
+  view.querySelectorAll('[data-card]').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === row.getAttribute('data-card'); })[0];
+      if (d && epCardIsEpisode(d)) openEpisodeCard({ desc: d, entry: null, surface: 'praylist', titleText: d.title, seriesTitle: d.kind === 'podcast' ? epCardSeriesTitle(d.podSeries) : (d.block || ''), dateLabel: '', descText: d.descText || null, onPlay: function () { tapPlay(d); } }, row);
     });
   });
   wireRowActs(view); // v413 §2.6: the row ⋮ + share wiring rides every Prayers paint

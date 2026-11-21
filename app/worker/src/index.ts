@@ -2267,27 +2267,46 @@ function podBuildSequence(items: ExtFeedItem[], def: PodSeriesDef, channelImageU
   // Bonuses (§2.1's anchor rule): per content, the newest edition
   // carrying it supplies; the anchor is the latest day published
   // before the bonus within that edition (0 = the sequence head).
-  const bonusBySlug = new Map<string, { it: ExtFeedItem; edition: number }>();
+  // v585: contents are grouped by slug, then by their own feed
+  // identity (the enclosure URL — one content, however many
+  // editions carry it). The standing supplier for a slug keeps
+  // the bare slug key, byte-untouched, so every standing mark
+  // keeps its episode. A SECOND distinct content deriving the
+  // same slug no longer collapses into the first's entry: it
+  // stands with its own key (the slug + a short deterministic
+  // hash of its URL), its own entry, and its own mark — a mark
+  // is isolated to one episode, never shared across two.
+  const bonusGroups = new Map<string, Map<string, { it: ExtFeedItem; edition: number }>>();
   for (const b of bonusItems) {
-    const cur = bonusBySlug.get(b.slug);
+    let g = bonusGroups.get(b.slug);
+    if (!g) { g = new Map(); bonusGroups.set(b.slug, g); }
+    const cur = g.get(b.it.url);
     if (!cur || b.edition > cur.edition || (b.edition === cur.edition && (b.it.pubMs ?? 0) > (cur.it.pubMs ?? 0))) {
-      bonusBySlug.set(b.slug, { it: b.it, edition: b.edition });
+      g.set(b.it.url, { it: b.it, edition: b.edition });
     }
   }
-  for (const [slug, sup] of bonusBySlug) {
-    let anchor = 0;
-    for (const [k, it] of winner) {
-      const [ed, day] = k.split("|").map(Number);
-      if (ed === sup.edition && (it.pubMs ?? 0) <= (sup.it.pubMs ?? 0) && day > anchor && day !== 366) anchor = day;
-    }
-    out.push({
-      entry: {
-        key: def.prefix + ":bonus-" + slug, kind: "bonus", day: null, label: "Bonus",
-        title: podStripEditionSuffix(sup.it.title.replace(/^BONUS\s*:\s*/i, "")),
-        url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
-        imageUrl: sup.it.imageUrl || channelImageUrl || null, descText: sup.it.descText || null,
-      },
-      sortDay: anchor, sortRank: 1, sortPub: sup.it.pubMs ?? 0,
+  const bonusKeyHash = (s: string): string => {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(16).padStart(8, "0");
+  };
+  for (const [slug, g] of bonusGroups) {
+    const sups = [...g.values()].sort((a, b) => (b.edition - a.edition) || ((b.it.pubMs ?? 0) - (a.it.pubMs ?? 0)));
+    sups.forEach((sup, i) => {
+      let anchor = 0;
+      for (const [k, it] of winner) {
+        const [ed, day] = k.split("|").map(Number);
+        if (ed === sup.edition && (it.pubMs ?? 0) <= (sup.it.pubMs ?? 0) && day > anchor && day !== 366) anchor = day;
+      }
+      out.push({
+        entry: {
+          key: i === 0 ? def.prefix + ":bonus-" + slug : def.prefix + ":bonus-" + slug + "-" + bonusKeyHash(sup.it.url), kind: "bonus", day: null, label: "Bonus",
+          title: podStripEditionSuffix(sup.it.title.replace(/^BONUS\s*:\s*/i, "")),
+          url: sup.it.url, durationS: sup.it.durationS, edition: sup.edition,
+          imageUrl: sup.it.imageUrl || channelImageUrl || null, descText: sup.it.descText || null,
+        },
+        sortDay: anchor, sortRank: 1, sortPub: sup.it.pubMs ?? 0,
+      });
     });
   }
   out.sort((a, b) => (a.sortDay - b.sortDay) || (a.sortRank - b.sortRank) || (a.sortPub - b.sortPub));

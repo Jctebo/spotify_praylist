@@ -273,6 +273,13 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .chipbtn.playing { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
 .chipbtn.missing { opacity:.55; border-style:dashed; }
 .playbtn { width:42px; height:42px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-ink); font-size:16px; cursor:pointer; flex:none; }
+.epcard-body { padding:14px 16px 16px; }
+.epcard-title { margin:0 0 2px; font-size:19px; line-height:1.25; }
+.epcard-series { font-size:15px; }
+.epcard-desc { margin:8px 0 0; }
+.epcard .track-draw-line { margin-top:8px; }
+.epcard-acts { display:flex; align-items:center; gap:10px; margin:14px 0 8px; }
+.epcard-play { min-height:44px; border-radius:22px; padding:6px 18px; font-size:16px; }
 .podmark { flex:none; min-width:44px; min-height:44px; border-radius:50%; border:1px solid var(--line, #ccc); background:transparent; color:var(--ink); font-size:15px; cursor:pointer; padding:4px 8px; }
 .podmark.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 .podmark-wrap { flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; }
