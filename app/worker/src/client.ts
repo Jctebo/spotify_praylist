@@ -1615,7 +1615,7 @@ function opnDefaultDoc() {
       intentions: [],
       conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
       profiles: {
-        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: true, version: 1, picks: {}
+        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: true, version: 1, picks: {}, dayDefaults: {}, mig590: true
       },
       config: {
         sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
@@ -1644,7 +1644,11 @@ function opnDoc() {
         // no-op while locked, so the ciphertext is never
         // overwritten by the ephemeral document.
         if (d && d.format === 'orapronobis-personal-data-encrypted' && d.wraps && d.ct) { opnVaultEnv = d; opnDocCache = opnDefaultDoc(); return opnDocCache; }
-        if (d && d.format === 'orapronobis-personal-data' && d.sections) { opnDocCache = d; return d; }
+        if (d && d.format === 'orapronobis-personal-data' && d.sections) {
+          opnDocCache = d;
+          if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
+          return d;
+        }
       }
     } catch (e) {}
   }
@@ -2341,6 +2345,7 @@ function opnRestoreFromText(text) {
   // (encrypted under the vault when one stands).
   return opnSnapshotWrite().then(function () {
     opnDocCache = doc;
+    if (doc.sections && opnMigrateProfiles590(doc.sections.profiles)) { /* migrated in place below */ }
     opnSave();
     // v589 (fix-forward): the file's podcastListens rows land
     // in the podcast core through the standing import seam —
@@ -2382,7 +2387,7 @@ function opnUndoRestore() {
   }
   return Promise.resolve(adopt(parsed));
 }
-var OPN_SEED_PROFILES = [{"key": "little-way", "name": "The Little Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Night"], "layers": {"novenas": {"on": false}, "podcasts": {"on": false, "series": []}}}, {"key": "salesian", "name": "The Salesian Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midday", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}, {"key": "benedictine", "name": "The Benedictine Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}];
+var OPN_SEED_PROFILES = [{"key": "little-way", "name": "The Little Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Night"], "layers": {"novenas": {"on": false}, "podcasts": {"on": false, "series": []}}}, {"key": "salesian", "name": "The Salesian Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midday", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": true, "series": ["bible-in-a-year", "exorcist-files", "daily-gospel-exegesis", "daily-readings"]}}}, {"key": "benedictine", "name": "The Benedictine Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": true, "series": ["daily-readings"]}}}];
 var OPN_SEED_SOURCES = [{"sourceKey": "morning-prayer", "name": "Morning Prayer", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-rosary", "name": "Daily Rosary", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 6, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "novenas", "name": "Novenas", "family": "own", "block": "Novenas", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "auxilium-christianorum", "name": "Auxilium Christianorum", "family": "own", "block": "Afternoon", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-reflection", "name": "Daily Reflection", "family": "own", "block": "Night", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "do-invitatory", "name": "Divine Office \\u2014 Invitatory", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-invitatory", "role": "primary"}, {"sourceKey": "do-morning-prayer", "name": "Divine Office \\u2014 Morning Prayer", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "primary"}, {"sourceKey": "sth-lauds", "name": "Sing the Hours \\u2014 Lauds", "family": "external", "block": "Morning", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "fallback"}, {"sourceKey": "do-midmorning-prayer", "name": "Divine Office \\u2014 Midmorning Prayer", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midmorning-prayer", "role": "primary"}, {"sourceKey": "do-midday-prayer", "name": "Divine Office \\u2014 Midday Prayer", "family": "external", "block": "Midday", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-midday-prayer", "role": "primary"}, {"sourceKey": "do-midafternoon-prayer", "name": "Divine Office \\u2014 Midafternoon Prayer", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midafternoon-prayer", "role": "primary"}, {"sourceKey": "saint-of-the-day", "name": "Saint of the Day", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-saint-of-the-day", "role": "primary"}, {"sourceKey": "do-office-of-readings", "name": "Divine Office \\u2014 Office of Readings", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-office-of-readings", "role": "primary"}, {"sourceKey": "do-evening-prayer", "name": "Divine Office \\u2014 Evening Prayer", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "primary"}, {"sourceKey": "sth-vespers", "name": "Sing the Hours \\u2014 Vespers", "family": "external", "block": "Evening", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "fallback"}, {"sourceKey": "do-night-prayer", "name": "Divine Office \\u2014 Night Prayer", "family": "external", "block": "Night", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-night-prayer", "role": "primary"}, {"sourceKey": "usccb-daily-readings", "name": "USCCB Daily Readings", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-usccb-readings", "role": "primary"}, {"sourceKey": "daily-tv-mass", "name": "Daily TV Mass", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-daily-tv-mass", "role": "primary"}, {"sourceKey": "fr-mike-homily", "name": "Fr. Mike Sunday Homily", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-fr-mike-homily", "role": "primary"}, {"sourceKey": "barron-sermon", "name": "Bp. Barron Sunday Sermon", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": "ext-barron-sermon", "role": "primary"}, {"sourceKey": "stations-of-the-cross", "name": "Stations of the Cross / Lenten Devotion", "family": "unplaced", "block": "", "dayRule": "fridays", "sortOrder": null, "enabled": 0, "slotId": null, "role": "primary"}, {"sourceKey": "daily-gospel-exegesis", "name": "Daily Gospel Exegesis", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-gospel-exegesis", "role": "primary"}, {"sourceKey": "marian-antiphon-midday", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Midday", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon-evening", "name": "Marian Antiphon \\u2014 Angelus", "family": "own", "block": "Evening", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "the-ai-signal", "name": "The AI Signal", "family": "own", "block": "The AI Signal", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}];
 var OPN_SEED_PROMPTS = [{"id": 1, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you omit to confess a mortal sin, either intentionally or through forgetfulness?", "sort": 10, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 2, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you intentionally neglect to say the penance which was imposed on you, or were you so careless as to forget it?", "sort": 20, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 3, "category": "Preliminary Examination", "commandment_no": null, "text": "Have you carried out the resolutions you made at your last confession or have you paid no heed at all to them?", "sort": 30, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 4, "category": "Commandment I", "commandment_no": 1, "text": "Have you doubted in matters of faith? Murmured against God at your adversity or at the prosperity of others? Despaired of His mercy?", "sort": 110, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 5, "category": "Commandment I", "commandment_no": 1, "text": "Have you believed in fortune-tellers or consulted them?", "sort": 120, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 6, "category": "Commandment I", "commandment_no": 1, "text": "Have you gone to places of worship belonging to other denominations?", "sort": 130, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 7, "category": "Commandment I", "commandment_no": 1, "text": "Have you recommended yourself daily to God? Neglected your morning or night prayers? Omitted religious duties or practices through motives of human respect?", "sort": 140, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 8, "category": "Commandment I", "commandment_no": 1, "text": "Have you rashly presumed upon God's forbearance in order to commit sin?", "sort": 150, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 9, "category": "Commandment I", "commandment_no": 1, "text": "Have you read books, papers, and periodicals of anti-Catholic or atheistic tendency? Made use of superstitious practices? Spoken with levity or irreverence of priests, Religious, or sacred objects?", "sort": 160, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 10, "category": "Commandment II", "commandment_no": 2, "text": "Have you taken the name of God in vain? Profaned anything relating to religion?", "sort": 210, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 11, "category": "Commandment II", "commandment_no": 2, "text": "Have you sworn falsely, rashly, or in slight and trivial matters? Cursed yourself or others, or any creature? Angered others so as to make them swear, or blaspheme?", "sort": 220, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 12, "category": "Commandment III", "commandment_no": 3, "text": "Have you kept holy the Lord's Day, and all other days commanded to be kept holy? Bought or sold things, not of necessity, on that day? Done or commanded some servile work not of necessity? Missed Mass or been wilfully distracted during Mass? Talked, gazed, or laughed in the church? Profaned the day by dancing, drinking, gambling, or in other ways?", "sort": 310, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 13, "category": "Commandment IV", "commandment_no": 4, "text": "Have you honored your parents, superiors, and masters, according to your just duty? Deceived them? Disobeyed them?", "sort": 410, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 14, "category": "Commandment IV", "commandment_no": 4, "text": "Have you failed in due reverence to aged persons?", "sort": 420, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 15, "category": "Commandment V", "commandment_no": 5, "text": "Have you procured, desired, or hastened the death of any one? Borne hatred? Oppressed any one? Desired revenge? Not forgiven injuries? Refused to speak to others? Used provoking language? Injured others? Caused enmity between others?", "sort": 510, "source": "Lasance, My Prayer Book (1908), pp. 348-349"}, {"id": 16, "category": "Commandment VI and IX", "commandment_no": 6, "text": "Have you been guilty of lascivious dressing? Been in lewd company? Read immodest books? Been guilty of unchaste songs, discourses, words, or actions? Wilfully entertained impure thoughts or desires?", "sort": 610, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 17, "category": "Commandment VII", "commandment_no": 7, "text": "Have you been guilty of stealing, or of deceit in buying, or selling, in regard to wares, prices, weights, or measures? Have you wilfully damaged another man's goods, or negligently spoiled them?", "sort": 710, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 18, "category": "Commandment VIII", "commandment_no": 8, "text": "Have you borne false witness? Called injurious names? Disclosed another's sins? Flattered others? Judged rashly?", "sort": 810, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 19, "category": "Commandment X", "commandment_no": 10, "text": "Have you coveted unjustly anything that belongs to another?", "sort": 1010, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 20, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you gone to confession at least once a year? Received holy communion during Easter-time?", "sort": 1110, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 21, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you violated the fasts of the Church, or eaten flesh-meat on prohibited days?", "sort": 1120, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 22, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you sinned against any other commandment of the Church?", "sort": 1130, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 23, "category": "Capital Sins", "commandment_no": null, "text": "Examine yourself also in regard to the Seven Capital Sins and the nine ways of being accessary to another's sin.", "sort": 1210, "source": "Lasance, My Prayer Book (1908), p. 349"}];
 var OPN_SEED_GUIDE = [{"step_no": 1, "title": "Opening", "body": "Approach the confessional with the same recollectedness and reverence as would fill your heart if Christ our Lord were seated there in person ready to hear your confession. The priest is really the representative of Christ. When you kneel down, say: Bless me, Father, for I have sinned, and then begin the Confiteor, proceeding as far as \\"through my fault,\\" etc. Then tell when you made your last confession and begin the avowal of your sins."}, {"step_no": 2, "title": "The list", "body": "Confess all your sins with a contrite and humble heart, and conclude thus: For these and all the sins of my past life, especially my sins of \\u2014 , I am heartily sorry, beg pardon of God, and absolution of you, my Father; then finish the Confiteor: Therefore I beseech the blessed Mary ever Virgin, blessed Michael the archangel, blessed John the Baptist, the holy apostles Peter and Paul, and all the saints, to pray to the Lord our God for me."}, {"step_no": 3, "title": "Act of Contrition", "body": "O my God, confessing my guilt and with a contrite heart I kneel before Thee and implore Thee to look upon me according to the multitude of Thy mercies. I detest and am heartily sorry for all my sins, not only because I dread the loss of heaven and the pain of hell, but also and principally because by them I have offended Thee, Who art infinitely good and deserving of all my love. I firmly resolve, with the help of Thy grace, to confess my sins and to amend my life. I acknowledge Thee, O God, to be the Supreme Good, and I love Thee with all my heart. Be merciful to me, a poor sinner. I beseech Thee, by the passion and death of Jesus Christ, Thy Son, to forgive me my sins. Amen."}, {"step_no": 4, "title": "Penance", "body": "Listen then with humility and docility to the instruction of your confessor, and during this time avoid all recurrence as to the confession itself; remembering that sins forgotten after a serious examination are really comprised in the absolution. Accept with submission the penance imposed, and if any obstacle that you foresee will prevent your accomplishing it, state this respectfully."}, {"step_no": 5, "title": "Final blessing", "body": "While the priest pronounces the words of absolution, endeavor to excite an act of perfect contrition."}];
@@ -2416,34 +2421,140 @@ function opnIsPersonalPath(path) {
 }
 var opnBookSlugs = null; // learned from the book read, for local slug validation
 var opnSolemnity = {};    // date -> true, learned from the day payload
+
+/* ---- v590: profiles — designed defaults, migration,
+   per-day resolution, contents ---- */
+var OPN_DOW_KEYS_590 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+var OPN_COURSE_KEYS_590 = ['catechism-in-a-year', 'bible-in-a-year', 'rosary-in-a-year', 'summa-in-a-year'];
+var OPN_OLD_SEED_590 = {
+  'little-way': { coreBlocks: ['Morning', 'Night'], layers: { novenas: { on: false }, podcasts: { on: false, series: [] } } },
+  'salesian': { coreBlocks: ['Morning', 'Midday', 'Evening', 'Night'], layers: { novenas: { on: true }, podcasts: { on: false, series: [] } } },
+  'benedictine': { coreBlocks: ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'], layers: { novenas: { on: true }, podcasts: { on: false, series: [] } } }
+};
+function opnProfileShape590(p) {
+  return JSON.stringify({ coreBlocks: p.coreBlocks || [], layers: opnLayersOut(p.layers) });
+}
+function opnMigrateProfiles590(P) {
+  // v590 §2.6: in place at first open — pristine defaults
+  // re-seated from the DESIGNED configs (the seed above);
+  // a default differing from BOTH the old seed and the
+  // designed config is first preserved whole as a custom
+  // "<Name> — as found" (automatic migration, NOT a user
+  // save — exempt from the rename rule). Customs stand
+  // byte-identical; standingKey/dayRule/picks carry by key;
+  // dayDefaults stands absent (= today's behavior).
+  if (!P || !Array.isArray(P.list) || P.mig590) return false;
+  var designed = {};
+  OPN_SEED_PROFILES.forEach(function (d) { designed[d.key] = d; });
+  var taken = {};
+  P.list.forEach(function (p) { taken[p.key] = 1; });
+  var preserved = [];
+  P.list.forEach(function (p) {
+    if (!p || p.kind !== 'default' || !designed[p.key]) return;
+    var newShape = opnProfileShape590(designed[p.key]);
+    if (opnProfileShape590(p) === newShape) return;
+    var oldSeed = OPN_OLD_SEED_590[p.key];
+    var oldShape = oldSeed ? JSON.stringify({ coreBlocks: oldSeed.coreBlocks, layers: opnLayersOut(oldSeed.layers) }) : null;
+    if (oldShape !== null && opnProfileShape590(p) !== oldShape) {
+      var nm = p.name + ' — as found';
+      var slug = nm.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profile';
+      var key = slug;
+      for (var n = 2; taken[key]; n++) key = slug + '-' + n;
+      taken[key] = 1;
+      var copy = opnClone(p);
+      copy.key = key; copy.name = nm; copy.kind = 'custom';
+      preserved.push(copy);
+    }
+    p.coreBlocks = opnClone(designed[p.key].coreBlocks);
+    p.layers = opnClone(designed[p.key].layers);
+  });
+  preserved.forEach(function (c) { P.list.push(c); });
+  if (!P.dayDefaults || typeof P.dayDefaults !== 'object') P.dayDefaults = {};
+  P.version = (typeof P.version === 'number' ? P.version : 1) + 1;
+  P.mig590 = true;
+  return true;
+}
+function opnResolveProfile590(P, date) {
+  // v590 §2.2 precedence: per-date pick → per-day default
+  // for the date's weekday → day rule → standing default →
+  // first. A set per-day default outranks the day rule for
+  // its weekday, solemnities included (John's amendment,
+  // flagged in the Plan §2.9).
+  var byKey = function (k) { return P.list.filter(function (x) { return x.key === k; })[0] || null; };
+  var dow = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)))).getUTCDay();
+  var dayKind = dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday');
+  var pick = byKey(P.picks && P.picks[date]);
+  if (pick) return { profile: pick, resolvedBy: 'pick', dayKind: dayKind };
+  var dd = P.dayDefaults && typeof P.dayDefaults === 'object' ? byKey(P.dayDefaults[OPN_DOW_KEYS_590[dow]]) : null;
+  if (dd) return { profile: dd, resolvedBy: 'day-default', dayKind: dayKind };
+  if (P.dayRule && (dayKind === 'sunday' || dayKind === 'solemnity')) {
+    var ben = byKey('benedictine');
+    if (ben) return { profile: ben, resolvedBy: 'rule', dayKind: dayKind };
+  }
+  var st = byKey(P.standingKey);
+  if (st) return { profile: st, resolvedBy: 'standing', dayKind: dayKind };
+  return { profile: P.list[0], resolvedBy: 'standing', dayKind: dayKind };
+}
+function opnCheckContents590(contents, coreBlocks) {
+  // v590 §2.3: contents validation — per block, the ordered
+  // selector list. Core blocks take source/prayer/seat/
+  // course selectors; the Novenas block takes novena /
+  // all-novenas only (layers stand after core, for contents
+  // as for blocks). Absent contents = standing contents.
+  if (contents === undefined || contents === null) return undefined;
+  if (typeof contents !== 'object' || Array.isArray(contents)) throw opnErr(400, 'contents must be an object');
+  var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  var out = {};
+  Object.keys(contents).forEach(function (block) {
+    if (block !== 'Novenas' && HOURS.indexOf(block) < 0) throw opnErr(400, 'bad contents block ' + block);
+    if (block !== 'Novenas' && coreBlocks && coreBlocks.indexOf(block) < 0) throw opnErr(400, 'contents for a block that does not stand: ' + block);
+    var items = contents[block];
+    if (!Array.isArray(items)) throw opnErr(400, 'contents.' + block + ' must be an array');
+    var seen = {}, list = [];
+    items.forEach(function (raw) {
+      var it = raw && typeof raw === 'object' ? raw : {};
+      var kind = it.kind, key = it.key;
+      if (block === 'Novenas') {
+        if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
+        if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
+      } else {
+        if (['source', 'prayer', 'seat', 'course'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
+        if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
+        if (kind === 'seat' && key !== 'daily-readings') throw opnErr(400, 'bad seat ' + key);
+        if (kind === 'course' && OPN_COURSE_KEYS_590.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
+      }
+      var id = kind + ':' + key;
+      if (seen[id]) return;
+      seen[id] = 1;
+      list.push({ kind: kind, key: key });
+    });
+    out[block] = list;
+  });
+  return out;
+}
+function opnContentsOf590(p) {
+  return p && p.contents && typeof p.contents === 'object' ? opnClone(p.contents) : null;
+}
 function opnProfilesPayload(date) {
   var P = opnDoc().sections.profiles;
   if (!P.list.length) return { ok: true, profiles: [], state: null, effective: null };
-  var byKey = function (k) { return P.list.filter(function (x) { return x.key === k; })[0] || null; };
-  var pick = byKey(P.picks[date]);
-  var dow = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)))).getUTCDay();
-  var dayKind = pick ? null : (dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday'));
-  var profile = pick, resolvedBy = pick ? 'pick' : null;
-  if (!profile && P.dayRule && (dayKind === 'sunday' || dayKind === 'solemnity')) {
-    var ben = byKey('benedictine');
-    if (ben) { profile = ben; resolvedBy = 'rule'; }
-  }
-  if (!profile) {
-    profile = byKey(P.standingKey) || P.list[0];
-    resolvedBy = 'standing';
-  }
-  if (!dayKind) dayKind = dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday');
+  var r = opnResolveProfile590(P, date);
+  var profile = r.profile;
   return {
     ok: true,
     profiles: P.list.map(function (p) {
-      return { key: p.key, name: p.name, honorLine: p.honorLine, kind: p.kind, coreBlocks: p.coreBlocks.slice(),
+      var o = { key: p.key, name: p.name, honorLine: p.honorLine, kind: p.kind, coreBlocks: p.coreBlocks.slice(),
         layers: { novenas: { on: !!p.layers.novenas.on }, podcasts: { on: !!p.layers.podcasts.on, series: (p.layers.podcasts.series || []).slice() } } };
+      var c = opnContentsOf590(p);
+      if (c) o.contents = c;
+      return o;
     }),
-    state: { standingKey: P.standingKey, dayRule: P.dayRule, version: P.version },
+    state: { standingKey: P.standingKey, dayRule: P.dayRule, version: P.version, dayDefaults: opnClone(P.dayDefaults || {}) },
     effective: {
-      key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: resolvedBy, dayKind: dayKind,
+      key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: r.resolvedBy, dayKind: r.dayKind,
       coreBlocks: profile.coreBlocks.slice(),
       layers: [{ key: 'novenas', on: !!profile.layers.novenas.on }, { key: 'podcasts', on: !!profile.layers.podcasts.on, series: (profile.layers.podcasts.series || []).slice() }],
+      contents: opnContentsOf590(profile),
       version: P.version
     }
   };
@@ -2612,7 +2723,19 @@ function opnLocalApi(path, opts, mode) {
       var bump = function () { P.version++; opnSave(); return opnProfilesPayload(todayChicago()); };
       var findP = function (k) { return P.list.filter(function (x) { return x.key === k; })[0]; };
       if (p === '/api/prayer/profiles/state') {
-        if (body.standingKey === undefined && body.dayRule === undefined) throw opnErr(400, 'standingKey or dayRule required');
+        if (body.standingKey === undefined && body.dayRule === undefined && body.dayDefaults === undefined) throw opnErr(400, 'standingKey, dayRule or dayDefaults required');
+        if (body.dayDefaults !== undefined) {
+          if (!body.dayDefaults || typeof body.dayDefaults !== 'object' || Array.isArray(body.dayDefaults)) throw opnErr(400, 'dayDefaults must be an object');
+          var nd = {};
+          Object.keys(body.dayDefaults).forEach(function (dow) {
+            if (OPN_DOW_KEYS_590.indexOf(dow) < 0) throw opnErr(400, 'bad weekday ' + dow);
+            var v = body.dayDefaults[dow];
+            if (v === null || v === '') return;
+            if (typeof v !== 'string' || !findP(v)) throw opnErr(400, 'bad profile ' + String(v));
+            nd[dow] = v;
+          });
+          P.dayDefaults = nd;
+        }
         if (body.standingKey !== undefined) {
           if (typeof body.standingKey !== 'string' || !findP(body.standingKey)) throw opnErr(400, 'bad profile ' + (typeof body.standingKey === 'string' ? body.standingKey : '(empty)'));
           P.standingKey = body.standingKey;
@@ -2634,6 +2757,12 @@ function opnLocalApi(path, opts, mode) {
       if (p === '/api/prayer/profiles/layers') {
         var lp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
         if (!lp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
+        // v590 §2.4: the leak closed — the layers route
+        // carries the kind guard. Writing layers onto a
+        // default is copy-on-write, routed through the
+        // rename step (the save route mints the copy); a
+        // direct write here is refused and changes nothing.
+        if (lp.kind === 'default') throw opnErr(400, 'rename_required: the named profiles cannot be changed — save as a copy under a name you give');
         lp.layers = opnLayersOut(opnCheckLayers(body.layers));
         return bump();
       }
@@ -2654,18 +2783,32 @@ function opnLocalApi(path, opts, mode) {
         });
         if (!core.length) throw opnErr(400, 'a profile needs at least one core block');
         var layers = opnLayersOut(opnCheckLayers(body.layers));
+        var contents = opnCheckContents590(body.contents, core);
         if (typeof body.key === 'string' && body.key !== '') {
           var ep = findP(body.key);
           if (!ep) throw opnErr(400, 'bad profile ' + body.key);
           if (ep.kind === 'default') throw opnErr(400, 'the named profiles cannot be changed — save as new');
           ep.name = name; ep.honorLine = honor; ep.coreBlocks = core; ep.layers = layers;
+          if (contents !== undefined) ep.contents = contents;
           return bump();
         }
+        // v590 §2.4 (Amendment 1): every mint is a rename —
+        // a copy based on a standing profile lands only
+        // under a name John gives; the source's own name
+        // (or any default's name) is refused, and nothing
+        // is minted by the refused save.
+        var basedOn = typeof body.basedOn === 'string' ? findP(body.basedOn) : null;
+        if (basedOn && name === basedOn.name) throw opnErr(400, 'rename_required: give the copy a new name');
+        var nameIsDefault = P.list.some(function (x) { return x.kind === 'default' && x.name === name; });
+        if (nameIsDefault) throw opnErr(400, 'rename_required: give the copy a new name');
         var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         if (!slug) slug = 'profile';
         var key = slug;
         for (var n = 2; findP(key); n++) key = slug + '-' + n;
-        P.list.push({ key: key, name: name, honorLine: honor, kind: 'custom', coreBlocks: core, layers: layers });
+        var rec = { key: key, name: name, honorLine: honor, kind: 'custom', coreBlocks: core, layers: layers };
+        if (contents !== undefined) rec.contents = contents;
+        else if (basedOn && basedOn.contents) rec.contents = opnClone(basedOn.contents);
+        P.list.push(rec);
         return bump();
       }
       if (p === '/api/prayer/profiles/delete') {
@@ -2674,6 +2817,7 @@ function opnLocalApi(path, opts, mode) {
         if (dp.kind === 'default') throw opnErr(400, 'the named profiles cannot be deleted');
         P.list = P.list.filter(function (x) { return x.key !== dp.key; });
         Object.keys(P.picks).forEach(function (dt) { if (P.picks[dt] === dp.key) delete P.picks[dt]; });
+        if (P.dayDefaults) Object.keys(P.dayDefaults).forEach(function (dw) { if (P.dayDefaults[dw] === dp.key) delete P.dayDefaults[dw]; });
         if (P.standingKey === dp.key) P.standingKey = 'salesian';
         return bump();
       }
@@ -3126,6 +3270,59 @@ function opnScrubDayPayload(j) {
     if (j.solemnity) opnSolemnity[j.date] = true;
     var adds = opnDoc().sections.config.addenda[j.date];
     if (adds) j.additions = opnClone(adds);
+  }
+  return opnFoldDay590(j);
+}
+
+function opnFoldDay590(j) {
+  // v590 §2.5: the fold, restored in the device + web
+  // shapes — the local effective profile (opnProfilesPayload,
+  // the §2.2 precedence) composes the day client-side: core
+  // blocks in profile order, the layer blocks appended
+  // after core, never interleaved; additions filtered to
+  // standing blocks (the server fold's posture); the fold
+  // rides the payload so the profile card paints and every
+  // fold consumer reads the same fold.
+  if (!j || !j.date || !Array.isArray(j.blocks)) return j;
+  var res = opnProfilesPayload(j.date);
+  if (!res || !res.effective) return j;
+  var eff = res.effective;
+  j.profile = eff;
+  var byName = {};
+  j.blocks.forEach(function (b) { if (b && b.block) byName[b.block] = b; });
+  var out = [];
+  (eff.coreBlocks || []).forEach(function (name) {
+    if (byName[name]) { out.push(byName[name]); delete byName[name]; }
+  });
+  // A block outside the standing seven hours + the two
+  // layer blocks keeps its standing place; a standing
+  // hour the profile does not name drops — the profile's
+  // core list IS the day's block list.
+  var HOURS590 = ['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  j.blocks.forEach(function (b) {
+    if (b && byName[b.block] && HOURS590.indexOf(b.block) < 0 && b.block !== 'Podcasts') { out.push(b); delete byName[b.block]; }
+  });
+  var layerOn = function (k) {
+    var f = null;
+    (eff.layers || []).forEach(function (l) { if (l.key === k) f = l; });
+    return !!(f && f.on);
+  };
+  if (layerOn('novenas') && byName['Novenas']) { byName['Novenas'].layer = 'novenas'; out.push(byName['Novenas']); delete byName['Novenas']; }
+  if (layerOn('podcasts')) {
+    var pb = byName['Podcasts'] || { block: 'Podcasts', label: 'Podcasts', caption: 'the podcasts you added', spotifyUrl: null, tracks: [], trackCount: 0 };
+    pb.layer = 'podcasts';
+    out.push(pb);
+    delete byName['Podcasts'];
+  }
+  j.blocks = out;
+  if (Array.isArray(j.additions)) {
+    var standing = {};
+    out.forEach(function (b) { standing[b.block] = 1; });
+    j.additions = j.additions.filter(function (a) { return standing[a.block]; });
+  }
+  if (j.readingsSeat && eff.contents && eff.contents.Morning) {
+    var hasSeat = eff.contents.Morning.some(function (it) { return it.kind === 'seat' && it.key === 'daily-readings'; });
+    if (!hasSeat) j.readingsSeat = null;
   }
   return j;
 }
@@ -9539,6 +9736,12 @@ function paintSettings() {
   if (opnMode() === 'web') html += opnPointerHtml();
   // v419 (G28): the page sub — what the page holds, in one line.
   html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
+  // v590 §2.2: the Profiles screen's Settings door.
+  html += '<h2 class="sectionhead">PRAYER PLAN</h2><div class="liblist"><div class="setrow">'
+    + '<div class="setname">Prayer profiles</div>'
+    + '<div class="meta">The three named ways and your own copies — blocks, layers, and contents, and the default for each day.</div>'
+    + '<div class="setcontrols"><button class="btn ghost" id="set-profiles">Configure plan</button></div>'
+    + '</div></div>';
   // v358 §1 Decision 2: the Playback section stands above Source
   // mapping — the autoplay choice lives in the app's standing
   // settings home as well as on the dock and Now Playing. The
@@ -9684,6 +9887,8 @@ function paintSettings() {
   var setBarHost = hdrRow2();
   var setBarBack = setBarHost ? setBarHost.querySelector('[data-settingsback]') : null;
   if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
+  var profBtn590 = document.getElementById('set-profiles');
+  if (profBtn590) profBtn590.addEventListener('click', function () { openProfilesScreen(); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -16999,6 +17204,81 @@ function podGroupFacts() {
   }
   return { series: n, episodes: eps };
 }
+
+function resolveProfileCourses590(day) {
+  // v590 §2.3 (Amendment 3): each course selector in the
+  // effective profile's contents resolves to the course's
+  // next episode BY THE USER'S OWN PROGRESS — the standing
+  // Current pointer over the core-folded payload (the same
+  // listened set the Courses card counts). A finished or
+  // unavailable course resolves nothing: its slot stands
+  // empty. The descriptor stands in state.courseRes590 for
+  // extRebuildDescs to place in the block.
+  state.courseRes590 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (it.kind === 'course') jobs.push({ block: block, key: it.key });
+    });
+  });
+  jobs.forEach(function (job) {
+    api('/api/player/podcasts?series=' + encodeURIComponent(job.key)).then(function (payload) {
+      if (state.dayPayload !== day) return;
+      if (!payload || !Array.isArray(payload.entries)) return;
+      var curKey = payload.currentKey || opnPodCurrentKey(payload.entries);
+      if (!curKey) return;
+      var e = null;
+      payload.entries.forEach(function (x) { if (x.key === curKey) e = x; });
+      if (!e) return;
+      state.courseRes590[job.block + ':' + job.key] = {
+        episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: job.key,
+        title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || null, enclosureUrl: null,
+        available: !!e.url, block: job.block, source: '', durationS: e.durationS || 0, listened: !!e.listened,
+        podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
+        imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null, course590: true
+      };
+      extRebuildDescs(day);
+      if (state.dayPayload) paintPrayersView(state.dayPayload);
+    }).catch(function () {});
+  });
+}
+function resolveReadingsSeat590(day) {
+  // v590 §2.5: the Daily Readings seat, resolved on-device
+  // — the server gate's key check becomes the contents
+  // check: the seat stands for any profile whose Podcasts
+  // layer carries daily-readings (standing contents), or
+  // whose Morning contents name the seat selector. The
+  // episode is the presented date's, matched by its title
+  // (the server's dailyReadingsMatch rule).
+  if (!day || day.readingsSeat) return;
+  var eff = day.profile;
+  if (!eff) return;
+  var pod = null;
+  (eff.layers || []).forEach(function (l) { if (l.key === 'podcasts') pod = l; });
+  if (!pod || !pod.on) return;
+  var allowed = false;
+  if (eff.contents && eff.contents.Morning) {
+    allowed = eff.contents.Morning.some(function (it) { return it.kind === 'seat' && it.key === 'daily-readings'; });
+  } else {
+    allowed = (pod.series || []).indexOf('daily-readings') >= 0;
+  }
+  if (!allowed) return;
+  api('/api/player/podcasts?series=daily-readings').then(function (payload) {
+    if (state.dayPayload !== day || !payload || !Array.isArray(payload.entries)) return;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var parts = String(day.presentedDay || day.date || '').split('-');
+    var y = Number(parts[0]), mo = Number(parts[1]), d = Number(parts[2]);
+    var plain = 'Daily Mass Reading Podcast for ' + MONTHS[mo - 1] + ' ' + d + ', ' + y;
+    var hit = null;
+    payload.entries.forEach(function (e) { if (!hit && e.title && String(e.title).trim() === plain) hit = e; });
+    if (!hit) payload.entries.forEach(function (e) { if (!hit && e.title && String(e.title).indexOf(MONTHS[mo - 1] + ' ' + d + ', ' + y) >= 0) hit = e; });
+    if (!hit) return;
+    day.readingsSeat = { series: 'daily-readings', seqKey: hit.key, title: hit.title, url: hit.url, durationS: hit.durationS || 0, imageUrl: hit.imageUrl || null, listened: !!hit.listened, positionS: hit.positionS || null };
+    extRebuildDescs(day);
+  }).catch(function () {});
+}
 function resolveProfilePodcasts(day) {
   // v515 §2 (P4): the Podcasts layer build — for each series
   // in the fold's Podcasts layer, in layer order, the series
@@ -17069,6 +17349,30 @@ function extRebuildDescs(day) {
     (state.extStanding || []).filter(function (s) { return s.block === b.block; })
       .forEach(function (slot) { merged.push({ sortOrder: slot.sortOrder || 0, ext: slot }); });
     merged.sort(function (a, c) { return a.sortOrder - c.sortOrder; });
+    // v590 §2.3: contents gate the block's settings-row
+    // families — with a contents entry standing for the
+    // block, a source row stands only when a source
+    // selector names it, and the named rows stand in
+    // contents order. No contents entry = standing
+    // contents: the merged list stands exactly as above.
+    var c590 = (day.profile && day.profile.contents) ? day.profile.contents[b.block] : null;
+    var selIdx590 = function (kind, key) {
+      if (!c590) return -1;
+      for (var i = 0; i < c590.length; i++) if (c590[i].kind === kind && c590[i].key === key) return i;
+      return -1;
+    };
+    if (c590) {
+      merged = merged.filter(function (e) {
+        if (e.own) return selIdx590('source', e.own.sourceKey) >= 0;
+        return selIdx590('source', e.ext.slotId) >= 0 || selIdx590('source', e.ext.sourceKey) >= 0;
+      });
+      merged.sort(function (a, c) {
+        var ka = a.own ? selIdx590('source', a.own.sourceKey) : selIdx590('source', a.ext.slotId);
+        var kc = c.own ? selIdx590('source', c.own.sourceKey) : selIdx590('source', c.ext.slotId);
+        if (ka !== kc) return ka - kc;
+        return a.sortOrder - c.sortOrder;
+      });
+    }
     merged.forEach(function (e) {
       if (e.own) {
         var row = e.own;
@@ -17085,6 +17389,18 @@ function extRebuildDescs(day) {
         if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
       }
     });
+    // v590 §2.3 (Amendment 3): the block's course selectors
+    // stand as tracks — each resolved by resolveProfile-
+    // Courses590 to the course's next episode by the user's
+    // own progress; an unresolved (finished/unavailable)
+    // course leaves its slot empty and nothing else moves.
+    if (c590 && state.courseRes590) {
+      c590.forEach(function (it) {
+        if (it.kind !== 'course') return;
+        var cd = state.courseRes590[b.block + ':' + it.key];
+        if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+      });
+    }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   descs = foldDayAdditions(descs, date, day.readingsSeat); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold
@@ -18315,6 +18631,10 @@ function buildDayFromPayload(day, snap) {
     // externals dispatch — its descriptors join the day
     // through extRebuildDescs as each series settles.
     resolveProfilePodcasts(day);
+    // v590 §2.3/§2.5: the contents course selectors and
+    // the on-device readings seat resolve beside it.
+    resolveProfileCourses590(day);
+    resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
     // map paints the rows before any play (B6).
@@ -19133,7 +19453,10 @@ function wirePrayersView(day) {
   wirePlayed(view);
   // v515 §2: the profile surface acts ride every Prayers paint.
   view.querySelectorAll('[data-profchange]').forEach(function (btn) {
-    btn.addEventListener('click', function () { openProfileSheet(); });
+    btn.addEventListener('click', function () { openProfilesScreen(); });
+  });
+  view.querySelectorAll('[data-profconfigure]').forEach(function (btn) {
+    btn.addEventListener('click', function () { openProfilesScreen(); });
   });
   view.querySelectorAll('[data-proflayer]').forEach(function (btn) {
     btn.addEventListener('click', function () { profileLayerToggle(btn.getAttribute('data-proflayer')); });
@@ -19154,7 +19477,7 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-profcustomize]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var fold = state.dayPayload && state.dayPayload.profile;
-      if (fold && fold.key) openProfileEditor(fold.key);
+      openProfilesScreen(fold && fold.key ? fold.key : null);
     });
   });
   if (state.current) markPlaying(state.current.episodeId);
@@ -19281,8 +19604,349 @@ function profileLayerToggle(which) {
     var layers = JSON.parse(JSON.stringify(rec.layers));
     if (which === 'novenas') layers.novenas.on = !layers.novenas.on;
     else layers.podcasts.on = !layers.podcasts.on;
+    if (rec.kind === 'default') {
+      // v590 §2.4: copy-on-write, routed through the
+      // rename step — nothing mints and nothing changes
+      // while the rename stands unconfirmed; on confirm
+      // the copy mints with the toggled layers and takes
+      // the act's scope (today's pick, else the standing
+      // default), and the day rebuilds.
+      openRenameCopySheet590(rec.name + ' — my copy', function (newName) {
+        profPut('/api/prayer/profiles/save', { basedOn: rec.key, name: newName, honorLine: '', coreBlocks: rec.coreBlocks.slice(), layers: layers, contents: rec.contents }).then(function (res2) {
+          var nk = null;
+          ((res2 && res2.profiles) || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
+          if (!nk) { profileRebuild(); return; }
+          if (res.effective && res.effective.resolvedBy === 'pick') {
+            profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: nk }).then(function () { profileRebuild(); }).catch(function () { profileRebuild(); });
+          } else if (res.state && res.state.standingKey === rec.key) {
+            profPut('/api/prayer/profiles/state', { standingKey: nk }).then(function () { profileRebuild(); }).catch(function () { profileRebuild(); });
+          } else profileRebuild();
+        }).catch(function () {});
+      });
+      return;
+    }
     profPut('/api/prayer/profiles/layers', { profileKey: rec.key, layers: layers }).then(function () { profileRebuild(); }).catch(function () {});
   }).catch(function () {});
+}
+
+function openRenameCopySheet590(suggested, onConfirm) {
+  // v590 §2.4 (Amendment 1): the rename step — a copy
+  // lands only under a name John gives. Cancel (or an
+  // empty name) confirms nothing: no copy is minted and
+  // the pending change does not take effect.
+  var old = document.querySelector('.profrename590');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profrename590';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Name your copy</h1></div>'
+    + '<p class="sub">The named profiles stay as designed — your change saves as your own copy, under a name you give.</p>'
+    + '<label class="f">Name</label><input type="text" data-rename590="1" value="' + esc(suggested || '') + '">'
+    + '<p class="fieldnote" data-rename590note="1"></p>'
+    + '<div class="row"><button class="btn gold" data-rename590save="1">Save copy</button>'
+    + '<button class="btn ghost" data-rename590cancel="1">Cancel</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var input = sheet.querySelector('[data-rename590="1"]');
+  var note = sheet.querySelector('[data-rename590note="1"]');
+  sheet.querySelector('[data-rename590cancel="1"]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-rename590save="1"]').addEventListener('click', function () {
+    var name = input ? String(input.value || '').trim() : '';
+    if (!name) { if (note) note.textContent = 'Give the copy a name — the save does not complete without one.'; return; }
+    sheet.remove();
+    onConfirm(name);
+  });
+}
+function profContentsUniverse590(block) {
+  var items = [];
+  if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'All active novenas' }); return items; }
+  (state.ownStanding || []).forEach(function (r) { if (r.block === block) items.push({ kind: 'source', key: r.sourceKey, label: r.title || r.sourceKey }); });
+  (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.source || sl.slotId }); });
+  if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'Daily Readings seat' });
+  OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: 'Course — ' + k }); });
+  return items;
+}
+function openProfilesScreen(openKey) {
+  // v590 §2.2: ONE Profiles screen replaces the sheet +
+  // editor pair — the picker (For today · Standing
+  // default · the Day rule · Default by day), the profile
+  // cards, and the opened profile (blocks with real
+  // switches + drag order · the two layer switches · the
+  // series checklist only while Podcasts is on · contents
+  // per block). Reached from the Praylist's first-row
+  // Configure plan button, the profile card, and Settings.
+  var old = document.querySelector('.profplan590');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profplan590';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Prayer profiles</h1></div>'
+    + '<div class="profplanbody"><p class="sub">Loading …</p></div><p class="fieldnote profplannote"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.profplanbody');
+  var note = sheet.querySelector('.profplannote');
+  var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  var DOWS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
+  var res = null, ed = null, ddOpen = null, seriesList = null, delArmed = false;
+  function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
+  function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
+  function load(keepEd) {
+    return api('/api/prayer/profiles').then(function (r) {
+      res = r;
+      if (!keepEd) ed = null;
+      if (openKey && !ed) { startEdit(openKey); openKey = null; }
+      paint();
+    }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+  }
+  function startEdit(key) {
+    var rec = byKey(key);
+    if (!rec) { ed = null; return; }
+    ed = {
+      key: rec.key, kind: rec.kind, name: rec.name, honor: rec.kind === 'default' ? '' : (rec.honorLine || ''),
+      core: (rec.coreBlocks || []).slice(),
+      layers: JSON.parse(JSON.stringify(rec.layers)),
+      contents: {}, openContents: null, dragBlock: null
+    };
+    (ed.core.concat(['Novenas'])).forEach(function (b) {
+      ed.contents[b] = (rec.contents && rec.contents[b]) ? opnClone(rec.contents[b]) : null;
+    });
+    delArmed = false;
+  }
+  function contentsOut() {
+    if (!ed) return undefined;
+    var out = {}, any = false;
+    Object.keys(ed.contents).forEach(function (b) {
+      if (ed.contents[b]) { out[b] = ed.contents[b].map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; }); any = true; }
+    });
+    return any ? out : undefined;
+  }
+  function paint() {
+    if (!body || !res || !res.profiles) return;
+    var eff = res.effective;
+    var html = '<p class="sub">For today</p>';
+    res.profiles.forEach(function (p) {
+      var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
+      html += '<div class="card bookrow" data-pp590pick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + (p.kind === 'custom' ? ' <span class="meta">(yours)</span>' : '') + '</span>' + (mark ? '<span class="meta">Today</span>' : '') + '<button class="btn ghost" data-pp590open="' + esc(p.key) + '">Open</button></div></div>';
+    });
+    if (eff && eff.resolvedBy === 'pick') html += '<div class="card bookrow" data-pp590pick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
+    html += '<p class="sub">Standing default</p>';
+    res.profiles.forEach(function (p) {
+      var mark = res.state && res.state.standingKey === p.key;
+      html += '<div class="card bookrow" data-pp590stand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">Default</span>' : '') + '<button class="btn ghost" data-pp590open="' + esc(p.key) + '">Open</button></div></div>';
+    });
+    html += '<p class="sub">Day rule</p>';
+    html += '<div class="card bookrow" data-pp590rule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state && res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
+    html += '<p class="sub">Default by day</p>';
+    var dd = (res.state && res.state.dayDefaults) || {};
+    DOWS.forEach(function (dw) {
+      var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
+      html += '<div class="card bookrow" data-pp590dd="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Standing default') + '</span></div></div>';
+      if (ddOpen === dw[0]) {
+        html += '<div class="card bookrow" data-pp590ddset="' + dw[0] + ':"><div class="row"><span class="grow">Standing default (no per-day default)</span></div></div>';
+        res.profiles.forEach(function (p) {
+          html += '<div class="card bookrow" data-pp590ddset="' + dw[0] + ':' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span></div></div>';
+        });
+      }
+    });
+    if (ed) html += paintEditor();
+    body.innerHTML = html;
+    wire();
+  }
+  function paintEditor() {
+    var rec = byKey(ed.key);
+    var html = '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
+    if (ed.kind === 'default') html += '<p class="sub">A named profile — it stays as designed. Saving makes your own copy, and the save asks for its name.</p>';
+    else html += '<label class="f">Name</label><input type="text" data-pp590name="1" value="' + esc(ed.name) + '">';
+    html += '<p class="sub">Blocks</p>';
+    ed.core.forEach(function (b) {
+      html += '<div class="card bookrow" draggable="true" data-pp590blockrow="' + esc(b) + '"><div class="row"><span class="meta" data-pp590drag="' + esc(b) + '">≡</span><span class="grow">' + esc(b) + '</span><button class="btn ghost" data-pp590contents="' + esc(b) + '">Contents</button><button class="btn ghost" data-pp590blockoff="' + esc(b) + '">On</button></div></div>';
+      if (ed.openContents === b) html += paintContents(b);
+    });
+    HOURS.forEach(function (b) {
+      if (ed.core.indexOf(b) >= 0) return;
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(b) + '</span><button class="btn ghost" data-pp590blockon="' + esc(b) + '">Off</button></div></div>';
+    });
+    html += '<p class="sub">Layers</p>';
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-pp590contents="Novenas">Contents</button><button class="btn ghost" data-pp590layer="novenas">' + (ed.layers.novenas.on ? 'On' : 'Off') + '</button></div></div>';
+    if (ed.openContents === 'Novenas') html += paintContents('Novenas');
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-pp590layer="podcasts">' + (ed.layers.podcasts.on ? 'On' : 'Off') + '</button></div></div>';
+    if (ed.layers.podcasts.on) {
+      if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
+      else seriesList.forEach(function (sr) {
+        var chosen = (ed.layers.podcasts.series || []).indexOf(sr.series) >= 0;
+        html += '<div class="card bookrow" data-pp590series="' + esc(sr.series) + '"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span><span class="meta">' + (chosen ? 'On' : '') + '</span></div></div>';
+      });
+    }
+    html += '<div class="row">';
+    if (ed.kind === 'default') {
+      html += '<button class="btn gold" data-pp590save="copy">Save as my copy</button>';
+    } else {
+      html += '<button class="btn gold" data-pp590save="over">Save</button>'
+        + '<button class="btn ghost" data-pp590save="new">Save as new</button>'
+        + '<button class="btn ghost" data-pp590delete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>';
+    }
+    html += '<button class="btn ghost" data-pp590close="1">Close</button></div>';
+    return html;
+  }
+  function paintContents(block) {
+    var uni = profContentsUniverse590(block);
+    var mat = ed.contents[block];
+    var html = '<div class="profcontents590">';
+    uni.forEach(function (it) {
+      var id = it.kind + ':' + it.key;
+      var on = !mat || mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; });
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(it.label) + '</span><button class="btn ghost" data-pp590citem="' + esc(block) + '|' + esc(id) + '">' + (on ? 'On' : 'Off') + '</button></div></div>';
+    });
+    if (!uni.length) html += '<p class="sub">Nothing stands in this block today.</p>';
+    return html + '</div>';
+  }
+  function wire() {
+    body.querySelectorAll('[data-pp590pick]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var key = row.getAttribute('data-pp590pick');
+        profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { profileRebuild(); load(true); }).catch(fail);
+      });
+    });
+    body.querySelectorAll('[data-pp590stand]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-pp590stand') }).then(function () { profileRebuild(); load(true); }).catch(fail);
+      });
+    });
+    var ruleRow = body.querySelector('[data-pp590rule]');
+    if (ruleRow) ruleRow.addEventListener('click', function () {
+      profPut('/api/prayer/profiles/state', { dayRule: !(res.state && res.state.dayRule) }).then(function () { profileRebuild(); load(true); }).catch(fail);
+    });
+    body.querySelectorAll('[data-pp590dd]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var dw = row.getAttribute('data-pp590dd');
+        ddOpen = ddOpen === dw ? null : dw;
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590ddset]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var parts = String(row.getAttribute('data-pp590ddset')).split(':');
+        var nd = opnClone((res.state && res.state.dayDefaults) || {});
+        if (parts[1]) nd[parts[0]] = parts[1]; else delete nd[parts[0]];
+        ddOpen = null;
+        profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(function () { profileRebuild(); load(true); }).catch(fail);
+      });
+    });
+    body.querySelectorAll('[data-pp590open]').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        startEdit(btn.getAttribute('data-pp590open'));
+        paint();
+        if (ed && ed.layers.podcasts.on && !seriesList) loadSeries();
+      });
+    });
+    if (!ed) return;
+    var nameIn = body.querySelector('[data-pp590name]');
+    if (nameIn) nameIn.addEventListener('input', function (ev) { ed.name = ev.target.value; });
+    body.querySelectorAll('[data-pp590blockoff]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var i = ed.core.indexOf(btn.getAttribute('data-pp590blockoff'));
+        if (i >= 0) ed.core.splice(i, 1);
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590blockon]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var b = btn.getAttribute('data-pp590blockon');
+        var ci = HOURS.indexOf(b);
+        var at = ed.core.length;
+        ed.core.forEach(function (x, i) { if (HOURS.indexOf(x) < ci) at = i + 1; });
+        // canonical hour position: insert after the last
+        // standing block whose canonical hour is earlier
+        var pos = 0;
+        ed.core.forEach(function (x, i) { if (HOURS.indexOf(x) < ci) pos = i + 1; });
+        ed.core.splice(pos, 0, b);
+        if (!ed.contents[b]) ed.contents[b] = null;
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590blockrow]').forEach(function (row) {
+      row.addEventListener('dragstart', function () { ed.dragBlock = row.getAttribute('data-pp590blockrow'); });
+      row.addEventListener('dragover', function (ev) { ev.preventDefault(); });
+      row.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        var target = row.getAttribute('data-pp590blockrow');
+        var from = ed.core.indexOf(ed.dragBlock), to = ed.core.indexOf(target);
+        if (from >= 0 && to >= 0 && from !== to) { var mv = ed.core.splice(from, 1)[0]; ed.core.splice(to, 0, mv); }
+        ed.dragBlock = null;
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590layer]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var w = btn.getAttribute('data-pp590layer');
+        ed.layers[w].on = !ed.layers[w].on;
+        paint();
+        if (w === 'podcasts' && ed.layers.podcasts.on && !seriesList) loadSeries();
+      });
+    });
+    body.querySelectorAll('[data-pp590series]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var k = row.getAttribute('data-pp590series');
+        var arr = ed.layers.podcasts.series || (ed.layers.podcasts.series = []);
+        var i = arr.indexOf(k);
+        if (i >= 0) arr.splice(i, 1); else arr.push(k);
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590contents]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var b = btn.getAttribute('data-pp590contents');
+        ed.openContents = ed.openContents === b ? null : b;
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590citem]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var parts = String(btn.getAttribute('data-pp590citem')).split('|');
+        var block = parts[0], id = parts[1];
+        var uni = profContentsUniverse590(block);
+        var mat = ed.contents[block];
+        if (!mat) mat = uni.slice();
+        var has = mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; });
+        if (has) mat = mat.filter(function (m) { return (m.kind + ':' + (m.key || '')) !== id; });
+        else uni.forEach(function (it) { if ((it.kind + ':' + it.key) === id) mat.push(it); });
+        ed.contents[block] = mat.map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
+        paint();
+      });
+    });
+    body.querySelectorAll('[data-pp590save]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var act = btn.getAttribute('data-pp590save');
+        var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut() };
+        if (act === 'over') {
+          payload.key = ed.key;
+          profPut('/api/prayer/profiles/save', payload).then(function () { profileRebuild(); load(false); }).catch(fail);
+        } else {
+          var srcKey = ed.key;
+          openRenameCopySheet590(ed.name + ' — my copy', function (newName) {
+            payload.name = newName;
+            payload.basedOn = srcKey;
+            if (ed.kind === 'default') payload.honorLine = '';
+            profPut('/api/prayer/profiles/save', payload).then(function () { profileRebuild(); load(false); }).catch(fail);
+          });
+        }
+      });
+    });
+    var delBtn = body.querySelector('[data-pp590delete]');
+    if (delBtn) delBtn.addEventListener('click', function () {
+      if (!delArmed) { delArmed = true; paint(); return; }
+      profPut('/api/prayer/profiles/delete', { profileKey: ed.key }).then(function () { profileRebuild(); load(false); }).catch(fail);
+    });
+    var closeBtn = body.querySelector('[data-pp590close]');
+    if (closeBtn) closeBtn.addEventListener('click', function () { ed = null; paint(); });
+  }
+  function loadSeries() {
+    api('/api/player/podcasts').then(function (r) {
+      seriesList = (r && r.seriesList) || [];
+      paint();
+    }).catch(function () { seriesList = []; paint(); });
+  }
+  load(false);
 }
 function openProfileSheet() {
   // The slot picker's dress: a .sheet on mountDrawer; a row
@@ -19629,7 +20293,12 @@ function paintListenHome(day) {
   // the block rows, where v546's Starred section stood;
   // paintFavoritesFolderRow fills it here and on every
   // starred settle/toggle.
-  var html = profileCardHtml(day) + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  // v590 (Amendment 4): the Configure plan button stands
+  // on the FIRST ROW of the Praylist — the door to the
+  // Profiles screen, standing whether or not a profile
+  // card paints below it.
+  var html = '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>'
+    + profileCardHtml(day) + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
