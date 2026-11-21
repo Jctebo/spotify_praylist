@@ -447,6 +447,36 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profplan590 .chip591, .profpop591 .chip591 { padding:5px 11px; min-height:38px; }
 .profplan590 .profcontents591, .profpop591 .profcontents591 { margin:0 0 6px 10px; }
 .profplan590 .stepper591 .btn, .profpop591 .stepper591 .btn { min-height:32px; }
+/* v593 §2: the no-pop-up Configure family — the ladder
+   (.profladder593), the editor's frozen zone
+   (.proffrozen593: the dirty-only acts bar · the chips ·
+   the block jump strip · the progress hairline), the
+   switch prompt, the This profile zone, and the Day
+   mapping screen (.profmapscreen593). The frozen zone is
+   a flex sibling above the .panelbody scroller, so the
+   acts bar appearing changes only the scroller's height,
+   never its content offset. */
+.proffrozen593 { flex:none; background:var(--card); border-bottom:1px solid var(--line); padding:6px 10px 4px; }
+.profbar593 .row { gap:8px; margin:0 0 2px; }
+.profbarline593 { margin:2px 0 4px; }
+.proffrozen593 .profchips593 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 6px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+.proffrozen593 .chip591 { padding:5px 11px; min-height:38px; }
+.chip591 .today593 { font-size:10px; vertical-align:super; margin-left:5px; opacity:.85; }
+.chip591 .dot593 { display:inline-block; width:7px; height:7px; border-radius:50%; background:#d97706; box-shadow:0 0 0 1.5px var(--card); margin-left:6px; }
+.profjump593 { display:flex; flex-wrap:nowrap; gap:4px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+.profjumbtn593 { flex:0 0 auto; font-family:var(--sans); font-size:12px; padding:4px 9px; min-height:32px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; white-space:nowrap; }
+.profjumbtn593.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.profhair593 { height:2px; background:var(--line); margin-top:4px; }
+.profhair593 i { display:block; height:100%; width:0; background:var(--accent); }
+.profzone593 { margin:0 0 4px; }
+.profzone593 .row { gap:8px; }
+.profladder593 .bookrow { padding:8px 10px; margin:0 0 6px; }
+.profladder593 .sub { margin:0 0 8px; }
+.profmapscreen593 .bookrow { padding:8px 10px; margin:0 0 6px; }
+.profmapscreen593 .sub { margin:0 0 8px; }
+.profmapscreen593 .sectionhead { margin:12px 0 6px; }
+.profmapscreen593 .profchips591 { margin:0 0 8px; padding-bottom:2px; }
+.profmapscreen593 .chip591 { padding:5px 11px; min-height:38px; }
 /* v462 §2.4.10: the prayer book's two seats the standing
    rules do not carry — the row/page favorite star and the
    reading page's English | Latin switch (the kind-switch
@@ -1008,7 +1038,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v592-1";
+var CACHE = "ora-pro-nobis-v593-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

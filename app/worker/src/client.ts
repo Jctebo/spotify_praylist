@@ -9933,7 +9933,7 @@ function paintSettings() {
   var setBarBack = setBarHost ? setBarHost.querySelector('[data-settingsback]') : null;
   if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
   var profBtn590 = document.getElementById('set-profiles');
-  if (profBtn590) profBtn590.addEventListener('click', function () { openProfilesScreen(); });
+  if (profBtn590) profBtn590.addEventListener('click', function () { openConfigureLadder593(); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -19498,10 +19498,10 @@ function wirePrayersView(day) {
   wirePlayed(view);
   // v515 §2: the profile surface acts ride every Prayers paint.
   view.querySelectorAll('[data-profchange]').forEach(function (btn) {
-    btn.addEventListener('click', function () { openProfilesScreen(); });
+    btn.addEventListener('click', function () { openConfigureLadder593(); });
   });
   view.querySelectorAll('[data-profconfigure]').forEach(function (btn) {
-    btn.addEventListener('click', function () { openProfilesScreen(); });
+    btn.addEventListener('click', function () { openConfigureLadder593(); });
   });
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
@@ -19658,27 +19658,136 @@ function profContentsUniverse590(block) {
   OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: profCourseLabels591[k] || ('Course — ' + k) }); });
   return items;
 }
-function openProfilesScreen(openKey) {
-  // v591 §2.1: the Configure plan screen, blocks first.
-  // The screen opens on the profile TODAY follows: a head
-  // line naming it, the profiles as chips in ONE scrollable
-  // row, then the blocks themselves — real switches, an on
-  // block's contents standing open underneath (switches +
-  // steppers on every row, an Add act), Novenas and
-  // Podcasts standing as blocks among blocks. The toggles
-  // edit a DRAFT of the opened profile; edits land in a
-  // profile only through the save acts (Save Profile writes
-  // the opened profile — the ways included; Save New mints
-  // another, named at the save; Reset to Default returns a
-  // named way to its designed shape). v592: the screen mounts
-  // FULL SCREEN (profscreenfull592), and the day mapping lives
-  // behind a Day mapping button in the head — it opens as a
-  // pop-up (an Every day row + the seven weekdays, each
-  // opening its pop-up). One pop-up builder serves every
-  // scope (chip · Every day · weekday): it explains the
-  // profile, carries its toggles as a draft, and its acts —
-  // Apply (the scope follows the profile; never edits it),
-  // Save Profile, Save New, Reset, Delete (his own only).
+function openConfigureLadder593() {
+  // v593 §2 (Q5=A, John's pick): Configure opens a LADDER —
+  // a two-option fork: PROFILE EDIT · DAY MAPPING — each
+  // door to its own full screen. No pop-ups or sheets stack
+  // in this flow. The ladder's Close returns to the calling
+  // surface; each screen's Close returns here.
+  var old = document.querySelector('.profladder593');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profladder593 profscreenfull592';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Configure plan</h1></div>'
+    + '<div class="card bookrow" data-p593door="edit"><div class="row"><span class="grow">Profile edit</span><span class="meta">›</span></div><p class="sub">Change what a profile stands — blocks, contents, toggles.</p></div>'
+    + '<div class="card bookrow" data-p593door="map"><div class="row"><span class="grow">Day mapping</span><span class="meta">›</span></div><p class="sub">Which profile each day follows.</p></div>'
+    + '<div class="row"><button class="btn ghost" data-p593ladderclose="1">Close</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  sheet.querySelector('[data-p593door="edit"]').addEventListener('click', function () { sheet.remove(); openProfilesScreen(null, { ladder: true }); });
+  sheet.querySelector('[data-p593door="map"]').addEventListener('click', function () { sheet.remove(); openDayMappingScreen593(true); });
+  var lc = sheet.querySelector('[data-p593ladderclose]');
+  if (lc) lc.addEventListener('click', function () { sheet.remove(); });
+}
+function openDayMappingScreen593(fromLadder) {
+  // v593 §2 (Q5=A): the Day mapping as its OWN full screen,
+  // reached from the Configure ladder (never within the
+  // profile window). Week view: Every day + Mon–Sun, each
+  // naming its profile. A day's row turns the SAME screen
+  // to that day's assignment view — chips + one Stand act;
+  // the assignment writes at once (no draft, no Save).
+  // Editing a profile's toggles never happens here.
+  var old = document.querySelector('.profmapscreen593');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet profmapscreen593 profscreenfull592';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Day mapping</h1></div>'
+    + '<div class="profmapbody593"><p class="sub">Loading …</p></div><p class="fieldnote profmapnote593"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.profmapbody593');
+  var note = sheet.querySelector('.profmapnote593');
+  var DOWS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
+  var res = null, view = 'week', selKey = null;
+  function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
+  function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
+  function dowName(scope) { var d = DOWS.filter(function (x) { return x[0] === scope; })[0]; return d ? d[1] : scope; }
+  function curKeyFor(scope) {
+    if (!res || !res.state) return null;
+    if (scope === 'standing') return res.state.standingKey;
+    var dd = res.state.dayDefaults || {};
+    return dd[scope] || res.state.standingKey;
+  }
+  function paint() {
+    if (!body || !res || !res.profiles) return;
+    var html = '';
+    if (view === 'week') {
+      html += '<p class="sub">Each day follows its profile. Sunday stands as The Benedictine Way by default — any day can be changed like any other.</p>';
+      html += '<p class="sub">Standing a profile for a day takes effect at once.</p>';
+      var stand = byKey(res.state && res.state.standingKey);
+      html += '<div class="card bookrow" data-p593mapday="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
+      var dd = (res.state && res.state.dayDefaults) || {};
+      DOWS.forEach(function (dw) {
+        var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
+        html += '<div class="card bookrow" data-p593mapday="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
+      });
+      html += '<div class="row"><button class="btn ghost" data-p593mapclose="1">Close</button></div>';
+      body.innerHTML = html;
+      body.querySelectorAll('[data-p593mapday]').forEach(function (row) {
+        row.addEventListener('click', function () { view = row.getAttribute('data-p593mapday'); selKey = curKeyFor(view); paint(); });
+      });
+      var mc = body.querySelector('[data-p593mapclose]');
+      if (mc) mc.addEventListener('click', closeScreen);
+    } else {
+      var label = view === 'standing' ? 'Every day' : dowName(view);
+      var cur = curKeyFor(view);
+      if (!selKey) selKey = cur;
+      html += '<h2 class="sectionhead">' + esc(label) + '</h2>';
+      html += '<div class="profchips591">';
+      res.profiles.forEach(function (p) {
+        html += '<button class="chip591' + (p.key === selKey ? ' on' : '') + '" data-p593mapchip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
+      });
+      html += '</div>';
+      if (view === 'sun') html += '<p class="sub">Sunday stands as The Benedictine Way by default — stand any profile here, like any day.</p>';
+      html += '<p class="sub">To change what a profile contains, use Configure plan.</p>';
+      html += '<div class="row"><button class="btn gold" data-p593stand="1">' + (view === 'standing' ? 'Stand as every day' : 'Stand for ' + esc(label)) + '</button>'
+        + '<button class="btn ghost" data-p593mapback="1">Back</button></div>';
+      body.innerHTML = html;
+      body.querySelectorAll('[data-p593mapchip]').forEach(function (chip) {
+        chip.addEventListener('click', function () { selKey = chip.getAttribute('data-p593mapchip'); paint(); });
+      });
+      var st = body.querySelector('[data-p593stand]');
+      if (st) st.addEventListener('click', function () {
+        var done = function (r) { if (r) res = r; view = 'week'; selKey = null; paint(); profileRebuild(); };
+        if (view === 'standing') profPut('/api/prayer/profiles/state', { standingKey: selKey }).then(done).catch(fail);
+        else {
+          var nd = opnClone((res.state && res.state.dayDefaults) || {});
+          nd[view] = selKey;
+          profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(done).catch(fail);
+        }
+      });
+      var bk = body.querySelector('[data-p593mapback]');
+      if (bk) bk.addEventListener('click', function () { view = 'week'; selKey = null; paint(); });
+    }
+  }
+  function closeScreen() { sheet.remove(); if (fromLadder) openConfigureLadder593(); }
+  api('/api/prayer/profiles').then(function (r) { res = r; paint(); }).catch(function () { if (body) body.innerHTML = '<p class="sub">Day mapping did not load.</p>'; });
+}
+function openProfilesScreen(openKey, opts) {
+  // v593 §2: the Configure plan screen IS the only profile
+  // editor — the pop-up machinery
+  // is retired whole (no profile pop-up, no mapping
+  // pop-up). The screen opens on the profile
+  // TODAY follows. The chips ARE the switch (Q2=A): a chip
+  // tap stands the tapped profile for today — its SAVED
+  // shape, the day rebuilds — AND opens it here for
+  // editing; the switch lands at the top (Q6=A). Edits
+  // remain a draft until Save writes them (the v591
+  // semantics stand). A chip tap while the standing draft
+  // is dirty fires the prompt first (Q1=B): Save · Discard
+  // · Stay. The acts bar stands at the top ONLY while the
+  // draft is dirty (Q3=C), carrying Save · Save New + the
+  // status line; Save New also stands always in the This
+  // profile zone (its clean-state home). The chips row +
+  // block jump strip + progress hairline stand frozen
+  // always (Q4=A). The frozen zone is a flex sibling above
+  // the .panelbody scroller, so the bar appearing shrinks
+  // only the scroller's height — never its content offset;
+  // every edit repaint is anchored to the edited block, so
+  // an edit never moves his place (W6 repaired). Reached
+  // from the Configure ladder, the labeled Close returns
+  // to the ladder.
+  var fromLadder = !!(opts && opts.ladder);
   var old = document.querySelector('.profplan590');
   if (old) old.remove();
   var sheet = document.createElement('div');
@@ -19689,12 +19798,36 @@ function openProfilesScreen(openKey) {
   mountDrawer(sheet, true);
   var body = sheet.querySelector('.profplanbody');
   var note = sheet.querySelector('.profplannote');
+  var scroller = sheet.querySelector('.panelbody');
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
-  var DOWS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
+  var BLOCKS593 = HOURS.concat(['Novenas', 'Podcasts']);
   var DUR591 = { 'little-way': 'About 30 minutes', 'salesian': 'About 1½–2 hours', 'benedictine': 'The full day — all seven blocks' };
   var res = null, seriesList = null, bookList = null;
-  var edKey = openKey || null, ed = null, resetArmed = false;
-  var mapPaintFn = null; // v592: the day mapping pop-up's repaint, while it stands
+  var edKey = openKey || null, ed = null, resetArmed = false, delArmed = false;
+  // The frozen zone: inserted into .inner above the
+  // scrolling .panelbody (flex sibling — see header).
+  var frozen = document.createElement('div');
+  frozen.className = 'proffrozen593';
+  frozen.innerHTML = '<div class="profbar593" data-p593bar="1" hidden><div class="row"><button class="btn gold" data-p593save="profile">Save</button><button class="btn ghost" data-p593save="new">Save New</button></div><p class="sub profbarline593" data-p593barline="1"></p></div>'
+    + '<div class="profchips593" data-p593chips="1"></div>'
+    + '<div class="profjump593" data-p593jump="1">' + BLOCKS593.map(function (b) { return '<button class="profjumbtn593" data-p593jumpbtn="' + esc(b) + '">' + esc(b) + '</button>'; }).join('') + '</div>'
+    + '<div class="profhair593"><i data-p593hair="1"></i></div>';
+  var innerEl = sheet.querySelector('.inner');
+  if (innerEl && scroller) innerEl.insertBefore(frozen, scroller);
+  var barEl = frozen.querySelector('[data-p593bar]');
+  var barLine = frozen.querySelector('[data-p593barline]');
+  var chipsEl = frozen.querySelector('[data-p593chips]');
+  var hairEl = frozen.querySelector('[data-p593hair]');
+  frozen.querySelectorAll('[data-p593jumpbtn]').forEach(function (btn) {
+    btn.addEventListener('click', function () { jumpTo(btn.getAttribute('data-p593jumpbtn')); });
+  });
+  frozen.querySelectorAll('[data-p593save]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.getAttribute('data-p593save') === 'profile') saveProfileDraft(null);
+      else doSaveNew();
+    });
+  });
+  if (scroller) scroller.addEventListener('scroll', function () { spyUpdate(); });
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
   function draftOf(rec) {
@@ -19758,7 +19891,7 @@ function openProfilesScreen(openKey) {
   function paintContents(d, block) {
     var mat = d.contents[block];
     var uni = profContentsUniverse590(block);
-    var html = '<div class="profcontents591">'
+    var html = '<div class="profcontents591" data-p593anchor="' + esc(block) + '">'
       + '<p class="sub">' + (mat ? 'Set by you — this block stands as listed' : 'As the day brings it') + '</p>';
     var disp = [];
     if (mat) {
@@ -19785,7 +19918,7 @@ function openProfilesScreen(openKey) {
     return html + '</div>';
   }
   function paintSeries(d) {
-    var html = '<div class="profcontents591"><p class="sub">Podcast series in the day</p>';
+    var html = '<div class="profcontents591" data-p593anchor="Podcasts"><p class="sub">Podcast series in the day</p>';
     if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
     else seriesList.forEach(function (sr) {
       var chosen = (d.layers.podcasts.series || []).indexOf(sr.series) >= 0;
@@ -19800,17 +19933,17 @@ function openProfilesScreen(openKey) {
     HOURS.forEach(function (b) { if (order.indexOf(b) < 0) order.push(b); });
     order.forEach(function (b) {
       var on = d.core.indexOf(b) >= 0;
-      html += '<div class="card bookrow"><div class="row">'
+      html += '<div class="card bookrow" data-p593anchor="' + esc(b) + '"><div class="row">'
         + (on ? '<span class="stepper591"><button class="btn ghost" data-p591up="' + esc(b) + '">↑</button><button class="btn ghost" data-p591down="' + esc(b) + '">↓</button></span>' : '')
         + '<span class="grow">' + esc(b) + '</span>'
         + '<button class="switch591' + (on ? ' on' : '') + '" data-p591block="' + esc(b) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button>'
         + '</div></div>';
       if (on) html += paintContents(d, b);
     });
-    html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span>'
+    html += '<div class="card bookrow" data-p593anchor="Novenas"><div class="row"><span class="grow">Novenas</span>'
       + '<button class="switch591' + (d.layers.novenas.on ? ' on' : '') + '" data-p591layer="novenas" role="switch" aria-checked="' + (d.layers.novenas.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
     if (d.layers.novenas.on) html += paintContents(d, 'Novenas');
-    html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span>'
+    html += '<div class="card bookrow" data-p593anchor="Podcasts"><div class="row"><span class="grow">Podcasts</span>'
       + '<button class="switch591' + (d.layers.podcasts.on ? ' on' : '') + '" data-p591layer="podcasts" role="switch" aria-checked="' + (d.layers.podcasts.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
     if (d.layers.podcasts.on) html += paintSeries(d);
     return html;
@@ -19827,7 +19960,7 @@ function openProfilesScreen(openKey) {
           d.core.splice(pos, 0, b);
           if (d.contents[b] === undefined) d.contents[b] = null;
         }
-        repaint();
+        repaint(btn);
       });
     });
     function moveCore(attr, dir) {
@@ -19836,7 +19969,7 @@ function openProfilesScreen(openKey) {
           var b = btn.getAttribute(attr);
           var i = d.core.indexOf(b), j = i + dir;
           if (i >= 0 && j >= 0 && j < d.core.length) { var mv = d.core.splice(i, 1)[0]; d.core.splice(j, 0, mv); }
-          repaint();
+          repaint(btn);
         });
       });
     }
@@ -19846,7 +19979,7 @@ function openProfilesScreen(openKey) {
       btn.addEventListener('click', function () {
         var w = btn.getAttribute('data-p591layer');
         d.layers[w].on = !d.layers[w].on;
-        repaint();
+        repaint(btn);
         if (w === 'podcasts' && d.layers.podcasts.on && !seriesList) loadSeries();
       });
     });
@@ -19856,7 +19989,7 @@ function openProfilesScreen(openKey) {
         var arr = d.layers.podcasts.series || (d.layers.podcasts.series = []);
         var i = arr.indexOf(k);
         if (i >= 0) arr.splice(i, 1); else arr.push(k);
-        repaint();
+        repaint(btn);
       });
     });
     function cParts(btn, attr) { return String(btn.getAttribute(attr)).split('|'); }
@@ -19868,7 +20001,7 @@ function openProfilesScreen(openKey) {
         var has = m.some(function (x) { return (x.kind + ':' + (x.key || '')) === id; });
         if (has) d.contents[block] = m.filter(function (x) { return (x.kind + ':' + (x.key || '')) !== id; });
         else { var kp = id.split(':'); m.push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] }); }
-        repaint();
+        repaint(btn);
       });
     });
     root.querySelectorAll('[data-p591cremove]').forEach(function (btn) {
@@ -19883,7 +20016,7 @@ function openProfilesScreen(openKey) {
         var block = parts[0], id = parts[1];
         var m = materialize(d, block);
         d.contents[block] = m.filter(function (x) { return (x.kind + ':' + (x.key || '')) !== id; });
-        repaint();
+        repaint(btn);
       });
     });
     function moveItem(attr, dir) {
@@ -19896,7 +20029,7 @@ function openProfilesScreen(openKey) {
           m.forEach(function (x, j) { if ((x.kind + ':' + (x.key || '')) === id) i = j; });
           var j = i + dir;
           if (i >= 0 && j >= 0 && j < m.length) { var mv = m.splice(i, 1)[0]; m.splice(j, 0, mv); }
-          repaint();
+          repaint(btn);
         });
       });
     }
@@ -19904,6 +20037,125 @@ function openProfilesScreen(openKey) {
     moveItem('data-p591cdown', 1);
     root.querySelectorAll('[data-p591add]').forEach(function (btn) {
       btn.addEventListener('click', function () { openAddPicker(btn.getAttribute('data-p591add'), d, repaint); });
+    });
+  }
+  function explainEd(d) {
+    var parts = (d.core || []).slice();
+    if (d.layers && d.layers.novenas && d.layers.novenas.on) parts.push('Novenas');
+    if (d.layers && d.layers.podcasts && d.layers.podcasts.on) parts.push('Podcasts');
+    return 'Stands: ' + parts.join(' · ');
+  }
+  function jumpTo(name) {
+    if (!body || !scroller) return;
+    var el = body.querySelector('[data-p593anchor="' + name + '"]');
+    if (!el) return;
+    var top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 2;
+    if (scroller.scrollTo) scroller.scrollTo({ top: top, behavior: 'smooth' });
+    else scroller.scrollTop = top;
+  }
+  function spyUpdate() {
+    if (!body || !scroller) return;
+    var max = scroller.scrollHeight - scroller.clientHeight;
+    if (hairEl) hairEl.style.width = (max > 0 ? Math.round(100 * scroller.scrollTop / max) : 0) + '%';
+    var anchors = body.querySelectorAll('[data-p593anchor]');
+    if (!anchors.length) return;
+    var topEdge = scroller.getBoundingClientRect().top + 16;
+    var cur = anchors[0].getAttribute('data-p593anchor');
+    anchors.forEach(function (el) { if (el.getBoundingClientRect().top <= topEdge) cur = el.getAttribute('data-p593anchor'); });
+    frozen.querySelectorAll('[data-p593jumpbtn]').forEach(function (btn) {
+      if (btn.getAttribute('data-p593jumpbtn') === cur) btn.classList.add('on');
+      else btn.classList.remove('on');
+    });
+  }
+  function anchoredRepaint(btn) {
+    var a = btn && btn.closest ? btn.closest('[data-p593anchor]') : null;
+    var name = a ? a.getAttribute('data-p593anchor') : null;
+    var top = a ? a.getBoundingClientRect().top : null;
+    paint();
+    if (name && top !== null && body && scroller) {
+      var nel = body.querySelector('[data-p593anchor="' + name + '"]');
+      if (nel) scroller.scrollTop += nel.getBoundingClientRect().top - top;
+    }
+  }
+  function paintFrozen() {
+    if (!res || !ed) return;
+    var dirty = draftDirty(ed);
+    var eff = res.effective;
+    if (barEl) barEl.hidden = !dirty;
+    if (dirty && barLine) barLine.textContent = ed.name + ' · unsaved changes' + (eff ? (eff.key === ed.key ? ' · today follows this profile' : ' · today follows ' + eff.name) : '');
+    if (chipsEl) {
+      var html = '';
+      res.profiles.forEach(function (p) {
+        html += '<button class="chip591' + (p.key === edKey ? ' on' : '') + '" data-p593chip="' + esc(p.key) + '">' + esc(p.name)
+          + (eff && eff.key === p.key ? '<span class="today593">today</span>' : '')
+          + (dirty && p.key === edKey ? '<span class="dot593"></span>' : '') + '</button>';
+      });
+      chipsEl.innerHTML = html;
+      chipsEl.querySelectorAll('[data-p593chip]').forEach(function (chip) {
+        chip.addEventListener('click', function () { chipTap(chip.getAttribute('data-p593chip')); });
+      });
+    }
+  }
+  function chipTap(key) {
+    if (!ed || key === edKey) return;
+    if (draftDirty(ed)) { openSwitchPrompt(key); return; }
+    doSwitch(key);
+  }
+  function doSwitch(key) {
+    // Q2=A: today stands the tapped profile's SAVED shape
+    // (a day-pick of the record, never the draft) and the
+    // day rebuilds; the screen opens a fresh draft of it,
+    // at the top (Q6=A).
+    profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key }).then(function (r) {
+      if (r) res = r;
+      ed = null; edKey = key; resetArmed = false; delArmed = false;
+      paint();
+      if (scroller) scroller.scrollTop = 0;
+      profileRebuild();
+    }).catch(fail);
+  }
+  function openSwitchPrompt(targetKey) {
+    // Q1=B: the switch prompt — Save · Discard · Stay.
+    var oldP = document.querySelector('.profprompt593');
+    if (oldP) oldP.remove();
+    var sh = document.createElement('div');
+    sh.className = 'sheet profprompt593';
+    sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Unsaved changes</h1></div>'
+      + '<p class="sub">You have unsaved changes to ' + esc(ed.name) + '. Save them before you switch?</p>'
+      + '<div class="row"><button class="btn gold" data-p593prompt="save">Save</button><button class="btn ghost" data-p593prompt="discard">Discard</button><button class="btn ghost" data-p593prompt="stay">Stay</button></div></div>';
+    document.body.appendChild(sh);
+    mountDrawer(sh, false);
+    sh.querySelectorAll('[data-p593prompt]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var act = btn.getAttribute('data-p593prompt');
+        sh.remove();
+        if (act === 'save') saveProfileDraft(function () { doSwitch(targetKey); });
+        else if (act === 'discard') { ed = null; doSwitch(targetKey); }
+      });
+    });
+  }
+  function saveProfileDraft(cb) {
+    var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut(ed) };
+    payload.key = ed.key;
+    profPut('/api/prayer/profiles/save', payload).then(function (r) {
+      res = r; ed = null; edKey = payload.key; resetArmed = false; delArmed = false; paint(); profileRebuild();
+      if (cb) cb();
+    }).catch(fail);
+  }
+  function doSaveNew() {
+    var srcKey = ed.key;
+    var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut(ed) };
+    openRenameCopySheet590('', function (newName) {
+      payload.name = newName;
+      payload.basedOn = srcKey;
+      profPut('/api/prayer/profiles/save', payload).then(function (r) {
+        res = r;
+        var nk = null;
+        (r.profiles || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
+        if (note) note.textContent = 'Saved as ' + newName + '.';
+        if (nk) { ed = null; edKey = nk; resetArmed = false; delArmed = false; paint(); if (scroller) scroller.scrollTop = 0; }
+        else paint();
+      }).catch(fail);
     });
   }
   function openAddPicker(block, d, repaint) {
@@ -19980,200 +20232,43 @@ function openProfilesScreen(openKey) {
     }
     var eff = res.effective;
     var html = '<p class="sub" data-p591head="1">Today follows ' + esc(eff ? eff.name : '') + '</p>';
-    html += '<div class="row"><button class="btn ghost" data-p592daymap="1">Day mapping</button></div>';
-    html += '<div class="profchips591">';
-    res.profiles.forEach(function (p) {
-      html += '<button class="chip591' + (eff && eff.key === p.key ? ' on' : '') + '" data-p591chip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
-    });
-    html += '</div>';
     html += '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
-    if (draftDirty(ed)) html += '<p class="sub">Unsaved changes — Save Profile writes them into ' + esc(ed.name) + '.</p>';
+    if (ed.honor) html += '<p class="sub">' + esc(ed.honor) + '</p>';
+    if (DUR591[ed.key]) html += '<p class="sub">' + DUR591[ed.key] + '</p>';
+    html += '<p class="sub">' + esc(explainEd(ed)) + '</p>';
+    if (draftDirty(ed)) html += '<p class="sub">Unsaved changes — Save writes them into ' + esc(ed.name) + '.</p>';
+    html += '<div class="profzone593"><div class="row">'
+      + '<button class="btn ghost" data-p593savenew="1">Save New</button>'
+      + (ed.kind === 'default' ? '<button class="btn ghost" data-p593reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button>' : '')
+      + (ed.kind === 'custom' ? '<button class="btn ghost" data-p593delete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>' : '')
+      + '</div><p class="sub">' + (ed.kind === 'default' ? 'Reset returns this way to its designed shape. ' : '') + 'Save New makes another profile from these toggles, named at the save.</p></div>';
     html += paintBlocks(ed);
-    html += '<div class="row"><button class="btn gold" data-p591save="profile">Save Profile</button>'
-      + '<button class="btn ghost" data-p591save="new">Save New</button>'
-      + (ed.kind === 'default' ? '<button class="btn ghost" data-p591reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button>' : '')
-      + '</div>';
-    html += '<div class="row"><button class="btn ghost" data-p591close="1">' + (draftDirty(ed) ? 'Close without saving' : 'Close') + '</button></div>';
+    html += '<div class="row"><button class="btn ghost" data-p593close="1">' + (draftDirty(ed) ? 'Close without saving' : 'Close') + '</button></div>';
     body.innerHTML = html;
     wire();
+    paintFrozen();
+    spyUpdate();
   }
   function wire() {
-    wireBlocks(body, ed, paint);
-    body.querySelectorAll('[data-p591chip]').forEach(function (chip) {
-      chip.addEventListener('click', function () { openPop('today', chip.getAttribute('data-p591chip')); });
-    });
-    var dmBtn = body.querySelector('[data-p592daymap]');
-    if (dmBtn) dmBtn.addEventListener('click', function () { openMapPop(); });
-    body.querySelectorAll('[data-p591save]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var act = btn.getAttribute('data-p591save');
-        var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut(ed) };
-        if (act === 'profile') {
-          payload.key = ed.key;
-          profPut('/api/prayer/profiles/save', payload).then(function (r) {
-            res = r; ed = null; edKey = payload.key; resetArmed = false; paint(); profileRebuild();
-          }).catch(fail);
-        } else {
-          var srcKey = ed.key;
-          openRenameCopySheet590('', function (newName) {
-            payload.name = newName;
-            payload.basedOn = srcKey;
-            profPut('/api/prayer/profiles/save', payload).then(function (r) {
-              res = r;
-              if (note) note.textContent = 'Saved as ' + newName + ' — it stands in the row of profiles above.';
-              paint();
-            }).catch(fail);
-          });
-        }
-      });
-    });
-    var resetBtn = body.querySelector('[data-p591reset]');
+    wireBlocks(body, ed, anchoredRepaint);
+    var sn = body.querySelector('[data-p593savenew]');
+    if (sn) sn.addEventListener('click', function () { doSaveNew(); });
+    var resetBtn = body.querySelector('[data-p593reset]');
     if (resetBtn) resetBtn.addEventListener('click', function () {
       if (!resetArmed) { resetArmed = true; paint(); return; }
       profPut('/api/prayer/profiles/reset', { profileKey: ed.key }).then(function (r) {
         res = r; ed = null; resetArmed = false; paint(); profileRebuild();
       }).catch(fail);
     });
-    var closeBtn = body.querySelector('[data-p591close]');
-    if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); });
-  }
-  function openMapPop() {
-    // v592 §2: the day mapping as a pop-up, opened from the
-    // Day mapping button in the screen's head. It paints into
-    // a stable body container (the S11 discipline); a day row
-    // opens that scope's profile pop-up above it, and closing
-    // the profile pop-up returns here — the mapping sheet
-    // stands underneath throughout.
-    var oldMap = document.querySelector('.profmap592');
-    if (oldMap) oldMap.remove();
-    var map = document.createElement('div');
-    map.className = 'sheet profmap592';
-    map.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Day mapping</h1></div>'
-      + '<div class="profmapbody"></div></div>';
-    document.body.appendChild(map);
-    mountDrawer(map, true);
-    var mapBody = map.querySelector('.profmapbody');
-    function mPaint() {
-      if (!document.body.contains(map)) { mapPaintFn = null; return; }
-      var stand = byKey(res.state && res.state.standingKey);
-      var html = '<div class="card bookrow" data-p592mapday="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
-      var dd = (res.state && res.state.dayDefaults) || {};
-      DOWS.forEach(function (dw) {
-        var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
-        html += '<div class="card bookrow" data-p592mapday="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
-      });
-      html += '<div class="row"><button class="btn ghost" data-p592mapclose="1">Close</button></div>';
-      mapBody.innerHTML = html;
-      mapBody.querySelectorAll('[data-p592mapday]').forEach(function (row) {
-        row.addEventListener('click', function () {
-          var scope = row.getAttribute('data-p592mapday');
-          var dd2 = (res.state && res.state.dayDefaults) || {};
-          var key = scope === 'standing' ? res.state.standingKey : (dd2[scope] || res.state.standingKey);
-          openPop(scope, key);
-        });
-      });
-      var mc = mapBody.querySelector('[data-p592mapclose]');
-      if (mc) mc.addEventListener('click', function () { mapPaintFn = null; map.remove(); });
-    }
-    mapPaintFn = mPaint;
-    mPaint();
-  }
-  function openPop(scope, key) {
-    var oldPop = document.querySelector('.profpop591');
-    if (oldPop) oldPop.remove();
-    var pop = document.createElement('div');
-    pop.className = 'sheet profpop591';
-    pop.innerHTML = '<div class="inner"><div class="profpopbody"></div></div>';
-    document.body.appendChild(pop);
-    mountDrawer(pop, true);
-    var popBody = pop.querySelector('.profpopbody');
-    var shownKey = key, ped = null, pResetArmed = false, pDelArmed = false;
-    var scopeName = scope === 'today' ? 'today' : scope === 'standing' ? 'every day' : (DOWS.filter(function (d) { return d[0] === scope; })[0] || [])[1];
-    var applyLabel = scope === 'today' ? 'Use for today' : scope === 'standing' ? 'Use every day' : 'Stand for ' + scopeName;
-    function pFail(e) { var n = popBody.querySelector('.profpopnote'); if (n) n.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
-    function pPaint() {
-      var rec = byKey(shownKey);
-      if (!rec) { pop.remove(); return; }
-      if (!ped || ped.key !== shownKey) ped = draftOf(rec);
-      var inner = '<div class="profchips591">';
-      res.profiles.forEach(function (p) {
-        inner += '<button class="chip591' + (p.key === shownKey ? ' on' : '') + '" data-p591pchip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
-      });
-      inner += '</div><div class="row"><h1 class="screen grow">' + esc(rec.name) + '</h1></div>';
-      if (rec.honorLine) inner += '<p class="sub">' + esc(rec.honorLine) + '</p>';
-      if (DUR591[rec.key]) inner += '<p class="sub">' + DUR591[rec.key] + '</p>';
-      inner += '<p class="sub">' + esc(explain591(rec)) + '</p>';
-      if (scope === 'sun') inner += '<p class="sub">Sunday stands as The Benedictine Way by default — stand any profile here, like any day.</p>';
-      if (draftDirty(ped)) inner += '<p class="sub">Unsaved changes — Save Profile writes them into ' + esc(rec.name) + '.</p>';
-      inner += paintBlocks(ped);
-      inner += '<div class="row"><button class="btn gold" data-p591papply="1">' + esc(applyLabel) + '</button></div>'
-        + '<p class="sub">Apply makes ' + esc(scopeName) + ' follow this profile. It does not change the profile.</p>'
-        + '<div class="row"><button class="btn gold" data-p591psave="profile">Save Profile</button><button class="btn ghost" data-p591psave="new">Save New</button></div>'
-        + '<p class="sub">Save Profile writes these toggles into ' + esc(rec.name) + '.</p>'
-        + (rec.kind === 'default' ? '<div class="row"><button class="btn ghost" data-p591preset="1">' + (pResetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button></div><p class="sub">Reset returns ' + esc(rec.name) + ' to its designed shape, discarding edits.</p>' : '')
-        + (rec.kind === 'custom' ? '<div class="row"><button class="btn ghost" data-p591pdelete="1">' + (pDelArmed ? 'Tap again to delete' : 'Delete profile') + '</button></div>' : '')
-        + '<div class="row"><button class="btn ghost" data-p591pclose="1">' + (draftDirty(ped) ? 'Close without saving' : 'Close') + '</button></div>'
-        + '<p class="fieldnote profpopnote"></p>';
-      popBody.innerHTML = inner;
-      wireBlocks(popBody, ped, pPaint);
-      popBody.querySelectorAll('[data-p591pchip]').forEach(function (chip) {
-        chip.addEventListener('click', function () { shownKey = chip.getAttribute('data-p591pchip'); ped = null; pResetArmed = false; pDelArmed = false; pPaint(); });
-      });
-      var applyBtn = popBody.querySelector('[data-p591papply]');
-      if (applyBtn) applyBtn.addEventListener('click', function () {
-        var done = function (r) { if (r) res = r; pop.remove(); if (mapPaintFn) mapPaintFn(); ed = null; edKey = null; paint(); profileRebuild(); };
-        if (scope === 'today') profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: shownKey }).then(done).catch(pFail);
-        else if (scope === 'standing') profPut('/api/prayer/profiles/state', { standingKey: shownKey }).then(done).catch(pFail);
-        else {
-          var nd = opnClone((res.state && res.state.dayDefaults) || {});
-          nd[scope] = shownKey;
-          profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(done).catch(pFail);
-        }
-      });
-      popBody.querySelectorAll('[data-p591psave]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var act = btn.getAttribute('data-p591psave');
-          var recNow = byKey(shownKey);
-          var payload = { name: recNow.name, honorLine: recNow.honorLine || '', coreBlocks: ped.core.slice(), layers: ped.layers, contents: contentsOut(ped) };
-          if (act === 'profile') {
-            payload.key = shownKey;
-            profPut('/api/prayer/profiles/save', payload).then(function (r) {
-              res = r; ped = null; pPaint(); ed = null; paint(); if (mapPaintFn) mapPaintFn(); profileRebuild();
-            }).catch(pFail);
-          } else {
-            openRenameCopySheet590('', function (newName) {
-              payload.name = newName;
-              payload.basedOn = shownKey;
-              profPut('/api/prayer/profiles/save', payload).then(function (r) {
-                res = r;
-                var nk = null;
-                (r.profiles || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
-                if (nk) { shownKey = nk; ped = null; }
-                pPaint();
-                ed = null; paint(); if (mapPaintFn) mapPaintFn();
-              }).catch(pFail);
-            });
-          }
-        });
-      });
-      var pReset = popBody.querySelector('[data-p591preset]');
-      if (pReset) pReset.addEventListener('click', function () {
-        if (!pResetArmed) { pResetArmed = true; pPaint(); return; }
-        profPut('/api/prayer/profiles/reset', { profileKey: shownKey }).then(function (r) {
-          res = r; ped = null; pResetArmed = false; pPaint(); ed = null; paint(); if (mapPaintFn) mapPaintFn(); profileRebuild();
-        }).catch(pFail);
-      });
-      var pDel = popBody.querySelector('[data-p591pdelete]');
-      if (pDel) pDel.addEventListener('click', function () {
-        if (!pDelArmed) { pDelArmed = true; pPaint(); return; }
-        profPut('/api/prayer/profiles/delete', { profileKey: shownKey }).then(function (r) {
-          res = r; pop.remove(); if (mapPaintFn) mapPaintFn(); ed = null; edKey = null; paint(); profileRebuild();
-        }).catch(pFail);
-      });
-      var pClose = popBody.querySelector('[data-p591pclose]');
-      if (pClose) pClose.addEventListener('click', function () { pop.remove(); if (mapPaintFn) mapPaintFn(); });
-    }
-    pPaint();
+    var delBtn = body.querySelector('[data-p593delete]');
+    if (delBtn) delBtn.addEventListener('click', function () {
+      if (!delArmed) { delArmed = true; paint(); return; }
+      profPut('/api/prayer/profiles/delete', { profileKey: ed.key }).then(function (r) {
+        res = r; ed = null; edKey = null; delArmed = false; paint(); profileRebuild();
+      }).catch(fail);
+    });
+    var closeBtn = body.querySelector('[data-p593close]');
+    if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); if (fromLadder) openConfigureLadder593(); });
   }
   load(false);
   loadSeries();
