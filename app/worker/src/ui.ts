@@ -578,6 +578,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    at v361: the combined row retired, and intention rows are
    ordinary standard cards under the geometry that stands.) */
 .sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
+.favfolder-head { display:flex; align-items:center; gap:6px; }
+.favfolder-head .sectionhead { flex:1; }
+.favfolder-chev { flex:none; background:none; border:none; font-family:inherit; font-size:15px; line-height:1; color:var(--navy); cursor:pointer; padding:6px 4px; }
 /* v449 §2 Build 1: the square-card family stands down
    whole — the two-column grid and its card dress retire
    with the home's re-form to one series row per line

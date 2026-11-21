@@ -2014,13 +2014,13 @@ function opnLocalApi(path, opts, mode) {
       var seenK = {}, entries = [];
       body.starred.forEach(function (rawE) {
         var e = rawE && typeof rawE === 'object' ? rawE : {};
-        if (e.k !== 'episode' && e.k !== 'podcast' && e.k !== 'prayer') throw opnErr(400, 'bad star kind');
+        if (e.k !== 'episode' && e.k !== 'podcast' && e.k !== 'prayer' && e.k !== 'series' && e.k !== 'folder') throw opnErr(400, 'bad star kind');
         if (typeof e.id !== 'string' || !e.id || e.id.length > 200) throw opnErr(400, 'bad star id');
         if (typeof e.title !== 'string' || e.title.length > 300) throw opnErr(400, 'bad star title');
         if (e.k === 'podcast' && (typeof e.series !== 'string' || !e.series)) throw opnErr(400, 'podcast star needs its series');
         if (e.k === 'prayer' && opnBookSlugs && !opnBookSlugs[e.id]) throw opnErr(400, 'bad prayer slug ' + e.id);
         if (e.url !== undefined && e.url !== null && (typeof e.url !== 'string' || e.url.length > 2000)) throw opnErr(400, 'bad star url');
-        var k = e.k === 'podcast' ? 'podcast:' + e.series + ':' + e.id : e.k === 'prayer' ? 'prayer:' + e.id : 'episode:' + e.id;
+        var k = e.k === 'podcast' ? 'podcast:' + e.series + ':' + e.id : e.k === 'prayer' ? 'prayer:' + e.id : e.k === 'series' ? 'series:' + e.id : e.k === 'folder' ? 'folder:' + e.id : 'episode:' + e.id;
         if (seenK[k]) return;
         seenK[k] = 1;
         entries.push(opnClone(e));
@@ -7170,7 +7170,10 @@ function paintPodcastsIndex() {
     // the meta position.
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (s.showImageUrl ? '<img class="rowart" src="' + esc(s.showImageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
-    html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><h3>' + esc(s.title) + '</h3>';
+    // v576 (Q2 A): the series star stands on the list card —
+    // favoriting the podcast itself (a door in the Favorite
+    // Podcasts folder), beside the title.
+    html += '<div class="card" data-podseries="' + esc(s.series) + '"><div class="row">' + art + '<div class="grow"><div class="titlerow"><h3>' + esc(s.title) + '</h3>' + seriesStarBtnHtml(s.series) + '</div>';
     if (s.kind === 'rss') {
       // v464 §2.3: an RSS series card — the video form's Latest
       // with the listened count standing beside it (§1.6's
@@ -7218,7 +7221,10 @@ function paintPodcastsIndex() {
   view.innerHTML = html;
   paintOfflineLine();
   view.querySelectorAll('[data-podseries]').forEach(function (c) {
-    c.addEventListener('click', function () { massPodReturn = false; openPodSeries(c.getAttribute('data-podseries')); });
+    c.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-trackstar]')) return; // v576: the star's own act (the delegated handler)
+      massPodReturn = false; openPodSeries(c.getAttribute('data-podseries'));
+    });
   });
 }
 // ============================================================
@@ -7390,6 +7396,30 @@ function paintPodSeriesPage() {
   else if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
   else if (state.podcasts && state.podcasts.kind === 'own') paintPodOwnSeries();
   else paintPodcasts();
+  seatSeriesStar();
+}
+function seriesStarBtnHtml(seriesKey) {
+  // v576 (Q2 A): the podcast's own star — the same glyph and
+  // the same delegated [data-trackstar] act as every track
+  // star; its key is the series form.
+  if (!seriesKey) return '';
+  var key = starKeyOf('series', seriesKey);
+  return '<button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Favorite this podcast">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button>';
+}
+function seatSeriesStar() {
+  // v576 (Q2 A): the star at the head of the podcast's own
+  // page — seated in the row-2 bar's right slot after the
+  // painter runs, so every series painter (audio · RSS ·
+  // own · video) carries it from this one seat. The bar is
+  // re-rendered whole by every page paint, so no stale star
+  // survives leaving the page.
+  var bar = hdrRow2();
+  if (!bar) return;
+  var slot = bar.querySelector('.hdr2-right');
+  if (!slot) return;
+  var s = state.podcasts;
+  if (!s || !s.series) return;
+  slot.innerHTML = seriesStarBtnHtml(s.series);
 }
 function openPodSeries(key) {
   closeWatch(); // v434 §2.6.2 seat 4: opening any series while a watch record somehow stands closes it first — the invariant has no unnamed path
@@ -9823,6 +9853,11 @@ var STARRED_KEY = 'opn-starred-v546';
 function starKeyOf(kind, id, series) {
   if (kind === 'podcast') return 'podcast:' + (series || '') + ':' + (id || '');
   if (kind === 'prayer') return 'prayer:' + (id || '');
+  // v576: a favorited podcast (a series door) and a custom
+  // folder definition ride the same store, under their own
+  // key forms.
+  if (kind === 'series') return 'series:' + (id || '');
+  if (kind === 'folder') return 'folder:' + (id || '');
   return 'episode:' + (id || '');
 }
 function starEntryKey(e) { return starKeyOf(e && e.k, e && e.id, e && e.series); }
@@ -9891,6 +9926,21 @@ function starEntryForKey(key) {
     }
     return { k: 'podcast', id: seq, series: series, title: seq, sub: series, durationS: 0, imageUrl: '', block: 'Podcasts', url: null, date: state.presentedDay || '' };
   }
+  if (kind === 'series') {
+    // v576 (Q2 A): a series star resolves its door entry
+    // from the standing series payloads — the open series
+    // page first, then the index list. The door carries the
+    // show's own title and art; it opens the series and
+    // plays nothing itself.
+    var skey = String(key).slice('series:'.length);
+    if (state.podcasts && state.podcasts.series === skey) {
+      return { k: 'series', id: skey, title: state.podcasts.title || skey, sub: 'Podcast', durationS: 0, imageUrl: state.podcasts.showImageUrl || '', block: '', url: null, date: state.presentedDay || '' };
+    }
+    var srow = state.podcastsIndex && Array.isArray(state.podcastsIndex.seriesList)
+      ? state.podcastsIndex.seriesList.filter(function (x) { return x.series === skey; })[0] : null;
+    if (srow) return { k: 'series', id: skey, title: srow.title || skey, sub: 'Podcast', durationS: 0, imageUrl: srow.showImageUrl || '', block: '', url: null, date: state.presentedDay || '' };
+    return { k: 'series', id: skey, title: skey, sub: 'Podcast', durationS: 0, imageUrl: '', block: '', url: null, date: state.presentedDay || '' };
+  }
   var id = String(key).slice('episode:'.length);
   var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === id; })[0];
   if (d) return starEntryForDesc(d);
@@ -9953,6 +10003,7 @@ function starredLoad() {
     if (!res || !Array.isArray(res.starred)) return;
     if (res.starred.length) {
       starredSet(res.starred);
+      favPraylistSweep(); // v576: the reset rule reads the settled store too
       refreshStarChrome();
       paintFavoritesSurfaces();
       return;
@@ -9996,7 +10047,7 @@ document.addEventListener('click', function (ev) {
   var key = b.getAttribute('data-trackstar');
   // v547: a prayer's star seat toggles the BOOK favorite —
   // the prayer's own system; the track store never sees it.
-  if (key && key.indexOf('prayer:') === 0) { toggleBookFav(key.slice('prayer:'.length)); return; }
+  if (key && key.indexOf('prayer:') === 0) { toggleBookFav(key.slice('prayer:'.length)); paintFavoritesSurfaces(); return; }
   var entry = starEntryForKey(key);
   if (entry) toggleStar(entry);
 });
@@ -10005,6 +10056,10 @@ function starredDescFor(entry) {
   // sources first, the snapshot last (Plan §2.7). A prayer
   // entry opens its page instead and builds nothing here.
   if (!entry || entry.k === 'prayer') return null;
+  // v576: a series door and a folder definition are never
+  // playable — no descriptor stands for them, so Play all
+  // and Add all to queue pass them by.
+  if (entry.k === 'series' || entry.k === 'folder') return null;
   if (entry.k === 'podcast') {
     if (state.podcasts && state.podcasts.series === entry.series) {
       var pe = (state.podcasts.entries || []).filter(function (e) { return e.key === entry.id; })[0];
@@ -10099,21 +10154,23 @@ function openFavRowMenu(e, anchorEl) {
   // honored from here.
   var desc = starredDescFor(e);
   if (e.k === 'podcast') {
-    if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) { openPodRowMenu(e.id, anchorEl); return; }
+    if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) { openPodRowMenu(e.id, anchorEl, favMoveItems(e)); return; }
     var pitems = [];
     if (desc) pitems.push({ label: 'Share', act: function () { openShareSheet({ artHtml: rowArtHtml(desc), title: desc.title || e.title || '', line: 'Episode' + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''), url: desc.url || location.origin + '/' }); } });
     if (desc && desc.available && desc.url && queueKindIsPod() !== false) pitems.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
     pitems.push({ label: favPodListenedOf(e) ? 'Mark as not listened' : 'Mark as listened', act: function () { favPodToggle(e); } });
+    pitems.push.apply(pitems, favMoveItems(e)); // v576: Move to folder
     openSheetMenu(e.title || 'Options', pitems, anchorEl);
     return;
   }
   var live = (state.dayDescs || []).filter(function (x) { return x.episodeId === e.id; })[0];
-  if (live) { openDayRowMenu(live, anchorEl); return; }
+  if (live) { openDayRowMenu(live, anchorEl, favMoveItems(e)); return; }
   var items = [];
   if (desc) items.push({ label: 'Share', act: function () { shareTrackSheet(desc); } });
   if (desc && desc.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
   var sp = desc ? spotifyUrlFor(desc) : null;
   if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+  items.push.apply(items, favMoveItems(e)); // v576: Move to folder
   openSheetMenu(e.title || 'Options', items, anchorEl);
 }
 function starredRowHtml(e) {
@@ -10159,7 +10216,12 @@ function favoritesList() {
   // only. Adoption already filters prayer entries out of
   // the working copy (starredSet); the filter stands here
   // too, so no paint can ever carry one.
-  return (state.starred || []).filter(function (e) { return e && e.k !== 'prayer'; });
+  // v576: TRACK entries are exactly the episode and podcast
+  // kinds — series doors and folder definitions ride the
+  // same store but are not tracks, and every standing
+  // flat-list consumer (Play all, the reorder mode, the
+  // home folder row's count) reads tracks only.
+  return (state.starred || []).filter(function (e) { return e && (e.k === 'episode' || e.k === 'podcast'); });
 }
 function paintFavoritesFolderRow() {
   // v547: the folder row on the Listen home — ONE row in
@@ -10290,6 +10352,277 @@ function wireFavDrag(scope) {
     });
   });
 }
+/* ============================================================
+   v576 — Grouped Favorites (John's approval, package 66,
+   Ora thread 2026-11-21 09:13 CT; run level To Ship).
+   The Favorites page carries FOLDERS. The four named
+   folders are the DEFAULT folders (John, 09:01/09:03 CT):
+   Favorite Praylist · Favorite Catechesis · Favorite
+   Prayers · Favorite Podcasts. All folders stand EXPANDED
+   by default on page visit; each can be COLLAPSED. More
+   folders can be ADDED from the page's overflow (the header
+   menu's Favorites group); items MOVE between folders from
+   the item's own ⋮ menu.
+   Picks: Q1 B — the Podcasts folder holds favorited
+   podcasts as DOORS only; starred episodes stay out of it.
+   Q2 A — the podcast's star stands on the Podcasts list
+   card + the series page head (seriesStarBtnHtml /
+   seatSeriesStar). Q3 A — ONE list: the prayer book's
+   favorites ARE the Prayers folder (this REVERSES v547's
+   correction — the book's favorites excluded, tracks only;
+   John's new word governs), and its rows play the prayer's
+   audio (v573/v574: every prayer carries audio). Q4 C —
+   the Catechesis folder holds starred EPISODES only, of
+   any Catechesis kind; with Q1 B, a starred podcast episode
+   lands in Catechesis, never Podcasts. Q5 C — click-through
+   closes as decided-no-change (no build). Q6 B — rules
+   follow the FOLDER: an item moved out of Favorite Praylist
+   no longer resets after the day.
+   The store is the standing starred store in both shapes
+   (the server starred_tracks table · the v568 on-device
+   file): two new entry kinds ride it — 'series' (a door)
+   and 'folder' (a custom folder's definition) — and any
+   entry may carry a folder assignment. No migration:
+   entries are whole JSON in both stores.
+   ============================================================ */
+var FAV_FOLDER_DEFAULTS = [
+  { id: 'praylist', name: 'Favorite Praylist' },
+  { id: 'catechesis', name: 'Favorite Catechesis' },
+  { id: 'prayers', name: 'Favorite Prayers' },
+  { id: 'podcasts', name: 'Favorite Podcasts' }
+];
+var FAV_COLLAPSE_KEY = 'opn-favcollapse-v576';
+function favFolders() {
+  // The folder list: the four defaults, then the custom
+  // folders in store order (their definition entries).
+  var out = FAV_FOLDER_DEFAULTS.map(function (f) { return { id: f.id, name: f.name, custom: false }; });
+  (state.starred || []).forEach(function (e) {
+    if (e && e.k === 'folder' && typeof e.id === 'string' && e.id) out.push({ id: e.id, name: e.title || 'Folder', custom: true });
+  });
+  return out;
+}
+function favDerivedFolder(e) {
+  // Where an entry belongs with no assignment standing:
+  // a door to Podcasts (Q1 B) · a podcast episode to
+  // Catechesis (Q4 C) · a Novenas episode to Catechesis ·
+  // any other episode to Praylist (it was starred in the
+  // day).
+  if (!e) return 'praylist';
+  if (e.k === 'series') return 'podcasts';
+  if (e.k === 'podcast') return 'catechesis';
+  if (e.block === 'Novenas') return 'catechesis';
+  return 'praylist';
+}
+function favFolderOf(e) {
+  // The entry's EFFECTIVE folder: its standing assignment
+  // where one stands (and still names a folder that
+  // exists), else its derived folder. Q6 B reads this —
+  // the rules follow the folder.
+  if (e && typeof e.folder === 'string' && e.folder) {
+    var known = favFolders().some(function (f) { return f.id === e.folder; });
+    if (known) return e.folder;
+  }
+  return favDerivedFolder(e);
+}
+function favTracksIn(folderId) {
+  return favoritesList().filter(function (e) { return favFolderOf(e) === folderId; });
+}
+function favDoorsIn(folderId) {
+  return (state.starred || []).filter(function (e) { return e && e.k === 'series' && favFolderOf(e) === folderId; });
+}
+function favCollapseRead() {
+  try { var v = JSON.parse(localStorage.getItem(FAV_COLLAPSE_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; }
+}
+function favCollapsed(folderId) { return !!favCollapseRead()[folderId]; }
+function favToggleCollapse(folderId) {
+  // Collapse is device-local UI state (the played-marks
+  // precedent): it is not personal data and never syncs.
+  var map = favCollapseRead();
+  if (map[folderId]) delete map[folderId]; else map[folderId] = 1;
+  try { localStorage.setItem(FAV_COLLAPSE_KEY, JSON.stringify(map)); } catch (e) {}
+  paintFavoritesSurfaces();
+}
+function favPraylistSweep() {
+  // The reset rule (John, 09:01 CT; Q6 B form): a Favorite
+  // Praylist item resets after its day. An entry whose
+  // EFFECTIVE folder is Praylist and whose star date is an
+  // earlier day leaves the store, persisted through the
+  // standing whole-list write. An item moved out of
+  // Praylist never resets (its effective folder is no
+  // longer Praylist); an entry with no date never resets.
+  // Web mode never sweeps: the layer's list stands empty
+  // there and its writes are refused by design.
+  if (typeof opnMode === 'function' && opnMode() === 'web') return false;
+  var today = (state.dayPayload && state.dayPayload.date) || state.presentedDay || (typeof todayChicago === 'function' ? todayChicago() : '');
+  if (!today) return false;
+  var list = state.starred || [];
+  var kept = list.filter(function (e) {
+    if (!e || (e.k !== 'episode' && e.k !== 'podcast')) return true;
+    if (favFolderOf(e) !== 'praylist') return true;
+    if (typeof e.date !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(e.date)) return true;
+    return e.date >= today;
+  });
+  if (kept.length === list.length) return false;
+  starredSet(kept);
+  starredSync();
+  return true;
+}
+function favMoveToFolder(e, targetId) {
+  var key = starEntryKey(e);
+  var list = (state.starred || []).slice();
+  for (var i = 0; i < list.length; i++) {
+    if (starEntryKey(list[i]) === key) {
+      // Moving to the derived folder clears the assignment
+      // — the entry simply goes home.
+      if (targetId === favDerivedFolder(list[i])) delete list[i].folder;
+      else list[i].folder = targetId;
+      break;
+    }
+  }
+  starredSet(list);
+  paintFavoritesSurfaces();
+  starredSync();
+}
+function favMoveItems(e) {
+  // The Move items for an item's ⋮ menu: every folder but
+  // the Prayers folder (its content is definitional under
+  // Q3 A — the book's favorites ARE that folder) and the
+  // folder the item already stands in.
+  var cur = favFolderOf(e);
+  return favFolders().filter(function (f) { return f.id !== 'prayers' && f.id !== cur; }).map(function (f) {
+    return { label: 'Move to ' + f.name, act: function () { favMoveToFolder(e, f.id); } };
+  });
+}
+function favCreateFolder(name) {
+  var entry = { k: 'folder', id: 'f' + Date.now().toString(36), title: name, sub: '', durationS: 0, imageUrl: '', block: '', url: null, date: '' };
+  var list = (state.starred || []).slice();
+  list.push(entry);
+  starredSet(list);
+  paintFavoritesSurfaces();
+  starredSync();
+}
+function favRenameFolder(folderId, name) {
+  var list = (state.starred || []).slice();
+  list.forEach(function (e) { if (e && e.k === 'folder' && e.id === folderId) e.title = name; });
+  starredSet(list);
+  paintFavoritesSurfaces();
+  starredSync();
+}
+function favDeleteFolder(folderId) {
+  // The definition leaves; its items return to their
+  // derived folders (their assignments clear).
+  var list = (state.starred || []).filter(function (e) { return !(e && e.k === 'folder' && e.id === folderId); });
+  list.forEach(function (e) { if (e && e.folder === folderId) delete e.folder; });
+  starredSet(list);
+  paintFavoritesSurfaces();
+  starredSync();
+}
+function openFavNameSheet(folder) {
+  // The name sheet for New folder / Rename — the intention
+  // editor's form (one sheet, one input, one gold act).
+  var editing = !!folder;
+  var sheet = document.createElement('div'); sheet.className = 'sheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (editing ? 'Rename folder' : 'New folder') + '</h1></div>'
+    + '<label class="f">Name</label><input type="text" id="favf-name" placeholder="Folder name" value="' + (editing ? esc(folder.name) : '') + '">'
+    + '<p class="fieldnote" id="favf-note"></p><div style="margin-top:14px"><button class="btn gold" id="favf-save">' + (editing ? 'Save' : 'Create folder') + '</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  sheet.querySelector('#favf-save').addEventListener('click', function () {
+    var name = sheet.querySelector('#favf-name').value.trim();
+    if (!name) { sheet.querySelector('#favf-note').textContent = 'Give the folder a name first.'; return; }
+    if (editing) favRenameFolder(folder.id, name); else favCreateFolder(name);
+    sheet.remove();
+  });
+}
+function openFavFolderMenu(folder, anchorEl) {
+  openSheetMenu(folder.name, [
+    { label: 'Rename', act: function () { openFavNameSheet(folder); } },
+    { label: 'Delete folder', act: function () { favDeleteFolder(folder.id); } }
+  ], anchorEl);
+}
+function favDoorRowHtml(e) {
+  // A favorited podcast as a DOOR (Q1 B): art · title · the
+  // Podcast line; its tap opens the podcast (goSeries) and
+  // it plays nothing itself. Its star unstarring is the
+  // standing delegated act; its ⋮ carries Move.
+  var key = starEntryKey(e);
+  var art = '<span class="rowartwrap"><span class="rowart tile tone-navy"><span>\u266b</span></span>'
+    + (e.imageUrl ? '<img class="rowart" src="' + esc(e.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
+  var cluster = '<span class="prow-cluster">'
+    + '<button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button>'
+    + '<button class="iconbtn" data-favdoormenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
+  return '<div class="card trow prow" data-favdoor="' + esc(e.id) + '"><div class="row">'
+    + art
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title || '') + '</h3>' + cluster + '</div>'
+    + '<div class="meta">Podcast</div>'
+    + '</div></div></div>';
+}
+function openFavDoorMenu(e, anchorEl) {
+  var items = [{ label: 'Open podcast', act: function () { goSeries(e.id); } }];
+  items.push.apply(items, favMoveItems(e));
+  openSheetMenu(e.title || 'Podcast', items, anchorEl);
+}
+function favPrayerRowHtml(slug) {
+  // Q3 A: a Prayers folder row IS a book favorite. Its disc
+  // plays the prayer's audio (prayerAudioDesc — every
+  // prayer carries audio, v573/v574); its star is the
+  // book's own star (the delegated handler routes the
+  // prayer: key to toggleBookFav).
+  var f = bookFind(slug);
+  if (!f) return '';
+  var desc = prayerAudioDesc(f.prayer, 'en');
+  var meta = [f.category, desc && desc.durationS ? fmtDur(desc.durationS) : ''].filter(Boolean).join(' \u00b7 ');
+  var disc = desc ? '<button class="playbtn thumbdisc" data-favprayerplay="' + esc(slug) + '" aria-label="Play">&#9654;</button>' : '';
+  var artDesc = { episodeId: 'prayer:' + slug + ':en', kind: 'prayer', title: f.prayer.title, block: '', imageUrl: '/logo.png' };
+  var cluster = '<span class="prow-cluster">'
+    + '<button class="trackstar" data-trackstar="prayer:' + esc(slug) + '" aria-label="Star">\u2605</button>'
+    + '<button class="iconbtn" data-favprayermenu="' + esc(slug) + '" aria-label="More options">\u22ee</button></span>';
+  return '<div class="card trow prow"><div class="row">'
+    + rowArtHtml(artDesc, disc)
+    + '<div class="grow"><div class="titlerow"><h3>' + esc(f.prayer.title) + '</h3>' + cluster + '</div>'
+    + (meta ? '<div class="meta">' + esc(meta) + '</div>' : '')
+    + '</div></div></div>';
+}
+function openFavPrayerMenu(slug, anchorEl) {
+  // A prayer row's ⋮: open the prayer, or take it out of
+  // the book's favorites (which is what the Prayers folder
+  // lists). No Move — the prayer's home is definitional
+  // under Q3 A.
+  openSheetMenu('Prayer', [
+    { label: 'Open prayer', act: function () { openPrayerPage(slug); } },
+    { label: 'Remove from favorites', act: function () { toggleBookFav(slug); paintFavoritesSurfaces(); } }
+  ], anchorEl);
+}
+function favFolderEmptyLine(folder) {
+  if (folder.id === 'praylist') return 'No favorites for today yet \u2014 tap \u2606 on a track in today\u2019s prayers.';
+  if (folder.id === 'catechesis') return 'No starred episodes yet \u2014 tap \u2606 on any Catechesis episode.';
+  if (folder.id === 'prayers') return 'No favorite prayers yet \u2014 tap \u2606 on a prayer in the book.';
+  if (folder.id === 'podcasts') return 'No favorite podcasts yet \u2014 tap \u2606 on a podcast in the Podcasts list.';
+  return 'Nothing filed here yet \u2014 move an item here from its \u22ee menu.';
+}
+function favFolderSectionHtml(folder) {
+  var tracks = folder.id === 'prayers' ? [] : favTracksIn(folder.id);
+  var doors = folder.id === 'prayers' ? [] : favDoorsIn(folder.id);
+  var prayers = folder.id === 'prayers' ? bookFavsList() : [];
+  var count = tracks.length + doors.length + prayers.length;
+  var collapsed = favCollapsed(folder.id);
+  var html = '<div class="favfolder" data-favfolder="' + esc(folder.id) + '">'
+    + '<div class="favfolder-head"><button class="favfolder-chev" data-favcollapse="' + esc(folder.id) + '" aria-label="' + (collapsed ? 'Expand' : 'Collapse') + ' ' + esc(folder.name) + '">' + (collapsed ? '\u25b8' : '\u25be') + '</button>'
+    + '<h2 class="sectionhead grow">' + esc(folder.name) + '</h2>'
+    + '<span class="meta">' + count + '</span>'
+    + (folder.custom ? '<button class="iconbtn" data-favfoldermenu="' + esc(folder.id) + '" aria-label="Folder options">\u22ee</button>' : '')
+    + '</div>';
+  if (!collapsed) {
+    if (!count) html += '<div class="card"><div class="meta">' + favFolderEmptyLine(folder) + '</div></div>';
+    else {
+      html += doors.map(favDoorRowHtml).join('');
+      html += tracks.map(starredRowHtml).join('');
+      html += prayers.map(favPrayerRowHtml).join('');
+    }
+  }
+  return html + '</div>';
+}
+
 function paintFavoritesPage(day) {
   // v568: on the public web build, favorites live in the app
   // — the pointer card stands above the (empty) list.
@@ -10304,6 +10637,28 @@ function paintFavoritesPage(day) {
   // v550: in reorder mode the page paints the mode's own
   // form — the bar reads Reorder with Done at its right,
   // the rows carry handles alone (favReorderRowHtml).
+  // v576: the Praylist reset sweep runs at the head of the
+  // paint (its Q6 B form lives in favPraylistSweep), and
+  // the book loads are kicked so the Prayers folder's rows
+  // can resolve their prayers — the settle repaints through
+  // paintFavoritesSurfaces while this page stands.
+  favPraylistSweep();
+  if (opnMode() !== 'web') {
+    // The book favorites load kicks once (the standing
+    // discipline: the load adopts the server list; toggles
+    // then write through it) — a repaint never re-reads
+    // over a toggle whose write is still landing.
+    if (!Array.isArray(state.bookFavs)) bookFavsLoad().then(function () { paintFavoritesSurfaces(); });
+    if (!state.book) {
+      api('/api/prayer/book').then(function (res) {
+        if (res && Array.isArray(res.groups) && res.groups.length) {
+          state.book = { groups: res.groups };
+          bookWriteCopy(res.groups);
+          paintFavoritesSurfaces();
+        }
+      }).catch(function () {});
+    }
+  }
   var list = favoritesList();
   if (favReorder) {
     paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Reorder', backAttrs: 'data-back="__favorites"', rightHtml: '<button class="btn ghost small" id="fav-done">Done</button>' }), '__favorites');
@@ -10328,12 +10683,11 @@ function paintFavoritesPage(day) {
   // universal menu's Favorites group (openHeaderMenu).
   paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"',
     rightHtml: list.length ? '<button class="playbtn small" id="starred-playall" aria-label="Play all of Favorites">&#9654;</button>' : '' }), '__favorites');
+  // v576: the list area paints the FOLDER SECTIONS — the
+  // four default folders, then the customs, each expanded
+  // unless this device has it collapsed (favFolderSectionHtml).
   var html = opnFavCard + '<div id="favorites-list">';
-  if (!list.length) {
-    html += '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
-  } else {
-    html += list.map(starredRowHtml).join('');
-  }
+  html += favFolders().map(favFolderSectionHtml).join('');
   html += '</div>';
   view.innerHTML = html;
   var pa = document.getElementById('starred-playall');
@@ -10368,6 +10722,41 @@ function paintFavoritesPage(day) {
       var t = state.readTracks[b.getAttribute('data-read')];
       if (t) openRead(t);
     });
+  });
+  // v576: the folder wiring — collapse chevrons, custom
+  // folder menus, door taps + menus, prayer plays + menus.
+  view.querySelectorAll('[data-favcollapse]').forEach(function (b) {
+    b.addEventListener('click', function () { favToggleCollapse(b.getAttribute('data-favcollapse')); });
+  });
+  view.querySelectorAll('[data-favfoldermenu]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = favFolders().filter(function (x) { return x.id === b.getAttribute('data-favfoldermenu'); })[0];
+      if (f) openFavFolderMenu(f, b);
+    });
+  });
+  view.querySelectorAll('[data-favdoor]').forEach(function (c) {
+    c.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-trackstar]') || ev.target.closest('[data-favdoormenu]')) return;
+      goSeries(c.getAttribute('data-favdoor'));
+    });
+  });
+  view.querySelectorAll('[data-favdoormenu]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var e = starredEntryByKey(b.getAttribute('data-favdoormenu'));
+      if (e) openFavDoorMenu(e, b);
+    });
+  });
+  view.querySelectorAll('[data-favprayerplay]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var f = bookFind(b.getAttribute('data-favprayerplay'));
+      var d = f && prayerAudioDesc(f.prayer, 'en');
+      if (d) playTrack(d);
+    });
+  });
+  view.querySelectorAll('[data-favprayermenu]').forEach(function (b) {
+    b.addEventListener('click', function () { openFavPrayerMenu(b.getAttribute('data-favprayermenu'), b); });
   });
   list.forEach(function (e) { if (e.k === 'podcast') favPodWarm(e.series); });
 }
@@ -12939,6 +13328,11 @@ function openHeaderMenu() {
     // mode itself, and only while the list holds a track.
     if (!favReorder && favoritesList().length) items.push({ label: 'Add all to queue', act: function () { starredAddAll(); } });
     if (!favReorder && favoritesList().length >= 2) items.push({ label: 'Reorder', act: function () { enterFavReorder(); } });
+    // v576: New folder — the page overflow's folder act
+    // (John, 09:03 CT: more folders are added from the
+    // overflow menu). It stands outside the reorder mode;
+    // the name sheet mints the folder.
+    if (!favReorder) items.push({ label: 'New folder', act: function () { openFavNameSheet(null); } });
   } else if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
     // A block page: Sort · Mark all · Share · Open in
     // Spotify (where a URL stands) · Download all — the
@@ -13219,7 +13613,7 @@ function shareTrackSheet(t) {
    offered) · Open in Spotify (where a URL stands). The
    Download item stands only while the episode is not already
    on the device — the cache read lands before the menu opens. */
-function openDayRowMenu(t, anchorEl) {
+function openDayRowMenu(t, anchorEl, extraItems) {
   var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
   // v542 §2 (Part 2): Add to queue stands for an available
   // track when no podcast queue stands (the kind bound, §1);
@@ -13229,6 +13623,10 @@ function openDayRowMenu(t, anchorEl) {
     if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
     var sp = spotifyUrlFor(t);
     if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+    // v576: a caller may append its own items (the Favorites
+    // page's Move items) — standing callers pass none and
+    // the menu renders exactly as before.
+    if (extraItems && extraItems.length) items.push.apply(items, extraItems);
     openSheetMenu(t.title || 'Options', items, anchorEl);
   };
   if (!t.available || !('caches' in window)) { build(true); return; }
@@ -17139,7 +17537,7 @@ function podDlTapNative(key, res, entry) {
    Mark as listened / not listened. State reads podDlStateMap,
    kept fresh by refreshPodDlStates. */
 var podDlStateMap = {};
-function openPodRowMenu(key, anchorEl) {
+function openPodRowMenu(key, anchorEl, extraItems) {
   var res = state.podcasts;
   if (!res || !res.entries) return;
   var e = res.entries.filter(function (x) { return x.key === key; })[0];
@@ -17162,6 +17560,9 @@ function openPodRowMenu(key, anchorEl) {
     else if (e.url && st.standing && st.manual) items.push({ label: 'Remove download', act: function () { podDlTap(key); } });
   }
   items.push({ label: e.listened ? 'Mark as not listened' : 'Mark as listened', act: function () { podToggleMark(key); } });
+  // v576: a caller may append its own items (the Favorites
+  // page's Move items) — standing callers pass none.
+  if (extraItems && extraItems.length) items.push.apply(items, extraItems);
   openSheetMenu(e.title, items, anchorEl);
 }
 function refreshPodDlStates() {

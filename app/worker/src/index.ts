@@ -1600,9 +1600,15 @@ async function starredTracks(env: Env): Promise<Record<string, unknown>[]> {
 // v546: the one star key — 'episode:<episodeId>' ·
 // 'podcast:<series>:<seqKey>' · 'prayer:<slug>'. The client
 // builds the same string; the PUT validates against it.
+// v576: two more kinds ride the same store — 'series:<key>'
+// (a favorited podcast, a door in the Favorite Podcasts
+// folder) and 'folder:<id>' (a custom Favorites folder
+// definition). Entries stay whole JSON; no migration.
 function starKeyOfEntry(e: Record<string, unknown>): string {
   if (e.k === "podcast") return "podcast:" + String(e.series ?? "") + ":" + String(e.id ?? "");
   if (e.k === "prayer") return "prayer:" + String(e.id ?? "");
+  if (e.k === "series") return "series:" + String(e.id ?? "");
+  if (e.k === "folder") return "folder:" + String(e.id ?? "");
   return "episode:" + String(e.id ?? "");
 }
 
@@ -3583,7 +3589,7 @@ export default {
           const entries: { key: string; entry: Record<string, unknown> }[] = [];
           for (const raw of body.starred) {
             const e = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-            if (e.k !== "episode" && e.k !== "podcast" && e.k !== "prayer") return err(400, "bad star kind");
+            if (e.k !== "episode" && e.k !== "podcast" && e.k !== "prayer" && e.k !== "series" && e.k !== "folder") return err(400, "bad star kind");
             if (typeof e.id !== "string" || !e.id || e.id.length > 200) return err(400, "bad star id");
             if (typeof e.title !== "string" || e.title.length > 300) return err(400, "bad star title");
             if (e.k === "podcast" && (typeof e.series !== "string" || !e.series)) return err(400, "podcast star needs its series");
