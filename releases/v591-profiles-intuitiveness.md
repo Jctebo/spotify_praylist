@@ -436,3 +436,49 @@ remain in the client, unreached · private-shape parity for
 the new routes is code + harness level (the private host's
 Access gate blocks a live fetch from this seat, the
 standing posture).
+
+## §5 Ship (chain-v591-ship2, successor seat, 2026-11-21)
+
+The original build chain completed Plan · Implement ·
+Review and the merge, then died during Ship with no
+report; this seat finished the ship on the verified state
+— nothing was rebuilt.
+
+- Merge 66f8b79 (release/v591 → main) + pin bump bb5bc92
+  (ora-pro-nobis-v591-1) stand on GitHub main, pushed
+  through the Git Data API, byte-identical — main pushed ·
+  remote in sync (66f8b79).
+- harness-v591: **32 ok / 0 not ok** on the merged tree
+  (66f8b79, the clean ship worktree) — the equivalence legs
+  A1/A2 green: a Salesian weekday and a Sunday under the
+  seeded map compose byte-identical to the v590 ship.
+- Pre-deploy live read: production at Worker **faf9b32b**
+  (the v590 build) at 100% — the rollback target. Dry run
+  clean (exit 0), then deploy via the connector-surrogate
+  wrangler (deploy-app-v591-ship.py) from the clean ship
+  worktree at 66f8b79.
+- Worker ora-pro-nobis-app now serves version **2774044f**
+  at 100%. Served proofs: the served sw.js carries pin
+  ora-pro-nobis-v591-1; the served app.js parses whole
+  (1,146,364 bytes) and carries the v591 surface — the
+  blocks-first screen, the profile chips row, real
+  switches, Save Profile / Save New / Reset to Default,
+  the day mapping, the contents Add / remove / stepper
+  acts, Configure plan — and no "Current" as a
+  configuration state; the live public day payload for
+  2026-11-21 stands in the public shape (personal folds
+  client-side); personal-data reads on the public host
+  stand empty (profiles [], intentions refused with the
+  personal-in-app pointer, by design); the served client
+  is the same tree the harness equivalence legs ran on.
+- Row 1565 Live · What's New 406 · Ship phase record 2380 ·
+  Ship contract 792 · intake 1105 closed Done.
+- Field legs standing open for John (his verdicts, not
+  claimed): first open after the update — the blocks stand
+  first with their contents open underneath; edit The
+  Salesian Way and Save Profile writes it back; Save New
+  mints a new profile under his name for it; Reset returns
+  a way to its designed config; Sunday follows The
+  Benedictine Way from the day map, and the map entry can
+  be changed; a contents item drags by its steppers, a
+  prayer adds into a block, an item removes from its row.
