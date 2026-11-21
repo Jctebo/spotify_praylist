@@ -1403,8 +1403,935 @@ function presentedDayWord() {
   if (!p) return 'Today';
   return p === todayChicago() ? 'Today' : shortDayLabel(p);
 }
+/* ---------------- v568: local personal data ----------------
+   The public build carries NO account service: personal data
+   (intentions, Conscience, profiles, config, favorites and
+   starred tracks) lives in ONE on-device personal-data file,
+   written only through this layer. Modes (opnMode):
+   - 'server': John's private serving (Access session) — the
+     standing server records, untouched; this layer never runs.
+   - 'device': the public build inside the native shell — every
+     personal-data call is answered HERE from the on-device
+     file; no per-user server endpoint is called.
+   - 'web': the public build in a browser — personal data is
+     never stored in the browser; reads answer from an
+     ephemeral empty file, writes are refused, and the personal
+     surfaces carry the app-pointer card (opnPointerHtml).
+   The file IS the file v570's export/import carries:
+   { format: 'orapronobis-personal-data', formatVersion: 1,
+     sections: {...} }. PIN material NEVER enters the file: the
+   on-device PIN state stands in its own store (OPN_PIN_KEY),
+   outside the sections, and no export path reads it. Playback
+   state (podcast listens, positions) is device state, not
+   personal data — it stands in OPN_PLAYBACK_KEY, likewise
+   outside the file. */
+var OPN_DATA_KEY = 'opn-personal-data-v1';
+var OPN_PIN_KEY = 'opn-pin-local-v1';
+var OPN_PLAYBACK_KEY = 'opn-playback-local-v1';
+var OPN_DRAWS_KEY = 'opn-draws-local-v1';
+var OPN_BLOCKS = ['Novenas', 'Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+var OPN_DAY_RULES = ['daily', 'weekdays', 'weekends', 'sundays', 'fridays', 'fallback-only'];
+var OPN_COMMANDMENT_CATS = ['Commandment I', 'Commandment II', 'Commandment III', 'Commandment IV', 'Commandment V', 'Commandment VI and IX', 'Commandment VII', 'Commandment VIII', 'Commandment X'];
+var OPN_RECOVERY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function opnShape() {
+  try { return window.__OPN_SHAPE__ === 'public' ? 'public' : 'private'; } catch (e) { return 'private'; }
+}
+function opnMode() {
+  if (opnShape() !== 'public') return 'server';
+  return oraInShell() ? 'device' : 'web';
+}
+function opnNowISO() { return new Date().toISOString(); }
+function opnErr(status, message) {
+  var e = new Error(message);
+  e.status = status;
+  e.data = { error: message };
+  return e;
+}
+function opnClone(x) { return JSON.parse(JSON.stringify(x)); }
+function opnDateLabel(date) {
+  var p = String(date || '').split('-').map(Number);
+  var dt = new Date(Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1, 12));
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(dt);
+}
+function opnPointerHtml() {
+  return '<div class="card opn-pointer"><h3>Your prayers live in the app</h3>'
+    + '<p>Intentions, your examination of conscience, profiles and favorites are kept on your phone, in the Ora Pro Nobis app — never on this website, and never behind an account. Open the app on your phone to see and change them.</p></div>';
+}
+function opnDefaultDoc() {
+  return {
+    format: 'orapronobis-personal-data', formatVersion: 1, exportedAt: null,
+    sections: {
+      intentions: [],
+      conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
+      profiles: {
+        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: true, version: 1, picks: {}
+      },
+      config: {
+        sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
+        blockOrder: null,
+        massSeats: { before: [], after: [], afterMass: [], preMass: [] },
+        universalPrayer: {},
+        addenda: {}
+      },
+      favorites: { book: [], starred: [] }
+    },
+    seq: { intention: 1, run: 1, entry: 1, confession: 1 }
+  };
+}
+var opnDocCache = null;
+function opnDoc() {
+  if (opnDocCache) return opnDocCache;
+  if (opnMode() !== 'web') {
+    try {
+      var raw = localStorage.getItem(OPN_DATA_KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && d.format === 'orapronobis-personal-data' && d.sections) { opnDocCache = d; return d; }
+      }
+    } catch (e) {}
+  }
+  opnDocCache = opnDefaultDoc();
+  opnSave();
+  return opnDocCache;
+}
+function opnSave() {
+  if (opnMode() === 'web') return; // web never stores personal data
+  try { localStorage.setItem(OPN_DATA_KEY, JSON.stringify(opnDocCache)); } catch (e) {}
+}
+/* ---- on-device PIN (never in the personal-data file) ---- */
+var opnPinTokens = {};
+function opnPinLoad() {
+  if (opnMode() === 'web') return null;
+  try { var r = localStorage.getItem(OPN_PIN_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+}
+function opnPinSave(s) {
+  try {
+    if (s) localStorage.setItem(OPN_PIN_KEY, JSON.stringify(s));
+    else localStorage.removeItem(OPN_PIN_KEY);
+  } catch (e) {}
+}
+function opnHex(buf) {
+  return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+}
+function opnPbkdf2(secret, saltHex, iterations) {
+  var salt = new Uint8Array(saltHex.match(/.{2}/g).map(function (h) { return parseInt(h, 16); }));
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(secret), 'PBKDF2', false, ['deriveBits'])
+    .then(function (key) {
+      return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' }, key, 256);
+    })
+    .then(function (bits) { return opnHex(bits); });
+}
+function opnRandomHex(n) {
+  var b = new Uint8Array(n);
+  crypto.getRandomValues(b);
+  return opnHex(b);
+}
+function opnRecoveryCode() {
+  var chars = '';
+  while (chars.length < 12) {
+    var b = crypto.getRandomValues(new Uint8Array(1))[0];
+    if (b < 256 - (256 % 32)) chars += OPN_RECOVERY_ALPHABET[b % 32];
+  }
+  return chars.slice(0, 4) + '-' + chars.slice(4, 8) + '-' + chars.slice(8, 12);
+}
+function opnNormalizeRecovery(code) { return String(code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase(); }
+function opnPinRetryAfter(st) {
+  if (!st || !st.nextAllowedAt) return 0;
+  var ms = Date.parse(st.nextAllowedAt) - Date.now();
+  return ms > 0 ? Math.ceil(ms / 1000) : 0;
+}
+function opnPinRegisterFailure(st) {
+  st.failedAttempts = (st.failedAttempts || 0) + 1;
+  var wait = 0;
+  if (st.failedAttempts >= 5) {
+    wait = Math.min(30 * Math.pow(2, st.failedAttempts - 5), 300);
+    st.nextAllowedAt = new Date(Date.now() + wait * 1000).toISOString();
+  }
+  opnPinSave(st);
+  return { attemptsRemaining: Math.max(0, 5 - st.failedAttempts), retryAfterSeconds: wait };
+}
+function opnPinIssueToken() {
+  var token = opnRandomHex(32);
+  var expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+  opnPinTokens[token] = expiresAt;
+  return { token: token, expiresAt: expiresAt };
+}
+function opnPinTokenValid() {
+  if (!pinToken) return false;
+  var exp = opnPinTokens[pinToken];
+  return !!exp && Date.parse(exp) > Date.now();
+}
+function opnPinHashPair(secret) {
+  var salt = opnRandomHex(16);
+  return opnPbkdf2(secret, salt, 100000).then(function (hash) {
+    return { hash: hash, salt: salt, iterations: 100000 };
+  });
+}
+function opnPinSet(pin) {
+  return opnPinHashPair(pin).then(function (pc) {
+    var recoveryCode = opnRecoveryCode();
+    return opnPinHashPair(opnNormalizeRecovery(recoveryCode)).then(function (rc) {
+      opnPinSave({
+        pinHash: pc.hash, pinSalt: pc.salt, pinIterations: pc.iterations,
+        recoveryHash: rc.hash, recoverySalt: rc.salt, recoveryIterations: rc.iterations,
+        failedAttempts: 0, nextAllowedAt: null, createdAt: opnNowISO()
+      });
+      var issued = opnPinIssueToken();
+      return { recoveryCode: recoveryCode, token: issued.token, expiresAt: issued.expiresAt };
+    });
+  });
+}
+function opnPinGateCheck() {
+  var st = opnPinLoad();
+  if (st && !opnPinTokenValid()) throw opnErr(403, 'pin_required');
+}
+/* ---- device playback state (outside the file) ---- */
+function opnPlayback() {
+  try {
+    var r = localStorage.getItem(OPN_PLAYBACK_KEY);
+    if (r) { var p = JSON.parse(r); if (p && p.listens) return p; }
+  } catch (e) {}
+  return { listens: {}, positions: {}, dayPositions: {} };
+}
+function opnPlaybackSave(p) {
+  try { localStorage.setItem(OPN_PLAYBACK_KEY, JSON.stringify(p)); } catch (e) {}
+}
+/* ---- local per-track intention draws (outside the file) ---- */
+function opnDraws() {
+  try {
+    var r = localStorage.getItem(OPN_DRAWS_KEY);
+    if (r) { var p = JSON.parse(r); if (p && typeof p === 'object') return p; }
+  } catch (e) {}
+  return {};
+}
+function opnDrawsSave(p) {
+  try { localStorage.setItem(OPN_DRAWS_KEY, JSON.stringify(p)); } catch (e) {}
+}
+var OPN_SEED_PROFILES = [{"key": "little-way", "name": "The Little Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Night"], "layers": {"novenas": {"on": false}, "podcasts": {"on": false, "series": []}}}, {"key": "salesian", "name": "The Salesian Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midday", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}, {"key": "benedictine", "name": "The Benedictine Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}];
+var OPN_SEED_SOURCES = [{"sourceKey": "morning-prayer", "name": "Morning Prayer", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-rosary", "name": "Daily Rosary", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 6, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "novenas", "name": "Novenas", "family": "own", "block": "Novenas", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "auxilium-christianorum", "name": "Auxilium Christianorum", "family": "own", "block": "Afternoon", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-reflection", "name": "Daily Reflection", "family": "own", "block": "Night", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "do-invitatory", "name": "Divine Office \u2014 Invitatory", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-invitatory", "role": "primary"}, {"sourceKey": "do-morning-prayer", "name": "Divine Office \u2014 Morning Prayer", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "primary"}, {"sourceKey": "sth-lauds", "name": "Sing the Hours \u2014 Lauds", "family": "external", "block": "Morning", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "fallback"}, {"sourceKey": "do-midmorning-prayer", "name": "Divine Office \u2014 Midmorning Prayer", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midmorning-prayer", "role": "primary"}, {"sourceKey": "do-midday-prayer", "name": "Divine Office \u2014 Midday Prayer", "family": "external", "block": "Midday", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-midday-prayer", "role": "primary"}, {"sourceKey": "do-midafternoon-prayer", "name": "Divine Office \u2014 Midafternoon Prayer", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midafternoon-prayer", "role": "primary"}, {"sourceKey": "saint-of-the-day", "name": "Saint of the Day", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-saint-of-the-day", "role": "primary"}, {"sourceKey": "do-office-of-readings", "name": "Divine Office \u2014 Office of Readings", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-office-of-readings", "role": "primary"}, {"sourceKey": "do-evening-prayer", "name": "Divine Office \u2014 Evening Prayer", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "primary"}, {"sourceKey": "sth-vespers", "name": "Sing the Hours \u2014 Vespers", "family": "external", "block": "Evening", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "fallback"}, {"sourceKey": "do-night-prayer", "name": "Divine Office \u2014 Night Prayer", "family": "external", "block": "Night", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-night-prayer", "role": "primary"}, {"sourceKey": "usccb-daily-readings", "name": "USCCB Daily Readings", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-usccb-readings", "role": "primary"}, {"sourceKey": "daily-tv-mass", "name": "Daily TV Mass", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-daily-tv-mass", "role": "primary"}, {"sourceKey": "fr-mike-homily", "name": "Fr. Mike Sunday Homily", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-fr-mike-homily", "role": "primary"}, {"sourceKey": "barron-sermon", "name": "Bp. Barron Sunday Sermon", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": "ext-barron-sermon", "role": "primary"}, {"sourceKey": "stations-of-the-cross", "name": "Stations of the Cross / Lenten Devotion", "family": "unplaced", "block": "", "dayRule": "fridays", "sortOrder": null, "enabled": 0, "slotId": null, "role": "primary"}, {"sourceKey": "daily-gospel-exegesis", "name": "Daily Gospel Exegesis", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-gospel-exegesis", "role": "primary"}, {"sourceKey": "marian-antiphon-midday", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Midday", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon-evening", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Evening", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "the-ai-signal", "name": "The AI Signal", "family": "own", "block": "The AI Signal", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}];
+var OPN_SEED_PROMPTS = [{"id": 1, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you omit to confess a mortal sin, either intentionally or through forgetfulness?", "sort": 10, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 2, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you intentionally neglect to say the penance which was imposed on you, or were you so careless as to forget it?", "sort": 20, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 3, "category": "Preliminary Examination", "commandment_no": null, "text": "Have you carried out the resolutions you made at your last confession or have you paid no heed at all to them?", "sort": 30, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 4, "category": "Commandment I", "commandment_no": 1, "text": "Have you doubted in matters of faith? Murmured against God at your adversity or at the prosperity of others? Despaired of His mercy?", "sort": 110, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 5, "category": "Commandment I", "commandment_no": 1, "text": "Have you believed in fortune-tellers or consulted them?", "sort": 120, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 6, "category": "Commandment I", "commandment_no": 1, "text": "Have you gone to places of worship belonging to other denominations?", "sort": 130, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 7, "category": "Commandment I", "commandment_no": 1, "text": "Have you recommended yourself daily to God? Neglected your morning or night prayers? Omitted religious duties or practices through motives of human respect?", "sort": 140, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 8, "category": "Commandment I", "commandment_no": 1, "text": "Have you rashly presumed upon God's forbearance in order to commit sin?", "sort": 150, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 9, "category": "Commandment I", "commandment_no": 1, "text": "Have you read books, papers, and periodicals of anti-Catholic or atheistic tendency? Made use of superstitious practices? Spoken with levity or irreverence of priests, Religious, or sacred objects?", "sort": 160, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 10, "category": "Commandment II", "commandment_no": 2, "text": "Have you taken the name of God in vain? Profaned anything relating to religion?", "sort": 210, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 11, "category": "Commandment II", "commandment_no": 2, "text": "Have you sworn falsely, rashly, or in slight and trivial matters? Cursed yourself or others, or any creature? Angered others so as to make them swear, or blaspheme?", "sort": 220, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 12, "category": "Commandment III", "commandment_no": 3, "text": "Have you kept holy the Lord's Day, and all other days commanded to be kept holy? Bought or sold things, not of necessity, on that day? Done or commanded some servile work not of necessity? Missed Mass or been wilfully distracted during Mass? Talked, gazed, or laughed in the church? Profaned the day by dancing, drinking, gambling, or in other ways?", "sort": 310, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 13, "category": "Commandment IV", "commandment_no": 4, "text": "Have you honored your parents, superiors, and masters, according to your just duty? Deceived them? Disobeyed them?", "sort": 410, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 14, "category": "Commandment IV", "commandment_no": 4, "text": "Have you failed in due reverence to aged persons?", "sort": 420, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 15, "category": "Commandment V", "commandment_no": 5, "text": "Have you procured, desired, or hastened the death of any one? Borne hatred? Oppressed any one? Desired revenge? Not forgiven injuries? Refused to speak to others? Used provoking language? Injured others? Caused enmity between others?", "sort": 510, "source": "Lasance, My Prayer Book (1908), pp. 348-349"}, {"id": 16, "category": "Commandment VI and IX", "commandment_no": 6, "text": "Have you been guilty of lascivious dressing? Been in lewd company? Read immodest books? Been guilty of unchaste songs, discourses, words, or actions? Wilfully entertained impure thoughts or desires?", "sort": 610, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 17, "category": "Commandment VII", "commandment_no": 7, "text": "Have you been guilty of stealing, or of deceit in buying, or selling, in regard to wares, prices, weights, or measures? Have you wilfully damaged another man's goods, or negligently spoiled them?", "sort": 710, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 18, "category": "Commandment VIII", "commandment_no": 8, "text": "Have you borne false witness? Called injurious names? Disclosed another's sins? Flattered others? Judged rashly?", "sort": 810, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 19, "category": "Commandment X", "commandment_no": 10, "text": "Have you coveted unjustly anything that belongs to another?", "sort": 1010, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 20, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you gone to confession at least once a year? Received holy communion during Easter-time?", "sort": 1110, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 21, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you violated the fasts of the Church, or eaten flesh-meat on prohibited days?", "sort": 1120, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 22, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you sinned against any other commandment of the Church?", "sort": 1130, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 23, "category": "Capital Sins", "commandment_no": null, "text": "Examine yourself also in regard to the Seven Capital Sins and the nine ways of being accessary to another's sin.", "sort": 1210, "source": "Lasance, My Prayer Book (1908), p. 349"}];
+var OPN_SEED_GUIDE = [{"step_no": 1, "title": "Opening", "body": "Approach the confessional with the same recollectedness and reverence as would fill your heart if Christ our Lord were seated there in person ready to hear your confession. The priest is really the representative of Christ. When you kneel down, say: Bless me, Father, for I have sinned, and then begin the Confiteor, proceeding as far as \"through my fault,\" etc. Then tell when you made your last confession and begin the avowal of your sins."}, {"step_no": 2, "title": "The list", "body": "Confess all your sins with a contrite and humble heart, and conclude thus: For these and all the sins of my past life, especially my sins of \u2014 , I am heartily sorry, beg pardon of God, and absolution of you, my Father; then finish the Confiteor: Therefore I beseech the blessed Mary ever Virgin, blessed Michael the archangel, blessed John the Baptist, the holy apostles Peter and Paul, and all the saints, to pray to the Lord our God for me."}, {"step_no": 3, "title": "Act of Contrition", "body": "O my God, confessing my guilt and with a contrite heart I kneel before Thee and implore Thee to look upon me according to the multitude of Thy mercies. I detest and am heartily sorry for all my sins, not only because I dread the loss of heaven and the pain of hell, but also and principally because by them I have offended Thee, Who art infinitely good and deserving of all my love. I firmly resolve, with the help of Thy grace, to confess my sins and to amend my life. I acknowledge Thee, O God, to be the Supreme Good, and I love Thee with all my heart. Be merciful to me, a poor sinner. I beseech Thee, by the passion and death of Jesus Christ, Thy Son, to forgive me my sins. Amen."}, {"step_no": 4, "title": "Penance", "body": "Listen then with humility and docility to the instruction of your confessor, and during this time avoid all recurrence as to the confession itself; remembering that sins forgotten after a serious examination are really comprised in the absolution. Accept with submission the penance imposed, and if any obstacle that you foresee will prevent your accomplishing it, state this respectfully."}, {"step_no": 5, "title": "Final blessing", "body": "While the priest pronounces the words of absolution, endeavor to excite an act of perfect contrition."}];
+/* ---- the local personal-data router ----
+   Answers every personal-data call from the on-device file,
+   in the standing server contracts' own shapes, so no surface
+   changes how it renders. In web mode, reads answer from the
+   ephemeral default file and every write is refused with the
+   app-pointer error. */
+function opnIsPersonalPath(path) {
+  var p = String(path || '').split('?')[0];
+  return p.indexOf('/api/prayer/intentions') === 0
+    || p.indexOf('/api/prayer/profiles') === 0
+    || p === '/api/prayer/book/favorites'
+    || p === '/api/prayer/starred'
+    || p === '/api/prayer/mass-personal-prayer'
+    || p === '/api/prayer/mass-universal-prayer'
+    || p === '/api/player/day-additions'
+    || p === '/api/player/block-order'
+    || p === '/api/player/source-settings'
+    || p.indexOf('/api/exam/') === 0
+    || p.indexOf('/api/confession') === 0
+    || p.indexOf('/api/pin/') === 0
+    || p === '/api/player/track-draws'
+    || p === '/api/prayer/redraw'
+    || p === '/api/player/podcasts/mark'
+    || p === '/api/player/podcasts/unmark'
+    || p === '/api/player/podcasts/position'
+    || p === '/api/player/day-position';
+}
+var opnBookSlugs = null; // learned from the book read, for local slug validation
+var opnSolemnity = {};    // date -> true, learned from the day payload
+function opnProfilesPayload(date) {
+  var P = opnDoc().sections.profiles;
+  if (!P.list.length) return { ok: true, profiles: [], state: null, effective: null };
+  var byKey = function (k) { return P.list.filter(function (x) { return x.key === k; })[0] || null; };
+  var pick = byKey(P.picks[date]);
+  var dow = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)))).getUTCDay();
+  var dayKind = pick ? null : (dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday'));
+  var profile = pick, resolvedBy = pick ? 'pick' : null;
+  if (!profile && P.dayRule && (dayKind === 'sunday' || dayKind === 'solemnity')) {
+    var ben = byKey('benedictine');
+    if (ben) { profile = ben; resolvedBy = 'rule'; }
+  }
+  if (!profile) {
+    profile = byKey(P.standingKey) || P.list[0];
+    resolvedBy = 'standing';
+  }
+  if (!dayKind) dayKind = dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday');
+  return {
+    ok: true,
+    profiles: P.list.map(function (p) {
+      return { key: p.key, name: p.name, honorLine: p.honorLine, kind: p.kind, coreBlocks: p.coreBlocks.slice(),
+        layers: { novenas: { on: !!p.layers.novenas.on }, podcasts: { on: !!p.layers.podcasts.on, series: (p.layers.podcasts.series || []).slice() } } };
+    }),
+    state: { standingKey: P.standingKey, dayRule: P.dayRule, version: P.version },
+    effective: {
+      key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: resolvedBy, dayKind: dayKind,
+      coreBlocks: profile.coreBlocks.slice(),
+      layers: [{ key: 'novenas', on: !!profile.layers.novenas.on }, { key: 'podcasts', on: !!profile.layers.podcasts.on, series: (profile.layers.podcasts.series || []).slice() }],
+      version: P.version
+    }
+  };
+}
+function opnCheckLayers(layers) {
+  var l = layers;
+  if (!l || typeof l !== 'object') throw opnErr(400, 'layers required');
+  if (!l.novenas || typeof l.novenas !== 'object') throw opnErr(400, 'layers.novenas required');
+  if (typeof l.novenas.on !== 'boolean') throw opnErr(400, 'layers.novenas.on must be a boolean');
+  if (!l.podcasts || typeof l.podcasts !== 'object') throw opnErr(400, 'layers.podcasts required');
+  if (typeof l.podcasts.on !== 'boolean') throw opnErr(400, 'layers.podcasts.on must be a boolean');
+  if (!Array.isArray(l.podcasts.series)) throw opnErr(400, 'layers.podcasts.series must be an array');
+  var series = [];
+  l.podcasts.series.forEach(function (raw) {
+    if (typeof raw !== 'string') throw opnErr(400, 'layers.podcasts.series must be strings');
+    if (series.indexOf(raw) < 0) series.push(raw);
+  });
+  return { novenas: { on: l.novenas.on ? 1 : 0 }, podcasts: { on: l.podcasts.on ? 1 : 0, series: series } };
+}
+function opnLayersOut(stored) {
+  return { novenas: { on: !!(stored && stored.novenas && stored.novenas.on) },
+    podcasts: { on: !!(stored && stored.podcasts && stored.podcasts.on), series: stored && stored.podcasts && Array.isArray(stored.podcasts.series) ? stored.podcasts.series.slice() : [] } };
+}
+function opnExamPrompts() {
+  var over = opnDoc().sections.conscience.promptTexts || {};
+  return OPN_SEED_PROMPTS.map(function (p) {
+    var c = opnClone(p);
+    if (over[p.id]) c.text = over[p.id];
+    return c;
+  });
+}
+function opnExamToday() {
+  var C = opnDoc().sections.conscience;
+  var date = todayChicago();
+  var run = null;
+  C.runs.forEach(function (r) { if (r.date === date && (!run || r.id > run.id)) run = r; });
+  if (!run) {
+    run = { id: opnDoc().seq.run++, date: date, state: 'open', opened_at: opnNowISO(), closed_at: null };
+    C.runs.push(run);
+    opnSave();
+  }
+  var prompts = opnExamPrompts();
+  var entries = C.entries.filter(function (e) { return e.run_id === run.id; })
+    .sort(function (a, b) { return (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : a.id - b.id); });
+  var cats = [];
+  prompts.forEach(function (p) { if (cats.indexOf(p.category) < 0) cats.push(p.category); });
+  var dayIdx = Math.floor(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) / 86400000);
+  return { ok: true, date: date, dateLabel: opnDateLabel(date), run: opnClone(run), prompts: prompts, entries: opnClone(entries), categories: cats, focusCategory: OPN_COMMANDMENT_CATS[dayIdx % OPN_COMMANDMENT_CATS.length] };
+}
+function opnElapsedText(lastDate, today) {
+  if (!lastDate) return 'No confession recorded yet in this app';
+  var days = Math.round((Date.parse(today + 'T12:00:00Z') - Date.parse(lastDate + 'T12:00:00Z')) / 86400000);
+  if (days <= 0) return 'You went to confession today';
+  if (days === 1) return 'It has been 1 day since your last confession';
+  if (days < 14) return 'It has been ' + days + ' days since your last confession';
+  var weeks = Math.floor(days / 7);
+  return 'It has been ' + weeks + ' week' + (weeks === 1 ? '' : 's') + ' since your last confession';
+}
+function opnConfessionPayload() {
+  var C = opnDoc().sections.conscience;
+  var today = todayChicago();
+  var guide = C.guideSteps ? opnClone(C.guideSteps) : opnClone(OPN_SEED_GUIDE);
+  var confs = C.confessions.slice().sort(function (a, b) { return (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id); });
+  var last = confs[0] || null;
+  var runDate = {};
+  C.runs.forEach(function (r) { runDate[r.id] = r.date; });
+  var open = C.entries.filter(function (e) { return !e.confession_id && e.kind === 'sin'; })
+    .sort(function (a, b) { return (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : a.id - b.id); });
+  var catOrder = ['Preliminary Examination'].concat(OPN_COMMANDMENT_CATS, ['Precepts of the Church', 'Capital Sins', 'Anything else']);
+  var groups = {}, order = [];
+  var perPrompt = {};
+  open.forEach(function (e) {
+    if (!groups[e.category]) { groups[e.category] = { category: e.category, entries: [], repeatPrompts: 0 }; order.push(e.category); }
+    groups[e.category].entries.push({ id: e.id, text: e.text, date: runDate[e.run_id] || '' });
+    if (e.prompt_id) { var k = e.category + ':' + e.prompt_id; perPrompt[k] = (perPrompt[k] || 0) + 1; }
+  });
+  Object.keys(perPrompt).forEach(function (k) {
+    if (perPrompt[k] > 1) { var cat = k.split(':')[0]; if (groups[cat]) groups[cat].repeatPrompts++; }
+  });
+  var prep = order.map(function (c) { return groups[c]; }).sort(function (a, b) {
+    var ia = catOrder.indexOf(a.category), ib = catOrder.indexOf(b.category);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  return {
+    ok: true,
+    elapsed: opnElapsedText(last ? last.date : null, today),
+    lastConfession: last ? { id: last.id, date: last.date, note: last.note } : null,
+    guide: guide,
+    penance: last ? { confessionId: last.id, date: last.date, text: last.penance_text, done_at: last.penance_done_at } : null,
+    prep: prep,
+    history: confs.map(function (h) {
+      return { id: h.id, date: h.date, note: h.note, penance_text: h.penance_text, penance_done_at: h.penance_done_at,
+        entryCount: C.entries.filter(function (e) { return e.confession_id === h.id; }).length };
+    })
+  };
+}
+function opnLocalApi(path, opts, mode) {
+  return Promise.resolve().then(function () {
+    var raw = String(path || '');
+    var q = raw.indexOf('?');
+    var p = q >= 0 ? raw.slice(0, q) : raw;
+    var params = new URLSearchParams(q >= 0 ? raw.slice(q + 1) : '');
+    var method = (opts && opts.method) || 'GET';
+    var body = {};
+    if (opts && opts.body) { try { body = JSON.parse(opts.body); } catch (e) { body = {}; } }
+    var write = method !== 'GET';
+    if (mode === 'web' && write && p.indexOf('/api/player/podcasts/') !== 0 && p !== '/api/player/day-position' && p !== '/api/player/track-draws') {
+      throw opnErr(403, 'Your personal prayer data lives in the app on your phone — open Ora Pro Nobis there to change it.');
+    }
+    var D = opnDoc(), S = D.sections;
+    /* intentions */
+    if (p === '/api/prayer/intentions' && method === 'GET') {
+      var list = S.intentions.slice().sort(function (a, b) {
+        var sa = a.status === 'active' ? 0 : 1, sb = b.status === 'active' ? 0 : 1;
+        if (sa !== sb) return sa - sb;
+        var pa = a.priority === 'H' ? 0 : a.priority === 'M' ? 1 : 2, pb = b.priority === 'H' ? 0 : b.priority === 'M' ? 1 : 2;
+        if (pa !== pb) return pa - pb;
+        return a.id - b.id;
+      }).map(function (i) { var c = opnClone(i); c.drawnCount = 0; c.lastDrawn = null; return c; });
+      return { ok: true, intentions: list };
+    }
+    if (p === '/api/prayer/intentions' && method === 'POST') {
+      var text = typeof body.text === 'string' ? body.text.trim() : '';
+      if (!text) throw opnErr(400, 'text required');
+      var pri = ['H', 'M', 'L'].indexOf(body.priority) >= 0 ? body.priority : 'M';
+      var row = { id: D.seq.intention++, text: text, priority: pri, status: 'active', created_at: opnNowISO() };
+      S.intentions.push(row);
+      opnSave();
+      return { ok: true, id: row.id, redrawn: false };
+    }
+    var im = /^\/api\/prayer\/intentions\/(\d+)(\/status)?$/.exec(p);
+    if (im) {
+      var iid = Number(im[1]);
+      var irow = S.intentions.filter(function (x) { return x.id === iid; })[0];
+      if (im[2] && method === 'POST') {
+        if (['active', 'retired'].indexOf(body.status) < 0) throw opnErr(400, 'bad status');
+        if (irow) irow.status = body.status;
+        opnSave();
+        return { ok: true, redrawn: false };
+      }
+      if (method === 'PATCH') {
+        if (body.priority !== undefined && ['H', 'M', 'L'].indexOf(body.priority) < 0) throw opnErr(400, 'bad priority');
+        if (irow) {
+          if (typeof body.text === 'string') irow.text = body.text;
+          if (body.priority !== undefined) irow.priority = body.priority;
+        }
+        opnSave();
+        return { ok: true, redrawn: false };
+      }
+      if (method === 'DELETE') {
+        S.intentions = S.intentions.filter(function (x) { return x.id !== iid; });
+        opnSave();
+        return { ok: true, redrawn: false };
+      }
+    }
+    /* profiles */
+    if (p === '/api/prayer/profiles' && method === 'GET') return opnProfilesPayload(todayChicago());
+    if (p.indexOf('/api/prayer/profiles/') === 0 && method === 'PUT') {
+      var P = S.profiles;
+      var bump = function () { P.version++; opnSave(); return opnProfilesPayload(todayChicago()); };
+      var findP = function (k) { return P.list.filter(function (x) { return x.key === k; })[0]; };
+      if (p === '/api/prayer/profiles/state') {
+        if (body.standingKey === undefined && body.dayRule === undefined) throw opnErr(400, 'standingKey or dayRule required');
+        if (body.standingKey !== undefined) {
+          if (typeof body.standingKey !== 'string' || !findP(body.standingKey)) throw opnErr(400, 'bad profile ' + (typeof body.standingKey === 'string' ? body.standingKey : '(empty)'));
+          P.standingKey = body.standingKey;
+        }
+        if (body.dayRule !== undefined) {
+          if (typeof body.dayRule !== 'boolean') throw opnErr(400, 'dayRule must be a boolean');
+          P.dayRule = body.dayRule;
+        }
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/day-pick') {
+        var ddate = typeof body.date === 'string' ? body.date : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(ddate)) throw opnErr(400, 'date must be YYYY-MM-DD');
+        if (body.profileKey === null) { delete P.picks[ddate]; return bump(); }
+        if (typeof body.profileKey !== 'string' || !findP(body.profileKey)) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
+        P.picks[ddate] = body.profileKey;
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/layers') {
+        var lp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
+        if (!lp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
+        lp.layers = opnLayersOut(opnCheckLayers(body.layers));
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/save') {
+        var name = typeof body.name === 'string' ? body.name.trim() : '';
+        if (!name) throw opnErr(400, 'name required');
+        if (name.length > 80) throw opnErr(400, 'name too long');
+        var honor = typeof body.honorLine === 'string' ? body.honorLine.trim() : '';
+        if (honor.length > 160) throw opnErr(400, 'honor line too long');
+        if (!Array.isArray(body.coreBlocks)) throw opnErr(400, 'coreBlocks must be an array');
+        var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+        var core = [];
+        body.coreBlocks.forEach(function (rawB) {
+          if (typeof rawB !== 'string') throw opnErr(400, 'bad block ' + String(rawB));
+          if (rawB === 'Novenas' || rawB === 'Podcasts') throw opnErr(400, rawB + ' is a layer, not a core block');
+          if (HOURS.indexOf(rawB) < 0) throw opnErr(400, 'bad block ' + (rawB || '(empty)'));
+          if (core.indexOf(rawB) < 0) core.push(rawB);
+        });
+        if (!core.length) throw opnErr(400, 'a profile needs at least one core block');
+        var layers = opnLayersOut(opnCheckLayers(body.layers));
+        if (typeof body.key === 'string' && body.key !== '') {
+          var ep = findP(body.key);
+          if (!ep) throw opnErr(400, 'bad profile ' + body.key);
+          if (ep.kind === 'default') throw opnErr(400, 'the named profiles cannot be changed — save as new');
+          ep.name = name; ep.honorLine = honor; ep.coreBlocks = core; ep.layers = layers;
+          return bump();
+        }
+        var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (!slug) slug = 'profile';
+        var key = slug;
+        for (var n = 2; findP(key); n++) key = slug + '-' + n;
+        P.list.push({ key: key, name: name, honorLine: honor, kind: 'custom', coreBlocks: core, layers: layers });
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/delete') {
+        var dp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
+        if (!dp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
+        if (dp.kind === 'default') throw opnErr(400, 'the named profiles cannot be deleted');
+        P.list = P.list.filter(function (x) { return x.key !== dp.key; });
+        Object.keys(P.picks).forEach(function (dt) { if (P.picks[dt] === dp.key) delete P.picks[dt]; });
+        if (P.standingKey === dp.key) P.standingKey = 'salesian';
+        return bump();
+      }
+    }
+    /* favorites + starred */
+    if (p === '/api/prayer/book/favorites') {
+      if (method === 'GET') return { ok: true, favorites: S.favorites.book.slice() };
+      if (!Array.isArray(body.favorites)) throw opnErr(400, 'favorites required');
+      var favs = [];
+      body.favorites.forEach(function (rawF) {
+        var s = String(rawF == null ? '' : rawF);
+        if (opnBookSlugs && !opnBookSlugs[s]) throw opnErr(400, 'bad slug ' + (s || '(empty)'));
+        if (favs.indexOf(s) < 0) favs.push(s);
+      });
+      S.favorites.book = favs;
+      opnSave();
+      return { ok: true, favorites: favs.slice() };
+    }
+    if (p === '/api/prayer/starred') {
+      if (method === 'GET') return { ok: true, starred: opnClone(S.favorites.starred) };
+      if (!Array.isArray(body.starred)) throw opnErr(400, 'starred required');
+      if (body.starred.length > 500) throw opnErr(400, 'starred list too long');
+      var seenK = {}, entries = [];
+      body.starred.forEach(function (rawE) {
+        var e = rawE && typeof rawE === 'object' ? rawE : {};
+        if (e.k !== 'episode' && e.k !== 'podcast' && e.k !== 'prayer') throw opnErr(400, 'bad star kind');
+        if (typeof e.id !== 'string' || !e.id || e.id.length > 200) throw opnErr(400, 'bad star id');
+        if (typeof e.title !== 'string' || e.title.length > 300) throw opnErr(400, 'bad star title');
+        if (e.k === 'podcast' && (typeof e.series !== 'string' || !e.series)) throw opnErr(400, 'podcast star needs its series');
+        if (e.k === 'prayer' && opnBookSlugs && !opnBookSlugs[e.id]) throw opnErr(400, 'bad prayer slug ' + e.id);
+        if (e.url !== undefined && e.url !== null && (typeof e.url !== 'string' || e.url.length > 2000)) throw opnErr(400, 'bad star url');
+        var k = e.k === 'podcast' ? 'podcast:' + e.series + ':' + e.id : e.k === 'prayer' ? 'prayer:' + e.id : 'episode:' + e.id;
+        if (seenK[k]) return;
+        seenK[k] = 1;
+        entries.push(opnClone(e));
+      });
+      S.favorites.starred = entries;
+      opnSave();
+      return { ok: true, starred: opnClone(entries) };
+    }
+    /* Mass seats + Universal Prayer */
+    if (p === '/api/prayer/mass-personal-prayer') {
+      var seats = S.config.massSeats;
+      var seatsOut = function () { return { ok: true, before: seats.before.slice(), after: seats.after.slice(), afterMass: seats.afterMass.slice(), preMass: seats.preMass.slice() }; };
+      if (method === 'GET') return seatsOut();
+      var seatMap = { before: 'before', after: 'after', aftermass: 'afterMass', premass: 'preMass' };
+      if (!seatMap[body.seat]) throw opnErr(400, 'seat must be before, after, aftermass, or premass');
+      if (!Array.isArray(body.slugs)) throw opnErr(400, 'slugs must be an array');
+      var sl = [];
+      body.slugs.forEach(function (rawS) {
+        if (typeof rawS !== 'string') throw opnErr(400, 'slugs must be strings');
+        if (sl.indexOf(rawS) >= 0) throw opnErr(400, 'duplicate slug ' + (rawS || '(empty)'));
+        if (opnBookSlugs && !opnBookSlugs[rawS]) throw opnErr(400, 'bad slug ' + (rawS || '(empty)'));
+        sl.push(rawS);
+      });
+      seats[seatMap[body.seat]] = sl;
+      opnSave();
+      return seatsOut();
+    }
+    if (p === '/api/prayer/mass-universal-prayer') {
+      if (method === 'GET') {
+        var gd = params.get('date') || '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(gd)) throw opnErr(400, 'date must be YYYY-MM-DD');
+        return { ok: true, date: gd, intentions: (S.config.universalPrayer[gd] || []).slice() };
+      }
+      var ud = typeof body.date === 'string' ? body.date : '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(ud)) throw opnErr(400, 'date must be YYYY-MM-DD');
+      if (!Array.isArray(body.intentions)) throw opnErr(400, 'intentions must be an array');
+      if (body.intentions.length > 50) throw opnErr(400, 'too many intentions (max 50)');
+      var ul = [];
+      body.intentions.forEach(function (rawU) {
+        if (typeof rawU !== 'string') throw opnErr(400, 'intentions must be strings');
+        var t = rawU.trim();
+        if (!t) throw opnErr(400, 'an intention must not be empty');
+        if (t.length > 1000) throw opnErr(400, 'an intention is too long (max 1000 chars)');
+        ul.push(t);
+      });
+      S.config.universalPrayer[ud] = ul;
+      opnSave();
+      return { ok: true, date: ud, intentions: ul.slice() };
+    }
+    /* day additions (addenda) */
+    if (p === '/api/player/day-additions' && method === 'PUT') {
+      var today = todayChicago();
+      if (body.date !== today) throw opnErr(400, 'date must be today');
+      if (!Array.isArray(body.additions)) throw opnErr(400, 'additions required');
+      if (body.additions.length > 75) throw opnErr(400, 'too many additions');
+      var seenA = {}, arows = [];
+      body.additions.forEach(function (rawA) {
+        var a = rawA || {};
+        var block = String(a.block == null ? '' : a.block);
+        if (OPN_BLOCKS.indexOf(block) < 0) throw opnErr(400, 'bad block ' + (block || '(empty)'));
+        var aslug = String(a.slug == null ? '' : a.slug);
+        var alang = String(a.lang == null ? '' : a.lang);
+        var akind = a.kind === 'reading' ? 'reading' : 'prayer';
+        var aref = null;
+        if (akind === 'reading') {
+          if (aslug !== 'daily-readings') throw opnErr(400, 'bad reading ' + (aslug || '(empty)'));
+          if (typeof a.ref !== 'string' || !a.ref || a.ref.length > 200) throw opnErr(400, 'bad reading ref');
+          aref = a.ref;
+        }
+        var aafter = null;
+        if (a.afterId === null || a.afterId === undefined) aafter = null;
+        else if (typeof a.afterId === 'string' && a.afterId.length <= 200) aafter = a.afterId;
+        else throw opnErr(400, 'bad afterId');
+        var akey = akind === 'reading' ? 'reading:' + aref : aslug + ':' + alang;
+        if (seenA[akey]) return;
+        seenA[akey] = 1;
+        arows.push({ block: block, slug: aslug, lang: alang, afterId: aafter, kind: akind, ref: aref });
+      });
+      S.config.addenda[today] = arows;
+      opnSave();
+      return { ok: true, date: today, additions: opnClone(arows) };
+    }
+    /* block order + source settings */
+    if (p === '/api/player/block-order') {
+      if (method === 'GET') return { ok: true, order: S.config.blockOrder ? S.config.blockOrder.slice() : null };
+      if (!Array.isArray(body.order)) throw opnErr(400, 'order required');
+      var names = [];
+      body.order.forEach(function (rawN) {
+        var nm = String(rawN == null ? '' : rawN);
+        if (OPN_BLOCKS.indexOf(nm) < 0) throw opnErr(400, 'bad block ' + (nm || '(empty)'));
+        if (names.indexOf(nm) < 0) names.push(nm);
+      });
+      S.config.blockOrder = names;
+      opnSave();
+      return { ok: true, order: names.slice() };
+    }
+    if (p === '/api/player/source-settings') {
+      var SS = S.config.sourceSettings;
+      if (method === 'GET') return { ok: true, version: SS.version, sources: opnClone(SS.sources) };
+      if (!Array.isArray(body.sources)) throw opnErr(400, 'sources required');
+      var storedKeys = {};
+      SS.sources.forEach(function (r) { storedKeys[r.sourceKey] = r; });
+      var seenS = {};
+      body.sources.forEach(function (s) {
+        var k = String(s.sourceKey == null ? '' : s.sourceKey);
+        if (!storedKeys[k]) throw opnErr(400, 'unknown sourceKey ' + (k || '(empty)'));
+        if (seenS[k]) throw opnErr(400, 'duplicate sourceKey ' + k);
+        seenS[k] = 1;
+        if (!(s.block === '' || OPN_BLOCKS.indexOf(s.block) >= 0 || (k === 'the-ai-signal' && s.block === 'The AI Signal') || (['usccb-daily-readings', 'daily-tv-mass', 'fr-mike-homily', 'barron-sermon'].indexOf(k) >= 0 && s.block === 'Mass and Homilies'))) throw opnErr(400, 'bad block for ' + k);
+        if (OPN_DAY_RULES.indexOf(s.dayRule) < 0) throw opnErr(400, 'bad dayRule for ' + k);
+        if (s.enabled !== 0 && s.enabled !== 1) throw opnErr(400, 'bad enabled for ' + k);
+      });
+      if (Object.keys(seenS).length !== SS.sources.length) throw opnErr(400, 'the row set must be exactly the stored set (no creates, no deletes)');
+      var counters = {};
+      body.sources.forEach(function (s) {
+        var r = storedKeys[s.sourceKey];
+        r.block = s.block == null ? '' : s.block;
+        r.dayRule = s.dayRule == null ? 'daily' : s.dayRule;
+        r.enabled = s.enabled == null ? 0 : s.enabled;
+        if (r.enabled === 1 && r.block !== '') {
+          counters[r.block] = (counters[r.block] || 0) + 1;
+          r.sortOrder = counters[r.block];
+        } else r.sortOrder = null;
+      });
+      SS.version++;
+      opnSave();
+      return { ok: true, version: SS.version };
+    }
+    /* PIN */
+    if (p === '/api/pin/state') {
+      var pst = opnPinLoad();
+      return { pinSet: !!pst, retryAfterSeconds: pst ? opnPinRetryAfter(pst) : 0 };
+    }
+    if (p === '/api/pin/set' && method === 'POST') {
+      var spin = typeof body.pin === 'string' ? body.pin : '';
+      if (!/^\d{4,8}$/.test(spin)) throw opnErr(400, 'pin must be 4-8 digits');
+      if (opnPinLoad()) throw opnErr(409, 'pin already set');
+      return opnPinSet(spin);
+    }
+    if (p === '/api/pin/verify' && method === 'POST') {
+      var vst = opnPinLoad();
+      if (!vst) throw opnErr(409, 'no pin set');
+      var vwait = opnPinRetryAfter(vst);
+      if (vwait > 0) { var ve = opnErr(429, 'wait'); ve.data = { error: 'wait', retryAfterSeconds: vwait }; throw ve; }
+      var vpin = typeof body.pin === 'string' ? body.pin : '';
+      return opnPbkdf2(vpin, vst.pinSalt, vst.pinIterations).then(function (derived) {
+        if (derived !== vst.pinHash) {
+          var f = opnPinRegisterFailure(vst);
+          var out = { error: 'wrong pin', attemptsRemaining: f.attemptsRemaining };
+          if (f.retryAfterSeconds) out.retryAfterSeconds = f.retryAfterSeconds;
+          var we = opnErr(401, 'wrong pin');
+          we.data = out;
+          throw we;
+        }
+        vst.failedAttempts = 0;
+        vst.nextAllowedAt = null;
+        opnPinSave(vst);
+        return opnPinIssueToken();
+      });
+    }
+    if (p === '/api/pin/change' && method === 'POST') {
+      var cst = opnPinLoad();
+      if (!cst) throw opnErr(409, 'no pin set');
+      if (!opnPinTokenValid()) throw opnErr(403, 'pin_required');
+      var cpin = typeof body.pin === 'string' ? body.pin : '';
+      if (!/^\d{4,8}$/.test(cpin)) throw opnErr(400, 'pin must be 4-8 digits');
+      opnPinTokens = {};
+      return opnPinSet(cpin);
+    }
+    if (p === '/api/pin/remove' && method === 'POST') {
+      if (!opnPinLoad()) throw opnErr(409, 'no pin set');
+      if (!opnPinTokenValid()) throw opnErr(403, 'pin_required');
+      opnPinSave(null);
+      opnPinTokens = {};
+      return { ok: true };
+    }
+    if (p === '/api/pin/recover' && method === 'POST') {
+      var rst = opnPinLoad();
+      if (!rst) throw opnErr(409, 'no pin set');
+      var npin = typeof body.newPin === 'string' ? body.newPin : '';
+      if (!/^\d{4,8}$/.test(npin)) throw opnErr(400, 'pin must be 4-8 digits');
+      var rwait = opnPinRetryAfter(rst);
+      if (rwait > 0) { var re = opnErr(429, 'wait'); re.data = { error: 'wait', retryAfterSeconds: rwait }; throw re; }
+      var code = opnNormalizeRecovery(typeof body.code === 'string' ? body.code : '');
+      return opnPbkdf2(code, rst.recoverySalt, rst.recoveryIterations).then(function (derived) {
+        if (derived !== rst.recoveryHash) {
+          var f2 = opnPinRegisterFailure(rst);
+          var out2 = { error: 'wrong code', attemptsRemaining: f2.attemptsRemaining };
+          if (f2.retryAfterSeconds) out2.retryAfterSeconds = f2.retryAfterSeconds;
+          var we2 = opnErr(401, 'wrong code');
+          we2.data = out2;
+          throw we2;
+        }
+        opnPinTokens = {};
+        return opnPinSet(npin);
+      });
+    }
+    /* Conscience: examination + confession (PIN-gated like the server) */
+    if (p.indexOf('/api/exam/') === 0 || p.indexOf('/api/confession') === 0) opnPinGateCheck();
+    var C = S.conscience;
+    if (p === '/api/exam/today') return opnExamToday();
+    if (p === '/api/exam/reflections') {
+      var runDate2 = {};
+      C.runs.forEach(function (r) { runDate2[r.id] = r.date; });
+      var refl = C.entries.filter(function (e) { return e.kind === 'reflection'; })
+        .sort(function (a, b) {
+          var da = runDate2[a.run_id] || '', db = runDate2[b.run_id] || '';
+          if (da !== db) return da < db ? 1 : -1;
+          if (a.created_at !== b.created_at) return a.created_at < b.created_at ? -1 : 1;
+          return a.id - b.id;
+        });
+      var groups = [];
+      refl.forEach(function (e) {
+        var g = groups.length ? groups[groups.length - 1] : null;
+        if (!g || g.date !== (runDate2[e.run_id] || '')) { g = { date: runDate2[e.run_id] || '', entries: [] }; groups.push(g); }
+        g.entries.push({ id: e.id, text: e.text, category: e.category, created_at: e.created_at });
+      });
+      return { ok: true, groups: groups };
+    }
+    if (p === '/api/exam/entries' && method === 'POST') {
+      var etext = typeof body.text === 'string' ? body.text.trim() : '';
+      if (!etext) throw opnErr(400, 'text required');
+      var erun = C.runs.filter(function (r) { return r.id === (body.runId || 0); })[0];
+      if (!erun) throw opnErr(404, 'run not found');
+      if (erun.state !== 'open') throw opnErr(409, 'run is closed');
+      var ecat = typeof body.category === 'string' ? body.category : '';
+      if (body.promptId) {
+        var pr = opnExamPrompts().filter(function (x) { return x.id === body.promptId; })[0];
+        if (!pr) throw opnErr(400, 'bad prompt');
+        ecat = pr.category;
+      }
+      if (!ecat) throw opnErr(400, 'category required');
+      var erow = { id: D.seq.entry++, run_id: erun.id, prompt_id: body.promptId || null, category: ecat, text: etext, kind: body.kind === 'reflection' ? 'reflection' : 'sin', confession_id: null, created_at: opnNowISO() };
+      C.entries.push(erow);
+      opnSave();
+      return { ok: true, id: erow.id };
+    }
+    var edm = /^\/api\/exam\/entries\/(\d+)$/.exec(p);
+    if (edm && method === 'DELETE') {
+      var eid = Number(edm[1]);
+      var eent = C.entries.filter(function (x) { return x.id === eid; })[0];
+      var erun2 = eent ? C.runs.filter(function (r) { return r.id === eent.run_id; })[0] : null;
+      if (!eent || !erun2 || erun2.state !== 'open') throw opnErr(409, 'entry is not on an open run');
+      C.entries = C.entries.filter(function (x) { return x.id !== eid; });
+      opnSave();
+      return { ok: true };
+    }
+    if (p === '/api/exam/runs' && method === 'POST') {
+      var tdate = todayChicago();
+      var latest = null;
+      C.runs.forEach(function (r) { if (r.date === tdate && (!latest || r.id > latest.id)) latest = r; });
+      if (latest && latest.state === 'open') return { ok: true, run: opnClone(latest), created: false };
+      var nrun = { id: D.seq.run++, date: tdate, state: 'open', opened_at: opnNowISO(), closed_at: null };
+      C.runs.push(nrun);
+      opnSave();
+      return { ok: true, run: opnClone(nrun), created: true };
+    }
+    var rcm = /^\/api\/exam\/runs\/(\d+)\/close$/.exec(p);
+    if (rcm && method === 'POST') {
+      var crun = C.runs.filter(function (r) { return r.id === Number(rcm[1]); })[0];
+      if (crun && crun.state === 'open') { crun.state = 'closed'; crun.closed_at = opnNowISO(); opnSave(); }
+      return { ok: true };
+    }
+    if (p === '/api/exam/prompts' && method === 'PUT') {
+      if (!Array.isArray(body.prompts)) throw opnErr(400, 'prompts required');
+      body.prompts.forEach(function (pr2) {
+        if (pr2 && pr2.id && typeof pr2.text === 'string') C.promptTexts[pr2.id] = pr2.text;
+      });
+      opnSave();
+      return { ok: true };
+    }
+    if (p === '/api/confession' && method === 'GET') return opnConfessionPayload();
+    if (p === '/api/confession/made' && method === 'POST') {
+      var cdate = String(body.date == null ? '' : body.date);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(cdate)) throw opnErr(400, 'date must be YYYY-MM-DD');
+      var crow = { id: D.seq.confession++, date: cdate, note: typeof body.note === 'string' ? body.note : '', penance_text: null, penance_done_at: null, created_at: opnNowISO() };
+      C.confessions.push(crow);
+      var closed = 0;
+      C.entries.forEach(function (e) { if (!e.confession_id && e.kind === 'sin') { e.confession_id = crow.id; closed++; } });
+      opnSave();
+      return { ok: true, id: crow.id, entriesClosed: closed };
+    }
+    var cdm = /^\/api\/confession\/entries\/(\d+)$/.exec(p);
+    if (cdm && method === 'DELETE') {
+      var cid = Number(cdm[1]);
+      var cent = C.entries.filter(function (x) { return x.id === cid && x.kind === 'sin'; })[0];
+      if (!cent) throw opnErr(404, 'entry not found');
+      C.entries = C.entries.filter(function (x) { return x.id !== cid; });
+      opnSave();
+      return { ok: true };
+    }
+    if (p === '/api/confession/penance' && method === 'POST') {
+      var ptext = typeof body.text === 'string' ? body.text.trim() : '';
+      if (!ptext) throw opnErr(400, 'text required');
+      var lastC = opnConfessionPayload().history[0];
+      if (!lastC) throw opnErr(400, 'record a confession first');
+      var crow2 = C.confessions.filter(function (x) { return x.id === lastC.id; })[0];
+      crow2.penance_text = ptext;
+      crow2.penance_done_at = null;
+      opnSave();
+      return { ok: true };
+    }
+    if (p === '/api/confession/penance/done' && method === 'POST') {
+      var lastC2 = opnConfessionPayload().history[0];
+      if (!lastC2) throw opnErr(400, 'no confession recorded');
+      var crow3 = C.confessions.filter(function (x) { return x.id === lastC2.id; })[0];
+      crow3.penance_done_at = opnNowISO();
+      opnSave();
+      return { ok: true };
+    }
+    if (p === '/api/confession/guide' && method === 'PUT') {
+      if (!Array.isArray(body.steps)) throw opnErr(400, 'steps required');
+      var guide = C.guideSteps ? opnClone(C.guideSteps) : opnClone(OPN_SEED_GUIDE);
+      body.steps.forEach(function (s) {
+        if (!s || !s.step_no) return;
+        var ex = guide.filter(function (g) { return g.step_no === s.step_no; })[0];
+        if (ex) { ex.title = s.title || ''; ex.body = s.body || ''; }
+        else guide.push({ step_no: s.step_no, title: s.title || '', body: s.body || '' });
+      });
+      guide.sort(function (a, b) { return a.step_no - b.step_no; });
+      C.guideSteps = guide;
+      opnSave();
+      return { ok: true };
+    }
+    /* per-track intention draws from the LOCAL pool */
+    if (p === '/api/player/track-draws' && method === 'POST') {
+      var draws = opnDraws();
+      var dkey = String(body.date || '');
+      if (!draws[dkey]) draws[dkey] = {};
+      var pool = S.intentions.filter(function (x) { return x.status === 'active'; });
+      var out = {};
+      (Array.isArray(body.keys) ? body.keys : []).forEach(function (k) {
+        if (draws[dkey][k]) { out[k] = { text: draws[dkey][k] }; return; }
+        if (!pool.length) return;
+        var pickI = pool[Math.floor(Math.random() * pool.length)];
+        draws[dkey][k] = pickI.text;
+        out[k] = { text: pickI.text };
+      });
+      opnDrawsSave(draws);
+      return { ok: true, date: dkey, draws: out };
+    }
+    if (p === '/api/prayer/redraw') return { ok: true, redrawn: false };
+    /* playback state stays on the device */
+    if (p === '/api/player/podcasts/mark' || p === '/api/player/podcasts/unmark') {
+      var pb = opnPlayback();
+      var lk = String(body.series || '') + '|' + String(body.seqKey || '');
+      if (p === '/api/player/podcasts/mark') pb.listens[lk] = { listenDate: todayChicago(), listenedAt: opnNowISO(), source: body.source || 'manual' };
+      else delete pb.listens[lk];
+      opnPlaybackSave(pb);
+      return { ok: true };
+    }
+    if (p === '/api/player/podcasts/position') {
+      var pb2 = opnPlayback();
+      var lk2 = String(body.series || '') + '|' + String(body.seqKey || '');
+      if (!pb2.listens[lk2]) pb2.positions[lk2] = { positionS: body.positionS || 0, durationS: body.durationS || 0 };
+      opnPlaybackSave(pb2);
+      return { ok: true };
+    }
+    if (p === '/api/player/day-position') {
+      var pb3 = opnPlayback();
+      pb3.dayPositions[String(body.episodeId || '') + '|' + String(body.date || '')] = { positionS: body.positionS || 0, durationS: body.durationS || 0 };
+      opnPlaybackSave(pb3);
+      return { ok: true };
+    }
+    throw opnErr(404, 'unknown local route');
+  });
+}
+/* Post-processing for content reads in the public shapes:
+   the server day payload's spoken-intention folds are drawn
+   from the server pool — they never reach a public client;
+   the device's own additions and playback state fold in
+   locally instead. */
+function opnScrubDayPayload(j) {
+  if (!j || typeof j !== 'object') return j;
+  delete j.introTexts;
+  delete j.intros;
+  if (j.date) {
+    if (j.solemnity) opnSolemnity[j.date] = true;
+    var adds = opnDoc().sections.config.addenda[j.date];
+    if (adds) j.additions = opnClone(adds);
+  }
+  return j;
+}
+function opnFoldPlaybackIntoPodcasts(j) {
+  var pb = opnPlayback();
+  var walk = function (o, seriesCtx) {
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o)) { o.forEach(function (x) { walk(x, seriesCtx); }); return; }
+    var ctx = typeof o.series === 'string' ? o.series : seriesCtx;
+    if (typeof o.key === 'string' && 'listened' in o) {
+      var lk = String(ctx || '') + '|' + o.key;
+      var l = pb.listens[lk];
+      if (l) { o.listened = true; o.listenDate = l.listenDate; o.listenedAt = l.listenedAt; o.source = l.source; o.positionS = null; }
+      else if (pb.positions[lk]) { o.listened = false; o.positionS = pb.positions[lk].positionS; }
+    }
+    Object.keys(o).forEach(function (k) { walk(o[k], ctx); });
+  };
+  walk(j, null);
+  return j;
+}
+
 function api(path, opts) {
   opts = opts || {};
+  // v568: in the public shapes, personal-data calls never
+  // leave the device — the local layer answers them from the
+  // on-device file (device) or the ephemeral empty file (web).
+  var opnM = opnMode();
+  if (opnM !== 'server' && opnIsPersonalPath(path)) return opnLocalApi(path, opts, opnM);
   // v356 \u00a72.6.1: while an unlock stands, its token rides every
   // /api/ call in the one header the gate reads. The token lives in
   // the memory-only variable below \u2014 never in any storage.
@@ -1418,6 +2345,20 @@ function api(path, opts) {
   return fetch(path, opts).then(function (r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
       if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.data = j; e.status = r.status; throw e; }
+      // v568: public-shape post-processing of content reads —
+      // the server pool's intention folds never reach a public
+      // client; the device's own additions and playback state
+      // fold in locally; the book read teaches the local layer
+      // the slug set its writes validate against.
+      if (opnM !== 'server' && j && typeof j === 'object') {
+        var cleanPath = String(path).split('?')[0];
+        if (cleanPath === '/api/player/day') j = opnScrubDayPayload(j);
+        else if (cleanPath.indexOf('/api/player/podcasts') === 0 && (!opts.method || opts.method === 'GET')) j = opnFoldPlaybackIntoPodcasts(j);
+        else if (cleanPath === '/api/prayer/book' && Array.isArray(j.groups)) {
+          opnBookSlugs = {};
+          j.groups.forEach(function (g) { (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) opnBookSlugs[pr.slug] = 1; }); });
+        }
+      }
       return j;
     });
   });
@@ -7415,6 +8356,9 @@ function renderSettings() {
 }
 function paintSettings() {
   var html = '';
+  // v568: on the public web build the personal sections
+  // (source mapping, block order) point to the app.
+  if (opnMode() === 'web') html += opnPointerHtml();
   // v419 (G28): the page sub — what the page holds, in one line.
   html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
   // v358 §1 Decision 2: the Playback section stands above Source
@@ -9176,6 +10120,9 @@ function wireFavDrag(scope) {
   });
 }
 function paintFavoritesPage(day) {
+  // v568: on the public web build, favorites live in the app
+  // — the pointer card stands above the (empty) list.
+  var opnFavCard = opnMode() === 'web' ? opnPointerHtml() : '';
   // v547: the Favorites page — the v546 list (the acts row
   // + the rows in list order) standing as its own page in
   // the block page's pattern: the pushed bar (dest Pray,
@@ -9192,7 +10139,7 @@ function paintFavoritesPage(day) {
     var byKey = {};
     list.forEach(function (e) { byKey[starEntryKey(e)] = e; });
     var rows = favReorder.keys.map(function (k) { return byKey[k]; }).filter(Boolean);
-    view.innerHTML = '<div id="favorites-list">' + (rows.length ? rows.map(favReorderRowHtml).join('') : '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>') + '</div>';
+    view.innerHTML = opnFavCard + '<div id="favorites-list">' + (rows.length ? rows.map(favReorderRowHtml).join('') : '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>') + '</div>';
     var dn = document.getElementById('fav-done');
     if (dn) dn.addEventListener('click', favReorderDone);
     wireFavDrag(view);
@@ -9210,7 +10157,7 @@ function paintFavoritesPage(day) {
   // universal menu's Favorites group (openHeaderMenu).
   paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"',
     rightHtml: list.length ? '<button class="playbtn small" id="starred-playall" aria-label="Play all of Favorites">&#9654;</button>' : '' }), '__favorites');
-  var html = '<div id="favorites-list">';
+  var html = opnFavCard + '<div id="favorites-list">';
   if (!list.length) {
     html += '<div class="card"><div class="meta">No starred tracks yet \u2014 tap \u2606 on any track and it will stand here.</div></div>';
   } else {
@@ -11126,6 +12073,9 @@ function closePrayerPage() {
 }
 function renderIntentions() {
   paintPrayersBar(null); // v448: the Intentions side is a tab home side — no pushed bar stands over it
+  // v568: on the public web build the intentions pool lives
+  // in the app — this surface points there, never dead-ends.
+  if (opnMode() === 'web') { view.innerHTML = opnPointerHtml(); return; }
   // v457: the side's head (title + the heading menu act)
   // stands in the header's row 2 — the paintPrayersBar(null)
   // above paints it there; the body opens on the skeleton.
@@ -16979,6 +17929,13 @@ function appendBlockSettingsCards(day, b) {
    inside the standing container is what those callers mean
    now (§2.5). */
 function renderConscience() {
+  // v568: on the public web build the Conscience surfaces
+  // point to the app — no PIN prompt, no browser storage.
+  if (opnMode() === 'web') {
+    paintRow2Plain('Conscience');
+    view.innerHTML = opnPointerHtml();
+    return;
+  }
   // v457: the tab's title stands in the header's row 2
   // before the gate paints — no foreign pill strands
   // during the PIN paint; the gate's content paint
