@@ -32,4 +32,12 @@
 
 ## 5 · Ship
 
-- (Filled at Ship: pin, merge + push read-back, Worker id, What's New id, row read-back, post-deploy manifest read, field legs, and the follow-ups named in §4.)
+- **Pin:** `ora-pro-nobis-v569-1` (ui.ts CACHE) as its own commit (32ebe64).
+- **Merge + push:** release/v569 rebased onto the then-current main (f088d6e — the Nov 23 publish commit, no app overlap; harness re-run against the new base: 12 ok / 0 not-ok) and pushed by Git Data API byte-identical replication (4 commits, every blob/tree/commit SHA verified): **main pushed · remote in sync** — main = 32ebe64 (ls-remote verified). Local branch deleted after merge.
+- **Worker:** **4e9c1ae3-b547-46cd-b6a9-5afffc2c961f** at 100% (deployed 2026-11-21 from the clean ship worktree at 32ebe64). Rollback: d3d3d0c3 (v574).
+- **What's New:** 385 — "Your day's prayers now load in one pass and keep playing offline".
+- **Row 1523 read back:** Live · shipped_at 2026-11-21T08:09:27Z · whats_new_id 385.
+- **Post-deploy production read (app agent door):** GET /api/agent/prayer/day?date=2026-11-21 → 200, the day payload serving (7 blocks) from the deployed Worker. The manifest itself was proven pre-deploy on the identical committed tree (§4) — the live user route is session-gated by design.
+- **Phases:** Implement 2277 · Review 2280 · Ship 2281 — all passed. Contracts 690 (Implement) · 691 (Review) · 692 (Ship) judged per-expectation and closed.
+- **Follow-ups named (not blocking):** (1) Cache Rule for the audio host's dated assets — spec in §2 — lands with the morning token edit adding the Rulesets scope. (2) Cost watch cost-per-prayer denominator lands with the zone-analytics scope on the same edit. (3) The nightly publish flow gains the warmer call (runner/warm_day_cache.py stands ready; it ran live tonight for 2026-11-21: 14/14 HIT).
+- **Field legs open (John's, in the app):** open the app on Wi-Fi and let the day settle — the day set downloads in one pass behind the boot; then play a track with connectivity off: it replays from the device.
