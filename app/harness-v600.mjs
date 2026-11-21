@@ -29,6 +29,17 @@
 //     lands exactly the layer the at-once route write
 //     lands) · the locked world: gate → unlock → draft →
 //     save lands.
+//  D  THE COMBINED DRIVE (the v601 shape, driven
+//     through the real Edit today screen): a poisoned
+//     standing layer (the v601 cold-materialization
+//     snapshot) composes healed · Edit today opens over
+//     it · Night off stands in the draft with Save today
+//     live and nothing written · SAVE LANDS — Night off
+//     as saved, every other block at its healed count,
+//     the stored layer carrying no Night contents entry
+//     (the ship defect: layerJsonOf emitted contents for
+//     the toggled-off block and the route validator
+//     refused the whole save).
 // Fixtures from production only (Improvement D): John's
 // import file (his profiles document).
 import { readFileSync, readdirSync } from 'node:fs';
@@ -479,6 +490,140 @@ if (envelopeStore) {
   }
   check('R19 after the pad unlock, a draft edit writes nothing and Save today lands the layer (the field path, in the locked world)',
     draftClean && landed, { draftClean, landed });
+}
+
+// ---------- D: the combined drive (v601 shape) ----------
+// One jsdom world over the production fixtures (John's
+// v589 document · production source-settings · the
+// production 2026-11-21 day payload), the v601 harness's
+// world recipe carried whole.
+const SETTINGS600 = JSON.parse(readFileSync(APP + 'tests/fixtures-v597/production-source-settings.json', 'utf8'));
+const DAY600 = JSON.parse(readFileSync(APP + 'tests/fixtures-v597/production-day-2026-11-21.json', 'utf8'));
+const DHOOK = '\n;window.__opn = { openEditTodayScreen594: openEditTodayScreen594, opnLocalApi: opnLocalApi, opnMode: opnMode, state: state, EXT_SLOTS: EXT_SLOTS, OWN_ROW_EPISODE: OWN_ROW_EPISODE, extDayRulePasses: extDayRulePasses, extWeekdayMon0: extWeekdayMon0, opnFoldDay590: opnFoldDay590, resolveReadingsSeat590: resolveReadingsSeat590, opnStandingContents597: opnStandingContents597, extRebuildDescs: extRebuildDescs };';
+function makeDWorld(doc) {
+  const store = {}; store[DATA_KEY] = JSON.stringify(doc || JOHN);
+  const html = SHELL.replace('<!--OPN_SHAPE-->', 'public');
+  const dom = new JSDOM(html, { url: 'https://app.orapronobis.media/', runScripts: 'dangerously', pretendToBeVisual: true });
+  const w = dom.window;
+  try { Object.defineProperty(w.navigator, 'standalone', { value: true, configurable: true }); } catch (e) {}
+  if (!w.crypto || !w.crypto.subtle) { try { Object.defineProperty(w, 'crypto', { value: webcrypto }); } catch (e) {} }
+  w.fetch = (url) => {
+    const u = String(url);
+    let body = {};
+    if (u.includes('/api/player/day')) body = JSON.parse(JSON.stringify(DAY600));
+    else if (u.includes('/api/player/podcasts?series=daily-readings')) body = { entries: [{ key: 'dr-1', title: 'Daily Mass Reading Podcast for November 21, 2026', url: 'https://example.invalid/dr.mp3' }], currentKey: 'dr-1' };
+    else if (u.includes('/api/player/podcasts?series=')) { const sk = decodeURIComponent(u.split('series=')[1] || 'x'); body = { entries: [{ key: 'stub-ep-' + sk, title: 'Day 1', url: 'https://example.invalid/e.mp3' }], currentKey: 'stub-ep-' + sk }; }
+    return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
+  };
+  Object.keys(store).forEach((k) => w.localStorage.setItem(k, store[k]));
+  const s = w.document.createElement('script');
+  s.textContent = appJs + DHOOK;
+  w.document.body.appendChild(s);
+  return w;
+}
+function buildStandingD(w) {
+  const O = w.__opn;
+  const wd = O.extWeekdayMon0('2026-11-21');
+  const prim = {};
+  (SETTINGS600.sources || []).forEach((s) => {
+    if (s.family !== 'external' || !s.slotId) return;
+    if (s.role !== 'fallback') prim[s.slotId] = s;
+  });
+  const standing = [];
+  O.EXT_SLOTS.forEach((s) => {
+    const row = prim[s.slotId];
+    if (!row || row.enabled !== 1 || !O.extDayRulePasses(row.dayRule || 'daily', wd)) return;
+    standing.push({ slotId: s.slotId, title: s.title, block: row.block || 'Morning', sortOrder: row.sortOrder, source: s.source || 'Divine Office' });
+  });
+  O.state.extStanding = standing;
+  const own = [];
+  (SETTINGS600.sources || []).forEach((s) => {
+    if (s.family !== 'own' || !O.OWN_ROW_EPISODE[s.sourceKey]) return;
+    own.push({ sourceKey: s.sourceKey, episodeId: O.OWN_ROW_EPISODE[s.sourceKey], block: s.block || 'Morning', sortOrder: s.sortOrder, title: s.name, enabled: s.enabled });
+  });
+  O.state.ownStanding = own.filter((r) => r.enabled === 1 && r.block).sort((a, c) => (a.sortOrder || 0) - (c.sortOrder || 0));
+  O.state.ownSlots = {};
+  O.state.ownStanding.forEach((r) => { O.state.ownSlots[r.sourceKey] = { state: 'present', tracks: [{ episodeId: r.sourceKey, title: r.title || r.sourceKey, state: 'present', streamUrl: 'https://example.invalid/o.mp3', durationS: 30 }] }; });
+  O.state.extSlots = {};
+  standing.forEach((s) => { O.state.extSlots[s.slotId] = { state: 'present', title: s.title, source: s.source, streamUrl: 'https://example.invalid/e.mp3', durationSec: 30 }; });
+}
+async function composeD(w) {
+  const O = w.__opn;
+  const day = O.opnFoldDay590(JSON.parse(JSON.stringify(DAY600)));
+  O.state.dayPayload = day;
+  O.resolveReadingsSeat590(day);
+  await sleep(400);
+  const descs = O.extRebuildDescs(day) || [];
+  const counts = {};
+  descs.forEach((d) => { if (d && d.block) counts[d.block] = (counts[d.block] || 0) + 1; });
+  (day.additions || []).forEach((a) => { if (a && a.block) counts[a.block] = (counts[a.block] || 0) + 1; });
+  return counts;
+}
+function poisonLayerD(w) {
+  const O = w.__opn;
+  const rec = JOHN.sections.profiles.list.filter((p) => p.key === 'salesian')[0];
+  const contents = {};
+  (rec.coreBlocks || []).concat(['Novenas']).forEach((b) => {
+    contents[b] = O.opnStandingContents597(rec, b).map((it) => it.key ? { kind: it.kind, key: it.key } : { kind: it.kind });
+  });
+  return { baseProfileKey: 'salesian', contents };
+}
+{
+  const w = makeDWorld();
+  await sleep(600);
+  // The poison is generated cold — standings unbuilt —
+  // exactly the field shape v601 reproduced.
+  const poison = poisonLayerD(w);
+  buildStandingD(w);
+  const cleanCounts = await composeD(w);
+  await routePut(w, '/api/prayer/profiles/today-edit', { date: '2026-11-21', layer: poison });
+  const healedCounts = await composeD(w);
+  const coreBlocksOfJohn = JOHN.sections.profiles.list.filter((p) => p.key === 'salesian')[0].coreBlocks;
+  check('D1 the poisoned standing layer composes healed: every standing block at its clean count, Morning > 0',
+    coreBlocksOfJohn.concat(['Novenas']).every((b) => (healedCounts[b] || 0) === (cleanCounts[b] || 0)) && (healedCounts.Morning || 0) > 0,
+    { healed: healedCounts, clean: cleanCounts });
+  const dStand0 = JSON.stringify((await profilesPayload(w)).todayEdit);
+  w.__opn.openEditTodayScreen594(true);
+  const opened = await until(() => !!w.document.querySelector('[data-p594tblock="Night"]'), 10000);
+  check('D2 Edit today opens over the poisoned standing layer (the blocks paint)', opened, {});
+  let nightOff = false;
+  if (opened) {
+    click(w, w.document.querySelector('[data-p594tblock="Night"]'));
+    nightOff = await until(() => {
+      const t = w.document.querySelector('[data-p594tblock="Night"]');
+      return !!t && t.getAttribute('aria-checked') === 'false' && todayBtnOf(w) && todayBtnOf(w).disabled === false;
+    }, 6000);
+  }
+  const dStand1 = JSON.stringify((await profilesPayload(w)).todayEdit);
+  check('D3 Night off stands in the draft with Save today live — and nothing has written (the stored layer stands byte-identical)',
+    nightOff && dStand1 === dStand0,
+    { nightOff, same: dStand1 === dStand0 });
+  let saved = null;
+  if (nightOff) {
+    click(w, todayBtnOf(w));
+    await until(async () => {
+      const r = await profilesPayload(w);
+      saved = r.todayEdit;
+      return !!(saved && Array.isArray(saved.coreBlocks) && saved.coreBlocks.indexOf('Night') < 0);
+    }, 8000);
+  }
+  // The saved layer's composition is measured in a
+  // FRESH world seeded with the saved document (the
+  // v601 legs' shape): the screen session's own rebuild
+  // state must not fight the fold measurement.
+  let savedCounts = {};
+  if (saved) {
+    const w2 = makeDWorld(JSON.parse(w.localStorage.getItem(DATA_KEY)));
+    await sleep(600);
+    buildStandingD(w2);
+    savedCounts = await composeD(w2);
+    w2.close();
+  }
+  check('D4 SAVE LANDS: Night off as saved, the stored layer carries no Night contents entry, every other block at its healed count',
+    !!saved && !(saved.contents && Object.prototype.hasOwnProperty.call(saved.contents, 'Night'))
+    && (savedCounts.Night || 0) === 0
+    && Object.keys(healedCounts).filter((b) => b !== 'Night').every((b) => (savedCounts[b] || 0) === (healedCounts[b] || 0)),
+    { saved, savedCounts, healedCounts });
 }
 
 console.log('harness-v600:', ok, 'ok /', bad, 'not ok');

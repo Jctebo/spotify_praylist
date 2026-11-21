@@ -20114,6 +20114,13 @@ function openEditTodayScreen594(fromLadder) {
     Object.keys(d.contents).forEach(function (b) {
       var list = d.contents[b];
       if (!list) return;
+      // v600 ship fix: contents stand only for a block
+      // the draft itself stands — a block toggled off
+      // leaves the draft's core, and its inherited
+      // contents entry must drop here, or the today-edit
+      // route's validator refuses the whole save
+      // ("contents for a block that does not stand").
+      if (b !== 'Novenas' && d.core.indexOf(b) < 0) return;
       if (JSON.stringify(list) !== JSON.stringify(opnTodayComposedContents594(p, b))) { contents[b] = list; anyC = true; }
     });
     if (anyC) layer.contents = contents;
