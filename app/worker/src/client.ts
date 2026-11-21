@@ -1615,7 +1615,7 @@ function opnDefaultDoc() {
       intentions: [],
       conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
       profiles: {
-        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: false, version: 1, picks: {}, dayDefaults: { sun: 'benedictine' }, mig590: true, mig591: true
+        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: false, version: 1, picks: {}, dayDefaults: { sun: 'benedictine' }, mig590: true, mig591: true, todayEdits: {}
       },
       config: {
         sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
@@ -2287,6 +2287,20 @@ function opnValidateImport(text) {
   });
   Object.keys(base.sections.conscience).forEach(function (k) { if (S.conscience[k] === undefined) S.conscience[k] = base.sections.conscience[k]; });
   Object.keys(base.sections.profiles).forEach(function (k) { if (S.profiles[k] === undefined) S.profiles[k] = base.sections.profiles[k]; });
+  // v594 Part 2 (doc §2.3): the today layer rides the file
+  // inside sections.profiles. Each entry validates with
+  // the write route's checks against the restored list; an
+  // entry that fails is dropped, never guessed — the
+  // restore never refuses the whole file over a layer.
+  if (Array.isArray(S.profiles.list) && S.profiles.todayEdits && typeof S.profiles.todayEdits === 'object' && !Array.isArray(S.profiles.todayEdits)) {
+    var teOut = {};
+    Object.keys(S.profiles.todayEdits).forEach(function (d) {
+      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(d)) return;
+      var chkT = opnCheckTodayLayer594({ list: S.profiles.list }, S.profiles.todayEdits[d]);
+      if (!chkT.error && chkT.layer) teOut[d] = chkT.layer;
+    });
+    S.profiles.todayEdits = teOut;
+  } else S.profiles.todayEdits = {};
   Object.keys(base.sections.config).forEach(function (k) { if (S.config[k] === undefined) S.config[k] = base.sections.config[k]; });
   Object.keys(base.sections.favorites).forEach(function (k) { if (S.favorites[k] === undefined) S.favorites[k] = base.sections.favorites[k]; });
   if (!d.seq || typeof d.seq !== 'object') d.seq = base.seq;
@@ -2562,6 +2576,7 @@ function opnProfilesPayload(date) {
       return o;
     }),
     state: { standingKey: P.standingKey, dayRule: P.dayRule, version: P.version, dayDefaults: opnClone(P.dayDefaults || {}) },
+    todayEdit: opnTodayEntry594(P, date) ? opnClone(opnTodayEntry594(P, date)) : null,
     effective: {
       key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: r.resolvedBy, dayKind: r.dayKind,
       coreBlocks: profile.coreBlocks.slice(),
@@ -2589,6 +2604,123 @@ function opnCheckLayers(layers) {
 function opnLayersOut(stored) {
   return { novenas: { on: !!(stored && stored.novenas && stored.novenas.on) },
     podcasts: { on: !!(stored && stored.podcasts && stored.podcasts.on), series: stored && stored.podcasts && Array.isArray(stored.podcasts.series) ? stored.podcasts.series.slice() : [] } };
+}
+/* ---- v594 Part 2: the today layer (todayEdits) ----
+   A per-date override inside sections.profiles, date-keyed
+   like picks, profile-shaped (doc §2.1): an entry carries a
+   field only once that aspect is touched for the date;
+   fields it does not carry fall through to the resolved
+   profile. The fold applies it after the profile, for that
+   date only. Divergence is always a live diff against the
+   profile's CURRENT shape — never a stored flag. */
+function opnTodayEntry594(P, date) {
+  if (!P || !P.todayEdits || typeof P.todayEdits !== 'object') return null;
+  var e = P.todayEdits[date];
+  return e && typeof e === 'object' && !Array.isArray(e) ? e : null;
+}
+function opnTodayItemId594(it) { return it.kind + ':' + (it.key || ''); }
+function opnTodayUniverse594(block) {
+  return profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
+}
+function opnTodayComposedContents594(rec, block) {
+  // The list a block composes from the profile alone: its
+  // own contents entry when one stands, else the standing
+  // universe (every item on, in universe order) — the
+  // editor's own reading of a block with no entry.
+  if (rec && rec.contents && rec.contents[block]) return opnClone(rec.contents[block]);
+  return opnTodayUniverse594(block);
+}
+function opnTodayDivergence594(rec, layer) {
+  // The one divergence definition (doc §2.1). Descriptors:
+  // {kind, block, item} — kinds: block-off · block-on ·
+  // layer-off · layer-on · series-off · series-on ·
+  // item-removed · item-added · items-reordered.
+  var out = [];
+  if (!rec || !layer) return out;
+  var pCore = rec.coreBlocks || [];
+  var lCore = Array.isArray(layer.coreBlocks) ? layer.coreBlocks : pCore;
+  pCore.forEach(function (b) { if (lCore.indexOf(b) < 0) out.push({ kind: 'block-off', block: b }); });
+  lCore.forEach(function (b) { if (pCore.indexOf(b) < 0) out.push({ kind: 'block-on', block: b }); });
+  if (Array.isArray(layer.coreBlocks) && JSON.stringify(lCore) !== JSON.stringify(pCore)
+    && !out.some(function (d) { return d.kind === 'block-off' || d.kind === 'block-on'; })) {
+    out.push({ kind: 'blocks-reordered', block: null });
+  }
+  var pLay = opnLayersOut(rec.layers);
+  var lLay = layer.layers ? opnLayersOut(layer.layers) : pLay;
+  if (pLay.novenas.on !== lLay.novenas.on) out.push({ kind: lLay.novenas.on ? 'layer-on' : 'layer-off', block: 'Novenas' });
+  if (pLay.podcasts.on !== lLay.podcasts.on) out.push({ kind: lLay.podcasts.on ? 'layer-on' : 'layer-off', block: 'Podcasts' });
+  var pSer = pLay.podcasts.series || [], lSer = lLay.podcasts.series || [];
+  pSer.forEach(function (s) { if (lSer.indexOf(s) < 0) out.push({ kind: 'series-off', block: 'Podcasts', item: s }); });
+  lSer.forEach(function (s) { if (pSer.indexOf(s) < 0) out.push({ kind: 'series-on', block: 'Podcasts', item: s }); });
+  if (layer.contents) Object.keys(layer.contents).forEach(function (block) {
+    var comp = opnTodayComposedContents594(rec, block);
+    var lay = layer.contents[block] || [];
+    var compIds = comp.map(opnTodayItemId594), layIds = lay.map(opnTodayItemId594);
+    var removed = comp.filter(function (it) { return layIds.indexOf(opnTodayItemId594(it)) < 0; });
+    var added = lay.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
+    removed.forEach(function (it) { out.push({ kind: 'item-removed', block: block, item: opnTodayItemId594(it) }); });
+    added.forEach(function (it) { out.push({ kind: 'item-added', block: block, item: opnTodayItemId594(it) }); });
+    if (!removed.length && !added.length && JSON.stringify(compIds) !== JSON.stringify(layIds)) out.push({ kind: 'items-reordered', block: block });
+  });
+  return out;
+}
+function opnApplyTodayLayer594(eff, layer) {
+  // The fold step: returns a NEW effective shape with the
+  // entry applied (the payload's own is never mutated).
+  if (!layer) return eff;
+  var out = opnClone(eff);
+  if (Array.isArray(layer.coreBlocks)) out.coreBlocks = layer.coreBlocks.slice();
+  if (layer.layers) {
+    var ll = opnLayersOut(layer.layers);
+    out.layers = [{ key: 'novenas', on: ll.novenas.on }, { key: 'podcasts', on: ll.podcasts.on, series: ll.podcasts.series.slice() }];
+  }
+  if (layer.contents) {
+    var merged = out.contents ? opnClone(out.contents) : {};
+    Object.keys(layer.contents).forEach(function (b) { merged[b] = opnClone(layer.contents[b]); });
+    out.contents = merged;
+  }
+  return out;
+}
+function opnCheckTodayLayer594(P, layer) {
+  // Validation + normalization for a today entry — the
+  // write route and the import validator share it. Returns
+  // {error} or {layer}; an entry carrying no fields
+  // normalizes to {layer: null} (= delete the entry).
+  if (!layer || typeof layer !== 'object' || Array.isArray(layer)) return { error: 'today layer must be an object' };
+  var base = typeof layer.baseProfileKey === 'string' ? P.list.filter(function (x) { return x.key === layer.baseProfileKey; })[0] : null;
+  if (!base) return { error: 'bad base profile ' + (typeof layer.baseProfileKey === 'string' ? layer.baseProfileKey : '(empty)') };
+  var out = { baseProfileKey: base.key };
+  if (layer.coreBlocks !== undefined) {
+    if (!Array.isArray(layer.coreBlocks)) return { error: 'coreBlocks must be an array' };
+    var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+    var core = [];
+    for (var i = 0; i < layer.coreBlocks.length; i++) {
+      var rawB = layer.coreBlocks[i];
+      if (typeof rawB !== 'string' || HOURS.indexOf(rawB) < 0) return { error: 'bad block ' + String(rawB) };
+      if (core.indexOf(rawB) < 0) core.push(rawB);
+    }
+    out.coreBlocks = core;
+  }
+  if (layer.layers !== undefined) {
+    try { out.layers = opnLayersOut(opnCheckLayers(layer.layers)); }
+    catch (e) { return { error: (e && e.data && e.data.error) || 'bad layers' }; }
+  }
+  if (layer.contents !== undefined) {
+    var effCore = out.coreBlocks || base.coreBlocks || [];
+    var checked;
+    try { checked = opnCheckContents590(layer.contents, effCore); }
+    catch (e) { return { error: (e && e.data && e.data.error) || 'bad contents' }; }
+    if (checked !== undefined) out.contents = checked;
+  }
+  if (out.coreBlocks === undefined && out.layers === undefined && out.contents === undefined) return { layer: null };
+  return { layer: out };
+}
+function opnPruneTodayEdits594(P) {
+  // Past-date entries prune on the next profiles write —
+  // a layer can never act after its date (doc §2.1).
+  if (!P || !P.todayEdits || typeof P.todayEdits !== 'object') return;
+  var today = todayChicago();
+  Object.keys(P.todayEdits).forEach(function (d) { if (d < today) delete P.todayEdits[d]; });
 }
 function opnExamPrompts() {
   var over = opnDoc().sections.conscience.promptTexts || {};
@@ -2734,6 +2866,7 @@ function opnLocalApi(path, opts, mode) {
       var P = S.profiles;
       var bump = function () { P.version++; opnSave(); return opnProfilesPayload(todayChicago()); };
       var findP = function (k) { return P.list.filter(function (x) { return x.key === k; })[0]; };
+      opnPruneTodayEdits594(P);
       if (p === '/api/prayer/profiles/state') {
         if (body.standingKey === undefined && body.dayRule === undefined && body.dayDefaults === undefined) throw opnErr(400, 'standingKey, dayRule or dayDefaults required');
         if (body.dayDefaults !== undefined) {
@@ -2764,6 +2897,21 @@ function opnLocalApi(path, opts, mode) {
         if (body.profileKey === null) { delete P.picks[ddate]; return bump(); }
         if (typeof body.profileKey !== 'string' || !findP(body.profileKey)) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
         P.picks[ddate] = body.profileKey;
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/today-edit') {
+        // v594 Part 2 (doc §2.1): the today layer write —
+        // {date, layer}. A null layer, or an entry carrying
+        // no fields, DELETES the date's entry (the day-pick
+        // delete pattern). Shares bump() with every profiles
+        // write, so the version moves and the day rebuilds.
+        var tdate = typeof body.date === 'string' ? body.date : '';
+        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(tdate)) throw opnErr(400, 'date must be YYYY-MM-DD');
+        if (!P.todayEdits || typeof P.todayEdits !== 'object' || Array.isArray(P.todayEdits)) P.todayEdits = {};
+        if (body.layer === null || body.layer === undefined) { delete P.todayEdits[tdate]; return bump(); }
+        var tchk = opnCheckTodayLayer594(P, body.layer);
+        if (tchk.error) throw opnErr(400, tchk.error);
+        if (tchk.layer) P.todayEdits[tdate] = tchk.layer; else delete P.todayEdits[tdate];
         return bump();
       }
       if (p === '/api/prayer/profiles/layers') {
@@ -3313,6 +3461,20 @@ function opnFoldDay590(j) {
   if (!res || !res.effective) return j;
   var eff = res.effective;
   j.profile = eff;
+  // v594 Part 2 (doc §2.1): the today layer applies AFTER
+  // the resolved profile, for this date only. An absent
+  // entry leaves the fold exactly as it stood. The mark
+  // rides the payload's profile when the layer stands AND
+  // the live diff against the profile is non-empty — the
+  // plan row and the ladder head paint from it.
+  var tEntry594 = opnTodayEntry594(opnDoc().sections.profiles, j.date);
+  if (tEntry594) {
+    var tProf594 = null;
+    (opnDoc().sections.profiles.list || []).forEach(function (x) { if (x.key === eff.key) tProf594 = x; });
+    eff = opnApplyTodayLayer594(eff, tEntry594);
+    j.profile = eff;
+    if (tProf594 && opnTodayDivergence594(tProf594, tEntry594).length) eff.todayEdits = true;
+  }
   var byName = {};
   j.blocks.forEach(function (b) { if (b && b.block) byName[b.block] = b; });
   var out = [];
@@ -19600,7 +19762,7 @@ function profPlanRowHtml(day) {
   if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
   else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
-    + '<div class="meta">' + esc(resLine) + '</div></div>'
+    + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
     + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
 }
 
@@ -19668,20 +19830,35 @@ function profVaultGate594(bodyEl, proceed, onClose) {
 }
 function openConfigureLadder593() {
   // v593 §2 (Q5=A, John's pick): Configure opens a LADDER —
-  // a two-option fork: PROFILE EDIT · DAY MAPPING — each
-  // door to its own full screen. No pop-ups or sheets stack
-  // in this flow. The ladder's Close returns to the calling
-  // surface; each screen's Close returns here.
+  // each door to its own full screen. No pop-ups or sheets
+  // stack in this flow. The ladder's Close returns to the
+  // calling surface; each screen's Close returns here.
+  // v594 Part 2 (Q5=A): THREE doors — Edit today · Edit
+  // profiles · Edit mapping — and the head states today's
+  // standing whole: "Today follows X" + "· today has its
+  // own edits" whenever a layer stands for today and the
+  // live diff against the profile is non-empty.
   var old = document.querySelector('.profladder593');
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet profladder593 profscreenfull592';
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Configure plan</h1></div>'
-    + '<div class="card bookrow" data-p593door="edit"><div class="row"><span class="grow">Profile edit</span><span class="meta">›</span></div><p class="sub">Change what a profile stands — blocks, contents, toggles.</p></div>'
-    + '<div class="card bookrow" data-p593door="map"><div class="row"><span class="grow">Day mapping</span><span class="meta">›</span></div><p class="sub">Which profile each day follows.</p></div>'
+    + '<p class="sub" data-p594ladderhead="1"></p>'
+    + '<div class="card bookrow" data-p594door="today"><div class="row"><span class="grow">Edit today</span><span class="meta">›</span></div><p class="sub">Today’s prayer as it stands — changes stand for today only.</p></div>'
+    + '<div class="card bookrow" data-p593door="edit"><div class="row"><span class="grow">Edit profiles</span><span class="meta">›</span></div><p class="sub">What a profile stands — changes stand in every day that follows it.</p></div>'
+    + '<div class="card bookrow" data-p593door="map"><div class="row"><span class="grow">Edit mapping</span><span class="meta">›</span></div><p class="sub">Which profile each day follows — every day and each weekday.</p></div>'
     + '<div class="row"><button class="btn ghost" data-p593ladderclose="1">Close</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true);
+  var headEl = sheet.querySelector('[data-p594ladderhead]');
+  api('/api/prayer/profiles').then(function (r) {
+    if (!headEl || !r || !r.effective) return;
+    var prof = null;
+    (r.profiles || []).forEach(function (p) { if (p.key === r.effective.key) prof = p; });
+    var edits = !!(prof && r.todayEdit && opnTodayDivergence594(prof, r.todayEdit).length);
+    headEl.textContent = 'Today follows ' + r.effective.name + (edits ? ' · today has its own edits' : '');
+  }).catch(function () {});
+  sheet.querySelector('[data-p594door="today"]').addEventListener('click', function () { sheet.remove(); openEditTodayScreen594(true); });
   sheet.querySelector('[data-p593door="edit"]').addEventListener('click', function () { sheet.remove(); openProfilesScreen(null, { ladder: true }); });
   sheet.querySelector('[data-p593door="map"]').addEventListener('click', function () { sheet.remove(); openDayMappingScreen593(true); });
   var lc = sheet.querySelector('[data-p593ladderclose]');
@@ -19776,15 +19953,415 @@ function openDayMappingScreen593(fromLadder) {
   // writes refuse the same way the editor's did).
   if (!profVaultGate594(body, loadMap, closeScreen)) loadMap();
 }
+function openEditTodayScreen594(fromLadder) {
+  // v594 Part 2 (doc §2.4): EDIT TODAY — today's composed
+  // day, edited for today only. No draft, no Save: every
+  // edit writes the today layer at once through the
+  // today-edit route (Q1=A) and the day rebuilds. The pick
+  // chips at the head write today's pick through the
+  // standing day-pick route; changing the pick clears the
+  // layer first, and the row says so before it writes
+  // (Q2=A). Divergences badge in place in fact language,
+  // removed items stand as a trace line with restore acts,
+  // and ONE clear act deletes the layer whole (Q4=A). The
+  // surface stands behind the same locked-vault gate as
+  // the other Configure surfaces (Part 1's discipline):
+  // its load and every write wait for the unlock.
+  var old = document.querySelector('.proftoday594');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet proftoday594 profscreenfull592';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Edit today</h1></div>'
+    + '<div class="proftodaybody594"><p class="sub">Loading …</p></div><p class="fieldnote proftodaynote594"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var body = sheet.querySelector('.proftodaybody594');
+  var note = sheet.querySelector('.proftodaynote594');
+  var scroller = sheet.querySelector('.panelbody');
+  var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  var res = null, td = null, seriesList = null, bookList = null;
+  function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
+  function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
+  function prof() { return res && res.effective ? byKey(res.effective.key) : null; }
+  function closeScreen() { sheet.remove(); if (fromLadder) openConfigureLadder593(); }
+  function buildTodayDraft() {
+    var p = prof();
+    if (!p) return null;
+    var d = { key: p.key, kind: p.kind, name: p.name, honor: p.honorLine || '',
+      core: (p.coreBlocks || []).slice(), layers: JSON.parse(JSON.stringify(p.layers)), contents: {} };
+    d.core.concat(['Novenas']).forEach(function (b) {
+      d.contents[b] = (p.contents && p.contents[b]) ? opnClone(p.contents[b]) : null;
+    });
+    var layer = res.todayEdit;
+    if (layer) {
+      if (Array.isArray(layer.coreBlocks)) d.core = layer.coreBlocks.slice();
+      if (layer.layers) d.layers = JSON.parse(JSON.stringify(opnLayersOut(layer.layers)));
+      if (layer.contents) Object.keys(layer.contents).forEach(function (b) { d.contents[b] = opnClone(layer.contents[b]); });
+    }
+    return d;
+  }
+  function layerFromDraft() {
+    // The layer is recomputed from the draft-vs-profile
+    // diff at every write: an aspect the draft holds
+    // exactly as the profile stands it is NOT carried, so
+    // undoing the last divergence deletes the entry whole.
+    var p = prof();
+    var layer = { baseProfileKey: p.key };
+    if (JSON.stringify(td.core) !== JSON.stringify(p.coreBlocks || [])) layer.coreBlocks = td.core.slice();
+    var pLay = opnLayersOut(p.layers), tLay = opnLayersOut(td.layers);
+    if (JSON.stringify(pLay) !== JSON.stringify(tLay)) layer.layers = tLay;
+    var contents = {}, anyC = false;
+    Object.keys(td.contents).forEach(function (b) {
+      var list = td.contents[b];
+      if (!list) return;
+      if (JSON.stringify(list) !== JSON.stringify(opnTodayComposedContents594(p, b))) { contents[b] = list; anyC = true; }
+    });
+    if (anyC) layer.contents = contents;
+    return layer;
+  }
+  function persist() {
+    var layer = layerFromDraft();
+    var has = layer.coreBlocks !== undefined || layer.layers !== undefined || layer.contents !== undefined;
+    return profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: has ? layer : null })
+      .then(function (r) { if (r) res = r; });
+  }
+  function divs() { var p = prof(); return p ? opnTodayDivergence594(p, res.todayEdit) : []; }
+  function prayerTitle(slug) {
+    if (bookList) for (var i = 0; i < bookList.length; i++) if (bookList[i].slug === slug) return bookList[i].title;
+    return slug;
+  }
+  function itemLabel(block, it) {
+    if (it.kind === 'prayer') return prayerTitle(it.key);
+    var u = null;
+    profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
+    return u ? u.label : (it.key || it.kind);
+  }
+  function effList(block) { return td.contents[block] || opnTodayComposedContents594(prof(), block); }
+  function materializeT(block) {
+    if (td.contents[block]) return td.contents[block];
+    var mat = opnTodayComposedContents594(prof(), block);
+    td.contents[block] = mat;
+    return mat;
+  }
+  function paintContentsT(block) {
+    var p = prof();
+    var comp = opnTodayComposedContents594(p, block);
+    var compIds = comp.map(opnTodayItemId594);
+    var list = effList(block);
+    var carried = !!(res.todayEdit && res.todayEdit.contents && res.todayEdit.contents[block]);
+    var html = '<div class="profcontents591" data-p594anchor="' + esc(block) + '">'
+      + '<p class="sub">' + (carried
+        ? 'Set for today — stands as listed · new prayers added to ' + esc(p.name) + ' will not join today'
+        : 'As ' + esc(p.name) + ' stands it') + '</p>';
+    list.forEach(function (it) {
+      var id = opnTodayItemId594(it);
+      var added = compIds.indexOf(id) < 0;
+      html += '<div class="card bookrow"><div class="row"><span class="stepper591"><button class="btn ghost" data-p594tcup="' + esc(block) + '|' + esc(id) + '">↑</button><button class="btn ghost" data-p594tcdown="' + esc(block) + '|' + esc(id) + '">↓</button></span><span class="grow">' + esc(itemLabel(block, it)) + (added ? ' <span class="meta">added for today</span>' : '') + '</span>'
+        + '<button class="switch591 on" data-p594tcitem="' + esc(block) + '|' + esc(id) + '" role="switch" aria-checked="true"><span class="knob591"></span></button>'
+        + '<button class="btn ghost" data-p594tcremove="' + esc(block) + '|' + esc(id) + '" aria-label="Remove">✕</button></div></div>';
+    });
+    if (!list.length) html += '<p class="sub">Nothing stands in this block today.</p>';
+    var removed = comp.filter(function (it) { return list.map(opnTodayItemId594).indexOf(opnTodayItemId594(it)) < 0; });
+    if (removed.length) {
+      html += '<p class="sub" data-p594tremoved="' + esc(block) + '">Removed for today: ' + removed.map(function (it) { return esc(itemLabel(block, it)); }).join(' · ') + '</p>'
+        + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p594trestore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(itemLabel(block, it)) + '</button>'; }).join('') + '</div>';
+    }
+    html += '<div class="row"><button class="btn ghost" data-p594tadd="' + esc(block) + '">Add</button></div>';
+    return html + '</div>';
+  }
+  function paintSeriesT() {
+    var p = prof();
+    var pSer = (opnLayersOut(p.layers).podcasts.series) || [];
+    var html = '<div class="profcontents591" data-p594anchor="Podcasts"><p class="sub">Podcast series in the day</p>';
+    if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
+    else seriesList.forEach(function (sr) {
+      var chosen = (td.layers.podcasts.series || []).indexOf(sr.series) >= 0;
+      var inProf = pSer.indexOf(sr.series) >= 0;
+      var badge = chosen && !inProf ? ' <span class="meta">added for today</span>'
+        : (!chosen && inProf ? ' <span class="meta">off for today (' + esc(p.name) + ' stands it on)</span>' : '');
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + badge + '</span>'
+        + '<button class="switch591' + (chosen ? ' on' : '') + '" data-p594tseries="' + esc(sr.series) + '" role="switch" aria-checked="' + (chosen ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+    });
+    return html + '</div>';
+  }
+  function paintBlocksT() {
+    var p = prof();
+    var pCore = p.coreBlocks || [];
+    var html = '';
+    var order = td.core.slice();
+    HOURS.forEach(function (b) { if (order.indexOf(b) < 0) order.push(b); });
+    order.forEach(function (b) {
+      var on = td.core.indexOf(b) >= 0;
+      var badge = on && pCore.indexOf(b) < 0 ? ' <span class="meta">added for today</span>'
+        : (!on && pCore.indexOf(b) >= 0 ? ' <span class="meta">off for today (' + esc(p.name) + ' stands it on)</span>' : '');
+      html += '<div class="card bookrow" data-p594anchor="' + esc(b) + '"><div class="row">'
+        + (on ? '<span class="stepper591"><button class="btn ghost" data-p594tup="' + esc(b) + '">↑</button><button class="btn ghost" data-p594tdown="' + esc(b) + '">↓</button></span>' : '')
+        + '<span class="grow">' + esc(b) + badge + '</span>'
+        + '<button class="switch591' + (on ? ' on' : '') + '" data-p594tblock="' + esc(b) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button>'
+        + '</div></div>';
+      if (on) html += paintContentsT(b);
+    });
+    var pLay = opnLayersOut(p.layers);
+    var novBadge = td.layers.novenas.on && !pLay.novenas.on ? ' <span class="meta">added for today</span>'
+      : (!td.layers.novenas.on && pLay.novenas.on ? ' <span class="meta">off for today (' + esc(p.name) + ' stands it on)</span>' : '');
+    html += '<div class="card bookrow" data-p594anchor="Novenas"><div class="row"><span class="grow">Novenas' + novBadge + '</span>'
+      + '<button class="switch591' + (td.layers.novenas.on ? ' on' : '') + '" data-p594tlayer="novenas" role="switch" aria-checked="' + (td.layers.novenas.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+    if (td.layers.novenas.on) html += paintContentsT('Novenas');
+    var podBadge = td.layers.podcasts.on && !pLay.podcasts.on ? ' <span class="meta">added for today</span>'
+      : (!td.layers.podcasts.on && pLay.podcasts.on ? ' <span class="meta">off for today (' + esc(p.name) + ' stands it on)</span>' : '');
+    html += '<div class="card bookrow" data-p594anchor="Podcasts"><div class="row"><span class="grow">Podcasts' + podBadge + '</span>'
+      + '<button class="switch591' + (td.layers.podcasts.on ? ' on' : '') + '" data-p594tlayer="podcasts" role="switch" aria-checked="' + (td.layers.podcasts.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+    if (td.layers.podcasts.on) html += paintSeriesT();
+    return html;
+  }
+  function paint() {
+    if (!body || !res || !res.profiles || !td) return;
+    var p = prof();
+    if (!p) { body.innerHTML = '<p class="sub">No profiles stand.</p>'; return; }
+    var dv = divs();
+    var html = '<p class="sub">Today follows ' + esc(p.name) + ' — the chips change today’s pick.</p>';
+    html += '<div class="profchips591">';
+    res.profiles.forEach(function (pp) {
+      html += '<button class="chip591' + (pp.key === p.key ? ' on' : '') + '" data-p594tchip="' + esc(pp.key) + '">' + esc(pp.name) + '</button>';
+    });
+    html += '</div>';
+    html += '<p class="sub">Change for today only.</p>';
+    if (res.todayEdit) html += '<p class="sub" data-p594tpickwarn="1">Changing the pick clears today’s edits.</p>';
+    if (dv.length) html += '<p class="sub" data-p594tdivline="1">Today differs from ' + esc(p.name) + ' in ' + dv.length + (dv.length === 1 ? ' place.' : ' places.') + '</p>';
+    else html += '<p class="sub" data-p594tdivline="1">Today stands as ' + esc(p.name) + ' stands it.</p>';
+    if (res.todayEdit) html += '<div class="row"><button class="btn ghost" data-p594tclear="1">Clear today’s edits — follow the profile whole</button></div>';
+    html += '<p class="sub">Changes here stand for today only. To change every day, use Edit profiles.</p>';
+    html += paintBlocksT();
+    html += '<div class="row"><button class="btn ghost" data-p594tclose="1">Close</button></div>';
+    body.innerHTML = html;
+    wire();
+  }
+  function anchoredRepaintT(btn) {
+    var a = btn && btn.closest ? btn.closest('[data-p594anchor]') : null;
+    var name = a ? a.getAttribute('data-p594anchor') : null;
+    var top = a ? a.getBoundingClientRect().top : null;
+    paint();
+    if (name && top !== null && body && scroller) {
+      var nel = body.querySelector('[data-p594anchor="' + name + '"]');
+      if (nel) scroller.scrollTop += nel.getBoundingClientRect().top - top;
+    }
+  }
+  function afterEdit(btn) {
+    persist().then(function () { anchoredRepaintT(btn); profileRebuild(); }).catch(fail);
+  }
+  function wire() {
+    body.querySelectorAll('[data-p594tchip]').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var key = chip.getAttribute('data-p594tchip');
+        if (!res.effective || key === res.effective.key) return;
+        // Q2=A: the pick writes at once through the
+        // standing day-pick route — and changing it clears
+        // today's edits FIRST (the warning stood above the
+        // chips before the tap), so a stale layer can never
+        // land on the new profile.
+        var clearFirst = res.todayEdit
+          ? profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null })
+          : Promise.resolve(null);
+        clearFirst.then(function () {
+          return profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key });
+        }).then(function (r) {
+          if (r) res = r;
+          td = buildTodayDraft();
+          paint();
+          profileRebuild();
+        }).catch(fail);
+      });
+    });
+    var clearBtn = body.querySelector('[data-p594tclear]');
+    if (clearBtn) clearBtn.addEventListener('click', function () {
+      profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null }).then(function (r) {
+        if (r) res = r;
+        td = buildTodayDraft();
+        paint();
+        profileRebuild();
+      }).catch(fail);
+    });
+    body.querySelectorAll('[data-p594tblock]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var b = btn.getAttribute('data-p594tblock');
+        var i = td.core.indexOf(b);
+        if (i >= 0) td.core.splice(i, 1);
+        else {
+          var ci = HOURS.indexOf(b), pos = 0;
+          td.core.forEach(function (x, j) { if (HOURS.indexOf(x) < ci) pos = j + 1; });
+          td.core.splice(pos, 0, b);
+          if (td.contents[b] === undefined) td.contents[b] = null;
+        }
+        afterEdit(btn);
+      });
+    });
+    function moveCoreT(attr, dir) {
+      body.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var b = btn.getAttribute(attr);
+          var i = td.core.indexOf(b), j = i + dir;
+          if (i >= 0 && j >= 0 && j < td.core.length) { var mv = td.core.splice(i, 1)[0]; td.core.splice(j, 0, mv); }
+          afterEdit(btn);
+        });
+      });
+    }
+    moveCoreT('data-p594tup', -1);
+    moveCoreT('data-p594tdown', 1);
+    body.querySelectorAll('[data-p594tlayer]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var w = btn.getAttribute('data-p594tlayer');
+        td.layers[w].on = !td.layers[w].on;
+        afterEdit(btn);
+        if (w === 'podcasts' && td.layers.podcasts.on && !seriesList) loadSeries();
+      });
+    });
+    body.querySelectorAll('[data-p594tseries]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var k = btn.getAttribute('data-p594tseries');
+        var arr = td.layers.podcasts.series || (td.layers.podcasts.series = []);
+        var i = arr.indexOf(k);
+        if (i >= 0) arr.splice(i, 1); else arr.push(k);
+        afterEdit(btn);
+      });
+    });
+    function cPartsT(btn, attr) { return String(btn.getAttribute(attr)).split('|'); }
+    function removeItemT(btn, attr) {
+      var parts = cPartsT(btn, attr);
+      var block = parts[0], id = parts[1];
+      var m = materializeT(block);
+      td.contents[block] = m.filter(function (x) { return opnTodayItemId594(x) !== id; });
+      afterEdit(btn);
+    }
+    body.querySelectorAll('[data-p594tcitem]').forEach(function (btn) {
+      btn.addEventListener('click', function () { removeItemT(btn, 'data-p594tcitem'); });
+    });
+    body.querySelectorAll('[data-p594tcremove]').forEach(function (btn) {
+      btn.addEventListener('click', function () { removeItemT(btn, 'data-p594tcremove'); });
+    });
+    function moveItemT(attr, dir) {
+      body.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var parts = cPartsT(btn, attr);
+          var block = parts[0], id = parts[1];
+          var m = materializeT(block);
+          var i = -1;
+          m.forEach(function (x, j) { if (opnTodayItemId594(x) === id) i = j; });
+          var j = i + dir;
+          if (i >= 0 && j >= 0 && j < m.length) { var mv = m.splice(i, 1)[0]; m.splice(j, 0, mv); }
+          afterEdit(btn);
+        });
+      });
+    }
+    moveItemT('data-p594tcup', -1);
+    moveItemT('data-p594tcdown', 1);
+    body.querySelectorAll('[data-p594trestore]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var parts = cPartsT(btn, 'data-p594trestore');
+        var block = parts[0], id = parts[1];
+        var comp = opnTodayComposedContents594(prof(), block);
+        var cur = effList(block);
+        var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
+        if (restored) {
+          var kept = cur.filter(function (it) { return comp.map(opnTodayItemId594).indexOf(opnTodayItemId594(it)) < 0; });
+          var base = comp.filter(function (it) { return opnTodayItemId594(it) === id || cur.map(opnTodayItemId594).indexOf(opnTodayItemId594(it)) >= 0; });
+          td.contents[block] = base.concat(kept);
+        }
+        afterEdit(btn);
+      });
+    });
+    body.querySelectorAll('[data-p594tadd]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openAddPickerT(btn.getAttribute('data-p594tadd')); });
+    });
+    var closeBtn = body.querySelector('[data-p594tclose]');
+    if (closeBtn) closeBtn.addEventListener('click', closeScreen);
+  }
+  function openAddPickerT(block) {
+    loadBookT(function () {
+      var oldA = document.querySelector('.profadd591');
+      if (oldA) oldA.remove();
+      var sh = document.createElement('div');
+      sh.className = 'sheet profadd591';
+      var list = effList(block);
+      var html = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>';
+      var any = false;
+      profContentsUniverse590(block).forEach(function (it) {
+        var id = it.kind + ':' + (it.key || '');
+        if (list.map(opnTodayItemId594).indexOf(id) >= 0) return;
+        any = true;
+        html += '<div class="card bookrow" data-p594tadditem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
+      });
+      if (block !== 'Novenas' && bookList) bookList.forEach(function (pr) {
+        var id = 'prayer:' + pr.slug;
+        if (list.map(opnTodayItemId594).indexOf(id) >= 0) return;
+        any = true;
+        html += '<div class="card bookrow" data-p594tadditem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(pr.title) + '</span><span class="meta">Prayer</span></div></div>';
+      });
+      if (!any) html += '<p class="sub">Everything addable already stands in this block.</p>';
+      html += '<div class="row"><button class="btn ghost" data-p594taddclose="1">Close</button></div></div>';
+      sh.innerHTML = html;
+      document.body.appendChild(sh);
+      mountDrawer(sh, true);
+      sh.querySelectorAll('[data-p594tadditem]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var id = row.getAttribute('data-p594tadditem');
+          var kp = id.split(':');
+          materializeT(block).push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
+          sh.remove();
+          afterEdit(null);
+        });
+      });
+      var c = sh.querySelector('[data-p594taddclose]');
+      if (c) c.addEventListener('click', function () { sh.remove(); });
+    });
+  }
+  function loadBookT(cb) {
+    if (bookList) { cb(); return; }
+    api('/api/prayer/book').then(function (r) {
+      bookList = [];
+      ((r && r.groups) || []).forEach(function (g) { (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) bookList.push({ slug: pr.slug, title: pr.title || pr.slug }); }); });
+      cb();
+    }).catch(function () { bookList = []; cb(); });
+  }
+  function loadSeries() {
+    api('/api/player/podcasts').then(function (r) {
+      seriesList = (r && r.seriesList) || [];
+      seriesList.forEach(function (s) {
+        if (OPN_COURSE_KEYS_590.indexOf(s.series) >= 0) {
+          profCourseLabels591[s.series] = (s.title || s.series) + (s.currentLabel ? ' · Next: ' + s.currentLabel : (s.currentKey ? ' · Next: ' + s.currentKey : ''));
+        }
+      });
+      paint();
+    }).catch(function () { seriesList = []; });
+  }
+  function load() {
+    return api('/api/prayer/profiles').then(function (r) {
+      res = r;
+      td = buildTodayDraft();
+      paint();
+    }).catch(function () { if (body) body.innerHTML = '<p class="sub">Today did not load.</p>'; });
+  }
+  function startLoad() {
+    load();
+    loadSeries();
+    loadBookT(function () { paint(); });
+  }
+  // Part 1's discipline, on the new surface: a locked
+  // device vault gates Edit today — the unlock card stands
+  // in the body and the load (and so every write) proceeds
+  // only once the real document stands unlocked.
+  if (!profVaultGate594(body, startLoad, closeScreen)) startLoad();
+}
 function openProfilesScreen(openKey, opts) {
   // v593 §2: the Configure plan screen IS the only profile
   // editor — the pop-up machinery
   // is retired whole (no profile pop-up, no mapping
   // pop-up). The screen opens on the profile
-  // TODAY follows. The chips ARE the switch (Q2=A): a chip
-  // tap stands the tapped profile for today — its SAVED
-  // shape, the day rebuilds — AND opens it here for
-  // editing; the switch lands at the top (Q6=A). Edits
+  // today follows. v594 Part 2 (findings §4.3) DECOUPLES
+  // the chips from the day: a chip tap switches the EDITOR
+  // only — no day-pick, no day rebuild (the v593 Q2=A
+  // coupling is retired by John's Part 2 picks; today's
+  // pick is Edit today's act). The switch lands at the
+  // top (Q6=A). Edits
   // remain a draft until Save writes them (the v591
   // semantics stand). A chip tap while the standing draft
   // is dirty fires the prompt first (Q1=B): Save · Discard
@@ -20095,12 +20672,11 @@ function openProfilesScreen(openKey, opts) {
     var dirty = draftDirty(ed);
     var eff = res.effective;
     if (barEl) barEl.hidden = !dirty;
-    if (dirty && barLine) barLine.textContent = ed.name + ' · unsaved changes' + (eff ? (eff.key === ed.key ? ' · today follows this profile' : ' · today follows ' + eff.name) : '');
+    if (dirty && barLine) barLine.textContent = ed.name + ' · unsaved changes';
     if (chipsEl) {
       var html = '';
       res.profiles.forEach(function (p) {
         html += '<button class="chip591' + (p.key === edKey ? ' on' : '') + '" data-p593chip="' + esc(p.key) + '">' + esc(p.name)
-          + (eff && eff.key === p.key ? '<span class="today593">today</span>' : '')
           + (dirty && p.key === edKey ? '<span class="dot593"></span>' : '') + '</button>';
       });
       chipsEl.innerHTML = html;
@@ -20115,17 +20691,15 @@ function openProfilesScreen(openKey, opts) {
     doSwitch(key);
   }
   function doSwitch(key) {
-    // Q2=A: today stands the tapped profile's SAVED shape
-    // (a day-pick of the record, never the draft) and the
-    // day rebuilds; the screen opens a fresh draft of it,
-    // at the top (Q6=A).
-    profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key }).then(function (r) {
-      if (r) res = r;
-      ed = null; edKey = key; resetArmed = false; delArmed = false;
-      paint();
-      if (scroller) scroller.scrollTop = 0;
-      profileRebuild();
-    }).catch(fail);
+    // v594 Part 2 (findings §4.3): DECOUPLED — a chip tap
+    // switches the EDITOR only. No day-pick is written and
+    // the day does not rebuild (the v593 Q2=A coupling is
+    // retired by John's Part 2 picks; today's pick is Edit
+    // today's act now). The screen opens a fresh draft of
+    // the tapped profile, at the top (Q6=A stands).
+    ed = null; edKey = key; resetArmed = false; delArmed = false;
+    paint();
+    if (scroller) scroller.scrollTop = 0;
   }
   function openSwitchPrompt(targetKey) {
     // Q1=B: the switch prompt — Save · Discard · Stay.
@@ -20243,9 +20817,8 @@ function openProfilesScreen(openKey, opts) {
       edKey = t.key;
       ed = draftOf(t);
     }
-    var eff = res.effective;
-    var html = '<p class="sub" data-p591head="1">Today follows ' + esc(eff ? eff.name : '') + '</p>';
-    html += '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
+    var html = '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
+    html += '<p class="sub" data-p594warn="1">Changes here stand in every day that follows this profile.</p>';
     if (ed.honor) html += '<p class="sub">' + esc(ed.honor) + '</p>';
     if (DUR591[ed.key]) html += '<p class="sub">' + DUR591[ed.key] + '</p>';
     html += '<p class="sub">' + esc(explainEd(ed)) + '</p>';

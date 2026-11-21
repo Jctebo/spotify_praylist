@@ -1217,10 +1217,17 @@ interface PrayerProfile {
   coreBlocks: string[]; layers: PrayerProfileLayers;
   contents?: Record<string, { kind: string; key?: string }[]>;
 }
+interface TodayLayer {
+  baseProfileKey: string;
+  coreBlocks?: string[];
+  layers?: PrayerProfileLayers;
+  contents?: Record<string, { kind: string; key?: string }[]>;
+}
 interface PrayerProfileStore {
   profiles: PrayerProfile[]; standingKey: string; dayRule: boolean;
   version: number; picks: Record<string, string>;
   dayDefaults: Record<string, string>;
+  todayEdits: Record<string, TodayLayer>;
 }
 
 // P3: the day-kind from MASS_CALENDAR — the date's DEFAULT
@@ -1311,7 +1318,21 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
           .bind(JSON.stringify(dayDefaults), nowISO());
       } catch { /* the in-memory seed stands for this read */ }
     }
-    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, picks, dayDefaults };
+    // v594 Part 2: the today layers (migration 0045's
+    // today_edits column) — read in their own try: a
+    // pre-0045 store reads as an absent map = the
+    // pre-Part-2 fold exactly.
+    let todayEdits: Record<string, TodayLayer> = {};
+    try {
+      const te = await env.DB.prepare("SELECT today_edits FROM prayer_profile_state WHERE id=1").first<{ today_edits: string | null }>();
+      if (te && typeof te.today_edits === "string" && te.today_edits) {
+        const parsed = JSON.parse(te.today_edits) as Record<string, unknown>;
+        for (const [d, v] of Object.entries(parsed)) {
+          if (v && typeof v === "object" && !Array.isArray(v)) todayEdits[d] = v as TodayLayer;
+        }
+      }
+    } catch { todayEdits = {}; }
+    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, picks, dayDefaults, todayEdits };
   } catch { return null; }
 }
 
@@ -1392,15 +1413,49 @@ function profileResolve(store: PrayerProfileStore, date: string): { profile: Pra
   return { profile: store.profiles[0], resolvedBy: "standing", dayKind };
 }
 
+// v594 Part 2: does the layer's applied shape differ from
+// the profile's current shape? (The plan-row mark's read —
+// the client's opnTodayDivergence594 is the exact form;
+// here a contents list carried against no profile entry
+// counts as divergent: the composed list is the standing
+// universe, which the server cannot enumerate, and a
+// carried list diverged at write time by construction.)
+function todayLayerDiverges594(profile: PrayerProfile, layer: TodayLayer): boolean {
+  if (layer.coreBlocks && JSON.stringify(layer.coreBlocks) !== JSON.stringify(profile.coreBlocks)) return true;
+  if (layer.layers) {
+    if (!!layer.layers.novenas.on !== !!profile.layers.novenas.on) return true;
+    if (!!layer.layers.podcasts.on !== !!profile.layers.podcasts.on) return true;
+    const ps = [...(profile.layers.podcasts.series || [])].sort();
+    const ls = [...(layer.layers.podcasts.series || [])].sort();
+    if (JSON.stringify(ps) !== JSON.stringify(ls)) return true;
+  }
+  if (layer.contents) {
+    for (const [block, items] of Object.entries(layer.contents)) {
+      const pc = profile.contents ? profile.contents[block] : undefined;
+      if (!pc) return true;
+      if (JSON.stringify(pc) !== JSON.stringify(items)) return true;
+    }
+  }
+  return false;
+}
+
 function profileFoldOf(store: PrayerProfileStore, date: string): {
   key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "standing";
   dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
   layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
   contents: Record<string, { kind: string; key?: string }[]> | null;
   version: number;
+  todayEdits?: boolean;
 } {
   const { profile, resolvedBy, dayKind } = profileResolve(store, date);
-  return {
+  const fold: {
+    key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "standing";
+    dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
+    layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
+    contents: Record<string, { kind: string; key?: string }[]> | null;
+    version: number;
+    todayEdits?: boolean;
+  } = {
     key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy, dayKind,
     coreBlocks: [...profile.coreBlocks],
     layers: [
@@ -1410,6 +1465,29 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
     contents: profile.contents ? JSON.parse(JSON.stringify(profile.contents)) as Record<string, { kind: string; key?: string }[]> : null,
     version: store.version,
   };
+  // v594 Part 2 (doc §2.1): the today layer applies AFTER
+  // the resolved profile, for this date only — coreBlocks
+  // and layers replace when carried; contents merge per
+  // block. Every downstream consumer (blocks, additions,
+  // the readings seat) reads the fold, so nothing else
+  // moves. The mark stamps when the live diff is non-empty.
+  const layer = store.todayEdits ? store.todayEdits[date] : undefined;
+  if (layer) {
+    if (Array.isArray(layer.coreBlocks)) fold.coreBlocks = [...layer.coreBlocks];
+    if (layer.layers) {
+      fold.layers = [
+        { key: "novenas", on: !!layer.layers.novenas.on },
+        { key: "podcasts", on: !!layer.layers.podcasts.on, series: [...(layer.layers.podcasts.series || [])] },
+      ];
+    }
+    if (layer.contents) {
+      const merged: Record<string, { kind: string; key?: string }[]> = fold.contents ? JSON.parse(JSON.stringify(fold.contents)) : {};
+      for (const [b, items] of Object.entries(layer.contents)) merged[b] = JSON.parse(JSON.stringify(items)) as { kind: string; key?: string }[];
+      fold.contents = merged;
+    }
+    if (todayLayerDiverges594(profile, layer)) fold.todayEdits = true;
+  }
+  return fold;
 }
 
 // The profiles read: the store's public shape + the state +
@@ -1430,6 +1508,7 @@ async function profilesPayload(env: Env, date: string) {
       ...(p.contents ? { contents: p.contents } : {}),
     })),
     state: { standingKey: store.standingKey, dayRule: store.dayRule, version: store.version, dayDefaults: store.dayDefaults },
+    todayEdit: store.todayEdits && store.todayEdits[date] ? JSON.parse(JSON.stringify(store.todayEdits[date])) as TodayLayer : null,
     effective: profileFoldOf(store, date),
   };
 }
@@ -4120,6 +4199,57 @@ export default {
               `INSERT INTO prayer_profile_day_picks (date, profile_key, updated_at) VALUES (?, ?, ?)
                ON CONFLICT(date) DO UPDATE SET profile_key = excluded.profile_key, updated_at = excluded.updated_at`,
             ).bind(date, body.profileKey, ts),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "today-edit" && request.method === "PUT") {
+          // v594 Part 2 (doc §2.1): the today layer write —
+          // {date, layer}; a null layer, or an entry
+          // carrying no fields, deletes the date's entry.
+          // Validation mirrors the client shim's
+          // opnCheckTodayLayer594; past-date entries prune
+          // in the same write; the version bumps in the
+          // same batch, as every profiles write does.
+          const body = await request.json().catch(() => ({})) as { date?: unknown; layer?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const date = typeof body.date === "string" ? body.date : "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          const today = prayerChicagoNow().date;
+          const next: Record<string, TodayLayer> = {};
+          for (const [d, v] of Object.entries(store.todayEdits || {})) if (d >= today) next[d] = v;
+          if (body.layer !== null && body.layer !== undefined) {
+            const L = (body.layer && typeof body.layer === "object" && !Array.isArray(body.layer)) ? body.layer as Record<string, unknown> : null;
+            if (!L) return err(400, "today layer must be an object");
+            const base = typeof L.baseProfileKey === "string" ? store.profiles.find((p) => p.key === L.baseProfileKey) : undefined;
+            if (!base) return err(400, `bad base profile ${typeof L.baseProfileKey === "string" ? L.baseProfileKey : "(empty)"}`);
+            const entry: TodayLayer = { baseProfileKey: base.key };
+            if (L.coreBlocks !== undefined) {
+              if (!Array.isArray(L.coreBlocks)) return err(400, "coreBlocks must be an array");
+              const HOURS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"];
+              const core: string[] = [];
+              for (const rawB of L.coreBlocks) {
+                if (typeof rawB !== "string" || !HOURS.includes(rawB)) return err(400, `bad block ${String(rawB)}`);
+                if (!core.includes(rawB)) core.push(rawB);
+              }
+              entry.coreBlocks = core;
+            }
+            if (L.layers !== undefined) {
+              const checkedL = validateProfileLayers(L.layers);
+              if ("error" in checkedL) return err(400, checkedL.error);
+              entry.layers = { novenas: { on: !!checkedL.normalized.novenas.on }, podcasts: { on: !!checkedL.normalized.podcasts.on, series: checkedL.normalized.podcasts.series } };
+            }
+            if (L.contents !== undefined) {
+              const checkedC = validateProfileContents(L.contents, entry.coreBlocks || base.coreBlocks);
+              if ("error" in checkedC) return err(400, checkedC.error);
+              if (checkedC.normalized && Object.keys(checkedC.normalized).length) entry.contents = checkedC.normalized;
+            }
+            if (entry.coreBlocks !== undefined || entry.layers !== undefined || entry.contents !== undefined) next[date] = entry;
+          }
+          const ts = nowISO();
+          await env.DB.batch([
+            env.DB.prepare("UPDATE prayer_profile_state SET today_edits = ?, updated_at = ? WHERE id = 1").bind(JSON.stringify(next), ts),
             profileBumpStmt(env, ts),
           ]);
           return json(await profilesPayload(env, prayerChicagoNow().date));
