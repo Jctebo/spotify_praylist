@@ -83,3 +83,26 @@ Gates on the working tree:
   by-design red**: S4 ("the home paint emits the Configure
   plan row BEFORE the profile card") asserts the card this
   release retires; its premise is gone by John's word.
+
+## §4 Review
+
+PASS. The diff was read whole (6234689 + the Review fix
+f84cf6c): three cuts and comment corrections in client.ts,
+nothing else. The removed wiring bound attributes no paint
+emits (proven at Plan, re-verified against the diff); the
+retained Configure plan wiring and both ladder doors stand
+byte-identical to base. One Review fix: the v590 comment at
+the plan row still said the button stands "whether or not
+a profile card paints below it" — corrected to name the
+card's retirement (f84cf6c, comment only).
+
+Gates re-run: harness-v595 **17 ok / 0 not ok** on the
+working tree after the fix and on a clean checkout of the
+committed tree; equivalence A1/A2 byte-identical in both.
+Named limits: the historical test suites under app/tests/
+(harness-v515/v517/v521/v522) assert the card's retired
+forms and stand as history, not gates — the standing gate
+family is app/harness-*.mjs, whose deltas are named in §3.
+Private-shape parity stands at code level (the change is
+one client paint path, shape-independent; the fold and the
+payload are untouched).
