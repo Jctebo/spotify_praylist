@@ -156,3 +156,36 @@ Regression: harness-v591 **32 ok / 0 not ok** — stands at its
 shipped count with zero deltas (its statics never pinned the
 mapping section's seat, so the expected superseded-static
 class does not arise).
+
+## §4 Review (chain-v592-build, 2026-11-21)
+
+**Verdict: PASS.** The diff was read whole (client.ts hunk by
+hunk; the ui.ts dress block). The gates stand as recorded in
+§3: harness-v592 **12 ok / 0 not ok** and harness-v591
+**32 ok / 0 not ok**, each on the working tree AND on a clean
+checkout of the committed tree (74711be).
+
+Points verified in the read: the mapping sheet paints only
+into its stable `.profmapbody` container (the S11 discipline;
+mountDrawer's restructure at mount cannot tear it) · the
+profile pop-up opened from the mapping mounts above it and
+every one of its completion paths (Apply · Save Profile ·
+Save New · Reset · Delete · Close) repaints the mapping from
+the fresh state before returning to it · a stale `mapPaintFn`
+self-clears when the mapping sheet has left the document ·
+the full-screen rule's !important height yields correctly
+to mountDrawer's inline tall-drawer height, and the
+panelbody remains the scroll · the compact overrides are
+scoped to the Configure family classes only — no shared
+dress moved · index.ts untouched, so the fold, the save
+routes, and the day-map semantics stand byte-identical.
+
+**Named limits standing:** with the panel covering the whole
+viewport, the scrim tap has no target on the Configure
+screen — the labeled Close act and the grab-drag stand as
+its close paths · the day mapping pop-up is a tall drawer
+sheet like the profile pop-ups, not full-screen (the
+full-screen form is the Configure screen's own, per scope) ·
+private-shape parity for the surface is code + harness level
+(the private host's Access gate blocks a live fetch from
+this seat, the standing posture).
