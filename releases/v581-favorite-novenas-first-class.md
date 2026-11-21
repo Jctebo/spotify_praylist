@@ -102,6 +102,19 @@ Review ran on a CLEAN checkout of the exact committed tree — worktree ~/worksp
 - Gate honesty: the three S-leg artifacts above are named with their causes; no failed leg is counted as a pass, and no functional leg failed anywhere in the suite.
 - Diff audit: the change is confined to the folder derivation, the door row's meta, the section visibility, two payload fields, and the settle-hook line — the starred store, the sweep, the vault, and the Prayers folder's definitional content are untouched (the diff stat: client.ts +102/−9 in the favorites span, index.ts +9).
 
+## 5 · Ship
+
+Shipped 2026-11-21 by chain-v581-r2 under John's To Ship approval of package 71 (2026-11-21 10:33 CT, chat approval is the record).
+
+- **Merge + push:** release/v581 merged back to main as part of this release (John's 2026-11-21 rule) — fast-forward over the v582/v579 ship commits (7330bd5) after a clean rebase; GitHub main **ba26628** (Implement 5f2ed7f · pin moves fd1d2b7 · doc §§3–4 ffe260a · SW pin bump ba26628), pushed via the Git Data API with byte-identical replication and read back: **main pushed · remote in sync**. Build branches stay local; release/v581 was never pushed.
+- **Deploy:** Worker **c8ea7792-2002-446d-9eea-ef9b6190c590**, deployed from a clean ship worktree of the merged main tree (driver deploy-app-v581-ship.py, dry-run clean first). SW pin **ora-pro-nobis-v581-1** (read back in the served sw.js). Rollback target: the prior production Worker 4b6371be (v579's deploy).
+- **Served-leg proofs (live, public shape):** the served app.js parses whole (1,069,262 script bytes) and carries the v581 surface (Favorite Novenas · favVisibleFolders · favNovenaStanding); the live `?series=novenas` payload answers 247 novenas, every one carrying `startDate` + `startLabel`; the private host answers 302 (Access) on the same Worker — proven-by-identity.
+- **Harness at Ship:** harness-v581 31 ok / 0 not ok on the clean checkout of the reviewed tree (6c1650d); on the pinned ship tree 29 ok / 2 not ok, the two being the pin bump's own legs (S1 sees ui.ts because the pin moved; S3 compares the moved pin against BASE) — the standing disclosed Ship shape. Sibling suites on the reviewed tree: every functional leg passes (v576 44/1 · v579 33/2 · v577 37/1, the not-oks all structural S-legs of older harnesses run on a newer tree, named in §4).
+- **Registry:** row 1552 **Live** (shipped_at 2026-11-21T16:56:31Z, read back) · What's New **396** · shipped record posted · all five phases passed (Scope 2318 · Plan 2320 · Implement 2326 · Review 2330 · Ship 2331) · time contracts 733/734/738/739 closed with every expectation judged met (contract 726 closed earlier with its expectations judged blocked — the first seat's clone stop and this seat's takeover, recorded honestly). Intake 1095 (Goals Board, Muse Jobs) closed with this outcome.
+- **Named for John's word, not folded in:** v579's reorder mode still lists empty CUSTOM folders (management access) while the Favorites page hides every empty folder, defaults and customs alike, as directed (§3.3). One word aligns the mode if he wants it.
+- **Standing open legs, untouched by this release:** the v568 live write-refusal POST proof (approval-gated) and v576's private-shape PUT field leg (John's: star a podcast in the app).
+- Field leg (John's): star a novena — it stands in Favorite Novenas with "Day n today" (or its start date); an unstarred novena leaves the folder off the page entirely.
+
 ### 2.8 Ship shape
 
 Client change + one server payload addition; SW pin `ora-pro-nobis-v581-1`; merge release/v581 back to main and push (read-back "main pushed · remote in sync"); deploy from the merged main tree; rollback target = v578 Worker be60f487. Sequencing with v579/v582: re-read main before merging and before deploying, rebase onto standing main, never force-push.
