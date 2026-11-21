@@ -93,3 +93,38 @@ release's file set (ui.ts + harness-v584.mjs); every functional leg passes.
   to ora-pro-nobis-v584-1 as the Ship commit, deploy from a clean
   checkout of merged main, served legs (styles.css dress · app.js
   parse · sw.js pin), What's New entry, row flips Live.
+
+## §5 Ship
+
+SHIPPED LIVE 2026-11-21 17:44Z (11:44 CT).
+
+- **Merge + push:** main re-read before the merge (0c52f5e, in sync —
+  v586's doc §5 commit had landed); release/v584 rebased onto it and
+  merged (merge commit **17fa828**: Implement 4f060bd · doc §3 f1a33a2 ·
+  doc §4 a20631c · SW pin bump 339b78e to ora-pro-nobis-v584-1). Pushed
+  via the Git Data API replication (5 commits, byte-identical, read
+  back): GitHub main **17fa828** == local main — main pushed · remote
+  in sync. The local release/v584 branch was deleted after the merge;
+  it was never pushed.
+- **Harness on the ship tree:** 15 ok / 2 not-ok — the two not-oks are
+  the pin bump's own legs (S5 sees the CACHE line move; S6 compares the
+  moved pin against base), the standing disclosed Ship shape; the
+  pre-Ship committed tree read 17/0 on its clean checkout.
+- **Deploy:** from a clean checkout of merged main 17fa828 (driver
+  deploy-app-v584-ship.py, dry-run clean first). Worker
+  **74616155-de04-4a19-8543-3c0e29046f6d** at 100%. Rollback target:
+  2ca5c0aa (v586's deploy).
+- **Served legs (public host):** GET /styles.css 200 — carries the
+  full-large dress exactly as built (keys 88px, digits 30px, grid
+  repeat(3, 88px), dots 18px, hint 19px) and the narrow-phone scaling
+  rule · GET /app.js 200 — parses whole under vm.Script (1,069,483
+  script bytes) · GET /sw.js — pin reads back `ora-pro-nobis-v584-1`.
+- **Registry:** row 1557 **Live** (shipped_at 2026-11-21T17:44:00Z,
+  read back) · What's New **398** · all five phases passed (Scope 2332 ·
+  Plan 2344 · Implement 2345 · Review 2348 · Ship 2351) · time
+  contracts 755/757/759/761 all closed with every expectation judged met.
+- **Field legs (John's):** open the Conscience gate — the pad stands
+  large (keys, digits, dots, hint); unlock the vault from a personal
+  surface and open Settings' protected section — the same large pad
+  stands at the gate; on a narrow phone the pad takes the full row
+  and keeps its proportions.
