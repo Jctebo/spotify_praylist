@@ -555,14 +555,20 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    Built on the standing tokens — the pad's accent is var(--accent),
    which v352's liturgical layer re-points by the day's color. */
 .pingate { text-align:center; }
-.pingate .lockline { font-size:17px; color:var(--navy); line-height:1.5; margin:6px 0 4px; }
-.pindots { display:flex; justify-content:center; gap:10px; margin:18px 0 6px; min-height:16px; }
-.pindot { width:14px; height:14px; border-radius:50%; border:2px solid var(--accent); background:transparent; }
+.pingate .lockline { font-size:19px; color:var(--navy); line-height:1.5; margin:6px 0 4px; }
+.pindots { display:flex; justify-content:center; gap:10px; margin:18px 0 6px; min-height:20px; }
+.pindot { width:18px; height:18px; border-radius:50%; border:2px solid var(--accent); background:transparent; }
 .pindot.on { background:var(--accent); }
-.pinpad { display:grid; grid-template-columns:repeat(3, 76px); gap:10px; justify-content:center; margin:14px 0 6px; }
-.pinpad button { font-family:inherit; font-size:20px; color:var(--navy); background:var(--card); border:1px solid var(--line); border-radius:50%; width:64px; height:64px; cursor:pointer; }
+.pinpad { display:grid; grid-template-columns:repeat(3, 88px); gap:10px; justify-content:center; margin:14px 0 6px; }
+.pinpad button { font-family:inherit; font-size:30px; color:var(--navy); background:var(--card); border:1px solid var(--line); border-radius:50%; width:88px; height:88px; cursor:pointer; }
 .pinpad button:disabled { opacity:.35; cursor:default; }
 .pinpad .pinblank { visibility:hidden; }
+/* v584: the pad stands FULL LARGE (keys 88px, digits 30px, dots
+   18px, hint 19px — presentation only, no behavior change).
+   On narrow phones the pad scales to the row width and keeps
+   its proportions: the columns take the row in thirds and the
+   keys stay round. */
+@media (max-width:340px) { .pinpad { grid-template-columns:repeat(3, 1fr); width:100%; } .pinpad button { width:100%; height:auto; aspect-ratio:1; } }
 .pinmsg { min-height:22px; font-size:15px; font-family:var(--sans); color:var(--danger); margin:8px 0 2px; }
 .pinmsg.wait { color:var(--muted); }
 @keyframes pinshake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-9px); } 40% { transform:translateX(9px); } 60% { transform:translateX(-6px); } 80% { transform:translateX(6px); } }
@@ -962,7 +968,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v586-1";
+var CACHE = "ora-pro-nobis-v584-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
