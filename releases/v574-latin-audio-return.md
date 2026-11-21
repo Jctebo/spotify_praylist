@@ -35,3 +35,14 @@
 - **Served-leg proof (the gate v562 missed, v573 restored — run BEFORE ship):** the reviewed code under `wrangler dev --remote` (LOCAL_DEV session) against the production bucket — our-father/la → **200, audio/mpeg, 202,981 B, sha256 byte-exact** against the render · litany-of-loreto/la (two-voice) → **200, audio/mpeg, 1,631,277 B, byte-exact** · Range bytes=0-99 on our-father/la → **206**, the exact first 100 bytes. Book read through the same session: 77 prayers · 77 EN folds · 27 LA folds.
 - **Diff read:** one Worker file (`index.ts`, map block only — the 27 `la` values plus the header comment's v574 note), the release doc, the harness. EN values byte-equal to the standing map (S3). No client, route, or schema change.
 - **Verdict: PASS.** The Latin folds may return; John's field playback (Our Father LA + one two-voice litany in the app) is the closing leg and stands open after ship by design — Latin's gate is his ear.
+
+## 5 · Ship
+
+- **Pin:** `ora-pro-nobis-v574-1` (ui.ts CACHE) as its own commit.
+- **Merge + push:** release/v574 merged to main. During the ship, two nightly wallpaper commits (496a249, 8b67ea4 — `assets/` images only, no app overlap) landed on remote main; the release branch was rebased onto 8b67ea4 and the harness base moved with it (harness still 11 ok / 0 not-ok against the new base). Push via the Git Data API byte-identical replication: **main pushed · remote in sync** — deployed head 8ce59ae (ls-remote verified).
+- **Worker:** **d3d3d0c3-a2e3-4d02-b005-fc7a8e28500b** at 100% (deployed 2026-11-21T07:23:01Z from the clean ship worktree at 8ce59ae). Rollback: a5f839ae (v573).
+- **What's New:** 384 — "Latin prayers have their voices back".
+- **Row 1534 read back:** Live · shipped_at 2026-11-21T07:23:35Z · whats_new_id 384.
+- **Post-deploy book read (production, app agent door):** 77 prayers · **77 EN folds · 27 LA folds · 0 foldless** — the Latin folds stand for exactly the 27-file set (our-father {en 21.2, la 25.4} · litany-of-loreto {en 201.1, la 203.8}).
+- **Phases:** Scope 2271 · Plan 2272 · Implement 2273 · Review 2274 · Ship 2275 — all passed; contracts 684 (Plan) · 685 (Implement) · 686 (Review) · 687 (Ship) judged per-expectation and closed.
+- **Field legs open (John's ear is Latin's gate):** play the Our Father in Latin and one two-voice litany (the Litany of Loreto) in the app.
