@@ -121,3 +121,34 @@ gate stands first → pad unlock → a block switch lands a
 layer → the clearing warning stands → the pick tap lands
 the pick and clears the layer · R3d the chips measure
 compact in that world too.
+
+## §4 Review
+
+PASS. The diff was read whole: ui.ts only, 3 insertions /
+5 deletions — the one unified compact chip rule, Edit
+today's row in the one compact row rule, the two
+per-screen re-declarations deleted, one comment. No other
+line moved; client.ts and index.ts are byte-identical to
+main (harness T4, and the merge base is the v594 Part 2
+ship f6c553b).
+
+Gates, all on the committed tree (fe74268):
+
+- **harness-v598: 15 ok / 0 not ok** on a CLEAN CHECKOUT
+  of the committed tree, matching the working tree.
+- **Fail-on-old proof:** the same harness on the pre-fix
+  tree (main f6c553b) runs **10 ok / 5 not ok** — T1/T2/T3
+  (the unified rule absent; 3 per-screen re-declarations
+  standing) and R1/R3d red, with R1's measurements the
+  field defect in numbers: Edit profiles' chip computes
+  min-height 38px, padding 5px/11px; Edit today's chip
+  computes **44px, padding 7px/14px**. Every behavior leg
+  (A1/A2, R3a–R3c) is green on both trees.
+- **Regression, every delta named:** harness-v594p2
+  **34 ok / 0 not ok — zero delta**. harness-v594 **7 ok /
+  2 not ok — zero delta**: the identical R3/R6 reds stand
+  on the base tree f6c553b (they assert the v593 chip
+  coupling — a chip tap in Edit profiles switching today —
+  which v594 Part 2 retired on John's picks; the v594
+  Part 2 ship recorded the same 7/2). No behavior leg
+  moved under a CSS-only change.
