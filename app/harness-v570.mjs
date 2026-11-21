@@ -10,6 +10,16 @@
 //      section, the snapshot key, the refusal lines).
 //   S5 PIN material never travels: the export/import code slice
 //      contains no read of the PIN store key.
+//   S6 THE SERVED CLIENT PARSES: the APP_JS template, rendered
+//      exactly as the Worker serves it, compiles whole — and
+//      the v568 seed guide's quoted body survives rendering
+//      with its quotes intact. (Standing lesson, 2026-11-21:
+//      the v568 seed literals were escaped one level too few
+//      inside the template; every served-leg proof that night
+//      checked the shell and the API and never the client's
+//      parse, so a dead client shipped. Worlds below run the
+//      RENDERED text — what the browser receives — never the
+//      raw source.)
 //
 // L-legs (the REAL v568+v570 client layer in Node vm worlds,
 // public shape; fixture: John's generated import file — drawn
@@ -74,12 +84,30 @@ check('S4 snapshot key + refusal lines stand',
 const v570slice = clientSrc.slice(clientSrc.indexOf('v570: export / import'), clientSrc.indexOf('var OPN_SEED_PROFILES'));
 check('S5 export/import slice never reads the PIN store', !v570slice.includes('OPN_PIN_KEY') && !v570slice.includes('opnPin'), v570slice.length);
 
-// ---------- world builder (the harness-v568 pattern) ----------
-const layerStart = clientSrc.indexOf('/* ---------------- v568: local personal data');
-const layerEnd = clientSrc.indexOf('function api(path, opts) {');
-const apiEnd = clientSrc.indexOf('function post(path, body)');
+// ---------- render APP_JS exactly as the Worker serves it ----------
+// APP_JS is a pure template literal (no ${} interpolation —
+// verified: the source holds no '${'), served verbatim at
+// /app.js. Evaluating the literal yields the served bytes.
+const tplStart = clientSrc.indexOf('= `') + 3;
+const tplEnd = clientSrc.indexOf('\n`;', tplStart);
+if (tplStart < 3 || tplEnd < 0) { console.log('not ok - APP_JS template markers'); process.exit(1); }
+const appJs = vm.runInContext('`' + clientSrc.slice(tplStart, tplEnd) + '`', vm.createContext({}));
+{
+  let parses = true, perr = '';
+  try { new vm.Script(appJs); } catch (e) { parses = false; perr = e.message; }
+  check('S6 served client (rendered APP_JS) parses whole', parses, perr);
+  const gStart = appJs.indexOf('var OPN_SEED_GUIDE = ');
+  const gEnd = appJs.indexOf(';', gStart);
+  const guide = vm.runInContext('(' + appJs.slice(gStart + 'var OPN_SEED_GUIDE = '.length, gEnd) + ')', vm.createContext({}));
+  check('S6 seed guide body keeps its inner quotes after rendering', !!guide && typeof guide[0].body === 'string' && guide[0].body.includes('"through my fault,"'), guide && guide[0].body.slice(0, 80));
+}
+
+// ---------- world builder (rendered client text) ----------
+const layerStart = appJs.indexOf('/* ---------------- v568: local personal data');
+const layerEnd = appJs.indexOf('function api(path, opts) {');
+const apiEnd = appJs.indexOf('function post(path, body)');
 if (layerStart < 0 || layerEnd < 0 || apiEnd < 0) { console.log('not ok - slice markers'); process.exit(1); }
-const layerText = clientSrc.slice(layerStart, layerEnd) + clientSrc.slice(layerEnd, apiEnd)
+const layerText = appJs.slice(layerStart, layerEnd) + appJs.slice(layerEnd, apiEnd)
   + '\n;this.__x = { opnDoc, opnExportText, opnRestoreFromText, opnValidateImport, opnUndoRestore, opnHasSnapshot, opnCountsOf, opnMode, opnPinSet };\n';
 
 function makeWorld(inShell) {
