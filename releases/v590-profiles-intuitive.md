@@ -549,3 +549,125 @@ and the skip case; the no-op equivalence leg is unaffected.
 
 Plan stands complete at Through Plan, as amended. John's next word — a
 run-level lift — seats Implement.
+
+## §3 Implement (chain-v590-build, 2026-11-21)
+
+Built on branch release/v590 in the standing worktree, per §2 as
+amended (§2.9, amendments 1–4) and the approved design document.
+
+**Client (client.ts).** The seed is corrected to the designed configs
+(Salesian podcasts on with its four series; Benedictine on with
+daily-readings). The migration (opnMigrateProfiles590) runs in place at
+first opnDoc adopt and on restore: a default differing from both the
+old seed and the designed config is first preserved whole as
+"<Name> — as found"; the designed configs re-seat; customs untouched;
+standingKey/dayRule/picks carried; the version bumps once; the vault
+envelope is unchanged and no PIN machinery moved. Resolution
+(opnResolveProfile590) carries the §2.9 precedence — pick → per-day
+default → day rule → standing → first — and opnProfilesPayload carries
+contents + dayDefaults + resolvedBy 'day-default'. The fold
+(opnFoldDay590) is restored in the device + web shapes at the day
+scrub: core blocks in profile order (a standing hour the profile does
+not name drops), layer blocks appended after core, additions filtered
+to standing blocks, the standing readings seat retired when Morning
+contents stand without the seat selector. Contents gate the settings
+rows inside extRebuildDescs (source selectors filter + order the own
+and external rows); course selectors resolve in
+resolveProfileCourses590 from the folded series payload's Current
+pointer (the user's own progress — lowest-position unlistened
+day/special entry; bonuses passed over; finished course → the slot
+stands empty); the readings seat resolves on-device in
+resolveReadingsSeat590 under the same contents rule as the server.
+Routes: the layers route refuses a default (rename_required — the
+leak is closed); the save route validates contents, refuses a mint
+under the source's or any default's name (rename_required), inherits
+basedOn contents; the state route carries dayDefaults; delete clears
+dayDefaults entries. The screen: one Profiles screen
+(openProfilesScreen) — For today · Standing default · the day rule ·
+Default by day · cards that open to block switches with drag order
+and canonical-hour switch-on, per-block contents editors, the layer
+switches, the series checklist only while Podcasts is on; every copy
+mint routes through the required rename sheet
+(openRenameCopySheet590) and nothing takes effect while the rename
+stands unconfirmed; a card layer toggle on a default routes through
+the same copy-on-write. The Configure plan button stands on the
+Praylist's first row (amendment 4), and the screen is also reachable
+from the profile card's Change act, Customize, and a Settings row.
+
+**Server (index.ts).** PrayerProfile gains the optional contents
+field (riding the layers JSON, validated by validateProfileContents);
+the store gains dayDefaults (migration 0044, a new nullable column on
+prayer_profile_state, read in its own guard so a pre-0044 store still
+answers); profileResolve carries the day-default leg; the seat check
+in the day payload is contents-based for every profile (Morning
+contents naming the seat selector, else the layer's series) — the
+old salesian/benedictine key restriction is gone; the layers route
+refuses a default and preserves contents; the save route validates
+contents and enforces the rename rule; the state route carries
+dayDefaults (written in the same batch, so a pre-0044 store fails the
+write whole rather than half); delete clears dayDefaults entries.
+
+**Styles (ui.ts).** The Configure plan row's gold border + the
+contents editor indent — two rules.
+
+**Harness.** app/harness-v590.mjs, production fixtures only (John's
+import file; the v589 production podcast fixture): statics · the
+NO-OP EQUIVALENCE leg (a Salesian day and a Sunday Benedictine day
+folded on-device with no contents edits are byte-identical in block
+list + per-block track identity to the reference composition) · the
+fold standing in the device shape · contents validation + fold/seat
+legs · copy mechanics + rename-required legs · migration legs (his
+exact list re-seats with zero copies; a drifted default preserved) ·
+per-day resolution legs · course legs (Day 322 stands; finished
+course empty; skip → first unlistened) · the restore-path migration
+leg. **37 ok / 0 not ok** on the working tree.
+
+Two build fixes inside Implement, named: the fold's leftover clause
+first kept non-core standing hours (the equivalence leg caught it —
+the clause now keeps only blocks outside the standing seven + layer
+pair); the fold first referenced the UI region's SLOT_BLOCKS and now
+carries its own hours list (the rendered client parses whole either
+way; the harness world caught the coupling).
+
+## §4 Review (chain-v590-build, 2026-11-21)
+
+- harness-v590 on a clean checkout of the committed tree: see §5
+  addendum line (run at Ship's compose; the working-tree run stands
+  at 37/0).
+- TypeScript: tsc --noEmit over the worker sources — the branch
+  carries the baseline's 36 missing-Cloudflare-types errors plus one
+  more of the same class (D1PreparedStatement at the dayDefaults
+  batch); no new error class. Wrangler's build supplies the types.
+- Regressions, each compared leg-by-leg against the base tree
+  (standing clone at the branch base): harness-v589 33/2 vs base
+  34/1 — the delta is two statics whose premises are v589's own
+  change-set (diff confinement to client.ts; newest migration 0042),
+  both superseded by v590's approved scope; every functional leg
+  passes identically, including the core fold over the production
+  fixture. harness-v578 39/4 on both trees, identical sets.
+  harness-v576 44/1 both (the stale newest-migration leg).
+  harness-v585 41/1 both (same leg). harness-v581 29/2 vs base 30/1 —
+  delta is its diff-confinement static (ui.ts now in v590's diff);
+  functional legs identical. harness-v586 22/1 vs base 23/0 — delta
+  is its diff-confinement static; all functional legs pass, including
+  the lectionary legs beside the changed seat gate. harness-v579
+  31/4 identical on both trees. harness-v587 34/5 identical sets on
+  both trees. harness-v584 10/7 identical on both trees.
+  harness-v570 34/6 vs base 35/5 — delta is its diff-confinement
+  static; its L3/L7/L8 restore-count legs fail identically on the
+  base tree (pre-existing, not v590's).
+- Named limits standing at Review: contents gating applies to the
+  settings-row families (own + external source rows) and to course
+  descriptors inside the block build; prayer selectors are validated,
+  stored, and editor-visible, and a prayer's standing rides its
+  source-row family (a prayer with no source row in the block gains
+  no new resolver in this build); contents item order follows the
+  editor's universe order (no drag for contents items); the Novenas
+  contents editor offers the all-novenas selector (named-subset
+  editing stands in the model + validation); the seat's on-device
+  resolution matches episode titles (the server's rule) and degrades
+  silently to no seat on a miss; in web mode the local doc is the
+  ephemeral seed doc, so the public web day composes under the
+  designed Salesian default.
+- Review verdict: PASS. The chain proceeds to Ship under John's
+  To Ship approval.
