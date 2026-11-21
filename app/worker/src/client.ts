@@ -1615,7 +1615,7 @@ function opnDefaultDoc() {
       intentions: [],
       conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
       profiles: {
-        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: true, version: 1, picks: {}, dayDefaults: {}, mig590: true
+        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: false, version: 1, picks: {}, dayDefaults: { sun: 'benedictine' }, mig590: true, mig591: true
       },
       config: {
         sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
@@ -1647,6 +1647,7 @@ function opnDoc() {
         if (d && d.format === 'orapronobis-personal-data' && d.sections) {
           opnDocCache = d;
           if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
+          if (opnMigrateProfiles591(d.sections.profiles)) opnSave();
           return d;
         }
       }
@@ -2346,6 +2347,7 @@ function opnRestoreFromText(text) {
   return opnSnapshotWrite().then(function () {
     opnDocCache = doc;
     if (doc.sections && opnMigrateProfiles590(doc.sections.profiles)) { /* migrated in place below */ }
+    if (doc.sections && opnMigrateProfiles591(doc.sections.profiles)) { /* migrated in place below */ }
     opnSave();
     // v589 (fix-forward): the file's podcastListens rows land
     // in the podcast core through the standing import seam —
@@ -2474,12 +2476,26 @@ function opnMigrateProfiles590(P) {
   P.mig590 = true;
   return true;
 }
+function opnMigrateProfiles591(P) {
+  // v591 Correction 1: the Sunday rule is just a default —
+  // a stored dayRule=true with no Sunday entry in the day
+  // map seeds the map's Sunday entry to The Benedictine
+  // Way; dayRule=false seeds nothing. The stored rule then
+  // retires: resolution never reads it again, and a
+  // solemnity follows its weekday's profile like any day.
+  if (!P || !Array.isArray(P.list) || P.mig591) return false;
+  if (!P.dayDefaults || typeof P.dayDefaults !== 'object') P.dayDefaults = {};
+  if (P.dayRule && !P.dayDefaults.sun) P.dayDefaults.sun = 'benedictine';
+  P.dayRule = false;
+  P.mig591 = true;
+  return true;
+}
 function opnResolveProfile590(P, date) {
-  // v590 §2.2 precedence: per-date pick → per-day default
-  // for the date's weekday → day rule → standing default →
-  // first. A set per-day default outranks the day rule for
-  // its weekday, solemnities included (John's amendment,
-  // flagged in the Plan §2.9).
+  // v591 §2.2 precedence: per-date pick → the day's profile
+  // (the day map, for the date's weekday) → the every-day
+  // (standing) profile → first. The v590 day-rule leg is
+  // RETIRED (Correction 1): the map's seeded Sunday entry
+  // carries what the rule carried.
   var byKey = function (k) { return P.list.filter(function (x) { return x.key === k; })[0] || null; };
   var dow = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)))).getUTCDay();
   var dayKind = dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday');
@@ -2487,10 +2503,6 @@ function opnResolveProfile590(P, date) {
   if (pick) return { profile: pick, resolvedBy: 'pick', dayKind: dayKind };
   var dd = P.dayDefaults && typeof P.dayDefaults === 'object' ? byKey(P.dayDefaults[OPN_DOW_KEYS_590[dow]]) : null;
   if (dd) return { profile: dd, resolvedBy: 'day-default', dayKind: dayKind };
-  if (P.dayRule && (dayKind === 'sunday' || dayKind === 'solemnity')) {
-    var ben = byKey('benedictine');
-    if (ben) return { profile: ben, resolvedBy: 'rule', dayKind: dayKind };
-  }
   var st = byKey(P.standingKey);
   if (st) return { profile: st, resolvedBy: 'standing', dayKind: dayKind };
   return { profile: P.list[0], resolvedBy: 'standing', dayKind: dayKind };
@@ -2757,12 +2769,11 @@ function opnLocalApi(path, opts, mode) {
       if (p === '/api/prayer/profiles/layers') {
         var lp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
         if (!lp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
-        // v590 §2.4: the leak closed — the layers route
-        // carries the kind guard. Writing layers onto a
-        // default is copy-on-write, routed through the
-        // rename step (the save route mints the copy); a
-        // direct write here is refused and changes nothing.
-        if (lp.kind === 'default') throw opnErr(400, 'rename_required: the named profiles cannot be changed — save as a copy under a name you give');
+        // v591 §2.2: profiles are edited directly — the
+        // ways included. The v590 kind guard (copy-on-write
+        // through the rename step) is SUPERSEDED by John's
+        // final model; a layers write lands on the profile
+        // named, ways and his own alike.
         lp.layers = opnLayersOut(opnCheckLayers(body.layers));
         return bump();
       }
@@ -2785,22 +2796,21 @@ function opnLocalApi(path, opts, mode) {
         var layers = opnLayersOut(opnCheckLayers(body.layers));
         var contents = opnCheckContents590(body.contents, core);
         if (typeof body.key === 'string' && body.key !== '') {
+          // v591 §2.2 SAVE PROFILE: the edits write back
+          // into the profile that was opened — the ways
+          // included (the v590 pristine refusal is
+          // superseded). No name is asked, no copy mints.
           var ep = findP(body.key);
           if (!ep) throw opnErr(400, 'bad profile ' + body.key);
-          if (ep.kind === 'default') throw opnErr(400, 'the named profiles cannot be changed — save as new');
           ep.name = name; ep.honorLine = honor; ep.coreBlocks = core; ep.layers = layers;
           if (contents !== undefined) ep.contents = contents;
           return bump();
         }
-        // v590 §2.4 (Amendment 1): every mint is a rename —
-        // a copy based on a standing profile lands only
-        // under a name John gives; the source's own name
-        // (or any default's name) is refused, and nothing
-        // is minted by the refused save.
+        // v591 §2.2 SAVE NEW: mints another profile from
+        // the toggles as they stand, under the name given
+        // at the save — the only place a name is asked.
+        // The opened profile stands byte-identical.
         var basedOn = typeof body.basedOn === 'string' ? findP(body.basedOn) : null;
-        if (basedOn && name === basedOn.name) throw opnErr(400, 'rename_required: give the copy a new name');
-        var nameIsDefault = P.list.some(function (x) { return x.kind === 'default' && x.name === name; });
-        if (nameIsDefault) throw opnErr(400, 'rename_required: give the copy a new name');
         var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         if (!slug) slug = 'profile';
         var key = slug;
@@ -2809,6 +2819,21 @@ function opnLocalApi(path, opts, mode) {
         if (contents !== undefined) rec.contents = contents;
         else if (basedOn && basedOn.contents) rec.contents = opnClone(basedOn.contents);
         P.list.push(rec);
+        return bump();
+      }
+      if (p === '/api/prayer/profiles/reset') {
+        // v591 §2.2 RESET TO DEFAULT: a named way returns
+        // to its DESIGNED config (the seed record), saved
+        // and draft edits alike discarded. His own profiles
+        // carry no designed default behind them.
+        var rp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
+        if (!rp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
+        var des = null;
+        OPN_SEED_PROFILES.forEach(function (d) { if (d.key === rp.key) des = d; });
+        if (rp.kind !== 'default' || !des) throw opnErr(400, 'only the named ways carry a designed default');
+        rp.name = des.name; rp.honorLine = des.honorLine;
+        rp.coreBlocks = opnClone(des.coreBlocks); rp.layers = opnClone(des.layers);
+        delete rp.contents;
         return bump();
       }
       if (p === '/api/prayer/profiles/delete') {
@@ -3315,6 +3340,26 @@ function opnFoldDay590(j) {
     delete byName['Podcasts'];
   }
   j.blocks = out;
+  // v591 Correction 2: a prayer standing in the effective
+  // profile's contents for a block surfaces in the built
+  // day through the standing additions path — the
+  // descriptor shape the weave paints into the block and
+  // the book audio serves. A standing per-day addition
+  // for the same prayer in the same block already carries
+  // it; no second copy stands.
+  if (eff.contents) {
+    if (!Array.isArray(j.additions)) j.additions = [];
+    var have591 = {};
+    j.additions.forEach(function (a) { if (a && a.kind !== 'reading' && a.slug) have591[a.block + '|' + a.slug] = 1; });
+    Object.keys(eff.contents).forEach(function (block) {
+      (eff.contents[block] || []).forEach(function (it) {
+        if (!it || it.kind !== 'prayer' || !it.key) return;
+        if (have591[block + '|' + it.key]) return;
+        have591[block + '|' + it.key] = 1;
+        j.additions.push({ block: block, slug: it.key, lang: 'en', afterId: null, kind: 'prayer', ref: null });
+      });
+    });
+  }
   if (Array.isArray(j.additions)) {
     var standing = {};
     out.forEach(function (b) { standing[b.block] = 1; });
@@ -19458,9 +19503,6 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-profconfigure]').forEach(function (btn) {
     btn.addEventListener('click', function () { openProfilesScreen(); });
   });
-  view.querySelectorAll('[data-proflayer]').forEach(function (btn) {
-    btn.addEventListener('click', function () { profileLayerToggle(btn.getAttribute('data-proflayer')); });
-  });
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
   });
@@ -19564,70 +19606,20 @@ function profileRebuild() {
 function profileCardHtml(day) {
   var fold = day && day.profile;
   if (!fold) return '';
-  var resLine = 'Your standing default';
+  // v591 §2.5: the card is INFORMATION ONLY — the name,
+  // how today resolved to it, and its honor line. Every
+  // configure act lives behind the Praylist's one
+  // Configure plan row; the card carries none (the v590
+  // Change/Customize/layer acts are removed).
+  var resLine = 'Your every-day profile';
   if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
-  else if (fold.resolvedBy === 'rule') resLine = fold.dayKind === 'sunday' ? 'The day rule \\u00b7 Sunday' : 'The day rule \\u00b7 a solemnity';
-  var novOn = false, podOn = false, podCount = 0;
-  (fold.layers || []).forEach(function (l) {
-    if (l.key === 'novenas') novOn = !!l.on;
-    if (l.key === 'podcasts') { podOn = !!l.on; podCount = (l.series || []).length; }
-  });
-  // v517 §2: the head row always paints (the name, the
-  // resolution line, the honor line) with the expand toggle;
-  // the body — the Change row, the layer rows, the Choose
-  // podcasts row when on, and the Customize row — paints
-  // only while profCardOpen stands.
-  var html = '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
+  else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
+  return '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine) + '</div>'
     + (fold.honorLine ? '<div class="meta">' + esc(fold.honorLine) + '</div>' : '')
-    + '</div><button class="btn ghost" data-profexpand="1">' + (profCardOpen ? 'Done' : 'Edit') + '</button></div>';
-  if (profCardOpen) {
-    html += '<div class="row"><span class="grow">Prayer profile</span><button class="btn ghost" data-profchange="1">Change</button></div>'
-      + '<div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-proflayer="novenas">' + (novOn ? 'On' : 'Off') + '</button></div>'
-      + '<div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-proflayer="podcasts">' + (podOn ? 'On' : 'Off') + '</button></div>'
-      + (podOn ? '<div class="row"><span class="grow">Podcast series</span><button class="btn ghost" data-podpick="1">Choose podcasts (' + podCount + ')</button></div>' : '')
-      + '<div class="row"><span class="grow">Customize</span><button class="btn ghost" data-profcustomize="1">Customize profile</button></div>';
-  }
-  return html + '</div>';
+    + '</div></div></div>';
 }
-function profileLayerToggle(which) {
-  // The layer act on the CURRENT (effective) profile: read
-  // the store, deep-copy the profile's layers, flip the named
-  // layer's on, PUT the layers whole, rebuild the day. Any
-  // failure leaves the paint as it stands.
-  if (which !== 'novenas' && which !== 'podcasts') return;
-  api('/api/prayer/profiles').then(function (res) {
-    if (!res || !res.effective || !res.profiles) return;
-    var rec = null;
-    res.profiles.forEach(function (p) { if (p.key === res.effective.key) rec = p; });
-    if (!rec || !rec.layers) return;
-    var layers = JSON.parse(JSON.stringify(rec.layers));
-    if (which === 'novenas') layers.novenas.on = !layers.novenas.on;
-    else layers.podcasts.on = !layers.podcasts.on;
-    if (rec.kind === 'default') {
-      // v590 §2.4: copy-on-write, routed through the
-      // rename step — nothing mints and nothing changes
-      // while the rename stands unconfirmed; on confirm
-      // the copy mints with the toggled layers and takes
-      // the act's scope (today's pick, else the standing
-      // default), and the day rebuilds.
-      openRenameCopySheet590(rec.name + ' — my copy', function (newName) {
-        profPut('/api/prayer/profiles/save', { basedOn: rec.key, name: newName, honorLine: '', coreBlocks: rec.coreBlocks.slice(), layers: layers, contents: rec.contents }).then(function (res2) {
-          var nk = null;
-          ((res2 && res2.profiles) || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
-          if (!nk) { profileRebuild(); return; }
-          if (res.effective && res.effective.resolvedBy === 'pick') {
-            profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: nk }).then(function () { profileRebuild(); }).catch(function () { profileRebuild(); });
-          } else if (res.state && res.state.standingKey === rec.key) {
-            profPut('/api/prayer/profiles/state', { standingKey: nk }).then(function () { profileRebuild(); }).catch(function () { profileRebuild(); });
-          } else profileRebuild();
-        }).catch(function () {});
-      });
-      return;
-    }
-    profPut('/api/prayer/profiles/layers', { profileKey: rec.key, layers: layers }).then(function () { profileRebuild(); }).catch(function () {});
-  }).catch(function () {});
-}
+
 
 function openRenameCopySheet590(suggested, onConfirm) {
   // v590 §2.4 (Amendment 1): the rename step — a copy
@@ -19638,11 +19630,11 @@ function openRenameCopySheet590(suggested, onConfirm) {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet profrename590';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Name your copy</h1></div>'
-    + '<p class="sub">The named profiles stay as designed — your change saves as your own copy, under a name you give.</p>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Name the new profile</h1></div>'
+    + '<p class="sub">The new profile saves under the name you give it. The profile you opened does not change.</p>'
     + '<label class="f">Name</label><input type="text" data-rename590="1" value="' + esc(suggested || '') + '">'
     + '<p class="fieldnote" data-rename590note="1"></p>'
-    + '<div class="row"><button class="btn gold" data-rename590save="1">Save copy</button>'
+    + '<div class="row"><button class="btn gold" data-rename590save="1">Save</button>'
     + '<button class="btn ghost" data-rename590cancel="1">Cancel</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true);
@@ -19656,29 +19648,40 @@ function openRenameCopySheet590(suggested, onConfirm) {
     onConfirm(name);
   });
 }
+var profCourseLabels591 = {};
 function profContentsUniverse590(block) {
   var items = [];
-  if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'All active novenas' }); return items; }
+  if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'Every active novena' }); return items; }
   (state.ownStanding || []).forEach(function (r) { if (r.block === block) items.push({ kind: 'source', key: r.sourceKey, label: r.title || r.sourceKey }); });
   (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.source || sl.slotId }); });
-  if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'Daily Readings seat' });
-  OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: 'Course — ' + k }); });
+  if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'The day\u2019s readings' });
+  OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: profCourseLabels591[k] || ('Course — ' + k) }); });
   return items;
 }
 function openProfilesScreen(openKey) {
-  // v590 §2.2: ONE Profiles screen replaces the sheet +
-  // editor pair — the picker (For today · Standing
-  // default · the Day rule · Default by day), the profile
-  // cards, and the opened profile (blocks with real
-  // switches + drag order · the two layer switches · the
-  // series checklist only while Podcasts is on · contents
-  // per block). Reached from the Praylist's first-row
-  // Configure plan button, the profile card, and Settings.
+  // v591 §2.1: the Configure plan screen, blocks first.
+  // The screen opens on the profile TODAY follows: a head
+  // line naming it, the profiles as chips in ONE scrollable
+  // row, then the blocks themselves — real switches, an on
+  // block's contents standing open underneath (switches +
+  // steppers on every row, an Add act), Novenas and
+  // Podcasts standing as blocks among blocks. The toggles
+  // edit a DRAFT of the opened profile; edits land in a
+  // profile only through the save acts (Save Profile writes
+  // the opened profile — the ways included; Save New mints
+  // another, named at the save; Reset to Default returns a
+  // named way to its designed shape). Below the blocks, the
+  // day mapping: an Every day row + the seven weekdays, each
+  // opening its pop-up. One pop-up builder serves every
+  // scope (chip · Every day · weekday): it explains the
+  // profile, carries its toggles as a draft, and its acts —
+  // Apply (the scope follows the profile; never edits it),
+  // Save Profile, Save New, Reset, Delete (his own only).
   var old = document.querySelector('.profplan590');
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet profplan590';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Prayer profiles</h1></div>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Configure plan</h1></div>'
     + '<div class="profplanbody"><p class="sub">Loading …</p></div><p class="fieldnote profplannote"></p></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true);
@@ -19686,268 +19689,466 @@ function openProfilesScreen(openKey) {
   var note = sheet.querySelector('.profplannote');
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
   var DOWS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
-  var res = null, ed = null, ddOpen = null, seriesList = null, delArmed = false;
+  var DUR591 = { 'little-way': 'About 30 minutes', 'salesian': 'About 1½–2 hours', 'benedictine': 'The full day — all seven blocks' };
+  var res = null, seriesList = null, bookList = null;
+  var edKey = openKey || null, ed = null, resetArmed = false;
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
-  function load(keepEd) {
-    return api('/api/prayer/profiles').then(function (r) {
-      res = r;
-      if (!keepEd) ed = null;
-      if (openKey && !ed) { startEdit(openKey); openKey = null; }
-      paint();
-    }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
-  }
-  function startEdit(key) {
-    var rec = byKey(key);
-    if (!rec) { ed = null; return; }
-    ed = {
-      key: rec.key, kind: rec.kind, name: rec.name, honor: rec.kind === 'default' ? '' : (rec.honorLine || ''),
-      core: (rec.coreBlocks || []).slice(),
-      layers: JSON.parse(JSON.stringify(rec.layers)),
-      contents: {}, openContents: null, dragBlock: null
-    };
-    (ed.core.concat(['Novenas'])).forEach(function (b) {
-      ed.contents[b] = (rec.contents && rec.contents[b]) ? opnClone(rec.contents[b]) : null;
+  function draftOf(rec) {
+    var d = { key: rec.key, kind: rec.kind, name: rec.name, honor: rec.honorLine || '',
+      core: (rec.coreBlocks || []).slice(), layers: JSON.parse(JSON.stringify(rec.layers)), contents: {} };
+    d.core.concat(['Novenas']).forEach(function (b) {
+      d.contents[b] = (rec.contents && rec.contents[b]) ? opnClone(rec.contents[b]) : null;
     });
-    delArmed = false;
+    return d;
   }
-  function contentsOut() {
-    if (!ed) return undefined;
+  function contentsOut(d) {
     var out = {}, any = false;
-    Object.keys(ed.contents).forEach(function (b) {
-      if (ed.contents[b]) { out[b] = ed.contents[b].map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; }); any = true; }
+    Object.keys(d.contents).forEach(function (b) {
+      if (b !== 'Novenas' && d.core.indexOf(b) < 0) return;
+      if (d.contents[b]) { out[b] = d.contents[b].map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; }); any = true; }
     });
     return any ? out : undefined;
   }
-  function paint() {
-    if (!body || !res || !res.profiles) return;
-    var eff = res.effective;
-    var html = '<p class="sub">For today</p>';
-    res.profiles.forEach(function (p) {
-      var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
-      html += '<div class="card bookrow" data-pp590pick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + (p.kind === 'custom' ? ' <span class="meta">(yours)</span>' : '') + '</span>' + (mark ? '<span class="meta">Today</span>' : '') + '<button class="btn ghost" data-pp590open="' + esc(p.key) + '">Open</button></div></div>';
-    });
-    if (eff && eff.resolvedBy === 'pick') html += '<div class="card bookrow" data-pp590pick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
-    html += '<p class="sub">Standing default</p>';
-    res.profiles.forEach(function (p) {
-      var mark = res.state && res.state.standingKey === p.key;
-      html += '<div class="card bookrow" data-pp590stand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">Default</span>' : '') + '<button class="btn ghost" data-pp590open="' + esc(p.key) + '">Open</button></div></div>';
-    });
-    html += '<p class="sub">Day rule</p>';
-    html += '<div class="card bookrow" data-pp590rule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state && res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
-    html += '<p class="sub">Default by day</p>';
-    var dd = (res.state && res.state.dayDefaults) || {};
-    DOWS.forEach(function (dw) {
-      var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
-      html += '<div class="card bookrow" data-pp590dd="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Standing default') + '</span></div></div>';
-      if (ddOpen === dw[0]) {
-        html += '<div class="card bookrow" data-pp590ddset="' + dw[0] + ':"><div class="row"><span class="grow">Standing default (no per-day default)</span></div></div>';
-        res.profiles.forEach(function (p) {
-          html += '<div class="card bookrow" data-pp590ddset="' + dw[0] + ':' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span></div></div>';
-        });
-      }
-    });
-    if (ed) html += paintEditor();
-    body.innerHTML = html;
-    wire();
-  }
-  function paintEditor() {
-    var rec = byKey(ed.key);
-    var html = '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
-    if (ed.kind === 'default') html += '<p class="sub">A named profile — it stays as designed. Saving makes your own copy, and the save asks for its name.</p>';
-    else html += '<label class="f">Name</label><input type="text" data-pp590name="1" value="' + esc(ed.name) + '">';
-    html += '<p class="sub">Blocks</p>';
-    ed.core.forEach(function (b) {
-      html += '<div class="card bookrow" draggable="true" data-pp590blockrow="' + esc(b) + '"><div class="row"><span class="meta" data-pp590drag="' + esc(b) + '">≡</span><span class="grow">' + esc(b) + '</span><button class="btn ghost" data-pp590contents="' + esc(b) + '">Contents</button><button class="btn ghost" data-pp590blockoff="' + esc(b) + '">On</button></div></div>';
-      if (ed.openContents === b) html += paintContents(b);
-    });
-    HOURS.forEach(function (b) {
-      if (ed.core.indexOf(b) >= 0) return;
-      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(b) + '</span><button class="btn ghost" data-pp590blockon="' + esc(b) + '">Off</button></div></div>';
-    });
-    html += '<p class="sub">Layers</p>';
-    html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span><button class="btn ghost" data-pp590contents="Novenas">Contents</button><button class="btn ghost" data-pp590layer="novenas">' + (ed.layers.novenas.on ? 'On' : 'Off') + '</button></div></div>';
-    if (ed.openContents === 'Novenas') html += paintContents('Novenas');
-    html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span><button class="btn ghost" data-pp590layer="podcasts">' + (ed.layers.podcasts.on ? 'On' : 'Off') + '</button></div></div>';
-    if (ed.layers.podcasts.on) {
-      if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
-      else seriesList.forEach(function (sr) {
-        var chosen = (ed.layers.podcasts.series || []).indexOf(sr.series) >= 0;
-        html += '<div class="card bookrow" data-pp590series="' + esc(sr.series) + '"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span><span class="meta">' + (chosen ? 'On' : '') + '</span></div></div>';
+  function draftDirty(d) {
+    var rec = byKey(d.key);
+    if (!rec) return true;
+    var shape = function (core, layers) {
+      return JSON.stringify({ c: core || [], n: !!(layers && layers.novenas && layers.novenas.on),
+        p: !!(layers && layers.podcasts && layers.podcasts.on), s: (layers && layers.podcasts && layers.podcasts.series) || [] });
+    };
+    if (shape(d.core, d.layers) !== shape(rec.coreBlocks, rec.layers)) return true;
+    var co = contentsOut(d);
+    var rc = null;
+    if (rec.contents) {
+      rc = {};
+      Object.keys(rec.contents).forEach(function (b) {
+        if (b !== 'Novenas' && (rec.coreBlocks || []).indexOf(b) < 0) return;
+        rc[b] = rec.contents[b];
       });
+      if (!Object.keys(rc).length) rc = null;
     }
-    html += '<div class="row">';
-    if (ed.kind === 'default') {
-      html += '<button class="btn gold" data-pp590save="copy">Save as my copy</button>';
-    } else {
-      html += '<button class="btn gold" data-pp590save="over">Save</button>'
-        + '<button class="btn ghost" data-pp590save="new">Save as new</button>'
-        + '<button class="btn ghost" data-pp590delete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>';
-    }
-    html += '<button class="btn ghost" data-pp590close="1">Close</button></div>';
-    return html;
+    return JSON.stringify(co || null) !== JSON.stringify(rc);
   }
-  function paintContents(block) {
+  function materialize(d, block) {
+    if (d.contents[block]) return d.contents[block];
+    var mat = profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
+    d.contents[block] = mat;
+    return mat;
+  }
+  function itemOn(d, block, it) {
+    var mat = d.contents[block];
+    if (!mat) return true;
+    var id = it.kind + ':' + (it.key || '');
+    return mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; });
+  }
+  function prayerTitle(slug) {
+    if (bookList) for (var i = 0; i < bookList.length; i++) if (bookList[i].slug === slug) return bookList[i].title;
+    return slug;
+  }
+  function explain591(rec) {
+    var parts = (rec.coreBlocks || []).slice();
+    if (rec.layers && rec.layers.novenas && rec.layers.novenas.on) parts.push('Novenas');
+    if (rec.layers && rec.layers.podcasts && rec.layers.podcasts.on) parts.push('Podcasts');
+    return 'Stands: ' + parts.join(' · ');
+  }
+  function paintContents(d, block) {
+    var mat = d.contents[block];
     var uni = profContentsUniverse590(block);
-    var mat = ed.contents[block];
-    var html = '<div class="profcontents590">';
-    uni.forEach(function (it) {
-      var id = it.kind + ':' + it.key;
-      var on = !mat || mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; });
-      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(it.label) + '</span><button class="btn ghost" data-pp590citem="' + esc(block) + '|' + esc(id) + '">' + (on ? 'On' : 'Off') + '</button></div></div>';
+    var html = '<div class="profcontents591">'
+      + '<p class="sub">' + (mat ? 'Set by you — this block stands as listed' : 'As the day brings it') + '</p>';
+    var disp = [];
+    if (mat) {
+      mat.forEach(function (m) {
+        var u = null;
+        uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (u ? u.label : (m.key || m.kind)), on: true });
+      });
+      uni.forEach(function (it) {
+        var id = it.kind + ':' + (it.key || '');
+        if (!mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; })) disp.push({ kind: it.kind, key: it.key || '', label: it.label, on: false });
+      });
+    } else {
+      uni.forEach(function (it) { disp.push({ kind: it.kind, key: it.key || '', label: it.label, on: true }); });
+    }
+    disp.forEach(function (r) {
+      var id = r.kind + ':' + r.key;
+      html += '<div class="card bookrow"><div class="row"><span class="stepper591"><button class="btn ghost" data-p591cup="' + esc(block) + '|' + esc(id) + '">↑</button><button class="btn ghost" data-p591cdown="' + esc(block) + '|' + esc(id) + '">↓</button></span><span class="grow">' + esc(r.label) + '</span>'
+        + '<button class="switch591' + (r.on ? ' on' : '') + '" data-p591citem="' + esc(block) + '|' + esc(id) + '" role="switch" aria-checked="' + (r.on ? 'true' : 'false') + '"><span class="knob591"></span></button>'
+        + '<button class="btn ghost" data-p591cremove="' + esc(block) + '|' + esc(id) + '" aria-label="Remove">✕</button></div></div>';
     });
-    if (!uni.length) html += '<p class="sub">Nothing stands in this block today.</p>';
+    if (!disp.length) html += '<p class="sub">Nothing stands in this block today.</p>';
+    html += '<div class="row"><button class="btn ghost" data-p591add="' + esc(block) + '">Add</button></div>';
     return html + '</div>';
   }
-  function wire() {
-    body.querySelectorAll('[data-pp590pick]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var key = row.getAttribute('data-pp590pick');
-        profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { profileRebuild(); load(true); }).catch(fail);
-      });
+  function paintSeries(d) {
+    var html = '<div class="profcontents591"><p class="sub">Podcast series in the day</p>';
+    if (!seriesList) html += '<p class="sub">Loading podcasts …</p>';
+    else seriesList.forEach(function (sr) {
+      var chosen = (d.layers.podcasts.series || []).indexOf(sr.series) >= 0;
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span>'
+        + '<button class="switch591' + (chosen ? ' on' : '') + '" data-p591series="' + esc(sr.series) + '" role="switch" aria-checked="' + (chosen ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
     });
-    body.querySelectorAll('[data-pp590stand]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-pp590stand') }).then(function () { profileRebuild(); load(true); }).catch(fail);
-      });
+    return html + '</div>';
+  }
+  function paintBlocks(d) {
+    var html = '';
+    var order = d.core.slice();
+    HOURS.forEach(function (b) { if (order.indexOf(b) < 0) order.push(b); });
+    order.forEach(function (b) {
+      var on = d.core.indexOf(b) >= 0;
+      html += '<div class="card bookrow"><div class="row">'
+        + (on ? '<span class="stepper591"><button class="btn ghost" data-p591up="' + esc(b) + '">↑</button><button class="btn ghost" data-p591down="' + esc(b) + '">↓</button></span>' : '')
+        + '<span class="grow">' + esc(b) + '</span>'
+        + '<button class="switch591' + (on ? ' on' : '') + '" data-p591block="' + esc(b) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button>'
+        + '</div></div>';
+      if (on) html += paintContents(d, b);
     });
-    var ruleRow = body.querySelector('[data-pp590rule]');
-    if (ruleRow) ruleRow.addEventListener('click', function () {
-      profPut('/api/prayer/profiles/state', { dayRule: !(res.state && res.state.dayRule) }).then(function () { profileRebuild(); load(true); }).catch(fail);
-    });
-    body.querySelectorAll('[data-pp590dd]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var dw = row.getAttribute('data-pp590dd');
-        ddOpen = ddOpen === dw ? null : dw;
-        paint();
-      });
-    });
-    body.querySelectorAll('[data-pp590ddset]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var parts = String(row.getAttribute('data-pp590ddset')).split(':');
-        var nd = opnClone((res.state && res.state.dayDefaults) || {});
-        if (parts[1]) nd[parts[0]] = parts[1]; else delete nd[parts[0]];
-        ddOpen = null;
-        profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(function () { profileRebuild(); load(true); }).catch(fail);
-      });
-    });
-    body.querySelectorAll('[data-pp590open]').forEach(function (btn) {
-      btn.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        startEdit(btn.getAttribute('data-pp590open'));
-        paint();
-        if (ed && ed.layers.podcasts.on && !seriesList) loadSeries();
-      });
-    });
-    if (!ed) return;
-    var nameIn = body.querySelector('[data-pp590name]');
-    if (nameIn) nameIn.addEventListener('input', function (ev) { ed.name = ev.target.value; });
-    body.querySelectorAll('[data-pp590blockoff]').forEach(function (btn) {
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span>'
+      + '<button class="switch591' + (d.layers.novenas.on ? ' on' : '') + '" data-p591layer="novenas" role="switch" aria-checked="' + (d.layers.novenas.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+    if (d.layers.novenas.on) html += paintContents(d, 'Novenas');
+    html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span>'
+      + '<button class="switch591' + (d.layers.podcasts.on ? ' on' : '') + '" data-p591layer="podcasts" role="switch" aria-checked="' + (d.layers.podcasts.on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+    if (d.layers.podcasts.on) html += paintSeries(d);
+    return html;
+  }
+  function wireBlocks(root, d, repaint) {
+    root.querySelectorAll('[data-p591block]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var i = ed.core.indexOf(btn.getAttribute('data-pp590blockoff'));
-        if (i >= 0) ed.core.splice(i, 1);
-        paint();
+        var b = btn.getAttribute('data-p591block');
+        var i = d.core.indexOf(b);
+        if (i >= 0) d.core.splice(i, 1);
+        else {
+          var ci = HOURS.indexOf(b), pos = 0;
+          d.core.forEach(function (x, j) { if (HOURS.indexOf(x) < ci) pos = j + 1; });
+          d.core.splice(pos, 0, b);
+          if (d.contents[b] === undefined) d.contents[b] = null;
+        }
+        repaint();
       });
     });
-    body.querySelectorAll('[data-pp590blockon]').forEach(function (btn) {
+    function moveCore(attr, dir) {
+      root.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var b = btn.getAttribute(attr);
+          var i = d.core.indexOf(b), j = i + dir;
+          if (i >= 0 && j >= 0 && j < d.core.length) { var mv = d.core.splice(i, 1)[0]; d.core.splice(j, 0, mv); }
+          repaint();
+        });
+      });
+    }
+    moveCore('data-p591up', -1);
+    moveCore('data-p591down', 1);
+    root.querySelectorAll('[data-p591layer]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var b = btn.getAttribute('data-pp590blockon');
-        var ci = HOURS.indexOf(b);
-        var at = ed.core.length;
-        ed.core.forEach(function (x, i) { if (HOURS.indexOf(x) < ci) at = i + 1; });
-        // canonical hour position: insert after the last
-        // standing block whose canonical hour is earlier
-        var pos = 0;
-        ed.core.forEach(function (x, i) { if (HOURS.indexOf(x) < ci) pos = i + 1; });
-        ed.core.splice(pos, 0, b);
-        if (!ed.contents[b]) ed.contents[b] = null;
-        paint();
+        var w = btn.getAttribute('data-p591layer');
+        d.layers[w].on = !d.layers[w].on;
+        repaint();
+        if (w === 'podcasts' && d.layers.podcasts.on && !seriesList) loadSeries();
       });
     });
-    body.querySelectorAll('[data-pp590blockrow]').forEach(function (row) {
-      row.addEventListener('dragstart', function () { ed.dragBlock = row.getAttribute('data-pp590blockrow'); });
-      row.addEventListener('dragover', function (ev) { ev.preventDefault(); });
-      row.addEventListener('drop', function (ev) {
-        ev.preventDefault();
-        var target = row.getAttribute('data-pp590blockrow');
-        var from = ed.core.indexOf(ed.dragBlock), to = ed.core.indexOf(target);
-        if (from >= 0 && to >= 0 && from !== to) { var mv = ed.core.splice(from, 1)[0]; ed.core.splice(to, 0, mv); }
-        ed.dragBlock = null;
-        paint();
-      });
-    });
-    body.querySelectorAll('[data-pp590layer]').forEach(function (btn) {
+    root.querySelectorAll('[data-p591series]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var w = btn.getAttribute('data-pp590layer');
-        ed.layers[w].on = !ed.layers[w].on;
-        paint();
-        if (w === 'podcasts' && ed.layers.podcasts.on && !seriesList) loadSeries();
-      });
-    });
-    body.querySelectorAll('[data-pp590series]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var k = row.getAttribute('data-pp590series');
-        var arr = ed.layers.podcasts.series || (ed.layers.podcasts.series = []);
+        var k = btn.getAttribute('data-p591series');
+        var arr = d.layers.podcasts.series || (d.layers.podcasts.series = []);
         var i = arr.indexOf(k);
         if (i >= 0) arr.splice(i, 1); else arr.push(k);
-        paint();
+        repaint();
       });
     });
-    body.querySelectorAll('[data-pp590contents]').forEach(function (btn) {
+    function cParts(btn, attr) { return String(btn.getAttribute(attr)).split('|'); }
+    root.querySelectorAll('[data-p591citem]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var b = btn.getAttribute('data-pp590contents');
-        ed.openContents = ed.openContents === b ? null : b;
-        paint();
-      });
-    });
-    body.querySelectorAll('[data-pp590citem]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var parts = String(btn.getAttribute('data-pp590citem')).split('|');
+        var parts = cParts(btn, 'data-p591citem');
         var block = parts[0], id = parts[1];
-        var uni = profContentsUniverse590(block);
-        var mat = ed.contents[block];
-        if (!mat) mat = uni.slice();
-        var has = mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; });
-        if (has) mat = mat.filter(function (m) { return (m.kind + ':' + (m.key || '')) !== id; });
-        else uni.forEach(function (it) { if ((it.kind + ':' + it.key) === id) mat.push(it); });
-        ed.contents[block] = mat.map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
-        paint();
+        var m = materialize(d, block);
+        var has = m.some(function (x) { return (x.kind + ':' + (x.key || '')) === id; });
+        if (has) d.contents[block] = m.filter(function (x) { return (x.kind + ':' + (x.key || '')) !== id; });
+        else { var kp = id.split(':'); m.push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] }); }
+        repaint();
       });
     });
-    body.querySelectorAll('[data-pp590save]').forEach(function (btn) {
+    root.querySelectorAll('[data-p591cremove]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var act = btn.getAttribute('data-pp590save');
-        var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut() };
-        if (act === 'over') {
-          payload.key = ed.key;
-          profPut('/api/prayer/profiles/save', payload).then(function () { profileRebuild(); load(false); }).catch(fail);
-        } else {
-          var srcKey = ed.key;
-          openRenameCopySheet590(ed.name + ' — my copy', function (newName) {
-            payload.name = newName;
-            payload.basedOn = srcKey;
-            if (ed.kind === 'default') payload.honorLine = '';
-            profPut('/api/prayer/profiles/save', payload).then(function () { profileRebuild(); load(false); }).catch(fail);
-          });
-        }
+        // v591: REMOVE — the item leaves this block's
+        // contents for this profile (never the app; the
+        // Add act brings it back). Removing from standing
+        // contents materializes the rest as the explicit
+        // list; removing the last item leaves an explicit
+        // empty list — the block stands on, empty.
+        var parts = cParts(btn, 'data-p591cremove');
+        var block = parts[0], id = parts[1];
+        var m = materialize(d, block);
+        d.contents[block] = m.filter(function (x) { return (x.kind + ':' + (x.key || '')) !== id; });
+        repaint();
       });
     });
-    var delBtn = body.querySelector('[data-pp590delete]');
-    if (delBtn) delBtn.addEventListener('click', function () {
-      if (!delArmed) { delArmed = true; paint(); return; }
-      profPut('/api/prayer/profiles/delete', { profileKey: ed.key }).then(function () { profileRebuild(); load(false); }).catch(fail);
+    function moveItem(attr, dir) {
+      root.querySelectorAll('[' + attr + ']').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var parts = cParts(btn, attr);
+          var block = parts[0], id = parts[1];
+          var m = materialize(d, block);
+          var i = -1;
+          m.forEach(function (x, j) { if ((x.kind + ':' + (x.key || '')) === id) i = j; });
+          var j = i + dir;
+          if (i >= 0 && j >= 0 && j < m.length) { var mv = m.splice(i, 1)[0]; m.splice(j, 0, mv); }
+          repaint();
+        });
+      });
+    }
+    moveItem('data-p591cup', -1);
+    moveItem('data-p591cdown', 1);
+    root.querySelectorAll('[data-p591add]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openAddPicker(btn.getAttribute('data-p591add'), d, repaint); });
     });
-    var closeBtn = body.querySelector('[data-pp590close]');
-    if (closeBtn) closeBtn.addEventListener('click', function () { ed = null; paint(); });
+  }
+  function openAddPicker(block, d, repaint) {
+    loadBook(function () {
+      var oldA = document.querySelector('.profadd591');
+      if (oldA) oldA.remove();
+      var sh = document.createElement('div');
+      sh.className = 'sheet profadd591';
+      var mat = d.contents[block];
+      var html = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>';
+      var any = false;
+      profContentsUniverse590(block).forEach(function (it) {
+        if (itemOn(d, block, it)) return;
+        any = true;
+        html += '<div class="card bookrow" data-p591additem="' + esc(it.kind + ':' + (it.key || '')) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
+      });
+      if (block !== 'Novenas' && bookList) bookList.forEach(function (pr) {
+        var id = 'prayer:' + pr.slug;
+        if (mat && mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; })) return;
+        any = true;
+        html += '<div class="card bookrow" data-p591additem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(pr.title) + '</span><span class="meta">Prayer</span></div></div>';
+      });
+      if (!any) html += '<p class="sub">Everything addable already stands in this block.</p>';
+      html += '<div class="row"><button class="btn ghost" data-p591addclose="1">Close</button></div></div>';
+      sh.innerHTML = html;
+      document.body.appendChild(sh);
+      mountDrawer(sh, true);
+      sh.querySelectorAll('[data-p591additem]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var id = row.getAttribute('data-p591additem');
+          var kp = id.split(':');
+          materialize(d, block).push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
+          sh.remove();
+          repaint();
+        });
+      });
+      var c = sh.querySelector('[data-p591addclose]');
+      if (c) c.addEventListener('click', function () { sh.remove(); });
+    });
+  }
+  function loadBook(cb) {
+    if (bookList) { cb(); return; }
+    api('/api/prayer/book').then(function (r) {
+      bookList = [];
+      ((r && r.groups) || []).forEach(function (g) { (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) bookList.push({ slug: pr.slug, title: pr.title || pr.slug }); }); });
+      cb();
+    }).catch(function () { bookList = []; cb(); });
   }
   function loadSeries() {
     api('/api/player/podcasts').then(function (r) {
       seriesList = (r && r.seriesList) || [];
+      seriesList.forEach(function (s) {
+        if (OPN_COURSE_KEYS_590.indexOf(s.series) >= 0) {
+          profCourseLabels591[s.series] = (s.title || s.series) + (s.currentLabel ? ' · Next: ' + s.currentLabel : (s.currentKey ? ' · Next: ' + s.currentKey : ''));
+        }
+      });
       paint();
-    }).catch(function () { seriesList = []; paint(); });
+    }).catch(function () { seriesList = []; });
+  }
+  function load(keepEd) {
+    return api('/api/prayer/profiles').then(function (r) {
+      res = r;
+      if (!keepEd) { ed = null; edKey = null; }
+      paint();
+    }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
+  }
+  function paint() {
+    if (!body || !res || !res.profiles) return;
+    if (!ed) {
+      var t = byKey(edKey) || (res.effective ? byKey(res.effective.key) : null) || res.profiles[0];
+      if (!t) { body.innerHTML = '<p class="sub">No profiles stand.</p>'; return; }
+      edKey = t.key;
+      ed = draftOf(t);
+    }
+    var eff = res.effective;
+    var html = '<p class="sub" data-p591head="1">Today follows ' + esc(eff ? eff.name : '') + '</p>';
+    html += '<div class="profchips591">';
+    res.profiles.forEach(function (p) {
+      html += '<button class="chip591' + (eff && eff.key === p.key ? ' on' : '') + '" data-p591chip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
+    });
+    html += '</div>';
+    html += '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
+    if (draftDirty(ed)) html += '<p class="sub">Unsaved changes — Save Profile writes them into ' + esc(ed.name) + '.</p>';
+    html += paintBlocks(ed);
+    html += '<div class="row"><button class="btn gold" data-p591save="profile">Save Profile</button>'
+      + '<button class="btn ghost" data-p591save="new">Save New</button>'
+      + (ed.kind === 'default' ? '<button class="btn ghost" data-p591reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button>' : '')
+      + '</div>';
+    html += '<p class="sub">Day by day</p>';
+    var stand = byKey(res.state && res.state.standingKey);
+    html += '<div class="card bookrow" data-p591day="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
+    var dd = (res.state && res.state.dayDefaults) || {};
+    DOWS.forEach(function (dw) {
+      var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
+      html += '<div class="card bookrow" data-p591day="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
+    });
+    html += '<div class="row"><button class="btn ghost" data-p591close="1">' + (draftDirty(ed) ? 'Close without saving' : 'Close') + '</button></div>';
+    body.innerHTML = html;
+    wire();
+  }
+  function wire() {
+    wireBlocks(body, ed, paint);
+    body.querySelectorAll('[data-p591chip]').forEach(function (chip) {
+      chip.addEventListener('click', function () { openPop('today', chip.getAttribute('data-p591chip')); });
+    });
+    body.querySelectorAll('[data-p591day]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        var scope = row.getAttribute('data-p591day');
+        var dd = (res.state && res.state.dayDefaults) || {};
+        var key = scope === 'standing' ? res.state.standingKey : (dd[scope] || res.state.standingKey);
+        openPop(scope, key);
+      });
+    });
+    body.querySelectorAll('[data-p591save]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var act = btn.getAttribute('data-p591save');
+        var payload = { name: ed.name, honorLine: ed.honor || '', coreBlocks: ed.core.slice(), layers: ed.layers, contents: contentsOut(ed) };
+        if (act === 'profile') {
+          payload.key = ed.key;
+          profPut('/api/prayer/profiles/save', payload).then(function (r) {
+            res = r; ed = null; edKey = payload.key; resetArmed = false; paint(); profileRebuild();
+          }).catch(fail);
+        } else {
+          var srcKey = ed.key;
+          openRenameCopySheet590('', function (newName) {
+            payload.name = newName;
+            payload.basedOn = srcKey;
+            profPut('/api/prayer/profiles/save', payload).then(function (r) {
+              res = r;
+              if (note) note.textContent = 'Saved as ' + newName + ' — it stands in the row of profiles above.';
+              paint();
+            }).catch(fail);
+          });
+        }
+      });
+    });
+    var resetBtn = body.querySelector('[data-p591reset]');
+    if (resetBtn) resetBtn.addEventListener('click', function () {
+      if (!resetArmed) { resetArmed = true; paint(); return; }
+      profPut('/api/prayer/profiles/reset', { profileKey: ed.key }).then(function (r) {
+        res = r; ed = null; resetArmed = false; paint(); profileRebuild();
+      }).catch(fail);
+    });
+    var closeBtn = body.querySelector('[data-p591close]');
+    if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); });
+  }
+  function openPop(scope, key) {
+    var oldPop = document.querySelector('.profpop591');
+    if (oldPop) oldPop.remove();
+    var pop = document.createElement('div');
+    pop.className = 'sheet profpop591';
+    pop.innerHTML = '<div class="inner"><div class="profpopbody"></div></div>';
+    document.body.appendChild(pop);
+    mountDrawer(pop, true);
+    var popBody = pop.querySelector('.profpopbody');
+    var shownKey = key, ped = null, pResetArmed = false, pDelArmed = false;
+    var scopeName = scope === 'today' ? 'today' : scope === 'standing' ? 'every day' : (DOWS.filter(function (d) { return d[0] === scope; })[0] || [])[1];
+    var applyLabel = scope === 'today' ? 'Use for today' : scope === 'standing' ? 'Use every day' : 'Stand for ' + scopeName;
+    function pFail(e) { var n = popBody.querySelector('.profpopnote'); if (n) n.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
+    function pPaint() {
+      var rec = byKey(shownKey);
+      if (!rec) { pop.remove(); return; }
+      if (!ped || ped.key !== shownKey) ped = draftOf(rec);
+      var inner = '<div class="profchips591">';
+      res.profiles.forEach(function (p) {
+        inner += '<button class="chip591' + (p.key === shownKey ? ' on' : '') + '" data-p591pchip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
+      });
+      inner += '</div><div class="row"><h1 class="screen grow">' + esc(rec.name) + '</h1></div>';
+      if (rec.honorLine) inner += '<p class="sub">' + esc(rec.honorLine) + '</p>';
+      if (DUR591[rec.key]) inner += '<p class="sub">' + DUR591[rec.key] + '</p>';
+      inner += '<p class="sub">' + esc(explain591(rec)) + '</p>';
+      if (scope === 'sun') inner += '<p class="sub">Sunday stands as The Benedictine Way by default — stand any profile here, like any day.</p>';
+      if (draftDirty(ped)) inner += '<p class="sub">Unsaved changes — Save Profile writes them into ' + esc(rec.name) + '.</p>';
+      inner += paintBlocks(ped);
+      inner += '<div class="row"><button class="btn gold" data-p591papply="1">' + esc(applyLabel) + '</button></div>'
+        + '<p class="sub">Apply makes ' + esc(scopeName) + ' follow this profile. It does not change the profile.</p>'
+        + '<div class="row"><button class="btn gold" data-p591psave="profile">Save Profile</button><button class="btn ghost" data-p591psave="new">Save New</button></div>'
+        + '<p class="sub">Save Profile writes these toggles into ' + esc(rec.name) + '.</p>'
+        + (rec.kind === 'default' ? '<div class="row"><button class="btn ghost" data-p591preset="1">' + (pResetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button></div><p class="sub">Reset returns ' + esc(rec.name) + ' to its designed shape, discarding edits.</p>' : '')
+        + (rec.kind === 'custom' ? '<div class="row"><button class="btn ghost" data-p591pdelete="1">' + (pDelArmed ? 'Tap again to delete' : 'Delete profile') + '</button></div>' : '')
+        + '<div class="row"><button class="btn ghost" data-p591pclose="1">' + (draftDirty(ped) ? 'Close without saving' : 'Close') + '</button></div>'
+        + '<p class="fieldnote profpopnote"></p>';
+      popBody.innerHTML = inner;
+      wireBlocks(popBody, ped, pPaint);
+      popBody.querySelectorAll('[data-p591pchip]').forEach(function (chip) {
+        chip.addEventListener('click', function () { shownKey = chip.getAttribute('data-p591pchip'); ped = null; pResetArmed = false; pDelArmed = false; pPaint(); });
+      });
+      var applyBtn = popBody.querySelector('[data-p591papply]');
+      if (applyBtn) applyBtn.addEventListener('click', function () {
+        var done = function (r) { if (r) res = r; pop.remove(); ed = null; edKey = null; paint(); profileRebuild(); };
+        if (scope === 'today') profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: shownKey }).then(done).catch(pFail);
+        else if (scope === 'standing') profPut('/api/prayer/profiles/state', { standingKey: shownKey }).then(done).catch(pFail);
+        else {
+          var nd = opnClone((res.state && res.state.dayDefaults) || {});
+          nd[scope] = shownKey;
+          profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(done).catch(pFail);
+        }
+      });
+      popBody.querySelectorAll('[data-p591psave]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var act = btn.getAttribute('data-p591psave');
+          var recNow = byKey(shownKey);
+          var payload = { name: recNow.name, honorLine: recNow.honorLine || '', coreBlocks: ped.core.slice(), layers: ped.layers, contents: contentsOut(ped) };
+          if (act === 'profile') {
+            payload.key = shownKey;
+            profPut('/api/prayer/profiles/save', payload).then(function (r) {
+              res = r; ped = null; pPaint(); ed = null; paint(); profileRebuild();
+            }).catch(pFail);
+          } else {
+            openRenameCopySheet590('', function (newName) {
+              payload.name = newName;
+              payload.basedOn = shownKey;
+              profPut('/api/prayer/profiles/save', payload).then(function (r) {
+                res = r;
+                var nk = null;
+                (r.profiles || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
+                if (nk) { shownKey = nk; ped = null; }
+                pPaint();
+                ed = null; paint();
+              }).catch(pFail);
+            });
+          }
+        });
+      });
+      var pReset = popBody.querySelector('[data-p591preset]');
+      if (pReset) pReset.addEventListener('click', function () {
+        if (!pResetArmed) { pResetArmed = true; pPaint(); return; }
+        profPut('/api/prayer/profiles/reset', { profileKey: shownKey }).then(function (r) {
+          res = r; ped = null; pResetArmed = false; pPaint(); ed = null; paint(); profileRebuild();
+        }).catch(pFail);
+      });
+      var pDel = popBody.querySelector('[data-p591pdelete]');
+      if (pDel) pDel.addEventListener('click', function () {
+        if (!pDelArmed) { pDelArmed = true; pPaint(); return; }
+        profPut('/api/prayer/profiles/delete', { profileKey: shownKey }).then(function (r) {
+          res = r; pop.remove(); ed = null; edKey = null; paint(); profileRebuild();
+        }).catch(pFail);
+      });
+      var pClose = popBody.querySelector('[data-p591pclose]');
+      if (pClose) pClose.addEventListener('click', function () { pop.remove(); });
+    }
+    pPaint();
   }
   load(false);
+  loadSeries();
+  loadBook(function () { paint(); });
 }
+
 function openProfileSheet() {
   // The slot picker's dress: a .sheet on mountDrawer; a row
   // tap is the one write, the sheet closes on its own close
