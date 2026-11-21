@@ -6210,7 +6210,7 @@ function massFeedPartHtml(part, label, idx, setKey) {
     opt = opts[oi];
     s += '<div class="segtoggle pill mass-seg mass-chips" role="group" aria-label="Reading options">';
     for (var ci = 0; ci < opts.length; ci++) {
-      s += '<button type="button" data-rchoice="' + esc(ckey + ':' + ci) + '"' + (ci === oi ? ' class="on"' : '') + '>' + esc(massOptionLabel(part, opts, ci)) + '</button>';
+      s += '<button type="button" data-rchoice="' + esc(ckey + ':' + ci) + '"' + (ci === oi ? ' class="active"' : '') + '>' + esc(massOptionLabel(part, opts, ci)) + '</button>';
     }
     s += '</div>';
   }
@@ -6352,16 +6352,20 @@ function massStandingSetKey() {
    carries: Weekday (the ferial set) first, then each
    memorial. It stands only on a day whose feed
    payload carries memorials; a mention-free day
-   renders no row and is byte-identical to before. */
+   renders no row and is byte-identical to before.
+   v586: the standing chip wears class "active" — the
+   segtoggle dress's selected word (the Worship pill's
+   dress). It wore "on", which no segtoggle rule
+   defines, so the active set showed no selection. */
 function massReadingsChipsHtml() {
   var f = massFeed;
   if (!f || !f.found || !f.memorials || !f.memorials.length) return '';
   var setKey = massStandingSetKey();
   var h = '<div class="segtoggle pill mass-seg mass-chips" role="group" aria-label="Readings">';
-  h += '<button type="button" data-rset="ferial"' + (setKey === 'ferial' ? ' class="on"' : '') + '>Weekday</button>';
+  h += '<button type="button" data-rset="ferial"' + (setKey === 'ferial' ? ' class="active"' : '') + '>Weekday</button>';
   for (var i = 0; i < f.memorials.length; i++) {
     var k = 'mem:' + i;
-    h += '<button type="button" data-rset="' + k + '"' + (setKey === k ? ' class="on"' : '') + '>' + esc(massMemorialChipLabel(f.memorials[i].name)) + '</button>';
+    h += '<button type="button" data-rset="' + k + '"' + (setKey === k ? ' class="active"' : '') + '>' + esc(massMemorialChipLabel(f.memorials[i].name)) + '</button>';
   }
   return h + '</div>';
 }
