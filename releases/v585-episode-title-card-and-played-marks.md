@@ -48,3 +48,34 @@ The WRITE keying is sound; the READ fold in the public shape is dead. Three fact
 - `app/harness-v585.mjs`, modeled on harness-v581: it renders the client from the committed tree (the template-literal render the server serves), parses the rendered script whole, and drives it in a DOM with mocked `api()` answers built from PRODUCTION fixtures: the production snapshot entry sets (bible-in-a-year + ora-pro-nobis, trimmed) and the production listen rows read in §2.2.
 - Legs: (a) device-mode fold — a stored listen lands on its own episode and no other; an unmarked episode reads `listened: false`; a stored position lands likewise; a listen key naming no standing entry is dropped, never guessed; (b) bonus collision — a synthetic two-contents-one-slug feed build (production-shaped items) yields two entries with distinct keys, and the standing slug key is unchanged when no collision stands; (c) the card — a tap on an episode row on each surface opens the card with all Q2 fields; Play on the card starts the standing act; the mark toggle flips the episode's own mark and no other; the play disc still plays directly; a prayer row still plays on tap; (d) regression — the v581/v579/v577 harness legs that touch these surfaces stay green.
 - Review verifies on a clean checkout of the committed tree (the ship-compose rule). No production D1 writes; the marks migration runs against copies only.
+
+## 3 · Implement
+
+Built on branch `release/v585` off the standing clone (main c0407d5), commit 6035a03. Diff confined to `app/worker/src/client.ts`, `app/worker/src/index.ts`, `app/worker/src/ui.ts`, `app/harness-v585.mjs`, and this doc. No migration (newest stays 0042); the SW pin is unmoved (it moves only at Ship).
+
+### 3.1 The fold fix (client.ts)
+
+`opnFoldPlaybackIntoPodcasts` now gates on the entry's identity — a string `key`, a string series context, and an episode shape (`url` or `streamUrl` standing) — exactly the discriminator Plan §2.3 specified. A device listen under `series|key` lands on that entry alone (with its listenDate/listenedAt/source); a standing position lands likewise; every other markable entry gains a definite `listened: false`. Series/index card objects carry neither url nor streamUrl and stay untouched. Server mode is unchanged — the fold never runs there.
+
+### 3.2 The bonus keying fix (index.ts)
+
+`podBuildSequence` groups bonus contents by slug, then by enclosure URL (one content, however many editions carry it). Suppliers sort by the standing rule (newest edition, then latest pubDate): the first keeps the bare `prefix:bonus-<slug>` key byte-untouched; each further distinct content keys `prefix:bonus-<slug>-<hash8>` (a deterministic FNV-style hash of its URL — the build is synchronous, so no async digest stands in it) and stands as its own entry with its own anchor. No collision → no key changes at all.
+
+### 3.3 The title card (client.ts + ui.ts)
+
+- One builder, `openEpisodeCard(model, anchorEl)` — an anchored card in the standing sheet dress (`.menusheet .anchmenu` + the `.epcard` rules in ui.ts), seated by openSheetMenu's anchor math, dismissed by the standing tap-catcher. The body carries the full Q2 set: title · series · date + duration · description · the Intention line (the standing `trackDrawTextFor` seam, where a draw stands) · Play (gold disc + label) · the standing star (`starBtnHtml`, served by the one delegated star handler) · the played state line with a mark toggle (`Mark as played` / `Mark as not played`).
+- The mark toggle rides the standing seams only: on the open series page, `podToggleMark` whole; off it, `writePodMarkQuiet` for a mark and the unmark route + `podSyncQueueListened` for an unmark (a failed post enqueues through the standing pod-mark queue); in Favorites, `favPodToggle`; for a homily take, `homilySetPlayed`; for day-form episodes, `writePlayed` under the presented date (the completion seam's own store).
+- Played state reads: podcast kind from the entry/descriptor (Favorites: `favPodListenedOf`); homily from its index flag; day-form from the day store — the presented-date read on the Praylist surface, the any-standing-date read on series/Favorites surfaces.
+- Wirings (a body tap on the row; any tap on a button inside the row keeps the button's act): the audio series page, the RSS series page, the own (AI Signal) series page, the novena series page — each fed by its standing descriptor builder (`podDesc` / `podOwnDesc` / `podNovenaDesc`) with Play = the page's standing play act (queue from that episode forward); the Praylist's block/episodes pages via `wirePrayersView`'s `[data-card]` pass, gated by `epCardIsEpisode` on the descriptor resolved from `state.dayDescs`, Play = `tapPlay`; Favorites' episode rows (`starredRowHtml` rows), gated to the episode/podcast kinds, Play = `playTrack`.
+- `epCardIsEpisode`: kind podcast / homily / external · the AI Signal track · a day-form novena track (`novenaInfo`) · a catalog novena stem (the v577 canon, matched by a BS_CH-built pattern — the template-literal construction rule). Prayer/book rows never pass the gate and keep tap-to-play; series doors and the Podcasts-layer series cards keep their click-through (they are doors, not episodes).
+- The row's play disc keeps its standing direct-play act everywhere — the card is the row body's act, not a replacement for the disc.
+
+### 3.4 Harness (working tree)
+
+`app/harness-v585.mjs` against the working tree, BASE c0407d5: **42 ok / 0 not ok** — S-legs (diff confinement · migrations · pin · the fold gate's form · the bonus rule's form · the card's standing · the rendered client parses whole) and L-legs (the fold over production-shaped stripped payloads + production listen rows · the bonus build over production-shaped feed items, incl. the byte-identical no-collision keys · the card's gate, Q2 contents, Play act, and mark toggles through every seam · the Q3 rule over the production listen set: all keep, orphans dropped). Sibling regression on the working tree: harness-v581 30 ok / 1 not ok and harness-v579 34 ok / 1 not ok — the single failure in each is its own S1 diff-confinement leg reading this release's files (structural, expected); every functional leg green. harness-v577's run reads the live feeds; its result stands in the Review record.
+
+### 3.5 Named unrun / open
+
+- No production D1 writes stood in this run; the marks migration ran against copies only (harness L1/L4). The device-side store on John's phone validates by the same fold rule at first open after Ship.
+- The v568-class served-leg proof (the served client script parsed whole from the deployed Worker) runs at Ship; here the rendered client parses whole in the harness (S6).
+- Field legs after Ship are John's: a mark made in the public build still stands after closing and reopening the app; an episode tap opens the card on each surface.
