@@ -21,3 +21,28 @@ The audit verifies, item by item, per block, for each of the three ways' designe
 2. Courses leave the defaults: course selectors come out of the contents universe (editor paint + Add picker), out of the contents validators on both folds (client + server parity); Reset — which already deletes contents — then restores a courseless default. Courses stand as before in Catechesis/Podcasts as series.
 3. The seat enters a block's standing list only under the posture that can compose it.
 4. The one decision for John — his own saved profiles' course items: the audit verified ZERO stored course items in his document, so Option 1 (recommended) is to proceed with no data change to his profiles at all; Option 2 adds a belt-and-braces migration strip for a state his document is verified not to be in; Option 3 keeps course selectors hand-addable (keeps Class C alive). The chain holds at Scope for his pick.
+
+## §4 Plan · Implement · Review
+
+Approved to Ship (John, Ora thread, 2026-11-21 16:46 CT, verbatim): "Build the fix — no change to my profiles" — Option 1: no data change to his profiles, re-verified by the build as a hard gate.
+
+### Plan — the fix points, named
+
+Client (app/worker/src/client.ts):
+- P1. A new standing-contents function, opnStandingContents597(profile, block): the profile's own contents entry when one stands, else the block's standing list — the contents universe with the readings seat admitted only under the posture that can compose it (the profile's Podcasts layer on AND carrying daily-readings — resolveReadingsSeat590's own absent-contents rule). opnTodayComposedContents594 (the editor's composed reading, consumed by Edit profiles' divergence reads and Edit today) resolves through it; the profiles editor's materialize() materializes through it. No painter or resolver keeps a private absent-contents branch.
+- P2. Courses out of the contents system: profContentsUniverse590 appends no course selectors (the universe is the editor paint's off-list source AND both Add pickers' source, so paint and picker close together); opnCheckContents590 drops a course-kind item at validation instead of admitting it (a legacy list normalizes courseless at its next write; other bad kinds still refuse); opnContentsOf590 — the read seam the payload, both editors, and the fold all consume — filters course items out of the clone it returns, so no stored list can paint or resolve a course before its next write.
+- P3. The course fold retires: resolveProfileCourses590, its day-load call, the extRebuildDescs placement segment, and state.courseRes590 are removed. A course key in contents can no longer resolve anywhere. Courses stand untouched as Podcasts-layer series and on the Catechesis Courses side; course progress/playback does not move. Class D's layer meaning (Bible in a Year as a series) stands.
+- P4. The seat (Class B): the standing function admits seat:daily-readings into Morning's standing list only under the P1 posture; both Add pickers stop offering the seat under a posture that cannot compose it (the draft's layers are at hand in both editors). Named limit: a raw-API write can still store a seat selector under a podcasts-off profile (the validators take no layer posture); the fold's resolver posture governs composition there, as it did — our own surfaces can no longer produce that state.
+
+Server (app/worker/src/index.ts), parity:
+- P5. validateProfileContents drops a course-kind item at validation (the same drop, not a whole-contents refusal — the store read at prayerProfileStore re-validates through it, so a stored list reads back courseless); PROFILE_COURSE_KEYS retires with the branch. The server's seat gate already reads the P1 posture (fold contents absent → layer on + series carries daily-readings) and does not move.
+
+Harness (app/harness-v597.mjs, grown from the audit driver /tmp/v597/audit.mjs): per way × per ON block over the production fixtures (John's v589 document · production source-settings · the production 2026-11-21 day payload), painted-ON set == composed set (49 mismatches on the pre-fix tree, 0 required on the new) · Reset leg · podcasts-off seat leg · materialized-block regression leg · server-parity leg (client fold == server fold on the same fixtures) · validator leg (a contents list carrying a course key is dropped at write on both folds) · equivalence (every non-course item's composed day byte-identical to the pre-fix ship; personal data + prayer seats byte-exact) · the no-data-change gate (John's profiles section byte-identical through a full editor + fold flow; zero stored course items re-confirmed on the shipped code's own read).
+
+### Implement
+
+(stands below as built)
+
+### Review
+
+(stands below as reviewed)
