@@ -108,14 +108,14 @@ check("S5 menu sections key order differs from BASE only by the swap",
   { base: sectionKeys(baseClient), cand: sectionKeys(clientSrc) });
 
 // ---------- rendered shell + client (S6 + C-legs) ----------
-function renderTpl(src, marker) {
+function renderTpl(src, marker, endSeq) {
   const at = src.indexOf(marker);
   const start = src.indexOf("= `", at) + 3;
-  const end = src.indexOf("\n`;", start);
+  const end = src.indexOf(endSeq, start);
   if (at < 0 || start < 3 || end < 0) return null;
   return vm.runInContext("`" + src.slice(start, end) + "`", vm.createContext({}));
 }
-const shell = renderTpl(uiSrc, "SHELL_HTML");
+const shell = renderTpl(uiSrc, "SHELL_HTML", "`;");
 check("C1 rendered SHELL_HTML stands", typeof shell === "string" && shell.includes('<nav class="tabbar"'));
 if (typeof shell === "string") {
   const rNav = navBlock(shell);
@@ -124,7 +124,7 @@ if (typeof shell === "string") {
   check("C1 rendered tab bar label order is the new order",
     JSON.stringify(labelSeq(rNav)) === JSON.stringify(["Worship", "Pray", "Catechesis", "Conscience", "Sacred Art"]), labelSeq(rNav));
 }
-const appJs = renderTpl(clientSrc, "APP_JS");
+const appJs = renderTpl(clientSrc, "APP_JS", "\n`;");
 check("S6 served client (rendered APP_JS) stands", typeof appJs === "string" && appJs.length > 100000);
 if (typeof appJs === "string") {
   let parses = true, perr = "";
