@@ -1,6 +1,6 @@
 # v561 — Homily note anytime — note box before, during, and after recording; a note with no recording
 
-Registry row 1514 · Intake: Goals Board task 1067 · Status: IN PROGRESS — approved 2026-11-20 17:38 CT (Q1 A · Q2 A · Q3 A · Q4 A · Q5 A · Q6 A · Q7 B · run level TO SHIP); formal-record check: no approval record stands for package 57 in the Scope Management Space (39 records, newest v551) — John's chat approval governs
+Registry row 1514 · Intake: Goals Board task 1067 · Status: LIVE — shipped 2026-11-20 18:24 CT (Worker ca096cac, What's New 381)
 
 ## 1 · Scope
 
@@ -52,3 +52,12 @@ Registry row 1514 · Intake: Goals Board task 1067 · Status: IN PROGRESS — ap
 - **Fences re-verified:** index.ts byte-identical · migrations end at 0042 · client.ts byte-identical outside the homily module span (S3a) · the module holds no network call (S3b) · the fenced functions byte-identical (S4a: finish paths, settle, descriptor, delete, row dress, note accessors, capture mechanics) · a note entry never reaches the player, queue, Praylist, or day additions (its menu carries no such acts; `homilyLiveDesc` refuses non-'ready'; the descriptor's `available` is false; `homilyPlayFromList` is takes-only). No migration, no APK, no shell change.
 - **Concerns and Information Needs:** None. The two harness-fixture fixes recorded in §3 were re-read: both touch harness probe code only, no app code, and the checks they serve (W2c's IndexedDB emptiness, W4e/W4f's zero-fetch windows) now measure the note operations themselves.
 - **Notes for the Curator:** Ship proceeds under the approval's run level (TO SHIP): SW pin bump to ora-pro-nobis-v561-1, merge to main, Worker deploy, door smoke, row flip with the What's New entry, intake 1067 close-out.
+
+## 5 · Ship
+
+- **Ship facts:** SW pin bump to `ora-pro-nobis-v561-1` (commit 29c44d5) · merge fast-forward into main over 415a5ed (GitHub main stood at the v560 ship head; no nightly commits intervened) · push via Git Data API replication, all four commits byte-identical — **main pushed · remote in sync** (origin/main == 29c44d5b3956c3f78435fec8c43c3bf6e4a52706, read back) · local branch `release/v561` deleted after merge, never pushed · **Worker ca096cac-ce8f-4162-b54e-0bce1602647c at 100%** · pin ora-pro-nobis-v561-1 · rollback = v560 Worker 70f93698-91c1-4fd3-9f8b-411c39e03017 · no migration (0042 stands last, 0043 stays free) · no APK (APK 1.0.48 stands).
+- **Harness at Ship:** merged tree **79 ok / 2 not-ok** — both not-oks are the SW pin bump's own lines (S2b: the ui.ts diff now includes the CACHE line change; S2c: the pin reads v561-1), disclosed here per the standing pattern. Build tree and two clean checkouts read **81 ok / 0 not-ok**.
+- **Smoke:** the app agent door on the new deployment — `GET /api/agent/player/day?date=2026-11-20` → **200, 6 blocks**. (The session route `/api/player/day` answers 403 to the door by design; the agent-door mirror is the standing smoke surface.) Honest limit: page routes are Access-gated, so served device bytes cannot be read headlessly; the note box's behavior on John's phone stands as the field legs below.
+- **Registry:** row 1514 read back **Live** · shipped_at 2026-11-21T00:24:16Z · **What's New 381** ("Homily note anytime"). Intake 1067 closed Done.
+- **Field legs (John's, open):** (1) the note box stands before recording and is editable during · (2) a note typed before recording stands as the take's note · (3) Save during a recording stops the recording and the take saves with the note · (4) a note-only entry from the record card and from Homilies — its row shows "Note only", no play · (5) record onto a note-only entry — it gains the take on the same entry · (6) a note-only entry alone stands the Homilies side up.
+- **Notes for the Curator:** Chain complete: Scope 2250 · Plan 2251 · Implement 2252 · Review 2253 · Ship 2254, contracts 663–667 all closed with expectations met. Next free version v562 · next free migration 0043 (held for the later homily cloud release).
