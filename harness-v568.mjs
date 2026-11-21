@@ -33,7 +33,7 @@ import { execSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
-const BASE = "67f8751";
+const BASE = "6f2f7c3";
 const C = "app/worker/src/client.ts";
 const I = "app/worker/src/index.ts";
 const U = "app/worker/src/ui.ts";
