@@ -14341,8 +14341,8 @@ function openHeaderMenu() {
   var sections = [
     { key: 'prayers', tab: 'prayers', name: 'Pray' },
     { key: 'mass', tab: 'mass', name: 'Worship' },
-    { key: 'conscience', tab: 'conscience', name: 'Conscience' },
     { key: 'podcasts', tab: 'podcasts', name: 'Catechesis' },
+    { key: 'conscience', tab: 'conscience', name: 'Conscience' },
     { key: 'wallpaper', tab: 'wallpaper', name: 'Sacred Art' }
   ];
   // D3 A, as composed: the standing group stands NEXT
