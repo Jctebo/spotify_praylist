@@ -26,7 +26,14 @@ class TestPagesDeployment(unittest.TestCase):
         self.assertFalse(prayer_output.exists() and list(prayer_output.rglob("*.*")))
         site_images = Path("docs/images/site")
         self.assertFalse(site_images.exists() and list(site_images.rglob("*.*")))
-        self.assertIn("Today's prayer rhythm", landing_page)
+        # v571: the root is the landing page — the concept, the one
+        # door (Start Praying into the web app), the store block,
+        # and the podcast links standing.
+        self.assertIn("Start Praying", landing_page)
+        self.assertIn("https://app.orapronobis.media", landing_page)
+        self.assertIn("Free always", landing_page)
+        self.assertIn("Your data stays on your phone", landing_page)
+        self.assertIn("ora-pro-nobis.apk", landing_page)
         self.assertIn("podcast.xml", landing_page)
         self.assertIn("tests.test_publish_site", validation)
 
