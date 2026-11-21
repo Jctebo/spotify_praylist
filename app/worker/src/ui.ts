@@ -306,6 +306,10 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .homily-note-text { font-size:15px; margin-top:3px; white-space:pre-wrap; }
 .homily-note-act { display:block; text-align:left; font-family:var(--sans); font-size:14px; background:none; border:none; padding:6px 0; margin-top:6px; cursor:pointer; color:var(--accent-text); }
 .homily-note-input { margin-top:8px; }
+/* v561 (Q4 A): the note-only row's tag — a small outlined
+   marker in the row's meta line naming that the entry is
+   words only, with no recording behind it. */
+.homily-note-tag { font-family:var(--sans); font-size:12px; font-weight:600; color:var(--accent-text); border:1px solid currentColor; border-radius:8px; padding:1px 6px; margin-left:4px; white-space:nowrap; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent-text); }
 /* v363 §2.3: the .notavail rule retires with its last row use —

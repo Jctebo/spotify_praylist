@@ -9708,6 +9708,16 @@ var homilyRec = null;
 var homilySavedNote = '';
 var homilyNoteCardId = '';
 var homilyNoteEdit = false;
+/* v561 (Q1 A · Q2 A): the record card's note draft — the
+   box stands at the card before any entry exists for the
+   day, and its text lives here until a Save seats it as a
+   note-only entry (D6) or a recording start seeds the
+   take's note from it (D3). homilyRecReuseId carries a
+   standing note-only entry's id from homilyStartRecord
+   into the two start paths, whose take lands on that
+   same entry (Q5 A · D5). */
+var homilyDraftNote = '';
+var homilyRecReuseId = '';
 var homilySettleBusy = false;
 function homilyIndexRaw() {
   try { var v = JSON.parse(localStorage.getItem(HOMILY_INDEX_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
@@ -9729,6 +9739,11 @@ function homilyIndex() {
     if (e && e.state === 'recording') {
       changed = true;
       if ((e.chunkCount || 0) > 0) { e.state = 'ready'; e.partial = true; kept.push(e); }
+      // v561 (D5): a take that never landed a chunk but
+      // carries a note began as words, not audio — it
+      // reverts to a note-only entry instead of dropping,
+      // so the note survives the dead session.
+      else if (homilyNoteOf(e)) { e.state = 'note'; kept.push(e); }
     } else if (e) kept.push(e);
   });
   if (changed) homilyIndexWrite(kept);
@@ -9759,6 +9774,42 @@ function homilySetNote(id, text) {
   var e = homilyEntry(id); if (!e) return;
   e.note = String(text == null ? '' : text).trim();
   homilyEntrySave(e);
+}
+/* v561 (D1 · D2 · D5 · D6): the note-only entry and the
+   card's note target. A note-only entry is an index entry
+   in state 'note' — a note with NO recording: it carries
+   no IndexedDB take and no chunks, and every standing
+   fence keeps it out of playback (homilySettle mints
+   'ready' only; homilyDescFor reads available from
+   state === 'ready'; homilyLiveDesc refuses non-'ready').
+   The list is the one surface that widens to show it. */
+function homilyTodayDateKey() { return state.mass && state.mass.date ? state.mass.date : todayChicago(); }
+function homilyTodayNoteEntry() {
+  var dk = homilyTodayDateKey(), found = null;
+  homilyIndex().forEach(function (e) { if (e.dateKey === dk && e.state === 'note') found = e; });
+  return found;
+}
+function homilyCardNoteTarget() {
+  if (homilyRec) { var r = homilyEntry(homilyRec.id); if (r) return r; }
+  if (homilyNoteCardId) { var c = homilyEntry(homilyNoteCardId); if (c) return c; }
+  var dk = homilyTodayDateKey(), best = null;
+  homilyIndex().forEach(function (e) {
+    if (e.dateKey === dk && (e.state === 'note' || e.state === 'ready') && (!best || String(e.createdAt) > String(best.createdAt))) best = e;
+  });
+  return best;
+}
+function homilyDraftNoteText() { return String(homilyDraftNote || '').trim(); }
+function homilyNoteOnlyCreate(text, dateKey, dayName) {
+  var entry = {
+    id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
+    name: 'Homily \u2014 ' + homilyLongDate(dateKey),
+    dateKey: dateKey, dayName: dayName || '',
+    createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
+    mimeType: '', starred: false, played: false, state: 'note', chunkCount: 0, partial: false,
+    note: String(text == null ? '' : text).trim()
+  };
+  homilyEntrySave(entry);
+  return entry;
 }
 function homilyDb() {
   if (homilyDbPromise) return homilyDbPromise;
@@ -10082,17 +10133,34 @@ function homilyStartNative() {
   homilyMicInUse = 'System default';
   var dateKey = state.mass && state.mass.date ? state.mass.date : todayChicago();
   var p = (state.mass && state.mass.payload) || {};
-  var entry = {
-    id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
-    name: 'Homily \u2014 ' + homilyLongDate(dateKey),
-    dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
-    createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
-    mimeType: 'audio/mp4',
-    starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: ''
-  };
+  // v561 (D5): a standing note-only entry for today takes
+  // the recording onto ITSELF — same id, same note; the
+  // take is its audio, not a second entry. Otherwise the
+  // new entry opens with the card draft as its note (D3:
+  // a note started before recording IS the take's note).
+  var reuse = homilyRecReuseId ? homilyEntry(homilyRecReuseId) : null;
+  homilyRecReuseId = '';
+  var wasNote = !!(reuse && reuse.state === 'note');
+  var entry;
+  if (wasNote) {
+    entry = reuse;
+    entry.state = 'recording';
+    entry.mimeType = 'audio/mp4';
+    if (!homilyNoteOf(entry) && homilyDraftNoteText()) entry.note = homilyDraftNoteText();
+  } else {
+    entry = {
+      id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
+      name: 'Homily \u2014 ' + homilyLongDate(dateKey),
+      dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
+      createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
+      mimeType: 'audio/mp4',
+      starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: homilyDraftNoteText()
+    };
+  }
+  homilyDraftNote = '';
   homilyEntrySave(entry);
   homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
-  homilyRec = { id: entry.id, native: true, started: false, stopping: false, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null };
+  homilyRec = { id: entry.id, native: true, started: false, stopping: false, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null, reusedNote: wasNote };
   if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (wl) { if (homilyRec && homilyRec.id === entry.id) homilyRec.wakeLock = wl; }).catch(function () {});
   homilyRec.timer = setInterval(homilyTickTimer, 500);
   paintMassHomilyCard();
@@ -10119,8 +10187,12 @@ function homilyNativeStartFailed(id) {
     if (rec.timer) clearInterval(rec.timer);
     if (rec.wakeLock) { try { rec.wakeLock.release(); } catch (e) {} }
   }
-  homilyEntryRemove(id);
-  homilyDeleteTake(id);
+  // v561 (D5): a failed start on a reused note-only entry
+  // hands the entry back to 'note' — its note survives;
+  // a fresh entry is removed exactly as before.
+  var failed = (rec && rec.reusedNote) ? homilyEntry(id) : null;
+  if (failed) { failed.state = 'note'; homilyEntrySave(failed); homilyDeleteTake(id); }
+  else { homilyEntryRemove(id); homilyDeleteTake(id); }
   homilySavedNote = 'Microphone not available on this device.';
   paintMassHomilyCard();
 }
@@ -10206,27 +10278,30 @@ function massHomilyCardInner() {
   if (homilyRec) {
     return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc rec" id="mass-homily-stop" aria-label="Stop recording"></button>'
       + '<div class="grow"><div class="homily-rec-title">Recording the homily</div><div class="meta" id="mass-homily-timer">' + fmtDur(Math.round((Date.now() - homilyRec.startedAt) / 1000)) + (homilyMicInUse ? ' \u00b7 Microphone: ' + esc(homilyMicInUse) : '') + '</div></div></div>'
-      + (homilyMicNotice ? '<div class="meta homily-mic-note">' + esc(homilyMicNotice) + '</div>' : '') + '</div>';
+      + (homilyMicNotice ? '<div class="meta homily-mic-note">' + esc(homilyMicNotice) + '</div>' : '')
+      + homilyNoteCardHtml() + '</div>';
   }
   return '<div class="card homily-rec-card"><div class="row"><button class="homily-disc" id="mass-homily-rec" aria-label="Record the homily"></button>'
     + '<div class="grow"><div class="homily-rec-title">Record the homily</div><div class="meta">The take saves on this device only.</div>'
     + (homilySavedNote ? '<div class="meta">' + esc(homilySavedNote) + '</div>' : '') + '</div></div>'
     + homilyMicRowHtml() + homilyNoteCardHtml() + '</div>';
 }
-/* v560 (Q1 C · Q6 A): the note box's record-card seat — it
-   stands only at rest, under the saved line, for the take
-   just saved (homilyNoteCardId, set by both finish paths);
-   the recording state above carries no box. One note, two
-   seats: this renders the entry's own note field, the same
-   field the Homilies list shows. No note yet → the box
-   itself stands (the M3 dress); a note standing → the note
-   in full + Edit note, which swaps in the prefilled box. */
+/* v560 (Q1 C · Q6 A) seated the box at rest for the take
+   just saved; v561 (Q1 A) supersedes the seat rule: the
+   box stands at the card BEFORE, DURING, and AFTER
+   recording — one live box over the entry's one note
+   field (D2's target: the recording entry while a take
+   runs · the just-saved entry · today's standing entry ·
+   else the draft seat, whose text lives in homilyDraftNote
+   until a Save or a recording start seats it). A standing
+   note shows in full + Edit note (the v560 dress); the
+   box itself otherwise, prefilled. The field is live-
+   bound in wireMassHomily: each keystroke writes through
+   to the target, so no repaint can lose typed text. */
 function homilyNoteCardHtml() {
-  if (!homilyNoteCardId) return '';
-  var e = homilyEntry(homilyNoteCardId);
-  if (!e || e.state !== 'ready') return '';
-  var note = homilyNoteOf(e);
-  if (note && !homilyNoteEdit) {
+  var target = homilyCardNoteTarget();
+  var note = target ? homilyNoteOf(target) : homilyDraftNote;
+  if (target && note && !homilyNoteEdit) {
     return '<div class="homily-note"><div class="homily-note-label">Note</div>'
       + '<div class="homily-note-text">' + esc(note) + '</div>'
       + '<button class="homily-note-act" id="mass-homily-note-edit">Edit note</button></div>';
@@ -10234,6 +10309,46 @@ function homilyNoteCardHtml() {
   return '<div class="homily-note"><div class="homily-note-label">Note</div>'
     + '<textarea class="homily-note-input" id="mass-homily-note-field" rows="3" placeholder="Jot a note about this homily\u2026">' + esc(note) + '</textarea>'
     + '<div class="row" style="margin-top:8px"><button class="btn gold" id="mass-homily-note-save">Save note</button></div></div>';
+}
+/* v561 (D4 — John's approval comment, verbatim: "Clicking
+   save will.close.out the note and stop recording of
+   recording is not finished"): the card's Save act. It
+   closes out the note — and, while a recording is still
+   running, it STOPS that recording: the note is written
+   to the recording entry FIRST, then the standing stop
+   path runs, so the take saves normally with the note
+   attached (Q2 A). At rest on an entry it writes the
+   note and folds the box to the read dress; at the draft
+   seat a non-empty text seats a note-only entry (D6)
+   and an empty one just clears the draft. Saving an
+   empty note against a note-only entry removes that
+   entry — no audio and no note is nothing. */
+function homilyCardNoteSave() {
+  var f = document.getElementById('mass-homily-note-field');
+  var text = f ? f.value : '';
+  if (homilyRec) {
+    homilySetNote(homilyRec.id, text);
+    homilyNoteEdit = false;
+    homilyStopRecord();
+    return;
+  }
+  var target = homilyCardNoteTarget();
+  if (target) {
+    if (target.state === 'note' && !String(text).trim()) homilyDelete(target.id);
+    else homilySetNote(target.id, text);
+    homilyNoteEdit = false;
+    paintMassHomilyCard();
+    return;
+  }
+  var t = String(text || '').trim();
+  if (t) {
+    var p = (state.mass && state.mass.payload) || {};
+    var created = homilyNoteOnlyCreate(t, homilyTodayDateKey(), p.name && p.name !== 'Mass of the Day' ? p.name : '');
+    homilyNoteCardId = created.id;
+  }
+  homilyDraftNote = '';
+  homilyNoteEdit = false;
+  paintMassHomilyCard();
 }
 function paintMassHomilyCard() {
   var host = document.getElementById('mass-homily-host');
@@ -10244,13 +10359,18 @@ function wireMassHomily() {
   if (rec) rec.addEventListener('click', homilyStartRecord);
   var stop = document.getElementById('mass-homily-stop');
   if (stop) stop.addEventListener('click', homilyStopRecord);
-  var nsave = document.getElementById('mass-homily-note-save');
-  if (nsave) nsave.addEventListener('click', function () {
-    var f = document.getElementById('mass-homily-note-field');
-    homilySetNote(homilyNoteCardId, f ? f.value : '');
-    homilyNoteEdit = false;
-    paintMassHomilyCard();
+  var nfield = document.getElementById('mass-homily-note-field');
+  if (nfield) nfield.addEventListener('input', function () {
+    // v561 (D2): the box is live-bound — each keystroke
+    // writes through to the target entry's note field
+    // (raw; Save trims) or to the draft, so a repaint
+    // (microphone notice, finish paint) never loses text.
+    var t = homilyCardNoteTarget();
+    if (t) { t.note = nfield.value; homilyEntrySave(t); }
+    else homilyDraftNote = nfield.value;
   });
+  var nsave = document.getElementById('mass-homily-note-save');
+  if (nsave) nsave.addEventListener('click', homilyCardNoteSave);
   var nedit = document.getElementById('mass-homily-note-edit');
   if (nedit) nedit.addEventListener('click', function () { homilyNoteEdit = true; paintMassHomilyCard(); });
   var ch = document.getElementById('mass-homily-mic-change');
@@ -10275,6 +10395,11 @@ function homilyStartRecord() {
   homilySavedNote = '';
   homilyNoteCardId = '';
   homilyNoteEdit = false;
+  // v561 (D5): a note-only entry standing for today is
+  // the entry this take lands on (Q5 A) — its id rides
+  // into both start paths; a fresh start clears it.
+  var noteEntry = homilyTodayNoteEntry();
+  homilyRecReuseId = noteEntry ? noteEntry.id : '';
   // v559: where the shell offers native recording, the
   // take is the shell's (Plan D6) — the branch stands
   // before the WebView availability guard, which does
@@ -10302,17 +10427,33 @@ function homilyStartCapture() {
     catch (e) { stream.getTracks().forEach(function (t) { t.stop(); }); homilyMicRelease(); homilySavedNote = 'Microphone not available on this device.'; paintMassHomilyCard(); return; }
     var dateKey = state.mass && state.mass.date ? state.mass.date : todayChicago();
     var p = (state.mass && state.mass.payload) || {};
-    var entry = {
-      id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
-      name: 'Homily \u2014 ' + homilyLongDate(dateKey),
-      dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
-      createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
-      mimeType: recorder.mimeType || mime || 'audio/webm',
-      starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: ''
-    };
+    // v561 (D5 · D3): the same reuse + draft seed as the
+    // native path — a standing note-only entry takes the
+    // take onto itself; a fresh entry opens with the
+    // card draft as its note.
+    var reuse = homilyRecReuseId ? homilyEntry(homilyRecReuseId) : null;
+    homilyRecReuseId = '';
+    var wasNote = !!(reuse && reuse.state === 'note');
+    var entry;
+    if (wasNote) {
+      entry = reuse;
+      entry.state = 'recording';
+      entry.mimeType = recorder.mimeType || mime || 'audio/webm';
+      if (!homilyNoteOf(entry) && homilyDraftNoteText()) entry.note = homilyDraftNoteText();
+    } else {
+      entry = {
+        id: 'h' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36),
+        name: 'Homily \u2014 ' + homilyLongDate(dateKey),
+        dateKey: dateKey, dayName: p.name && p.name !== 'Mass of the Day' ? p.name : '',
+        createdAt: new Date().toISOString(), durationS: 0, sizeBytes: 0,
+        mimeType: recorder.mimeType || mime || 'audio/webm',
+        starred: false, played: false, state: 'recording', chunkCount: 0, partial: false, note: homilyDraftNoteText()
+      };
+    }
+    homilyDraftNote = '';
     homilyEntrySave(entry);
     homilyIdbPut('takes', { id: entry.id, mimeType: entry.mimeType, startedAt: entry.createdAt }).catch(function () {});
-    homilyRec = { id: entry.id, stream: stream, recorder: recorder, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null };
+    homilyRec = { id: entry.id, stream: stream, recorder: recorder, startedAt: Date.now(), seq: 0, sizeBytes: 0, wakeLock: null, timer: null, reusedNote: wasNote };
     recorder.ondataavailable = function (ev) {
       if (!ev.data || !ev.data.size || !homilyRec || homilyRec.id !== entry.id) return;
       homilyRec.seq += 1;
@@ -10337,8 +10478,11 @@ function homilyAbortRecord(note) {
   if (rec) {
     if (rec.timer) clearInterval(rec.timer);
     if (rec.stream) rec.stream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} });
-    homilyEntryRemove(rec.id);
-    homilyDeleteTake(rec.id);
+    // v561 (D5): the reused-note revert, as in
+    // homilyNativeStartFailed — the note survives.
+    var failed = rec.reusedNote ? homilyEntry(rec.id) : null;
+    if (failed) { failed.state = 'note'; homilyEntrySave(failed); homilyDeleteTake(rec.id); }
+    else { homilyEntryRemove(rec.id); homilyDeleteTake(rec.id); }
   }
   homilySavedNote = note;
   paintMassHomilyCard();
@@ -10373,21 +10517,40 @@ function homilyFinishRecord() {
 }
 /* ---- the Homilies side + list (P9) ---- */
 function homilyListEntries() {
-  return homilyIndex().filter(function (e) { return e.state === 'ready'; }).slice()
+  // v561 (D1): the list is the one surface that widens —
+  // note-only entries (state 'note') stand in it beside
+  // the takes; every other reader keeps its 'ready' rule.
+  return homilyIndex().filter(function (e) { return e.state === 'ready' || e.state === 'note'; }).slice()
     .sort(function (a, b) { return String(b.createdAt).localeCompare(String(a.createdAt)); });
 }
 function paintCatechesisHomilies() {
   paintRow2Home('podcasts');
   var entries = homilyListEntries();
+  // v561 (D6): the list's own note seat — a standing
+  // '＋ Add a note' act heads the side, entries or none.
+  var h = '<div class="homily-list-head"><button class="homily-note-act" id="homilies-add-note">\uFF0B Add a note</button></div>';
   if (!entries.length) {
-    view.innerHTML = '<p class="sub">No homilies recorded yet. The record control stands in the Mass, at the homily\u2019s place.</p>';
+    view.innerHTML = h + '<p class="sub">No homilies yet \u2014 record the homily in the Mass, or add a note here.</p>';
+    wireHomiliesList();
     return;
   }
-  var h = '';
-  entries.forEach(function (e) { h += homilyRowHtml(e); });
+  entries.forEach(function (e) { h += e.state === 'note' ? homilyNoteOnlyRowHtml(e) : homilyRowHtml(e); });
   view.innerHTML = h;
   wireHomiliesList();
   homilySettle();
+}
+/* v561 (Q4 A · D7): the note-only row — name + date +
+   the 'Note only' tag, the note in full under the row,
+   the star standing, the ⋮ menu; NO play disc and NO
+   played mark: there is nothing to play. */
+function homilyNoteOnlyRowHtml(e) {
+  var meta = [homilyLongDate(e.dateKey)];
+  if (e.dayName) meta.push(e.dayName);
+  return '<div class="card trow homily-row homily-note-row" data-homilyid="' + esc(e.id) + '"><div class="row">'
+    + '<div class="grow"><div class="ttl">' + esc(e.name) + '</div><div class="meta">' + esc(meta.join(' \u00b7 ')) + ' <span class="homily-note-tag">Note only</span></div></div>'
+    + '<span class="prow-cluster"><button class="favstar' + (e.starred ? ' on' : '') + '" data-homilystar="' + esc(e.id) + '" aria-label="Favorite">' + (e.starred ? '\u2605' : '\u2606') + '</button>'
+    + '<button class="iconbtn" data-homilymenu="' + esc(e.id) + '" aria-label="More options">\u22ee</button></span></div>'
+    + homilyNoteRowHtml(e) + '</div>';
 }
 function homilyRowHtml(e) {
   var d = homilyDescFor(e);
@@ -10416,6 +10579,8 @@ function homilyNoteRowHtml(e) {
   return '<button class="homily-note-act" data-homilynote="' + esc(e.id) + '">\uFF0B Add a note</button>';
 }
 function wireHomiliesList() {
+  var addNote = view.querySelector('#homilies-add-note');
+  if (addNote) addNote.addEventListener('click', openHomilyNewNoteEditor);
   view.querySelectorAll('[data-homilyplay]').forEach(function (b) {
     b.addEventListener('click', function () { homilyPlayFromList(b.getAttribute('data-homilyplay')); });
   });
@@ -10433,7 +10598,9 @@ function wireHomiliesList() {
   });
 }
 function homilyPlayFromList(id) {
-  var entries = homilyListEntries();
+  // v561 (D7): the play queue is takes only — a note-only
+  // entry can never enter it, even by a stray call.
+  var entries = homilyListEntries().filter(function (e) { return e.state === 'ready'; });
   var at = -1;
   entries.forEach(function (e, i) { if (e.id === id) at = i; });
   if (at < 0) return;
@@ -10448,6 +10615,17 @@ function homilyPlayFromList(id) {
   });
 }
 function openHomilyMenu(e, anchorEl) {
+  // v561 (Q4 A · D7): a note-only entry's menu is Rename ·
+  // Edit note · Delete — no Play, no queue, no Praylist:
+  // there is no audio to carry anywhere.
+  if (e.state === 'note') {
+    openSheetMenu(e.name, [
+      { label: 'Rename', act: function () { openHomilyRename(e); } },
+      { label: homilyNoteOf(e) ? 'Edit note' : 'Add note', act: function () { openHomilyNoteEditor(e); } },
+      { label: 'Delete', act: function () { openConfirm({ line: 'Delete \u201c' + e.name + '\u201d? It is stored only on this device \u2014 deleting removes the only copy.', commitLabel: 'Delete', danger: true, act: function () { homilyDelete(e.id); } }); } }
+    ], anchorEl);
+    return;
+  }
   openSheetMenu(e.name, [
     { label: 'Play', act: function () { homilyPlayFromList(e.id); } },
     { label: 'Add to queue', act: function () { homilyMint(e.id).then(function () { addToQueue(homilyDescFor(e)); }); } },
@@ -10493,7 +10671,36 @@ function openHomilyNoteEditor(e) {
   if (field) field.focus();
   sheet.querySelector('[data-note-cancel]').addEventListener('click', function () { sheet.remove(); });
   sheet.querySelector('[data-note-save]').addEventListener('click', function () {
-    homilySetNote(e.id, field ? field.value : '');
+    var text = field ? field.value : '';
+    // v561 (D4): clearing a note-only entry's note to
+    // empty removes the entry — no audio and no note is
+    // nothing. A take's note still clears freely (v560).
+    if (e.state === 'note' && !String(text).trim()) homilyDelete(e.id);
+    else homilySetNote(e.id, text);
+    sheet.remove();
+    paintPodcastsIndex();
+  });
+}
+/* v561 (Q3 A · D6): the Homilies list's own creation
+   seat — the note-editor sheet pattern over a NEW
+   note-only entry, dated today. An empty Save creates
+   nothing and just closes. Nothing is recorded and
+   nothing leaves the device (Q1 C stands). */
+function openHomilyNewNoteEditor() {
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet slotpick';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Homily note</h1></div>'
+    + '<textarea class="homily-note-input" id="homily-note-field" rows="4" placeholder="Jot a note about this homily\u2026"></textarea>'
+    + '<div class="row" style="margin-top:10px"><button class="btn ghost grow" data-note-cancel>Cancel</button>'
+    + '<button class="btn gold grow" data-note-save>Save note</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  var field = sheet.querySelector('#homily-note-field');
+  if (field) field.focus();
+  sheet.querySelector('[data-note-cancel]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-note-save]').addEventListener('click', function () {
+    var text = field ? field.value : '';
+    if (String(text).trim()) homilyNoteOnlyCreate(text, todayChicago(), '');
     sheet.remove();
     paintPodcastsIndex();
   });
