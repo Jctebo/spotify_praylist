@@ -97,7 +97,7 @@ const appJs = vm.runInContext('`' + clientSrc.slice(tplStart, tplEnd) + '`', vm.
   try { new vm.Script(appJs); } catch (e) { parses = false; perr = e.message; }
   check('S6 served client (rendered APP_JS) parses whole', parses, perr);
   const gStart = appJs.indexOf('var OPN_SEED_GUIDE = ');
-  const gEnd = appJs.indexOf(';', gStart);
+  const gEnd = appJs.indexOf('];', gStart);
   const guide = vm.runInContext('(' + appJs.slice(gStart + 'var OPN_SEED_GUIDE = '.length, gEnd) + ')', vm.createContext({}));
   check('S6 seed guide body keeps its inner quotes after rendering', !!guide && typeof guide[0].body === 'string' && guide[0].body.includes('"through my fault,"'), guide && guide[0].body.slice(0, 80));
 }
