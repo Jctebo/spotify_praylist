@@ -671,3 +671,37 @@ way; the harness world caught the coupling).
   designed Salesian default.
 - Review verdict: PASS. The chain proceeds to Ship under John's
   To Ship approval.
+
+## §5 Ship (chain-v590-build, 2026-11-21)
+
+- Migration 0044 applied to the app D1 before the deploy and read
+  back: the day_defaults column stands on prayer_profile_state.
+- Merge 8694609 (release/v590 → main) + pin bump 2e04d42
+  (ora-pro-nobis-v590-1), pushed through the GitHub Git Data API,
+  byte-identical — main pushed · remote in sync (2e04d42).
+- harness-v590: 37 ok / 0 not ok on the working tree, on a clean
+  checkout of the committed tree (a0270c2), and on the merged tree —
+  the no-op equivalence leg green in every run.
+- Worker ora-pro-nobis-app deployed from the clean ship worktree at
+  2e04d42: version faf9b32b (rollback target 7be174e9, the v572
+  build). Served proofs: the served sw.js carries pin
+  ora-pro-nobis-v590-1; the served app.js parses whole (1,132,059
+  bytes) and carries the Configure plan row, the fold, the Profiles
+  screen, and the migration; the live public day payload for
+  2026-11-21 stands in the public shape at source (profile null,
+  standing blocks), and the SERVED client folds that live payload
+  under John's stored Salesian Way — Morning · Midday · Evening ·
+  Night · Novenas · Podcasts — with the migration running on his
+  exact document (3 profiles, zero copies minted, version 7);
+  personal-data reads on the public host stand empty (profiles [],
+  intentions []); the prayer book stands intact at 77 prayers.
+- Row 1564 Live · What's New 405 · Ship phase record 2375 ·
+  contracts 784/785/786 met · intake 1104 closed Done.
+- Field legs standing open for John (his verdicts, not claimed):
+  first open after the update — the migration runs in place, his
+  same PIN unlocks, his vault untouched; the Praylist's first row
+  carries Configure plan; the Profiles screen opens his three ways
+  as cards; his Salesian day stands shaped by the profile again;
+  a course added to an hour's contents carries the next episode by
+  his reading; an edit to a named way asks for a name before it
+  saves; a per-day default stands where he sets one.
