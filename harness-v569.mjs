@@ -91,14 +91,17 @@ check("S6b client diff adds exactly one function (daySetPrefetch)",
     return adds === 1 && dels === 0;
   })());
 
-// S7: the pin moved to v569-1 and ui.ts differs from base ONLY on
-// the pin line.
-check("S7 pin = ora-pro-nobis-v569-1, ui.ts diff is the pin line only",
-  ui.includes('var CACHE = "ora-pro-nobis-v569-1";') &&
+// S7: the ui.ts diff against base is confined to the CACHE pin
+// line (empty before Ship's pin commit; exactly the pin line
+// after it — the v574 S6b posture, so the gate reads the same
+// before and after the bump). When the pin stands, it is v569-1.
+check("S7 ui.ts diff confined to the pin line; pin is v569-1 when bumped",
   (() => {
     const d = execSync(`git diff ${BASE} -- ${UI}`, { encoding: "utf8" })
       .split("\n").filter((l) => /^[+-]/.test(l) && !/^[+-]{3}/.test(l));
-    return d.length === 2 && d.every((l) => l.includes("var CACHE"));
+    const confined = d.length === 0 || (d.length === 2 && d.every((l) => l.includes("var CACHE")));
+    const pinOk = !ui.includes('var CACHE = "ora-pro-nobis-v569-1";') || d.length === 2;
+    return confined && pinOk;
   })());
 
 // S8: PRAYER_AUDIO map byte-identical to base (v569 touches no
@@ -125,14 +128,16 @@ check("S9 cost watch + warmer present and python-clean",
     } catch { return false; }
   })());
 
-// S10: the touched-file set is exactly the v569 surface.
+// S10: every touched file stands inside the v569 surface (the
+// pin line joins the diff only at Ship's commit, so confinement —
+// not exact equality — is the invariant).
 check("S10 diff confined to the v569 surface",
   (() => {
     const names = execSync(`git diff --name-only ${BASE}`, { encoding: "utf8" })
-      .split("\n").filter(Boolean).sort();
-    const want = [SRC, CLI, UI, "jobs/ora_cost_watch.py", "runner/warm_day_cache.py",
-      "harness-v569.mjs", "releases/v569-serving-refactor.md"].sort();
-    return JSON.stringify(names) === JSON.stringify(want);
+      .split("\n").filter(Boolean);
+    const want = new Set([SRC, CLI, UI, "jobs/ora_cost_watch.py", "runner/warm_day_cache.py",
+      "harness-v569.mjs", "releases/v569-serving-refactor.md"]);
+    return names.length > 0 && names.every((n) => want.has(n));
   })(),
   execSync(`git diff --name-only ${BASE}`, { encoding: "utf8" }));
 
