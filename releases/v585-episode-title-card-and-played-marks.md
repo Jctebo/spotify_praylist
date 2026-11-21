@@ -90,3 +90,13 @@ Verified on a CLEAN CHECKOUT of the committed tree (430dbb5 — the ship-compose
 - **The card, as built vs Q2 A:** title · series · date + description · Intention line (where a draw stands) · Play · star · played state with mark played/unplayed — one builder, every episode surface. The boundary stands as built in §3.3: prayer/book rows keep tap-to-play; series doors keep their click-through; the row's play disc keeps direct play.
 - **Unrun, named:** no production D1 write stood anywhere in this run; the served-leg parse of the DEPLOYED Worker and the pin bump belong to Ship; the device-store validation on John's phone happens at first open after Ship (the fold rule itself is harness-proven against production copies).
 - **HELD AT THE SHIP GATE** per the approved run level (Stop before Ship). No ship, no deploy, no merge to main in this run. The branch `release/v585` stands at 430dbb5 (+ this section's doc commit) off the standing clone, ready for John's word.
+
+## 5 · Ship
+
+John's word (Ora thread, 2026-11-21 11:32 CT): "Ship.585" — the Ship gate lifts.
+
+- Main had moved since the build: origin/main stood at 6307094 (v586 merged). `release/v585` was rebased onto it — clean, no conflicts (rebased head 1adcffa).
+- **harness-v585 on a clean checkout of the rebased tree (BASE origin/main): 42 ok / 0 not ok** — identical to the Review run; the rendered client parses whole.
+- Before the merge, main moved again under concurrent ships (v584, then v583 merged; the first v585 merge into the clone's main was superseded when those seats moved the main ref). `release/v585` was rebased a second time onto the standing main (the v583/v584 line); the only conflict was the SW pin line, resolved to `ora-pro-nobis-v585-1`. The harness re-ran on a clean checkout of the final tree before the merge (its S3 leg reads the pin move itself — the Ship step — as the single named exception).
+- SW pin bumped to `ora-pro-nobis-v585-1` in this Ship commit.
+- Merge to main, push, Worker deploy, What's New, and the row flip are recorded in the Ship phase record (DevOps Board row 1559).
