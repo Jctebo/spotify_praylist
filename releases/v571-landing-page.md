@@ -37,4 +37,9 @@ Light review under the set's To-Ship approval (fresh seat; the streamlined path)
 
 ## 5 · Ship
 
-(Pending — written at Ship.)
+**SHIPPED LIVE 2026-11-21T08:38:00Z** (Pages deploy run 44885673939, success, on head b295270). What's New **387** ("A front door for Ora Pro Nobis") · registry row **1525 Live** (shippedAt 2026-11-21T08:38:00Z, whatsNewId 387, read back) · phases Implement 2285 · Review 2286 · Ship 2287, all passed · contracts 696/697/698 judged met + closed · GitHub main **b295270** (merge of release/v571) pushed by byte-identical replication — "main pushed · remote in sync".
+
+- **Live proof (the real root):** https://orapronobis.media/ → 200 with the landing page (7,898 bytes): the Start Praying door anchor exact, the three concept lines present, the store block (web app + `ora-pro-nobis.apk`), the old prayer-list home gone (no playlist mount). Start Praying's target https://app.orapronobis.media/ → 200.
+- **Frozen feed untouched:** https://orapronobis.media/podcast.xml → 200, the standing RSS (2,263,712 bytes); docs/podcast.xml and docs/intentions.xml carry no diff in this release.
+- **APK link:** the store block's Android button points at `ora-pro-nobis.apk` on the site root; the file lands with the night's APK build (1.0.49), which adds the binary to config/site and re-dispatches this same deploy workflow — until that build lands (within the night), the link 404s. The builder guard shipped here makes that step a file drop, not a code change.
+- **Field leg (John):** open https://orapronobis.media — the concept page with the gold Start Praying button; the button opens the app.
