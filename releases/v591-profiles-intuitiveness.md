@@ -401,3 +401,38 @@ byte-identical-to-BASE), the same legs that fail on main
 today; zero functional failures anywhere. The rendered
 client parses whole (1,141,681 chars); index.ts and ui.ts
 strip + parse clean.
+
+## §4 Review (chain-v591-build, 2026-11-21)
+
+**Verdict: PASS.** The diff was read whole (index.ts hunk by
+hunk; the client machinery regions; the surface splice). The
+gates stand as recorded in §3, with the harness at **32 ok /
+0 not ok** after the one defect below was fixed and guarded
+(S11 added in Review; 32/0 on the working tree and on a clean
+checkout of the committed tree, 81f8cb2).
+
+**Defect found in Review, fixed forward inside this
+approval:** the profile pop-up mounted its sheet EMPTY and
+repainted `pop.innerHTML` — mountDrawer restructures the
+sheet's `.inner` at mount time (grab strip + panel body), so
+the pop-up would have stood without drawer chrome and its
+first repaint would have torn the structure down. Fixed:
+the pop-up now carries a stable `.profpopbody` container
+inside the mounted `.inner` and paints/wires only there —
+the standing sheets' own discipline. Guarded by harness
+static S11. No other surface repaints a mounted sheet whole
+(the screen and the Add picker verified: both paint into
+inner containers or mount once with content standing).
+
+**Named limits standing:** named-subset novena picking
+stays unbuilt (the Novenas contents are all-or-nothing, in
+words) · contents item order for SOURCE families rides the
+standing extRebuildDescs gate (contents order honored
+there); prayer surfacing order rides the additions weave ·
+a contents prayer whose slug also stands as a per-day
+addition in another language dedupes to the stored addition
+(no duplicate stands) · the legacy profile sheet/editor
+remain in the client, unreached · private-shape parity for
+the new routes is code + harness level (the private host's
+Access gate blocks a live fetch from this seat, the
+standing posture).
