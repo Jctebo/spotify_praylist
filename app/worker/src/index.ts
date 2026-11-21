@@ -484,6 +484,64 @@ async function enumerateNovenaEpisodes(env: Env, date: string): Promise<string[]
     return [...ids];
   } catch { return []; }
 }
+// v569: the day-set asset scan — every enclosure in the own feed
+// whose stem carries the presented date, in feed order, deduped by
+// URL. The episode files are date-stamped at publish and never
+// change under a date (immutable day builds), so a date's asset
+// list is a settled fact the moment the day publishes. Same
+// failure posture as the novena scan above: any fetch/parse
+// failure reads as the empty list and the manifest still stands.
+async function enumerateDayAssets(env: Env, date: string): Promise<{ id: string; url: string; sizeBytes: number }[]> {
+  try {
+    const res = await fetch(ownFeedUrl(env));
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const out: { id: string; url: string; sizeBytes: number }[] = [];
+    const seen = new Set<string>();
+    const tagRe = /<enclosure\b[^>]*>/g;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(xml))) {
+      const um = /\burl="([^"]+)"/.exec(m[0]);
+      if (!um) continue;
+      const url = um[1];
+      const stem = ownStemOfUrl(url);
+      if (!stem.includes(date)) continue;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      const lm = /\blength="(\d+)"/.exec(m[0]);
+      out.push({ id: stem, url, sizeBytes: lm ? Number(lm[1]) : 0 });
+    }
+    return out;
+  } catch { return []; }
+}
+// v569: ONE manifest call per day carries the day's whole shape —
+// the day shell (the standing /api/prayer/day payload), the day's
+// Mass payload, the day's readings payload, and the day-set asset
+// list the device downloads in one pass. Each fold keeps its own
+// failure posture: a failed fold reads as its empty shape, never
+// as a failed manifest.
+async function dayManifestPayload(env: Env, date: string) {
+  const day = await prayerDayPayload(env, date);
+  let mass: unknown = null;
+  try { mass = await massPayload(env, date); } catch { mass = null; }
+  let readings: unknown = { date, found: false, parts: [], copyright: [] };
+  try { readings = await massReadingsPayload(date); } catch { /* the empty shape above stands */ }
+  const assets = await enumerateDayAssets(env, date);
+  return { ok: true, date, day, mass, readings, assets };
+}
+// v569: immutable day builds at the app layer — a SETTLED day
+// (before Chicago today) never changes under the client, so its
+// day + manifest answers carry a long immutable device cache;
+// today (and any future date) keeps the standing uncached shape.
+function settledJson(body: unknown, date: string, today: string): Response {
+  if (date < today) {
+    return new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { "content-type": "application/json", "cache-control": "private, max-age=31536000, immutable" },
+    });
+  }
+  return json(body);
+}
 // v427 §2.2: the per-episode sibling of prayerDrawForDate, under
 // its exact disciplines — a standing (date, episode) draw is
 // never re-picked by a read; missing episodes fill from the
@@ -3280,7 +3338,16 @@ export default {
         if (seg[2] === "day" && request.method === "GET") {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          return json(await prayerDayPayload(env, date));
+          return settledJson(await prayerDayPayload(env, date), date, pToday);
+        }
+        if (seg[2] === "day-manifest" && request.method === "GET") {
+          // v569: the day's whole shape in ONE call — day shell,
+          // Mass, readings, and the day-set asset list. Same gate
+          // as the day route (inside johnOnly); a settled date's
+          // manifest is immutable-cached like its day.
+          const date = url.searchParams.get("date") ?? pToday;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          return settledJson(await dayManifestPayload(env, date), date, pToday);
         }
         if (seg[2] === "mass" && !seg[3] && request.method === "GET") {
           // v486: the day's Mass versions + propers for the Mass

@@ -14528,6 +14528,46 @@ function ownFetchAudio(cacheKey, enclosureUrl, done) {
     });
   }).catch(function () { if (!settled) { settled = true; clearTimeout(fallback); download(); } });
 }
+// v569 day-set download: ONE manifest call per day carries the
+// day's whole shape; its asset list is the device day set. After
+// the day opens, the set downloads in ONE pass — sequentially,
+// through the standing feed-audio pass-through (the enclosure
+// host sends no CORS header) — into the standing device audio
+// cache under each asset's own URL, the key the cache-restore
+// playback paths already read. Entries already cached are
+// skipped; a failed asset never blocks the pass or the day.
+// Purely additive: playback routes are untouched — the pass only
+// warms the cache so the day replays locally (offline included).
+function daySetPrefetch(date) {
+  if (!('caches' in window)) return;
+  try { if (localStorage.getItem('opn-dayset-v569') === date) return; } catch (e) {}
+  api('/api/prayer/day-manifest?date=' + date).then(function (m) {
+    if (!m || !m.assets || !m.assets.length) return;
+    var assets = m.assets.filter(function (a) { return a && a.url; });
+    if (!assets.length) return;
+    var i = 0;
+    var step = function () {
+      if (i >= assets.length) {
+        window.__opnDaySet = { date: date, downloaded: assets.length };
+        try { localStorage.setItem('opn-dayset-v569', date); } catch (e) {}
+        return;
+      }
+      var a = assets[i++];
+      caches.open('opn-ext-audio-v1').then(function (cache) {
+        return cache.match(a.url).then(function (hit) {
+          if (hit) { step(); return; }
+          fetch('/api/player/feed-audio?url=' + encodeURIComponent(a.url)).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.blob();
+          }).then(function (blob) {
+            return cache.put(a.url, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+          }).then(step).catch(step);
+        });
+      }).catch(step);
+    };
+    step();
+  }).catch(function () {});
+}
 // The streaming parse (§2.1 ruling 2): the feed is strictly
 // date-descending; read the body incrementally, resolve the
 // presented day's items as their <item> elements close, and STOP
@@ -17367,6 +17407,7 @@ setupBackButton(); // v421: the Android system back binding (shell only; a guard
 // when they settle; the values are the same day's, so a
 // second apply changes nothing.
 api('/api/prayer/day?date=' + todayChicago()).then(function (day) { applyLiturgical(day || {}); }).catch(function () {});
+try { daySetPrefetch(todayChicago()); } catch (e) {} // v569: the one-pass day-set download warms behind the boot
 // v492 (John, 2026-11-17): a cold start opens on the Mass tab;
 // in general the app opens on the last tab the user opened
 // (opn-lasttab-v492, written by setTab), validated to a tab id.
