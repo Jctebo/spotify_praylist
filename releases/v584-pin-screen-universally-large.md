@@ -72,3 +72,24 @@ client parses whole, and the gate painter + PIN verify seams stand.
 Sibling regression (harness-v586 on the clean tree): 22 ok / 1 not-ok —
 the single failure is v586's own S1 diff-confinement leg reading this
 release's file set (ui.ts + harness-v584.mjs); every functional leg passes.
+
+## §4 Review (light, passed)
+
+- Committed-tree verification (John's caution, standing): harness-v584
+  ran on a CLEAN CHECKOUT of the committed tree (f4065a7) — **17 ok /
+  0 not ok**, identical to the working-tree run.
+- Diff read whole (base 6307094 → HEAD): ui.ts carries only the pin
+  dress block (five value changes + the v584 comment + the scaling
+  media rule); client.ts and index.ts stand byte-identical — no PIN
+  behavior, no vault path, no server route moved. Migrations untouched.
+  John's prayer seats and personal data untouched (no data path in the
+  diff at all).
+- The component claim from Scope is proven in the harness (R9–R11):
+  one pad painter (renderPinGate), the verify seams standing, and the
+  vault unlock painting no pad of its own — the one dress reaches
+  every pad surface.
+- Ship gate: merge release/v584 → main, push (Git Data API
+  replication, read-back "main pushed · remote in sync"), SW pin bump
+  to ora-pro-nobis-v584-1 as the Ship commit, deploy from a clean
+  checkout of merged main, served legs (styles.css dress · app.js
+  parse · sw.js pin), What's New entry, row flips Live.
