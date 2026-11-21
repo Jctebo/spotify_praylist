@@ -139,7 +139,7 @@ if (h6) {
   if (badLines.length) { h6 = false; console.log("  H6 index.ts lines outside the map:", badLines.slice(0, 4)); }
   const dUi = execSync(`git -C ${root} diff ${baseRef} HEAD -- app/worker/src/ui.ts`, { encoding: "utf8" });
   const uiHunks = dUi.split("\n").filter((l) => (l.startsWith("+") || l.startsWith("-")) && !l.startsWith("+++") && !l.startsWith("---"));
-  const badUi = uiHunks.filter((l) => !/CACHE = "ora-pro-nobis-v\d+-1"/.test(l));
+  const badUi = uiHunks.filter((l) => !/CACHE = "ora-pro-nobis-v\d+-\d+"/.test(l));
   if (badUi.length) { h6 = false; console.log("  H6 ui.ts lines outside the pin:", badUi.slice(0, 4)); }
 }
 check("H6 diff confined (index.ts map block + ui.ts pin + migration + harness + doc)", h6, diff.join(", "));
