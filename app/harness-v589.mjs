@@ -23,6 +23,12 @@
 //  C5 no second fold: the painters' mark acts write the
 //     core and take counts from the projection (static
 //     seats), and a toggled count equals the core's count.
+//  R  the restore bridge (fix-forward): a file carrying a
+//     podcastListens section restores its rows into the
+//     core through opnRestoreFromText — the shipped build
+//     restored only the personal-data document and the
+//     section landed nowhere; a file without the section
+//     restores exactly as before.
 // Fixtures: app/tests/fixtures-v589/production-podcast-
 // fixture.json — drawn from production (Improvement D):
 // the Bible snapshot's 372 entries whole, all 331 server
@@ -92,7 +98,8 @@ function makeWorld(store) {
   const seedSlice = slice('var OPN_SEED_PROFILES', 'function opnLocalApi');
   const localSlice = slice('function opnLocalApi', '/* Post-processing for content reads');
   const foldSlice = slice('function opnFoldPlaybackIntoPodcasts', 'function api(path, opts)');
-  vm.runInContext("this.todayChicago = function () { return '2026-11-21'; };\n" + opnSlice + '\n' + seedSlice + '\n' + localSlice + '\n' + foldSlice + '\n;this.__fold = opnFoldPlaybackIntoPodcasts; this.__local = opnLocalApi; this.__core = opnPodCore; this.__save = opnPlaybackSave; this.__coreSave = opnPodCoreSave;', world);
+  const restoreSlice = slice('function opnCountsOf', 'function opnHasSnapshot');
+  vm.runInContext("this.todayChicago = function () { return '2026-11-21'; };\n" + opnSlice + '\n' + seedSlice + '\n' + localSlice + '\n' + foldSlice + '\n' + restoreSlice + '\n;this.__fold = opnFoldPlaybackIntoPodcasts; this.__local = opnLocalApi; this.__core = opnPodCore; this.__save = opnPlaybackSave; this.__coreSave = opnPodCoreSave; this.__restore = opnRestoreFromText;', world);
   return world;
 }
 const stripped = (entries) => entries.map((e) => { const c = { ...e }; delete c.listened; delete c.listenDate; delete c.listenedAt; delete c.positionS; return c; });
@@ -179,6 +186,66 @@ const bibleIndex = () => ({ ok: true, seriesList: [{ series: 'bible-in-a-year', 
   check('C4 the orphan drops at ingest and is counted', (core.migration.dropped || []).includes('bible-in-a-year|biy:day-999') && !core.listens['bible-in-a-year|biy:day-999'], core.migration.dropped);
   const legacy = JSON.parse(store['opn-playback-local-v1'] || '{}');
   check('C4 the legacy store keeps only its day-form positions', Object.keys(legacy.listens || {}).length === 0 && Object.keys(legacy.positions || {}).length === 0 && !!legacy.dayPositions['some-episode|2026-11-21'], legacy);
+}
+
+// ---------- R: the restore bridge (fix-forward) ----------
+// A device world: the public shape standing in the shell,
+// so opnMode() reads 'device' and the personal-data layer
+// runs its on-device path — the same world John's phone
+// restores the prepared file in.
+function deviceWorld(store) {
+  const w = makeWorld(store);
+  vm.runInContext("this.window = { __OPN_SHAPE__: 'public' }; this.oraInShell = function () { return true; };", w);
+  return w;
+}
+{
+  const store = {};
+  const w = deviceWorld(store);
+  // Ingest the Bible series first (its payload read), so
+  // the registry stands when the restore's rows arrive.
+  w.__fold(JSON.parse(JSON.stringify(biblePayload())));
+  // The file's section: 331 rows — the fixture's 326
+  // (Bible 322 · Exorcist 3 · Catechism 1) + 4 of the
+  // prepared file's rows for series the fixture does not
+  // snapshot (they land pending, as they do on the phone)
+  // — plus one planted orphan.
+  const seamRow = (r) => ({ series: r.series, seqKey: r.seq_key, listenDate: r.listen_date, source: r.source });
+  const rows = [
+    ...FX.bible.listens.map(seamRow),
+    { series: 'bible-in-a-year', seqKey: 'biy:day-999', listenDate: '2026-11-12', source: 'seed' },
+    ...FX.exorcist.listens.map(seamRow),
+    ...FX.catechism.listens.map(seamRow),
+    { series: 'daily-gospel-exegesis', seqKey: '31a8328a-106e-4250-8306-9e6cd0ae6289', listenDate: '2026-11-18', source: 'auto' },
+    { series: 'daily-gospel-exegesis', seqKey: 'f12a7182-b6fc-4de4-a0b8-e7c2a49c0e3b', listenDate: '2026-11-20', source: 'auto' },
+    { series: 'counsel-of-trent', seqKey: 'tag:soundcloud,2010:tracks/2430746307', listenDate: '2026-11-20', source: 'auto' },
+    { series: 'barron-sunday-sermons', seqKey: 'wordonfire.podbean.com/c11d6ced-8e84-3e34-97ca-50685123df75', listenDate: '2026-11-17', source: 'auto' },
+  ];
+  check('R1 the fixture section carries 331 rows', rows.length === 331, rows.length);
+  const file = {
+    format: 'orapronobis-personal-data', formatVersion: 1, exportedAt: '2026-11-21T18:00:00.000Z',
+    sections: { intentions: [{ id: 1, text: 'fixture intention', level: 'medium', active: true, createdAt: '2026-11-01' }] },
+    podcastListens: rows,
+  };
+  const counts = await w.__restore(JSON.stringify(file));
+  check('R1 the restore consumes the podcastListens section (330 land; the orphan refused + counted)', !!counts.podcastListens && counts.podcastListens.landed === 330 && counts.podcastListens.refused === 1, counts.podcastListens);
+  const core = w.__core();
+  const bibleInCore = Object.keys(core.listens).filter((k) => k.indexOf('bible-in-a-year|') === 0);
+  check('R1 322 Bible in a Year listens stand in the core; the orphan is nowhere', bibleInCore.length === 322 && !core.listens['bible-in-a-year|biy:day-999'], bibleInCore.length);
+  const out = w.__fold(JSON.parse(JSON.stringify(biblePayload())));
+  const byKey = Object.fromEntries(out.entries.map((e) => [e.key, e]));
+  check('R1 the series view reads count 322 · current Day 322 from the core', out.listenedCount === 322 && out.currentKey === 'biy:day-322', { c: out.listenedCount, cur: out.currentKey });
+  check('R1 the rows paint: Days 1-321 + the bonus listened, Day 322 not', byKey['biy:day-1'].listened === true && byKey['biy:day-321'].listened === true && byKey['biy:bonus-if-you-feel-like'].listened === true && byKey['biy:day-322'].listened === false);
+  check('R1 the personal document restores as before (its counts stand)', counts.intentions === 1 && counts.profiles >= 1, counts);
+}
+{
+  const store = {};
+  const w = deviceWorld(store);
+  const file = {
+    format: 'orapronobis-personal-data', formatVersion: 1, exportedAt: '2026-11-21T18:00:00.000Z',
+    sections: { intentions: [{ id: 1, text: 'fixture intention', level: 'medium', active: true, createdAt: '2026-11-01' }] },
+  };
+  const counts = await w.__restore(JSON.stringify(file));
+  check('R2 a file without the section restores exactly as today (no listens land, no outcome rides)', counts.podcastListens === undefined && counts.intentions === 1 && Object.keys(w.__core().listens).length === 0, counts);
 }
 
 console.log('harness-v589:', ok, 'ok /', bad, 'not ok');

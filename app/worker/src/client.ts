@@ -2297,6 +2297,25 @@ function opnValidateImport(text) {
       }
     }
   }
+  // v589 (fix-forward): the podcastListens section — listen
+  // rows in the import seam's {series, seqKey, listenDate,
+  // source} shape, carried at the file's top level beside
+  // the sections. A file without the section restores
+  // exactly as before; a row that is not in the seam's shape
+  // is dropped here, and the seam itself refuses a row
+  // naming no standing episode — a restore never guesses a
+  // listen onto an episode.
+  if (Array.isArray(d.podcastListens)) {
+    d.podcastListens = d.podcastListens.filter(function (r) {
+      return r && typeof r.series === 'string' && typeof r.seqKey === 'string';
+    }).map(function (r) {
+      return {
+        series: r.series, seqKey: r.seqKey,
+        listenDate: typeof r.listenDate === 'string' ? r.listenDate : null,
+        source: typeof r.source === 'string' ? r.source : 'seed'
+      };
+    });
+  } else delete d.podcastListens;
   d.counts = actual;
   return d;
 }
@@ -2323,6 +2342,14 @@ function opnRestoreFromText(text) {
   return opnSnapshotWrite().then(function () {
     opnDocCache = doc;
     opnSave();
+    // v589 (fix-forward): the file's podcastListens rows land
+    // in the podcast core through the standing import seam —
+    // the restore is the bridge the seam was built for. The
+    // outcome rides the returned counts so the restore's
+    // caller can see what landed and what was refused.
+    if (doc.podcastListens && doc.podcastListens.length) {
+      counts.podcastListens = opnPodCoreImportListens(doc.podcastListens);
+    }
     return counts;
   });
 }
