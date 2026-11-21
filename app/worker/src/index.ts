@@ -1301,7 +1301,10 @@ async function reflectionsPayload(env: Env) {
 // pilot's six prayers and v509's batch 1 (the Daily group +
 // Morning & evening, 26 more) carry pre-rendered audio
 // (production voice avocado_v2:MAI_03, rendered once from
-// the stored bodies); the values are the renders' measured
+// the stored bodies); v562 completed the book — the
+// remaining 45 prayers rendered the same way, the
+// call-and-response prayers in two voices (the leader
+// MAI_03, the responses MAI_01); the values are the renders' measured
 // durations in seconds. The files stand in the AUDIO bucket
 // at prayer-audio/<slug>.<lang>.mp3, land through the door
 // route below, and play through the session route beside
@@ -1330,7 +1333,7 @@ const PRAYER_AUDIO: Record<string, { en: number; la?: number }> = {
   "prayer-for-the-supreme-pontiff": { en: 94.5 },
   "ejaculation-of-resignation": { en: 7.9, la: 13.2 },
   "my-god-my-only-good": { en: 5.9 },
-  "veni-creator": { en: 149.4, la: 376.4 },
+  "veni-creator": { en: 149.4, la: 140.2 },
   "prayer-to-the-father-of-mercies": { en: 57.6 },
   "for-the-sovereign-pontiff": { en: 12.5, la: 12.4 },
   "morning-offering": { en: 20.2 },
@@ -1341,6 +1344,51 @@ const PRAYER_AUDIO: Record<string, { en: number; la?: number }> = {
   "anima-christi": { en: 29.9, la: 37.5 },
   "sub-tuum-praesidium": { en: 19.4, la: 25.3 },
   "prayer-for-all-the-faithful-departed": { en: 17.4 },
+  "prayer-of-st-ambrose-before-mass": { en: 89.4 },
+  "prayer-of-st-thomas-aquinas-before-mass": { en: 184.8 },
+  "prayer-before-mass": { en: 45.6 },
+  "prayer-before-communion": { en: 39.3 },
+  "prayer-after-communion": { en: 37.8 },
+  "act-of-spiritual-communion": { en: 22.9 },
+  "act-of-adoration-during-the-elevation": { en: 4.1 },
+  "prayers-before-the-blessed-sacrament": { en: 166.6 },
+  "pange-lingua": { en: 107.2, la: 103.3 },
+  "prayer-of-st-alphonsus-visit": { en: 125.7 },
+  "prayer-during-the-elevation": { en: 21.3, la: 26.9 },
+  "adoro-te-devote": { en: 93.0, la: 94.2 },
+  "memorare": { en: 31.3, la: 38.9 },
+  "hail-holy-queen": { en: 37.5, la: 42.1 },
+  "the-rosary-prayers": { en: 126.4, la: 172.6 },
+  "litany-of-loreto": { en: 201.1, la: 205.7 },
+  "prayer-to-our-lady-of-sorrows": { en: 19.2 },
+  "ave-maris-stella": { en: 48.6, la: 54.5 },
+  "the-magnificat": { en: 51.5, la: 60.2 },
+  "rosary-of-the-seven-dolours": { en: 231.0 },
+  "st-michael": { en: 20.0 },
+  "prayer-in-temptation": { en: 15.0 },
+  "prayer-in-sickness": { en: 30.0 },
+  "prayer-for-a-special-intention": { en: 103.4 },
+  "prayer-to-st-anthony": { en: 74.2, la: 65.8 },
+  "grace-before-meals": { en: 7.2 },
+  "grace-after-meals": { en: 24.1 },
+  "parents-prayer-for-their-children": { en: 72.6, la: 21.7 },
+  "prayer-for-the-family": { en: 138.5 },
+  "eternal-rest": { en: 11.2, la: 6.1 },
+  "de-profundis": { en: 38.2, la: 53.3 },
+  "prayer-for-the-holy-souls": { en: 55.2 },
+  "prayer-for-a-departed-loved-one": { en: 40.2 },
+  "league-of-perpetual-suffrage": { en: 7.8, la: 9.9 },
+  "prayers-for-the-souls-in-purgatory": { en: 168.4 },
+  "childs-guardian-angel": { en: 10.6 },
+  "childs-act-of-contrition": { en: 22.6 },
+  "rosary-of-our-lord": { en: 430.2 },
+  "chaplet-of-the-precious-blood": { en: 428.1, la: 54.6 },
+  "offering-of-the-precious-blood": { en: 7.5 },
+  "act-of-oblation-to-the-sacred-heart": { en: 15.6 },
+  "memorare-to-st-joseph": { en: 24.8 },
+  "prayer-to-st-joseph-for-the-church": { en: 81.4 },
+  "prayer-to-st-paul": { en: 38.7 },
+  "three-offerings-of-the-precious-blood": { en: 163.2 },
 };
 async function bookPayload(env: Env) {
   const r = await env.DB.prepare("SELECT slug, title, category, body, body_latin, source FROM prayer_book ORDER BY sort").all<{ slug: string; title: string; category: string; body: string; body_latin: string | null; source: string }>();
