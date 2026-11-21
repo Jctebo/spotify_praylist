@@ -2815,6 +2815,17 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   // insert paths (§2.4–§2.6). window 500 keeps the snapshot
   // feed-complete for those inserts.
   { key: "daily-readings", title: "USCCB Daily Readings Podcast", feedUrl: (env) => env.EXT_DAILY_READINGS_FEED_URL || RSS_USCCB_READINGS_FEED_URL, window: 500 },
+  // v577 §2.2 (Q2 A): Ora Pro Nobis itself joins the kind —
+  // John's own daily podcast stands as a series on the
+  // Podcasts side, navigable and favoritable like any other
+  // series. Its feed is the own feed (ownFeedUrl — the v427
+  // enumeration source, the same file the day build publishes);
+  // window 500 is the Daily Readings precedent (at ~10
+  // episodes a day it carries ~50 days of the show). The kind
+  // files it under Podcasts by construction (Q4 A); it stands
+  // last among the RSS defs, before the own kind, so every
+  // standing entry's order and shape are untouched.
+  { key: "ora-pro-nobis", title: "Ora Pro Nobis", feedUrl: (env) => ownFeedUrl(env), window: 500 },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -3035,6 +3046,189 @@ async function podRssIndexEntry(env: Env, def: PodRssSeriesDef): Promise<unknown
     listenedCount, total: seq.snap.entries.length,
     latestLabel: newest && newest.publishedMs != null ? videoDateLabel(newest.publishedMs) : null,
     showImageUrl: seq.snap.showImageUrl ?? null,
+  };
+}
+
+// ---- Podcasts NOVENA series (v577) ----------------------------
+// Plan §2.2 (Q3 A + John's clarification, Ora thread
+// 2026-11-21 09:19 CT): each novena ALSO stands as a catalog
+// series, through the grouped-novenas lens — a novena's series
+// shows ALL episodes related to that one novena. The novenas
+// stand as a SEPARATE GROUPING that takes one more click
+// through (the Novenas side → the novena's own series → its
+// episodes); the grouping's page carries a search at its top
+// and is SORTED BY SAINT. The Novenas day view (v516) keeps
+// its day seat in the Praylist; this kind is the catalog only.
+//
+// The kind's discipline is the RSS kind's, transposed: ONE
+// catalog snapshot in the standing rss_snapshots store (under
+// the key 'novenas-catalog'), read-to-refresh at the same 2 h
+// max age, stale-on-failure, a zero-yield build is a failed
+// build and never empties the catalog — so the grouping page
+// and every series page build from the one snapshot and can
+// never disagree. No migration: the store already stands. The
+// build parses the own feed with the standing podRssParseFeed
+// and groups its items by the novena stem rule
+// (novenaEpisodeIdOfStem's canon, generalized to any date:
+// the stem starts with its date → the rest after `<date>-` →
+// the LAST `-day-` at index > 0 → episodeId `novena-` + the
+// rest before it; dayN is the digits after that `-day-`).
+// Episode identity is the stem (one file per episode per
+// date — the feed's own naming); the GUID rides along.
+// The kind carries no server marks (the own kind's
+// discipline): its client rows are day-form descriptors, so
+// no mark route ever hears of it.
+const NOVENA_CATALOG_KEY = "novenas-catalog";
+
+interface PodNovenaEpisode {
+  key: string; guid: string | null; title: string; date: string;
+  dayN: number | null; label: string; url: string; durationS: number;
+}
+interface PodNovenaSeries {
+  slug: string; name: string; saint: string; episodes: PodNovenaEpisode[];
+}
+interface PodNovenaCatalog { builtAt: string; novenas: PodNovenaSeries[] }
+
+// The novena's display name from a feed title: the title
+// minus its trailing ` Day <n> - <Month D, YYYY>` (the feed's
+// standing form); the one other standing form leads with the
+// day (`Day 1: Novena to ...`). Null when neither form
+// stands — the caller falls back to the slug's own words.
+function novenaNameOfTitle(title: string): string | null {
+  const m = /^(.*?)\s+Day\s+\d+\s+-\s+(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}\s*$/.exec(title);
+  if (m) return m[1].trim() || null;
+  const m2 = /^Day\s+\d+:\s+(.*?)\s*$/.exec(title);
+  if (m2) return m2[1].trim() || null;
+  return null;
+}
+// The saint sort key: the name minus its novena framing, so
+// the page sorts by the saint (or feast) the novena honors.
+function novenaSaintOfName(name: string): string {
+  for (const p of ["Traditional Novena to ", "Short-Form Novena to ", "Novena to ", "Novena for ", "Traditional ", "Short-Form "]) {
+    if (name.startsWith(p)) return name.slice(p.length);
+  }
+  return name;
+}
+// The stem extraction, generalized to any date (the presented
+// day's enumeration above is date-bound by its seat; the
+// catalog is not). Returns null for a non-novena stem.
+function novenaEpisodeOfStem(stem: string): { slug: string; date: string; dayN: number | null } | null {
+  const dm = /^(\d{4}-\d{2}-\d{2})-(.*)$/.exec(stem);
+  if (!dm) return null;
+  const rest = dm[2];
+  const dayAt = rest.lastIndexOf("-day-");
+  if (dayAt <= 0) return null;
+  const dmN = /^(\d+)/.exec(rest.slice(dayAt + 5));
+  return { slug: rest.slice(0, dayAt), date: dm[1], dayN: dmN ? Number(dmN[1]) : null };
+}
+function podNovenaBuild(items: PodRssItem[]): PodNovenaSeries[] {
+  const bySlug = new Map<string, { slug: string; episodes: PodNovenaEpisode[]; nameVotes: Map<string, number> }>();
+  for (const it of items) {
+    if (!it.url) continue;
+    const stem = ownStemOfUrl(it.url);
+    const ep = novenaEpisodeOfStem(stem);
+    if (!ep) continue;
+    let s = bySlug.get(ep.slug);
+    if (!s) { s = { slug: ep.slug, episodes: [], nameVotes: new Map() }; bySlug.set(ep.slug, s); }
+    s.episodes.push({
+      key: stem, guid: it.guid, title: it.title, date: ep.date, dayN: ep.dayN,
+      label: it.pubMs != null ? videoDateLabel(it.pubMs) : "", url: it.url, durationS: it.durationS,
+    });
+    const nm = novenaNameOfTitle(it.title);
+    if (nm) s.nameVotes.set(nm, (s.nameVotes.get(nm) ?? 0) + 1);
+  }
+  const out: PodNovenaSeries[] = [];
+  for (const s of bySlug.values()) {
+    // The name is the most-carried derived name across the
+    // novena's episodes (the titles are uniform per novena;
+    // the vote guards a form drift mid-run).
+    let name = ""; let best = -1;
+    for (const [n, c] of s.nameVotes) { if (c > best) { best = c; name = n; } }
+    if (!name) name = s.slug.replace(/_/g, " ");
+    s.episodes.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (a.dayN ?? 0) - (b.dayN ?? 0)));
+    out.push({ slug: s.slug, name, saint: novenaSaintOfName(name), episodes: s.episodes });
+  }
+  // Sorted by saint (Q3 clarification): the saint key,
+  // case-insensitive; the name breaks a tie.
+  out.sort((a, b) => {
+    const sa = a.saint.toLowerCase(), sb = b.saint.toLowerCase();
+    if (sa !== sb) return sa < sb ? -1 : 1;
+    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+  });
+  return out;
+}
+async function podNovenaReadSnapshot(env: Env): Promise<PodNovenaCatalog | null> {
+  const row = await env.DB.prepare("SELECT payload FROM rss_snapshots WHERE series=?").bind(NOVENA_CATALOG_KEY).first<{ payload: string }>();
+  if (!row) return null;
+  try {
+    const p = JSON.parse(row.payload) as PodNovenaCatalog;
+    if (!Array.isArray(p.novenas) || typeof p.builtAt !== "string") return null;
+    return p;
+  } catch { return null; }
+}
+// The read path is the refresh path (the RSS kind's clause):
+// fresh snapshot → served · stale or missing → rebuild from
+// the own feed; on success the snapshot is replaced and
+// served · on failure the standing snapshot is served with
+// stale: true · no snapshot at all → null (the grouping's
+// unavailable surface).
+async function podNovenaCatalog(env: Env): Promise<{ cat: PodNovenaCatalog; stale: boolean } | null> {
+  const snap = await podNovenaReadSnapshot(env);
+  if (snap && Date.now() - Date.parse(snap.builtAt) < RSS_SNAPSHOT_MAX_AGE_MS) return { cat: snap, stale: false };
+  try {
+    const feed = await podRssFetchFeed(ownFeedUrl(env));
+    const novenas = podNovenaBuild(feed.items);
+    if (!novenas.length) throw new Error("novena catalog build produced no novenas");
+    const builtAt = nowISO();
+    const cat: PodNovenaCatalog = { builtAt, novenas };
+    await env.DB.prepare(
+      `INSERT INTO rss_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+       ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+    ).bind(NOVENA_CATALOG_KEY, JSON.stringify(cat), builtAt).run();
+    return { cat, stale: false };
+  } catch {
+    if (snap) return { cat: snap, stale: true };
+    return null;
+  }
+}
+// The grouping payload (§2.2): one entry per novena, in the
+// catalog's saint order (payload order is the paint order —
+// no client sort stands anywhere). latestDate/latestLabel
+// name the newest episode standing.
+async function podNovenasIndexPayload(env: Env): Promise<unknown> {
+  const r = await podNovenaCatalog(env);
+  if (!r) {
+    return { ok: true, kind: "novenas", series: "novenas", title: "Novenas", available: false, stale: false, builtAt: null, novenas: [] };
+  }
+  return {
+    ok: true, kind: "novenas", series: "novenas", title: "Novenas", available: true,
+    stale: r.stale, builtAt: r.cat.builtAt,
+    novenas: r.cat.novenas.map((n) => {
+      const latest = n.episodes.length ? n.episodes[0] : null;
+      return {
+        key: "novena-" + n.slug, slug: n.slug, name: n.name, saint: n.saint,
+        total: n.episodes.length,
+        latestDate: latest ? latest.date : null, latestLabel: latest ? latest.label : null,
+      };
+    }),
+  };
+}
+// One novena's series payload: ALL its episodes, newest
+// first (the catalog's stored order). An unknown slug
+// answers the kind's unavailable surface, never a 400 — the
+// grouping's keys are born from the index payload above.
+async function podNovenaPayload(env: Env, slug: string): Promise<unknown> {
+  const base = { ok: true, kind: "novena", series: "novena-" + slug };
+  const r = await podNovenaCatalog(env);
+  if (!r) return { ...base, title: "", available: false, stale: false, total: 0, entries: [] };
+  const n = r.cat.novenas.find((x) => x.slug === slug);
+  if (!n) return { ...base, title: "", available: false, stale: r.stale, total: 0, entries: [] };
+  return {
+    ...base, title: n.name, available: true, stale: r.stale, total: n.episodes.length,
+    entries: n.episodes.map((e) => ({
+      key: e.key, title: e.title, label: e.label, date: e.date, dayN: e.dayN,
+      url: e.url, durationS: e.durationS, imageUrl: null, descText: null,
+    })),
   };
 }
 
@@ -3340,6 +3534,13 @@ export default {
         // payload; an unknown series answers 400.
         const doorSeries = url.searchParams.get("series");
         if (doorSeries === null) return json(await podIndexPayload(env));
+        // v577 §2.2: the NOVENA kind routes before the video
+        // def lookup, composed WITH the kind (the v454/v464
+        // lesson) — the grouping key and every novena-<slug>
+        // series key. The payloads carry no listen state, so
+        // both shapes answer identically.
+        if (doorSeries === "novenas") return json(await podNovenasIndexPayload(env));
+        if (doorSeries.startsWith("novena-")) return json(await podNovenaPayload(env, doorSeries.slice("novena-".length)));
         // v434 §2.1: the door read mirrors the session read — a
         // VIDEO series key routes to the video payload builder
         // before the audio def lookup.
@@ -4078,6 +4279,14 @@ export default {
           // answers 400.
           const readSeries = url.searchParams.get("series");
           if (readSeries === null) return json(pub ? stripListenState(await podIndexPayload(env)) : await podIndexPayload(env));
+          // v577 §2.2: the NOVENA kind routes before the video
+          // def lookup, composed WITH the kind (the v454/v464
+          // lesson) — the grouping key and every novena-<slug>
+          // series key. The payloads carry no listen state, so
+          // stripListenState has nothing to strip and both
+          // shapes answer identically.
+          if (readSeries === "novenas") return json(await podNovenasIndexPayload(env));
+          if (readSeries.startsWith("novena-")) return json(await podNovenaPayload(env, readSeries.slice("novena-".length)));
           // v434 §2.1: a VIDEO series key routes to the video
           // payload builder BEFORE the audio def lookup; an
           // unknown key keeps the base behavior exactly.

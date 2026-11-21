@@ -7265,51 +7265,100 @@ function catechesisNovenasName(title) {
   var m = new RegExp(BS_CH + 's+Day' + BS_CH + 's+' + BS_CH + 'd{1,2}' + BS_CH + 's*$').exec(t);
   return m ? t.slice(0, m.index) : t;
 }
+/* v577 §2.3 (Q3 A + John's clarification, 2026-11-21
+   09:19 CT): the Novenas side becomes the CATALOG page —
+   the novenas stand as a separate grouping that takes one
+   more click through: this page lists every novena in the
+   catalog (the ?series=novenas payload, sorted by saint
+   server-side; payload order is the paint order), a SEARCH
+   stands at the top of the page and filters the list as it
+   is typed, and a card tap opens that novena's own series
+   (openPodSeries('novena-<slug>')) with ALL its episodes.
+   The v516 day view's direct episode rows on this side
+   retire under the clarification; the day standing survives
+   as each card's "Day <n> today" line, read from the
+   standing day resolution (state.ownSlots['novenas'],
+   settled by catechesisNovenasResolve below, whose settle
+   hook repaints this side) — and the Praylist's own Novenas
+   block is untouched. The catalog payload is cached on
+   state (novenasCatalog) so the settle repaint and the
+   back act repaint without a refetch. */
+var novenaSearchText = '';
+function novenaSearchMatch(nov, q) {
+  // The search predicate: the typed text, trimmed and
+  // lowered, against the novena's name and its saint — a
+  // substring on either. Pure, so the harness can drive it.
+  var needle = String(q || '').trim().toLowerCase();
+  if (!needle) return true;
+  return String(nov.name || '').toLowerCase().indexOf(needle) >= 0
+    || String(nov.saint || '').toLowerCase().indexOf(needle) >= 0;
+}
+function novenaCatalogListHtml(cat) {
+  // The grouping's list, in payload (saint) order. Today's
+  // standing joins from the day resolution: episodeId ->
+  // its Day n, when the presented day carries that novena.
+  var todayById = {};
+  var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+  if (slot && slot.tracks) slot.tracks.forEach(function (m) {
+    var info = novenaInfo(m.episodeId, m.title);
+    if (info) todayById[m.episodeId] = info;
+  });
+  if (!cat || !cat.available || !(cat.novenas || []).length) {
+    return '<div class="card"><div class="meta">The novena catalog is unavailable right now. Try again later.</div></div>';
+  }
+  var shown = 0;
+  var html = '';
+  (cat.novenas || []).forEach(function (n) {
+    if (!novenaSearchMatch(n, novenaSearchText)) return;
+    shown++;
+    var t = todayById['novena-' + n.slug];
+    html += '<div class="card" data-novena="' + esc(n.slug) + '"><div class="row"><div class="grow"><h3>' + esc(n.name) + '</h3>'
+      + '<div class="meta">' + n.total + ' episode' + (n.total === 1 ? '' : 's')
+      + (n.latestLabel ? ' · Latest: ' + esc(n.latestLabel) : '')
+      + (t ? ' · Day ' + t.n + ' today' : '')
+      + '</div></div></div></div>';
+  });
+  if (!shown) html = '<div class="card"><div class="meta">No novenas match your search.</div></div>';
+  return html;
+}
+function wireNovenaCatalogCards() {
+  view.querySelectorAll('[data-novena]').forEach(function (c) {
+    c.addEventListener('click', function () { massPodReturn = false; openPodSeries('novena-' + c.getAttribute('data-novena')); });
+  });
+}
 function paintCatechesisNovenas() {
   paintRow2Home('podcasts');
+  var cat = state.novenasCatalog;
+  if (!cat) {
+    view.innerHTML = skelHtml('podindex');
+    api('/api/player/podcasts?series=novenas').then(function (res) {
+      state.novenasCatalog = res;
+      if (state.tab === 'podcasts' && tabSideNow.podcasts === 'novenas' && podLevel === 'index') paintCatechesisNovenas();
+    }).catch(function () {
+      state.novenasCatalog = { ok: false, kind: 'novenas', available: false, novenas: [] };
+      if (state.tab === 'podcasts' && tabSideNow.podcasts === 'novenas' && podLevel === 'index') paintCatechesisNovenas();
+    });
+    return;
+  }
+  // The search stands at the TOP of the page (the
+  // clarification's seat); typing filters the list in place
+  // — only the list container repaints, so the input keeps
+  // its focus and its text.
+  view.innerHTML = '<p><input type="search" id="nov-search" placeholder="Search novenas" value="' + esc(novenaSearchText) + '" autocomplete="off"></p>'
+    + '<div id="nov-list">' + novenaCatalogListHtml(cat) + '</div>';
+  var inp = document.getElementById('nov-search');
+  if (inp) inp.addEventListener('input', function () {
+    novenaSearchText = inp.value;
+    var list = document.getElementById('nov-list');
+    if (list) { list.innerHTML = novenaCatalogListHtml(state.novenasCatalog); wireNovenaCatalogCards(); }
+  });
+  wireNovenaCatalogCards();
+  // Settle the day resolution so the "Day <n> today" lines
+  // can stand (the settle hook repaints this side).
   var day = state.dayPayload;
   var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
   var settled = !!(day && slot && (slot.state === 'present' || slot.state === 'missing'));
-  var html = '';
-  if (settled && slot.state === 'present' && slot.tracks && slot.tracks.length) {
-    html = slot.tracks.map(function (meta) {
-      var info = novenaInfo(meta.episodeId, meta.title);
-      var intro = introTextFor(meta, day);
-      return '<div class="card" data-card="' + esc(meta.episodeId) + '" data-novplay="' + esc(meta.episodeId) + '">'
-        + '<div class="row"><div class="rowartwrap tile">' + (meta.imageUrl ? '<img class="rowart" src="' + esc(meta.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</div>'
-        + '<div class="grow"><h3' + (isPlayed(meta.episodeId, day.date, 'Novenas') ? ' class="heard"' : '') + '>' + esc(catechesisNovenasName(meta.title)) + '</h3>'
-        + (info ? '<div class="meta">Day ' + info.n + '</div>' : '')
-        + (intro ? '<div class="meta">' + esc(intro) + '</div>' : '')
-        + '</div>' + playedDotHtml({ episodeId: meta.episodeId, block: 'Novenas' })
-        // v546 (Q1 A): the star joins the card beside the played dot — kind episode, keyed by the novena episode id (the star binds the episode across the novena's run).
-        + '<button class="trackstar" data-trackstar="' + esc(starKeyOf('episode', meta.episodeId)) + '" aria-label="Star">' + (starredHas(starKeyOf('episode', meta.episodeId)) ? '\u2605' : '\u2606') + '</button>'
-        + '</div></div>';
-    }).join('');
-  } else {
-    // The named empty state (P6): painted before the
-    // resolution settles, on a novena-less day, and when
-    // the resolution fails — never an error.
-    html = '<div class="card"><div class="meta">No novenas are running today</div></div>';
-  }
-  view.innerHTML = html;
-  wireCatechesisNovenas();
-  wirePlayed(view);
   if (!settled) catechesisNovenasResolve();
-}
-function wireCatechesisNovenas() {
-  view.querySelectorAll('[data-novplay]').forEach(function (card) {
-    card.addEventListener('click', function (ev) {
-      if (ev.target.closest('[data-markplayed]')) return; // the dot's own act (wirePlayed)
-      if (ev.target.closest('[data-trackstar]')) return; // v546: the star's own act (the delegated handler)
-      var day = state.dayPayload;
-      var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
-      if (!day || !slot || !slot.tracks) return;
-      var meta = null;
-      slot.tracks.forEach(function (m) { if (m.episodeId === card.getAttribute('data-novplay')) meta = m; });
-      if (!meta) return;
-      tapPlay(trackDesc(ownSlotTrack(catechesisNovenasRow(), meta, day.date), day));
-    });
-  });
 }
 function catechesisNovenasSettled() {
   // The settle hook (ownSettlePresent / ownSettleMissing):
@@ -7395,6 +7444,7 @@ function paintPodSeriesPage() {
   if (state.podcasts && state.podcasts.kind === 'rss') paintPodcastRss();
   else if (state.podcasts && state.podcasts.kind === 'video') paintPodcastVideos();
   else if (state.podcasts && state.podcasts.kind === 'own') paintPodOwnSeries();
+  else if (state.podcasts && state.podcasts.kind === 'novena') paintPodNovenaSeries();
   else paintPodcasts();
   seatSeriesStar();
 }
@@ -7662,6 +7712,71 @@ function playPodOwnFrom(key) {
   startQueue(descs, true);
 }
 
+
+/* ---------------- Podcasts NOVENA series (v577) ----------------
+   §2.3: one novena's series page — ALL its episodes, newest
+   first, in the standing series grammar (the row-2 bar · the
+   page head · the episode rows in the RSS rows' slim form).
+   The kind carries no server marks (the own kind's
+   discipline), so no mark button and no partway bar stand;
+   the rows carry the play disc and the star. The descriptor
+   is day-form (podOwnDesc's shape): kind 'episode', keyed by
+   the episode's stem, so the star binds the EPISODE and its
+   snapshot carries the enclosure URL — a Favorites row can
+   play it from the snapshot when no live source stands. */
+function paintPodNovenaSeries() {
+  var res = state.podcasts;
+  if (!res || res.kind !== 'novena') { view.innerHTML = skelHtml('podseries'); return; }
+  podLevel = 'series';
+  var html = '';
+  paintRow2Bar({ dest: podSeriesDest(), title: res.title || 'Novena', backAttrs: 'data-podback' });
+  if (!res.available) {
+    html += '<div class="card"><h3>' + esc(res.title || 'Novena') + '</h3><div class="meta">This series is unavailable right now. Try again later.</div></div>';
+    view.innerHTML = html;
+    wirePodBack();
+    return;
+  }
+  var durSum = res.entries.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
+  var latest = res.entries.length ? res.entries[0] : null;
+  var showCover = '<div class="blockcover tone-navy large"><span class="blockcover-initial">\u266b</span></div>';
+  html += '<div class="podpage-head">' + showCover
+    + '<div class="meta">' + res.entries.length + ' episode' + (res.entries.length === 1 ? '' : 's')
+    + (durSum > 0 ? ' · ' + fmtDurLong(durSum) : '')
+    + (latest ? ' · Latest: ' + esc(latest.label) : '') + '</div></div>';
+  res.entries.forEach(function (e) {
+    html += '<div class="card trow prow" data-podrow="' + esc(e.key) + '"><div class="row">'
+      + podRowArtHtml(e, '<button class="playbtn thumbdisc" data-novplay="' + esc(e.key) + '">&#9654;</button>')
+      + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title) + '</h3>' + starBtnHtml(podNovenaDesc(e)) + '</div>'
+      + '<div class="meta metarow"><span>' + (e.dayN ? 'Day ' + e.dayN + ' · ' : '') + esc(e.label) + (e.durationS ? ' · ' + fmtDur(e.durationS) : '') + '</span></div></div>'
+      + '</div></div>';
+  });
+  view.innerHTML = html;
+  wirePodBack();
+  view.querySelectorAll('[data-novplay]').forEach(function (b) {
+    b.addEventListener('click', function () { playNovenaFrom(b.getAttribute('data-novplay')); });
+  });
+}
+function podNovenaDesc(e) {
+  // The novena episode's descriptor, in the day-descriptor
+  // form (podOwnDesc's shape): no kind — the podcast stores
+  // are never entered; the star reads it as kind 'episode',
+  // keyed by the stem. Its enclosureUrl stands first for the
+  // snapshot branch (the v475 discipline podOwnDesc names).
+  return { episodeId: e.key, title: e.title, url: e.url, enclosureUrl: e.url, available: !!e.url, block: 'Novenas', durationS: e.durationS || 0, imageUrl: null, descText: null };
+}
+function playNovenaFrom(key) {
+  // The standing series play act (playPodOwnFrom's shape):
+  // play queues the series from the tapped entry forward
+  // through the standing queue machinery.
+  var res = state.podcasts;
+  if (!res || !res.entries) return;
+  var idx = -1;
+  res.entries.forEach(function (e, i) { if (e.key === key) idx = i; });
+  if (idx < 0) return;
+  var descs = res.entries.slice(idx).map(podNovenaDesc).filter(function (d) { return d.available; });
+  if (!descs.length) return;
+  startQueue(descs, true);
+}
 /* ---------------- Podcasts RSS series (v464) ----------------
    §2.4: the RSS series page — the standing playlist grammar
    without the course machinery: no derived current (the
