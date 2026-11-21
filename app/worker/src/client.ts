@@ -1467,27 +1467,77 @@ function opnPointerHtml() {
   return '<div class="card opn-pointer"><h3>Your prayers live in the app</h3>'
     + '<p>Intentions, your examination of conscience, profiles and favorites are kept on your phone, in the Ora Pro Nobis app — never on this website, and never behind an account. Open the app on your phone to see and change them.</p></div>';
 }
+/* ---- v587: the standing pad as a per-instance entry ----
+   renderPinGate's pad binds to fixed global IDs and the
+   module-level pinGateCtx, so a second pad on a page would
+   collide. This factory emits the gate's exact dots + pad
+   markup and classes under an id prefix, with its own
+   entry state and the gate's entry discipline (digits
+   only, at most 8, dots painted from 4, an optional submit
+   button enabled at 4+ digits). Each form's standing
+   submit handler reads value() and posts to its standing
+   route — the routes, bodies, and success/error handling
+   do not change. opnPinPadBind returns null when the pad
+   is not in the document. */
+function opnPinPadHtml(prefix, hint) {
+  var html = '<div class="pindots" id="' + prefix + '-dots"></div>';
+  if (hint) html += '<div class="meta" id="' + prefix + '-hint">' + hint + '</div>';
+  html += '<div class="pinpad" id="' + prefix + '-pad">'
+    + ['1','2','3','4','5','6','7','8','9'].map(function (d) { return '<button data-pinkey="' + d + '">' + d + '</button>'; }).join('')
+    + '<span class="pinblank"></span><button data-pinkey="0">0</button><button data-pinkey="back" aria-label="Delete last digit">&#9003;</button></div>';
+  return html;
+}
+function opnPinPadBind(prefix, submitId) {
+  var pad = document.getElementById(prefix + '-pad');
+  if (!pad) return null;
+  var st = { entry: '' };
+  function paint() {
+    var dots = document.getElementById(prefix + '-dots');
+    if (dots) {
+      var n = st.entry.length;
+      var h = '';
+      for (var i = 0; i < Math.max(4, n); i++) h += '<span class="pindot' + (i < n ? ' on' : '') + '"></span>';
+      dots.innerHTML = h;
+    }
+    if (submitId) { var b = document.getElementById(submitId); if (b) b.disabled = st.entry.length < 4; }
+  }
+  pad.querySelectorAll('[data-pinkey]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.getAttribute('data-pinkey');
+      if (k === 'back') st.entry = st.entry.slice(0, -1);
+      else if (st.entry.length < 8) st.entry += k;
+      paint();
+    });
+  });
+  paint();
+  return {
+    value: function () { return st.entry; },
+    clear: function () { st.entry = ''; paint(); }
+  };
+}
 /* ---- v578: the unlock card ----
    Stands on the personal surfaces while the vault is
    locked: the PIN entry (the standing verify route, which
-   now also decrypts), a biometric button when the shell
-   holds an enrolment, a passkey button when a passkey
-   wrap stands, and a compact recovery form (the standing
-   recover route). A successful unlock re-renders the
-   surface through the caller's rerender. */
+   now also decrypts; v587: the large pad, opnPinPadHtml —
+   the typed field retired), a biometric button when the
+   shell holds an enrolment, a passkey button when a
+   passkey wrap stands, and a compact recovery form (the
+   standing recover route; v587: its new PIN takes a pad
+   too, the code stays typed). A successful unlock
+   re-renders the surface through the caller's rerender. */
 function opnUnlockCardHtml() {
   var env = opnVaultPeek();
   var hasPasskey = !!(env && env.wraps && env.wraps.passkey);
   var html = '<div class="card opn-unlock"><h3>Your data on this phone is locked</h3>'
     + '<p class="meta">Your intentions, examination of conscience, profiles and favorites are encrypted on this phone. Unlock with your PIN to see them.</p>'
-    + '<label class="f">PIN</label><input type="password" id="opn-unlock-pin" inputmode="numeric" autocomplete="off">'
+    + opnPinPadHtml('opn-unlock', 'Enter your PIN to unlock — 4 to 8 digits.')
     + '<p class="pinmsg" id="opn-unlock-msg"></p>'
-    + '<div class="row"><button class="btn gold" id="opn-unlock-go">Unlock</button>'
+    + '<div class="row"><button class="btn gold" id="opn-unlock-go" disabled>Unlock</button>'
     + '<button class="btn ghost" id="opn-unlock-bio" style="display:none">Use fingerprint / face</button>'
     + (hasPasskey ? '<button class="btn ghost" id="opn-unlock-passkey">Use a passkey</button>' : '')
     + '<button class="btn ghost" id="opn-unlock-rec-open">Use recovery code</button></div>'
     + '<div id="opn-unlock-rec" style="display:none"><label class="f">Recovery code</label><input type="text" id="opn-rec-code" autocomplete="off" style="text-transform:uppercase">'
-    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="opn-rec-pin" inputmode="numeric" autocomplete="off">'
+    + '<label class="f">New PIN (4-8 digits)</label>' + opnPinPadHtml('opn-rec')
     + '<p class="pinmsg" id="opn-rec-msg"></p>'
     + '<div class="row"><button class="btn gold" id="opn-rec-go">Set new PIN and unlock</button></div></div>'
     + '</div>';
@@ -1497,6 +1547,8 @@ function opnBindUnlockCard(rerender) {
   var go = document.getElementById('opn-unlock-go');
   if (!go) return;
   var msg = document.getElementById('opn-unlock-msg');
+  var pad = opnPinPadBind('opn-unlock', 'opn-unlock-go');
+  var recPad = opnPinPadBind('opn-rec', 'opn-rec-go');
   var done = function (res) {
     if (res && res.token) pinToken = res.token;
     pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
@@ -1504,9 +1556,10 @@ function opnBindUnlockCard(rerender) {
     rerender();
   };
   go.addEventListener('click', function () {
-    var pin = document.getElementById('opn-unlock-pin').value.trim();
+    var pin = pad ? pad.value() : '';
     if (!/^[0-9]{4,8}$/.test(pin)) { msg.textContent = 'Enter your PIN — 4 to 8 digits.'; return; }
     post('/api/pin/verify', { pin: pin }).then(done).catch(function (e) {
+      if (pad) pad.clear();
       var d = (e && e.data) || {};
       if (e.status === 429 || d.retryAfterSeconds) { msg.textContent = 'Too many attempts — try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
       var rem = typeof d.attemptsRemaining === 'number' ? d.attemptsRemaining : null;
@@ -1538,7 +1591,7 @@ function opnBindUnlockCard(rerender) {
   var recGo = document.getElementById('opn-rec-go');
   if (recGo) recGo.addEventListener('click', function () {
     var code = document.getElementById('opn-rec-code').value.trim();
-    var npin = document.getElementById('opn-rec-pin').value.trim();
+    var npin = recPad ? recPad.value() : '';
     var rmsg = document.getElementById('opn-rec-msg');
     if (!code) { rmsg.textContent = 'Enter the recovery code.'; return; }
     if (!/^[0-9]{4,8}$/.test(npin)) { rmsg.textContent = 'The new PIN must be 4-8 digits.'; return; }
@@ -3141,16 +3194,18 @@ function renderPinRecoveryForm(tab, contentFn) {
   html += '<div class="card"><h3>Use your recovery code</h3>'
     + '<p class="meta">Enter the code shown when the PIN was set, and choose a new PIN. Your examination and confession content is kept.</p>'
     + '<label class="f">Recovery code</label><input type="text" id="rec-code" autocomplete="off" style="text-transform:uppercase">'
-    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="rec-pin1" inputmode="numeric" autocomplete="off">'
-    + '<label class="f">New PIN again</label><input type="password" id="rec-pin2" inputmode="numeric" autocomplete="off">'
+    + '<label class="f">New PIN (4-8 digits)</label>' + opnPinPadHtml('rec1')
+    + '<label class="f">New PIN again</label>' + opnPinPadHtml('rec2')
     + '<p class="pinmsg" id="rec-msg"></p>'
     + '<div class="row"><button class="btn gold" id="rec-go">Set new PIN</button><button class="btn ghost" id="rec-back">Back</button></div></div>';
   view.innerHTML = html;
+  var recPad1 = opnPinPadBind('rec1');
+  var recPad2 = opnPinPadBind('rec2');
   document.getElementById('rec-back').addEventListener('click', function () { renderPinGate(tab, contentFn, {}); });
   document.getElementById('rec-go').addEventListener('click', function () {
     var code = document.getElementById('rec-code').value.trim();
-    var p1 = document.getElementById('rec-pin1').value.trim();
-    var p2 = document.getElementById('rec-pin2').value.trim();
+    var p1 = recPad1 ? recPad1.value() : '';
+    var p2 = recPad2 ? recPad2.value() : '';
     var msg = document.getElementById('rec-msg');
     if (!code) { msg.textContent = 'Enter the recovery code.'; return; }
     if (p1 !== p2) { msg.textContent = 'The two entries do not match'; return; }
@@ -10357,15 +10412,17 @@ function openPinSetSheet(mode) {
     + '<p class="meta">' + (mode === 'set'
       ? 'The PIN gates Confession and Examination on this device\u2019s signed-in session. When it is set you will be shown a recovery code, once, for the day the PIN is forgotten.'
       : 'Choose the new PIN. A new recovery code is shown once, and every standing unlock ends.') + '</p>'
-    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="ps-pin1" inputmode="numeric" autocomplete="off">'
-    + '<label class="f">New PIN again</label><input type="password" id="ps-pin2" inputmode="numeric" autocomplete="off">'
+    + '<label class="f">New PIN (4-8 digits)</label>' + opnPinPadHtml('ps1')
+    + '<label class="f">New PIN again</label>' + opnPinPadHtml('ps2')
     + '<p class="pinmsg" id="ps-msg"></p>'
     + '<div style="margin-top:10px"><button class="btn gold" id="ps-save">' + (mode === 'set' ? 'Set PIN' : 'Change PIN') + '</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
+  var psPad1 = opnPinPadBind('ps1');
+  var psPad2 = opnPinPadBind('ps2');
   sheet.querySelector('#ps-save').addEventListener('click', function () {
-    var p1 = sheet.querySelector('#ps-pin1').value.trim();
-    var p2 = sheet.querySelector('#ps-pin2').value.trim();
+    var p1 = psPad1 ? psPad1.value() : '';
+    var p2 = psPad2 ? psPad2.value() : '';
     var msg = sheet.querySelector('#ps-msg');
     if (p1 !== p2) { msg.textContent = 'The two entries do not match'; return; }
     if (!/^[0-9]{4,8}$/.test(p1)) { msg.textContent = 'The PIN must be 4-8 digits.'; return; }
