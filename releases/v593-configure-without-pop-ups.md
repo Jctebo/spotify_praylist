@@ -196,3 +196,42 @@ to §3's named deltas.
 - The switch prompt is a sheet (the app's standing
   ask-surface) carrying the three acts; Q1=B's "you are
   asked" is met by it.
+
+## §5 Ship
+
+- **Merge + push:** release/v593 (4dc870d build · d6ddd91
+  doc §4 · 6f5e29f pin bump) merged to main as **acbab07**
+  and pushed through the GitHub Git Data API with
+  byte-identical replication (4 commits, SHA-asserted at
+  every step) — **main pushed · remote in sync** (remote
+  main read back acbab07b89617b17880be8b464935e33e4640489).
+- **Gates on the merged tree:** harness-v593 19 ok / 1 not
+  ok — the one red is T12, the pin leg reading the bump
+  itself (the standing disclosed shape); harness-v591
+  28/4 and harness-v592 9/3 on the ship tree, every red a
+  §3 named delta or a pin leg. On the committed tree and in
+  a clean checkout pre-bump: harness-v593 **20 ok / 0 not
+  ok**, equivalence A1/A2 byte-identical.
+- **Deploy:** Worker ora-pro-nobis-app version
+  **05cb835c-4dc1-4217-836b-dab431e99938** (rollback target
+  e7a1afeb / v592, confirmed at 100% pre-deploy; dry-run
+  clean first), pin **ora-pro-nobis-v593-1**.
+- **Served proofs:** served sw.js carries the v593-1 pin;
+  served app.js parses whole (1,148,940 chars) and carries
+  the ladder, the Day mapping screen, the switch prompt,
+  the frozen zone and the jump strip, with the pop-up
+  classes absent; the public host's profiles read stands
+  empty (personal data never serves there).
+- **Records:** What's New **408** · row 1567 **Live**
+  (shipped_at 2026-11-21T21:57:00Z) · Ship phase record
+  2390 passed · Ship contract 802, both expectations met ·
+  intake 1109 Done · branch release/v593 deleted,
+  worktrees removed, standing clone clean on main.
+- **Field legs (John's):** Praylist → Configure plan — the
+  ladder stands with two doors · Profile edit: tap The
+  Little Way — today follows it and its blocks stand open ·
+  change a toggle, tap another profile — the prompt asks
+  Save · Discard · Stay · the Save bar stands only while
+  changes are unsaved · the block strip jumps and lights
+  as you scroll · Day mapping: stand Tuesday to a profile
+  — it takes effect at once.
