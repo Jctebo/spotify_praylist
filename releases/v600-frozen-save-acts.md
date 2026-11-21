@@ -257,3 +257,86 @@ the standing serialization rule this chain does not
 merge or deploy over that work; on v601's landing it
 rebases onto the new main, re-verifies the merged tree
 whole, and ships.
+
+## §5 Ship
+
+SHIPPED LIVE 2026-11-21 23:38Z (17:38 CT).
+
+- Worker **eec180ed-0098-4d59-bf1c-ac1afd2e2ece** ·
+  rollback target 1815cb47 (v601) · pin
+  **ora-pro-nobis-v600-1** (in served sw.js).
+- GitHub main **fe125b1** (merge of release/v600) —
+  main pushed · remote in sync (Git Data API,
+  byte-identical, 7 commits replicated with SHA
+  assertions; whole-tree conflict-marker grep 0).
+- What's New **416** · row 1574 **Live** ·
+  shipped_records **790** · Ship record 2427 ·
+  Ship contract 837, met.
+
+### The ship defect + fix (named in the ship record)
+
+The first ship attempt stopped at the merged-tree gate
+on a failed combined drive, field-reachable in the
+exact v601 shape. The draft inherits the standing
+layer's contents for every block (a poisoned/healed
+layer can carry e.g. Night: []); toggling Night OFF
+removes it from the draft's coreBlocks, but
+`layerJsonOf` still emitted the Night contents entry
+(it differs from the composed contents). v600's
+single-write Save today sent coreBlocks-without-Night
+PLUS contents-for-Night in one body, and the
+today-edit route validator refused the whole write:
+"contents for a block that does not stand: Night".
+The stored layer stood unchanged — the user's save
+failed whole.
+
+The fix (client side, commit 0dc6b20): the draft's
+save serialization drops contents entries for blocks
+the draft's coreBlocks does not stand — `layerJsonOf`
+emits contents only for standing blocks (Novenas
+excepted, as the validator stands it). The route
+validator stands unchanged as the guard. Every other
+v600 behavior is unchanged in effect.
+
+### Gates
+
+- harness-v600: **37 ok / 0 not ok** on the working
+  tree, a clean checkout, and the merged tree — the
+  combined drive now stands as legs D1–D4 (poisoned
+  standing layer composes healed · Edit today opens
+  over it · Night off stands in the draft with Save
+  today live, nothing written · SAVE LANDS — Night off
+  as saved, every other block at its healed count, the
+  stored layer carrying no Night contents entry).
+  On the pre-fix client D4 is red (the save refused
+  whole; the standing layer unchanged) — the defect
+  reproduced in-harness.
+- harness-v601: 8 ok / 0 not ok (its B1 no-layer
+  equivalence byte-identical stands; harness-v600's
+  A1/A2 likewise).
+- Regressions, named: harness-v594p2 28 ok / 6 not ok
+  · harness-v598 13 ok / 2 not ok — the same by-design
+  reds as §4, zero delta.
+
+### Served proofs
+
+- Served sw.js carries pin ora-pro-nobis-v600-1.
+- Served app.js parses whole (1,193,516 chars); both
+  frozen bars stand in the served client.
+- Served-leg Edit today drive (the served client in
+  jsdom over John's document + the poisoned layer):
+  Edit today opens · Night off stands in the draft
+  with Save today live · SAVE LANDS — the stored
+  layer carries coreBlocks without Night and no
+  Night contents entry.
+
+### Field legs (John's)
+
+- Edit profiles: Save · Save New stand at the top
+  before any edit; Save greys while the draft is
+  clean and lights on the first edit.
+- Edit today: turn Night off — today does not change
+  until Save today is pressed; then Night stands off
+  for today.
+- Edit today with a change, closed without saving:
+  the prompt offers Save today · Discard · Stay.
