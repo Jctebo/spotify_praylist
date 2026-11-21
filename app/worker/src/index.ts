@@ -127,6 +127,82 @@ function johnOnly(request: Request, env: Env): Response | null {
   return json({ error: "access sign-in required" }, 403);
 }
 
+// v564: the public build's host. The redesign (v567) carries NO
+// account service: on app.orapronobis.media there is no sign-in
+// anywhere — the free tier serves openly, and personal data never
+// serves at all (it lives on the person's own device; John's
+// server-side data stays behind the private host's Access gate,
+// byte-identical to before). The gate below is the whole public
+// posture: public reads proceed (the day builders sanitize their
+// personal folds under `pub`), personal reads answer their empty
+// shapes so the standing client renders its empty states instead
+// of dead-ending, and every write is refused with the pointer to
+// the native app (John's web rule, 2026-11-20 22:28 CT). Under
+// LOCAL_DEV the harness may probe the public posture with the
+// x-opn-host-probe: public header; production ignores it.
+const PUBLIC_HOST = "app.orapronobis.media";
+function isPublicHost(request: Request, env: Env): boolean {
+  if (new URL(request.url).hostname === PUBLIC_HOST) return true;
+  return env.LOCAL_DEV === "1" && request.headers.get("x-opn-host-probe") === "public";
+}
+const PUBLIC_POINTER = "This part of Ora Pro Nobis lives in the app on your phone — your own prayers and data stay on your device. The web app carries the free daily prayers for everyone.";
+function publicGate(request: Request, seg: string[], url: URL): Response | null {
+  if (seg[0] !== "api") return null; // the shell + static assets are the public face
+  const fam = seg[1] ?? "";
+  const sub = seg[2] ?? "";
+  if (request.method !== "GET") {
+    return json({ error: PUBLIC_POINTER, code: "personal-in-app" }, 403);
+  }
+  // Personal reads: the family's empty shape (the builders' own
+  // no-data posture), so no personal datum moves and the client
+  // paints its empty state.
+  if (fam === "prayer" && sub === "intentions") return json({ ok: true, intentions: [] });
+  if (fam === "prayer" && sub === "starred") return json({ ok: true, starred: [] });
+  if (fam === "prayer" && sub === "book" && seg[3] === "favorites") return json({ ok: true, favorites: [] });
+  if (fam === "prayer" && sub === "mass-universal-prayer") {
+    const d = url.searchParams.get("date");
+    return json({ ok: true, date: d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : prayerChicagoNow().date, intentions: [] });
+  }
+  if (fam === "prayer" && sub === "mass-personal-prayer") return json({ ok: true, before: [], after: [], afterMass: [], preMass: [] });
+  if (sub === "profiles") return json({ ok: true, profiles: [], state: null, effective: null });
+  if (fam === "player" && sub === "block-order") return json({ ok: true, order: null });
+  if (fam === "exam" && sub === "today") {
+    const { date } = prayerChicagoNow();
+    const dayIdx = Math.floor(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) / 86400000);
+    return json({ ok: true, date, dateLabel: prayerDateLabel(date), run: null, prompts: [], entries: [], categories: [], focusCategory: COMMANDMENT_CATS[dayIdx % COMMANDMENT_CATS.length] });
+  }
+  if (fam === "exam" && sub === "reflections") return json({ ok: true, groups: [] });
+  if (fam === "confession" && !seg[2]) return json({ guide: [], penance: null, prep: [], history: [] });
+  if (fam === "pin" && sub === "state") return json({ pinSet: false, retryAfterSeconds: 0 });
+  // Public reads: the free tier whole — the day (sanitized by the
+  // builders under `pub`), Mass, readings, the book and its audio,
+  // episode audio + texts, the podcasts (listen state stripped at
+  // the route), sources/settings (content config), wallpapers.
+  const PUBLIC_READS: Record<string, string[]> = {
+    prayer: ["day", "day-manifest", "mass", "mass-readings", "book", "audio"],
+    player: ["day", "feed-audio", "text", "sources", "source-settings", "externals", "podcasts"],
+    wallpaper: ["manifest", "file"],
+  };
+  if ((PUBLIC_READS[fam] ?? []).includes(sub)) return null;
+  return json({ error: PUBLIC_POINTER, code: "personal-in-app" }, 403);
+}
+// v564: a public podcasts payload carries none of the standing
+// listen state — every entry's listened/listenDate/listenedAt/
+// source/positionS fields are removed whole (the client's fresh
+// state), recursively, wherever the builders folded them.
+function stripListenState(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(stripListenState);
+  if (v && typeof v === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (k === "listened" || k === "listenDate" || k === "listenedAt" || k === "positionS") continue;
+      out[k] = stripListenState(val);
+    }
+    return out;
+  }
+  return v;
+}
+
 
 // ---- Confession PIN (v356, Plan §2.1–§2.3) ---------------------------
 // One singleton pin_state row holds the PIN + recovery-code PBKDF2
@@ -520,8 +596,8 @@ async function enumerateDayAssets(env: Env, date: string): Promise<{ id: string;
 // list the device downloads in one pass. Each fold keeps its own
 // failure posture: a failed fold reads as its empty shape, never
 // as a failed manifest.
-async function dayManifestPayload(env: Env, date: string) {
-  const day = await prayerDayPayload(env, date);
+async function dayManifestPayload(env: Env, date: string, pub = false) {
+  const day = await prayerDayPayload(env, date, pub);
   let mass: unknown = null;
   try { mass = await massPayload(env, date); } catch { mass = null; }
   let readings: unknown = { date, found: false, parts: [], copyright: [] };
@@ -707,15 +783,19 @@ async function liturgicalDayFor(env: Env, date: string) {
 // v338 §2.9(3): the per-block segment audio bar retires —
 // segmentAudioUrl and the payload's audioMissing list are REMOVED;
 // the Intentions tab's item/intention listing is untouched.
-async function prayerDayPayload(env: Env, date: string) {
+async function prayerDayPayload(env: Env, date: string, pub = false) {
   const { date: today, hour } = prayerChicagoNow();
   const items = await prayerGetItems(env);
-  const draw = await prayerDrawForDate(env, date);
+  // v564: under `pub` the personal folds never serve and never
+  // write — no draw is taken (the draw writes standing rows), no
+  // completions are read, no addendum is read. The public day is
+  // the same shell with empty personal folds.
+  const draw = pub ? new Map<number, number>() : await prayerDrawForDate(env, date);
   const intentions = await env.DB.prepare("SELECT * FROM prayer_intentions").all<PrayerIntentionRow>();
   const byId = new Map((intentions.results ?? []).map((i) => [i.id, i]));
-  const done = await env.DB.prepare("SELECT item_id FROM prayer_completions WHERE date=?").bind(date).all<{ item_id: number }>();
-  const doneSet = new Set((done.results ?? []).map((r) => r.item_id));
-  const addRow = await env.DB.prepare("SELECT text FROM prayer_addenda WHERE date=?").bind(date).first<{ text: string }>();
+  const done = pub ? null : await env.DB.prepare("SELECT item_id FROM prayer_completions WHERE date=?").bind(date).all<{ item_id: number }>();
+  const doneSet = new Set((done?.results ?? []).map((r) => r.item_id));
+  const addRow = pub ? null : await env.DB.prepare("SELECT text FROM prayer_addenda WHERE date=?").bind(date).first<{ text: string }>();
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
   const audio = await prayerAudioMap(env);
@@ -911,7 +991,7 @@ async function playerIntroTexts(
 // block's fill) retired at v451 §2.2: the store read lives in
 // the podcasts own-series builders now, and the day carries no
 // block for the show.
-async function playerDayPayload(env: Env, dateOverride?: string) {
+async function playerDayPayload(env: Env, dateOverride?: string, pub = false) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
   const srcRows = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all<{
@@ -926,7 +1006,10 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   // intro texts, presentedDay.
   const presented = dateOverride ?? prayerChicagoNow().date;
   const settings = await sourceSettingsPayload(env);
-  const introTexts = await playerIntroTexts(env, presented);
+  // v564: under `pub` the introTexts map — the drawn intention
+  // texts' home in the shell — reads empty, and neither draw
+  // behind it runs (the episode draw writes standing rows).
+  const introTexts = pub ? {} : await playerIntroTexts(env, presented);
   // v515 §2: the block shell builder, extracted whole — its
   // output is byte-identical to the standing map; the profile
   // fold below composes the day's shells through it.
@@ -941,7 +1024,10 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   // the layer groups (Novenas, then Podcasts), never
   // interleaved. No fold (the pre-0038 posture) leaves the
   // blocks exactly as they stand above.
-  const profileStore = await prayerProfileStore(env);
+  // v564: under `pub` no profile store is read — the public day
+  // composes in the standing (pre-fold) shape, exactly the
+  // posture a store-less read has always produced.
+  const profileStore = pub ? null : await prayerProfileStore(env);
   const profileFold = profileStore ? profileFoldOf(profileStore, presented) : null;
   let profileCore: string[] = [];
   let profileNovenasOn = false;
@@ -963,16 +1049,19 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
   // to startDesc's pendingResume seam. An absent table (pre-0020
   // rollback posture) reads as an empty fold, never an error.
   let dayPositions: Record<string, number> = {};
-  try {
-    const dayPosRows = await env.DB.prepare("SELECT episode_id, position_s FROM day_positions WHERE date=?")
-      .bind(presented).all<{ episode_id: string; position_s: number }>();
-    dayPositions = Object.fromEntries((dayPosRows.results ?? []).map((r) => [r.episode_id, r.position_s]));
-  } catch { dayPositions = {}; }
+  if (!pub) {
+    try {
+      const dayPosRows = await env.DB.prepare("SELECT episode_id, position_s FROM day_positions WHERE date=?")
+        .bind(presented).all<{ episode_id: string; position_s: number }>();
+      dayPositions = Object.fromEntries((dayPosRows.results ?? []).map((r) => [r.episode_id, r.position_s]));
+    } catch { dayPositions = {}; }
+  }
   // v413 §2.2: the manual-order fold — the stored arrangement
   // rides the day payload itself, so it is fresh at every open
   // with no version check. An absent table (pre-0021 rollback
   // posture) or an empty one reads as null = contract order.
-  const blockOrder = await playerBlockOrder(env);
+  // v564: under `pub` the arrangement is the contract order.
+  const blockOrder = pub ? null : await playerBlockOrder(env);
   // v549 §2.5: the Morning Prayer readings seat (John's Q5
   // comment on package 50): when the effective profile is
   // the Salesian Way or the Benedictine Way and its Podcasts
@@ -992,7 +1081,7 @@ async function playerDayPayload(env: Env, dateOverride?: string) {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
     liturgicalDay: await liturgicalDayFor(env, presented),
     version: settings.version, introTexts, blocks, dayPositions, blockOrder,
-    additions: await dayAdditionsFold(env, presented, profileFold
+    additions: pub ? [] : await dayAdditionsFold(env, presented, profileFold
       ? new Set<string>([...profileCore, ...(profileNovenasOn ? ["Novenas"] : [])])
       : null),
     profile: profileFold,
@@ -3312,9 +3401,18 @@ export default {
     // Everything else is John's session surface. The day-payload GET
     // also accepts the agent token (the job's read path, Plan step 3).
     const agentDayRead = seg[0] === "api" && seg[1] === "prayer" && seg[2] === "day" && request.method === "GET" && isAgent(request, env);
+    // v564: the public host runs the public gate; every other host
+    // keeps the standing johnOnly gate exactly. `pub` threads into
+    // the day builders so their personal folds never serve.
+    const pub = isPublicHost(request, env);
     if (!agentDayRead) {
-      const denied = johnOnly(request, env);
-      if (denied) return denied;
+      if (pub) {
+        const gated = publicGate(request, seg, url);
+        if (gated) return gated;
+      } else {
+        const denied = johnOnly(request, env);
+        if (denied) return denied;
+      }
     }
 
     try {
@@ -3338,7 +3436,7 @@ export default {
         if (seg[2] === "day" && request.method === "GET") {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          return settledJson(await prayerDayPayload(env, date), date, pToday);
+          return settledJson(await prayerDayPayload(env, date, pub), date, pToday);
         }
         if (seg[2] === "day-manifest" && request.method === "GET") {
           // v569: the day's whole shape in ONE call — day shell,
@@ -3347,7 +3445,7 @@ export default {
           // manifest is immutable-cached like its day.
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          return settledJson(await dayManifestPayload(env, date), date, pToday);
+          return settledJson(await dayManifestPayload(env, date, pub), date, pToday);
         }
         if (seg[2] === "mass" && !seg[3] && request.method === "GET") {
           // v486: the day's Mass versions + propers for the Mass
@@ -3903,9 +4001,9 @@ export default {
             if (dateParam !== today && dateParam !== chicagoShiftDate(today, 1)) {
               return err(400, "date must be today or tomorrow");
             }
-            return json(await playerDayPayload(env, dateParam));
+            return json(await playerDayPayload(env, dateParam, pub));
           }
-          return json(await playerDayPayload(env));
+          return json(await playerDayPayload(env, undefined, pub));
         }
         if (seg[2] === "day-additions" && request.method === "PUT") {
           // v510 §2.1: John's Praylist additions write — the
@@ -3973,26 +4071,26 @@ export default {
           // payload in the standing shape; an unknown series
           // answers 400.
           const readSeries = url.searchParams.get("series");
-          if (readSeries === null) return json(await podIndexPayload(env));
+          if (readSeries === null) return json(pub ? stripListenState(await podIndexPayload(env)) : await podIndexPayload(env));
           // v434 §2.1: a VIDEO series key routes to the video
           // payload builder BEFORE the audio def lookup; an
           // unknown key keeps the base behavior exactly.
           const readVideoDef = podVideoSeriesDef(readSeries);
-          if (readVideoDef) return json(await podVideoPayload(env, readVideoDef));
+          if (readVideoDef) return json(pub ? stripListenState(await podVideoPayload(env, readVideoDef)) : await podVideoPayload(env, readVideoDef));
           // v451 §2.1: an OWN series key routes to the own
           // payload builder BEFORE the audio def lookup (the
           // v434 seat); an unknown key keeps the base behavior.
           const readOwnDef = podOwnSeriesDef(readSeries);
-          if (readOwnDef) return json(await podOwnPayload(env, readOwnDef));
+          if (readOwnDef) return json(pub ? stripListenState(await podOwnPayload(env, readOwnDef)) : await podOwnPayload(env, readOwnDef));
           // v464 §2.3: an RSS series key routes to the RSS
           // payload builder BEFORE the audio def lookup (the
           // v434/v451 seat); an unknown key keeps the base
           // behavior.
           const readRssDef = podRssSeriesDef(readSeries);
-          if (readRssDef) return json(await podRssPayload(env, readRssDef));
+          if (readRssDef) return json(pub ? stripListenState(await podRssPayload(env, readRssDef)) : await podRssPayload(env, readRssDef));
           const readDef = podSeriesDef(readSeries);
           if (!readDef) return err(400, "unknown series");
-          return json(await podPayload(env, readDef));
+          return json(pub ? stripListenState(await podPayload(env, readDef)) : await podPayload(env, readDef));
         }
         if (seg[2] === "podcasts" && seg[3] === "mark" && request.method === "POST") {
           // v381 §2.2/§2.4: a mark is John's act (session-only).
