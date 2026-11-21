@@ -431,6 +431,22 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .stepper591 { flex:0 0 auto; display:inline-flex; gap:2px; margin-right:6px; }
 .stepper591 .btn { min-height:36px; padding:2px 8px; }
 .profcontents591 { margin:0 0 10px 12px; }
+/* v592: the Configure surface, compact + full screen — the
+   screen mounts edge to edge with its own scroll (the
+   panelbody is the scroll), and the surface family's rows
+   and spacing tighten. Scoped to the Configure sheets
+   (.profplan590 screen · .profpop591 profile pop-up ·
+   .profmap592 day mapping pop-up); shared dress stands
+   elsewhere. */
+.sheet.profscreenfull592 .inner { width:100%; max-width:none; height:100dvh !important; max-height:100dvh !important; border-radius:0; }
+.profscreenfull592 .panelbody { padding:2px 10px 14px; }
+.profplan590 .bookrow, .profpop591 .bookrow, .profmap592 .bookrow { padding:8px 10px; margin:0 0 6px; }
+.profplan590 .sub, .profpop591 .sub, .profmap592 .sub { margin:0 0 8px; }
+.profplan590 .sectionhead, .profpop591 .sectionhead, .profmap592 .sectionhead { margin:12px 0 6px; }
+.profplan590 .profchips591, .profpop591 .profchips591 { margin:0 0 8px; padding-bottom:2px; }
+.profplan590 .chip591, .profpop591 .chip591 { padding:5px 11px; min-height:38px; }
+.profplan590 .profcontents591, .profpop591 .profcontents591 { margin:0 0 6px 10px; }
+.profplan590 .stepper591 .btn, .profpop591 .stepper591 .btn { min-height:32px; }
 /* v462 §2.4.10: the prayer book's two seats the standing
    rules do not carry — the row/page favorite star and the
    reading page's English | Latin switch (the kind-switch
@@ -992,7 +1008,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v591-1";
+var CACHE = "ora-pro-nobis-v592-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

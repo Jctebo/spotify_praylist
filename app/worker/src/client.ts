@@ -19670,9 +19670,11 @@ function openProfilesScreen(openKey) {
   // profile only through the save acts (Save Profile writes
   // the opened profile — the ways included; Save New mints
   // another, named at the save; Reset to Default returns a
-  // named way to its designed shape). Below the blocks, the
-  // day mapping: an Every day row + the seven weekdays, each
-  // opening its pop-up. One pop-up builder serves every
+  // named way to its designed shape). v592: the screen mounts
+  // FULL SCREEN (profscreenfull592), and the day mapping lives
+  // behind a Day mapping button in the head — it opens as a
+  // pop-up (an Every day row + the seven weekdays, each
+  // opening its pop-up). One pop-up builder serves every
   // scope (chip · Every day · weekday): it explains the
   // profile, carries its toggles as a draft, and its acts —
   // Apply (the scope follows the profile; never edits it),
@@ -19680,7 +19682,7 @@ function openProfilesScreen(openKey) {
   var old = document.querySelector('.profplan590');
   if (old) old.remove();
   var sheet = document.createElement('div');
-  sheet.className = 'sheet profplan590';
+  sheet.className = 'sheet profplan590 profscreenfull592';
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Configure plan</h1></div>'
     + '<div class="profplanbody"><p class="sub">Loading …</p></div><p class="fieldnote profplannote"></p></div>';
   document.body.appendChild(sheet);
@@ -19692,6 +19694,7 @@ function openProfilesScreen(openKey) {
   var DUR591 = { 'little-way': 'About 30 minutes', 'salesian': 'About 1½–2 hours', 'benedictine': 'The full day — all seven blocks' };
   var res = null, seriesList = null, bookList = null;
   var edKey = openKey || null, ed = null, resetArmed = false;
+  var mapPaintFn = null; // v592: the day mapping pop-up's repaint, while it stands
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
   function draftOf(rec) {
@@ -19977,6 +19980,7 @@ function openProfilesScreen(openKey) {
     }
     var eff = res.effective;
     var html = '<p class="sub" data-p591head="1">Today follows ' + esc(eff ? eff.name : '') + '</p>';
+    html += '<div class="row"><button class="btn ghost" data-p592daymap="1">Day mapping</button></div>';
     html += '<div class="profchips591">';
     res.profiles.forEach(function (p) {
       html += '<button class="chip591' + (eff && eff.key === p.key ? ' on' : '') + '" data-p591chip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
@@ -19989,14 +19993,6 @@ function openProfilesScreen(openKey) {
       + '<button class="btn ghost" data-p591save="new">Save New</button>'
       + (ed.kind === 'default' ? '<button class="btn ghost" data-p591reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button>' : '')
       + '</div>';
-    html += '<p class="sub">Day by day</p>';
-    var stand = byKey(res.state && res.state.standingKey);
-    html += '<div class="card bookrow" data-p591day="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
-    var dd = (res.state && res.state.dayDefaults) || {};
-    DOWS.forEach(function (dw) {
-      var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
-      html += '<div class="card bookrow" data-p591day="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
-    });
     html += '<div class="row"><button class="btn ghost" data-p591close="1">' + (draftDirty(ed) ? 'Close without saving' : 'Close') + '</button></div>';
     body.innerHTML = html;
     wire();
@@ -20006,14 +20002,8 @@ function openProfilesScreen(openKey) {
     body.querySelectorAll('[data-p591chip]').forEach(function (chip) {
       chip.addEventListener('click', function () { openPop('today', chip.getAttribute('data-p591chip')); });
     });
-    body.querySelectorAll('[data-p591day]').forEach(function (row) {
-      row.addEventListener('click', function () {
-        var scope = row.getAttribute('data-p591day');
-        var dd = (res.state && res.state.dayDefaults) || {};
-        var key = scope === 'standing' ? res.state.standingKey : (dd[scope] || res.state.standingKey);
-        openPop(scope, key);
-      });
-    });
+    var dmBtn = body.querySelector('[data-p592daymap]');
+    if (dmBtn) dmBtn.addEventListener('click', function () { openMapPop(); });
     body.querySelectorAll('[data-p591save]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var act = btn.getAttribute('data-p591save');
@@ -20046,6 +20036,47 @@ function openProfilesScreen(openKey) {
     });
     var closeBtn = body.querySelector('[data-p591close]');
     if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); });
+  }
+  function openMapPop() {
+    // v592 §2: the day mapping as a pop-up, opened from the
+    // Day mapping button in the screen's head. It paints into
+    // a stable body container (the S11 discipline); a day row
+    // opens that scope's profile pop-up above it, and closing
+    // the profile pop-up returns here — the mapping sheet
+    // stands underneath throughout.
+    var oldMap = document.querySelector('.profmap592');
+    if (oldMap) oldMap.remove();
+    var map = document.createElement('div');
+    map.className = 'sheet profmap592';
+    map.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Day mapping</h1></div>'
+      + '<div class="profmapbody"></div></div>';
+    document.body.appendChild(map);
+    mountDrawer(map, true);
+    var mapBody = map.querySelector('.profmapbody');
+    function mPaint() {
+      if (!document.body.contains(map)) { mapPaintFn = null; return; }
+      var stand = byKey(res.state && res.state.standingKey);
+      var html = '<div class="card bookrow" data-p592mapday="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
+      var dd = (res.state && res.state.dayDefaults) || {};
+      DOWS.forEach(function (dw) {
+        var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
+        html += '<div class="card bookrow" data-p592mapday="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
+      });
+      html += '<div class="row"><button class="btn ghost" data-p592mapclose="1">Close</button></div>';
+      mapBody.innerHTML = html;
+      mapBody.querySelectorAll('[data-p592mapday]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var scope = row.getAttribute('data-p592mapday');
+          var dd2 = (res.state && res.state.dayDefaults) || {};
+          var key = scope === 'standing' ? res.state.standingKey : (dd2[scope] || res.state.standingKey);
+          openPop(scope, key);
+        });
+      });
+      var mc = mapBody.querySelector('[data-p592mapclose]');
+      if (mc) mc.addEventListener('click', function () { mapPaintFn = null; map.remove(); });
+    }
+    mapPaintFn = mPaint;
+    mPaint();
   }
   function openPop(scope, key) {
     var oldPop = document.querySelector('.profpop591');
@@ -20090,7 +20121,7 @@ function openProfilesScreen(openKey) {
       });
       var applyBtn = popBody.querySelector('[data-p591papply]');
       if (applyBtn) applyBtn.addEventListener('click', function () {
-        var done = function (r) { if (r) res = r; pop.remove(); ed = null; edKey = null; paint(); profileRebuild(); };
+        var done = function (r) { if (r) res = r; pop.remove(); if (mapPaintFn) mapPaintFn(); ed = null; edKey = null; paint(); profileRebuild(); };
         if (scope === 'today') profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: shownKey }).then(done).catch(pFail);
         else if (scope === 'standing') profPut('/api/prayer/profiles/state', { standingKey: shownKey }).then(done).catch(pFail);
         else {
@@ -20107,7 +20138,7 @@ function openProfilesScreen(openKey) {
           if (act === 'profile') {
             payload.key = shownKey;
             profPut('/api/prayer/profiles/save', payload).then(function (r) {
-              res = r; ped = null; pPaint(); ed = null; paint(); profileRebuild();
+              res = r; ped = null; pPaint(); ed = null; paint(); if (mapPaintFn) mapPaintFn(); profileRebuild();
             }).catch(pFail);
           } else {
             openRenameCopySheet590('', function (newName) {
@@ -20119,7 +20150,7 @@ function openProfilesScreen(openKey) {
                 (r.profiles || []).forEach(function (pp) { if (pp.name === newName) nk = pp.key; });
                 if (nk) { shownKey = nk; ped = null; }
                 pPaint();
-                ed = null; paint();
+                ed = null; paint(); if (mapPaintFn) mapPaintFn();
               }).catch(pFail);
             });
           }
@@ -20129,18 +20160,18 @@ function openProfilesScreen(openKey) {
       if (pReset) pReset.addEventListener('click', function () {
         if (!pResetArmed) { pResetArmed = true; pPaint(); return; }
         profPut('/api/prayer/profiles/reset', { profileKey: shownKey }).then(function (r) {
-          res = r; ped = null; pResetArmed = false; pPaint(); ed = null; paint(); profileRebuild();
+          res = r; ped = null; pResetArmed = false; pPaint(); ed = null; paint(); if (mapPaintFn) mapPaintFn(); profileRebuild();
         }).catch(pFail);
       });
       var pDel = popBody.querySelector('[data-p591pdelete]');
       if (pDel) pDel.addEventListener('click', function () {
         if (!pDelArmed) { pDelArmed = true; pPaint(); return; }
         profPut('/api/prayer/profiles/delete', { profileKey: shownKey }).then(function (r) {
-          res = r; pop.remove(); ed = null; edKey = null; paint(); profileRebuild();
+          res = r; pop.remove(); if (mapPaintFn) mapPaintFn(); ed = null; edKey = null; paint(); profileRebuild();
         }).catch(pFail);
       });
       var pClose = popBody.querySelector('[data-p591pclose]');
-      if (pClose) pClose.addEventListener('click', function () { pop.remove(); });
+      if (pClose) pClose.addEventListener('click', function () { pop.remove(); if (mapPaintFn) mapPaintFn(); });
     }
     pPaint();
   }
