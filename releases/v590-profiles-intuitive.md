@@ -19,8 +19,10 @@ level: Through Plan.
 
 Amended at the Plan gate (John, Ora thread, 2026-11-21 12:58 CT): two
 amendments — rename-on-save, and a per-day default profile — folded into
-§2.2, §2.4, §2.5, §2.6, §2.7, §2.8 and stated whole in §2.9. The run
-level stands Through Plan.
+§2.2, §2.4, §2.5, §2.6, §2.7, §2.8 and stated whole in §2.9. Amended
+again (John, Ora thread, 2026-11-21 13:00 CT): a third amendment —
+courses in a day's entry — folded into §2.3, §2.7, §2.8 and stated
+whole in §2.9. The run level stands Through Plan.
 
 ## §2 Plan
 
@@ -182,6 +184,7 @@ Grounded in what a block's contents actually are today:
 Contents item shape: `{kind: 'source', key}` (an own or external source
 row's key) · `{kind: 'prayer', slug}` (a prayer-book prayer) ·
 `{kind: 'seat', key: 'daily-readings'}` (the Morning readings seat) ·
+`{kind: 'course', key}` (a course — Amendment 3, below) ·
 for the Novenas block, `{kind: 'novena', slug}` entries or the single
 `{kind: 'all-novenas'}` selector. Rules:
 
@@ -208,7 +211,66 @@ for the Novenas block, `{kind: 'novena', slug}` entries or the single
   each block row expands to its contents — item rows with on/off switches
   (off = removed from the list) and drag order — drawn from the block's
   real families for the current day, so what John sees is what the day
-  actually carries.
+  actually carries. The courses (the sequence series below) stand in the
+  item picker as addable items for any block.
+
+**Courses in contents (Amendment 3, §2.9).** A `{kind: 'course', key}`
+selector names a course — a sequence series as the app carries them
+under Catechesis › Courses (`POD_SERIES_LIST`, index.ts:2144: Catechism
+in a Year · Bible in a Year · The Rosary in a Year · Summa in a Year) —
+and may stand in any block's contents list, ordered among the other
+items like any selector. At day build the selector resolves to **the
+next episode in the course, by the user's own progress** (John's
+correction and refinement, §2.9 — NOT an episode mapped to the date):
+the first unlistened day episode in course order, from that user's own
+listened set — exactly the pointer the Courses side already shows as
+"Current: Day N". The standing computation, read from the code: the
+server fold derives current as the lowest-position unlistened DAY
+entry (kind "day", or "special" — the Day 366 special is a day) from
+the user's `podcast_listens` rows (`podPayload`, index.ts:2389–2392);
+the course card paints that entry's label as "Current:"
+(`podIndexPayload`, index.ts:2409–2413; client.ts:19696); the client
+mirrors the same rule (`podCurrentKey`, client.ts:7761), and in the
+device shape the v589 core derives it from the core's listens
+(`opnPodCurrentKey`, client.ts:2126). The selector's resolution IS
+that pointer, computed per user from the same listened set the marks
+stand in — a user who has listened to none resolves to the course's
+first episode. Two edges, stated plainly:
+
+- **Skips:** where the listened episodes are not a prefix of the
+  course, the next episode is the FIRST unlistened day episode in
+  course order — the pointer does not jump past a skipped episode.
+- **Bonuses:** the pointer passes bonuses over — a bonus becomes
+  current only when no unlistened day episode stands. An unlistened
+  bonus therefore never stands in the entry while a day episode
+  remains; bonuses stay reachable on the Courses side, as today.
+  (This is the one place the pointer is narrower than a literal
+  "next unlistened of any kind" reading; it is the standing rule and
+  the Plan keeps it, flagged here for John's eye.)
+
+If the course has no next episode — every entry listened, the pointer
+null (the card reads "Complete") — or the series is unavailable, the
+slot stands **empty**: the item does not stand and nothing else in the
+block moves. The resolved episode is a normal track in the entry: its
+Intention line draws per-track under the standing one-intention system
+(v539), and its played mark keys on the core podcast model
+(`series|episodeKey`) as any episode — so listening to it in the entry
+advances the course's Current on the Courses side, and a mark made on
+the Courses side moves what the next day's entry resolves to. A course
+selector inside a layer block follows the layers-after-core rule as
+any contents: it stands in that block, which stands after core, and
+the save validation confines it to the block that names it (named in
+the Podcasts layer block, it stands there as a track — the one track
+that block carries by selector, §2.3's door-only posture otherwise
+unchanged). The line against per-day additions, in one sentence: a
+per-day addition is one item a user picks for one date and it dies
+with the date, while a course selector stands in the profile and
+resolves fresh at every day build to wherever the user's progress
+then stands. Not to be conflated with the date-based externals
+matcher: the `ext-bible-in-a-year` SOURCE row (§2.3 family 2) resolves
+Bible in a Year by day-of-year (`extMatchBible`, index.ts:1860–1876) —
+a different mechanism standing beside this one; the course selector
+never reads the calendar.
 
 ### 2.4 Q2 A mechanics — pristine defaults, his own copies
 
@@ -335,13 +397,17 @@ re-encryption event occurs.
   through the rename step (§2.4); the rename-required save (the save
   route refuses a copy mint — default save-as-copy, Save as new,
   copy-on-write — without the name John gives at the rename step); save
-  route contents validation; the card's acts repoint to the screen.
+  route contents validation; the course selector's day-build resolution
+  from the core's current derivation (`opnPodCurrentKey` over the core
+  listens, §2.3); the card's acts repoint to the screen.
 - **index.ts** — `profileFoldOf` and the day composition honor contents
   identically (server parity); the same precedence resolves the
   effective profile server-side (the payload contract carries
   `dayDefaults` as an optional field, absent = no per-day defaults);
   the readings-seat gate becomes the contents check; profiles payload
-  carries contents.
+  carries contents; the course selector resolves from `podPayload`'s
+  standing current derivation over the user's listens (server parity
+  with the device fold, §2.3).
 - **ui.ts** — the Profiles screen's styles; the Settings row that opens
   it.
 - **Harness (harness-v590)** — fixtures from production only: John's
@@ -371,7 +437,18 @@ re-encryption event occurs.
   over the day rule (a Sunday per-day default stands on a Sunday, and
   on a solemnity falling on that weekday); a per-date pick for the
   date still outranks the per-day default; weekdays absent from the
-  map resolve exactly as today.
+  map resolve exactly as today; (h) course selectors (Amendment 3) —
+  on the production fixture (the v589 fixture: Bible in a Year whole,
+  372 entries, with the standing listen rows — 322 listens, Current
+  standing at Day 322), a `{kind: 'course', key: 'bible-in-a-year'}`
+  selector in a block's contents resolves at day build to Day 322's
+  episode, standing as a normal track at the selector's position in
+  the block; the finished-course case — the fixture with every entry
+  listened (pointer null) — leaves the slot empty and the block's
+  other items unmoved; a skip case (a listened set that is not a
+  prefix) resolves to the first unlistened day episode; and the no-op
+  equivalence leg (a) is unaffected — no default's standing contents
+  carry a course selector, so the byte-identical gate stands.
 
 ### 2.8 Risks, named
 
@@ -396,10 +473,19 @@ re-encryption event occurs.
 - **Intentions and played state.** Contents gate standing only; draws
   and the v589 core key off track identity, which contents do not
   rename. No migration of either store stands in this release.
+- **Course pointer vs. calendar expectation (Amendment 3).** A course
+  selector's episode is the user's progress point, which can lag (or
+  lead) the calendar's Day N for that date — John's correction settles
+  that this is the intent ("not for that date — the next one in the
+  course", by his own reading progress), and §2.3 names it plainly,
+  with the bonus pass-over flagged. Protection: the resolution reads
+  the same listened set and the same derivation as the Courses card,
+  so the entry and the card can never disagree about what is next;
+  the harness leg (§2.7h) pins it on the production fixture.
 
-### 2.9 Amendments at the Plan gate (John, 2026-11-21 12:58 CT)
+### 2.9 Amendments at the Plan gate (John, 2026-11-21 12:58–13:01 CT)
 
-Two amendments, given as the Plan was presented; the in-place text of
+Three amendments, given as the Plan was presented; the in-place text of
 §2.2–§2.8 above already reads as amended — this section is the record
 of what changed.
 
@@ -435,6 +521,31 @@ that weekday, every week, until he clears it. Migration: an absent
 map is today's behavior exactly, and the no-op equivalence leg still
 gates byte-identical (§2.6, §2.7a). New harness legs (§2.7f, §2.7g):
 rename-required save, and per-day default resolution.
+
+**Amendment 3 — courses in a day's entry.** John, verbatim (Ora
+thread, 2026-11-21 13:00 CT): "Also, the ability to add courses into a
+days entry. Courses automatically add the course for the day in he
+entry." Corrected and refined by John (13:01 CT), verbatim: "Not for
+that date. But the next one in the couese" and "Based on their
+reading". The governing reading, as folded into §2.3: a
+`{kind: 'course', key}` selector may stand in any block's contents,
+and at day build it resolves to the NEXT EPISODE IN THE COURSE BY THE
+USER'S OWN PROGRESS — the first unlistened day episode in course
+order from that user's listened set, which is exactly the pointer the
+Courses side shows as "Current". No date mapping stands anywhere in
+the resolution; the earlier date-based framing is superseded whole.
+A user who has listened to none gets the first episode; the slot
+stands empty only when the course is finished (no next episode) or
+unavailable. What counts as listened is the played state itself — the
+server `podcast_listens` rows in the server shape, the v589 core's
+listens in the device shape — the same marks the Courses card counts.
+The standing computation was read from the code and matches John's
+words, with one narrowing flagged for his eye (§2.3): the pointer
+passes bonuses over until no unlistened day episode stands, and at a
+skip it names the first unlistened day episode rather than jumping
+past it. New harness leg (§2.7h): next-in-sequence resolution on the
+production Bible in a Year fixture, the finished-course empty slot,
+and the skip case; the no-op equivalence leg is unaffected.
 
 Plan stands complete at Through Plan, as amended. John's next word — a
 run-level lift — seats Implement.
