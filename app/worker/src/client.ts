@@ -19497,30 +19497,16 @@ function wirePrayersView(day) {
   // v344: the marker wiring rides the same paints.
   wirePlayed(view);
   // v515 §2: the profile surface acts ride every Prayers paint.
-  view.querySelectorAll('[data-profchange]').forEach(function (btn) {
-    btn.addEventListener('click', function () { openConfigureLadder593(); });
-  });
+  // v595: the card-era acts retire with the card — the
+  // data-profchange / data-profexpand / data-profcustomize
+  // wiring bound attributes no paint has emitted since
+  // v591 (dead wiring, removed whole). The Configure plan
+  // row's wiring stands.
   view.querySelectorAll('[data-profconfigure]').forEach(function (btn) {
     btn.addEventListener('click', function () { openConfigureLadder593(); });
   });
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
-  });
-  // v517 §2: the collapsed card's acts — expand flips the
-  // paint flag and re-paints from the standing day payload
-  // (no fetch, no write); Customize opens the editor for
-  // the effective profile.
-  view.querySelectorAll('[data-profexpand]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      profCardOpen = !profCardOpen;
-      if (state.dayPayload) paintPrayersView(state.dayPayload);
-    });
-  });
-  view.querySelectorAll('[data-profcustomize]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var fold = state.dayPayload && state.dayPayload.profile;
-      openProfilesScreen(fold && fold.key ? fold.key : null);
-    });
   });
   if (state.current) markPlaying(state.current.episodeId);
 }
@@ -19586,38 +19572,17 @@ function shortHomeDate(day) {
   return (day && day.dateLabel) || 'the day&rsquo;s prayers';
 }
 /* ---------------- v515: Prayer Profiles ----------------
-   The profile surface at the head of the Pray tab home: a
-   card naming the day payload's effective profile fold, how
-   it resolved, and its honor line, with the layer acts
-   (Novenas on/off · Podcasts on/off + the series picker)
-   and the Change act (the profile sheet: today's pick, the
-   standing default, the day rule). Every act writes through
-   the session profiles routes and rebuilds the day whole
-   (profileRebuild — the renderPrayersSide path), so a
-   midday switch re-composes today from the new fold. No
-   fold stands (the pre-0038 posture), no card stands. */
-// v517 §2: the profile card stands collapsed on a cold
-// open; expanding is a paint state of the open session.
-var profCardOpen = false;
+   The Configure surfaces' shared write helpers: every act
+   writes through the session profiles routes and rebuilds
+   the day whole (profileRebuild — the renderPrayersSide
+   path), so a midday switch re-composes today from the
+   new fold. (The v515 profile CARD that stood at the head
+   of the Pray tab home retired in v595 — John's word,
+   2026-11-21: "please stop showing this row." The Praylist
+   stands: the Prayer plan row → Favorites → the blocks.) */
 function profPut(path, body) { return api(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
 function profileRebuild() {
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); }).catch(function () {});
-}
-function profileCardHtml(day) {
-  var fold = day && day.profile;
-  if (!fold) return '';
-  // v591 §2.5: the card is INFORMATION ONLY — the name,
-  // how today resolved to it, and its honor line. Every
-  // configure act lives behind the Praylist's one
-  // Configure plan row; the card carries none (the v590
-  // Change/Customize/layer acts are removed).
-  var resLine = 'Your every-day profile';
-  if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
-  else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
-  return '<div class="card profcard"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
-    + '<div class="meta">' + esc(resLine) + '</div>'
-    + (fold.honorLine ? '<div class="meta">' + esc(fold.honorLine) + '</div>' : '')
-    + '</div></div></div>';
 }
 
 
@@ -20616,16 +20581,17 @@ function paintListenHome(day) {
   // v459 §2 Build 4: the Sort act retires from that row —
   // it stands in the universal menu's Prayers page group.
   // v547: the Favorites folder row stands at the head of
-  // the side — its slot sits between the profile card and
-  // the block rows, where v546's Starred section stood;
+  // the side — its slot sits between the Prayer plan row
+  // and the block rows (the profile card that stood there
+  // retired in v595), where v546's Starred section stood;
   // paintFavoritesFolderRow fills it here and on every
   // starred settle/toggle.
   // v590 (Amendment 4): the Configure plan button stands
   // on the FIRST ROW of the Praylist — the door to the
-  // Profiles screen, standing whether or not a profile
-  // card paints below it.
+  // Configure ladder (v593), and since v595 the only
+  // profile surface at the head of the side.
   var html = '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>'
-    + profileCardHtml(day) + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+    + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
