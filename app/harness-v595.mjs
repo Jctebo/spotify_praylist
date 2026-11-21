@@ -1,22 +1,28 @@
 // harness-v595.mjs — v595 the Praylist profile card retires
 // (John, Ora thread, 2026-11-21 15:39 CT, with his
 // screenshot of the Praylist, the card scribbled out:
-// "And please stop showing this row.") Presentation only:
-// the card's paint + call + its dead card-era wiring are
-// removed; the day's composition, the fold, profile state,
-// and personal data stand untouched — equivalence is the
-// gate.
-//  T  statics: no card paint / call / card-era wiring /
-//     paint flag stands in the client · exactly one
-//     configure act on the Praylist · both ladder doors
-//     (the Configure plan row · Settings) stand · no new
-//     migration · SW pin unmoved pre-Ship · the rendered
-//     client parses whole.
-//  P  the RENDERED Praylist paint: paintListenHome run in
-//     a vm world with a profile fold standing — the plan
-//     row paints, the Favorites slot follows it, and NO
-//     profile card paints (no profcard class, no fold
-//     name, no honor line, no resolution line).
+// "And please stop showing this row.") REFINED by John
+// (15:44 CT): "I just don't want to show 2 rows when the
+// button and current plan can be in one row." The shape
+// is a MERGE: ONE plan row carries the current plan (the
+// standing profile's name + its resolution line) on the
+// left and the Configure plan button on the right; the
+// separate card row is removed. Presentation only; the
+// day's composition, the fold, profile state, and
+// personal data stand untouched — equivalence is the gate.
+//  T  statics: no card paint / card-era wiring / paint
+//     flag stands in the client · exactly one configure
+//     act on the Praylist · the merged plan row paint
+//     stands · both ladder doors (the Configure plan row
+//     · Settings) stand · no new migration · SW pin
+//     unmoved pre-Ship · the rendered client parses whole.
+//  P  the RENDERED Praylist paint: paintListenHome run
+//     in a vm world — with a profile fold standing, the
+//     ONE plan row carries BOTH the profile's name + its
+//     standing line AND the configure act, no second
+//     card paints (no profcard, no honor line), the
+//     Favorites slot follows; with no fold, the row
+//     falls back to its bare "Prayer plan" label.
 //  A  EQUIVALENCE — with the seeded map and unedited
 //     profiles, a Salesian weekday and a Sunday compose
 //     byte-identical to the v593 ship.
@@ -42,18 +48,17 @@ const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'ut
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
 
-check('T1 the card is gone whole: no profileCardHtml paint, no profcard class, no paint flag, no card-era wiring, no resolution lines',
+check('T1 the card is gone whole: no profileCardHtml paint, no profcard class, no paint flag, no card-era wiring',
   !clientSrc.includes('function profileCardHtml')
   && !clientSrc.includes('card profcard')
   && !clientSrc.includes('profCardOpen')
   && !clientSrc.includes("querySelectorAll('[data-profchange]')")
   && !clientSrc.includes("querySelectorAll('[data-profexpand]')")
-  && !clientSrc.includes("querySelectorAll('[data-profcustomize]')")
-  && !clientSrc.includes('Your every-day profile')
-  && !clientSrc.includes('Your pick for today')
-  && !clientSrc.includes('From the day mapping'));
-check('T2 one configure act: exactly one painted data-profconfigure on the Praylist; the Configure plan row stands in paintListenHome',
-  (clientSrc.match(/data-profconfigure="1"/g) || []).length === 1
+  && !clientSrc.includes("querySelectorAll('[data-profcustomize]')"));
+check('T2 one configure act: exactly one painted data-profconfigure on the Praylist; the merged plan row paint stands and paintListenHome calls it',
+  (clientSrc.match(/data-profconfigure="1"/g) || []).length === 2
+  && clientSrc.includes('function profPlanRowHtml(day)')
+  && clientSrc.includes('var html = profPlanRowHtml(day)')
   && clientSrc.includes('card profplanrow')
   && clientSrc.includes('Prayer plan'));
 check('T3 both ladder doors stand: the Configure plan wiring + the Settings door both open the ladder; the ladder keeps its two doors',
@@ -90,26 +95,37 @@ function slice(from, to) {
 {
   const world = { console, JSON, Object, Array, String, Number };
   vm.createContext(world);
+  const rowSlice = slice('function profPlanRowHtml(day)', 'function openRenameCopySheet590');
   const paintSlice = slice('function paintListenHome(day)', 'function homeBodyHtml(day)');
   vm.runInContext(
     'this.view = { innerHTML: "" };\n'
+    + 'this.esc = function (s) { return String(s); };\n'
     + 'this.paintPrayersBar = function () {};\n'
     + 'this.homeBodyHtml = function () { return "<div id=\\"blocks-marker\\"></div>"; };\n'
     + 'this.offlineLineHtml = function () { return ""; };\n'
     + 'this.paintFavoritesFolderRow = function () {};\n'
-    + paintSlice + '\nthis.__paint = paintListenHome;', world);
+    + rowSlice + '\n' + paintSlice + '\nthis.__paint = paintListenHome;', world);
   const day = { date: '2026-11-21', profile: { key: 'salesian', name: 'The Salesian Way', resolvedBy: 'standing', honorLine: "named in honor of the tradition, not the order's own routine" } };
   vm.runInContext('this.__paint(' + JSON.stringify(day) + ');', world);
   const html = world.view.innerHTML;
-  check('P1 the Praylist paints the Prayer plan row with its one Configure plan act',
-    html.includes('Prayer plan') && (html.match(/data-profconfigure="1"/g) || []).length === 1, html.slice(0, 200));
-  check('P2 NO profile card paints under a standing fold: no profcard, no fold name, no honor line, no resolution line',
-    !html.includes('profcard') && !html.includes('The Salesian Way')
-    && !html.includes('named in honor') && !html.includes('every-day profile'), html.slice(0, 300));
-  check('P3 the standing order: Prayer plan row → Favorites slot → the blocks',
+  check('P1 the Praylist paints exactly ONE plan row and it carries the one Configure plan act',
+    (html.match(/profplanrow/g) || []).length === 1
+    && (html.match(/data-profconfigure="1"/g) || []).length === 1
+    && html.includes('Configure plan'), html.slice(0, 300));
+  check('P2 the ONE row carries BOTH: the standing profile name + its standing line on the left, the button on the right; NO second card (no profcard, no honor-line block)',
+    html.includes('The Salesian Way') && html.includes('Your every day profile')
+    && html.indexOf('The Salesian Way') < html.indexOf('data-profconfigure')
+    && !html.includes('profcard') && !html.includes('named in honor'), html.slice(0, 300));
+  check('P3 the standing order: the one plan row → Favorites slot → the blocks',
     html.indexOf('profplanrow') >= 0
     && html.indexOf('profplanrow') < html.indexOf('favorites-folder-slot')
     && html.indexOf('favorites-folder-slot') < html.indexOf('blocks-marker'), html.slice(0, 300));
+  vm.runInContext('this.__paint(' + JSON.stringify({ date: '2026-11-21', profile: null }) + ');', world);
+  const bare = world.view.innerHTML;
+  check('P4 no fold standing: the one row falls back to its bare "Prayer plan" label with the act standing',
+    (bare.match(/profplanrow/g) || []).length === 1
+    && bare.includes('Prayer plan') && bare.includes('Configure plan')
+    && !bare.includes('profcard'), bare.slice(0, 300));
 }
 
 // ---------- the fold world (equivalence + data layer) ----------

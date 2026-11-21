@@ -19584,6 +19584,25 @@ function profPut(path, body) { return api(path, { method: 'PUT', headers: { 'Con
 function profileRebuild() {
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); }).catch(function () {});
 }
+function profPlanRowHtml(day) {
+  // v595 (John's refinement, 2026-11-21 15:44 CT): ONE
+  // row carries both — "I just don't want to show 2 rows
+  // when the button and current plan can be in one row."
+  // The current plan on the left (the standing profile's
+  // name + how today resolved to it — the lines the
+  // retired card carried), the Configure plan button on
+  // the right. No fold stands (the pre-0038 posture):
+  // the row falls back to its bare "Prayer plan" label,
+  // the act standing.
+  var fold = day && day.profile;
+  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  var resLine = 'Your every day profile';
+  if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
+  else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
+  return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
+    + '<div class="meta">' + esc(resLine) + '</div></div>'
+    + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+}
 
 
 function openRenameCopySheet590(suggested, onConfirm) {
@@ -20623,9 +20642,11 @@ function paintListenHome(day) {
   // starred settle/toggle.
   // v590 (Amendment 4): the Configure plan button stands
   // on the FIRST ROW of the Praylist — the door to the
-  // Configure ladder (v593), and since v595 the only
-  // profile surface at the head of the side.
-  var html = '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>'
+  // Configure ladder (v593). v595: that row IS the plan
+  // surface — profPlanRowHtml carries the current plan
+  // (name + resolution line) beside the button, and the
+  // separate profile card row is gone.
+  var html = profPlanRowHtml(day)
     + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
