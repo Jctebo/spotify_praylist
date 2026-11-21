@@ -12,7 +12,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 
-const BASE = "6a854cb"; // v573 ship (GitHub main at branch time)
+const BASE = "8b67ea4"; // GitHub main at ship time (v573 ship + the 2026-11-21 nightly wallpaper commits, assets only)
 const SRC = "app/worker/src/index.ts";
 const UI = "app/worker/src/ui.ts";
 const PROJ = "/home/hatch/workspace/projects/ora-pro-nobis/v574-latin-return";
