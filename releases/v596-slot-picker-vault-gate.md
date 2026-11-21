@@ -139,4 +139,34 @@ checkout of the committed tree at Ship (§5).
 
 ## §5 Ship
 
-(stands at Ship)
+SHIPPED LIVE 2026-11-21 23:47Z (17:47 CT).
+
+- Worker **536176d5-73c6-43ec-975b-59412d42db5e** ·
+  rollback target eec180ed (v600) · pin
+  **ora-pro-nobis-v596-1** (in served sw.js).
+- GitHub main **7c230e1** (fast-forward merge of
+  release/v596: the fix 03e0966 + the pin bump) —
+  main pushed · remote in sync (Git Data API,
+  byte-identical, 2 commits replicated with SHA
+  assertions; whole-tree conflict-marker grep 0).
+- Served proofs: served sw.js carries the pin ·
+  served app.js parses whole (1,198,893 B) and
+  carries the gate call at the slot picker.
+- What's New **417** · row 1570 **Live** ·
+  shipped_records **791** · Ship record 2431 ·
+  Ship contract 841, met.
+
+### Gates
+
+- harness-v596: **9 ok / 0 not ok** on the working
+  tree, a clean checkout of the committed tree, and
+  the merged tree.
+- Fail-on-old (the same harness on the pre-fix
+  tree): T1 · R2 · R4 red — no gate stands, the pick
+  rows paint from the ephemeral document, no unlock
+  path, no pick: the silent refusal reproduced.
+- Regressions, named: harness-v601 8/0 ·
+  harness-v600 37/0 — zero delta · harness-v594
+  7/2 on this tree and 7/2 on the pre-fix tree with
+  identical payloads — zero delta (R3/R6 assert the
+  Q2=A coupling retired by v594 Part 2).
