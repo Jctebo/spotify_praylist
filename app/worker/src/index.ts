@@ -22,12 +22,6 @@ export interface Env {
   // deterministic per (date, item) so the gate can assert the
   // weighted distribution exactly (the DevOps LOCAL_DEV precedent).
   LOCAL_DEV?: string;
-  // v568 harness seam ONLY: when "1" (and LOCAL_DEV is "1"),
-  // every request reads as the public serving shape, so the
-  // gate can prove the shape marker + the personal-route
-  // refusal locally. Production leaves it unset: the public
-  // shape is the public host alone (PUBLIC_HOST below).
-  OPN_PUBLIC_SHAPE?: string;
   // v427 harness seam ONLY (F-427-I2): overrides the own-feed URL
   // the per-episode novena enumeration fetches, so the gate can
   // serve fixture feeds locally. Read ONLY when LOCAL_DEV is "1";
@@ -126,37 +120,6 @@ function isAgent(request: Request, env: Env): boolean {
 // User routes: John only. Behind Cloudflare Access the email header
 // is authoritative; any other email is refused. Without Access
 // headers the route is closed unless LOCAL_DEV is set by the harness.
-// v568: the serving shape. John's private serving (the
-// Access-gated origin) is 'private' — the standing behavior,
-// untouched. The public build serves on PUBLIC_HOST: no
-// account, no sign-in, and NO per-user server records — a
-// public request to a personal-data route is refused here,
-// before any personal table is read or written, whatever
-// later releases open the public content routes. The agent
-// door (/api/agent/...) is not a personal route and never
-// matches this set.
-const PUBLIC_HOST = "app.orapronobis.media";
-function shapeOf(request: Request, env: Env): "private" | "public" {
-  if (env.LOCAL_DEV === "1" && env.OPN_PUBLIC_SHAPE === "1") return "public";
-  return new URL(request.url).hostname === PUBLIC_HOST ? "public" : "private";
-}
-const PERSONAL_ROUTE_PREFIXES = [
-  "/api/prayer/intentions", "/api/prayer/profiles",
-  "/api/prayer/mass-personal-prayer", "/api/prayer/mass-universal-prayer",
-  "/api/exam/", "/api/confession", "/api/pin/",
-];
-const PERSONAL_ROUTE_EXACT = new Set([
-  "/api/prayer/book/favorites", "/api/prayer/starred",
-  "/api/player/day-additions", "/api/player/block-order",
-  "/api/player/source-settings", "/api/player/track-draws",
-  "/api/prayer/redraw", "/api/player/podcasts/mark",
-  "/api/player/podcasts/unmark", "/api/player/podcasts/position",
-  "/api/player/day-position",
-]);
-function isPersonalRoute(path: string): boolean {
-  if (PERSONAL_ROUTE_EXACT.has(path)) return true;
-  return PERSONAL_ROUTE_PREFIXES.some((p) => path.startsWith(p));
-}
 function johnOnly(request: Request, env: Env): Response | null {
   const email = request.headers.get("cf-access-authenticated-user-email");
   if (email) return JOHN_EMAILS.has(email.toLowerCase()) ? null : json({ error: "forbidden" }, 403);
@@ -3435,15 +3398,6 @@ export default {
       return err(404, "unknown agent route");
     }
 
-    // v568: the public shape refuses every personal-data
-    // route before the session gate — personal data lives on
-    // the device in the app; no D1 personal table is touched
-    // for a public client, in either direction.
-    const shape = shapeOf(request, env);
-    if (shape === "public" && isPersonalRoute(path)) {
-      return err(403, "personal data lives on your device in the app");
-    }
-
     // Everything else is John's session surface. The day-payload GET
     // also accepts the agent token (the job's read path, Plan step 3).
     const agentDayRead = seg[0] === "api" && seg[1] === "prayer" && seg[2] === "day" && request.method === "GET" && isAgent(request, env);
@@ -4902,7 +4856,7 @@ export default {
       if (seg[0] === "api") return err(404, "unknown route");
 
       // Static shell (John's session only — the gate above has run).
-      if (path === "/" || path === "/index.html") return new Response(SHELL_HTML.replace("<!--OPN_SHAPE-->", shape), { headers: { "content-type": "text/html; charset=utf-8" } });
+      if (path === "/" || path === "/index.html") return new Response(SHELL_HTML.replace("<!--OPN_SHAPE-->", pub ? "public" : "private"), { headers: { "content-type": "text/html; charset=utf-8" } });
       if (path === "/styles.css") return new Response(APP_CSS, { headers: { "content-type": "text/css; charset=utf-8" } });
       if (path === "/app.js") return new Response(APP_JS, { headers: { "content-type": "text/javascript; charset=utf-8" } });
       if (path === "/manifest.json") return new Response(MANIFEST_JSON, { headers: { "content-type": "application/json" } });

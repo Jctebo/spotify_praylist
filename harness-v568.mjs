@@ -33,7 +33,7 @@ import { execSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
-const BASE = "6f2f7c3";
+const BASE = "5c5fa13";
 const C = "app/worker/src/client.ts";
 const I = "app/worker/src/index.ts";
 const U = "app/worker/src/ui.ts";
@@ -66,9 +66,9 @@ const layer = cSrc.slice(layerStart, layerEnd);
 check("S5 layer holds no network call", !/[^a-zA-Z]fetch\(/.test(layer) && !layer.includes("XMLHttpRequest"));
 check("S6 layer writes the v570 envelope", layer.includes("'orapronobis-personal-data'") && layer.includes("formatVersion: 1"));
 check("S7 PIN stands outside the file", layer.includes("OPN_PIN_KEY = 'opn-pin-local-v1'") && !/sections:\s*\{[^}]*pin/i.test(layer));
-check("S8 worker refusal stands", iSrc.includes('personal data lives on your device in the app') && iSrc.includes('PUBLIC_HOST = "app.orapronobis.media"'));
-check("S9 shell marker stands", uSrc.includes('window.__OPN_SHAPE__="<!--OPN_SHAPE-->"') && iSrc.includes('SHELL_HTML.replace("<!--OPN_SHAPE-->", shape)'));
-check("S10 harness seam is LOCAL_DEV-gated", iSrc.includes('env.LOCAL_DEV === "1" && env.OPN_PUBLIC_SHAPE === "1"'));
+check("S8 v564 public gate stands and v568 adds no second gate", iSrc.includes("function publicGate(") && iSrc.includes('code: "personal-in-app"') && !iSrc.includes("personal data lives on your device in the app") && !iSrc.includes("function shapeOf"));
+check("S9 shell marker stands", uSrc.includes('window.__OPN_SHAPE__="<!--OPN_SHAPE-->"') && iSrc.includes('SHELL_HTML.replace("<!--OPN_SHAPE-->", pub ? "public" : "private")'));
+check("S10 probe seam is LOCAL_DEV-gated", iSrc.includes('env.LOCAL_DEV === "1" && request.headers.get("x-opn-host-probe") === "public"'));
 const personalNeedles = ["intentions", "profiles", "book/favorites", "starred", "mass-personal-prayer", "mass-universal-prayer", "day-additions", "block-order", "source-settings", "exam/", "confession", "pin/", "track-draws", "podcasts/mark", "podcasts/unmark", "podcasts/position", "day-position"];
 const missing = personalNeedles.filter((n) => !layer.includes("/api/" + (n.startsWith("prayer") || n.startsWith("player") ? "" : "") + n) && !layer.includes(n));
 check("S11 every personal family routed locally", missing.length === 0, missing.join(","));
@@ -263,20 +263,26 @@ function servedLegs() {
       proc.stderr.on("data", (d) => { buf += d; });
     });
     let activePort = port;
-    const get = async (path) => {
-      const r = await fetch(`http://127.0.0.1:${activePort}${path}`);
+    const get = async (path, pub) => {
+      const r = await fetch(`http://127.0.0.1:${activePort}${path}`, pub ? { headers: { "x-opn-host-probe": "public" } } : undefined);
+      return { status: r.status, text: await r.text() };
+    };
+    const postPub = async (path) => {
+      const r = await fetch(`http://127.0.0.1:${activePort}${path}`, { method: "POST", headers: { "x-opn-host-probe": "public", "Content-Type": "application/json" }, body: "{}" });
       return { status: r.status, text: await r.text() };
     };
     (async () => {
-      let proc = await boot(["OPN_PUBLIC_SHAPE:1"]);
+      let proc = await boot([]);
       if (!proc) { check("L0 wrangler dev boots", false); return resolve(); }
       try {
-        const shell = await get("/");
+        const shell = await get("/", true);
         check("L1 public shell carries the public marker", shell.status === 200 && shell.text.includes('window.__OPN_SHAPE__="public"'), `status ${shell.status}`);
-        const refusal = await get("/api/prayer/intentions");
-        check("L2 public personal route refused", refusal.status === 403 && refusal.text.includes("personal data lives on your device"), `status ${refusal.status}: ${refusal.text.slice(0, 80)}`);
-        const content = await get("/api/prayer/book");
-        check("L3 public content route is NOT refused by the personal guard", content.status === 200 && content.text.includes('"groups"'), `status ${content.status}`);
+        const read = await get("/api/prayer/intentions", true);
+        check("L2 public personal read answers the empty shape (no data posture)", read.status === 200 && read.text.includes('"intentions":[]'), `status ${read.status}: ${read.text.slice(0, 80)}`);
+        const write = await postPub("/api/prayer/intentions");
+        check("L2b public personal write refused with the app pointer", write.status === 403 && write.text.includes("personal-in-app"), `status ${write.status}: ${write.text.slice(0, 80)}`);
+        const content = await get("/api/prayer/book", true);
+        check("L3 public content route serves", content.status === 200 && content.text.includes('"groups"'), `status ${content.status}`);
       } finally { proc.killTree(); }
       await new Promise((r) => setTimeout(r, 1500));
       activePort = port + 1;
