@@ -52,3 +52,13 @@ Harness: harness-v582 **16 ok / 0 not-ok** on the build tree and again on a clea
 
 - **Trunk-drift rework:** 0 — main stood at 175b857 from clone through the build; v581 had not merged.
 - **Concerns and Information Needs:** none. The one harness defect found was in the harness itself (a `git show` of the 1MB+ client.ts overflowed the default exec buffer; fixed with an explicit maxBuffer before the first full run).
+
+## 4 · Review
+
+Light review (streamlined path), against the approved picks:
+
+- **Diff audit:** the full source diff vs main 175b857 is two hunks. client.ts: the Novenas head wrapper (`<p>` → `<div class="novsearchbar">`) plus its naming comment — the input element and its wiring are byte-identical. ui.ts: one additive rule set (`.novsearchbar`, its glyph seat, its input rule) placed after the `.searchpill` rules; the `.searchpill` dress and every other rule stand untouched. No other file carries a source change.
+- **Q1 A compliance:** the input rule reads width:100% (the entire row — the global `* { box-sizing: border-box; }` at ui.ts stands, so the padding rides inside the row), height:56px (taller than the standing 44px pill; the tap target is the full bar), font-size:18px (larger than the standing 16px). The bar stands at the top of the Novenas page, above the list, as before.
+- **Behavior unchanged:** harness S5 proves `novenaSearchMatch`'s source byte-identical to BASE; C1 drives the rendered function (name hit, saint hit, clean miss, empty needle matches all); the list repaint-on-type wiring is unmoved (S5). The saint sort order rides the payload, untouched.
+- **Harness evidence:** harness-v582 16 ok / 0 not-ok on the build tree and on a clean checkout of the exact committed tree (52e33b6), including S6 — the RENDERED client parses whole.
+- **Verdict:** PASS. No returns, no concerns carried to Ship.
