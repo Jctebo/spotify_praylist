@@ -291,6 +291,19 @@ async function cachedFormulary(env: CacheEnv, key: string, compute: () => Promis
   return formulary;
 }
 
+/* v586: the feasts of the Blessed Virgin Mary herself,
+   for the Common fallback in the saint branch below.
+   A label naming a saint stands out first (St Joseph,
+   Spouse of the Blessed Virgin Mary · Ss Joachim and
+   Anne, Parents of the Blessed Virgin Mary) — those
+   feasts are not hers, and their own pages stand ahead
+   of any fallback in the caller's loop regardless. */
+function isBlessedVirginMaryFeast(label?: string): boolean {
+  const l = label ?? "";
+  if (/^Saints?\b/.test(l)) return false;
+  return l.includes("Blessed Virgin Mary") || l.startsWith("Our Lady of") || l === "Mary, the Holy Mother of God";
+}
+
 export async function resolveFormulary(env: CacheEnv, v: MassVersion): Promise<MassFormulary> {
   if (v.kind === "season") {
     const season = v.season ?? (v.label && v.label.includes("Nativity") ? "Christmas" : null);
@@ -320,7 +333,11 @@ export async function resolveFormulary(env: CacheEnv, v: MassVersion): Promise<M
   }
   if (v.kind === "saint") {
     const candidates = v.slugs && v.slugs.length ? v.slugs : (v.slug ? [v.slug] : []);
-    const key = "form:saint:" + (candidates[0] ?? v.key);
+    // v586: the key is versioned — saint empties cached
+    // under the old key (an empty result is served for
+    // 24 hours) retire at this deploy, and every saint
+    // formulary re-derives once under the fixed code.
+    const key = "form:saint:2:" + (candidates[0] ?? v.key);
     return cachedFormulary(env, key, async () => {
       for (const slug of candidates) {
         const html = await fetchText(SAINT_PAGE(slug));
@@ -341,6 +358,21 @@ export async function resolveFormulary(env: CacheEnv, v: MassVersion): Promise<M
       if ((v.label ?? "").startsWith("Dedication of")) {
         const clines = await fetchLines(COMMONS_PAGE);
         if (clines) return commonsFormulary(clines, "dedication");
+      }
+      // v586: a memorial of the Blessed Virgin Mary whose
+      // own page the source does not carry (its Marian set
+      // stands as readings pages, not propers pages — every
+      // candidate for the Presentation 404s) stands the
+      // Common of the Blessed Virgin Mary whole, on the
+      // Dedication shape above: the Commons page itself
+      // prints the warrant ("These Masses are also used
+      // for celebrating the Memorial of the Blessed Virgin
+      // Mary"). Verbatim extraction, never a paraphrase;
+      // the memorial's own proper, where the source
+      // carries it, always stands ahead of the Common.
+      if (isBlessedVirginMaryFeast(v.label)) {
+        const clines = await fetchLines(COMMONS_PAGE);
+        if (clines) return commonsFormulary(clines, "Common of the Blessed Virgin Mary");
       }
       return {};
     });
