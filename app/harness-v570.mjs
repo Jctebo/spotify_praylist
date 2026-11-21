@@ -136,8 +136,13 @@ const johnFile = JSON.parse(johnText);
   check('L1 counts carry the world data', env.counts.intentions === 2 && env.counts.conscienceEntries === 1 && env.counts.favoritesBook === 1, env.counts);
   const pinRaw = A.__storage.get('opn-pin-local-v1') || '';
   const pinRec = pinRaw ? JSON.parse(pinRaw) : {};
-  const pinSecrets = Object.values(pinRec).filter((v) => typeof v === 'string' && v.length >= 8);
-  check('L2 export carries no PIN record material', pinSecrets.length > 0 && pinSecrets.every((s) => !text.includes(s)), Object.keys(pinRec));
+  // The secret material proper: the two hash/salt pairs. (The
+  // record's createdAt is a plain timestamp — the export's own
+  // exportedAt can share its millisecond in a fast world, so a
+  // blanket value census false-fires on it; the hashes and
+  // salts are the material that must never travel.)
+  const pinSecrets = ['pinHash', 'pinSalt', 'recoveryHash', 'recoverySalt'].map((k) => pinRec[k]).filter((v) => typeof v === 'string' && v.length >= 8);
+  check('L2 export carries no PIN record material', pinSecrets.length === 4 && pinSecrets.every((s) => !text.includes(s)), Object.keys(pinRec));
   check('L2 export carries no PIN field', !text.includes('pinHash') && !text.includes('"pin"') && !text.includes('4271'));
 
   const B = makeWorld(true);
