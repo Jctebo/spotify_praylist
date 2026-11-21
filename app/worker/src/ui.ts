@@ -450,13 +450,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profplan590 .stepper591 .btn, .profpop591 .stepper591 .btn { min-height:32px; }
 /* v593 §2: the no-pop-up Configure family — the ladder
    (.profladder593), the editor's frozen zone
-   (.proffrozen593: the dirty-only acts bar · the chips ·
+   (.proffrozen593: the acts bar · the chips ·
    the block jump strip · the progress hairline), the
    switch prompt, the This profile zone, and the Day
    mapping screen (.profmapscreen593). The frozen zone is
    a flex sibling above the .panelbody scroller, so the
    acts bar appearing changes only the scroller's height,
-   never its content offset. */
+   never its content offset. v600: the acts bar stands
+   frozen ALWAYS (the dirty-only bar is reversed), and
+   Edit today's Save today bar reuses this same frozen
+   dress (.proftodayfrozen600). */
 .proffrozen593 { flex:none; background:var(--card); border-bottom:1px solid var(--line); padding:6px 10px 4px; }
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
