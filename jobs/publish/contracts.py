@@ -1635,6 +1635,12 @@ def _resolve_saints_litany_content(
             names = saints_ladder.resolve_invocations(target_date, windows=injected)
         else:
             names = saints_ladder.resolve_invocations(target_date)
+        # v580 — the LLM backstop (John, Q3 A): a final pass that can
+        # only REMOVE a suspect invocation, never add one. Any failure
+        # leaves the deterministically guarded list unchanged.
+        from jobs.publish import feast_classification
+
+        names = feast_classification.llm_backstop(names)
         if len(names) < saints_ladder.minimum_invocation_count():
             raise RuntimeError(
                 f"saints_ladder resolved implausibly few invocations ({len(names)}) "

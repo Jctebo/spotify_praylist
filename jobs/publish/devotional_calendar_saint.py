@@ -179,6 +179,7 @@ def _empty_result() -> dict:
         "gospel_reason": "",
         "roster_bracket": "",
         "saints": [],
+        "litany_persons": [],
         "principal": "",
         "martyrology_lead": "",
         "martyrology_text": "",
@@ -199,6 +200,7 @@ def calendar_saint_for(target: dt.date) -> dict | None:
         result["gospel_reason"] = "sunday"
         return result
     saints: list[str] = []
+    litany_persons: list[str] = []
     principal = ""
     roster_bracket = ""
     for summary, description in _events_by_date().get(target, []):
@@ -213,8 +215,22 @@ def calendar_saint_for(target: dt.date) -> dict | None:
             continue  # The calendar itself says this observance is not kept.
         if description.startswith("Church observance: "):
             name = _observance_name(description)
-            if name and _names_saint(name) and name not in saints:
+            if not name:
+                continue
+            # v580: a dedication feast yields its associated person(s)
+            # to the litany (never the event words). The persons ride
+            # a separate field — the Daily Reflection's saint stands
+            # exactly as before.
+            from jobs.publish.feast_classification import classify_feast
+
+            feast = classify_feast(name)
+            if feast.kind == "dedication":
+                for person in feast.persons:
+                    if person not in litany_persons:
+                        litany_persons.append(person)
+            if _names_saint(name) and name not in saints:
                 saints.append(name)
+    result["litany_persons"] = litany_persons
     if saints:
         result["witness_name"] = "; ".join(saints)
         result["witness_source"] = "calendar"
@@ -249,6 +265,7 @@ def resolve_saint_of_day(target: dt.date, calendar_saint: str = "") -> dict:
     legacy["witness_state"] = "saint" if legacy["witness_name"] else "gospel_only"
     legacy["gospel_reason"] = "" if legacy["witness_name"] else "no_saint_named"
     legacy["saints"] = [legacy["witness_name"]] if legacy["witness_name"] else []
+    legacy["litany_persons"] = []
     legacy["principal"] = ""
     legacy["roster_bracket"] = legacy.get("roster_bracket", "")
     return legacy

@@ -14,8 +14,13 @@ nightly from three tiers (John's answers, 2026-11-08):
 
 A saint is invoked once, in the highest tier they qualify for. No tier
 name is ever rendered. Marian titles and non-saint feasts add no
-invocation. Membership is data (config/publish/saints-ladder.json);
-this module is the mechanism only.
+invocation — since v580 that rule stands in code, not only here: the
+feast intake classifies every feast name through
+jobs.publish.feast_classification (event feasts are skipped,
+dedication feasts yield their person), and a deterministic guard
+strikes any resolved invocation that does not classify as a person.
+Membership is data (config/publish/saints-ladder.json); this module
+is the mechanism only.
 
 Identity: saints are matched through the alias machinery
 (jobs.novena_contracts.saint_aliases.canonical_saint_key) first, then
@@ -189,7 +194,14 @@ def _compute_feast_saints(target: _dt.date) -> List[str]:
     from jobs.publish.devotional_calendar_saint import resolve_saint_of_day
 
     result = resolve_saint_of_day(target)
-    return [str(name).strip() for name in (result.get("saints") or []) if str(name).strip()]
+    names = [str(name).strip() for name in (result.get("saints") or []) if str(name).strip()]
+    # v580: dedication feasts surface their associated person(s) on a
+    # separate field; they join the feast intake as persons.
+    for person in result.get("litany_persons") or []:
+        person = str(person).strip()
+        if person and person not in names:
+            names.append(person)
+    return names
 
 
 def resolve_invocations(
@@ -228,23 +240,40 @@ def resolve_invocations(
 
     # Tier 2a — the day's feast saint(s), in calendar order.
     feast = list(feast_saints) if feast_saints is not None else _compute_feast_saints(target)
-    for name in feast:
+
+    def place_feast_person(name: str) -> None:
         member = _match_member(index, saint_name=name)
         if member is not None:
             place(f"member:{member['key']}", str(member["spoken"]))
-            continue
+            return
         window_entry = _match_window(index, saint_name=name)
         if window_entry is not None:
             if "excluded" in window_entry:
-                continue
+                return
             place(f"window:{window_entry['key']}", str(window_entry["spoken"]))
-            continue
+            return
         if _nname(name) == "mary":
             # Mary under a form the data does not carry: she stands
             # first in the core already; a Marian naming adds nothing.
-            continue
+            return
         warnings.append(f"saints_ladder: feast saint not in ladder data, invoked as named: {name}")
         place(f"feast:{_nname(name)}", _base_name(name))
+
+    for name in feast:
+        # v580 — feast-type classification before placement (John's
+        # rules, 2026-11-21): an event feast adds no invocation; a
+        # dedication feast yields its person; an event-form title
+        # yields the person it names.
+        from jobs.publish.feast_classification import classify_feast
+
+        feast_class = classify_feast(name)
+        if feast_class.kind == "event":
+            continue
+        if feast_class.kind == "dedication" or feast_class.extracted:
+            for person in feast_class.persons:
+                place_feast_person(person)
+            continue
+        place_feast_person(name)
 
     # Tier 2b — window saints, in the resolver's own order.
     runtimes = list(windows) if windows is not None else _compute_windows(target)
@@ -273,6 +302,18 @@ def resolve_invocations(
     # Tier 3 — the patrons, in data order, skipping keys already placed.
     for entry in payload["patrons"]:
         place(f"member:{entry['key']}", str(entry["spoken"]))
+
+    # v580 — the deterministic guard: no resolved invocation may be a
+    # feast event, a place, or an object. A struck slot stands empty;
+    # no substitution is invented (John, Q3 A + Q5 A).
+    from jobs.publish.feast_classification import guard_invocations
+
+    guarded = guard_invocations(ordered)
+    if len(guarded) != len(ordered):
+        struck = [n for n in ordered if n not in guarded]
+        for name in struck:
+            warnings.append(f"saints_ladder: guard struck non-person invocation: {name}")
+        ordered = guarded
 
     _LAST_WARNINGS = warnings
     return ordered
