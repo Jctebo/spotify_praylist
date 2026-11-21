@@ -1092,7 +1092,11 @@ async function playerDayPayload(env: Env, dateOverride?: string, pub = false) {
     version: settings.version, introTexts, blocks, dayPositions, blockOrder,
     additions: pub ? [] : await dayAdditionsFold(env, presented, profileFold
       ? new Set<string>([...profileCore, ...(profileNovenasOn ? ["Novenas"] : [])])
-      : null),
+      : null, profileFold && profileFold.contents
+      ? Object.entries(profileFold.contents).flatMap(([block, items]) => items
+          .filter((it) => it.kind === "prayer" && typeof it.key === "string")
+          .map((it) => ({ block, slug: it.key as string, lang: "en", afterId: null, kind: "prayer", ref: null })))
+      : []),
     profile: profileFold,
     readingsSeat,
   };
@@ -1139,13 +1143,24 @@ async function dayAdditions(env: Env, date: string): Promise<DayAdditionRow[]> {
 // or its language's audio retired from the map) drops
 // from the fold, never an error.
 interface DayAdditionFoldEntry { block: string; slug: string; lang: string; afterId: string | null; kind: string; ref: string | null; title: string; durationS: number; url?: string; imageUrl?: string | null; listened?: boolean }
-async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | null = null): Promise<DayAdditionFoldEntry[]> {
+async function dayAdditionsFold(env: Env, date: string, standing: Set<string> | null = null, contentsPrayers: DayAdditionRow[] = []): Promise<DayAdditionFoldEntry[]> {
   // v515 §2 (P2): when a profile fold stands, its standing
   // set filters the read rows BEFORE resolution — an
   // addition into a stood-down block drops from the fold;
   // its row is never written here and stands for any later
   // shape that restores the block.
   const rows = (await dayAdditions(env, date)).filter((a) => !standing || standing.has(a.block));
+  // v591 Correction 2 (server parity): a prayer standing
+  // in the effective profile's contents for a block rides
+  // the same fold as a synthetic addition row, resolved
+  // against the book + audio map exactly like a stored
+  // one; a stored addition for the same prayer in the
+  // same block already carries it — no second copy.
+  for (const extra of contentsPrayers) {
+    if (standing && !standing.has(extra.block)) continue;
+    if (rows.some((a) => a.kind !== "reading" && a.block === extra.block && a.slug === extra.slug)) continue;
+    rows.push(extra);
+  }
   if (!rows.length) return [];
   const titles = new Map<string, string>();
   try {
@@ -1283,7 +1298,20 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
         }
       }
     } catch { dayDefaults = {}; }
-    return { profiles, standingKey: st.standing_key, dayRule: st.day_rule === 1, version: st.version, picks, dayDefaults };
+    // v591 Correction 1 (server parity with the client's
+    // mig591): the Sunday rule is just a default — a
+    // standing day_rule with no Sunday entry in the map
+    // seeds the map's Sunday entry to The Benedictine Way,
+    // and the rule retires: the stored flag is zeroed in
+    // the same write and resolution never reads it again.
+    if (st.day_rule === 1) {
+      if (!dayDefaults.sun) dayDefaults = { ...dayDefaults, sun: "benedictine" };
+      try {
+        await env.DB.prepare("UPDATE prayer_profile_state SET day_defaults = ?, day_rule = 0, updated_at = ? WHERE id = 1")
+          .bind(JSON.stringify(dayDefaults), nowISO());
+      } catch { /* the in-memory seed stands for this read */ }
+    }
+    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, picks, dayDefaults };
   } catch { return null; }
 }
 
@@ -1335,30 +1363,37 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
   return { normalized: out };
 }
 
-function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "pick" | "day-default" | "rule" | "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
+// v591 §2.2: the DESIGNED configs — Reset to Default's
+// fixtures, the same shapes the client's seed carries
+// (OPN_SEED_PROFILES), in the server's stored form.
+const DESIGNED_PROFILES_591 = [
+  { key: "little-way", name: "The Little Way", honorLine: "named in honor of the tradition, not the order's own routine", coreBlocks: ["Morning", "Night"], layers: { novenas: { on: 0 }, podcasts: { on: 0, series: [] as string[] } } },
+  { key: "salesian", name: "The Salesian Way", honorLine: "named in honor of the tradition, not the order's own routine", coreBlocks: ["Morning", "Midday", "Evening", "Night"], layers: { novenas: { on: 1 }, podcasts: { on: 1, series: ["bible-in-a-year", "exorcist-files", "daily-gospel-exegesis", "daily-readings"] } } },
+  { key: "benedictine", name: "The Benedictine Way", honorLine: "named in honor of the tradition, not the order's own routine", coreBlocks: ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], layers: { novenas: { on: 1 }, podcasts: { on: 1, series: ["daily-readings"] } } },
+];
+
+function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "pick" | "day-default" | "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
   const dayKind = profileDayKind(date);
   const byKey = (k: string | undefined) => store.profiles.find((p) => p.key === k);
   const pick = byKey(store.picks[date]);
   if (pick) return { profile: pick, resolvedBy: "pick", dayKind };
-  // v590 §2.2 (Amendment 2): the per-day default stands
-  // between the pick and the day rule — a set per-day
-  // default outranks the rule for its weekday.
+  // v591 §2.2: the day's profile (the day map) stands
+  // between the pick and the every-day profile. The v590
+  // day-rule leg is RETIRED (Correction 1): the map's
+  // seeded Sunday entry carries what the rule carried,
+  // and a solemnity follows its weekday's profile.
   const dowKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const parts = date.split("-").map(Number);
   const dow = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])).getUTCDay();
   const dd = byKey(store.dayDefaults ? store.dayDefaults[dowKeys[dow]] : undefined);
   if (dd) return { profile: dd, resolvedBy: "day-default", dayKind };
-  if (store.dayRule && (dayKind === "sunday" || dayKind === "solemnity")) {
-    const benedictine = byKey("benedictine");
-    if (benedictine) return { profile: benedictine, resolvedBy: "rule", dayKind };
-  }
   const standing = byKey(store.standingKey);
   if (standing) return { profile: standing, resolvedBy: "standing", dayKind };
   return { profile: store.profiles[0], resolvedBy: "standing", dayKind };
 }
 
 function profileFoldOf(store: PrayerProfileStore, date: string): {
-  key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "rule" | "standing";
+  key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "standing";
   dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
   layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
   contents: Record<string, { kind: string; key?: string }[]> | null;
@@ -4035,10 +4070,12 @@ export default {
             }
             standingKey = body.standingKey;
           }
-          let dayRule = store.dayRule;
+          // v591 Correction 1: the day rule is retired —
+          // a dayRule field is validated for shape and
+          // never written back on.
+          let dayRule = false;
           if (body.dayRule !== undefined) {
             if (typeof body.dayRule !== "boolean") return err(400, "dayRule must be a boolean");
-            dayRule = body.dayRule;
           }
           const ts = nowISO();
           const stateStmts: D1PreparedStatement[] = [
@@ -4105,11 +4142,9 @@ export default {
           // validateProfileLayers helper (the save route
           // validates through it too); behavior and the named
           // 400s are byte-identical to the v515 inline form.
-          // v590 §2.4: the leak closed server-side too —
-          // writing layers onto a default is copy-on-write
-          // through the rename step; a direct write is
-          // refused and changes nothing.
-          if (profile.kind === "default") return err(400, "rename_required: the named profiles cannot be changed — save as a copy under a name you give");
+          // v591 §2.2: profiles are edited directly, the
+          // ways included — the v590 kind guard is
+          // superseded server-side too.
           const checked = validateProfileLayers(body.layers);
           if ("error" in checked) return err(400, checked.error);
           const normalized = checked.normalized;
@@ -4159,9 +4194,11 @@ export default {
           const coreJson = JSON.stringify(coreBlocks);
           const ts = nowISO();
           if (typeof body.key === "string" && body.key !== "") {
+            // v591 §2.2 SAVE PROFILE: the edits write back
+            // into the profile that was opened — the ways
+            // included (the v590 refusal is superseded).
             const profile = store.profiles.find((p) => p.key === body.key);
             if (!profile) return err(400, `bad profile ${body.key}`);
-            if (profile.kind === "default") return err(400, "the named profiles cannot be changed — save as new");
             const overLayersJson = body.contents === undefined && profile.contents
               ? JSON.stringify({ ...checked.normalized, contents: profile.contents })
               : layersJson;
@@ -4172,14 +4209,11 @@ export default {
             ]);
             return json(await profilesPayload(env, prayerChicagoNow().date));
           }
-          // v590 §2.4 (Amendment 1): every mint is a
-          // rename — a copy based on a standing profile
-          // lands only under a name John gives; the
-          // source's own name (or any default's name) is
-          // refused and nothing is minted.
+          // v591 §2.2 SAVE NEW: mints another profile
+          // under the name given at the save — the only
+          // place a name is asked. The opened profile
+          // stands byte-identical.
           const basedOnProfile = typeof body.basedOn === "string" ? store.profiles.find((p) => p.key === body.basedOn) : undefined;
-          if (basedOnProfile && name === basedOnProfile.name) return err(400, "rename_required: give the copy a new name");
-          if (store.profiles.some((p) => p.kind === "default" && p.name === name)) return err(400, "rename_required: give the copy a new name");
           const mintLayersJson = body.contents === undefined && basedOnProfile && basedOnProfile.contents
             ? JSON.stringify({ ...checked.normalized, contents: basedOnProfile.contents })
             : layersJson;
@@ -4194,6 +4228,28 @@ export default {
           await env.DB.batch([
             env.DB.prepare("INSERT INTO prayer_profiles (key, name, honor_line, kind, core_blocks, layers, sort_order, updated_at) VALUES (?, ?, ?, 'custom', ?, ?, ?, ?)")
               .bind(key, name, honorLine, coreJson, mintLayersJson, sortOrder, ts),
+            profileBumpStmt(env, ts),
+          ]);
+          return json(await profilesPayload(env, prayerChicagoNow().date));
+        }
+        if (seg[2] === "profiles" && seg[3] === "reset" && request.method === "PUT") {
+          // v591 §2.2 RESET TO DEFAULT (server parity): a
+          // named way returns to its DESIGNED config,
+          // discarding edits made to it. His own profiles
+          // carry no designed default behind them.
+          const body = await request.json().catch(() => ({})) as { profileKey?: unknown };
+          const store = await prayerProfileStore(env);
+          if (!store) return err(400, "profiles store unavailable");
+          const profile = typeof body.profileKey === "string"
+            ? store.profiles.find((p) => p.key === body.profileKey)
+            : undefined;
+          if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
+          const des = DESIGNED_PROFILES_591.find((d) => d.key === profile.key);
+          if (profile.kind !== "default" || !des) return err(400, "only the named ways carry a designed default");
+          const ts = nowISO();
+          await env.DB.batch([
+            env.DB.prepare("UPDATE prayer_profiles SET name = ?, honor_line = ?, core_blocks = ?, layers = ?, updated_at = ? WHERE key = ?")
+              .bind(des.name, des.honorLine, JSON.stringify(des.coreBlocks), JSON.stringify(des.layers), ts, profile.key),
             profileBumpStmt(env, ts),
           ]);
           return json(await profilesPayload(env, prayerChicagoNow().date));

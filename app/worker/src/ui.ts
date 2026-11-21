@@ -418,6 +418,19 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .entry.refl { background:#f6ecd3; }
 .refltag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--gold-text); border:1px solid var(--gold); border-radius:6px; padding:1px 6px; margin-bottom:4px; }
 .kindswitch { margin:8px 0 0; }
+/* v591: the Configure plan surface — real switches, the
+   profiles chips in ONE scrollable row, and the stepper
+   pairs that order blocks and contents items alike. */
+.switch591 { flex:0 0 auto; width:52px; height:30px; border-radius:999px; border:1px solid var(--line); background:var(--card); padding:0; cursor:pointer; position:relative; }
+.switch591 .knob591 { position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--muted, #999); transition:left .15s ease, background .15s ease; }
+.switch591.on { background:var(--accent); border-color:var(--accent); }
+.switch591.on .knob591 { left:25px; background:var(--accent-ink, #fff); }
+.profchips591 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 12px; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+.chip591 { flex:0 0 auto; font-family:var(--sans); font-size:14px; padding:7px 14px; min-height:44px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; white-space:nowrap; }
+.chip591.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.stepper591 { flex:0 0 auto; display:inline-flex; gap:2px; margin-right:6px; }
+.stepper591 .btn { min-height:36px; padding:2px 8px; }
+.profcontents591 { margin:0 0 10px 12px; }
 /* v462 §2.4.10: the prayer book's two seats the standing
    rules do not carry — the row/page favorite star and the
    reading page's English | Latin switch (the kind-switch
