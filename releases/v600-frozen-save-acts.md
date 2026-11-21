@@ -1,0 +1,164 @@
+# v600 — Frozen save acts: Edit profiles always, Save today
+
+## §1 Scope
+
+John's direction (Ora thread, 2026-11-21 16:51 CT):
+"Also on edit profiles the save And save mee buttons need
+to be frozen. On today a new frozen button save today
+needs to be there" — and the semantics pick (16:53 CT):
+"Today's edits wait for the Save today button."
+
+Two halves, both decided:
+
+1. EDIT PROFILES — the acts bar stands FROZEN ALWAYS:
+   Save · Save New stand at the top whether the draft is
+   dirty or clean (Save inert/greyed when there is nothing
+   to save). This REVERSES v593's Q3=C (the bar stands
+   only while dirty).
+2. EDIT TODAY — DRAFT-UNTIL-SAVE with a frozen SAVE TODAY
+   button: today's edits hold as a screen draft and write
+   only when Save today is pressed. This REVERSES v594
+   Part 2's Q1=A (edits stand at once) and builds the
+   package's Q1 option B shape, as now picked.
+
+Client only (app/worker/src/client.ts). No server change,
+no migration, no data change: every write rides the
+standing routes (today-edit · day-pick · profiles/save).
+
+## §2 Plan
+
+### 2.1 Edit profiles — the permanent bar
+
+`paintFrozen()` today sets `barEl.hidden = !dirty`. The
+bar (`.profbar593`, inside the permanent `.proffrozen593`
+flex sibling above the `.panelbody` scroller) becomes
+permanent: the `hidden` attribute is never set. Save
+(`data-p593save="profile"`) carries the `disabled`
+attribute while the draft is clean — greyed by the
+standing `.btn` disabled posture; Save New stands live
+always (its clean-state purpose already stands: minting a
+profile from the toggles as they stand). The bar line
+paints always: dirty → "{name} · unsaved changes" (the
+standing words); clean → "No unsaved changes". Because
+the frozen zone's height is now constant, the first edit
+can no longer change the scroller's geometry at all —
+the v593 mitigation (flex sibling) becomes a guarantee,
+and every edit repaint stays anchored as built. Nothing
+else in the editor moves: chips switch the editor only,
+the Q1=B switch prompt, the This profile zone, the jump
+strip + scrollspy + hairline, the Q3=A warning line.
+
+### 2.2 Edit today — the draft state machine (exact)
+
+Standing state S = (P0, L0): P0 is today's effective
+pick; L0 is the standing `todayEdits` entry for today,
+or null. The screen draft D = { pick, td, cleared }:
+
+- OPEN (after the standing vault gate): pick := P0;
+  td := Part 2's `buildTodayDraft()` (profile P0's
+  composition with L0 applied); cleared := false.
+- DRAFT LAYER L(D): if cleared, the empty layer ("follow
+  the profile whole"); else Part 2's `layerFromDraft()`
+  recomputed from td against the draft pick's profile
+  (the diff machinery is unchanged — an aspect the draft
+  holds exactly as the profile stands it is not carried).
+- DIVERGENCES while drafting are computed on the DRAFT:
+  `opnTodayDivergence594(profileOf(pick), L(D))` — the
+  badges, the count line, the removed-item trace lines
+  and the materialize sentence all describe the draft.
+  For a cleared draft the layer reads as `{baseProfileKey}`
+  (no fields) → zero divergences → the line reads "Today
+  stands as X stands it."
+- DIRTY(D) := pick ≠ P0, OR (cleared AND L0 stands), OR
+  (not cleared AND L(D) carries any field). SAVE TODAY is
+  enabled exactly when DIRTY(D).
+- FROZEN BAR: a new frozen sibling above the scroller
+  (the `.proffrozen593` / `.profbar593` dress, reused —
+  no new CSS), standing always once the screen loads. It
+  carries SAVE TODAY (gold, `disabled` while clean) and
+  the draft's standing line: the divergence sentence in
+  the standing words ("Today differs from X in N
+  place(s)." / "Today stands as X stands it."), with
+  " · unsaved changes" appended while DIRTY(D).
+- EDITS (block toggles · steppers · layer toggles ·
+  series · contents add/remove/restore/reorder) mutate
+  td only. NOTHING writes; the payload — and so the
+  Praylist, the ladder head and the plan-row mark — keeps
+  composing from the standing state until the save lands.
+- PICK CHIP TAP (K ≠ draft pick): the clearing rule,
+  applied in-draft exactly as Part 2 applied it at the
+  tap: td := the draft of profile K with NO layer;
+  cleared := false; pick := K. The standing warning
+  ("Changing the pick clears today's edits.") stands in
+  the paint whenever a pick change would clear anything —
+  L0 stands, or the draft carries layer edits — before
+  both the tap and the save, in the standing words.
+- SAVE TODAY (dirty only) writes the whole draft at
+  once through the standing routes:
+  - pick ≠ P0: today-edit {layer: null} first (only when
+    L0 stands), then day-pick {date, profileKey: pick}.
+  - pick = P0: today-edit {date, layer: L(D) carrying
+    fields ? L(D) : null} — a draft equal to the profile
+    whole, and a cleared draft alike, write NO layer
+    (the entry deletes; the clear outcome).
+  After the write, res refreshes from the response, the
+  draft rebuilds from the new standing state (clean),
+  and `profileRebuild()` recomposes the day.
+- CLEAR ACT (label unchanged: "Clear today's edits —
+  follow the profile whole") RESETS THE DRAFT and never
+  writes: pick := P0; td := profile P0's whole draft (no
+  layer applied); cleared := L0 stands. A saved layer is
+  therefore cleared by drafting its removal (this act)
+  and saving. The act stands whenever L0 stands OR the
+  draft differs from the standing state.
+- CLOSE: the labeled Close act and the gate's Close row
+  route through a guard — clean draft closes at once;
+  a differing draft fires the prompt in the standing
+  Q1=B shape (a `.profprompt593` sheet): Save today
+  (writes, then closes) · Discard (closes; the standing
+  state stands byte-identical) · Stay (the prompt
+  closes; drafting continues). The drawer's universal
+  scrim/grab dismissal keeps the app's standing posture
+  — the same posture Edit profiles' unsaved drafts have
+  always had — and stands outside the prompt's reach,
+  named here.
+- The vault gate stands as built: it gates the OPEN;
+  the load and every save write run inside the gated
+  surface's own session, exactly as Part 2's writes did.
+
+### 2.3 What does not change
+
+The fold, the payload, the ladder head and the plan-row
+mark read the STANDING layer only — they are separate
+reads of the standing state, and a screen-local draft
+never reaches them. The server mirror, migration 0045,
+the today-edit / day-pick routes and the layer model
+(§2.1 of the Part 2 doc) stand untouched. With no draft
+saved, every composed day is byte-identical to the
+pre-v600 ship; a saved draft must produce exactly the
+layer Part 2's at-once writes produced for the same
+edits (the harness drives both paths on one fixture and
+compares).
+
+### 2.4 Gates (harness-v600)
+
+Statics (the permanent bar · Save Today bar + draft
+machinery · the retired at-once writes named) · the
+v594p2 A/L equivalence legs carried whole (fold +
+routes untouched) · real-DOM legs in the plain world:
+the profiles bar stands clean and dirty, Save inert
+when clean, the scroller's offset unmoved by the first
+edit · Edit today writes nothing until Save today (the
+payload and the composed day read before and after) ·
+Save today writes pick + layer together (the warning
+painted before) · a profile-whole draft writes no layer ·
+the close prompt (Discard byte-identical · Stay keeps
+drafting · Save today writes and closes) · the clear
+act resets without writing · the ladder head shows no
+mark while a draft stands unsaved · the both-paths
+equivalence (draft-save vs the at-once route writes) ·
+the locked-vault world: gate → unlock → draft → save
+lands. Regression: harness-v594p2 · harness-v598 ·
+harness-v597 if landed — every delta named; the retired
+at-once assertions (v594p2's R3/R4/R8/R9 class) are
+by-design reds under John's reversal, named per leg.
