@@ -17,6 +17,11 @@ the ability to edit both blocks and contents. This supersedes the 2026-11-17
 blocks-only line for this item; the reversal is named in package 82. Run
 level: Through Plan.
 
+Amended at the Plan gate (John, Ora thread, 2026-11-21 12:58 CT): two
+amendments — rename-on-save, and a per-day default profile — folded into
+§2.2, §2.4, §2.5, §2.6, §2.7, §2.8 and stated whole in §2.9. The run
+level stands Through Plan.
+
 ## §2 Plan
 
 ### 2.1 The diagnosis — the defaults stand in the data; in the shape John runs they are unsurfaced, and the day is not shaped by them at all
@@ -116,9 +121,13 @@ stands.
 - The screen's head is the picker, in plain words: **For today** (the three
   defaults + his customs as cards, today's effective one marked, "Use the
   rule" standing when a pick stands), **Standing default** (the same cards,
-  the standing one marked), and the **Day rule** as one switch ("The
-  Benedictine Way on Sundays and solemnities"). A card tap is the pick —
-  the standing write-then-rebuild behavior, unchanged underneath.
+  the standing one marked), the **Day rule** as one switch ("The
+  Benedictine Way on Sundays and solemnities"), and **Default by day**
+  (Amendment 2, §2.9): seven day rows — Monday through Sunday — each
+  naming its per-day default profile or standing unset ("Standing
+  default"), each row opening the same card list to set or clear it. A
+  card tap is the pick — the standing write-then-rebuild behavior,
+  unchanged underneath.
 - A card opens its profile on the same screen: block rows in order, each
   with a real on/off switch; order is edited by drag handle (the v579
   Favorites dress), never by ↑/↓ word buttons and never by append-on-On —
@@ -129,9 +138,16 @@ stands.
   all-or-nothing, per the standing design.
 - Switching profiles rebuilds TODAY in the new profile's shape, same day —
   the standing behavior, restored in the device shape by §2.5.
-- Day-type stays automatic: Sunday/solemnity → The Benedictine Way when
-  the day rule stands; a per-date pick outranks the rule; both read from
-  the same resolution order as today (pick → rule → standing → first).
+- Resolution order for a date (Amendment 2, §2.9, extends today's
+  pick → rule → standing → first): **per-date pick (For today) →
+  per-day default John set for that weekday → day rule → standing
+  default → first**. A per-date pick outranks all. A per-day default
+  outranks the single standing default. The day rule (Sunday/solemnity →
+  The Benedictine Way) stands UNLESS a per-day default John set says
+  otherwise — a set per-day default outranks the rule for that weekday,
+  solemnities included; the rule still governs every weekday carrying no
+  per-day default. This rule-vs-per-day point is flagged for John's eye
+  at the next gate (§2.9).
 
 ### 2.3 The model — contents (the revision John ordered)
 
@@ -205,23 +221,34 @@ it and closes the one leak:
   Both stand.
 - In the Profiles screen, opening a default shows its blocks, layers, and
   contents read-write in place — but the only save act is **Save as my
-  copy**. Saving mints a `kind: 'custom'` record: name required (the
-  field pre-fills "<Name> — my copy" so the naming judgment is made for
-  him, editable), key = the name's slug with the standing -2/-3 collision
-  suffix, honor line starts blank (the honor line belongs to the three
-  named defaults — standing editor posture).
+  copy**, and saving REQUIRES a rename (Amendment 1, §2.9): the save
+  presents the name field and does not complete until John sets the
+  copy's name. A pre-filled suggestion ("<Name> — my copy") may stand in
+  the field, but the rename act is a required part of the save — no save
+  of an edited default lands under a name John did not give. Saving then
+  mints a `kind: 'custom'` record under that name: key = the name's slug
+  with the standing -2/-3 collision suffix, honor line starts blank (the
+  honor line belongs to the three named defaults — standing editor
+  posture).
 - A custom opens with **Save** (over itself), **Save as new**, and
-  **Delete** (arm-then-tap, standing). Customs stand in the same card
-  lists as the defaults, marked as his. Deleting the standing default
-  re-seats the standing key to 'salesian'; deleting a profile clears its
-  day picks — both standing behaviors, kept.
+  **Delete** (arm-then-tap, standing). **Save as new** mints a copy, so
+  the rename rule covers it too: it presents the name field and lands
+  only under a name John gives. Customs stand in the same card lists as
+  the defaults, marked as his. Deleting the standing default re-seats
+  the standing key to 'salesian'; deleting a profile clears its day
+  picks — both standing behaviors, kept.
 - THE LEAK, closed: the card's layer toggles and the podcast picker's
   writes go through the layers route, which gains the kind guard. Writing
-  layers onto a default performs **copy-on-write**: the write mints his
-  copy of that default (auto-named as above, carrying the toggled
-  layers), the copy becomes the effective profile for the act's scope
-  (today's pick if a pick stood, else the standing default), and the day
-  rebuilds — the toggle takes effect, the default stays byte-identical.
+  layers onto a default performs **copy-on-write — routed through the
+  rename step** (Amendment 1, §2.9): the write does NOT mint silently.
+  It presents the rename for the copy that would carry the toggled
+  layers, and only when John confirms the name does the copy mint, become
+  the effective profile for the act's scope (today's pick if a pick
+  stood, else the standing default), and the day rebuild — the toggle
+  takes effect, the default stays byte-identical. **While the rename
+  stands unconfirmed, the pending change does not take effect**: no copy
+  is minted, no layer changes, no rebuild; the toggle reads as it read
+  before the tap, and abandoning the rename abandons the change whole.
   The Plan names this as the one behavior John has not seen drawn; it is
   flagged for his eye at the Ship gate if he lifts the run level.
 
@@ -229,7 +256,10 @@ it and closes the one leak:
 
 The repair the diagnosis names: in the device and web shapes, the
 effective profile is resolved locally (`opnProfilesPayload` already
-computes it) and folded into the day client-side — blocks filtered and
+computes it) under the full precedence of §2.2 — per-date pick →
+per-day default for the date's weekday → day rule → standing default →
+first — reading the per-day map from the store (§2.6), and folded into
+the day client-side — blocks filtered and
 ordered by the profile's coreBlocks, the Novenas block appended when its
 layer stands, the Podcasts block appended when its layer stands, contents
 applied per §2.3, and the Daily Readings seat resolved on-device for any
@@ -245,7 +275,11 @@ record shape — one model, both shapes, no divergence: the server fold
 ### 2.6 Migration — his on-device state
 
 His profiles live in the local document's profiles section
-`{list, standingKey, dayRule, version, picks}` under the v578 vault. The
+`{list, standingKey, dayRule, version, picks}` under the v578 vault.
+Amendment 2 (§2.9) adds one field to that shape: `dayDefaults`, a
+weekday→profile-key map (`mon`…`sun` → a profile key), standing
+alongside standingKey, dayRule, and picks; a weekday absent from the
+map carries no per-day default. The
 migration runs in place at first open under the new build, inside the
 standing section-merge posture; the vault envelope does not change and no
 re-encryption event occurs.
@@ -266,14 +300,20 @@ re-encryption event occurs.
    pristine default. Any default that differs from both — drift he made,
    e.g. through the card toggles — is first preserved whole as a custom
    copy named "<Name> — as found", and the preservation is counted in
-   the migration note the harness asserts. (Against the fixture, his
+   the migration note the harness asserts. This preservation is
+   automatic migration, NOT a user save: it is exempt from Amendment
+   1's rename-on-save rule — John is not asked to name a copy he did
+   not ask to make. (Against the fixture, his
    stored Salesian Way differs from the old seed but EQUALS the designed
    config, so it re-seats with no copy minted and no change to his day.)
 3. **Customs untouched.** Every `kind: 'custom'` record carries over
    byte-identical, gaining only the absent-`contents` reading of §2.3.
 4. **State carries by key.** standingKey, dayRule, and picks carry over
-   unchanged (their keys still stand); profiles version bumps once, so
-   every fold consumer re-reads.
+   unchanged (their keys still stand); `dayDefaults` stands absent or
+   empty in his stored document and carries as absent — an absent map
+   is today's behavior exactly, so the migration changes no resolution
+   and the no-op equivalence leg (§2.7a) still passes byte-identical;
+   profiles version bumps once, so every fold consumer re-reads.
 5. **The server store stands as it is.** The private shape's
    prayer_profiles tables are not migrated by this release; the payload
    contract gains `contents` as an optional field the older store simply
@@ -283,17 +323,25 @@ re-encryption event occurs.
 
 - **client.ts** — corrected `OPN_SEED_PROFILES` (designed configs +
   default contents absent-by-design); the §2.6 migration at document
-  load; `opnProfilesPayload` carries contents in the fold; the §2.5
-  on-device day fold (compose from the local effective profile inside
-  the day-payload path, beside `opnScrubDayPayload`); the Profiles
-  screen (cards, picker sections, opened-profile editor for blocks +
-  layers + contents, drag order in the v579 dress); the sheet and the
-  old editor retire into it (their routes and write contracts stand);
-  layers route kind guard + copy-on-write; save route contents
-  validation; the card's acts repoint to the screen.
+  load; `opnProfilesPayload` carries contents in the fold and resolves
+  the effective profile under the §2.2 precedence (per-date pick →
+  per-day default → day rule → standing → first); the §2.5 on-device
+  day fold (compose from the local effective profile inside the
+  day-payload path, beside `opnScrubDayPayload`); the Profiles screen
+  (cards, picker sections incl. Default by day, opened-profile editor
+  for blocks + layers + contents, drag order in the v579 dress); the
+  sheet and the old editor retire into it (their routes and write
+  contracts stand); layers route kind guard + copy-on-write routed
+  through the rename step (§2.4); the rename-required save (the save
+  route refuses a copy mint — default save-as-copy, Save as new,
+  copy-on-write — without the name John gives at the rename step); save
+  route contents validation; the card's acts repoint to the screen.
 - **index.ts** — `profileFoldOf` and the day composition honor contents
-  identically (server parity); the readings-seat gate becomes the
-  contents check; profiles payload carries contents.
+  identically (server parity); the same precedence resolves the
+  effective profile server-side (the payload contract carries
+  `dayDefaults` as an optional field, absent = no per-day defaults);
+  the readings-seat gate becomes the contents check; profiles payload
+  carries contents.
 - **ui.ts** — the Profiles screen's styles; the Settings row that opens
   it.
 - **Harness (harness-v590)** — fixtures from production only: John's
@@ -307,11 +355,23 @@ re-encryption event occurs.
   reorder → build order follows; a layer item named in core contents →
   refused at save; (d) copy mechanics — editing a default saves only as
   a copy, the default byte-identical after; card layer toggle on a
-  default → copy-on-write, default byte-identical, toggle effective;
+  default → copy-on-write routed through the rename step, default
+  byte-identical, toggle effective only after the rename confirms;
   (e) migration — his exact stored list → pristine defaults seated,
   zero copies minted on the fixture, customs byte-identical,
-  standingKey/picks/dayRule carried; a synthetic drifted default →
-  preserved as "— as found" before re-seating.
+  standingKey/picks/dayRule carried, dayDefaults absent; a synthetic
+  drifted default → preserved as "— as found" before re-seating;
+  (f) rename-required save (Amendment 1) — a save of an edited default
+  with no rename given mints nothing and changes nothing; the save
+  completes only under the name John gives, and the copy stands under
+  that name; a copy-on-write rename left unconfirmed → no copy, no
+  layer change, no rebuild; (g) per-day default resolution
+  (Amendment 2) — with `dayDefaults` set for a weekday, that weekday's
+  day resolves to the per-day profile over the standing default AND
+  over the day rule (a Sunday per-day default stands on a Sunday, and
+  on a solemnity falling on that weekday); a per-date pick for the
+  date still outranks the per-day default; weekdays absent from the
+  map resolve exactly as today.
 
 ### 2.8 Risks, named
 
@@ -328,12 +388,53 @@ re-encryption event occurs.
   defect class. Protection: one record shape, one contents rule, the
   harness's equivalence legs run against both composers.
 - **Copy-on-write surprise.** A card toggle silently minting a profile
-  could confuse the picker list. Protection: the copy is named plainly
-  ("— my copy"), the card's resolution line names the effective profile
-  as today, and the behavior is flagged for John's eye before Ship.
+  could confuse the picker list. Protection (strengthened by Amendment
+  1): nothing mints silently — the write stops at the rename step, the
+  pending change takes no effect until John names the copy, the card's
+  resolution line names the effective profile as today, and the
+  behavior is flagged for John's eye before Ship.
 - **Intentions and played state.** Contents gate standing only; draws
   and the v589 core key off track identity, which contents do not
   rename. No migration of either store stands in this release.
 
-Plan stands complete at Through Plan. John's next word — a run-level
-lift — seats Implement.
+### 2.9 Amendments at the Plan gate (John, 2026-11-21 12:58 CT)
+
+Two amendments, given as the Plan was presented; the in-place text of
+§2.2–§2.8 above already reads as amended — this section is the record
+of what changed.
+
+**Amendment 1 — rename on save.** John, verbatim: "Once you edit it
+and hit save, you have to rename it." Saving an edited default now
+REQUIRES a rename step (§2.4): the save presents the name field and
+does not complete until John sets the copy's name. A pre-filled
+suggestion may stand in the field, but no copy lands under a name John
+did not give. The rule covers every copy mint: Save as my copy, Save
+as new, and copy-on-write — which no longer mints silently: a card
+toggle or picker write onto a default routes through the rename step
+before it takes effect, and while the rename stands unconfirmed the
+pending change does not take effect (no copy, no layer change, no
+rebuild). One exemption, stated plainly: the migration's automatic
+"— as found" preservation (§2.6) is not a user save and carries no
+rename — John is not asked to name a copy he did not ask to make.
+
+**Amendment 2 — per-day default.** John, verbatim: "Also the ability
+to change default profile per day." The Profiles screen gains a
+**Default by day** section (§2.2): each weekday can carry its own
+default profile, set from the same card list, or stand unset. The
+store gains `dayDefaults`, a weekday→profile-key map alongside
+standingKey, dayRule, and picks (§2.6). Resolution for a date, in
+order: **per-date pick (For today) → per-day default John set for that
+weekday → day rule → standing default → first** (§2.2, §2.5). A
+per-date pick outranks all; a per-day default outranks the single
+standing default; and the automatic day rule (Sunday/solemnity → The
+Benedictine Way) stands UNLESS a per-day default John set says
+otherwise — a set per-day default governs its weekday even on a
+solemnity. **FLAGGED for John's eye at the next gate:** that last
+point — a per-day default he sets overrides the solemnity rule for
+that weekday, every week, until he clears it. Migration: an absent
+map is today's behavior exactly, and the no-op equivalence leg still
+gates byte-identical (§2.6, §2.7a). New harness legs (§2.7f, §2.7g):
+rename-required save, and per-day default resolution.
+
+Plan stands complete at Through Plan, as amended. John's next word — a
+run-level lift — seats Implement.
