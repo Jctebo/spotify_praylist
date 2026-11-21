@@ -58,7 +58,13 @@ Registry row 1516 · Intake: Goals Board task 1080 · Status: IN CHAIN — appro
 
 ## 4 · Review
 
-_(not yet written)_
+- **Seating:** Review record 2264 · contract 677 · holder v562-chain.
+- **Clean-checkout harness (the ship gate):** fresh clone of the branch at the exact HEAD to ship, `cc21811`, worktree clean — **harness-v562: 26 ok / 0 not-ok**. (The build-tree run at Implement read the same 26/0; the committed tree carries both, per the standing rule that a green run on a dirty worktree proves nothing.)
+- **Restore-set verification:** every one of the 97 uploads (36 restores + 61 renders) was verified byte-identical in the bucket by wrangler GET sha256 read-back (uploads.json); the bucket end-state union is 108 keys under prayer-audio/. The REST objects-list staleness recorded in §3 stands noted: the list endpoint is not the serving path; the Worker reads the bucket by binding, the same storage wrangler verified.
+- **Production read-back (pre-deploy):** the app agent door's book read shows the standing fold intact (our-father: audio {en 21.2, la 26.7}) and the uncovered prayers still foldless (memorare: no audio field) — the fold lands with this deploy, as scoped.
+- **Serve-route limitation, stated plainly:** the user audio route refuses agent credentials (403, by design), so no live-route audio fetch is available to the chain at Review. The serving proof at Ship is the post-deploy book read-back (all 77 rows carrying audio folds with the new durations) plus John's field playback legs; the storage leg is already proven byte-level.
+- **QA re-check at Review:** the ledger stands at 97/97 pass with the method disclosures of §3 (Latin medium-charSim judgment; the three judgment cases; the three genuine derailments fixed by re-render, incl. the Q7 C restore case). No threshold was moved silently anywhere in the chain: every deviation from the Plan's literal check text is written in §3 with its calibration evidence.
+- **Verdict: PASS** — the release is clear to ship at the approved run level (TO SHIP).
 
 ## 5 · Ship
 
