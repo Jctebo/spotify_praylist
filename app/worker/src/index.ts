@@ -1347,10 +1347,13 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
 // v590 §2.3: the contents validation (the client layer's
 // opnCheckContents590 rule, server parity): per block the
 // ordered selector list; core blocks take source/prayer/
-// seat/course selectors, the Novenas block takes novena /
+// seat selectors, the Novenas block takes novena /
 // all-novenas only; layers stand after core for contents
 // as for blocks. Absent contents = standing contents.
-const PROFILE_COURSE_KEYS = ["catechism-in-a-year", "bible-in-a-year", "rosary-in-a-year", "summa-in-a-year"];
+// v597: course selectors are OUT of the contents system
+// (PROFILE_COURSE_KEYS retires) — a course-kind item drops
+// at validation, exactly the client's drop, so a stored
+// list carrying one reads back courseless.
 function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string }[]> } | { error: string } {
   if (contents === undefined || contents === null) return { normalized: undefined };
   if (typeof contents !== "object" || Array.isArray(contents)) return { error: "contents must be an object" };
@@ -1369,10 +1372,12 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         if (kind === "all-novenas") { if (!seen.has("all-novenas")) { seen.add("all-novenas"); list.push({ kind: "all-novenas" }); } continue; }
         if (kind !== "novena" || typeof key !== "string" || !key) return { error: "bad novena selector in contents" };
       } else {
-        if (typeof kind !== "string" || !["source", "prayer", "seat", "course"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
+        // v597: a course item drops at validation (never
+        // an error, never stored) — the client's drop.
+        if (kind === "course") continue;
+        if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
         if (typeof key !== "string" || !key) return { error: "contents item needs a key" };
         if (kind === "seat" && key !== "daily-readings") return { error: `bad seat ${key}` };
-        if (kind === "course" && !PROFILE_COURSE_KEYS.includes(key)) return { error: `bad course ${key}` };
       }
       const id = `${kind}:${key}`;
       if (seen.has(id)) continue;

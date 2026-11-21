@@ -2441,7 +2441,9 @@ var opnSolemnity = {};    // date -> true, learned from the day payload
 /* ---- v590: profiles — designed defaults, migration,
    per-day resolution, contents ---- */
 var OPN_DOW_KEYS_590 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-var OPN_COURSE_KEYS_590 = ['catechism-in-a-year', 'bible-in-a-year', 'rosary-in-a-year', 'summa-in-a-year'];
+// v597: OPN_COURSE_KEYS_590 retires with the course selectors — the
+// contents system no longer names course keys at all (any course-kind
+// item drops at validation, whatever its key).
 var OPN_OLD_SEED_590 = {
   'little-way': { coreBlocks: ['Morning', 'Night'], layers: { novenas: { on: false }, podcasts: { on: false, series: [] } } },
   'salesian': { coreBlocks: ['Morning', 'Midday', 'Evening', 'Night'], layers: { novenas: { on: true }, podcasts: { on: false, series: [] } } },
@@ -2523,10 +2525,11 @@ function opnResolveProfile590(P, date) {
 }
 function opnCheckContents590(contents, coreBlocks) {
   // v590 §2.3: contents validation — per block, the ordered
-  // selector list. Core blocks take source/prayer/seat/
-  // course selectors; the Novenas block takes novena /
+  // selector list. Core blocks take source/prayer/seat
+  // selectors; the Novenas block takes novena /
   // all-novenas only (layers stand after core, for contents
   // as for blocks). Absent contents = standing contents.
+  // v597: course selectors are out (see the drop below).
   if (contents === undefined || contents === null) return undefined;
   if (typeof contents !== 'object' || Array.isArray(contents)) throw opnErr(400, 'contents must be an object');
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
@@ -2544,10 +2547,14 @@ function opnCheckContents590(contents, coreBlocks) {
         if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
         if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
       } else {
-        if (['source', 'prayer', 'seat', 'course'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
+        // v597: course selectors are OUT of the contents
+        // system — a course item drops at validation (never
+        // an error, never stored), so a legacy list carrying
+        // one normalizes courseless at its next write.
+        if (kind === 'course') return;
+        if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
         if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
         if (kind === 'seat' && key !== 'daily-readings') throw opnErr(400, 'bad seat ' + key);
-        if (kind === 'course' && OPN_COURSE_KEYS_590.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
       }
       var id = kind + ':' + key;
       if (seen[id]) return;
@@ -2559,7 +2566,17 @@ function opnCheckContents590(contents, coreBlocks) {
   return out;
 }
 function opnContentsOf590(p) {
-  return p && p.contents && typeof p.contents === 'object' ? opnClone(p.contents) : null;
+  // v597: the read seam the payload, both editors, and
+  // the fold all consume — course items are filtered out
+  // of the clone, so no stored list can paint or resolve
+  // a course selector before its next validated write.
+  if (!p || !p.contents || typeof p.contents !== 'object') return null;
+  var out = {};
+  Object.keys(p.contents).forEach(function (b) {
+    var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
+    out[b] = items.filter(function (it) { return !it || it.kind !== 'course'; }).map(function (it) { return opnClone(it); });
+  });
+  return out;
 }
 function opnProfilesPayload(date) {
   var P = opnDoc().sections.profiles;
@@ -2622,13 +2639,45 @@ function opnTodayItemId594(it) { return it.kind + ':' + (it.key || ''); }
 function opnTodayUniverse594(block) {
   return profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
 }
-function opnTodayComposedContents594(rec, block) {
-  // The list a block composes from the profile alone: its
-  // own contents entry when one stands, else the standing
-  // universe (every item on, in universe order) — the
-  // editor's own reading of a block with no entry.
+function opnSeatPosture597(layers) {
+  // v597: the readings seat composes only under this
+  // posture — the Podcasts layer on AND carrying
+  // daily-readings (resolveReadingsSeat590's own
+  // absent-contents rule). Layers arrive in the stored
+  // shape ({podcasts:{on,series}}) or the payload shape
+  // ([{key,on,series}]); both read here.
+  var podOn = false, podSeries = [];
+  if (Array.isArray(layers)) {
+    layers.forEach(function (l) { if (l && l.key === 'podcasts') { podOn = !!l.on; podSeries = l.series || []; } });
+  } else if (layers && layers.podcasts) {
+    podOn = !!layers.podcasts.on; podSeries = layers.podcasts.series || [];
+  }
+  return podOn && podSeries.indexOf('daily-readings') >= 0;
+}
+function opnStandingContents597(rec, block) {
+  // v597: THE standing-contents function — the one list
+  // a block composes under a profile, read by the editor
+  // paint (opnTodayComposedContents594, the profiles
+  // editor's materialize) and standing behind every fold
+  // resolver's absent-contents branch: the profile's own
+  // contents entry when one stands, else the block's
+  // standing list — the contents universe (courseless
+  // since v597) with the readings seat admitted only
+  // under opnSeatPosture597. No painter or resolver keeps
+  // a private absent-contents branch of its own, so
+  // selected == showing by construction.
   if (rec && rec.contents && rec.contents[block]) return opnClone(rec.contents[block]);
-  return opnTodayUniverse594(block);
+  var items = opnTodayUniverse594(block);
+  if (block === 'Morning' && !opnSeatPosture597(rec && rec.layers)) {
+    items = items.filter(function (it) { return !(it.kind === 'seat' && it.key === 'daily-readings'); });
+  }
+  return items;
+}
+function opnTodayComposedContents594(rec, block) {
+  // The list a block composes from the profile alone —
+  // v597: the editor's composed reading IS the standing
+  // function (one truth for paint and fold).
+  return opnStandingContents597(rec, block);
 }
 function opnTodayDivergence594(rec, layer) {
   // The one divergence definition (doc §2.1). Descriptors:
@@ -17412,45 +17461,10 @@ function podGroupFacts() {
   return { series: n, episodes: eps };
 }
 
-function resolveProfileCourses590(day) {
-  // v590 §2.3 (Amendment 3): each course selector in the
-  // effective profile's contents resolves to the course's
-  // next episode BY THE USER'S OWN PROGRESS — the standing
-  // Current pointer over the core-folded payload (the same
-  // listened set the Courses card counts). A finished or
-  // unavailable course resolves nothing: its slot stands
-  // empty. The descriptor stands in state.courseRes590 for
-  // extRebuildDescs to place in the block.
-  state.courseRes590 = {};
-  var eff = day && day.profile;
-  if (!eff || !eff.contents) return;
-  var jobs = [];
-  Object.keys(eff.contents).forEach(function (block) {
-    (eff.contents[block] || []).forEach(function (it) {
-      if (it.kind === 'course') jobs.push({ block: block, key: it.key });
-    });
-  });
-  jobs.forEach(function (job) {
-    api('/api/player/podcasts?series=' + encodeURIComponent(job.key)).then(function (payload) {
-      if (state.dayPayload !== day) return;
-      if (!payload || !Array.isArray(payload.entries)) return;
-      var curKey = payload.currentKey || opnPodCurrentKey(payload.entries);
-      if (!curKey) return;
-      var e = null;
-      payload.entries.forEach(function (x) { if (x.key === curKey) e = x; });
-      if (!e) return;
-      state.courseRes590[job.block + ':' + job.key] = {
-        episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: job.key,
-        title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || null, enclosureUrl: null,
-        available: !!e.url, block: job.block, source: '', durationS: e.durationS || 0, listened: !!e.listened,
-        podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
-        imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null, course590: true
-      };
-      extRebuildDescs(day);
-      if (state.dayPayload) paintPrayersView(state.dayPayload);
-    }).catch(function () {});
-  });
-}
+// v597: resolveProfileCourses590 RETIRES — course selectors are out of the
+// contents system (validators drop them, the read seam filters them, the
+// universe offers none), so no contents course can resolve. Courses stand
+// as Podcasts-layer series and on the Catechesis Courses side, untouched.
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -17596,18 +17610,6 @@ function extRebuildDescs(day) {
         if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
       }
     });
-    // v590 §2.3 (Amendment 3): the block's course selectors
-    // stand as tracks — each resolved by resolveProfile-
-    // Courses590 to the course's next episode by the user's
-    // own progress; an unresolved (finished/unavailable)
-    // course leaves its slot empty and nothing else moves.
-    if (c590 && state.courseRes590) {
-      c590.forEach(function (it) {
-        if (it.kind !== 'course') return;
-        var cd = state.courseRes590[b.block + ':' + it.key];
-        if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
-      });
-    }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   descs = foldDayAdditions(descs, date, day.readingsSeat); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold
@@ -18838,9 +18840,9 @@ function buildDayFromPayload(day, snap) {
     // externals dispatch — its descriptors join the day
     // through extRebuildDescs as each series settles.
     resolveProfilePodcasts(day);
-    // v590 §2.3/§2.5: the contents course selectors and
-    // the on-device readings seat resolve beside it.
-    resolveProfileCourses590(day);
+    // v590 §2.5: the on-device readings seat resolves
+    // beside it. (v597: contents course selectors retire —
+    // nothing resolves beside it for them anymore.)
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -19794,14 +19796,17 @@ function openRenameCopySheet590(suggested, onConfirm) {
     onConfirm(name);
   });
 }
-var profCourseLabels591 = {};
 function profContentsUniverse590(block) {
   var items = [];
   if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'Every active novena' }); return items; }
   (state.ownStanding || []).forEach(function (r) { if (r.block === block) items.push({ kind: 'source', key: r.sourceKey, label: r.title || r.sourceKey }); });
   (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.source || sl.slotId }); });
   if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'The day\u2019s readings' });
-  OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: profCourseLabels591[k] || ('Course — ' + k) }); });
+  // v597: NO course selectors stand in the universe —
+  // courses are series (Catechesis · the Podcasts layer),
+  // never per-block contents. The universe is the editor
+  // paint's off-list source and both Add pickers' source,
+  // so paint and picker close together here.
   return items;
 }
 function profVaultGate594(bodyEl, proceed, onClose) {
@@ -20287,6 +20292,9 @@ function openEditTodayScreen594(fromLadder) {
       profContentsUniverse590(block).forEach(function (it) {
         var id = it.kind + ':' + (it.key || '');
         if (list.map(opnTodayItemId594).indexOf(id) >= 0) return;
+        // v597: the seat is offered only under the posture
+        // that can compose it (opnSeatPosture597).
+        if (it.kind === 'seat' && !opnSeatPosture597(td && td.layers)) return;
         any = true;
         html += '<div class="card bookrow" data-p594tadditem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
       });
@@ -20325,11 +20333,6 @@ function openEditTodayScreen594(fromLadder) {
   function loadSeries() {
     api('/api/player/podcasts').then(function (r) {
       seriesList = (r && r.seriesList) || [];
-      seriesList.forEach(function (s) {
-        if (OPN_COURSE_KEYS_590.indexOf(s.series) >= 0) {
-          profCourseLabels591[s.series] = (s.title || s.series) + (s.currentLabel ? ' · Next: ' + s.currentLabel : (s.currentKey ? ' · Next: ' + s.currentKey : ''));
-        }
-      });
       paint();
     }).catch(function () { seriesList = []; });
   }
@@ -20458,7 +20461,10 @@ function openProfilesScreen(openKey, opts) {
   }
   function materialize(d, block) {
     if (d.contents[block]) return d.contents[block];
-    var mat = profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
+    // v597: a first touch materializes the STANDING list
+    // (opnStandingContents597) — exactly what the block
+    // composes — never the raw universe.
+    var mat = opnStandingContents597({ contents: d.contents, layers: d.layers }, block);
     d.contents[block] = mat;
     return mat;
   }
@@ -20495,7 +20501,14 @@ function openProfilesScreen(openKey, opts) {
         if (!mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; })) disp.push({ kind: it.kind, key: it.key || '', label: it.label, on: false });
       });
     } else {
-      uni.forEach(function (it) { disp.push({ kind: it.kind, key: it.key || '', label: it.label, on: true }); });
+      // v597: an unmaterialized block paints the STANDING
+      // list (opnStandingContents597) — the items the fold
+      // will compose, each on — never the raw universe.
+      opnStandingContents597({ contents: d.contents, layers: d.layers }, block).forEach(function (m) {
+        var u = null;
+        uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (u ? u.label : (m.key || m.kind)), on: true });
+      });
     }
     disp.forEach(function (r) {
       var id = r.kind + ':' + r.key;
@@ -20756,6 +20769,9 @@ function openProfilesScreen(openKey, opts) {
       var any = false;
       profContentsUniverse590(block).forEach(function (it) {
         if (itemOn(d, block, it)) return;
+        // v597: the seat is offered only under the posture
+        // that can compose it (opnSeatPosture597).
+        if (it.kind === 'seat' && !opnSeatPosture597(d.layers)) return;
         any = true;
         html += '<div class="card bookrow" data-p591additem="' + esc(it.kind + ':' + (it.key || '')) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
       });
@@ -20794,11 +20810,6 @@ function openProfilesScreen(openKey, opts) {
   function loadSeries() {
     api('/api/player/podcasts').then(function (r) {
       seriesList = (r && r.seriesList) || [];
-      seriesList.forEach(function (s) {
-        if (OPN_COURSE_KEYS_590.indexOf(s.series) >= 0) {
-          profCourseLabels591[s.series] = (s.title || s.series) + (s.currentLabel ? ' · Next: ' + s.currentLabel : (s.currentKey ? ' · Next: ' + s.currentKey : ''));
-        }
-      });
       paint();
     }).catch(function () { seriesList = []; });
   }
