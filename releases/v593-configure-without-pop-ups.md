@@ -163,3 +163,36 @@ equivalence, save/reset/contents/courses) still passes.
 harness-v592 **10 ok / 2 not ok** (base 12/0) — T3 (the Day
 mapping button in the head) and T4 (the mapping pop-up):
 both retired by Q5=A; its equivalence + day-map legs pass.
+
+## §4 Review
+
+The diff read whole (client.ts +537/−221 net across the
+function span, ui.ts +30, harness new, this doc). The
+retained-machinery proof ran as a byte comparison against
+main: the draft/contents/block painter segment differs from
+the shipped v592 original ONLY by the five anchor attributes
+and the seven `repaint(btn)` hand-offs; the Add-picker /
+loader segment is byte-identical. The rendered client parses
+whole (harness T13) and the equivalence gate holds on the
+working tree and in a clean checkout of the committed HEAD
+(4dc870d): harness-v593 20/0 in both, regressions identical
+to §3's named deltas.
+
+**Verdict: PASS.** Named limits, none rounded:
+
+- The screen's live DOM behaviors (the prompt's three acts,
+  scrollspy lighting, anchored repaints, the bar's
+  appearance) are proven at source-static level plus the
+  data layer (F1–F3) — the repo's standing harness pattern
+  (v591/v592 the same); no DOM-simulation harness exists.
+  The field legs below carry the live checks.
+- Dismiss gestures (grab-drag, scrim tap) close the editor
+  to the calling surface without the ladder return; the
+  labeled Close is the ladder path, as specced.
+- Delete stands on the editor for the first time (in
+  v591/v592 it lived only in the pop-up) — same endpoint,
+  same two-tap arm; named so the surface change is on
+  record.
+- The switch prompt is a sheet (the app's standing
+  ask-surface) carrying the three acts; Q1=B's "you are
+  asked" is met by it.
