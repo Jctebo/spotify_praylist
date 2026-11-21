@@ -147,4 +147,41 @@ vault gate, divergence badges, the 0045 migration.
 
 ## §5 Ship
 
-(Ship record appended at deploy.)
+SHIPPED LIVE 2026-11-21 23:30Z (17:30 CT).
+
+- Worker **1815cb47-1222-460a-a8c9-fe775aaeba1f** ·
+  rollback target 6a44cfa5 (v597) · pin
+  **ora-pro-nobis-v601-1**.
+- Deploy sequence, for the record: cf306d08 (v595)
+  deployed 21:50:56Z · 8b3316b6 (v594 Part 2) 22:10:40Z ·
+  c408bfad (v598) 22:46:37Z · **v601 rollback deployment
+  134d042f, 22:59:38Z, cf306d08 at 100%** (stood ~10
+  minutes; the served client verified as the v595
+  client, under which the stored layer is ignored) ·
+  6a44cfa5 (v597 ship) covered it · 1815cb47 (this fix)
+  deployed from main 97179b7.
+- GitHub main **97179b7** — main pushed · remote in
+  sync (Git Data API replication, read-back OK).
+- Served proofs: the served sw.js carries the v601-1
+  pin; the served app.js parses whole (1,191,801 B) and
+  carries opnEnsureStandings601, the fold guard, and
+  the Part 2 surfaces (the ladder, Edit today behind
+  profVaultGate594). SERVED-LEG DRIVE: the served
+  client, over production fixtures with the poisoned
+  layer standing, composes clean == poisoned —
+  Morning 5 · Midday 2 · Evening 3 · Night 2 ·
+  Novenas 1 (Morning 5 matches the field screenshot
+  from the working state at 15:39 CT).
+- Gates at ship: harness-v601 **8/0** on the working
+  tree, the rebased tree, and the merged tree;
+  regression deltas vs base all named in §4 (zero
+  behavioral deltas).
+- What's New **415** · row 1575 **Live** ·
+  shipped_records **789** (inserted and read back) ·
+  intake 1118 Done.
+- Field leg (John's): the Praylist carries its tracks
+  again. If today still reads empty on a device that
+  holds the damaged layer in a form the guard does not
+  recognize, one "Clear today's edits" in Edit today
+  restores it whole; the layer also expires at
+  midnight.
