@@ -19623,6 +19623,30 @@ function profContentsUniverse590(block) {
   OPN_COURSE_KEYS_590.forEach(function (k) { items.push({ kind: 'course', key: k, label: profCourseLabels591[k] || ('Course — ' + k) }); });
   return items;
 }
+function profVaultGate594(bodyEl, proceed, onClose) {
+  // v594: the Configure surfaces (Profile edit · Day mapping)
+  // read and write the on-device document. While the device
+  // vault stands locked, the local layer serves the ephemeral
+  // default document on reads and refuses every write
+  // (423 vault_locked) — v593's chip tap died on exactly that
+  // refusal: the day-pick never landed and the only trace was
+  // the raw 'vault_locked' string on a note line at the
+  // scroll's bottom, so the tap read as dead. The gate: stand
+  // the standing unlock card (v587) in the surface's body and
+  // proceed only once unlocked, when the real document
+  // stands in the cache. Returns true when the gate stood —
+  // the caller must not load yet. Inert outside the device
+  // shape and whenever the vault stands open.
+  if (typeof opnMode !== 'function' || opnMode() !== 'device') return false;
+  if (typeof opnVaultLocked !== 'function' || !opnVaultLocked()) return false;
+  if (!bodyEl) return false;
+  bodyEl.innerHTML = opnUnlockCardHtml()
+    + '<div class="row"><button class="btn ghost" data-p594gateclose="1">Close</button></div>';
+  opnBindUnlockCard(proceed);
+  var gc = bodyEl.querySelector('[data-p594gateclose]');
+  if (gc) gc.addEventListener('click', function () { if (onClose) onClose(); });
+  return true;
+}
 function openConfigureLadder593() {
   // v593 §2 (Q5=A, John's pick): Configure opens a LADDER —
   // a two-option fork: PROFILE EDIT · DAY MAPPING — each
@@ -19726,7 +19750,12 @@ function openDayMappingScreen593(fromLadder) {
     }
   }
   function closeScreen() { sheet.remove(); if (fromLadder) openConfigureLadder593(); }
-  api('/api/prayer/profiles').then(function (r) { res = r; paint(); }).catch(function () { if (body) body.innerHTML = '<p class="sub">Day mapping did not load.</p>'; });
+  function loadMap() {
+    api('/api/prayer/profiles').then(function (r) { res = r; paint(); }).catch(function () { if (body) body.innerHTML = '<p class="sub">Day mapping did not load.</p>'; });
+  }
+  // v594: a locked device vault gates the surface (its
+  // writes refuse the same way the editor's did).
+  if (!profVaultGate594(body, loadMap, closeScreen)) loadMap();
 }
 function openProfilesScreen(openKey, opts) {
   // v593 §2: the Configure plan screen IS the only profile
@@ -20235,9 +20264,15 @@ function openProfilesScreen(openKey, opts) {
     var closeBtn = body.querySelector('[data-p593close]');
     if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); if (fromLadder) openConfigureLadder593(); });
   }
-  load(false);
-  loadSeries();
-  loadBook(function () { paint(); });
+  function startLoad() {
+    load(false);
+    loadSeries();
+    loadBook(function () { paint(); });
+  }
+  // v594: a locked device vault gates the editor — the
+  // unlock card stands in the body and the load proceeds
+  // only once the real document stands unlocked.
+  if (!profVaultGate594(body, startLoad, function () { sheet.remove(); if (fromLadder) openConfigureLadder593(); })) startLoad();
 }
 
 function openProfileSheet() {
