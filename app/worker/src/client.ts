@@ -2673,6 +2673,33 @@ function opnStandingContents597(rec, block) {
   }
   return items;
 }
+function opnEnsureStandings601() {
+  // v601: the contents universe (profContentsUniverse590,
+  // hence opnStandingContents597's absent-contents
+  // branch) reads state.ownStanding / state.extStanding,
+  // which exist only after a Pray day build
+  // (buildWithSettings inside resolveExternals). A
+  // Configure surface opened cold — before any Pray
+  // visit — paints and materializes from an empty
+  // universe, and a today-layer snapshot taken then
+  // gates the day empty at the fold. Build the
+  // standings through the standing entry points, once,
+  // and wait for them (bounded; on failure the surface
+  // proceeds with what stands).
+  if (state.ownStanding !== undefined) return Promise.resolve();
+  var start = Date.now();
+  return api('/api/player/day?date=' + encodeURIComponent(todayChicago()))
+    .then(function (day) { return resolveExternals(opnScrubDayPayload(day)); })
+    .catch(function () { return null; })
+    .then(function () {
+      return new Promise(function (done) {
+        (function poll() {
+          if (state.ownStanding !== undefined || Date.now() - start > 2500) { done(); return; }
+          setTimeout(poll, 50);
+        })();
+      });
+    });
+}
 function opnTodayComposedContents594(rec, block) {
   // The list a block composes from the profile alone —
   // v597: the editor's composed reading IS the standing
@@ -2725,7 +2752,43 @@ function opnApplyTodayLayer594(eff, layer) {
   }
   if (layer.contents) {
     var merged = out.contents ? opnClone(out.contents) : {};
-    Object.keys(layer.contents).forEach(function (b) { merged[b] = opnClone(layer.contents[b]); });
+    Object.keys(layer.contents).forEach(function (b) {
+      var entry = opnClone(layer.contents[b]);
+      // v601 guard: a today-layer contents entry is a
+      // machine-materialized snapshot (Edit today copies
+      // the composed list on first touch). A snapshot
+      // naming NO source selector was materialized from
+      // an incompletely built contents universe (the
+      // standings exist only after a Pray day build) —
+      // applied verbatim it gates every source row out
+      // of the block and the day composes empty. Restore
+      // the block's standing source selectors ahead of
+      // the entry's own items; an entry naming at least
+      // one source applies verbatim (deliberate gating
+      // stands). Scoped to the today layer: profile
+      // contents keep the v591 semantics.
+      var namesSource = Array.isArray(entry) && entry.some(function (it) { return it && it.kind === 'source'; });
+      // An entry carrying a prayer was hand-shaped
+      // through the Add picker and stands as the block's
+      // deliberate truth (Part 2 §2 semantics) — the
+      // restore below covers only the snapshot shapes
+      // (empty · seat-only) a cold materialization makes.
+      var namesPrayer = Array.isArray(entry) && entry.some(function (it) { return it && it.kind === 'prayer'; });
+      if (Array.isArray(entry) && !namesSource && !namesPrayer) {
+        // The standing items a sourceless snapshot
+        // loses: the block's source selectors. (The
+        // Novenas block's entry names all-novenas
+        // instead — its row is stood by the gate's
+        // all-novenas keying, repaired in extRebuildDescs
+        // in this same release.)
+        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source'; });
+        var seen = {};
+        entry.forEach(function (it) { seen[opnTodayItemId594(it)] = 1; });
+        var restored = standing.filter(function (it) { return !seen[opnTodayItemId594(it)]; });
+        entry = restored.concat(entry);
+      }
+      merged[b] = entry;
+    });
     out.contents = merged;
   }
   return out;
@@ -17584,7 +17647,12 @@ function extRebuildDescs(day) {
     };
     if (c590) {
       merged = merged.filter(function (e) {
-        if (e.own) return selIdx590('source', e.own.sourceKey) >= 0;
+        if (e.own) return selIdx590('source', e.own.sourceKey) >= 0
+          // v601: the contents system names the Novenas
+          // block's own row with the all-novenas item,
+          // never a source selector — an entry carrying
+          // all-novenas stands the novenas row.
+          || (e.own.sourceKey === 'novenas' && c590.some(function (it) { return it.kind === 'all-novenas'; }));
         return selIdx590('source', e.ext.slotId) >= 0 || selIdx590('source', e.ext.sourceKey) >= 0;
       });
       merged.sort(function (a, c) {
@@ -20344,9 +20412,15 @@ function openEditTodayScreen594(fromLadder) {
     }).catch(function () { if (body) body.innerHTML = '<p class="sub">Today did not load.</p>'; });
   }
   function startLoad() {
-    load();
-    loadSeries();
-    loadBookT(function () { paint(); });
+    // v601: standings stand before the first paint — the
+    // composed lists this screen paints and materializes
+    // read the day-build standings (see
+    // opnEnsureStandings601).
+    opnEnsureStandings601().then(function () {
+      load();
+      loadSeries();
+      loadBookT(function () { paint(); });
+    });
   }
   // Part 1's discipline, on the new surface: a locked
   // device vault gates Edit today — the unlock card stands
@@ -20868,9 +20942,14 @@ function openProfilesScreen(openKey, opts) {
     if (closeBtn) closeBtn.addEventListener('click', function () { sheet.remove(); if (fromLadder) openConfigureLadder593(); });
   }
   function startLoad() {
-    load(false);
-    loadSeries();
-    loadBook(function () { paint(); });
+    // v601: standings stand before the first paint (the
+    // editor's composed lists read the same standings —
+    // see opnEnsureStandings601).
+    opnEnsureStandings601().then(function () {
+      load(false);
+      loadSeries();
+      loadBook(function () { paint(); });
+    });
   }
   // v594: a locked device vault gates the editor — the
   // unlock card stands in the body and the load proceeds
