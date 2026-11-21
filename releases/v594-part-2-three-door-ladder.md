@@ -320,3 +320,59 @@ head, Edit today open + at-once write + divergence line + badge,
 pick-clears-layer with the warning standing, the decoupled editor
 chip, and the locked-vault world: gate → pad unlock → write lands
 → clear act).
+
+## 4. Review
+
+Review ran on a clean checkout of the committed tree (861366e),
+with the base tree (main 7626e6a) run alongside for delta
+attribution:
+
+- **harness-v594p2 on the clean checkout: 34 ok / 0 not ok.**
+  Equivalence A1/A2 green — with no layer anywhere, composition
+  is byte-identical to the pre-Part-2 ship.
+- **Byte-exactness:** through a full Part 2 write flow (layer
+  write · pick change · layer clear) over John's production
+  document, the intentions, conscience, config (the prayer seats)
+  and favorites sections and every profile record stand
+  byte-identical to the fixture; the only change is the pick the
+  flow itself wrote.
+- **Whole-tree marker grep** (the Part 1 lesson): no conflict
+  markers in the worker sources or this doc.
+- **Regression, base → branch, every delta named:**
+  - harness-v593: base 19 ok / 1 not ok → branch 18 ok / 2 not
+    ok. The base red (T2, one-configure-act statics) is
+    PRE-EXISTING on main — it went red with the v595 merge,
+    before Part 2. Part 2's only delta is **T11** ("0044 still
+    newest") — migration 0045 is Part 2's own server-parity
+    migration, by design. Note on T3/T4: they pass as statics
+    because the strings they assert now stand in Edit today
+    (the harness's slice spans both screens); the chip coupling
+    they named is retired — the behavioral proof is
+    harness-v594p2 R5 (the editor chip fires no pick) and R4/R8
+    (Edit today's chip is the pick, in both worlds).
+  - harness-v594: base 9 ok / 0 not ok → branch 7 ok / 2 not ok.
+    **R3 and R6** assert the v593 chip coupling in the editor
+    (a chip tap stands the pick, read through the retired
+    "Today follows" head) — retired by John's Part 2 picks,
+    by design. The gate legs (R1/R2/R5/R7) stand green: the
+    editor still gates under a locked vault. The replacement
+    path is proven in the locked world by harness-v594p2 R7/R8.
+  - harness-v595: base 18 ok / 0 not ok → branch 17 ok / 1 not
+    ok. The only delta is **T5** ("0044 still newest") —
+    migration 0045, by design. The merged plan row, its exact
+    standing line, and the ladder entry all stand green.
+- **Named limits:** (1) the server fold's divergence mark
+  (`todayLayerDiverges594`) reads a contents list carried
+  against no profile entry as divergent — the composed list is
+  the standing universe, which the server cannot enumerate; a
+  carried list diverged at write time by construction (the
+  client that authors it diffs exactly). (2) Edit today's
+  Podcasts series divergences badge in place rather than
+  standing in a removed-item trace — series are layer state,
+  and the findings' trace rule names contents items. (3) The
+  ladder head paints from the profiles read; under a locked
+  vault that read rides the ephemeral default document — the
+  standing posture of every read surface in that state; the
+  doors' own surfaces gate.
+
+Review verdict: PASS — ship it.
