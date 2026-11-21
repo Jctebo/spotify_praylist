@@ -7861,6 +7861,10 @@ function catechesisNovenasSettled() {
   // the novenas resolution landed — repaint if this side
   // stands. Off the side it costs nothing.
   if (state.tab === 'podcasts' && tabSideNow.podcasts === 'novenas') paintPodcastsIndex();
+  // v581: the Favorites page's novena doors read the same
+  // resolution for their "Day n today" line — repaint its
+  // surfaces too (a no-op unless that page stands).
+  paintFavoritesSurfaces();
 }
 function catechesisNovenasResolve() {
   // The paint-free kick for a Catechesis-first open (the
@@ -11132,11 +11136,25 @@ function wireFavDrag(scope) {
    entry may carry a folder assignment. No migration:
    entries are whole JSON in both stores.
    ============================================================ */
+/* v581 (John's approval, package 71, Ora thread
+   2026-11-21 10:33 CT; run level To Ship): favorite
+   NOVENAS are a first-class favorite object — a FIFTH
+   default folder, Favorite Novenas, holding favorited
+   novena series as novena objects (the door + the live
+   day standing, Q2 A). Q1 A: Favorite Podcasts holds
+   podcast series only. Q3 A: already-starred novenas
+   move automatically — a derivation change in
+   favDerivedFolder, not a store migration. ADDED RULE
+   (John, same message): empty folders don't show — the
+   page paints favVisibleFolders() only (defaults and
+   customs alike), the one derivation every list painter
+   (this page, v579's reorder lists) reads. */
 var FAV_FOLDER_DEFAULTS = [
   { id: 'praylist', name: 'Favorite Praylist' },
   { id: 'catechesis', name: 'Favorite Catechesis' },
   { id: 'prayers', name: 'Favorite Prayers' },
-  { id: 'podcasts', name: 'Favorite Podcasts' }
+  { id: 'podcasts', name: 'Favorite Podcasts' },
+  { id: 'novenas', name: 'Favorite Novenas' }
 ];
 var FAV_COLLAPSE_KEY = 'opn-favcollapse-v576';
 var FAV_FOLDER_ORDER_KEY = 'opn-favfolderorder-v579';
@@ -11185,7 +11203,7 @@ function favDerivedFolder(e) {
   // any other episode to Praylist (it was starred in the
   // day).
   if (!e) return 'praylist';
-  if (e.k === 'series') return 'podcasts';
+  if (e.k === 'series') return favIsNovenaDoor(e) ? 'novenas' : 'podcasts';
   if (e.k === 'podcast') return 'catechesis';
   if (e.block === 'Novenas') return 'catechesis';
   return 'praylist';
@@ -11206,6 +11224,51 @@ function favTracksIn(folderId) {
 }
 function favDoorsIn(folderId) {
   return (state.starred || []).filter(function (e) { return e && e.k === 'series' && favFolderOf(e) === folderId; });
+}
+function favIsNovenaDoor(e) {
+  // v581: a novena door is a series entry under the v577
+  // canon — novena series keys are 'novena-' + slug on the
+  // catalog cards, the series page head, and in
+  // starEntryForKey's novena resolution. No new field.
+  return !!e && e.k === 'series' && typeof e.id === 'string' && e.id.indexOf('novena-') === 0;
+}
+function favFolderCount(folderId) {
+  // v581: the one count every folder painter reads —
+  // tracks + doors, or the book's favorites for the
+  // Prayers folder (its content is definitional, Q3 A of
+  // v576), exactly as the section paint counted them.
+  if (folderId === 'prayers') return bookFavsList().length;
+  return favTracksIn(folderId).length + favDoorsIn(folderId).length;
+}
+function favVisibleFolders() {
+  // v581 (John's added rule): a folder with no items does
+  // not render — the visible list is the derived folder
+  // list filtered to folders holding at least one item.
+  // This is the single source: the Favorites page paints
+  // it, and v579's reorder lists read it, so a folder
+  // hidden here is absent there by construction.
+  return favFolders().filter(function (f) { return favFolderCount(f.id) > 0; });
+}
+function favNovenaStanding(e) {
+  // v581 (Q2 A): the novena object's live day standing.
+  // "Day n today" when the novena stands in the presented
+  // day's Novenas slot — the same resolution the v577
+  // catalog card reads (the slot's track for this novena
+  // + novenaInfo on its title). Else its start date from
+  // the catalog ("Starts <label>" — the server's
+  // startLabel on the novenas index payload). Else the
+  // plain kind line until either load lands.
+  var slot = state.ownSlots ? state.ownSlots['novenas'] : null;
+  if (slot && slot.tracks) {
+    var hit = null;
+    slot.tracks.forEach(function (m) { if (m.episodeId === e.id) hit = novenaInfo(m.episodeId, m.title); });
+    if (hit) return 'Day ' + hit.n + ' today';
+  }
+  if (state.novenasCatalog && Array.isArray(state.novenasCatalog.novenas)) {
+    var nrow = state.novenasCatalog.novenas.filter(function (x) { return 'novena-' + x.slug === e.id; })[0];
+    if (nrow && nrow.startLabel) return 'Starts ' + nrow.startLabel;
+  }
+  return 'Novena';
 }
 function favCollapseRead() {
   try { var v = JSON.parse(localStorage.getItem(FAV_COLLAPSE_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; }
@@ -11344,14 +11407,18 @@ function favDoorRowHtml(e) {
   var cluster = '<span class="prow-cluster">'
     + '<button class="trackstar" data-trackstar="' + esc(key) + '" aria-label="Star">' + (starredHas(key) ? '\u2605' : '\u2606') + '</button>'
     + '<button class="iconbtn" data-favdoormenu="' + esc(key) + '" aria-label="More options">\u22ee</button></span>';
+  // v581: a novena door's meta is its live day standing
+  // (favNovenaStanding), never the word Podcast — the
+  // object is a novena, not a podcast door.
+  var meta = favIsNovenaDoor(e) ? favNovenaStanding(e) : 'Podcast';
   return '<div class="card trow prow" data-favdoor="' + esc(e.id) + '"><div class="row">'
     + art
     + '<div class="grow"><div class="titlerow"><h3>' + esc(e.title || '') + '</h3>' + cluster + '</div>'
-    + '<div class="meta">Podcast</div>'
+    + '<div class="meta">' + esc(meta) + '</div>'
     + '</div></div></div>';
 }
 function openFavDoorMenu(e, anchorEl) {
-  var items = [{ label: 'Open podcast', act: function () { goSeries(e.id); } }];
+  var items = [{ label: favIsNovenaDoor(e) ? 'Open novena' : 'Open podcast', act: function () { goSeries(e.id); } }];
   items.push.apply(items, favMoveItems(e));
   openSheetMenu(e.title || 'Podcast', items, anchorEl);
 }
@@ -11397,7 +11464,7 @@ function favFolderSectionHtml(folder) {
   var tracks = folder.id === 'prayers' ? [] : favTracksIn(folder.id);
   var doors = folder.id === 'prayers' ? [] : favDoorsIn(folder.id);
   var prayers = folder.id === 'prayers' ? bookFavsList() : [];
-  var count = tracks.length + doors.length + prayers.length;
+  var count = favFolderCount(folder.id);
   var collapsed = favCollapsed(folder.id);
   var html = '<div class="favfolder" data-favfolder="' + esc(folder.id) + '">'
     + '<div class="favfolder-head"><button class="favfolder-chev" data-favcollapse="' + esc(folder.id) + '" aria-label="' + (collapsed ? 'Expand' : 'Collapse') + ' ' + esc(folder.name) + '">' + (collapsed ? '\u25b8' : '\u25be') + '</button>'
@@ -11461,6 +11528,23 @@ function paintFavoritesPage(day) {
         }
       }).catch(function () {});
     }
+    // v581: a novena door's standing line reads the
+    // novenas catalog (its start date) and the day
+    // resolution (its "Day n today") — kick both in the
+    // standing pattern when novena doors stand and either
+    // is unsettled; the settles repaint through
+    // paintFavoritesSurfaces (the catalog fetch's own
+    // settle, and catechesisNovenasSettled for the slot).
+    if ((state.starred || []).some(favIsNovenaDoor)) {
+      if (!state.novenasCatalog) {
+        api('/api/player/podcasts?series=novenas').then(function (res) {
+          state.novenasCatalog = res;
+          paintFavoritesSurfaces();
+        }).catch(function () {});
+      }
+      var nslot = state.ownSlots ? state.ownSlots['novenas'] : null;
+      if (!(nslot && (nslot.state === 'present' || nslot.state === 'missing'))) catechesisNovenasResolve();
+    }
   }
   var list = favoritesList();
   if (favReorder) {
@@ -11507,8 +11591,14 @@ function paintFavoritesPage(day) {
   // v576: the list area paints the FOLDER SECTIONS — the
   // four default folders, then the customs, each expanded
   // unless this device has it collapsed (favFolderSectionHtml).
+  // v581: the sections are the VISIBLE folders only
+  // (favVisibleFolders — empty folders don't show, John's
+  // added rule), now five defaults; when none stands, the
+  // list area carries the one settled empty card.
+  var visibleFolders = favVisibleFolders();
   var html = opnFavCard + '<div id="favorites-list">';
-  html += favFolders().map(favFolderSectionHtml).join('');
+  html += visibleFolders.length ? visibleFolders.map(favFolderSectionHtml).join('')
+    : '<div class="card"><div class="meta">No favorites yet \u2014 tap \u2606 on a track, a prayer, a podcast, or a novena and it will stand here.</div></div>';
   html += '</div>';
   view.innerHTML = html;
   var pa = document.getElementById('starred-playall');

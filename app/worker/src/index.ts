@@ -3205,10 +3205,19 @@ async function podNovenasIndexPayload(env: Env): Promise<unknown> {
     stale: r.stale, builtAt: r.cat.builtAt,
     novenas: r.cat.novenas.map((n) => {
       const latest = n.episodes.length ? n.episodes[0] : null;
+      // v581: the start fields — the Day-1 episode's date
+      // where a Day 1 stands, else the earliest episode's
+      // (episodes stand newest-first, so the last is the
+      // earliest). The Favorite Novenas door carries the
+      // start date when the novena is not running today.
+      const dayOne = n.episodes.find((e) => e.dayN === 1) ?? null;
+      const earliest = n.episodes.length ? n.episodes[n.episodes.length - 1] : null;
+      const start = dayOne ?? earliest;
       return {
         key: "novena-" + n.slug, slug: n.slug, name: n.name, saint: n.saint,
         total: n.episodes.length,
         latestDate: latest ? latest.date : null, latestLabel: latest ? latest.label : null,
+        startDate: start ? start.date : null, startLabel: start ? start.label : null,
       };
     }),
   };

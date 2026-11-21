@@ -212,7 +212,7 @@ const door = { k: 'series', id: 'bible-in-a-year', title: 'Bible in a Year', sub
   const res = await put(seed);
   check('L7 layer PUT accepts the standing kinds + the series kind', res && Array.isArray(res.starred) && res.starred.length === 6, res && res.starred && res.starred.length);
   X.starredSet(res.starred);
-  check('L1 folders stand in order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['praylist', 'catechesis', 'prayers', 'podcasts']), X.favFolders());
+  check('L1 folders stand in order', JSON.stringify(X.favFolders().map((f) => f.id)) === JSON.stringify(['praylist', 'catechesis', 'prayers', 'podcasts', 'novenas']), X.favFolders()); // v581: the pin moves to five — Favorite Novenas stands fifth (Q1 A)
   check('L1 day episode derives Praylist', X.favFolderOf(epDay) === 'praylist');
   check('L1 Novenas episode derives Catechesis', X.favFolderOf(epNovena) === 'catechesis');
   check('L1 podcast episode derives Catechesis, never Podcasts (Q4 C + Q1 B)', X.favFolderOf(epPod) === 'catechesis');
