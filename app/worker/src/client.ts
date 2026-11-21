@@ -1607,6 +1607,103 @@ function opnDraws() {
 function opnDrawsSave(p) {
   try { localStorage.setItem(OPN_DRAWS_KEY, JSON.stringify(p)); } catch (e) {}
 }
+/* ---- v570: export / import — the user-managed data net ----
+   Save a copy serializes the standing on-device document (the
+   v568 file) with a fresh exportedAt stamp and a per-class
+   counts header; Restore adopts a copy as the document after
+   the format gate and the dry-run count check, keeping a
+   pre-restore snapshot on the device for undo. PIN material
+   stands in its own separate on-device store, outside the
+   document — no export path reads it, and a restore never
+   touches it: a restored device sets a fresh PIN. Device shape only: web never
+   stores personal data, and the private shape never runs
+   this layer. */
+var OPN_SNAPSHOT_KEY = 'opn-personal-data-snapshot-v1';
+function opnCountsOf(doc) {
+  var S = (doc && doc.sections) || {};
+  var C = S.conscience || {}, P = S.profiles || {}, G = S.config || {}, F = S.favorites || {};
+  var addendaRows = 0;
+  Object.keys(G.addenda || {}).forEach(function (d) { addendaRows += (G.addenda[d] || []).length; });
+  return {
+    intentions: (S.intentions || []).length,
+    conscienceRuns: (C.runs || []).length,
+    conscienceEntries: (C.entries || []).length,
+    confessions: (C.confessions || []).length,
+    profiles: (P.list || []).length,
+    sourceSettings: ((G.sourceSettings || {}).sources || []).length,
+    addenda: addendaRows,
+    favoritesBook: (F.book || []).length,
+    favoritesStarred: (F.starred || []).length,
+    universalPrayerDates: Object.keys(G.universalPrayer || {}).length
+  };
+}
+function opnExportText() {
+  var out = opnClone(opnDoc());
+  out.exportedAt = opnNowISO();
+  out.counts = opnCountsOf(out);
+  return JSON.stringify(out, null, 2);
+}
+function opnImportRefusal(message) { var e = new Error(message); e.opnRefusal = true; return e; }
+function opnValidateImport(text) {
+  var d = null;
+  try { d = JSON.parse(text); } catch (e) { d = null; }
+  if (!d || typeof d !== 'object' || d.format !== 'orapronobis-personal-data' || !d.sections || typeof d.sections !== 'object') {
+    throw opnImportRefusal('That file is not an Ora Pro Nobis data copy. Nothing was changed.');
+  }
+  if (typeof d.formatVersion !== 'number' || d.formatVersion < 1) {
+    throw opnImportRefusal('That file is not an Ora Pro Nobis data copy. Nothing was changed.');
+  }
+  if (d.formatVersion > 1) {
+    throw opnImportRefusal('This copy was made by a newer version of Ora Pro Nobis. Update the app, then restore it. Nothing was changed.');
+  }
+  var base = opnDefaultDoc();
+  var S = d.sections;
+  ['intentions'].forEach(function (k) { if (!Array.isArray(S[k])) S[k] = base.sections[k]; });
+  ['conscience', 'profiles', 'config', 'favorites'].forEach(function (k) {
+    if (!S[k] || typeof S[k] !== 'object') S[k] = base.sections[k];
+  });
+  Object.keys(base.sections.conscience).forEach(function (k) { if (S.conscience[k] === undefined) S.conscience[k] = base.sections.conscience[k]; });
+  Object.keys(base.sections.profiles).forEach(function (k) { if (S.profiles[k] === undefined) S.profiles[k] = base.sections.profiles[k]; });
+  Object.keys(base.sections.config).forEach(function (k) { if (S.config[k] === undefined) S.config[k] = base.sections.config[k]; });
+  Object.keys(base.sections.favorites).forEach(function (k) { if (S.favorites[k] === undefined) S.favorites[k] = base.sections.favorites[k]; });
+  if (!d.seq || typeof d.seq !== 'object') d.seq = base.seq;
+  ['intention', 'run', 'entry', 'confession'].forEach(function (k) {
+    if (typeof d.seq[k] !== 'number' || !(d.seq[k] >= 1)) d.seq[k] = 1;
+  });
+  var actual = opnCountsOf(d);
+  if (d.counts && typeof d.counts === 'object') {
+    var keys = Object.keys(actual);
+    for (var i = 0; i < keys.length; i++) {
+      if (typeof d.counts[keys[i]] === 'number' && d.counts[keys[i]] !== actual[keys[i]]) {
+        throw opnImportRefusal('This copy does not check out — its counts do not match its contents. Nothing was changed.');
+      }
+    }
+  }
+  d.counts = actual;
+  return d;
+}
+function opnRestoreFromText(text) {
+  var doc = opnValidateImport(text);
+  try { localStorage.setItem(OPN_SNAPSHOT_KEY, JSON.stringify(opnDoc())); } catch (e) {}
+  opnDocCache = doc;
+  opnSave();
+  return opnCountsOf(doc);
+}
+function opnHasSnapshot() {
+  try { return !!localStorage.getItem(OPN_SNAPSHOT_KEY); } catch (e) { return false; }
+}
+function opnUndoRestore() {
+  var raw = null;
+  try { raw = localStorage.getItem(OPN_SNAPSHOT_KEY); } catch (e) {}
+  if (!raw) return false;
+  var snap = null;
+  try { snap = JSON.parse(raw); } catch (e) { snap = null; }
+  if (!snap || snap.format !== 'orapronobis-personal-data' || !snap.sections) return false;
+  opnDocCache = snap;
+  opnSave();
+  try { localStorage.removeItem(OPN_SNAPSHOT_KEY); } catch (e) {}
+  return true;
+}
 var OPN_SEED_PROFILES = [{"key": "little-way", "name": "The Little Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Night"], "layers": {"novenas": {"on": false}, "podcasts": {"on": false, "series": []}}}, {"key": "salesian", "name": "The Salesian Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midday", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}, {"key": "benedictine", "name": "The Benedictine Way", "honorLine": "named in honor of the tradition, not the order's own routine", "kind": "default", "coreBlocks": ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], "layers": {"novenas": {"on": true}, "podcasts": {"on": false, "series": []}}}];
 var OPN_SEED_SOURCES = [{"sourceKey": "morning-prayer", "name": "Morning Prayer", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-rosary", "name": "Daily Rosary", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Morning", "dayRule": "daily", "sortOrder": 6, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "novenas", "name": "Novenas", "family": "own", "block": "Novenas", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "auxilium-christianorum", "name": "Auxilium Christianorum", "family": "own", "block": "Afternoon", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "daily-reflection", "name": "Daily Reflection", "family": "own", "block": "Night", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "do-invitatory", "name": "Divine Office \u2014 Invitatory", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-invitatory", "role": "primary"}, {"sourceKey": "do-morning-prayer", "name": "Divine Office \u2014 Morning Prayer", "family": "external", "block": "Morning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "primary"}, {"sourceKey": "sth-lauds", "name": "Sing the Hours \u2014 Lauds", "family": "external", "block": "Morning", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-morning-prayer", "role": "fallback"}, {"sourceKey": "do-midmorning-prayer", "name": "Divine Office \u2014 Midmorning Prayer", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midmorning-prayer", "role": "primary"}, {"sourceKey": "do-midday-prayer", "name": "Divine Office \u2014 Midday Prayer", "family": "external", "block": "Midday", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-midday-prayer", "role": "primary"}, {"sourceKey": "do-midafternoon-prayer", "name": "Divine Office \u2014 Midafternoon Prayer", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-midafternoon-prayer", "role": "primary"}, {"sourceKey": "saint-of-the-day", "name": "Saint of the Day", "family": "external", "block": "Afternoon", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-saint-of-the-day", "role": "primary"}, {"sourceKey": "do-office-of-readings", "name": "Divine Office \u2014 Office of Readings", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-office-of-readings", "role": "primary"}, {"sourceKey": "do-evening-prayer", "name": "Divine Office \u2014 Evening Prayer", "family": "external", "block": "Evening", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "primary"}, {"sourceKey": "sth-vespers", "name": "Sing the Hours \u2014 Vespers", "family": "external", "block": "Evening", "dayRule": "fallback-only", "sortOrder": 3, "enabled": 1, "slotId": "ext-evening-prayer", "role": "fallback"}, {"sourceKey": "do-night-prayer", "name": "Divine Office \u2014 Night Prayer", "family": "external", "block": "Night", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-night-prayer", "role": "primary"}, {"sourceKey": "usccb-daily-readings", "name": "USCCB Daily Readings", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-usccb-readings", "role": "primary"}, {"sourceKey": "daily-tv-mass", "name": "Daily TV Mass", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": "ext-daily-tv-mass", "role": "primary"}, {"sourceKey": "fr-mike-homily", "name": "Fr. Mike Sunday Homily", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 3, "enabled": 1, "slotId": "ext-fr-mike-homily", "role": "primary"}, {"sourceKey": "barron-sermon", "name": "Bp. Barron Sunday Sermon", "family": "external", "block": "Mass and Homilies", "dayRule": "daily", "sortOrder": 4, "enabled": 1, "slotId": "ext-barron-sermon", "role": "primary"}, {"sourceKey": "stations-of-the-cross", "name": "Stations of the Cross / Lenten Devotion", "family": "unplaced", "block": "", "dayRule": "fridays", "sortOrder": null, "enabled": 0, "slotId": null, "role": "primary"}, {"sourceKey": "daily-gospel-exegesis", "name": "Daily Gospel Exegesis", "family": "external", "block": "Midmorning", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": "ext-gospel-exegesis", "role": "primary"}, {"sourceKey": "marian-antiphon-midday", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Midday", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "marian-antiphon-evening", "name": "Marian Antiphon \u2014 Angelus", "family": "own", "block": "Evening", "dayRule": "daily", "sortOrder": 2, "enabled": 1, "slotId": null, "role": "primary"}, {"sourceKey": "the-ai-signal", "name": "The AI Signal", "family": "own", "block": "The AI Signal", "dayRule": "daily", "sortOrder": 1, "enabled": 1, "slotId": null, "role": "primary"}];
 var OPN_SEED_PROMPTS = [{"id": 1, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you omit to confess a mortal sin, either intentionally or through forgetfulness?", "sort": 10, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 2, "category": "Preliminary Examination", "commandment_no": null, "text": "Did you intentionally neglect to say the penance which was imposed on you, or were you so careless as to forget it?", "sort": 20, "source": "Lasance, My Prayer Book (1908), p. 347"}, {"id": 3, "category": "Preliminary Examination", "commandment_no": null, "text": "Have you carried out the resolutions you made at your last confession or have you paid no heed at all to them?", "sort": 30, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 4, "category": "Commandment I", "commandment_no": 1, "text": "Have you doubted in matters of faith? Murmured against God at your adversity or at the prosperity of others? Despaired of His mercy?", "sort": 110, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 5, "category": "Commandment I", "commandment_no": 1, "text": "Have you believed in fortune-tellers or consulted them?", "sort": 120, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 6, "category": "Commandment I", "commandment_no": 1, "text": "Have you gone to places of worship belonging to other denominations?", "sort": 130, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 7, "category": "Commandment I", "commandment_no": 1, "text": "Have you recommended yourself daily to God? Neglected your morning or night prayers? Omitted religious duties or practices through motives of human respect?", "sort": 140, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 8, "category": "Commandment I", "commandment_no": 1, "text": "Have you rashly presumed upon God's forbearance in order to commit sin?", "sort": 150, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 9, "category": "Commandment I", "commandment_no": 1, "text": "Have you read books, papers, and periodicals of anti-Catholic or atheistic tendency? Made use of superstitious practices? Spoken with levity or irreverence of priests, Religious, or sacred objects?", "sort": 160, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 10, "category": "Commandment II", "commandment_no": 2, "text": "Have you taken the name of God in vain? Profaned anything relating to religion?", "sort": 210, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 11, "category": "Commandment II", "commandment_no": 2, "text": "Have you sworn falsely, rashly, or in slight and trivial matters? Cursed yourself or others, or any creature? Angered others so as to make them swear, or blaspheme?", "sort": 220, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 12, "category": "Commandment III", "commandment_no": 3, "text": "Have you kept holy the Lord's Day, and all other days commanded to be kept holy? Bought or sold things, not of necessity, on that day? Done or commanded some servile work not of necessity? Missed Mass or been wilfully distracted during Mass? Talked, gazed, or laughed in the church? Profaned the day by dancing, drinking, gambling, or in other ways?", "sort": 310, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 13, "category": "Commandment IV", "commandment_no": 4, "text": "Have you honored your parents, superiors, and masters, according to your just duty? Deceived them? Disobeyed them?", "sort": 410, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 14, "category": "Commandment IV", "commandment_no": 4, "text": "Have you failed in due reverence to aged persons?", "sort": 420, "source": "Lasance, My Prayer Book (1908), p. 348"}, {"id": 15, "category": "Commandment V", "commandment_no": 5, "text": "Have you procured, desired, or hastened the death of any one? Borne hatred? Oppressed any one? Desired revenge? Not forgiven injuries? Refused to speak to others? Used provoking language? Injured others? Caused enmity between others?", "sort": 510, "source": "Lasance, My Prayer Book (1908), pp. 348-349"}, {"id": 16, "category": "Commandment VI and IX", "commandment_no": 6, "text": "Have you been guilty of lascivious dressing? Been in lewd company? Read immodest books? Been guilty of unchaste songs, discourses, words, or actions? Wilfully entertained impure thoughts or desires?", "sort": 610, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 17, "category": "Commandment VII", "commandment_no": 7, "text": "Have you been guilty of stealing, or of deceit in buying, or selling, in regard to wares, prices, weights, or measures? Have you wilfully damaged another man's goods, or negligently spoiled them?", "sort": 710, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 18, "category": "Commandment VIII", "commandment_no": 8, "text": "Have you borne false witness? Called injurious names? Disclosed another's sins? Flattered others? Judged rashly?", "sort": 810, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 19, "category": "Commandment X", "commandment_no": 10, "text": "Have you coveted unjustly anything that belongs to another?", "sort": 1010, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 20, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you gone to confession at least once a year? Received holy communion during Easter-time?", "sort": 1110, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 21, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you violated the fasts of the Church, or eaten flesh-meat on prohibited days?", "sort": 1120, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 22, "category": "Precepts of the Church", "commandment_no": null, "text": "Have you sinned against any other commandment of the Church?", "sort": 1130, "source": "Lasance, My Prayer Book (1908), p. 349"}, {"id": 23, "category": "Capital Sins", "commandment_no": null, "text": "Examine yourself also in regard to the Seven Capital Sins and the nine ways of being accessary to another's sin.", "sort": 1210, "source": "Lasance, My Prayer Book (1908), p. 349"}];
@@ -8389,6 +8486,25 @@ function paintSettings() {
     + '<div class="meta" id="set-offline-counts"></div>'
     + '<div class="setcontrols"><button class="btn ghost" id="set-clear-offline">Clear offline downloads</button></div>'
     + '</div></div>';
+  // v570: MY DATA ON THIS PHONE — export / import, the
+  // user-managed data net. Device shape only: on web the
+  // pointer card at the top of this page already says where
+  // personal data lives, and the private shape never stands
+  // this section. Save a copy downloads (or shares) the
+  // on-device file; Restore adopts a copy after its count
+  // check and keeps the pre-restore snapshot for undo.
+  if (opnMode() === 'device') {
+    html += '<h2 class="sectionhead">MY DATA ON THIS PHONE</h2><div class="liblist"><div class="setrow">'
+      + '<div class="setname">My data on this phone</div>'
+      + '<div class="meta">Your intentions, examination of conscience, profiles and favorites live only on this phone — there is no account and no server copy. Save a copy to keep them safe, and restore it on a new phone or after a reinstall. Your PIN does not travel in the copy; a restored phone sets a fresh PIN.</div>'
+      + '<div class="setcontrols"><button class="btn ghost" id="set-mydata-save">Save a copy</button>'
+      + '<button class="btn ghost" id="set-mydata-restore">Restore from a copy</button>'
+      + (opnHasSnapshot() ? '<button class="btn ghost" id="set-mydata-undo">Undo last restore</button>' : '')
+      + '</div>'
+      + '<div class="meta" id="set-mydata-note"></div>'
+      + '<input type="file" id="set-mydata-file" accept=".json,application/json" style="display:none">'
+      + '</div></div>';
+  }
   // v394 §2.4: the WALLPAPER section — device-local, in the
   // standing position after OFFLINE. The static paint renders
   // the section shell in a loading state; fillWallpaperSection
@@ -8496,6 +8612,61 @@ function paintSettings() {
   });
   var offCounts = document.getElementById('set-offline-counts');
   if (offCounts) offCounts.textContent = offlineLineText();
+  // v570: the My data acts — Save a copy (share sheet where
+  // the platform offers files, else a download), Restore
+  // from a copy (file picker → count check → snapshot →
+  // adopt), Undo last restore. Plain-language notes only;
+  // a refused copy changes nothing.
+  var mdNote = document.getElementById('set-mydata-note');
+  var mdSave = document.getElementById('set-mydata-save');
+  if (mdSave) mdSave.addEventListener('click', function () {
+    var text = opnExportText();
+    var fname = 'orapronobis-my-data-' + todayChicago() + '.json';
+    var file = null;
+    try { file = new File([text], fname, { type: 'application/json' }); } catch (e) { file = null; }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+      navigator.share({ files: [file], title: 'Ora Pro Nobis — my data copy' }).then(function () {
+        if (mdNote) mdNote.textContent = 'Copy shared. Keep it somewhere safe — it is the only copy of your data besides this phone.';
+      }).catch(function () {});
+      return;
+    }
+    try {
+      var blob = new Blob([text], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+      if (mdNote) mdNote.textContent = 'Copy saved as ' + fname + '. Keep it somewhere safe — it is the only copy of your data besides this phone.';
+    } catch (e) {
+      if (mdNote) mdNote.textContent = 'The copy could not be saved on this device.';
+    }
+  });
+  var mdFile = document.getElementById('set-mydata-file');
+  var mdRestore = document.getElementById('set-mydata-restore');
+  if (mdRestore && mdFile) mdRestore.addEventListener('click', function () { mdFile.click(); });
+  if (mdFile) mdFile.addEventListener('change', function () {
+    var f = mdFile.files && mdFile.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var counts = opnRestoreFromText(String(reader.result || ''));
+        paintSettings();
+        var freshNote = document.getElementById('set-mydata-note');
+        if (freshNote) freshNote.textContent = 'Your copy is restored — ' + counts.intentions + ' intentions, ' + counts.conscienceRuns + ' examinations, ' + counts.profiles + ' profiles and ' + counts.favoritesBook + ' favorite prayers now stand on this phone. If this was a mistake, undo the restore below.';
+      } catch (e) {
+        if (mdNote) mdNote.textContent = (e && e.opnRefusal) ? e.message : 'That file could not be read. Nothing was changed.';
+      }
+      mdFile.value = '';
+    };
+    reader.onerror = function () { if (mdNote) mdNote.textContent = 'That file could not be read. Nothing was changed.'; };
+    reader.readAsText(f);
+  });
+  var mdUndo = document.getElementById('set-mydata-undo');
+  if (mdUndo) mdUndo.addEventListener('click', function () {
+    if (opnUndoRestore()) { paintSettings(); }
+  });
   fillPinSection();
   snapshotSettings(); // v419 (G28): the paint IS the saved state — the unsaved line starts clean
   refreshUnsaved();
