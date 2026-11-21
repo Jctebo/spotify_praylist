@@ -113,7 +113,7 @@ function slice(from, to) {
     && (html.match(/data-profconfigure="1"/g) || []).length === 1
     && html.includes('Configure plan'), html.slice(0, 300));
   check('P2 the ONE row carries BOTH: the standing profile name + its standing line on the left, the button on the right; NO second card (no profcard, no honor-line block)',
-    html.includes('The Salesian Way') && html.includes('Your every day profile')
+    html.includes('The Salesian Way') && html.includes('Your every-day profile')
     && html.indexOf('The Salesian Way') < html.indexOf('data-profconfigure')
     && !html.includes('profcard') && !html.includes('named in honor'), html.slice(0, 300));
   check('P3 the standing order: the one plan row → Favorites slot → the blocks',

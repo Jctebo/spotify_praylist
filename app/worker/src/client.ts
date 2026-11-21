@@ -19596,7 +19596,7 @@ function profPlanRowHtml(day) {
   // the act standing.
   var fold = day && day.profile;
   if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
-  var resLine = 'Your every day profile';
+  var resLine = 'Your every-day profile';
   if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
   else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
