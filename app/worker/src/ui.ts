@@ -11,6 +11,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ora Pro Nobis</title>
 <meta name="theme-color" content="#16283f">
+<script>window.__OPN_SHAPE__="<!--OPN_SHAPE-->";</script>
 <script>
 // v429 §2.5: the boot stamp + one-shot self-heal. Seated
 // before the stylesheet so the decision never waits on it.
