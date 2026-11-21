@@ -185,6 +185,13 @@ def build_artifact(
 
     for name in ("index.html", "site.css", "site.js"):
         shutil.copy2(SITE_DIR / name, output_dir / name)
+    # v571: the Android app rides the site when the APK stands in
+    # config/site — the landing page's store block links it at the
+    # stable name ora-pro-nobis.apk. Guarded: the file exists only
+    # once an APK build lands it.
+    apk_source = SITE_DIR / "ora-pro-nobis.apk"
+    if apk_source.exists():
+        shutil.copy2(apk_source, output_dir / "ora-pro-nobis.apk")
     (output_dir / "prayers.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

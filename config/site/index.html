@@ -4,11 +4,47 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0a1c3a">
-    <meta name="description" content="A daily place for prayer, reflection, and sacred music.">
-    <title>Daily Prayer | Ora Pro Nobis</title>
+    <meta name="description" content="Ora Pro Nobis — the day's Catholic prayers, composed fresh every day. Free always. No accounts. Your data stays on your phone.">
+    <title>Ora Pro Nobis — Daily Prayer, Free Always</title>
     <link rel="icon" href="images/logo_ora_pro_nobis.png">
-    <link rel="stylesheet" href="site.css">
-    <script src="site.js" defer></script>
+    <style>
+      :root { --navy: #0a1c3a; --navy-2: #10294f; --gold: #c9a227; --paper: #f7f3ea; --ink: #1c2430; --muted: #5a6572; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: var(--paper); line-height: 1.55; }
+      a { color: var(--navy); }
+      .site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1.25rem; background: var(--navy); }
+      .brand { display: flex; align-items: center; gap: 0.6rem; color: #fff; text-decoration: none; font-size: 1.15rem; letter-spacing: 0.02em; }
+      .brand img { border-radius: 8px; }
+      .header-links { display: flex; gap: 1.1rem; }
+      .header-link { color: #e8e2d2; text-decoration: none; font-size: 0.95rem; }
+      .header-link:hover { text-decoration: underline; }
+      .hero { background: linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; text-align: center; padding: 4.2rem 1.25rem 3.6rem; }
+      .eyebrow { text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.8rem; color: var(--gold); margin: 0 0 1rem; }
+      .hero h1 { font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.12; margin: 0 auto 1.1rem; max-width: 44rem; font-weight: normal; }
+      .hero p.lede { font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: #e8e2d2; max-width: 40rem; margin: 0 auto 2.2rem; }
+      .door { display: inline-block; background: var(--gold); color: var(--navy); font-family: inherit; font-size: 1.25rem; letter-spacing: 0.06em; padding: 0.95rem 2.6rem; border-radius: 999px; text-decoration: none; border: none; cursor: pointer; }
+      .door:hover { filter: brightness(1.07); }
+      .hero .under { margin-top: 1rem; color: #b9c4d6; font-size: 0.95rem; }
+      .points { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.4rem; max-width: 64rem; margin: 0 auto; padding: 3rem 1.25rem 1rem; }
+      .point { background: #fff; border: 1px solid #e3ddcc; border-radius: 14px; padding: 1.5rem 1.4rem; }
+      .point h2 { margin: 0 0 0.6rem; font-size: 1.3rem; font-weight: normal; color: var(--navy); }
+      .point p { margin: 0; color: var(--muted); }
+      .point .mark { color: var(--gold); font-size: 1.3rem; display: block; margin-bottom: 0.5rem; }
+      .get { max-width: 64rem; margin: 0 auto; padding: 2.2rem 1.25rem 3rem; text-align: center; }
+      .get h2 { font-weight: normal; color: var(--navy); font-size: 1.7rem; margin: 0 0 0.5rem; }
+      .get p { color: var(--muted); max-width: 38rem; margin: 0 auto 1.6rem; }
+      .store-row { display: flex; flex-wrap: wrap; gap: 0.9rem; justify-content: center; }
+      .store-btn { display: inline-block; border: 1.5px solid var(--navy); color: var(--navy); border-radius: 12px; padding: 0.7rem 1.4rem; text-decoration: none; font-size: 1.02rem; background: #fff; }
+      .store-btn small { display: block; font-size: 0.78rem; color: var(--muted); letter-spacing: 0.04em; }
+      .store-btn:hover { background: #efe9d8; }
+      .podcast-note { border-top: 1px solid #e3ddcc; max-width: 64rem; margin: 0 auto; padding: 2rem 1.25rem 2.6rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+      .podcast-note h2 { font-weight: normal; color: var(--navy); margin: 0 0 0.3rem; font-size: 1.35rem; }
+      .podcast-note p { margin: 0; color: var(--muted); }
+      .podcast-links { display: flex; gap: 1.2rem; }
+      .text-link { text-decoration: none; border-bottom: 1px solid var(--gold); }
+      .site-footer { background: var(--navy); color: #b9c4d6; display: flex; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; font-size: 0.95rem; }
+      .site-footer span:first-child { color: #fff; }
+    </style>
   </head>
   <body>
     <header class="site-header">
@@ -24,35 +60,42 @@
 
     <main id="top">
       <section class="hero" aria-labelledby="page-title">
-        <img id="wallpaper" class="hero-image" alt="Today's devotional wallpaper" hidden>
-        <div class="hero-shade" aria-hidden="true"></div>
-        <div class="hero-copy">
-          <p class="eyebrow">A daily rhythm of prayer</p>
-          <h1 id="page-title">Make room for the sacred.</h1>
-          <p id="today-date" class="hero-date">Prayer for today</p>
-          <a class="hero-action" href="#prayer-times">Explore today's prayers <span aria-hidden="true">↓</span></a>
-        </div>
-        <span class="hero-credit">Daily devotional wallpaper</span>
+        <p class="eyebrow">Ora Pro Nobis — pray for us</p>
+        <h1 id="page-title">The day's prayers, ready when you are. Free always.</h1>
+        <p class="lede">Morning, Midmorning, Midday, Evening, and Night prayer — the Rosary, novenas, the Mass and its readings — composed fresh every day, in English and Latin, with audio. Press one button and pray. That is the whole design.</p>
+        <a class="door" href="https://app.orapronobis.media">Start Praying</a>
+        <p class="under">No accounts. Nothing to sign up for. The prayers are a gift.</p>
       </section>
 
-      <section class="prayer-section" id="prayer-times" aria-labelledby="prayer-heading">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Listen and pray</p>
-            <h2 id="prayer-heading">Today's prayer rhythm</h2>
-          </div>
-          <p class="section-note">Choose a prayer or open the complete playlist in Spotify.</p>
+      <section class="points" aria-label="How Ora Pro Nobis works">
+        <div class="point">
+          <span class="mark" aria-hidden="true">✦</span>
+          <h2>Free always</h2>
+          <p>No accounts, no sign-in, nothing to buy. Every prayer in the app is free, for everyone, every day — prayers going up, with nothing in the way.</p>
         </div>
-        <nav id="group-nav" class="group-nav" aria-label="Prayer times"></nav>
-        <div id="playlist-groups" class="playlist-groups" aria-live="polite">
-          <p class="loading-message">Preparing today's prayer list…</p>
+        <div class="point">
+          <span class="mark" aria-hidden="true">✦</span>
+          <h2>Your data stays on your phone</h2>
+          <p>Your intentions, your examination of conscience, your journal — they live in the app on your own device. They never go to a server, and they are never sold or shared.</p>
+        </div>
+        <div class="point">
+          <span class="mark" aria-hidden="true">✦</span>
+          <h2>Prayers going up</h2>
+          <p>New prayers are composed and published every day, matched to the Church's calendar — the saint of the day, the day's readings, the seasons and feasts. Open the app and today's prayer is ready.</p>
+        </div>
+      </section>
+
+      <section class="get" aria-labelledby="get-heading">
+        <h2 id="get-heading">Get the app</h2>
+        <p>The web app is the full free tier, on any phone or computer — nothing to install. The Android app keeps the same prayers on your phone.</p>
+        <div class="store-row">
+          <a class="store-btn" href="https://app.orapronobis.media">Open the web app<small>app.orapronobis.media</small></a>
+          <a class="store-btn" href="ora-pro-nobis.apk">Get the Android app<small>direct download (APK)</small></a>
         </div>
       </section>
 
       <section class="podcast-note" aria-label="Podcast">
-        <div class="podcast-mark" aria-hidden="true">✦</div>
         <div>
-          <p class="eyebrow">Keep listening</p>
           <h2>Prayer for the moments in between.</h2>
           <p>Find the Ora Pro Nobis podcast in your favorite podcast app.</p>
         </div>
