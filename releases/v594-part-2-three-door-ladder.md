@@ -376,3 +376,80 @@ attribution:
   doors' own surfaces gate.
 
 Review verdict: PASS — ship it.
+
+## 5. Ship
+
+Shipped 2026-11-21 22:11Z by chain-v594-part2-build.
+
+- **Merge + push:** branch `release/v594-part2` (861366e +
+  bdd44f3) fast-forwarded into main in the standing clone; the
+  pin commit ae7ff40 on top; all three commits replicated to
+  GitHub via the Git Data API with SHA assertions — **GitHub
+  main ae7ff40 · main pushed · remote in sync.**
+- **Pin:** `ora-pro-nobis-v594-2` (ui.ts CACHE, the only
+  occurrence; Part 1 took v594-1).
+- **Migration 0045** applied to the app D1
+  (3a177d55-7baa-424c-9c4d-0d60cd9fe332) BEFORE the deploy and
+  verified by read-back: the `today_edits` column stands on
+  `prayer_profile_state`.
+- **Deploy:** connector-surrogate driver
+  (`deploy-app-v594p2-ship.py`; dry run clean first) from a
+  clean worktree of ae7ff40 — **Worker 8b3316b6** · rollback
+  target **cf306d08** (v595, confirmed at 100% pre-deploy).
+- **Served proofs (production):** sw.js carries pin
+  ora-pro-nobis-v594-2 with zero conflict markers · the served
+  app.js parses whole (1,182,604 chars) and carries
+  `openEditTodayScreen594`, `opnTodayDivergence594`, Part 1's
+  `profVaultGate594`, the edits mark and the clear act, with
+  zero conflict markers · the public profiles read answers the
+  public shape (empty, no error).
+- **Harness on the merged tree** (with the pin): 34 ok / 0 not
+  ok — the third tree, after the working tree and the clean
+  checkout.
+- **What's New 411** — "Edit today, Edit profiles, Edit
+  mapping".
+- **Row 1568: Live** · shipped_at re-synced to
+  2026-11-21T22:11:00Z · whats_new_id 411 · the Part 2 ship
+  note appended to run_directive (read back).
+- **shipped_records (the addendum's step, named):** the table
+  is UNIQUE on (project_id, version) — one record per version —
+  and Part 1's ship already wrote the v594 record (id 783).
+  Part 2's ship therefore UPDATED record 783 to this ship
+  (shipped_at 2026-11-21T22:11:00Z · whats_new_id 411),
+  **verified by read-back**: the v594 row stands in
+  shipped_records with Part 2's ship data, not only on the
+  release. Part 1's ship remains recorded on What's New 409,
+  its release doc, and contracts 808–811.
+- **Records:** Part 2's phase passage stands on contracts
+  **812** (Plan) · **813** (Implement) · **815** (Review) ·
+  **816** (Ship), all expectations met; phase_records
+  Plan–Ship on row 1568 stand as Part 1's (2396–2399, passed,
+  final — the header's handling).
+- **Intake 1110: closed Done** — Part 1's fix verified shipped
+  at closeout (row 1568 Live from Part 1's ship, What's New
+  409, and `profVaultGate594` serving in the production
+  client, read from the served app.js above).
+- **Cleanup:** branch `release/v594-part2` deleted; the
+  build/base/clean/ship worktrees removed; the standing clone
+  stands clean on main.
+
+**Field legs for John (his verdicts, not claimed):**
+1. Praylist → Configure plan: the ladder shows three doors and
+   its head reads "Today follows …" (with "· today has its own
+   edits" once a layer stands); the plan row carries the same
+   mark.
+2. Edit today: turn Night off — it stands at once, the line
+   counts the difference, Night's row reads "off for today";
+   tap Clear today's edits and the day follows the profile
+   whole again.
+3. Edit today with the vault locked (fresh app open): the PIN
+   pad stands first; after the PIN, the edits land.
+4. Edit today: change the pick (the warning about clearing
+   stands first) — today follows the new profile and the edits
+   are gone.
+5. Edit profiles: tap another profile's chip — the editor
+   switches, today does NOT change; the warning line stands
+   under the profile's name.
+6. A prayer removed in Edit today stands in the "Removed for
+   today" line with its Restore act; a contents block touched
+   for today reads "Set for today — stands as listed".
