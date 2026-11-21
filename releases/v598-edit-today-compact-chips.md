@@ -152,3 +152,29 @@ Gates, all on the committed tree (fe74268):
   which v594 Part 2 retired on John's picks; the v594
   Part 2 ship recorded the same 7/2). No behavior leg
   moved under a CSS-only change.
+
+## §5 Ship
+
+SHIPPED LIVE 2026-11-21. Worker **c408bfad** at pin
+**ora-pro-nobis-v598-1**, deployed from main **6ccb73c**
+(merge 37a1b76 + pin bump) — main pushed · remote in sync
+(Git Data API, byte-identical, SHA-asserted). Rollback
+target: 8b3316b6 (v594 Part 2), confirmed at 100%
+pre-deploy; the dry run was clean. What's New **412** ·
+row 1572 **Live** · shipped_records **785** inserted and
+read back · intake 1115 closed Done.
+
+Gates on the merged tree: harness-v598 **15 ok / 0 not
+ok** (also 15/0 on the working tree and on a clean
+checkout of the committed tree; the fail-on-old and
+regression runs stand in §4). Served proofs on the
+deploy: the served app.js parses whole (1,187,268
+chars), no conflict markers anywhere; the served sw.js
+carries pin ora-pro-nobis-v598-1; the served styles.css
+carries the unified rule — `.proftoday594 .chip591`
+stands in the one compact selector list at
+padding 5px 11px / min-height 38px.
+
+Field leg: open Configure plan → Edit today — the
+profile chips at its head now stand in the same compact
+size as Edit profiles' chips.
