@@ -55,3 +55,54 @@ Gates (all on the committed tree c1ff8d3):
 - Equivalence: G1 — John's day folds byte-identical old vs new. G6 — a materialized day's descriptors differ old vs new by exactly the course tracks. G2 — post-load profile bytes equal old vs new.
 - **NO DATA CHANGE (the hard gate):** G3 — John's stored document is byte-identical after a full editor + fold flow on the new code (no save act taken). G4 — zero stored course items re-confirmed on the shipped code's own read. G5 — the import file's sha256 is unchanged.
 - Regression (each harness on the new tree vs the base tree 6ccb73c, deltas named): harness-v594p2 **34/0** (zero delta) · harness-v594 **7/2 == base** (R3/R6 — Part 2's named by-design reds, the retired chip coupling) · harness-v598 **14/1** (T4 asserts client.ts byte-identical to main — v598's own ui-only premise; v597 is a client change by design) · harness-v592 **7/5 == base** · harness-v593 **18/2 == base** · harness-v595 **17/1 == base** · harness-v590 28/9 → 24/13 (new reds C2 · C4 · D3 · S3 — each asserts the retired course-contents behavior: a course key erroring a save, a fold carrying a course item, the resolver standing) · harness-v591 28/4 → 27/5 (new red S6 — asserts the retired course label cache). No other delta anywhere.
+
+## §5 Ship
+
+SHIPPED LIVE 2026-11-21 23:09Z (17:09 CT).
+
+- Worker **6a44cfa5-9fb9-47e0-a0b9-0f2076628a63** ·
+  rollback target c408bfad (v598's version) · pin
+  **ora-pro-nobis-v597-1**.
+- GitHub main **afd65f5** — main pushed · remote in sync
+  (byte-identical replication, SHA assertions at every
+  commit; the remote head 5482e19, v598's doc commit, was
+  replicated locally first and the merge re-based on it;
+  the merged tree's app/ is identical to the tree the
+  deploy ran from).
+- Served proofs: the served sw.js carries the v597-1 pin;
+  the served app.js parses whole (1,187,826 chars) and
+  carries the standing function; conflict-marker grep
+  over the served files: 0.
+- Gates at ship: harness-v597 **25/0** on the working
+  tree and on a clean checkout of the committed fix; on
+  the merged tree 24/1 — the one red is the pre-Ship pin
+  leg reading the new pin, by design. A-leg mismatch
+  count on the shipped code: **0** (49 on the pre-fix
+  client).
+- What's New **413** · row 1571 **Live** ·
+  shipped_records **787** (inserted and read back) ·
+  intake 1114 Done.
+- **Production state found at ship (named):** the live
+  Worker at deploy time was v595's version (cf306d08) —
+  a deployment at 22:59:38Z had re-pointed production to
+  it after v594 Part 2 (22:11Z) and v598 (22:46Z) had
+  deployed, so the served app carried neither Part 2's
+  todayEdits nor v598's chips (served app.js: 0 todayEdits
+  hits, pin v595-1). This deploy restores all three from
+  main in one step; the served app.js now carries
+  todayEdits (16 hits) at the v597 pin. The board rows
+  for v594/v598 read Live throughout — the divergence was
+  in the deployed Worker only.
+- **NO DATA CHANGE to John's profiles** — the G3/G4/G5
+  legs stand as the proof: his stored document
+  byte-identical through the full flow, zero stored
+  course items on the shipped code's own read, the
+  import file untouched.
+- Field legs (John's): (1) Open Configure → Edit
+  profiles → each way: nothing stands picked that does
+  not play — no course rows stand in any block. (2) The
+  Little Way's Morning shows no daily-readings seat.
+  (3) Add a prayer to a block, save, and the day plays
+  exactly the list that stands picked. (4) Bible in a
+  Year still stands in the Podcasts layer and plays as
+  before.
