@@ -146,3 +146,52 @@ deltas are named in §3. Private-shape parity stands at
 code level (the change is one client paint path,
 shape-independent; the fold and the payload are
 untouched).
+
+## §5 Ship
+
+SHIPPED LIVE 2026-11-21. Final serving Worker
+**cf306d08** at pin **ora-pro-nobis-v595-1**, deployed
+from main **2ffb8fc** — main pushed · remote in sync.
+What's New **410** · row 1569 **Live** · intake 1111
+closed Done.
+
+The road, plainly: the bare-removal shape merged and
+pushed (deaef71) but was never deployed — John's 15:44
+refinement landed first (2490fea). The v594 chain then
+merged locally (a271310) carrying literal merge-conflict
+markers its commit 32f982b had committed at the CACHE
+pin in ui.ts; the main seat was alerted at once, and the
+markers were resolved in f7ecc93 (both sides read the
+same pin; the merged tree takes the deploying release's
+pin, v595-1). The v594 chain pushed its merge, deployed
+its fix as Worker 88032d46 (pin v594-1), and rebuilt the
+remote history to 2ffb8fc, carrying this release's ship
+fix (below) under its §5 doc. v594's client fix rides
+this deploy — harness-v594 **9 ok / 0 not ok** on the
+final tree — and its row closed on its own deploy.
+
+Two deploys: 4fadc0e9 (from f7ecc93), then the final
+cf306d08 (from 2ffb8fc). The served proof on the first
+deploy caught a defect the gates had missed: the
+merged-row paint wrote the standing line as "Your every
+day profile" — the card's own line is "Your every-day
+profile" (§4's "verbatim" stood corrected). The line
+and the harness leg that had asserted the wrong string
+were both fixed (5f813c2; P2 now pins the card's exact
+line), and the final deploy serves the corrected line.
+
+Gates on the final tree: harness-v595 **18 ok / 0 not
+ok** — working tree, clean checkout, and the 2ffb8fc
+tree; equivalence A1/A2 byte-identical throughout.
+Served proofs on the final deploy: the served app.js
+parses whole (1,150,333 chars), profPlanRowHtml stands,
+"Your every-day profile" stands, no profileCardHtml, no
+profcard, no conflict markers; the served sw.js carries
+pin ora-pro-nobis-v595-1; /api/player/day answers 200.
+Rollback targets: 4fadc0e9 (the first v595 deploy),
+88032d46 (v594's deploy).
+
+Field leg (John's): open the Praylist — ONE row stands
+at the head: your plan's name and its line on the left,
+Configure plan on the right, and no second card under
+it.
