@@ -147,3 +147,29 @@ this doc). Findings:
   this tree — named here rather than silently left.
 
 Verdict: **pass** — ready to ship.
+
+## §5 Ship (passed) — 2026-11-21
+
+- **Merge + push:** release/v587 merged back to main as part of this release (John's 2026-11-21
+  rule) — GitHub main **787cbf9** (Implement 50ffeb8 · Review doc d56f791 · merge 321c996 · SW
+  pin bump 787cbf9), pushed via the Git Data API with byte-identical replication (4 commits,
+  read back: GitHub main = 787cbf964ceac04cdf46ed5924039a7d78006656) — **main pushed · remote
+  in sync**. The local branch was deleted after the merge; release/v587 was never pushed as a
+  branch.
+- **Deploy:** Worker **e001d8cc-2f21-40da-946d-bada2742fc36**, deployed from a clean ship
+  worktree of the merged main tree (driver deploy-app-v587-ship.py, dry-run clean first). SW
+  pin **ora-pro-nobis-v587-1** (read back in the served sw.js). Rollback target: the prior
+  production Worker 0fc1caff (v585's deploy).
+- **Served proofs:** the served app.js (1,088,828 bytes) parses whole; the pad factory and the
+  unlock / recovery / set-change pad wirings stand in it; the typed unlock field is gone; the
+  served styles.css carries the v584 dress (88px keys, 30px digits). Harness on the final ship
+  tree: 36 ok / 3 not ok — the three are the pin bump's own legs (S1/S3/S5 reading the one-line
+  CACHE change in ui.ts), the standing disclosed Ship shape; the pre-Ship committed tree read
+  39 ok / 0 not ok on its clean checkout.
+- **Board:** row 1561 Live · shipped_at 2026-11-21T17:54:00Z · What's New **402**. Phase
+  records: Scope 2355 · Plan 2357 · Implement 2359 · Review 2360 · Ship 2362. Contracts:
+  Plan 767 · Implement 768 · Review 770 · Ship 771 — all met.
+- **Field leg left for John:** open the app to the locked Intentions (or Conscience) surface —
+  the unlock screen stands with the large pad, and his same PIN unlocks his data exactly as
+  before; the PIN set/change sheet and the recovery form's new-PIN step stand with pads too,
+  and the recovery code is still typed.
