@@ -189,3 +189,42 @@ full-screen form is the Configure screen's own, per scope) ·
 private-shape parity for the surface is code + harness level
 (the private host's Access gate blocks a live fetch from
 this seat, the standing posture).
+
+## §5 Ship (chain-v592-build, 2026-11-21)
+
+- Merge 78a42f2 (release/v592 → main) + pin bump b0ec135
+  (ora-pro-nobis-v592-1) stand on GitHub main, pushed
+  through the Git Data API, byte-identical — main pushed ·
+  remote in sync (78a42f2).
+- harness-v592: **12 ok / 0 not ok** on the merged tree
+  (78a42f2, the clean ship worktree) — the equivalence legs
+  A1/A2 green: a Salesian weekday and a Sunday under the
+  seeded map compose byte-identical to the v591 ship.
+  harness-v591 regression: **32 ok / 0 not ok** on the
+  merged tree as well.
+- Pre-deploy live read: production at Worker **2774044f**
+  (the v591 build) at 100% — the rollback target. Dry run
+  clean (exit 0), then deploy via the connector-surrogate
+  wrangler (deploy-app-v592-ship.py) from the clean ship
+  worktree at 78a42f2.
+- Worker ora-pro-nobis-app now serves version **e7a1afeb**
+  at pin **ora-pro-nobis-v592-1**.
+- Served proofs: served sw.js carries pin
+  ora-pro-nobis-v592-1 · served app.js parses whole
+  (1,143,728 chars) and carries the Day mapping button, the
+  full-screen class, and the mapping pop-up, with exactly
+  ONE painted configure act and no standing-section
+  attribute left · served styles.css carries the compact
+  book-row rule and the full-screen rule exactly as built ·
+  public personal-data reads stand empty (profiles [],
+  intentions []).
+- What's New **407** ("Configure plan, tightened — compact,
+  full screen, day mapping up top") · row 1566 **Live**
+  (shipped_at 2026-11-21T20:30:31Z) · Ship phase record
+  2385 · Ship time contract 797, expectation met · intake
+  1107 Done.
+- Field legs open for John (his verdicts, not claimed):
+  Configure plan opens full screen and stands tighter ·
+  the Day mapping button stands at the top and the week
+  opens as a pop-up · a day changed in the pop-up stands ·
+  the Praylist shows the one configure row.
