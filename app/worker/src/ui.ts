@@ -443,8 +443,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profplan590 .bookrow, .profpop591 .bookrow, .profmap592 .bookrow { padding:8px 10px; margin:0 0 6px; }
 .profplan590 .sub, .profpop591 .sub, .profmap592 .sub { margin:0 0 8px; }
 .profplan590 .sectionhead, .profpop591 .sectionhead, .profmap592 .sectionhead { margin:12px 0 6px; }
-.profplan590 .profchips591, .profpop591 .profchips591 { margin:0 0 8px; padding-bottom:2px; }
-.profplan590 .chip591, .profpop591 .chip591 { padding:5px 11px; min-height:38px; }
+.profplan590 .profchips591, .profpop591 .profchips591, .profmapscreen593 .profchips591, .proftoday594 .profchips591 { margin:0 0 8px; padding-bottom:2px; }
+/* v598: ONE compact chip dress for the whole Configure family — stated once, for every Configure screen's wrapper, so no screen can fall back to the base 44px dress by omission (Edit today stood in no compact scope and rendered large). */
+.profplan590 .chip591, .profpop591 .chip591, .proffrozen593 .chip591, .profmapscreen593 .chip591, .proftoday594 .chip591 { padding:5px 11px; min-height:38px; }
 .profplan590 .profcontents591, .profpop591 .profcontents591 { margin:0 0 6px 10px; }
 .profplan590 .stepper591 .btn, .profpop591 .stepper591 .btn { min-height:32px; }
 /* v593 §2: the no-pop-up Configure family — the ladder
@@ -460,7 +461,6 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
 .proffrozen593 .profchips593 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 6px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
-.proffrozen593 .chip591 { padding:5px 11px; min-height:38px; }
 .chip591 .today593 { font-size:10px; vertical-align:super; margin-left:5px; opacity:.85; }
 .chip591 .dot593 { display:inline-block; width:7px; height:7px; border-radius:50%; background:#d97706; box-shadow:0 0 0 1.5px var(--card); margin-left:6px; }
 .profjump593 { display:flex; flex-wrap:nowrap; gap:4px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
@@ -475,8 +475,6 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profmapscreen593 .bookrow { padding:8px 10px; margin:0 0 6px; }
 .profmapscreen593 .sub { margin:0 0 8px; }
 .profmapscreen593 .sectionhead { margin:12px 0 6px; }
-.profmapscreen593 .profchips591 { margin:0 0 8px; padding-bottom:2px; }
-.profmapscreen593 .chip591 { padding:5px 11px; min-height:38px; }
 /* v462 §2.4.10: the prayer book's two seats the standing
    rules do not carry — the row/page favorite star and the
    reading page's English | Latin switch (the kind-switch
