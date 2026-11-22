@@ -579,9 +579,8 @@ v603's pin moved at its Ship.
   served player day for 2026-11-21 answers 200 with
   its composed day payload.
 - Board closeout: What's New 420 · row 1578 Live
-  (shipped_at 2026-11-22T03:55:00Z) ·
-  shipped_records inserted and read back (see the
-  Ship seat's closing report for its id) · Ship
+  (shipped_at 2026-11-22T03:55:39Z) ·
+  shipped_records 794 inserted and read back · Ship
   phase record 2445 passed · intake 1123 Done.
 - Field legs: on the Praylist, open a block and pray
   from the expansion; tap Edit inside a block, answer
