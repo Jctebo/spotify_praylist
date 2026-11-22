@@ -15374,13 +15374,10 @@ function openHeaderMenu() {
     items.push({ head: true, label: 'Pray' });
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
-    // v604: the fold option — Expand all / Collapse all
-    // write the ONE stored page mode and repaint; the
-    // acts stand outside the in-place edit posture only.
-    if (!opn604.editing) {
-      items.push({ label: 'Expand all', act: function () { opnSetPraylistMode604('expanded'); opnFoldSession604 = {}; opnRepaintHome604(); } });
-      items.push({ label: 'Collapse all', act: function () { opnSetPraylistMode604('collapsed'); opnFoldSession604 = {}; opnRepaintHome604(); } });
-    }
+    // v604: the fold option stood here (Expand all /
+    // Collapse all). v609: the fold RETIRES with the
+    // block sections — the merged set has nothing to
+    // fold, and the acts stand nowhere.
   } else if (tab === 'podcasts' && podLevel === 'index') {
     // The Formation home: the retired row-2 button's act.
     items.push({ head: true, label: 'Catechesis' });
@@ -19899,7 +19896,11 @@ function wirePrayersView(day) {
       var all = extRebuildDescs(day);
       // The episodes page's Play All is the unblocked-group build:
       // the descriptors carrying no block (§2.3.4).
-      var descs = blockName === '__episodes'
+      // v609: the merged set's Play All is the whole day —
+      // the fold's composed sequence, unfiltered.
+      var descs = blockName === '__all'
+        ? all
+        : blockName === '__episodes'
         ? all.filter(function (d) { return !d.block; })
         : all.filter(function (d) { return d.block === blockName; });
       // v344 §2.4: play skips played, with the fully-played
@@ -20539,7 +20540,14 @@ function opnToggleShape607(kind, name) {
     var k = arr.indexOf(name);
     if (k >= 0) arr.splice(k, 1); else arr.push(name);
   }
-  return opnWriteShape607();
+  // v609: after the shape write lands, flush the
+  // session's materialized contents under the NEW shape
+  // — a group flipped ON takes its (possibly edited)
+  // list into the store with the flip; a group flipped
+  // OFF keeps its list in the session only (the store
+  // cannot hold contents for a block that does not
+  // stand — the standing validator rule).
+  return opnWriteShape607().then(function () { return opnWrite604('__shape609'); });
 }
 function opnProfileMenu607(anchorEl) {
   // The orphaned acts of the retired Edit profiles door,
@@ -22345,8 +22353,14 @@ function paintListenHome(day) {
   // (name + resolution line) beside the button, and the
   // separate profile card row is gone.
   var html = profPlanRowHtml(day)
-    + opnBannerHtml604() + opnEditBarHtml604() + opnShapeHtml607()
+    + opnBannerHtml604() + opnEditBarHtml604()
     + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  // v609: the v607 shape strip (opnShapeHtml607) NO
+  // LONGER paints here — John (2026-11-21 22:34 CT):
+  // the switches section at the form's top is clutter.
+  // Every switch re-seats at its group's head in the
+  // edit set (opnEditGroupHtml609); the strip function
+  // stands as unreachable dead code.
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
@@ -22372,10 +22386,105 @@ function homeBodyHtml(day) {
   // unchanged, no filter narrowing it now), one series row
   // per line; the episodes group stands last, outside the
   // order, when the day carries episodes.
-  var html = '';
-  orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b, day); });
-  if ((day.episodes || []).length) html += episodesRowHtml(day);
-  return html;
+  // v609 (John, 2026-11-21 22:28 CT): "Merge everything
+  // into one set" — the home body is opnSetHtml609's ONE
+  // list. blockRowHtml / episodesRowHtml stand as
+  // unreachable dead code (codebase precedent).
+  return opnSetHtml609(day);
+}
+/* ---------------- v609: the merged set ----------------
+   The Praylist page stops segmenting block-by-block: the
+   whole day stands as ONE SET — one continuous list of
+   the day's tracks in fold order (orderedBlocks order ·
+   each block's tracks in order · the block-less episodes
+   at the tail, their fold position). No block header
+   cards, no expansions, no dividers, no block names in
+   the set; the fold option retires with the sections.
+   The blocks remain the composition unit underneath —
+   the stores, the fold, and the edit form's per-block
+   contents all keep working; only the page's
+   presentation merges. */
+function opnSetHtml609(day) {
+  if (opn604.editing) return opnEditSetHtml609(day);
+  var html = '<div class="p609set" data-p609set="1">'
+    + '<div class="row p604exphead"><button class="playbtn small" data-queue="__all" aria-label="Play all of the day">&#9654;</button>'
+    + '<span class="grow">Play All</span></div>';
+  orderedBlocks(day).forEach(function (b) {
+    (b.tracks || []).forEach(function (t) { html += trackCard(Object.assign({}, t, { _block: b.block })); });
+  });
+  (day.episodes || []).forEach(function (t) { html += trackCard(t); });
+  return html + '</div>';
+}
+function opnEditSetHtml609(day) {
+  // The edit form over the set: ONE list of condensed
+  // contents rows, grouped by block under a group head
+  // carrying the block's ON/OFF toggle (John, 2026-11-21
+  // 22:34 CT: the group toggles stand in the condensed
+  // form, and toggled-off groups show too). Groups ON in
+  // the day stand in day order; groups OFF stand after
+  // them in canonical order, in full — toggle off, rows
+  // visible and dimmed, editable in place. Drags stay
+  // within their block's run by store construction
+  // (opnDragOver604 looks both ids up in the drag block's
+  // own list — a cross-boundary target is an inert
+  // no-op; no move writes between blocks' contents). The
+  // unblocked episodes carry no edit rows: they are not
+  // profile contents.
+  var html = '<div class="p609set p609edit" data-p609set="1">';
+  var seen = {};
+  orderedBlocks(day).forEach(function (b) { seen[b.block] = true; html += opnEditGroupHtml609(b.block); });
+  ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas', 'Podcasts'].forEach(function (name) {
+    if (!seen[name]) html += opnEditGroupHtml609(name);
+  });
+  return html + '</div>';
+}
+function opnGroupOn609(block) {
+  var sh = opn604.shape;
+  if (!sh) return true;
+  if (block === 'Novenas') return !!sh.layers.novenas.on;
+  if (block === 'Podcasts') return !!sh.layers.podcasts.on;
+  return sh.core.indexOf(block) >= 0;
+}
+/* v609: the series switches' seat — inside the Podcasts
+   group. John's podcast selections live in layers.series
+   (the fold synthesizes their standings), NOT in the
+   Podcasts contents, which stand empty on his profiles:
+   retiring the switches with the top strip would strand
+   every standing series with no seat to switch it. They
+   stand here, with their group, on the standing wiring. */
+function opnSeriesRows609() {
+  if (!opn604.series) return '<p class="sub">Loading podcasts \u2026</p>';
+  var sh = opn604.shape;
+  var onKeys = (sh && sh.layers && sh.layers.podcasts && sh.layers.podcasts.series) || [];
+  return opn604.series.map(function (sr) {
+    var on = onKeys.indexOf(sr.series) >= 0;
+    return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span>'
+      + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="series|' + esc(sr.series) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+  }).join('');
+}
+function opnEditGroupHtml609(block) {
+  var list = opnMaterialize604(block);
+  var on = opnGroupOn609(block);
+  var kind = block === 'Novenas' ? 'layer|novenas' : block === 'Podcasts' ? 'layer|podcasts' : 'block|' + block;
+  var html = '<div class="p609group' + (on ? '' : ' p609off') + '" data-p604exp="' + esc(block) + '">'
+    + '<div class="row p609ghead" data-p609ghead="' + esc(block) + '"><span class="grow">' + esc(block) + '</span>'
+    + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
+  if (block === 'Podcasts') html += opnSeriesRows609();
+  list.forEach(function (it) {
+    var id = opnTodayItemId594(it);
+    html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(id) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(id) + '" title="Drag to reorder">&#x2630;</span>'
+      + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(id) + '">Remove</button></div></div>';
+  });
+  if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
+  var removed = opn604.removed[block] || [];
+  if (removed.length) {
+    html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
+      + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+  }
+  html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
+  return html + '</div>';
 }
 function appendBlockPodcastCards(b) {
   // v522: the Podcasts layer shell's cards — ONE SERIES
