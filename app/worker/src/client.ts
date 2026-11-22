@@ -15299,7 +15299,7 @@ function openHeaderMenu() {
     // v604: the fold option — Expand all / Collapse all
     // write the ONE stored page mode and repaint; the
     // acts stand outside the in-place edit posture only.
-    if (!opn604.block) {
+    if (!opn604.editing) {
       items.push({ label: 'Expand all', act: function () { opnSetPraylistMode604('expanded'); opnFoldSession604 = {}; opnRepaintHome604(); } });
       items.push({ label: 'Collapse all', act: function () { opnSetPraylistMode604('collapsed'); opnFoldSession604 = {}; opnRepaintHome604(); } });
     }
@@ -15562,7 +15562,15 @@ function wireRowActs(scope) {
     b.addEventListener('click', function () {
       var key = b.getAttribute('data-rowmenu');
       var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
-      if (t) openDayRowMenu(t, b);
+      if (!t) return;
+      // v607: on the Praylist home, an EPISODE row's ⋮ menu
+      // carries the v585 title card as its Details item —
+      // the card's seat after the row tap returned to play.
+      var extra = null;
+      if (state.prayersView && state.prayersView.kind === 'home' && typeof epCardIsEpisode === 'function' && epCardIsEpisode(t)) {
+        extra = [{ label: 'Details', act: function () { openEpisodeCard({ desc: t, entry: null, surface: 'praylist', titleText: t.title, seriesTitle: t.kind === 'podcast' ? epCardSeriesTitle(t.podSeries) : (t.block || ''), dateLabel: '', descText: t.descText || null, onPlay: function () { tapPlay(t); } }, b); } }];
+      }
+      openDayRowMenu(t, b, extra);
     });
   });
   // v519: the addition card's overflow — resolved from
@@ -19781,17 +19789,19 @@ function wirePrayersView(day) {
       if (t) openRead(t);
     });
   });
-  // v585: a tap on an EPISODE row's body opens its title
-  // card (Q1 A) — podcast inserts, novena episodes, the AI
-  // Signal, homily takes, external episodes. The row's own
-  // controls (the play disc, the played dot, the star, the
-  // ⋮) keep their acts; prayer rows are not episodes and
-  // stand untouched.
+  // v607 (John's field verdict, 2026-11-21): a tap on a
+  // track row PLAYS it — the v576 standing rule restored.
+  // v585's title card on the row tap RETIRES on the
+  // Prayers surfaces this wiring serves: the card's seat
+  // is now the row ⋮ menu's Details item (wireRowActs,
+  // home surface). Unavailable rows stay inert; the row's
+  // own controls keep their acts. Edit-posture rows carry
+  // no [data-card] and stay inert by construction.
   view.querySelectorAll('[data-card]').forEach(function (row) {
     row.addEventListener('click', function (ev) {
       if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
       var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === row.getAttribute('data-card'); })[0];
-      if (d && epCardIsEpisode(d)) openEpisodeCard({ desc: d, entry: null, surface: 'praylist', titleText: d.title, seriesTitle: d.kind === 'podcast' ? epCardSeriesTitle(d.podSeries) : (d.block || ''), dateLabel: '', descText: d.descText || null, onPlay: function () { tapPlay(d); } }, row);
+      if (d && d.available !== false) tapPlay(d);
     });
   });
   wireRowActs(view); // v413 §2.6: the row ⋮ + share wiring rides every Prayers paint
@@ -19824,6 +19834,10 @@ function wirePrayersView(day) {
       // The card's own controls (its play button) are not
       // navigation — a tap anywhere else opens the page (§2.2.5).
       if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      // v607: while the edit form stands, a block row's
+      // tap does not fold it away — every block stands
+      // expanded in the form.
+      if (opn604.editing) return;
       var bk604 = card.getAttribute('data-openblock');
       // v604: on the one page, a block row's tap toggles
       // its in-place expansion (independent folds, Q1);
@@ -19875,17 +19889,24 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p604pickedit]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnOpenPickEdit604(); });
   });
-  view.querySelectorAll('[data-p604edit]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnEnterEdit604(btn.getAttribute('data-p604edit')); });
+  // v607: the one Edit at the top + its Done + the shape
+  // switches + the edit bar's profile overflow. The
+  // per-block [data-p604edit] / [data-p604door] wiring
+  // retires with their buttons (no paint emits them).
+  view.querySelectorAll('[data-p607edit]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnEnterEdit607(); });
   });
-  view.querySelectorAll('[data-p604door]').forEach(function (btn) {
-    btn.addEventListener('click', function () { openBlockPage(btn.getAttribute('data-p604door')); });
+  view.querySelectorAll('[data-p607done]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnExitEdit607(); });
+  });
+  view.querySelectorAll('[data-p607more]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnProfileMenu607(btn); });
+  });
+  view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
   view.querySelectorAll('[data-p604change]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnAskScope604(opn604.block); });
-  });
-  view.querySelectorAll('[data-p604done]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opn604.block = null; opnRepaintHome604(); });
+    btn.addEventListener('click', function () { opnAskScope604(null); });
   });
   view.querySelectorAll('[data-p604savenew]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnSaveNew604(); });
@@ -20002,11 +20023,19 @@ function profileRebuild() {
    AT ONCE (today layer / profile contents). Save New in
    the frozen edit bar mints the composed day. */
 var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, dragMoved: false, bookList: null, bookGroups: null };
+// v607: the page-wide edit form — editing stands on the
+// whole page (opn604.block's single-block posture retires);
+// shape carries the block/layer switches' working shape
+// {core, layers} for the session scope; series caches the
+// podcast series list for the Podcasts switches.
+opn604.editing = false; opn604.shape = null; opn604.series = null; opn604.arm607 = null;
 var opnFoldSession604 = {};
 var OPN_PRAYLIST_MODE_KEY_604 = 'opn-praylistmode-v604';
 function opnPraylistMode604() { try { return localStorage.getItem(OPN_PRAYLIST_MODE_KEY_604) === 'expanded' ? 'expanded' : 'collapsed'; } catch (e) { return 'collapsed'; } }
 function opnSetPraylistMode604(m) { try { localStorage.setItem(OPN_PRAYLIST_MODE_KEY_604, m); } catch (e) {} }
 function opnExpanded604(block) {
+  // v607: in the edit form every block stands expanded.
+  if (opn604.editing) return true;
   if (Object.prototype.hasOwnProperty.call(opnFoldSession604, block)) return !!opnFoldSession604[block];
   return opnPraylistMode604() === 'expanded';
 }
@@ -20084,7 +20113,14 @@ function opnWrite604(block) {
   if (opn604.scope === 'today') {
     var layer = opn604.res.todayEdit ? opnClone(opn604.res.todayEdit) : { baseProfileKey: rec.key };
     if (!layer.contents) layer.contents = {};
-    layer.contents[block] = opnClone(opn604.lists[block]);
+    // v607: the form is page-wide — every materialized
+    // block's list writes, not only the acted block.
+    Object.keys(opn604.lists).forEach(function (b3) { layer.contents[b3] = opnClone(opn604.lists[b3]); });
+    // v607: the today-layer validator reads contents
+    // against the layer's own coreBlocks when they stand
+    // (a shape switch wrote them) — drop entries for
+    // blocks that do not stand in that core.
+    if (Array.isArray(layer.coreBlocks)) Object.keys(layer.contents).forEach(function (b4) { if (b4 !== 'Novenas' && layer.coreBlocks.indexOf(b4) < 0) delete layer.contents[b4]; });
     Object.keys(layer.contents).forEach(function (b2) {
       if (JSON.stringify(layer.contents[b2]) === JSON.stringify(opnTodayComposedContents594(rec, b2))) delete layer.contents[b2];
     });
@@ -20093,7 +20129,12 @@ function opnWrite604(block) {
   }
   var contents = rec.contents ? opnClone(rec.contents) : {};
   Object.keys(opn604.lists).forEach(function (b2) { contents[b2] = opnClone(opn604.lists[b2]); });
-  var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (rec.coreBlocks || []).slice(), layers: opnLayersOut(rec.layers), contents: contents };
+  // v607: same validator rule as the shape write — no
+  // contents entry for a block that does not stand under
+  // the session's current shape.
+  var coreNow604 = opn604.shape ? opn604.shape.core : (rec.coreBlocks || []);
+  Object.keys(contents).forEach(function (b3) { if (b3 !== 'Novenas' && coreNow604.indexOf(b3) < 0) delete contents[b3]; });
+  var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (opn604.shape ? opn604.shape.core.slice() : (rec.coreBlocks || []).slice()), layers: opn604.shape ? opnLayersOut(opn604.shape.layers) : opnLayersOut(rec.layers), contents: contents };
   return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
 }
 function opnRemove604(block, id) {
@@ -20129,7 +20170,8 @@ function opnWireDrag604(scopeEl) {
   scopeEl.querySelectorAll('[data-p604handle]').forEach(function (h) {
     h.addEventListener('pointerdown', function (ev) {
       if (ev && ev.preventDefault) ev.preventDefault();
-      var block = opn604.block;
+      var expEl = h.closest ? h.closest('[data-p604exp]') : null;
+      var block = expEl ? expEl.getAttribute('data-p604exp') : null;
       if (!block) return;
       var dragId = h.getAttribute('data-p604handle');
       var move = function (e2) {
@@ -20153,18 +20195,20 @@ function opnWireDrag604(scopeEl) {
 }
 function opnExpansionHtml604(b, day) {
   var block = b.block;
-  if (opn604.block === block) return opnEditPostureHtml604(b);
+  // v607: the edit form is page-wide — while it stands,
+  // every expansion is the edit posture. The per-block
+  // Edit act and the Block page door RETIRE from the
+  // prayer head (the one Edit stands at the top).
+  if (opn604.editing) return opnEditPostureHtml604(b);
   var html = '<div class="p604exp" data-p604exp="' + esc(block) + '">'
     + '<div class="row p604exphead"><button class="playbtn small" data-queue="' + esc(block) + '" aria-label="Play all of ' + esc(b.label || block) + '">&#9654;</button>'
-    + '<span class="grow">Play All</span>'
-    + '<button class="btn ghost" data-p604edit="' + esc(block) + '">Edit</button>'
-    + '<button class="btn ghost" data-p604door="' + esc(block) + '">Block page</button></div>';
+    + '<span class="grow">Play All</span></div>';
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: block })); }).join('');
   return html + '</div>';
 }
 function opnEditPostureHtml604(b) {
   var block = b.block;
-  var list = opn604.lists[block] || [];
+  var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
   list.forEach(function (it) {
     var id = opnTodayItemId594(it);
@@ -20183,7 +20227,8 @@ function opnEditPostureHtml604(b) {
   return html + '</div>';
 }
 function opnBannerHtml604() {
-  if (!opn604.scope) return '';
+  // v607: the banner stands while the edit form stands.
+  if (!opn604.editing || !opn604.scope) return '';
   var name = opn604.res && opn604.res.effective ? opn604.res.effective.name : '';
   var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
   var line = opn604.scope === 'today'
@@ -20193,10 +20238,11 @@ function opnBannerHtml604() {
   return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">Change</button></div>' + second + '</div></div>';
 }
 function opnEditBarHtml604() {
-  if (!opn604.block) return '';
+  if (!opn604.editing) return '';
   return '<div class="proffrozen593 p604bar" data-p604bar="1"><div class="profbar593"><div class="row">'
     + '<button class="btn gold" data-p604savenew="1"' + (opn604.wrote ? '' : ' disabled') + '>Save New</button>'
-    + '<button class="btn ghost" data-p604done="1">Done</button></div></div></div>';
+    + '<button class="btn ghost" data-p607more="1" aria-label="Profile options">&#8943;</button>'
+    + '<button class="btn ghost" data-p607done="1">Done</button></div></div></div>';
 }
 function opnAskScope604(block) {
   var old = document.querySelector('.p604q');
@@ -20217,7 +20263,12 @@ function opnAskScope604(block) {
       if (opn604.scope && opn604.scope !== sc) { opn604.scopeSwitched = true; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; }
       opn604.scope = sc;
       sheet.remove();
+      // v607: a page entry (block null, entry pending)
+      // starts the page-wide form; a scope Change inside
+      // the form re-seeds the session on the new scope.
       if (block) opnStartPosture604(block);
+      else if (opn604.editing) { opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opn604.wrote = false; opnInitShape607(); opnRepaintHome604(); }
+      else if (opn607entry) { opn607entry = false; opnStartEdit607(); }
       else opnRepaintHome604();
     });
   });
@@ -20297,6 +20348,151 @@ function opnSaveNew604() {
     }).catch(function () {});
   });
 }
+/* ---------------- v607: one Edit at the top ----------------
+   The page-wide edit form. Entry (opnEnterEdit607) stands
+   behind the v594 vault gate, awaits the standings, loads
+   the profiles payload, asks the ONE QUESTION when no
+   scope stands, then opnStartEdit607: editing=true, the
+   shape strip seeds from the scope's composed shape, and
+   every block stands expanded in edit posture. Writes go
+   through the standing stores AT ONCE (opnWrite604 for
+   contents · opnWriteShape607 for block/layer switches). */
+var opn607entry = false;
+function opnInitShape607() {
+  var rec = opnProfRec604();
+  if (!rec) { opn604.shape = null; return; }
+  var core = (rec.coreBlocks || []).slice();
+  var layers = opnLayersOut(rec.layers);
+  if (opn604.scope === 'today' && opn604.res.todayEdit) {
+    var layer = opn604.res.todayEdit;
+    if (Array.isArray(layer.coreBlocks)) core = layer.coreBlocks.slice();
+    if (layer.layers) layers = opnLayersOut(layer.layers);
+  }
+  opn604.shape = { core: core, layers: layers };
+}
+function opnStartEdit607() {
+  opn604.editing = true;
+  opnInitShape607();
+  opnRepaintHome604();
+  if (!opn604.series) {
+    api('/api/player/podcasts').then(function (r) { opn604.series = (r && r.seriesList) || []; if (opn604.editing) opnRepaintHome604(); }).catch(function () { opn604.series = []; });
+  }
+}
+function opnEnterEdit607() {
+  // The v594 vault gate's duty passes wholly to this
+  // entry (the Configure doors retire in this release).
+  if (profVaultGate594(view, function () { opnRepaintHome604(); opnEnterEdit607(); }, function () { opnRepaintHome604(); })) return;
+  opnEnsureStandings601().then(function () {
+    return opn604.res ? opn604.res : opnLoadRes604();
+  }).then(function () {
+    if (!opn604.scope) { opn607entry = true; opnAskScope604(null); return; }
+    opnStartEdit607();
+  }).catch(function () {});
+}
+function opnExitEdit607() {
+  opn604.editing = false;
+  opn604.arm607 = null;
+  opnRepaintHome604();
+}
+function opnWriteShape607() {
+  opn604.wrote = true;
+  var rec = opnProfRec604();
+  if (!rec || !opn604.shape) return Promise.resolve();
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var done = function (r) { if (r) opn604.res = r; opnRepaintHome604(); profileRebuild(); };
+  var sh = opn604.shape;
+  var layersStored = { novenas: { on: !!sh.layers.novenas.on }, podcasts: { on: !!sh.layers.podcasts.on, series: (sh.layers.podcasts.series || []).slice() } };
+  if (opn604.scope === 'today') {
+    var layer = opn604.res.todayEdit ? opnClone(opn604.res.todayEdit) : { baseProfileKey: rec.key };
+    layer.coreBlocks = sh.core.slice();
+    layer.layers = layersStored;
+    var has = layer.coreBlocks !== undefined || layer.layers !== undefined || (layer.contents && Object.keys(layer.contents).length > 0);
+    return profPut('/api/prayer/profiles/today-edit', { date: date, layer: has ? layer : null }).then(done).catch(function () {});
+  }
+  var contents = rec.contents ? opnClone(rec.contents) : {};
+  Object.keys(opn604.lists).forEach(function (b2) { contents[b2] = opnClone(opn604.lists[b2]); });
+  // The contents validator refuses an entry for a block
+  // that does not stand — a block switched OFF in this
+  // form carries no contents entry in the write (its
+  // materialized list stands in the session, restored
+  // if the block is switched back on).
+  Object.keys(contents).forEach(function (b3) { if (b3 !== 'Novenas' && sh.core.indexOf(b3) < 0) delete contents[b3]; });
+  var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: sh.core.slice(), layers: opnLayersOut(sh.layers), contents: contents };
+  return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
+}
+function opnShapeHtml607() {
+  if (!opn604.editing || !opn604.shape) return '';
+  var sh = opn604.shape;
+  var H = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  var sw = function (kind, name, on) {
+    return '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '|' + esc(name) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button>';
+  };
+  var html = '<div class="p607shape" data-p607shape="1"><p class="sub">Blocks &amp; layers — switches write at once, in the banner\u2019s scope.</p>';
+  H.forEach(function (b) {
+    html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(b) + '</span>' + sw('block', b, sh.core.indexOf(b) >= 0) + '</div></div>';
+  });
+  html += '<div class="card bookrow"><div class="row"><span class="grow">Novenas</span>' + sw('layer', 'novenas', !!sh.layers.novenas.on) + '</div></div>';
+  html += '<div class="card bookrow"><div class="row"><span class="grow">Podcasts</span>' + sw('layer', 'podcasts', !!sh.layers.podcasts.on) + '</div></div>';
+  if (sh.layers.podcasts.on) {
+    if (!opn604.series) html += '<p class="sub">Loading podcasts \u2026</p>';
+    else opn604.series.forEach(function (sr) {
+      var on = (sh.layers.podcasts.series || []).indexOf(sr.series) >= 0;
+      html += '<div class="card bookrow"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span>' + sw('series', sr.series, on) + '</div></div>';
+    });
+  }
+  return html + '</div>';
+}
+function opnToggleShape607(kind, name) {
+  var sh = opn604.shape;
+  if (!sh) return;
+  if (kind === 'block') {
+    var i = sh.core.indexOf(name);
+    if (i >= 0) sh.core.splice(i, 1);
+    else {
+      var H = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+      var ci = H.indexOf(name), pos = 0;
+      sh.core.forEach(function (x, j) { if (H.indexOf(x) < ci) pos = j + 1; });
+      sh.core.splice(pos, 0, name);
+    }
+  } else if (kind === 'layer') {
+    sh.layers[name].on = !sh.layers[name].on;
+  } else if (kind === 'series') {
+    var arr = sh.layers.podcasts.series || (sh.layers.podcasts.series = []);
+    var k = arr.indexOf(name);
+    if (k >= 0) arr.splice(k, 1); else arr.push(name);
+  }
+  return opnWriteShape607();
+}
+function opnProfileMenu607(anchorEl) {
+  // The orphaned acts of the retired Edit profiles door,
+  // re-homed: Reset to Default (a default profile) ·
+  // Delete profile (a custom profile) — two-tap armed,
+  // exactly as the door armed them, on the standing
+  // reset/delete routes, acting on the profile in force.
+  // No rename act stands here: no rename of a standing
+  // profile exists in the app — a name is given only at
+  // the Save New mint.
+  var rec = opnProfRec604();
+  if (!rec) return;
+  var items = [];
+  if (rec.kind === 'default') {
+    items.push({ label: opn604.arm607 === 'reset' ? 'Tap again to reset' : 'Reset to Default', act: function () {
+      if (opn604.arm607 !== 'reset') { opn604.arm607 = 'reset'; opnProfileMenu607(anchorEl); return; }
+      opn604.arm607 = null;
+      profPut('/api/prayer/profiles/reset', { profileKey: rec.key }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnInitShape607(); opnRepaintHome604(); profileRebuild(); }).catch(function () {});
+    } });
+  }
+  if (rec.kind === 'custom') {
+    items.push({ label: opn604.arm607 === 'delete' ? 'Tap again to delete' : 'Delete profile', act: function () {
+      if (opn604.arm607 !== 'delete') { opn604.arm607 = 'delete'; opnProfileMenu607(anchorEl); return; }
+      opn604.arm607 = null;
+      profPut('/api/prayer/profiles/delete', { profileKey: rec.key }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnExitEdit607(); profileRebuild(); }).catch(function () {});
+    } });
+  }
+  if (!items.length) items.push({ label: 'No profile acts stand for this profile', act: function () {} });
+  openSheetMenu(rec.name || 'Profile', items, anchorEl);
+}
+
 function opnOpenPickEdit604() {
   api('/api/prayer/profiles').then(function (res) {
     opn604.res = res;
@@ -20344,13 +20540,20 @@ function profPlanRowHtml(day) {
   // the row falls back to its bare "Prayer plan" label,
   // the act standing.
   var fold = day && day.profile;
-  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn ghost" data-p604pickedit="1">Edit</button><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  // v607: ONE Edit at the top — the page edit form's entry
+  // (Done while it stands). The standing pick's act keeps
+  // its seat under its own name (Pick).
+  var edit607 = opn604.editing
+    ? '<button class="btn gold" data-p607done="1">Done</button>'
+    : '<button class="btn gold" data-p607edit="1">Edit</button>';
+  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span>' + edit607 + '<button class="btn ghost" data-p604pickedit="1">Pick</button><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
   // v604: the resolution line collapses to the standing
   // form — the profile in force IS the standing pick.
   var resLine = 'Your every-day profile';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
-    + '<button class="btn ghost" data-p604pickedit="1">Edit</button>'
+    + edit607
+    + '<button class="btn ghost" data-p604pickedit="1">Pick</button>'
     + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
 }
 
@@ -20437,10 +20640,16 @@ function openConfigureLadder593() {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet profladder593 profscreenfull592';
+  // v607 (John's pick, 2026-11-21 22:02 CT): the Edit
+  // today and Edit profiles DOORS RETIRE — the top Edit
+  // on the Praylist is the only editor. The ladder shell
+  // stands (the Configure plan button and the Settings
+  // Profiles button still route here) carrying its head
+  // and the word; the two screens stand in the tree as
+  // unreachable code (no painted surface opens them).
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Configure plan</h1></div>'
     + '<p class="sub" data-p594ladderhead="1"></p>'
-    + '<div class="card bookrow" data-p594door="today"><div class="row"><span class="grow">Edit today</span><span class="meta">›</span></div><p class="sub">Today’s prayer as it stands — changes stand for today only.</p></div>'
-    + '<div class="card bookrow" data-p593door="edit"><div class="row"><span class="grow">Edit profiles</span><span class="meta">›</span></div><p class="sub">What a profile stands — changes stand in every day that follows it.</p></div>'
+    + '<p class="sub" data-p607ladderword="1">Editing stands on the Praylist — tap Edit at the top of the page. Contents and block switches for today only and for standing are edited there, in place.</p>'
     + '<div class="row"><button class="btn ghost" data-p593ladderclose="1">Close</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true);
@@ -20452,8 +20661,6 @@ function openConfigureLadder593() {
     var edits = !!(prof && r.todayEdit && opnTodayDivergence594(prof, r.todayEdit).length);
     headEl.textContent = 'Today follows ' + r.effective.name + (edits ? ' · today has its own edits' : '');
   }).catch(function () {});
-  sheet.querySelector('[data-p594door="today"]').addEventListener('click', function () { sheet.remove(); openEditTodayScreen594(true); });
-  sheet.querySelector('[data-p593door="edit"]').addEventListener('click', function () { sheet.remove(); openProfilesScreen(null, { ladder: true }); });
   var lc = sheet.querySelector('[data-p593ladderclose]');
   if (lc) lc.addEventListener('click', function () { sheet.remove(); });
 }
@@ -22060,7 +22267,7 @@ function paintListenHome(day) {
   // (name + resolution line) beside the button, and the
   // separate profile card row is gone.
   var html = profPlanRowHtml(day)
-    + opnBannerHtml604() + opnEditBarHtml604()
+    + opnBannerHtml604() + opnEditBarHtml604() + opnShapeHtml607()
     + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
