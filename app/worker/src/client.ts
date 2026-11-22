@@ -18332,7 +18332,14 @@ function extRebuildDescs(day) {
       c590.forEach(function (it) {
         if (it.kind !== 'episode') return;
         var ed = state.episodeRes614[b.block + ':' + it.key];
-        if (ed) expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+        if (!ed) return;
+        // A homily descriptor stands RAW (the day-addition
+        // precedent): the trackDesc seam's whitelist would
+        // drop its kind + homilyId, the identity its play
+        // path reads. Podcast episode descriptors take the
+        // standing course/day seam.
+        if (ed.kind === 'homily') { descs.push(Object.assign({}, ed, { _block: b.block })); return; }
+        expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
       });
     }
   });
@@ -21781,7 +21788,7 @@ function openEditTodayScreen594(fromLadder) {
         afterEdit(btn);
       });
     });
-    function cPartsT(btn, attr) { return String(btn.getAttribute(attr)).split('|'); }
+    function cPartsT(btn, attr) { var v = String(btn.getAttribute(attr)); var i = v.indexOf('|'); return i < 0 ? [v] : [v.slice(0, i), v.slice(i + 1)]; } // v614: split on the FIRST '|' only — an episode item's key carries its own '|' (the core listen key), and the row id must survive it verbatim (the v604 handlers' slice+join pattern)
     function removeItemT(btn, attr) {
       var parts = cPartsT(btn, attr);
       var block = parts[0], id = parts[1];
@@ -22139,7 +22146,7 @@ function openProfilesScreen(openKey, opts) {
         repaint(btn);
       });
     });
-    function cParts(btn, attr) { return String(btn.getAttribute(attr)).split('|'); }
+    function cParts(btn, attr) { var v = String(btn.getAttribute(attr)); var i = v.indexOf('|'); return i < 0 ? [v] : [v.slice(0, i), v.slice(i + 1)]; } // v614: split on the FIRST '|' only — an episode item's key carries its own '|', and the row id must survive it verbatim (the v604 handlers' slice+join pattern)
     root.querySelectorAll('[data-p591citem]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var parts = cParts(btn, 'data-p591citem');
@@ -22530,6 +22537,17 @@ function openAddLadder603(block, host) {
     function officeItems614() {
       return sources().filter(function (it) { return it.kind === 'source' && EXT_TOKENS[it.key]; });
     }
+    function ownItems614() {
+      // The block's OWN source rows (its own prayers —
+      // Morning Prayer, Daily Rosary, Marian Antiphon,
+      // Daily Reflection, by block): the old rung offered
+      // them with the rest of the block's universe, and
+      // John's rule stands — any playable audio is
+      // accessible from the Add screen. In the tree they
+      // stand under their provider name, Ora Pro Nobis
+      // (the §1 provider-name pattern), under Pray.
+      return sources().filter(function (it) { return it.kind === 'source' && !EXT_TOKENS[it.key] && it.key !== 'ext-saint-of-the-day'; });
+    }
     function saintItem614() {
       var f = sources().filter(function (it) { return it.kind === 'source' && it.key === 'ext-saint-of-the-day'; });
       return f.length ? f[0] : null;
@@ -22637,6 +22655,7 @@ function openAddLadder603(block, host) {
         groups.push({ head: 'Pray \u203a Sing the Hours', items: singItems614().filter(function (it) { return match(it.label); }), path: 'Pray \u203a Sing the Hours' });
         var si = saintItem614();
         groups.push({ head: 'Pray \u203a Saint of the Day', items: si && match(si.label) ? [si] : [], path: 'Pray \u203a Saint of the Day' });
+        groups.push({ head: 'Pray \u203a Ora Pro Nobis', items: ownItems614().filter(function (it) { return match(it.label); }), path: 'Pray \u203a Ora Pro Nobis' });
         groups.push({ head: 'Catechesis \u203a Courses', items: courses().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Courses' });
         groups.push({ head: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis', items: dailyItems().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis' });
         var doors = [];
@@ -22673,7 +22692,7 @@ function openAddLadder603(block, host) {
         ]);
       }
       if (rung === 'br:worship') return doors614([['lf:lectionary', 'Lectionary', 'USCCB Daily Readings'], ['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass'], ['lf:adoration', 'Adoration', 'No list audio']]);
-      if (rung === 'br:pray') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category'], ['lf:office', 'Divine Office', 'The eight hours'], ['lf:sing', 'Sing the Hours', 'Lauds \u00b7 Vespers'], ['lf:saint', 'Saint of the Day', 'The day\u2019s saint']]);
+      if (rung === 'br:pray') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category'], ['lf:office', 'Divine Office', 'The eight hours'], ['lf:sing', 'Sing the Hours', 'Lauds \u00b7 Vespers'], ['lf:saint', 'Saint of the Day', 'The day\u2019s saint'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers']]);
       if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies']]);
       if (rung === 'br:conscience' || rung === 'br:sacred-art' || rung === 'lf:virtual-mass' || rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
       if (rung === 'lf:lectionary') return readingsNode614();
@@ -22694,6 +22713,7 @@ function openAddLadder603(block, host) {
       if (rung === 'lf:office') { var oh = ''; officeItems614().forEach(function (it) { if (match(it.label)) oh += rowHtml(it, ''); }); return oh || '<p class="sub">No office hours stand for this block.</p>'; }
       if (rung === 'lf:sing') { var sh2 = ''; singItems614().forEach(function (it) { if (match(it.label)) sh2 += rowHtml(it, ''); }); return sh2; }
       if (rung === 'lf:saint') { var si2 = saintItem614(); return si2 ? rowHtml(si2, '') : '<p class="sub">Nothing to add</p>'; }
+      if (rung === 'lf:own') { var ow = ''; ownItems614().forEach(function (it) { if (match(it.label)) ow += rowHtml(it, ''); }); return ow || '<p class="sub">Nothing to add</p>'; }
       if (rung === 'lf:courses') return doors614(OPN_COURSE_KEYS_603.map(function (k) { return ['course:' + k, opnLadderCourseTitle603(k), 'Next episode + every episode']; }));
       if (rung.indexOf('course:') === 0) return courseNode614(rung.slice('course:'.length));
       if (rung === 'lf:podcasts') {
@@ -22721,7 +22741,7 @@ function openAddLadder603(block, host) {
     function parentOf614(r) {
       if (r.indexOf('br:') === 0) return 'root';
       if (r === 'lf:lectionary' || r === 'lf:virtual-mass' || r === 'lf:adoration') return 'br:worship';
-      if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:sing' || r === 'lf:saint') return 'br:pray';
+      if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:sing' || r === 'lf:saint' || r === 'lf:own') return 'br:pray';
       if (r.indexOf('prayers:') === 0) return 'lf:prayerbook';
       if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies') return 'br:catechesis';
       if (r.indexOf('course:') === 0) return 'lf:courses';
