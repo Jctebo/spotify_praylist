@@ -530,9 +530,64 @@ v603's pin moved at its Ship.
   the harness-v585 baseline. Field legs remain John's,
   as recorded above, and are not claimed here.
 
-## §5 Ship
+## §5 Ship (2026-11-21, Ship seat, contract 858 — run level TO SHIP)
 
-- (Written at Ship: merge · pin `ora-pro-nobis-v604-1`
-  · push read-back · clean-checkout gates · deploy ·
-  served proofs · What's New · shipped_records ·
-  intake close.)
+- Pin: SW pin bumped on release/v604 in d3920f3
+  (`ora-pro-nobis-v603-1` → `ora-pro-nobis-v604-1`,
+  ui.ts CACHE); harness-v604 re-run on the branch
+  tree after the bump: 51 ok / 0 not ok.
+- Merge: release/v604 merged to main as 0427223
+  (--no-ff). Main had not moved past the branch base
+  ffd1bbe (verified before merge). Whole-tree marker
+  grep: `dayDefaults` hits only in the migration
+  deletes, the import strip, retirement comments, and
+  the named-400 checks; `openDayMappingScreen593`
+  zero hits; conflict markers zero.
+- Push: 10 commits replicated byte-identical via the
+  GitHub Git Data API with SHA assertions — main
+  pushed · remote in sync at
+  0427223af7afa7dd17a229a9fe5eabde2c821cb1.
+- Gates on a clean checkout of the exact merged HEAD
+  (0427223, tracked tree clean): harness-v604 51 ok /
+  0 not ok · harness-v603 50 ok / 0 not ok. Note on
+  refs: harness-v604 reads its old build via
+  `git show main:`, so its clean run stood in a
+  disposable clone with that clone's main ref at the
+  base ffd1bbe (the harness's design environment, as
+  on the branch tree); harness-v603's T11 pin-vs-main
+  leg reads main the other way, so its 50/0 clean run
+  stood with main at the merged HEAD. The checked-out
+  tree was the exact merged HEAD, tracked-clean, in
+  both runs.
+- Deploy (connector-surrogate driver, from the
+  standing clone at 0427223): Worker
+  b63ffb5c-6a94-4adc-942b-512449736ede at 100% ·
+  rollback target 90d4f7c0 (v603).
+- Served proofs (https://app.orapronobis.media):
+  served sw.js pin reads `ora-pro-nobis-v604-1`
+  (v603-1 absent) · served app.js parses whole
+  (1,224,850 chars, node --check OK) and carries
+  `opnMigrateProfiles604`, `opn-praylistmode-v604`,
+  and `opnOpenAdd604` (the one-page expansion), and
+  does NOT carry `openDayMappingScreen593` · the
+  door-mirror profiles payload state is
+  {standingKey: "salesian", version: 6} — no
+  `dayDefaults`, no `picks` · a served day composes
+  under the standing pick: profiles effective for
+  Sunday 2026-11-22 resolves to salesian with
+  resolvedBy "standing" (no day-map flip), and the
+  served player day for 2026-11-21 answers 200 with
+  its composed day payload.
+- Board closeout: What's New 420 · row 1578 Live
+  (shipped_at 2026-11-22T03:55:00Z) ·
+  shipped_records inserted and read back (see the
+  Ship seat's closing report for its id) · Ship
+  phase record 2445 passed · intake 1123 Done.
+- Field legs: on the Praylist, open a block and pray
+  from the expansion; tap Edit inside a block, answer
+  the one question (today only / standing), remove a
+  track and watch the restore line stand, then Save
+  New and watch the mint become your standing pick;
+  flip the standing pick from the plan row and watch
+  the next day follow it — including a Sunday, which
+  no longer flips on its own.
