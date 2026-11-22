@@ -473,11 +473,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    folder head's (.favfolder-head + .sectionhead + .meta
    carry it); this rule keeps only the tap affordance. */
 .p609sethead { cursor:pointer; }
-/* v615: the set head's played disc — the played-dot dress
-   at head size (the 44px card-row box must not swell the
-   head); grey (the theme's muted tone) when the block's
-   every available track is played. */
-.p609sethead .p615disc { flex:0 0 auto; width:20px; height:20px; margin:0; cursor:default; }
+/* v615: the set head's disc — grey (the theme's muted
+   tone) when the block's every available track is played.
+   v616: the disc is the PLAY disc — the standing
+   .playbtn.small form (44px tap, the 30px gold disc drawn
+   by its ::after in var(--accent)) seated in the head; the
+   grey "all" rule stands verbatim on the same ::after, so
+   the v615 live seam greys the play disc itself. */
+.p609sethead .p615disc { flex:0 0 auto; margin:0; cursor:pointer; }
 .p609sethead .p615disc.all::after { background:var(--muted); border-color:var(--muted); }
 .p609group { margin:0 0 8px; }
 .p609ghead { align-items:center; margin:2px 0 6px; font-family:var(--sans); font-weight:600; }

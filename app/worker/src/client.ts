@@ -15297,7 +15297,9 @@ function refreshPlayedChrome() {
   // v615: the Praylist heads' live pass — each head's count
   // re-reads as the block's UNPLAYED count and its disc
   // greys (the "all" class) exactly when no unplayed track
-  // stands and at least one available track does. Recomputed
+  // stands and at least one available track does. v616: the
+  // disc this pass greys is the head's play disc — the seam
+  // and the grey stand unchanged. Recomputed
   // from state like every pass above; never incremented.
   view.querySelectorAll('[data-p615disc]').forEach(function (sp) {
     var c = opnBlockCounts615(sp.getAttribute('data-p615disc'));
@@ -20417,7 +20419,13 @@ function wirePrayersView(day) {
   var pbHost = document.getElementById('hdrrow2');
   if (pbHost) pbHost.querySelectorAll('[data-queue]').forEach(function (b) { queueBtns.push(b); });
   queueBtns.forEach(function (btn) {
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function (ev) {
+      // v616: a queue disc stands inside the Praylist group
+      // head (its own tap zone) — the tap must not bubble
+      // to the head's fold act. Discs standing outside a
+      // head (the block page's bar, the episodes page) have
+      // no ancestor act, so the stop changes nothing there.
+      if (ev && ev.stopPropagation) ev.stopPropagation();
       var blockName = btn.getAttribute('data-queue');
       var all = extRebuildDescs(day);
       // The episodes page's Play All is the unblocked-group build:
@@ -20458,9 +20466,12 @@ function wirePrayersView(day) {
   });
   // v612: the merged set's group heads are the fold's tap
   // targets — v604's row-tap shape (opnToggleBlock604 +
-  // repaint) moved to the head. The head carries no inner
-  // controls, so no target guard stands; track rows keep
-  // their own acts (the head is a separate element).
+  // repaint) moved to the head. v616: the head now carries
+  // one inner control — its play disc, wired by the
+  // [data-queue] pass above, whose handler stops
+  // propagation, so a disc tap never reaches this act;
+  // track rows keep their own acts (the head is a
+  // separate element).
   view.querySelectorAll('[data-p609sethead]').forEach(function (head) {
     head.addEventListener('click', function () {
       opnToggleBlock604(head.getAttribute('data-p609sethead'));
@@ -23376,8 +23387,12 @@ function opnPickInForm609(key) {
 }
 function opnSetHtml609(day) {
   if (opn604.editing) return opnEditSetHtml609(day);
-  var html = '<div class="p609set" data-p609set="1">'
-    + '<div class="row p604exphead"><button class="btn ghost" data-queue="__all">Play All</button></div>';
+  // v616 (John, 2026-11-22 09:24 CT, field verdict on
+  // v615: "The play should be gone and replaced with a
+  // play disc"): the set's Play All text pill RETIRES
+  // whole — no whole-day control stands in the set; each
+  // group head's disc is the block's play disc (below).
+  var html = '<div class="p609set" data-p609set="1">';
   if (!day) return html + '</div>';
   // v609 REPAIR (2026-11-21, production break — John's
   // field report: "all blocks disappeared"): the set
@@ -23428,16 +23443,25 @@ function opnSetHtml609(day) {
     var open609 = opnExpanded604(run.block);
     // v615 (John, 2026-11-22): the head's count reads LIVE —
     // the block's UNPLAYED count (opnCounts615 over the run
-    // as painted), and a disc in the played-dot dress stands
-    // between the name and the count: the hollow ring while
-    // any unplayed track stands, grey ("all") when every
-    // available track is played. The disc is a span painted
-    // inside the head — the head stays the one tap target.
+    // as painted). v616: the head's disc is a PLAY DISC —
+    // the standing .playbtn.small disc (the disc the old
+    // Play All row carried, the block page's bar form) at
+    // the right beside the count, carrying the block's own
+    // [data-queue] act (the Episodes tail carries the
+    // standing "__episodes" act, its descriptors standing
+    // block-less). The p615disc seam stands: refreshPlayed-
+    // Chrome's head pass toggles "all" on this same element
+    // and the disc greys (var(--muted)) exactly when every
+    // available track is played — a greyed disc stays
+    // tappable and replays the block (queueBuild's fallback).
+    // The disc is its OWN tap zone: the [data-queue] wiring
+    // stops propagation, so a disc tap never folds; a head
+    // tap elsewhere still folds (the v612 discipline).
     var c615 = opnCounts615(run.tracks);
     html += '<div class="p609sethead favfolder-head" data-p609sethead="' + esc(run.block) + '">'
       + '<span class="p612collmark favfolder-chev">' + (open609 ? '&#9662;' : '&#9656;') + '</span>'
       + '<h2 class="sectionhead grow">' + esc(run.block) + '</h2>'
-      + '<span class="played-dot p615disc' + (c615.total > 0 && c615.unplayed === 0 ? ' all' : '') + '" data-p615disc="' + esc(run.block) + '" aria-hidden="true"></span>'
+      + '<button class="playbtn small p615disc' + (c615.total > 0 && c615.unplayed === 0 ? ' all' : '') + '" data-p615disc="' + esc(run.block) + '" data-queue="' + (run.block === 'Episodes' ? '__episodes' : esc(run.block)) + '" aria-label="Play ' + esc(run.block) + '">&#9654;</button>'
       + '<span class="meta" data-p615count="' + esc(run.block) + '">' + c615.unplayed + '</span></div>';
     if (open609) run.tracks.forEach(function (t) { html += trackCard(t); });
   });
