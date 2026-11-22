@@ -51,7 +51,7 @@ function check(name, cond, extra) {
 const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-const oldClientSrc = git(['show', 'HEAD:app/worker/src/client.ts']);
+const oldClientSrc = git(['show', '6a0ef37:app/worker/src/client.ts']); // fail-on-old pin: the base tree (v619 ship) — pinned by hash so the OA legs survive the fix's own commit
 const FRMIKE = JSON.parse(readFileSync(APP + 'tests/fixtures-v620/frmike-payload-live.json', 'utf8'));
 const BARRON = JSON.parse(readFileSync(APP + 'tests/fixtures-v620/barron-payload-live.json', 'utf8'));
 const BIBLE = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/bible-folded.json', 'utf8'));
