@@ -13261,6 +13261,16 @@ function weaveAdditions(seg, adds) {
   pending.forEach(function (a) { emit(dayAdditionDesc(a)); });
   return out;
 }
+function readingsSeatDesc549(seat) {
+  // v619: the seat descriptor's one construction — the
+  // fold (foldReadingsSeat) and the contents pass in
+  // extRebuildDescs both stand the seat from here.
+  return { episodeId: seat.seqKey, kind: 'podcast', seriesKey: seat.seqKey, podSeries: 'daily-readings',
+    title: seat.title || 'Daily Reading', url: seat.url || null, enclosureUrl: null, available: !!seat.url,
+    block: 'Morning', source: '', durationS: seat.durationS || 0, listened: !!seat.listened,
+    podPositionS: (!seat.listened && seat.positionS > 0) ? Math.floor(seat.positionS) : null,
+    imageUrl: seat.imageUrl || null, descText: null, spotifyUrl: null, readingsSeat: true };
+}
 function foldReadingsSeat(descs, seat) {
   // v549 §2.5: the Morning Prayer readings seat — the day
   // payload's date-matched episode stands in the Morning
@@ -13274,16 +13284,12 @@ function foldReadingsSeat(descs, seat) {
     if (descs[i].block === 'Morning' && descs[i].episodeId === 'daily-rosary') { idx = i; break; }
   }
   if (idx < 0) return descs;
-  var d = { episodeId: seat.seqKey, kind: 'podcast', seriesKey: seat.seqKey, podSeries: 'daily-readings',
-    title: seat.title || 'Daily Reading', url: seat.url || null, enclosureUrl: null, available: !!seat.url,
-    block: 'Morning', source: '', durationS: seat.durationS || 0, listened: !!seat.listened,
-    podPositionS: (!seat.listened && seat.positionS > 0) ? Math.floor(seat.positionS) : null,
-    imageUrl: seat.imageUrl || null, descText: null, spotifyUrl: null, readingsSeat: true };
+  var d = readingsSeatDesc549(seat);
   var out = descs.slice();
   out.splice(idx, 0, d);
   return out;
 }
-function foldDayAdditions(descs, dateStr, seat) {
+function foldDayAdditions(descs, dateStr, seat, placed619) {
   // §2.2: weave the day's additions into a descriptor list.
   // The list stands in block order (the canonical blocks,
   // then the unblocked group); segments are woven per block
@@ -13292,13 +13298,20 @@ function foldDayAdditions(descs, dateStr, seat) {
   // place in the day.
   // v549 §2.5: the readings seat weaves after the additions,
   // on both exits — it stands even on a day with no additions.
+  // v619: placed619 (built by extRebuildDescs' contents pass
+  // in the same call) names the additions + the readings
+  // seat already stood AT their contents positions — the
+  // weave skips exactly those, so nothing doubles; every
+  // other addition keeps its anchor/tail weave as before.
+  var placedAdds619 = placed619 && placed619.adds ? placed619.adds : null;
+  var seatPlaced619 = !!(placed619 && placed619.seat);
   var byBlock = {};
-  if (state.dayAdditions && state.dayAdditionsDate === dateStr) state.dayAdditions.forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
+  if (state.dayAdditions && state.dayAdditionsDate === dateStr) state.dayAdditions.forEach(function (a) { if (placedAdds619 && a && placedAdds619[a.block + '|' + dayAdditionIdOf(a)]) return; (byBlock[a.block] = byBlock[a.block] || []).push(a); });
   // v551 (P10): today's device-local homily additions join
   // the same fold — they join BEFORE the empty check, or a
   // homily-only day would skip the weave entirely.
   homilyAdditionsFor(dateStr).forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
-  if (!Object.keys(byBlock).length) return foldReadingsSeat(descs, seat);
+  if (!Object.keys(byBlock).length) return seatPlaced619 ? descs : foldReadingsSeat(descs, seat);
   var segs = {}, segOrder = [];
   descs.forEach(function (d) {
     var b = d.block || '';
@@ -13312,7 +13325,7 @@ function foldDayAdditions(descs, dateStr, seat) {
   segOrder.forEach(function (b) {
     if (segs[b]) { out = out.concat(segs[b]); delete segs[b]; }
   });
-  return foldReadingsSeat(out, seat);
+  return seatPlaced619 ? out : foldReadingsSeat(out, seat);
 }
 function dayAdditionCardHtml(d) {
   // §2.3: the added prayer's card on its block page — the
@@ -18322,7 +18335,12 @@ function extRebuildDescs(day) {
   // stands; an unresolved/missing slot emits NO intro.
   var descs = [];
   var date = day.presentedDay || day.date;
+  // v619: the placed set for this rebuild — contents-pass
+  // placements (prayer additions by block + descriptor id,
+  // and the readings seat) the additions fold must skip.
+  var placed619 = { adds: {}, seat: false };
   (day.blocks || []).forEach(function (b) {
+    var blockStart619 = descs.length;
     (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
     // v522: the Podcasts layer shell folds NOTHING — no
     // Podcasts-group episode stands in the day build (the
@@ -18403,89 +18421,187 @@ function extRebuildDescs(day) {
         return a.e.sortOrder - c.e.sortOrder;
       });
     }
-    emit.forEach(function (em) {
-      var e = em.e;
-      if (e.own) {
-        var row = e.own;
-        var st = state.ownSlots[row.sourceKey];
-        if (!st) return;
-        if (st.state === 'present') {
-          // v603 Review fix: with a contents entry
-          // standing, the Novenas row emits the
-          // contents-order selection (named novenas at
-          // their contents positions, all-novenas
-          // standing the rest) — without contents the
-          // slot stands whole, exactly as before.
-          var metas = st.tracks;
-          if (row.sourceKey === 'novenas' && c590) metas = opnNovenaMetas603(c590, st.tracks);
-          metas.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
-        } else if (st.state === 'missing') {
-          // v603 Review fix: a named-only Novenas entry
-          // under a missing slot is a TRUE empty (no
-          // novena runs that day) — no missing
-          // placeholder stands. With all-novenas
-          // standing, the standing placeholder stands.
-          if (!(row.sourceKey === 'novenas' && c590 && !c590.some(function (it) { return it.kind === 'all-novenas'; }))) {
-            expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
-          }
-        }
-      } else {
-        var slot = e.ext;
-        var st2 = state.extSlots[slot.slotId];
-        if (st2) {
-          var trk = extSlotTrack(slot, st2);
-          if (em.occ) trk._occ = em.occ;
-          expandDescs(trk, day).forEach(function (d) { descs.push(d); });
+    var emitOwn619 = function (e) {
+      var row = e.own;
+      var st = state.ownSlots[row.sourceKey];
+      if (!st) return;
+      if (st.state === 'present') {
+        // v603 Review fix: with a contents entry
+        // standing, the Novenas row emits the
+        // contents-order selection (named novenas at
+        // their contents positions, all-novenas
+        // standing the rest) — without contents the
+        // slot stands whole, exactly as before.
+        var metas = st.tracks;
+        if (row.sourceKey === 'novenas' && c590) metas = opnNovenaMetas603(c590, st.tracks);
+        metas.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
+      } else if (st.state === 'missing') {
+        // v603 Review fix: a named-only Novenas entry
+        // under a missing slot is a TRUE empty (no
+        // novena runs that day) — no missing
+        // placeholder stands. With all-novenas
+        // standing, the standing placeholder stands.
+        if (!(row.sourceKey === 'novenas' && c590 && !c590.some(function (it) { return it.kind === 'all-novenas'; }))) {
+          expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
         }
       }
-    });
-    // v590 §2.3 (Amendment 3), restored by v603: the
-    // block's course selectors stand as tracks — each
-    // resolved by resolveProfileCourses590 to the course's
-    // next episode by the user's own progress; an
-    // unresolved (finished/unavailable) course leaves its
-    // slot empty and nothing else moves.
-    if (c590 && state.courseRes590) {
-      c590.forEach(function (it) {
-        if (it.kind !== 'course') return;
-        var cd = state.courseRes590[b.block + ':' + it.key];
-        if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+    };
+    var emitExt619 = function (e, occ) {
+      var slot = e.ext;
+      var st2 = state.extSlots[slot.slotId];
+      if (st2) {
+        var trk = extSlotTrack(slot, st2);
+        if (occ) trk._occ = occ;
+        expandDescs(trk, day).forEach(function (d) { descs.push(d); });
+      }
+    };
+    if (!c590) {
+      // No contents entry for the block: the standing
+      // emission stands byte-for-byte (merged sortOrder
+      // order; no course/day/episode legs).
+      emit.forEach(function (em) {
+        if (em.e.own) emitOwn619(em.e);
+        else emitExt619(em.e, em.occ);
       });
-    }
-    // v611: the block's day selectors stand as tracks at
-    // their contents positions, beside the course leg —
-    // each resolved by resolveExegesisDay611 to the
-    // presented day's own episode; an unresolved day
-    // (the gap rule) leaves its slot empty.
-    if (c590 && state.exegesisRes611) {
-      c590.forEach(function (it) {
-        if (it.kind !== 'day') return;
-        var dd = state.exegesisRes611[b.block + ':' + it.key];
-        if (dd) expandDescs(Object.assign({}, dd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+    } else {
+      // v619: ONE PASS over the stored contents list —
+      // every contents-driven descriptor stands AT its
+      // item's own position, so a drag that crosses a
+      // kind boundary (course above source, prayer above
+      // anything, the seat, an episode) carries into the
+      // composed play order. The gate above (the merged
+      // filter) still decides WHICH settings rows stand;
+      // the pass only changes WHERE they emit. Payload
+      // tracks (b.tracks, emitted above) are not contents
+      // items and still stand ahead of the contents.
+      var candByIdx619 = {};
+      var emittedCand619 = [];
+      var addCand619 = function (idx, e, occ) {
+        if (idx == null || idx < 0) return;
+        (candByIdx619[idx] = candByIdx619[idx] || []).push({ e: e, occ: occ });
+      };
+      merged.forEach(function (e) {
+        if (e.own) {
+          // The Novenas own row is stood by its gate
+          // exception below, never by a source candidate.
+          if (e.own.sourceKey !== 'novenas') addCand619(selIdx590('source', e.own.sourceKey), e, 0);
+          return;
+        }
+        // v610 occurrence discipline: the nth contents
+        // occurrence of the same selector emits the nth
+        // copy, copies after the first stamped _occ.
+        var occN = 0;
+        c590.forEach(function (it, i) {
+          if (it && it.kind === 'source' && it.key === e.ext.slotId) { addCand619(i, e, occN); occN++; }
+        });
+        if (!occN) addCand619(selIdx590('source', e.ext.sourceKey), e, 0);
       });
-    }
-    // v614: the block's episode selectors stand as tracks
-    // at their contents positions, beside the course/day
-    // legs — each resolved by resolveProfileEpisodes614 to
-    // the one episode it names (fixed), or standing as the
-    // available:false "Not available" card on a rotted key.
-    if (c590 && state.episodeRes614) {
-      c590.forEach(function (it) {
-        if (it.kind !== 'episode') return;
-        var ed = state.episodeRes614[b.block + ':' + it.key];
-        if (!ed) return;
-        // A homily descriptor stands RAW (the day-addition
-        // precedent): the trackDesc seam's whitelist would
-        // drop its kind + homilyId, the identity its play
-        // path reads. Podcast episode descriptors take the
-        // standing course/day seam.
-        if (ed.kind === 'homily') { descs.push(Object.assign({}, ed, { _block: b.block })); return; }
-        expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+      Object.keys(candByIdx619).forEach(function (k) {
+        candByIdx619[k].sort(function (a, c) { return a.e.sortOrder - c.e.sortOrder; });
       });
+      var emitCand619 = function (idx) {
+        (candByIdx619[idx] || []).forEach(function (em) {
+          if (emittedCand619.indexOf(em) >= 0) return;
+          emittedCand619.push(em);
+          if (em.e.own) emitOwn619(em.e);
+          else emitExt619(em.e, em.occ);
+        });
+      };
+      var novenasEmitted619 = false;
+      var emitNovenas619 = function () {
+        if (novenasEmitted619) return;
+        novenasEmitted619 = true;
+        merged.forEach(function (e) { if (e.own && e.own.sourceKey === 'novenas') emitOwn619(e); });
+      };
+      var placedPrayer619 = {};
+      var seatIdx619 = -1;
+      c590.forEach(function (it, idx) {
+        if (!it) return;
+        if (it.kind === 'source') {
+          emitCand619(idx);
+          if (it.key === 'novenas') emitNovenas619();
+        } else if (it.kind === 'all-novenas' || it.kind === 'novena') {
+          // The Novenas own row stands at the FIRST item
+          // that stands it; later novena items emit
+          // nothing more for the row (its metas are
+          // internally contents-ordered by
+          // opnNovenaMetas603, as before).
+          emitNovenas619();
+        } else if (it.kind === 'course') {
+          // v590 §2.3 (Amendment 3), restored by v603:
+          // resolved by resolveProfileCourses590; an
+          // unresolved course leaves its slot empty.
+          if (state.courseRes590) {
+            var cd = state.courseRes590[b.block + ':' + it.key];
+            if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+          }
+        } else if (it.kind === 'day') {
+          // v611: resolved by resolveExegesisDay611; an
+          // unresolved day (the gap rule) leaves its slot
+          // empty.
+          if (state.exegesisRes611) {
+            var dd = state.exegesisRes611[b.block + ':' + it.key];
+            if (dd) expandDescs(Object.assign({}, dd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+          }
+        } else if (it.kind === 'episode') {
+          // v614: resolved by resolveProfileEpisodes614,
+          // incl. the homily raw-push branch.
+          if (state.episodeRes614) {
+            var ed = state.episodeRes614[b.block + ':' + it.key];
+            if (ed) {
+              if (ed.kind === 'homily') descs.push(Object.assign({}, ed, { _block: b.block }));
+              else expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+            }
+          }
+        } else if (it.kind === 'prayer') {
+          // The contents prayer stands at its contents
+          // position through its addition descriptor —
+          // the record opnFoldDay590 synthesized on the
+          // payload (or the standing per-day addition for
+          // the same prayer + block: the fold's have591
+          // dedupe treats them as one item, and the one
+          // standing copy takes the contents position).
+          // The weave in foldDayAdditions skips the same
+          // record via placed619, so it never doubles.
+          if (placedPrayer619[it.key]) return;
+          placedPrayer619[it.key] = 1;
+          var rec619 = null;
+          (state.dayAdditions || []).forEach(function (a) {
+            if (!rec619 && a && a.block === b.block && a.slug === it.key && a.kind !== 'reading' && a.kind !== 'homily') rec619 = a;
+          });
+          var recUse619 = rec619 || { block: b.block, slug: it.key, lang: 'en', afterId: null, kind: 'prayer', ref: null };
+          descs.push(dayAdditionDesc(recUse619));
+          placed619.adds[b.block + '|' + dayAdditionIdOf(recUse619)] = 1;
+        } else if (it.kind === 'seat') {
+          // The Morning readings seat stands at its
+          // contents position; foldReadingsSeat then
+          // skips (placed619.seat). The fold's misplace
+          // guard stands: if no daily-rosary descriptor
+          // stands in Morning today, the seat is pulled
+          // back out below and the fold decides as before.
+          if (b.block === 'Morning' && it.key === 'daily-readings' && day.readingsSeat && !placed619.seat) {
+            seatIdx619 = descs.length;
+            descs.push(readingsSeatDesc549(day.readingsSeat));
+            placed619.seat = true;
+          }
+        }
+      });
+      // Any gated candidate the pass did not reach (a
+      // shape the contents walk cannot name) emits in
+      // contents-index order at the block tail — the
+      // gate's standing is never lost.
+      Object.keys(candByIdx619).map(Number).sort(function (a, c) { return a - c; }).forEach(emitCand619);
+      if (seatIdx619 >= 0) {
+        var rosary619 = false;
+        for (var ri619 = blockStart619; ri619 < descs.length; ri619++) {
+          if (descs[ri619].block === 'Morning' && descs[ri619].episodeId === 'daily-rosary') { rosary619 = true; break; }
+        }
+        if (!rosary619) { descs.splice(seatIdx619, 1); placed619.seat = false; }
+      }
     }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
-  descs = foldDayAdditions(descs, date, day.readingsSeat); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold
+  descs = foldDayAdditions(descs, date, day.readingsSeat, placed619); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold · v619: placed619 skips the additions + seat the contents pass already stood at their contents positions
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day

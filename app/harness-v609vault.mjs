@@ -374,8 +374,11 @@ const EXPECTED_NIGHT = [
   const { descs } = await paintRealDay(w);
   const newIds = descs.map((t) => t.episodeId);
   const kept = newIds.filter((id) => id !== 'bible-in-a-year:ep-1' && id !== 'exorcist-files:ep-1');
+  // v619 REVERSAL (recorded in harness-v619.mjs + docs/releases/v619.md): the readings seat now stands at its CONTENTS position (the tail of Morning's contents list) instead of the v549 before-rosary anchor, so the track-for-track comparison below reads both lists seat-free; F8c still asserts the seat itself stands in Morning.
+  const keptNoSeat = kept.filter((id) => id !== 'daily-readings:2026-11-21');
+  const oldNoSeat = oldIds.filter((id) => id !== 'daily-readings:2026-11-21');
   check('F8b track-for-track: every pre-migration track stands in order; the two series land as course items at the tail of Night',
-    JSON.stringify(kept) === JSON.stringify(oldIds) && newIds.includes('bible-in-a-year:ep-1') && newIds.includes('exorcist-files:ep-1'),
+    JSON.stringify(keptNoSeat) === JSON.stringify(oldNoSeat) && newIds.includes('bible-in-a-year:ep-1') && newIds.includes('exorcist-files:ep-1'),
     { old: oldIds.length, new: newIds.length });
   const seat = descs.find((t) => t.podSeries === 'daily-readings');
   check('F8c the readings seat stands from its CONTENTS entry (Morning), as before', !!seat && seat.block === 'Morning', seat && seat.block);

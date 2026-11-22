@@ -191,13 +191,14 @@ const missSlot = (slotId, title) => (w) => { w.__opn.state.extSlots[slotId] = { 
   O.writePlayed('ext-invitatory', DATE, 'marked', 'Morning', 0);
   O.state.dayPayload.dayPositions = { 'morning-prayer': 222.7 }; // the in-progress mark (the v617 E1 recipe)
   const built = O.discQueue618(morning).map((t) => t.episodeId);
+  // v619 REVERSAL (recorded in harness-v619.mjs + docs/releases/v619.md): the readings seat now stands at its CONTENTS position (the tail of Morning's contents list) instead of the v549 before-rosary anchor — Q1b/Q1c expectations updated for that one move; the unplayed/available filtering they test is unchanged.
   check('Q1b the disc\u2019s build through the ONE predicate: unplayed AVAILABLE only, in standing order — the in-progress track stands in it; the played and the unavailable stand out',
-    JSON.stringify(built) === JSON.stringify(['morning-prayer', 'daily-readings:2026-11-21', 'daily-rosary', 'marian-antiphon']),
+    JSON.stringify(built) === JSON.stringify(['morning-prayer', 'daily-rosary', 'marian-antiphon', 'daily-readings:2026-11-21']),
     { built });
   click(w, discOf(d, 'Morning'));
   await sleep(200);
   check('Q1c ◆ disc tap: state.queue == the unplayed AVAILABLE tracks only, in standing order',
-    JSON.stringify(queueIds(O)) === JSON.stringify(['morning-prayer', 'daily-readings:2026-11-21', 'daily-rosary', 'marian-antiphon'])
+    JSON.stringify(queueIds(O)) === JSON.stringify(['morning-prayer', 'daily-rosary', 'marian-antiphon', 'daily-readings:2026-11-21'])
     && !!O.state.current && O.state.current.episodeId === 'morning-prayer',
     { queue: queueIds(O), current: O.state.current && O.state.current.episodeId });
   w.close();
