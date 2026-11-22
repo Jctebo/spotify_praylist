@@ -1358,6 +1358,11 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // is kept; any other day key is an error — the
           // client's mirror rule.
           if (key !== "daily-gospel-exegesis") return { error: `bad day ${String(key)}` };
+        } else if (kind === "episode") {
+          // v614: an episode item's key is the core listen
+          // key verbatim, '<series>|<episodeKey>', both
+          // sides non-empty — the client's mirror rule.
+          if (typeof key !== "string" || key.indexOf("|") <= 0 || key.indexOf("|") >= key.length - 1) return { error: `bad episode ${String(key)}` };
         } else {
           if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
           if (typeof key !== "string" || !key) return { error: "contents item needs a key" };

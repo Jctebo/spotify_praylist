@@ -2704,6 +2704,15 @@ function opnCheckContents590(contents, coreBlocks) {
           // is kept; any other day key is an error,
           // exactly the course rule's shape.
           if (key !== OPN_DAY_KEY_611) throw opnErr(400, 'bad day ' + key);
+        } else if (kind === 'episode') {
+          // v614: an episode item pins ONE episode of a
+          // series — its key is the core listen key
+          // verbatim, '<series>|<episodeKey>', both sides
+          // non-empty (Q5 A). Anything else is an error,
+          // exactly the course rule's shape. No dedupe
+          // exception: the standing seen[] drop gives
+          // Q4 A (once only per block).
+          if (!opnEpisodeKeyOk614(key)) throw opnErr(400, 'bad episode ' + key);
         } else {
           if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
           if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
@@ -2725,6 +2734,30 @@ function opnCheckContents590(contents, coreBlocks) {
   });
   return out;
 }
+function opnEpisodeKeyOk614(key) {
+  // v614: the episode key shape — '<series>|<episodeKey>',
+  // the core listen key verbatim, both sides non-empty.
+  if (typeof key !== 'string') return false;
+  var i = key.indexOf('|');
+  return i > 0 && i < key.length - 1;
+}
+function opnEpisodeTitle614(key) {
+  // v614: an episode item's editor label — from the core
+  // episode registry (ingested by opnPodCoreIngestSeries),
+  // falling back to the series title + the episode key when
+  // the registry has not ingested that series yet. The
+  // homily series reads the device index (its takes never
+  // enter the core registry).
+  var k = String(key || '');
+  var i = k.indexOf('|');
+  if (i < 0) return k;
+  var series = k.slice(0, i), epKey = k.slice(i + 1);
+  if (series === 'homily') { var he = homilyEntry(epKey); return he ? he.name : 'Homily'; }
+  var core = opnPodCore();
+  var e = core && core.episodes ? core.episodes[k] : null;
+  if (e) return (e.label ? e.label + ': ' : '') + (e.title || epKey);
+  return opnLadderCourseTitle603(series) + ' ' + epKey;
+}
 function opnContentsOf590(p) {
   // v603: the read seam — a course item naming one of the
   // four standing keys passes through (it can paint and
@@ -2736,7 +2769,7 @@ function opnContentsOf590(p) {
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611); }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611) && (it.kind !== 'episode' || opnEpisodeKeyOk614(it.key)); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -17921,6 +17954,118 @@ function resolveExegesisDay611(day) {
     if (state.dayPayload) paintPrayersView(state.dayPayload);
   }).catch(function () {});
 }
+function resolveProfileEpisodes614(day) {
+  // v614: each episode selector in the effective profile's
+  // contents resolves to the ONE episode it names — FIXED
+  // (Q3 A): no currentKey, no progress read, no date read;
+  // the named entry resolves every day until the item is
+  // removed. Jobs group BY SERIES: one fetch per series per
+  // day build, however many pins of that series stand (the
+  // exegesis discipline). The descriptor stands in
+  // state.episodeRes614 for extRebuildDescs to place at its
+  // contents position, in the course descriptor's shape,
+  // with listened / podPositionS copied off the core-folded
+  // entry (Q5 A: the key IS the core listen key verbatim).
+  // MISS on a LOADED payload (rotted key): the descriptor
+  // stands available:false — the "Not available" card,
+  // passed over at play, removable in the editor; the item
+  // never vanishes silently. A payload that fails to load
+  // resolves NOTHING that build (the course rule).
+  // Series 'homily' and 'novenas' resolve through their own
+  // seams below, never this fetch leg.
+  state.episodeRes614 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (it.kind === 'episode' && opnEpisodeKeyOk614(it.key)) jobs.push({ block: block, key: it.key });
+    });
+  });
+  if (!jobs.length) return;
+  var settle = function () { extRebuildDescs(day); if (state.dayPayload) paintPrayersView(state.dayPayload); };
+  var missDesc = function (job, series, epKey) {
+    return {
+      episodeId: epKey, kind: 'podcast', seriesKey: epKey, podSeries: series,
+      title: opnEpisodeTitle614(job.key), url: null, enclosureUrl: null,
+      available: false, block: job.block, source: '', durationS: 0, listened: false,
+      podPositionS: null, imageUrl: null, descText: null, spotifyUrl: null, episode614: true
+    };
+  };
+  var bySeries = {};
+  jobs.forEach(function (job) {
+    var i = job.key.indexOf('|');
+    var series = job.key.slice(0, i), epKey = job.key.slice(i + 1);
+    if (series === 'homily') {
+      // Device-local (Q2 A): read the take on THIS device.
+      var he = homilyEntry(epKey);
+      if (he) { var hd = homilyDescFor(he, job.block); hd.episode614 = true; state.episodeRes614[job.block + ':' + job.key] = hd; }
+      else {
+        var md = { episodeId: 'homily:' + epKey, kind: 'homily', homilyId: epKey, title: 'Homily', url: null, enclosureUrl: null, available: false, block: job.block, source: '', durationS: 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null, episode614: true };
+        state.episodeRes614[job.block + ':' + job.key] = md;
+      }
+      return;
+    }
+    (bySeries[series] = bySeries[series] || []).push({ job: job, epKey: epKey });
+  });
+  Object.keys(bySeries).forEach(function (series) {
+    var group = bySeries[series];
+    if (series === 'novenas') {
+      // S3 (Plan proposal inside Q5's shape): the catalog
+      // payload is the grouped lens and carries no core
+      // marks — the found episode is INGESTED into the core
+      // at resolve time under series 'novenas', so the
+      // descriptor's played state is the core's truth and
+      // playing the pin writes 'novenas|<stem>' through the
+      // standing mark path. The Novenas block's own Day-n
+      // machinery is a different identity and is NOT joined:
+      // a pinned novena episode stands alone.
+      api('/api/player/podcasts?series=novenas').then(function (payload) {
+        if (state.dayPayload !== day) return;
+        if (!payload || !Array.isArray(payload.novenas)) return;
+        group.forEach(function (g) {
+          var ep = null;
+          payload.novenas.forEach(function (n) { (n.episodes || []).forEach(function (x) { if (x.key === g.epKey) ep = x; }); });
+          if (!ep) { state.episodeRes614[g.job.block + ':' + g.job.key] = missDesc(g.job, series, g.epKey); return; }
+          var core = opnPodCore();
+          opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', [ep]);
+          opnPodCoreSave(core);
+          var lk = 'novenas|' + ep.key;
+          var l = core.listens[lk], pos = core.positions[lk];
+          state.episodeRes614[g.job.block + ':' + g.job.key] = {
+            episodeId: ep.key, kind: 'podcast', seriesKey: ep.key, podSeries: 'novenas',
+            title: (ep.label ? ep.label + ': ' : '') + (ep.title || ''), url: ep.url || null, enclosureUrl: null,
+            available: !!ep.url, block: g.job.block, source: '', durationS: ep.durationS || 0,
+            listened: !!l, podPositionS: (!l && pos && pos.positionS > 0) ? Math.floor(pos.positionS) : null,
+            imageUrl: null, descText: null, spotifyUrl: null, episode614: true
+          };
+        });
+        settle();
+      }).catch(function () {});
+      return;
+    }
+    api('/api/player/podcasts?series=' + encodeURIComponent(series)).then(function (payload) {
+      if (state.dayPayload !== day) return;
+      if (!payload || !Array.isArray(payload.entries)) return;
+      group.forEach(function (g) {
+        var e = null;
+        payload.entries.forEach(function (x) { if (x.key === g.epKey) e = x; });
+        if (!e) { state.episodeRes614[g.job.block + ':' + g.job.key] = missDesc(g.job, series, g.epKey); return; }
+        state.episodeRes614[g.job.block + ':' + g.job.key] = {
+          episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: series,
+          title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || e.streamUrl || null, enclosureUrl: null,
+          available: !!(e.url || e.streamUrl), block: g.job.block, source: '', durationS: e.durationS || 0, listened: !!e.listened,
+          podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
+          imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null, episode614: true
+        };
+      });
+      settle();
+    }).catch(function () {});
+  });
+  // Homily jobs settled synchronously above; if any stand,
+  // one rebuild places them (fetch legs settle themselves).
+  if (jobs.some(function (j) { return j.key.indexOf('homily|') === 0; })) settle();
+}
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -18176,6 +18321,18 @@ function extRebuildDescs(day) {
         if (it.kind !== 'day') return;
         var dd = state.exegesisRes611[b.block + ':' + it.key];
         if (dd) expandDescs(Object.assign({}, dd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+      });
+    }
+    // v614: the block's episode selectors stand as tracks
+    // at their contents positions, beside the course/day
+    // legs — each resolved by resolveProfileEpisodes614 to
+    // the one episode it names (fixed), or standing as the
+    // available:false "Not available" card on a rotted key.
+    if (c590 && state.episodeRes614) {
+      c590.forEach(function (it) {
+        if (it.kind !== 'episode') return;
+        var ed = state.episodeRes614[b.block + ':' + it.key];
+        if (ed) expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
       });
     }
   });
@@ -19422,6 +19579,9 @@ function buildDayFromPayload(day, snap) {
     // buildDayFromPayload — opnFoldDay590 built the
     // profile this pass reads).
     resolveExegesisDay611(day);
+    // v614: the contents episode selectors resolve beside
+    // the courses/day (fixed pins, homily + novena seams).
+    resolveProfileEpisodes614(day);
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -20473,6 +20633,7 @@ function opnBlockTodayMark604(block, day) {
 function opnItemLabel604(block, it) {
   if (it.kind === 'course') return opnLadderCourseTitle603(it.key);
   if (it.kind === 'day') return 'Daily Gospel Exegesis';
+  if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
   if (it.kind === 'novena') {
     var cat = state.novenasCatalog;
     var n = cat && cat.novenas ? cat.novenas.filter(function (x) { return x.slug === it.key; })[0] : null;
@@ -21398,6 +21559,7 @@ function openEditTodayScreen594(fromLadder) {
   function itemLabel(block, it) {
     if (it.kind === 'prayer') return prayerTitle(it.key);
     if (it.kind === 'day') return 'Daily Gospel Exegesis';
+    if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
     var u = null;
     profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
     return u ? u.label : (it.key || it.kind);
@@ -21876,7 +22038,7 @@ function openProfilesScreen(openKey, opts) {
       mat.forEach(function (m) {
         var u = null;
         uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
-        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (u ? u.label : (m.key || m.kind))), on: true });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (m.kind === 'episode' ? opnEpisodeTitle614(m.key) : (u ? u.label : (m.key || m.kind)))), on: true });
       });
       uni.forEach(function (it) {
         var id = it.kind + ':' + (it.key || '');
@@ -22255,18 +22417,35 @@ function openProfilesScreen(openKey, opts) {
 
 /* ---- v603: the Add ladder ----
    The contents Add act is a LADDER (John's word, on the
-   app's standing ladder pattern): kind doors first, each
-   door its own rung, one search pill at the top of every
-   rung that follows the ladder — from the head it searches
-   ALL addable items (matches grouped by kind, the rung
-   path named); inside a rung it narrows that rung only;
-   clearing restores the rung's full list. An item already
-   in the block paints marked "Already in <block>", not
-   tappable — no duplicates are ever written. A pick adds
-   through the host editor's own add act and returns to
-   the editor (Q4). One builder serves both editors; the
-   host supplies the block's standing ids, the add act,
-   the seat-posture layers, and the book access. */
+   app's standing ladder pattern): one search pill at the
+   top of every rung; from the head it searches ALL addable
+   items (matches grouped, the path named); inside a rung
+   it narrows that rung only; clearing restores the rung's
+   full list. An item already in the block paints marked
+   "Already in <block>", not tappable — no duplicates are
+   ever written (v610 exception: a Divine Office source
+   stays addable). A pick adds through the host editor's
+   own add act and returns to the editor (Q4). One builder
+   serves both editors; the host supplies the block's
+   standing ids, the add act, the seat-posture layers, and
+   the book access.
+   v614: the ladder's shape is the APP-LAYOUT TREE (Q1 A):
+   Worship · Pray · Catechesis · Conscience · Sacred Art,
+   leaves under each branch, and the word for the old flat
+   door set stands nowhere. Dynamic nodes (Q0) — Lectionary
+   readings, Daily Gospel Exegesis, each course — open with
+   the LIVING ENTRY AT THE HEAD (today's date / "Next
+   episode") and every other episode below it, each
+   pinnable as a fixed episode item (kind 'episode', key
+   '<series>|<episodeKey>'); the resolved entry stands ONLY
+   at the head. Episode search lives inside each series
+   node ("Search episodes"); episode titles stand in no
+   head search. Virtual Mass (Plan S1) and Adoration paint
+   as named no-add leaves; Sing the Hours rows (Plan S2)
+   add the standing office item under the Sing the Hours
+   dress. When block === 'Novenas' the tree collapses to
+   the Novenas leaf alone (the block's own novena /
+   all-novenas items), as the doors rung did before. */
 var opnLadderSeries603 = null;
 function opnLadderCourseTitle603(key) {
   if (opnLadderSeries603) {
@@ -22282,8 +22461,9 @@ function openAddLadder603(block, host) {
     sh.className = 'sheet profadd591 profaddladder603';
     document.body.appendChild(sh);
     mountDrawer(sh, true);
-    var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources' | 'daily'
+    var rung = 'root'; // tree path rung (v614 header above)
     var query = '';
+    var pay614 = {}; // series payloads fetched on node open
     function isOn(item) {
       // v610: a Divine Office source already standing stays
       // addable — a second copy may stand (duplicates are
@@ -22303,8 +22483,8 @@ function openAddLadder603(block, host) {
       return OPN_COURSE_KEYS_603.map(function (k) { return { kind: 'course', key: k, label: opnLadderCourseTitle603(k) }; });
     }
     function dailyItems() {
-      // v611: the Daily rung's one item — the day
-      // selector, resolved by the date at fold time.
+      // v611: the day selector — resolved by the date at
+      // fold time; v614 homes it at the exegesis node's head.
       return [{ kind: 'day', key: OPN_DAY_KEY_611, label: 'Daily Gospel Exegesis' }];
     }
     function novenaItems() {
@@ -22313,81 +22493,257 @@ function openAddLadder603(block, host) {
       if (cat && cat.novenas) cat.novenas.forEach(function (n) { out.push({ kind: 'novena', key: n.slug, label: n.name || n.slug }); });
       return out;
     }
+    function presented614() {
+      var d = state.dayPayload;
+      return (d && (d.presentedDay || d.date)) || state.presentedDay || new Date().toISOString().slice(0, 10);
+    }
+    function fetchSeries614(series) {
+      if (pay614[series]) return pay614[series];
+      pay614[series] = 'loading';
+      api('/api/player/podcasts?series=' + encodeURIComponent(series)).then(function (r) {
+        pay614[series] = r;
+        if (series === 'novenas') state.novenasCatalog = r;
+        if (document.body.contains(sh)) paintList();
+      }).catch(function () { pay614[series] = 'failed'; if (document.body.contains(sh)) paintList(); });
+      return 'loading';
+    }
+    function seriesTitle614(series) {
+      if (opnLadderSeries603) for (var i = 0; i < opnLadderSeries603.length; i++) if (opnLadderSeries603[i].series === series) return opnLadderSeries603[i].title || series;
+      return series;
+    }
+    function epItem614(series, e) {
+      return { kind: 'episode', key: series + '|' + e.key, label: (e.label ? e.label + ': ' : '') + (e.title || e.key) };
+    }
     function match(label) { return !query.trim() || String(label).toLowerCase().indexOf(query.trim().toLowerCase()) >= 0; }
+    function matchItem(it) { return match(it.label) || (it.sub && match(it.sub)); }
     function rowHtml(item, path) {
+      if (item.noAdd) {
+        return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(item.label) + '</span></div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
+      }
       var on = isOn(item);
       var meta = on ? 'Already in ' + esc(block) : (path ? esc(path) : '');
-      return '<div class="card bookrow' + (on ? ' profadd-on603' : '') + '"' + (on ? '' : ' data-p603additem="' + esc(item.kind + ':' + (item.key || '')) + '"') + '><div class="row"><span class="grow">' + esc(item.label) + '</span>' + (meta ? '<span class="meta">' + meta + '</span>' : '') + '</div></div>';
+      return '<div class="card bookrow' + (on ? ' profadd-on603' : '') + '"' + (on ? '' : ' data-p603additem="' + esc(item.kind + ':' + (item.key || '')) + '"') + '><div class="row"><span class="grow">' + esc(item.label) + '</span>' + (meta ? '<span class="meta">' + meta + '</span>' : '') + '</div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
     }
-    function doorHtml(kind, title, sub) {
-      return '<div class="card bookrow" data-p603door="' + kind + '"><div class="row"><span class="grow">' + esc(title) + '</span><span class="meta">\u203a</span></div><p class="sub">' + esc(sub) + '</p></div>';
+    function doorHtml(to, title, sub) {
+      return '<div class="card bookrow" data-p603door="' + esc(to) + '"><div class="row"><span class="grow">' + esc(title) + '</span><span class="meta">\u203a</span></div>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '') + '</div>';
     }
-    function listHtml() {
-      var html = '';
-      var q = query.trim();
-      if (rung === 'doors' && q) {
-        // Head search: ALL addable items, grouped by kind,
-        // the rung path named on every row.
-        var anyG = false;
-        var groups = [];
-        if (block !== 'Novenas') {
-          groups.push({ head: 'Courses', items: courses().filter(function (it) { return match(it.label); }), path: 'Courses' });
-          var pr = [];
-          (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Prayers \u203a ' + g.name }); }); });
-          groups.push({ head: 'Prayers', items: pr, path: '' });
-          groups.push({ head: 'Sources', items: sources().filter(function (it) { return match(it.label); }), path: 'Sources' });
-          groups.push({ head: 'Daily', items: dailyItems().filter(function (it) { return match(it.label); }), path: 'Daily' });
-        } else {
-          groups.push({ head: 'Novenas', items: novenaItems().filter(function (it) { return match(it.label); }), path: 'Novenas' });
-        }
-        groups.forEach(function (g) {
-          if (!g.items.length) return;
-          anyG = true;
-          html += '<h2 class="sectionhead">' + esc(g.head) + '</h2>';
-          g.items.forEach(function (it) { html += rowHtml(it, it.path !== undefined && it.path !== '' ? it.path : g.path); });
-        });
-        if (!anyG) html += '<p class="sub">Nothing addable matches your search.</p>';
-      } else if (rung === 'doors') {
-        if (block === 'Novenas') {
-          html += doorHtml('novenas', 'Novenas', 'One novena, or every active novena');
-        } else {
-          html += doorHtml('courses', 'Courses', 'A course\u2019s next episode, by your progress');
-          html += doorHtml('prayers', 'Prayers', 'The prayer book, by category');
-          html += doorHtml('sources', 'Sources', 'This block\u2019s own sources');
-          html += doorHtml('daily', 'Daily', 'The day\u2019s episode, by the date');
-        }
-      } else if (rung === 'courses') {
-        courses().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
-      } else if (rung === 'prayers') {
-        (host.groups() || []).forEach(function (g) {
-          if (!match(g.name) && !g.prayers.some(function (p) { return match(p.title); })) return;
-          html += '<div class="card bookrow" data-p603group="' + esc(g.name) + '"><div class="row"><span class="grow">' + esc(g.name) + '</span><span class="meta">' + g.prayers.length + ' \u203a</span></div></div>';
-        });
-      } else if (rung.indexOf('prayers:') === 0) {
-        var gname = rung.slice('prayers:'.length);
-        var grp = null;
-        (host.groups() || []).forEach(function (g) { if (g.name === gname) grp = g; });
-        if (grp) grp.prayers.forEach(function (p) { if (match(p.title)) html += rowHtml({ kind: 'prayer', key: p.slug, label: p.title }, ''); });
-      } else if (rung === 'novenas') {
-        novenaItems().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
-      } else if (rung === 'sources') {
-        sources().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
-      } else if (rung === 'daily') {
-        dailyItems().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
-      }
+    function officeItems614() {
+      return sources().filter(function (it) { return it.kind === 'source' && EXT_TOKENS[it.key]; });
+    }
+    function saintItem614() {
+      var f = sources().filter(function (it) { return it.kind === 'source' && it.key === 'ext-saint-of-the-day'; });
+      return f.length ? f[0] : null;
+    }
+    function singItems614() {
+      // Plan S2: no distinct Sing the Hours item stands —
+      // its rows add the standing office item under the
+      // Sing the Hours dress.
+      return [
+        { kind: 'source', key: 'ext-morning-prayer', label: 'Lauds', sub: 'Sing the Hours \u2014 adds the Morning Prayer office item' },
+        { kind: 'source', key: 'ext-evening-prayer', label: 'Vespers', sub: 'Sing the Hours \u2014 adds the Evening Prayer office item' }
+      ];
+    }
+    function readingsNode614() {
+      var pay = fetchSeries614('daily-readings');
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      if (pay === 'failed' || !Array.isArray(pay.entries)) return '<p class="sub">Readings did not load.</p>';
+      var presented = presented614();
+      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var parts = String(presented).split('-');
+      var plain = 'Daily Mass Reading Podcast for ' + MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0];
+      var hit = null;
+      pay.entries.forEach(function (e) { if (!hit && e.title && String(e.title).trim() === plain) hit = e; });
+      if (!hit) pay.entries.forEach(function (e) { if (!hit && e.title && String(e.title).indexOf(MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0]) >= 0) hit = e; });
+      var html = rowHtml({ kind: 'seat', key: 'daily-readings', label: opnDateLabel(presented), sub: hit ? hit.title : '' }, '');
+      pay.entries.forEach(function (e) {
+        if (hit && e.key === hit.key) return; // Q0: the resolved entry stands ONLY at the head
+        var dm = /(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}/.exec(e.title || '');
+        var dlab = dm ? dm[0] : (ownChicagoDateStr(e.publishedMs) ? opnDateLabel(ownChicagoDateStr(e.publishedMs)) : (e.label || ''));
+        var it = { kind: 'episode', key: 'daily-readings|' + e.key, label: dlab, sub: e.title || '' };
+        if (matchItem(it)) html += rowHtml(it, '');
+      });
       return html;
     }
+    function exegesisNode614() {
+      var pay = fetchSeries614('daily-gospel-exegesis');
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      if (pay === 'failed' || !Array.isArray(pay.entries)) return '<p class="sub">Episodes did not load.</p>';
+      var presented = presented614();
+      var want = offlineShiftDate(presented, -1);
+      var hit = null;
+      pay.entries.forEach(function (x) { if (!hit && ownChicagoDateStr(x.publishedMs) === want) hit = x; });
+      var html = '';
+      if (hit) html += rowHtml({ kind: 'day', key: OPN_DAY_KEY_611, label: opnDateLabel(presented), sub: hit.title || '' }, '');
+      else html += rowHtml({ noAdd: true, label: opnDateLabel(presented), sub: 'No episode released for today' }, '');
+      pay.entries.forEach(function (e) {
+        if (hit && e.key === hit.key) return;
+        var it = epItem614('daily-gospel-exegesis', e);
+        if (matchItem(it)) html += rowHtml(it, '');
+      });
+      return html;
+    }
+    function courseNode614(series) {
+      var pay = fetchSeries614(series);
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      if (pay === 'failed' || !Array.isArray(pay.entries)) return '<p class="sub">Episodes did not load.</p>';
+      var curKey = pay.currentKey || opnPodCurrentKey(pay.entries);
+      var cur = null;
+      pay.entries.forEach(function (e) { if (e.key === curKey) cur = e; });
+      var html = '';
+      if (cur) html += rowHtml({ kind: 'course', key: series, label: 'Next episode', sub: (cur.label ? cur.label + ': ' : '') + (cur.title || '') }, '');
+      else html += rowHtml({ noAdd: true, label: 'Course complete \u2014 no next episode' }, '');
+      pay.entries.forEach(function (e) {
+        if (cur && e.key === cur.key) return;
+        var it = epItem614(series, e);
+        if (matchItem(it)) html += rowHtml(it, '');
+      });
+      return html;
+    }
+    function seriesNode614(series) {
+      if (series === 'daily-gospel-exegesis') return exegesisNode614();
+      var pay = fetchSeries614(series);
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      if (pay === 'failed' || !Array.isArray(pay.entries)) return '<p class="sub">Episodes did not load.</p>';
+      var html = '';
+      pay.entries.forEach(function (e) { var it = epItem614(series, e); if (matchItem(it)) html += rowHtml(it, ''); });
+      return html || '<p class="sub">No episodes stand.</p>';
+    }
+    function novenaSeriesNode614(slug) {
+      var pay = fetchSeries614('novenas');
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      var cat = state.novenasCatalog;
+      var nv = null;
+      if (cat && cat.novenas) cat.novenas.forEach(function (n) { if (n.slug === slug) nv = n; });
+      if (!nv) return '<p class="sub">That novena no longer stands.</p>';
+      var html = '';
+      (nv.episodes || []).forEach(function (e) {
+        var it = { kind: 'episode', key: 'novenas|' + e.key, label: (e.label ? e.label + ': ' : '') + (e.title || e.key) };
+        if (matchItem(it)) html += rowHtml(it, '');
+      });
+      return html || '<p class="sub">No episodes stand.</p>';
+    }
+    function headSearch614() {
+      var html = '', anyG = false;
+      var groups = [];
+      if (block === 'Novenas') {
+        groups.push({ head: 'Catechesis \u203a Novenas', items: novenaItems().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Novenas' });
+      } else {
+        var seatIt = sources().filter(function (it) { return it.kind === 'seat'; });
+        groups.push({ head: 'Worship \u203a Lectionary', items: seatIt.filter(function (it) { return match(it.label); }), path: 'Worship \u203a Lectionary' });
+        var pr = [];
+        (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Pray \u203a Prayer Book \u203a ' + g.name }); }); });
+        groups.push({ head: 'Pray \u203a Prayer Book', items: pr, path: '' });
+        groups.push({ head: 'Pray \u203a Divine Office', items: officeItems614().filter(function (it) { return match(it.label); }), path: 'Pray \u203a Divine Office' });
+        groups.push({ head: 'Pray \u203a Sing the Hours', items: singItems614().filter(function (it) { return match(it.label); }), path: 'Pray \u203a Sing the Hours' });
+        var si = saintItem614();
+        groups.push({ head: 'Pray \u203a Saint of the Day', items: si && match(si.label) ? [si] : [], path: 'Pray \u203a Saint of the Day' });
+        groups.push({ head: 'Catechesis \u203a Courses', items: courses().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Courses' });
+        groups.push({ head: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis', items: dailyItems().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis' });
+        var doors = [];
+        (opnLadderSeries603 || []).forEach(function (sd) { if (match(sd.title || sd.series)) doors.push({ door: 'series:' + sd.series, label: sd.title || sd.series }); });
+        if (state.novenasCatalog && state.novenasCatalog.novenas) state.novenasCatalog.novenas.forEach(function (n) { if (match(n.name || n.slug)) doors.push({ door: 'novena:' + n.slug, label: n.name || n.slug }); });
+        groups.push({ head: 'Catechesis \u203a Podcasts', items: [], doors: doors, path: 'Catechesis \u203a Podcasts' });
+      }
+      groups.forEach(function (g) {
+        if (!g.items.length && !(g.doors && g.doors.length)) return;
+        anyG = true;
+        html += '<h2 class="sectionhead">' + esc(g.head) + '</h2>';
+        g.items.forEach(function (it) { html += rowHtml(it, it.path !== undefined && it.path !== '' ? it.path : g.path); });
+        (g.doors || []).forEach(function (d) { html += doorHtml(d.door, d.label, g.path); });
+      });
+      if (!anyG) html += '<p class="sub">Nothing addable matches your search.</p>';
+      return html;
+    }
+    function doors614(list) {
+      var html = '';
+      list.forEach(function (d) { if (match(d[1])) html += doorHtml(d[0], d[1], d[2]); });
+      return html;
+    }
+    function listHtml() {
+      var q = query.trim();
+      if (rung === 'root' && q) return headSearch614();
+      if (rung === 'root') {
+        if (block === 'Novenas') { var h = ''; novenaItems().forEach(function (it) { h += rowHtml(it, ''); }); return h; }
+        return doors614([
+          ['br:worship', 'Worship', 'Lectionary \u00b7 Virtual Mass \u00b7 Adoration'],
+          ['br:pray', 'Pray', 'Prayer Book \u00b7 Divine Office \u00b7 Sing the Hours \u00b7 Saint of the Day'],
+          ['br:catechesis', 'Catechesis', 'Courses \u00b7 Podcasts \u00b7 Novenas \u00b7 Homilies'],
+          ['br:conscience', 'Conscience', 'No playable audio'],
+          ['br:sacred-art', 'Sacred Art', 'No playable audio']
+        ]);
+      }
+      if (rung === 'br:worship') return doors614([['lf:lectionary', 'Lectionary', 'USCCB Daily Readings'], ['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass'], ['lf:adoration', 'Adoration', 'No list audio']]);
+      if (rung === 'br:pray') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category'], ['lf:office', 'Divine Office', 'The eight hours'], ['lf:sing', 'Sing the Hours', 'Lauds \u00b7 Vespers'], ['lf:saint', 'Saint of the Day', 'The day\u2019s saint']]);
+      if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies']]);
+      if (rung === 'br:conscience' || rung === 'br:sacred-art' || rung === 'lf:virtual-mass' || rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
+      if (rung === 'lf:lectionary') return readingsNode614();
+      if (rung === 'lf:prayerbook') {
+        var ph = '';
+        (host.groups() || []).forEach(function (g) {
+          if (!match(g.name) && !g.prayers.some(function (p) { return match(p.title); })) return;
+          ph += '<div class="card bookrow" data-p603group="' + esc(g.name) + '"><div class="row"><span class="grow">' + esc(g.name) + '</span><span class="meta">' + g.prayers.length + ' \u203a</span></div></div>';
+        });
+        return ph;
+      }
+      if (rung.indexOf('prayers:') === 0) {
+        var gname = rung.slice('prayers:'.length), grp = null, gh = '';
+        (host.groups() || []).forEach(function (g) { if (g.name === gname) grp = g; });
+        if (grp) grp.prayers.forEach(function (p) { if (match(p.title)) gh += rowHtml({ kind: 'prayer', key: p.slug, label: p.title }, ''); });
+        return gh;
+      }
+      if (rung === 'lf:office') { var oh = ''; officeItems614().forEach(function (it) { if (match(it.label)) oh += rowHtml(it, ''); }); return oh || '<p class="sub">No office hours stand for this block.</p>'; }
+      if (rung === 'lf:sing') { var sh2 = ''; singItems614().forEach(function (it) { if (match(it.label)) sh2 += rowHtml(it, ''); }); return sh2; }
+      if (rung === 'lf:saint') { var si2 = saintItem614(); return si2 ? rowHtml(si2, '') : '<p class="sub">Nothing to add</p>'; }
+      if (rung === 'lf:courses') return doors614(OPN_COURSE_KEYS_603.map(function (k) { return ['course:' + k, opnLadderCourseTitle603(k), 'Next episode + every episode']; }));
+      if (rung.indexOf('course:') === 0) return courseNode614(rung.slice('course:'.length));
+      if (rung === 'lf:podcasts') {
+        if (!opnLadderSeries603) return '<p class="sub">Loading \u2026</p>';
+        return doors614(opnLadderSeries603.map(function (sd) { return ['series:' + sd.series, sd.title || sd.series, '']; }));
+      }
+      if (rung.indexOf('series:') === 0) return seriesNode614(rung.slice('series:'.length));
+      if (rung === 'lf:novenas') {
+        var cat = state.novenasCatalog;
+        if (!cat) { fetchSeries614('novenas'); return '<p class="sub">Loading \u2026</p>'; }
+        return doors614((cat.novenas || []).map(function (n) { return ['novena:' + n.slug, n.name || n.slug, n.saint || '']; }));
+      }
+      if (rung.indexOf('novena:') === 0) return novenaSeriesNode614(rung.slice('novena:'.length));
+      if (rung === 'lf:homilies') return doors614([['series:fr-mike-homilies', 'Sunday Homilies with Fr. Mike Schmitz', ''], ['series:barron-sunday-sermons', 'Bishop Barron\u2019s Sunday Sermons', ''], ['lf:myhomilies', 'My recorded homilies', 'Recorded on this device']]);
+      if (rung === 'lf:myhomilies') {
+        var mh = '';
+        homilyIndex().filter(function (e) { return e.state === 'ready'; }).forEach(function (e) {
+          var it = { kind: 'episode', key: 'homily|' + e.id, label: e.name };
+          if (match(it.label)) mh += rowHtml(it, '');
+        });
+        return mh || '<p class="sub">No recorded homilies stand on this device.</p>';
+      }
+      return '';
+    }
+    function parentOf614(r) {
+      if (r.indexOf('br:') === 0) return 'root';
+      if (r === 'lf:lectionary' || r === 'lf:virtual-mass' || r === 'lf:adoration') return 'br:worship';
+      if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:sing' || r === 'lf:saint') return 'br:pray';
+      if (r.indexOf('prayers:') === 0) return 'lf:prayerbook';
+      if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies') return 'br:catechesis';
+      if (r.indexOf('course:') === 0) return 'lf:courses';
+      if (r.indexOf('series:') === 0) { var sk = r.slice('series:'.length); return (sk === 'fr-mike-homilies' || sk === 'barron-sunday-sermons') ? 'lf:homilies' : 'lf:podcasts'; }
+      if (r.indexOf('novena:') === 0) return 'lf:novenas';
+      if (r === 'lf:myhomilies') return 'lf:homilies';
+      return 'root';
+    }
+    function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung === 'lf:lectionary'; }
     function paint() {
       sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>'
-        + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="Search" value="' + esc(query) + '" autocomplete="off"></div>'
+        + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="' + (isEpisodeNode614() ? 'Search episodes' : 'Search') + '" value="' + esc(query) + '" autocomplete="off"></div>'
         + '<div data-p603list="1">' + listHtml() + '</div>'
-        + (rung !== 'doors' ? '<div class="row"><button class="btn ghost" data-p603back="1">Back</button></div>' : '')
+        + (rung !== 'root' ? '<div class="row"><button class="btn ghost" data-p603back="1">Back</button></div>' : '')
         + '<div class="row"><button class="btn ghost" data-p603close="1">Close</button></div></div>';
       wire();
     }
     function paintList() {
       var c = sh.querySelector('[data-p603list]');
       if (c) { c.innerHTML = listHtml(); wireList(c); }
+      var inp = sh.querySelector('[data-p603search]');
+      if (inp && isEpisodeNode614()) inp.setAttribute('placeholder', 'Search episodes');
     }
     function wireList(root) {
       root.querySelectorAll('[data-p603door]').forEach(function (row) {
@@ -22416,7 +22772,7 @@ function openAddLadder603(block, host) {
       var c = sh.querySelector('[data-p603list]');
       if (c) wireList(c);
       var bk = sh.querySelector('[data-p603back]');
-      if (bk) bk.addEventListener('click', function () { rung = rung.indexOf('prayers:') === 0 ? 'prayers' : 'doors'; query = ''; paint(); });
+      if (bk) bk.addEventListener('click', function () { rung = parentOf614(rung); query = ''; paint(); });
       var cl = sh.querySelector('[data-p603close]');
       if (cl) cl.addEventListener('click', function () { sh.remove(); });
     }
