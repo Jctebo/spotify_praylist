@@ -93,3 +93,29 @@
   geometry (jsdom has no layout); the locked-vault
   legs run over a real envelope made through the
   client's own pin-set path.
+
+## §4 Review
+
+- harness-v599 on a clean checkout of the committed
+  tree (b3ff6a7): 17 ok / 0 not ok — identical to
+  the working tree.
+- Equivalence: the change is confined to a
+  paint-only screen function (T3) with index.ts
+  byte-identical (T4); the composition gates stand
+  in the regressions — harness-v600 37/0 (its A/L
+  legs are the byte-identical composition proofs)
+  and harness-v601 8/0. Every composed day is
+  byte-identical to the pre-v599 ship.
+- Regressions, deltas named: harness-v600 37/0 —
+  zero delta · harness-v601 8/0 — zero delta ·
+  harness-v598 13/2 — zero delta against the
+  v600-shipped baseline: T4 asserts client.ts
+  byte-identical to main (by-design red for a
+  client-changing release) and R3c asserts the
+  at-once Edit today flow v600 retired (by-design).
+- Review verdict: PASS. The strip shares Edit
+  profiles' jump component by construction (no CSS
+  added, ui.ts untouched pre-pin), behaves as that
+  strip behaves, stands frozen, and cannot dirty
+  the draft (R8: document byte-identical after
+  jumps + close).
