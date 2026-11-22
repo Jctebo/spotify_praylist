@@ -95,6 +95,10 @@ check('T10 the book groups stand whole beside the flat list (both loaders)',
   (clientSrc.match(/bookGroups = \[\];/g) || []).length >= 2 && clientSrc.includes('g.category'));
 const pinOf = (src) => (src.match(/ora-pro-nobis-v\d+-\d+/) || [null])[0];
 check('T11 SW pin unmoved vs main pre-Ship', pinOf(uiSrc) === pinOf(git(['show', 'main:app/worker/src/ui.ts'])), { cand: pinOf(uiSrc), main: pinOf(git(['show', 'main:app/worker/src/ui.ts'])) });
+check('T13 Review fix statics: the fold reads kind novena (the contents-order selection + the gate stands the row on a named item)',
+  clientSrc.includes('function opnNovenaMetas603(contents, tracks)')
+  && clientSrc.includes("return it.kind === 'all-novenas' || it.kind === 'novena';")
+  && clientSrc.includes("metas = opnNovenaMetas603(c590, st.tracks)"));
 
 // ---------- render APP_JS ----------
 const tplStart = clientSrc.indexOf('= `') + 3;
@@ -185,6 +189,7 @@ function docOf(w) { return JSON.parse(w.localStorage.getItem(DATA_KEY)); }
     { Morning: [{ kind: 'course', key: 'not-a-course' }] },
     { Morning: [{ kind: 'course', key: 'summa-in-a-year' }, { kind: 'course', key: 'summa-in-a-year' }] },
     { Novenas: [{ kind: 'all-novenas' }] },
+    { Novenas: [{ kind: 'novena', key: 'christ_the_king' }, { kind: 'all-novenas' }] },
   ];
   let agree = true, kept = false;
   for (const item of battery) {
@@ -428,6 +433,161 @@ function doorsOf(w) { return [...w.document.querySelectorAll('.profaddladder603 
   check('R20 locked vault: the unlock gate stands in front of the editor — no Add, no ladder',
     !w.document.querySelector('[data-p591add]') && !w.document.querySelector('.profaddladder603')
     && w.document.body.innerHTML.includes('opn-unlock'), w.document.body.innerHTML.slice(0, 200));
+  w.close();
+}
+
+// ---------- N: the named-novena fix (Review round 2) ----------
+// John's word (2026-11-21 19:05 CT): a named novena PLAYS
+// its own Day n on each day it runs. The day's resolved
+// novenas slot is built from the production catalog
+// fixture (tests/fixtures-v603/novenas.json) by the feed's
+// own rule: a novena runs from its startDate for `total`
+// days and contributes that date's Day n episode — slot
+// presence IS the day standing (ownResolveFeed settles
+// exactly the feed's per-date novena items). Fixture date
+// 2026-11-21 (the production day fixture): nine novenas
+// run — christ_the_king stands at Day 9 (start 2026-11-13,
+// 9 days), miraculous_medal at Day 4 (start 2026-11-18,
+// 6 days); 14_holy_helpers ran 2026-07-30 + 9 days and
+// does NOT cover the date.
+function novenaSlotFor(dateStr) {
+  const tracks = [];
+  (NOVENAS.novenas || []).forEach((n) => {
+    if (!n.startDate || !n.total) return;
+    const off = Math.round((Date.parse(dateStr + 'T12:00:00Z') - Date.parse(n.startDate + 'T12:00:00Z')) / 86400000);
+    if (off < 0 || off >= n.total) return;
+    tracks.push({ episodeId: 'novena-' + n.slug, title: n.name + ' Day ' + (off + 1), state: 'present', enclosureUrl: 'https://example.invalid/' + dateStr + '-' + n.slug + '-day-' + (off + 1) + '.mp3', streamUrl: null, durationS: 300, sizeBytes: 1000, imageUrl: '/logo.png' });
+  });
+  return { state: tracks.length ? 'present' : 'missing', tracks };
+}
+function worldWithNovenas(contents) {
+  const st = johnStore();
+  const doc = JSON.parse(st[DATA_KEY]);
+  const sal = (doc.sections.profiles.list || []).find((p) => p.key === 'salesian');
+  sal.contents = Object.assign({}, sal.contents || {}, { Novenas: contents });
+  st[DATA_KEY] = JSON.stringify(doc);
+  return makeDomWorld(st);
+}
+async function composeNovenas(w) {
+  const O = w.__opn;
+  const DAY = JSON.parse(readFileSync(APP + 'tests/fixtures-v597/production-day-2026-11-21.json', 'utf8'));
+  const day = O.opnFoldDay590(JSON.parse(JSON.stringify(DAY)));
+  O.state.dayPayload = day;
+  O.state.ownStanding = [{ sourceKey: 'novenas', episodeId: 'novenas', block: 'Novenas', sortOrder: 90, title: 'Novenas', enabled: 1 }];
+  O.state.extStanding = [];
+  O.state.ownSlots = { novenas: novenaSlotFor('2026-11-21') };
+  O.state.extSlots = {};
+  const descs = O.extRebuildDescs(day) || [];
+  return descs.filter((d) => String(d.episodeId || '').indexOf('novena-') === 0);
+}
+{
+  const slot = novenaSlotFor('2026-11-21');
+  check('N0 the fixture slot for 2026-11-21 carries the nine running novenas (catalog window rule) and not 14_holy_helpers',
+    slot.tracks.length === 9 && slot.tracks.some((t) => t.episodeId === 'novena-christ_the_king')
+    && !slot.tracks.some((t) => t.episodeId === 'novena-14_holy_helpers'), slot.tracks.map((t) => t.episodeId));
+}
+{
+  const w = await worldWithNovenas([{ kind: 'novena', key: 'christ_the_king' }]);
+  await sleep(300);
+  const nov = await composeNovenas(w);
+  check('N1 named ALONE on a running day composes that novena\u2019s own Day n track (christ_the_king, Day 9)',
+    nov.length === 1 && nov[0].episodeId === 'novena-christ_the_king' && String(nov[0].title).includes('Day 9'), nov.map((d) => d.episodeId + '|' + d.title));
+  w.close();
+}
+{
+  const w = await worldWithNovenas([{ kind: 'novena', key: '14_holy_helpers' }]);
+  await sleep(300);
+  const O = w.__opn;
+  const DAY = JSON.parse(readFileSync(APP + 'tests/fixtures-v597/production-day-2026-11-21.json', 'utf8'));
+  const day = O.opnFoldDay590(JSON.parse(JSON.stringify(DAY)));
+  O.state.dayPayload = day;
+  O.state.ownStanding = [{ sourceKey: 'novenas', episodeId: 'novenas', block: 'Novenas', sortOrder: 90, title: 'Novenas', enabled: 1 }];
+  O.state.extStanding = [];
+  O.state.ownSlots = { novenas: novenaSlotFor('2026-11-21') };
+  O.state.extSlots = {};
+  const descs = O.extRebuildDescs(day) || [];
+  const nov = descs.filter((d) => String(d.episodeId || '').indexOf('novena-') === 0);
+  const placeholder = descs.filter((d) => d.episodeId === 'novenas');
+  check('N2 named ALONE outside its run composes empty BY TRUTH — zero tracks, no missing placeholder (reason: 14_holy_helpers\u2019 window 2026-07-30 + 9d does not cover 2026-11-21, so the day\u2019s slot carries no track for it)',
+    nov.length === 0 && placeholder.length === 0, { nov: nov.length, placeholder: placeholder.length });
+  w.close();
+}
+{
+  const w = await worldWithNovenas([{ kind: 'all-novenas' }, { kind: 'novena', key: 'christ_the_king' }]);
+  await sleep(300);
+  const nov = await composeNovenas(w);
+  const ck = nov.filter((d) => d.episodeId === 'novena-christ_the_king');
+  check('N3 named + all-novenas: every running novena stands and the named one stands exactly ONCE (dedupe by episode identity)',
+    nov.length === 9 && ck.length === 1, { total: nov.length, ck: ck.length });
+  w.close();
+}
+{
+  const w = await worldWithNovenas([{ kind: 'novena', key: 'miraculous_medal' }, { kind: 'novena', key: 'christ_the_king' }]);
+  await sleep(300);
+  const nov = await composeNovenas(w);
+  check('N4 two named novenas stand in CONTENTS order (miraculous_medal before christ_the_king — the reverse of slot order)',
+    JSON.stringify(nov.map((d) => d.episodeId)) === JSON.stringify(['novena-miraculous_medal', 'novena-christ_the_king']), nov.map((d) => d.episodeId));
+  w.close();
+}
+{
+  // Edit today: the named pick rides the draft into the
+  // today layer at Save today; the standing profile is
+  // untouched; the saved layer composes for today.
+  const w = makeDomWorld(johnStore());
+  await sleep(300);
+  const O = w.__opn;
+  const profBefore = JSON.stringify(((docOf(w).sections.profiles.list || []).find((p) => p.key === 'salesian') || {}).contents || {});
+  w.__opn.openEditTodayScreen594(false);
+  await until(() => w.document.querySelector('[data-p594tadd="Novenas"]'));
+  click(w, w.document.querySelector('[data-p594tadd="Novenas"]'));
+  await until(() => w.document.querySelector('[data-p603door="novenas"]'));
+  click(w, w.document.querySelector('[data-p603door="novenas"]'));
+  await sleep(120);
+  const row = w.document.querySelector('[data-p603additem="novena:miraculous_medal"]');
+  check('N5a Edit today: the Novenas rung offers the named novena as a pick', !!row);
+  const docBeforePick = w.localStorage.getItem(DATA_KEY);
+  if (row) click(w, row);
+  await until(() => !w.document.querySelector('.profaddladder603'));
+  check('N5b the pick lands in the today DRAFT — nothing is written', w.localStorage.getItem(DATA_KEY) === docBeforePick);
+  click(w, w.document.querySelector('[data-p600savetoday="1"]'));
+  await until(() => { const d = docOf(w); const te = d.sections.profiles.todayEdits && d.sections.profiles.todayEdits[TODAY]; return te && (te.contents && te.contents.Novenas || []).some((it) => it.kind === 'novena' && it.key === 'miraculous_medal'); });
+  const d = docOf(w);
+  const te = d.sections.profiles.todayEdits[TODAY];
+  const profAfter = JSON.stringify(((d.sections.profiles.list || []).find((p) => p.key === 'salesian') || {}).contents || {});
+  check('N5c Save today writes the layer carrying the named novena; the standing profile\u2019s contents are byte-identical (untouched)',
+    !!te && profAfter === profBefore, { te: te && te.contents, profSame: profAfter === profBefore });
+  const nov = await composeNovenas(w);
+  const mm = nov.filter((x) => x.episodeId === 'novena-miraculous_medal');
+  check('N5d the saved today layer composes for today: the named novena stands exactly once, at its Day 4',
+    mm.length === 1 && String(mm[0].title).includes('Day 4'), nov.map((x) => x.episodeId));
+  w.close();
+}
+{
+  // The pre-fix defect, reproduced on the pre-fix tree
+  // (git HEAD = b4545c2, the held Review head): named
+  // alone on a running day composes EMPTY there.
+  const headSrc = git(['show', 'HEAD:app/worker/src/client.ts']);
+  const ha = headSrc.indexOf('= `') + 3, hb = headSrc.indexOf('\n`;', ha);
+  const headJs = vm.runInContext('`' + headSrc.slice(ha, hb) + '`', vm.createContext({}));
+  const st = johnStore();
+  const doc = JSON.parse(st[DATA_KEY]);
+  const sal = (doc.sections.profiles.list || []).find((p) => p.key === 'salesian');
+  sal.contents = Object.assign({}, sal.contents || {}, { Novenas: [{ kind: 'novena', key: 'christ_the_king' }] });
+  st[DATA_KEY] = JSON.stringify(doc);
+  const html = SHELL.replace('<!--OPN_SHAPE-->', 'public');
+  const dom = new JSDOM(html, { url: 'https://app.orapronobis.media/', runScripts: 'dangerously', pretendToBeVisual: true });
+  const w = dom.window;
+  try { Object.defineProperty(w.navigator, 'standalone', { value: true, configurable: true }); } catch (e) {}
+  if (!w.crypto || !w.crypto.subtle) { try { Object.defineProperty(w, 'crypto', { value: webcrypto }); } catch (e) {} }
+  w.fetch = fetchStub;
+  Object.keys(st).forEach((k) => w.localStorage.setItem(k, st[k]));
+  const s = w.document.createElement('script');
+  s.textContent = headJs + HOOK;
+  w.document.body.appendChild(s);
+  await sleep(300);
+  const nov = await composeNovenas(w);
+  check('N6 FAIL-ON-PRE-FIX: on the held Review head (b4545c2) the same named-alone world composes ZERO novena tracks (the defect the fix removes)',
+    nov.length === 0, nov.map((x) => x.episodeId));
   w.close();
 }
 

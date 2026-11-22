@@ -17649,6 +17649,37 @@ function resolveProfilePodcasts(day) {
     });
   });
 }
+function opnNovenaMetas603(contents, tracks) {
+  // v603 Review fix (John's word, Ora thread, 2026-11-21
+  // 19:05 CT — "Ok. Let's do it plus fix"): a NAMED novena
+  // plays. The Novenas block's contents walk in contents
+  // order: a 'novena' item stands its own track — the
+  // day's Day n episode, present in the resolved slot
+  // only while that novena runs (the feed carries one
+  // episode per running novena per date, so slot presence
+  // IS the day standing); the 'all-novenas' item stands
+  // every running novena's track not already stood by a
+  // named item — dedupe by episodeId, so a named novena
+  // that is also active stands exactly once, at its
+  // contents position. A named novena outside its run
+  // stands nothing that day: the block is then truly
+  // empty, never gate-empty.
+  var byId = {};
+  (tracks || []).forEach(function (m) { if (m && m.episodeId && !byId[m.episodeId]) byId[m.episodeId] = m; });
+  var out = [], stood = {};
+  (contents || []).forEach(function (it) {
+    if (!it) return;
+    if (it.kind === 'novena') {
+      var m = byId['novena-' + it.key];
+      if (m && !stood[m.episodeId]) { stood[m.episodeId] = 1; out.push(m); }
+    } else if (it.kind === 'all-novenas') {
+      (tracks || []).forEach(function (t) {
+        if (t && t.episodeId && !stood[t.episodeId]) { stood[t.episodeId] = 1; out.push(t); }
+      });
+    }
+  });
+  return out;
+}
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -17702,7 +17733,10 @@ function extRebuildDescs(day) {
           // block's own row with the all-novenas item,
           // never a source selector — an entry carrying
           // all-novenas stands the novenas row.
-          || (e.own.sourceKey === 'novenas' && c590.some(function (it) { return it.kind === 'all-novenas'; }));
+          // v603 Review fix: a named novena item stands
+          // the row too — it plays its own Day n (the
+          // selection is opnNovenaMetas603's, below).
+          || (e.own.sourceKey === 'novenas' && c590.some(function (it) { return it.kind === 'all-novenas' || it.kind === 'novena'; }));
         return selIdx590('source', e.ext.slotId) >= 0 || selIdx590('source', e.ext.sourceKey) >= 0;
       });
       merged.sort(function (a, c) {
@@ -17718,9 +17752,24 @@ function extRebuildDescs(day) {
         var st = state.ownSlots[row.sourceKey];
         if (!st) return;
         if (st.state === 'present') {
-          st.tracks.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
+          // v603 Review fix: with a contents entry
+          // standing, the Novenas row emits the
+          // contents-order selection (named novenas at
+          // their contents positions, all-novenas
+          // standing the rest) — without contents the
+          // slot stands whole, exactly as before.
+          var metas = st.tracks;
+          if (row.sourceKey === 'novenas' && c590) metas = opnNovenaMetas603(c590, st.tracks);
+          metas.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
         } else if (st.state === 'missing') {
-          expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
+          // v603 Review fix: a named-only Novenas entry
+          // under a missing slot is a TRUE empty (no
+          // novena runs that day) — no missing
+          // placeholder stands. With all-novenas
+          // standing, the standing placeholder stands.
+          if (!(row.sourceKey === 'novenas' && c590 && !c590.some(function (it) { return it.kind === 'all-novenas'; }))) {
+            expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
+          }
         }
       } else {
         var slot = e.ext;
