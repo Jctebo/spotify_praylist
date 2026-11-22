@@ -1615,7 +1615,7 @@ function opnDefaultDoc() {
       intentions: [],
       conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
       profiles: {
-        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', dayRule: false, version: 1, picks: {}, dayDefaults: { sun: 'benedictine' }, mig590: true, mig591: true, todayEdits: {}
+        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', version: 1, mig590: true, mig604: true, todayEdits: {}
       },
       config: {
         sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
@@ -1647,7 +1647,7 @@ function opnDoc() {
         if (d && d.format === 'orapronobis-personal-data' && d.sections) {
           opnDocCache = d;
           if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
-          if (opnMigrateProfiles591(d.sections.profiles)) opnSave();
+          if (opnMigrateProfiles604(d.sections.profiles)) opnSave();
           return d;
         }
       }
@@ -2287,6 +2287,13 @@ function opnValidateImport(text) {
   });
   Object.keys(base.sections.conscience).forEach(function (k) { if (S.conscience[k] === undefined) S.conscience[k] = base.sections.conscience[k]; });
   Object.keys(base.sections.profiles).forEach(function (k) { if (S.profiles[k] === undefined) S.profiles[k] = base.sections.profiles[k]; });
+  // v604 import posture: STRIP — a backup file carrying
+  // the retired fields restores with them deleted here
+  // (the mig604 pass would delete them at load regardless;
+  // a REJECT would refuse John's own standing backups,
+  // which carry the fields). Named in the v604 build log.
+  delete S.profiles.dayDefaults;
+  delete S.profiles.picks;
   // v594 Part 2 (doc §2.3): the today layer rides the file
   // inside sections.profiles. Each entry validates with
   // the write route's checks against the restored list; an
@@ -2361,7 +2368,7 @@ function opnRestoreFromText(text) {
   return opnSnapshotWrite().then(function () {
     opnDocCache = doc;
     if (doc.sections && opnMigrateProfiles590(doc.sections.profiles)) { /* migrated in place below */ }
-    if (doc.sections && opnMigrateProfiles591(doc.sections.profiles)) { /* migrated in place below */ }
+    if (doc.sections && opnMigrateProfiles604(doc.sections.profiles)) { /* migrated in place below */ }
     opnSave();
     // v589 (fix-forward): the file's podcastListens rows land
     // in the podcast core through the standing import seam —
@@ -2440,7 +2447,6 @@ var opnSolemnity = {};    // date -> true, learned from the day payload
 
 /* ---- v590: profiles — designed defaults, migration,
    per-day resolution, contents ---- */
-var OPN_DOW_KEYS_590 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 // v603: the course keys stand again — for the Add path
 // only. v597 removed course selectors from the contents
 // system whole; John's v603 word returns them as
@@ -2466,8 +2472,7 @@ function opnMigrateProfiles590(P) {
   // designed config is first preserved whole as a custom
   // "<Name> — as found" (automatic migration, NOT a user
   // save — exempt from the rename rule). Customs stand
-  // byte-identical; standingKey/dayRule/picks carry by key;
-  // dayDefaults stands absent (= today's behavior).
+  // byte-identical; standingKey carries by key.
   if (!P || !Array.isArray(P.list) || P.mig590) return false;
   var designed = {};
   OPN_SEED_PROFILES.forEach(function (d) { designed[d.key] = d; });
@@ -2494,38 +2499,35 @@ function opnMigrateProfiles590(P) {
     p.layers = opnClone(designed[p.key].layers);
   });
   preserved.forEach(function (c) { P.list.push(c); });
-  if (!P.dayDefaults || typeof P.dayDefaults !== 'object') P.dayDefaults = {};
   P.version = (typeof P.version === 'number' ? P.version : 1) + 1;
   P.mig590 = true;
   return true;
 }
-function opnMigrateProfiles591(P) {
-  // v591 Correction 1: the Sunday rule is just a default —
-  // a stored dayRule=true with no Sunday entry in the day
-  // map seeds the map's Sunday entry to The Benedictine
-  // Way; dayRule=false seeds nothing. The stored rule then
-  // retires: resolution never reads it again, and a
-  // solemnity follows its weekday's profile like any day.
-  if (!P || !Array.isArray(P.list) || P.mig591) return false;
-  if (!P.dayDefaults || typeof P.dayDefaults !== 'object') P.dayDefaults = {};
-  if (P.dayRule && !P.dayDefaults.sun) P.dayDefaults.sun = 'benedictine';
-  P.dayRule = false;
-  P.mig591 = true;
+function opnMigrateProfiles604(P) {
+  // v604 (Q3): the resolution collapse's migration — at
+  // the new build's first run against the REAL document,
+  // the stored dayDefaults and picks fields are DELETED;
+  // nothing else is touched. The standing pick starts
+  // from the stored standingKey, read as-is (no write, no
+  // defaulting to a name). Profiles, contents and today
+  // layers stand byte-identical. Runs once (mig604 flag).
+  // (The v591 Sunday-seed migration retired whole with
+  // the map it fed; stored mig591 flags stand inert.)
+  if (!P || !Array.isArray(P.list) || P.mig604) return false;
+  delete P.dayDefaults;
+  delete P.picks;
+  P.mig604 = true;
   return true;
 }
 function opnResolveProfile590(P, date) {
-  // v591 §2.2 precedence: per-date pick → the day's profile
-  // (the day map, for the date's weekday) → the every-day
-  // (standing) profile → first. The v590 day-rule leg is
-  // RETIRED (Correction 1): the map's seeded Sunday entry
-  // carries what the rule carried.
+  // v604: precedence COLLAPSES to standing pick -> today
+  // layer (the layer applies in the fold, after this
+  // resolver). The per-date pick leg and the day-map leg
+  // are REMOVED whole (retirement): resolution is the
+  // every-day (standing) profile -> first.
   var byKey = function (k) { return P.list.filter(function (x) { return x.key === k; })[0] || null; };
   var dow = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)))).getUTCDay();
   var dayKind = dow === 0 ? 'sunday' : (opnSolemnity[date] ? 'solemnity' : 'weekday');
-  var pick = byKey(P.picks && P.picks[date]);
-  if (pick) return { profile: pick, resolvedBy: 'pick', dayKind: dayKind };
-  var dd = P.dayDefaults && typeof P.dayDefaults === 'object' ? byKey(P.dayDefaults[OPN_DOW_KEYS_590[dow]]) : null;
-  if (dd) return { profile: dd, resolvedBy: 'day-default', dayKind: dayKind };
   var st = byKey(P.standingKey);
   if (st) return { profile: st, resolvedBy: 'standing', dayKind: dayKind };
   return { profile: P.list[0], resolvedBy: 'standing', dayKind: dayKind };
@@ -2604,7 +2606,7 @@ function opnProfilesPayload(date) {
       if (c) o.contents = c;
       return o;
     }),
-    state: { standingKey: P.standingKey, dayRule: P.dayRule, version: P.version, dayDefaults: opnClone(P.dayDefaults || {}) },
+    state: { standingKey: P.standingKey, version: P.version },
     todayEdit: opnTodayEntry594(P, date) ? opnClone(opnTodayEntry594(P, date)) : null,
     effective: {
       key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: r.resolvedBy, dayKind: r.dayKind,
@@ -2992,37 +2994,23 @@ function opnLocalApi(path, opts, mode) {
       var findP = function (k) { return P.list.filter(function (x) { return x.key === k; })[0]; };
       opnPruneTodayEdits594(P);
       if (p === '/api/prayer/profiles/state') {
-        if (body.standingKey === undefined && body.dayRule === undefined && body.dayDefaults === undefined) throw opnErr(400, 'standingKey, dayRule or dayDefaults required');
-        if (body.dayDefaults !== undefined) {
-          if (!body.dayDefaults || typeof body.dayDefaults !== 'object' || Array.isArray(body.dayDefaults)) throw opnErr(400, 'dayDefaults must be an object');
-          var nd = {};
-          Object.keys(body.dayDefaults).forEach(function (dow) {
-            if (OPN_DOW_KEYS_590.indexOf(dow) < 0) throw opnErr(400, 'bad weekday ' + dow);
-            var v = body.dayDefaults[dow];
-            if (v === null || v === '') return;
-            if (typeof v !== 'string' || !findP(v)) throw opnErr(400, 'bad profile ' + String(v));
-            nd[dow] = v;
-          });
-          P.dayDefaults = nd;
-        }
+        // v604: a dayDefaults field on this route is
+        // REJECTED with a named 400 and nothing writes —
+        // the field retired with the resolution collapse.
+        if (body.dayDefaults !== undefined) throw opnErr(400, 'dayDefaults retired in v604');
+        if (body.standingKey === undefined && body.dayRule === undefined) throw opnErr(400, 'standingKey or dayRule required');
         if (body.standingKey !== undefined) {
           if (typeof body.standingKey !== 'string' || !findP(body.standingKey)) throw opnErr(400, 'bad profile ' + (typeof body.standingKey === 'string' ? body.standingKey : '(empty)'));
           P.standingKey = body.standingKey;
         }
         if (body.dayRule !== undefined) {
+          // v604: dayRule has no reader left; the field is
+          // shape-validated and never written (server parity).
           if (typeof body.dayRule !== 'boolean') throw opnErr(400, 'dayRule must be a boolean');
-          P.dayRule = body.dayRule;
         }
         return bump();
       }
-      if (p === '/api/prayer/profiles/day-pick') {
-        var ddate = typeof body.date === 'string' ? body.date : '';
-        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(ddate)) throw opnErr(400, 'date must be YYYY-MM-DD');
-        if (body.profileKey === null) { delete P.picks[ddate]; return bump(); }
-        if (typeof body.profileKey !== 'string' || !findP(body.profileKey)) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
-        P.picks[ddate] = body.profileKey;
-        return bump();
-      }
+      // v604: PUT /api/prayer/profiles/day-pick is REMOVED whole — the route falls through to the standing 404 (unknown local route).
       if (p === '/api/prayer/profiles/today-edit') {
         // v594 Part 2 (doc §2.1): the today layer write —
         // {date, layer}. A null layer, or an entry carrying
@@ -3050,6 +3038,9 @@ function opnLocalApi(path, opts, mode) {
         return bump();
       }
       if (p === '/api/prayer/profiles/save') {
+        // v604: profile save payloads carrying the retired
+        // fields are REJECTED with a named 400 (no silent strip).
+        if (body.dayDefaults !== undefined || body.picks !== undefined) throw opnErr(400, 'dayDefaults/picks retired in v604');
         var name = typeof body.name === 'string' ? body.name.trim() : '';
         if (!name) throw opnErr(400, 'name required');
         if (name.length > 80) throw opnErr(400, 'name too long');
@@ -3113,8 +3104,6 @@ function opnLocalApi(path, opts, mode) {
         if (!dp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
         if (dp.kind === 'default') throw opnErr(400, 'the named profiles cannot be deleted');
         P.list = P.list.filter(function (x) { return x.key !== dp.key; });
-        Object.keys(P.picks).forEach(function (dt) { if (P.picks[dt] === dp.key) delete P.picks[dt]; });
-        if (P.dayDefaults) Object.keys(P.dayDefaults).forEach(function (dw) { if (P.dayDefaults[dw] === dp.key) delete P.dayDefaults[dw]; });
         if (P.standingKey === dp.key) P.standingKey = 'salesian';
         return bump();
       }
@@ -15292,6 +15281,13 @@ function openHeaderMenu() {
     items.push({ head: true, label: 'Pray' });
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
+    // v604: the fold option — Expand all / Collapse all
+    // write the ONE stored page mode and repaint; the
+    // acts stand outside the in-place edit posture only.
+    if (!opn604.block) {
+      items.push({ label: 'Expand all', act: function () { opnSetPraylistMode604('expanded'); opnFoldSession604 = {}; opnRepaintHome604(); } });
+      items.push({ label: 'Collapse all', act: function () { opnSetPraylistMode604('collapsed'); opnFoldSession604 = {}; opnRepaintHome604(); } });
+    }
   } else if (tab === 'podcasts' && podLevel === 'index') {
     // The Formation home: the retired row-2 button's act.
     items.push({ head: true, label: 'Catechesis' });
@@ -19813,7 +19809,17 @@ function wirePrayersView(day) {
       // The card's own controls (its play button) are not
       // navigation — a tap anywhere else opens the page (§2.2.5).
       if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
-      openBlockPage(card.getAttribute('data-openblock'));
+      var bk604 = card.getAttribute('data-openblock');
+      // v604: on the one page, a block row's tap toggles
+      // its in-place expansion (independent folds, Q1);
+      // the block page stands behind the expansion head's
+      // door. Other views keep the standing navigation.
+      if (state.prayersView && state.prayersView.kind === 'home' && bk604 !== '__favorites' && bk604 !== '__episodes') {
+        opnToggleBlock604(bk604);
+        opnRepaintHome604();
+        return;
+      }
+      openBlockPage(bk604);
     });
   });
   view.querySelectorAll('[data-back]').forEach(function (btn) {
@@ -19850,12 +19856,42 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-profconfigure]').forEach(function (btn) {
     btn.addEventListener('click', function () { openConfigureLadder593(); });
   });
+  // v604: the one page's acts.
+  view.querySelectorAll('[data-p604pickedit]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnOpenPickEdit604(); });
+  });
+  view.querySelectorAll('[data-p604edit]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnEnterEdit604(btn.getAttribute('data-p604edit')); });
+  });
+  view.querySelectorAll('[data-p604door]').forEach(function (btn) {
+    btn.addEventListener('click', function () { openBlockPage(btn.getAttribute('data-p604door')); });
+  });
+  view.querySelectorAll('[data-p604change]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnAskScope604(opn604.block); });
+  });
+  view.querySelectorAll('[data-p604done]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opn604.block = null; opnRepaintHome604(); });
+  });
+  view.querySelectorAll('[data-p604savenew]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnSaveNew604(); });
+  });
+  view.querySelectorAll('[data-p604remove]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604remove')).split('|'); opnRemove604(p[0], p.slice(1).join('|')); });
+  });
+  view.querySelectorAll('[data-p604restore]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604restore')).split('|'); opnRestore604(p[0], p.slice(1).join('|')); });
+  });
+  view.querySelectorAll('[data-p604add]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnOpenAdd604(btn.getAttribute('data-p604add')); });
+  });
+  opnWireDrag604(view);
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
   });
   if (state.current) markPlaying(state.current.episodeId);
 }
-function blockRowHtml(b) {
+function blockRowHtml(b, day) {
+  blockRowDay604 = day || null;
   // v449 §2 Build 1: the home block row — the Formation
   // series-row form (the shipped paintPodcastsIndex card:
   // .card > .row > the tile seat + .grow (the name as h3 ·
@@ -19874,14 +19910,23 @@ function blockRowHtml(b) {
   // block's caption where it stands.
   var n = b.trackCount != null ? b.trackCount : (b.tracks || []).length;
   var dur = (b.tracks || []).reduce(function (a, t) { return a + (t.durationS || t.durationSec || 0); }, 0);
-  return '<div class="card blockrow" data-openblock="' + esc(b.block) + '"><div class="row">'
+  // v604: the block's own today-edits mark joins its row's
+  // meta, and an expanded block's expansion stands as the
+  // row's sibling (prayer posture, or the edit posture
+  // while this block is being edited in place).
+  var mark604 = opnBlockTodayMark604(b.block, blockRowDay604);
+  var rowHtml = '<div class="card blockrow" data-openblock="' + esc(b.block) + '"><div class="row">'
     + coverTileHtml(b.block, 'sm')
     + '<div class="grow"><h3>' + esc(b.label || b.block) + '</h3>'
     + '<div class="meta">' + (b.caption ? esc(b.caption) + ' \u00b7 ' : '')
     + '<span data-bcount="' + esc(b.block) + '">' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span>'
     + (dur > 0 ? ' \u00b7 ' + fmtDurLong(dur) : '')
+    + (mark604 ? ' \u00b7 <span data-p604todaymark="' + esc(b.block) + '">today has its own edits</span>' : '')
     + ' <span class="dl-ico" data-carddl="' + esc(b.block) + '" style="display:none" title="Downloaded">\u2913</span></div></div></div></div>';
+  if (blockRowDay604 && opnExpanded604(b.block)) rowHtml += opnExpansionHtml604(b, blockRowDay604);
+  return rowHtml;
 }
+var blockRowDay604 = null;
 function episodesRowHtml(day) {
   // v449 §2 Build 1: the unblocked group stands as the last
   // home row, in the same series-row dress — it is not a
@@ -19929,6 +19974,344 @@ function profPut(path, body) { return api(path, { method: 'PUT', headers: { 'Con
 function profileRebuild() {
   api('/api/player/day').then(function (day) { buildDayFromPayload(day, null); }).catch(function () {});
 }
+
+/* ---------------- v604: the Praylist editable in place ----------------
+   One page: collapsed block rows fold INDEPENDENTLY (Q1);
+   an expanded block stands in prayer posture (tracks as
+   they stand, v585 untouched); its head's Edit act —
+   behind profVaultGate594, with opnEnsureStandings601
+   awaited before the first materialization — opens the
+   EDIT POSTURE in place. The one question (today only /
+   standing) is asked once per session and stands as a
+   frozen banner; writes go through the standing stores
+   AT ONCE (today layer / profile contents). Save New in
+   the frozen edit bar mints the composed day. */
+var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, removed: {}, wrote: false, dragMoved: false, bookList: null, bookGroups: null };
+var opnFoldSession604 = {};
+var OPN_PRAYLIST_MODE_KEY_604 = 'opn-praylistmode-v604';
+function opnPraylistMode604() { try { return localStorage.getItem(OPN_PRAYLIST_MODE_KEY_604) === 'expanded' ? 'expanded' : 'collapsed'; } catch (e) { return 'collapsed'; } }
+function opnSetPraylistMode604(m) { try { localStorage.setItem(OPN_PRAYLIST_MODE_KEY_604, m); } catch (e) {} }
+function opnExpanded604(block) {
+  if (Object.prototype.hasOwnProperty.call(opnFoldSession604, block)) return !!opnFoldSession604[block];
+  return opnPraylistMode604() === 'expanded';
+}
+function opnToggleBlock604(block) { opnFoldSession604[block] = !opnExpanded604(block); }
+function opnDateLabel604(date) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(date || ''));
+  if (!m) return String(date || '');
+  var dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' }).format(dt);
+}
+function opnBlockTodayMark604(block, day) {
+  if (!day || !day.date) return false;
+  var P = opnDoc().sections.profiles;
+  var entry = opnTodayEntry594(P, day.date);
+  if (!entry) return false;
+  var rec = (P.list || []).filter(function (x) { return x.key === entry.baseProfileKey; })[0];
+  if (!rec) return false;
+  return opnTodayDivergence594(rec, entry).some(function (d) { return d.block === block; });
+}
+function opnItemLabel604(block, it) {
+  if (it.kind === 'course') return opnLadderCourseTitle603(it.key);
+  if (it.kind === 'novena') {
+    var cat = state.novenasCatalog;
+    var n = cat && cat.novenas ? cat.novenas.filter(function (x) { return x.slug === it.key; })[0] : null;
+    return n ? (n.name || n.slug) : it.key;
+  }
+  var u = null;
+  profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
+  return u ? u.label : (it.key || it.kind);
+}
+function opnLayersStored604(layers) {
+  // Payload layers stand in two shapes (stored object /
+  // fold array); the save routes take the stored shape.
+  if (Array.isArray(layers)) {
+    var out = { novenas: { on: false }, podcasts: { on: false, series: [] } };
+    layers.forEach(function (l) { if (l.key === 'novenas') out.novenas.on = !!l.on; if (l.key === 'podcasts') { out.podcasts.on = !!l.on; out.podcasts.series = (l.series || []).slice(); } });
+    return out;
+  }
+  return opnLayersOut(layers);
+}
+function opnLoadRes604() { return api('/api/prayer/profiles').then(function (r) { opn604.res = r; return r; }); }
+function opnProfRec604() {
+  var r = opn604.res;
+  if (!r || !r.effective) return null;
+  return (r.profiles || []).filter(function (p) { return p.key === r.effective.key; })[0] || null;
+}
+function opnEffList604(block) {
+  var rec = opnProfRec604();
+  if (!rec) return [];
+  if (opn604.scope === 'today') {
+    var layer = opn604.res.todayEdit;
+    if (layer && layer.contents && layer.contents[block]) return opnClone(layer.contents[block]);
+    return opnTodayComposedContents594(rec, block);
+  }
+  return opnStandingContents597(rec, block);
+}
+function opnMaterialize604(block) {
+  if (!opn604.lists[block]) opn604.lists[block] = opnEffList604(block);
+  return opn604.lists[block];
+}
+function opnRepaintHome604() { if (state.dayPayload) paintPrayersView(state.dayPayload); }
+function opnWrite604(block) {
+  opn604.wrote = true;
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var done = function (r) { if (r) opn604.res = r; opnRepaintHome604(); profileRebuild(); };
+  var rec = opnProfRec604();
+  if (!rec) return Promise.resolve();
+  if (opn604.scope === 'today') {
+    var layer = opn604.res.todayEdit ? opnClone(opn604.res.todayEdit) : { baseProfileKey: rec.key };
+    if (!layer.contents) layer.contents = {};
+    layer.contents[block] = opnClone(opn604.lists[block]);
+    Object.keys(layer.contents).forEach(function (b2) {
+      if (JSON.stringify(layer.contents[b2]) === JSON.stringify(opnTodayComposedContents594(rec, b2))) delete layer.contents[b2];
+    });
+    var has = layer.coreBlocks !== undefined || layer.layers !== undefined || Object.keys(layer.contents).length > 0;
+    return profPut('/api/prayer/profiles/today-edit', { date: date, layer: has ? layer : null }).then(done).catch(function () {});
+  }
+  var contents = rec.contents ? opnClone(rec.contents) : {};
+  Object.keys(opn604.lists).forEach(function (b2) { contents[b2] = opnClone(opn604.lists[b2]); });
+  var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (rec.coreBlocks || []).slice(), layers: opnLayersOut(rec.layers), contents: contents };
+  return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
+}
+function opnRemove604(block, id) {
+  var m = opnMaterialize604(block);
+  var it = m.filter(function (x) { return opnTodayItemId594(x) === id; })[0];
+  opn604.lists[block] = m.filter(function (x) { return opnTodayItemId594(x) !== id; });
+  if (it) (opn604.removed[block] = opn604.removed[block] || []).push(it);
+  return opnWrite604(block);
+}
+function opnRestore604(block, id) {
+  var rec = opnProfRec604();
+  var comp = opn604.scope === 'today' ? opnTodayComposedContents594(rec, block) : opnStandingContents597(rec, block);
+  var cur = opnMaterialize604(block);
+  var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
+  if (restored) {
+    var compIds = comp.map(opnTodayItemId594), curIds = cur.map(opnTodayItemId594);
+    var kept = cur.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
+    var base = comp.filter(function (it) { return opnTodayItemId594(it) === id || curIds.indexOf(opnTodayItemId594(it)) >= 0; });
+    opn604.lists[block] = base.concat(kept);
+    opn604.removed[block] = (opn604.removed[block] || []).filter(function (it) { return opnTodayItemId594(it) !== id; });
+  }
+  return opnWrite604(block);
+}
+function opnDragOver604(block, dragId, targetId) {
+  var m = opnMaterialize604(block);
+  var i = -1, j = -1;
+  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === dragId) i = k; if (id === targetId) j = k; });
+  if (i < 0 || j < 0 || i === j) return;
+  var mv = m.splice(i, 1)[0];
+  m.splice(j, 0, mv);
+  opn604.dragMoved = true;
+}
+function opnWireDrag604(scopeEl) {
+  scopeEl.querySelectorAll('[data-p604handle]').forEach(function (h) {
+    h.addEventListener('pointerdown', function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      var block = opn604.block;
+      if (!block) return;
+      var dragId = h.getAttribute('data-p604handle');
+      var move = function (e2) {
+        try {
+          var el = document.elementFromPoint(e2.clientX, e2.clientY);
+          var row = el && el.closest ? el.closest('[data-p604erow]') : null;
+          if (row) { var tid = row.getAttribute('data-p604erow'); if (tid && tid !== dragId) opnDragOver604(block, dragId, tid); }
+        } catch (e) {}
+        if (e2.clientY < 80) window.scrollBy(0, -12);
+        else if (window.innerHeight && e2.clientY > window.innerHeight - 80) window.scrollBy(0, 12);
+      };
+      var up = function () {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        if (opn604.dragMoved) { opn604.dragMoved = false; opnWrite604(block); }
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+  });
+}
+function opnExpansionHtml604(b, day) {
+  var block = b.block;
+  if (opn604.block === block) return opnEditPostureHtml604(b);
+  var html = '<div class="p604exp" data-p604exp="' + esc(block) + '">'
+    + '<div class="row p604exphead"><button class="playbtn small" data-queue="' + esc(block) + '" aria-label="Play all of ' + esc(b.label || block) + '">&#9654;</button>'
+    + '<span class="grow">Play All</span>'
+    + '<button class="btn ghost" data-p604edit="' + esc(block) + '">Edit</button>'
+    + '<button class="btn ghost" data-p604door="' + esc(block) + '">Block page</button></div>';
+  html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: block })); }).join('');
+  return html + '</div>';
+}
+function opnEditPostureHtml604(b) {
+  var block = b.block;
+  var list = opn604.lists[block] || [];
+  var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
+  list.forEach(function (it) {
+    var id = opnTodayItemId594(it);
+    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(id) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(id) + '" title="Drag to reorder">&#x2630;</span>'
+      + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(id) + '">Remove</button></div></div>';
+  });
+  if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
+  var removed = opn604.removed[block] || [];
+  if (removed.length) {
+    html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
+      + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+  }
+  html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
+  return html + '</div>';
+}
+function opnBannerHtml604() {
+  if (!opn604.scope) return '';
+  var name = opn604.res && opn604.res.effective ? opn604.res.effective.name : '';
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var line = opn604.scope === 'today'
+    ? 'Editing today only — ' + opnDateLabel604(date)
+    : 'Editing standing — in ' + name + ', your every-day profile';
+  var second = opn604.scopeSwitched ? '<p class="sub profbarline593">Acts already written stand where they were written.</p>' : '';
+  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">Change</button></div>' + second + '</div></div>';
+}
+function opnEditBarHtml604() {
+  if (!opn604.block) return '';
+  return '<div class="proffrozen593 p604bar" data-p604bar="1"><div class="profbar593"><div class="row">'
+    + '<button class="btn gold" data-p604savenew="1"' + (opn604.wrote ? '' : ' disabled') + '>Save New</button>'
+    + '<button class="btn ghost" data-p604done="1">Done</button></div></div></div>';
+}
+function opnAskScope604(block) {
+  var old = document.querySelector('.p604q');
+  if (old) old.remove();
+  var profName = opn604.res && opn604.res.effective ? opn604.res.effective.name : '';
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet p604q';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Edit for when?</h1></div>'
+    + '<div class="card bookrow" data-p604scope="today"><div class="row"><span class="grow">Today only — ' + esc(opnDateLabel604(date)) + '</span></div></div>'
+    + '<div class="card bookrow" data-p604scope="standing"><div class="row"><span class="grow">Standing — in ' + esc(profName) + ', your every-day profile</span></div></div>'
+    + '<div class="row"><button class="btn ghost" data-p604qclose="1">Cancel</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  sheet.querySelectorAll('[data-p604scope]').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var sc = row.getAttribute('data-p604scope');
+      if (opn604.scope && opn604.scope !== sc) { opn604.scopeSwitched = true; opn604.lists = {}; opn604.removed = {}; }
+      opn604.scope = sc;
+      sheet.remove();
+      if (block) opnStartPosture604(block);
+      else opnRepaintHome604();
+    });
+  });
+  var qc = sheet.querySelector('[data-p604qclose]');
+  if (qc) qc.addEventListener('click', function () { sheet.remove(); });
+}
+function opnStartPosture604(block) {
+  opn604.block = block;
+  opnFoldSession604[block] = true;
+  opnMaterialize604(block);
+  opnRepaintHome604();
+}
+function opnEnterEdit604(block) {
+  // Guards at entry (plan §0.13): the vault gate stands in
+  // front of the posture — against the expansion host —
+  // and the standings settle before the first
+  // materialization in either scope.
+  var host = view.querySelector('[data-p604exp="' + block + '"]');
+  if (host && profVaultGate594(host, function () { opnRepaintHome604(); opnEnterEdit604(block); }, function () { opnRepaintHome604(); })) return;
+  opnEnsureStandings601().then(function () {
+    return opn604.res ? opn604.res : opnLoadRes604();
+  }).then(function () {
+    if (!opn604.scope) { opnAskScope604(block); return; }
+    opnStartPosture604(block);
+  }).catch(function () {});
+}
+function opnLoadBook604(cb) {
+  if (opn604.bookList) { cb(); return; }
+  api('/api/prayer/book').then(function (r) {
+    opn604.bookList = [];
+    opn604.bookGroups = [];
+    ((r && r.groups) || []).forEach(function (g) {
+      var gp = { name: g.category || g.name || '', prayers: [] };
+      (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) { var p = { slug: pr.slug, title: pr.title || pr.slug }; opn604.bookList.push(p); gp.prayers.push(p); } });
+      if (gp.prayers.length) opn604.bookGroups.push(gp);
+    });
+    cb();
+  }).catch(function () { opn604.bookList = []; opn604.bookGroups = []; cb(); });
+}
+function opnOpenAdd604(block) {
+  // The v603 ladder's THIRD host: picks land per the
+  // session scope through the standing write path.
+  var host604 = {
+    ids: function () { return opnEffList604(block).map(opnTodayItemId594); },
+    add: function (item) { opnMaterialize604(block).push(item); opnWrite604(block); },
+    layers: function () { var rec = opnProfRec604(); return rec ? rec.layers : null; },
+    groups: function () { return opn604.bookGroups; },
+    ensure: function (cb) { opnLoadBook604(cb); }
+  };
+  openAddLadder603(block, host604);
+}
+function opnSaveNew604() {
+  if (!opn604.wrote) return;
+  openRenameCopySheet590('', function (name) {
+    var res = opn604.res;
+    if (!res || !res.effective) return;
+    var eff = res.effective;
+    // The mint is the COMPOSED DAY: the resolved profile
+    // with the today layer folded whole.
+    var comp = res.todayEdit ? opnApplyTodayLayer594(eff, res.todayEdit) : eff;
+    var compRec = { key: comp.key, coreBlocks: comp.coreBlocks, layers: comp.layers, contents: comp.contents || null };
+    var contents = {};
+    (comp.coreBlocks || []).concat(['Novenas']).forEach(function (b) { contents[b] = opnStandingContents597(compRec, b); });
+    var payload = { name: name, honorLine: comp.honorLine || '', coreBlocks: (comp.coreBlocks || []).slice(), layers: opnLayersStored604(comp.layers), contents: contents, basedOn: eff.key };
+    profPut('/api/prayer/profiles/save', payload).then(function (r) {
+      if (r) opn604.res = r;
+      var mint = (opn604.res.profiles || []).filter(function (p) { return p.name === name; })[0];
+      var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+      var chain = res.todayEdit ? profPut('/api/prayer/profiles/today-edit', { date: date, layer: null }) : Promise.resolve(null);
+      return chain.then(function () { return mint ? profPut('/api/prayer/profiles/state', { standingKey: mint.key }) : null; });
+    }).then(function (r) {
+      if (r) opn604.res = r;
+      opn604.scope = 'standing';
+      opn604.lists = {}; opn604.removed = {}; opn604.wrote = false;
+      opnRepaintHome604();
+      profileRebuild();
+    }).catch(function () {});
+  });
+}
+function opnOpenPickEdit604() {
+  api('/api/prayer/profiles').then(function (res) {
+    opn604.res = res;
+    var old = document.querySelector('.p604pick');
+    if (old) old.remove();
+    var sheet = document.createElement('div');
+    sheet.className = 'sheet p604pick';
+    var sel = res.state ? res.state.standingKey : (res.effective && res.effective.key);
+    var html = '<div class="inner"><div class="row"><h1 class="screen grow">Standing pick</h1></div>'
+      + '<p class="sub">The profile every day follows.</p><div class="profchips591">';
+    (res.profiles || []).forEach(function (p) { html += '<button class="chip591' + (p.key === sel ? ' on' : '') + '" data-p604pickchip="' + esc(p.key) + '">' + esc(p.name) + '</button>'; });
+    html += '</div>';
+    if (res.todayEdit) html += '<p class="sub" data-p604pickwarn="1">today has its own edits — changing the profile clears them</p>';
+    html += '<div class="row"><button class="btn gold" data-p604picksave="1">Save</button><button class="btn ghost" data-p604pickclose="1">Cancel</button></div></div>';
+    sheet.innerHTML = html;
+    document.body.appendChild(sheet);
+    mountDrawer(sheet, true);
+    sheet.querySelectorAll('[data-p604pickchip]').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        sel = chip.getAttribute('data-p604pickchip');
+        sheet.querySelectorAll('[data-p604pickchip]').forEach(function (c) { c.classList.toggle('on', c.getAttribute('data-p604pickchip') === sel); });
+      });
+    });
+    var cc = sheet.querySelector('[data-p604pickclose]');
+    if (cc) cc.addEventListener('click', function () { sheet.remove(); });
+    var sv = sheet.querySelector('[data-p604picksave]');
+    if (sv) sv.addEventListener('click', function () {
+      var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+      var chain = res.todayEdit ? profPut('/api/prayer/profiles/today-edit', { date: date, layer: null }) : Promise.resolve(null);
+      chain.then(function () { return profPut('/api/prayer/profiles/state', { standingKey: sel }); })
+        .then(function (r) { if (r) opn604.res = r; sheet.remove(); opnRepaintHome604(); profileRebuild(); })
+        .catch(function () {});
+    });
+  }).catch(function () {});
+}
+
 function profPlanRowHtml(day) {
   // v595 (John's refinement, 2026-11-21 15:44 CT): ONE
   // row carries both — "I just don't want to show 2 rows
@@ -19940,12 +20323,13 @@ function profPlanRowHtml(day) {
   // the row falls back to its bare "Prayer plan" label,
   // the act standing.
   var fold = day && day.profile;
-  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span><button class="btn ghost" data-p604pickedit="1">Edit</button><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  // v604: the resolution line collapses to the standing
+  // form — the profile in force IS the standing pick.
   var resLine = 'Your every-day profile';
-  if (fold.resolvedBy === 'pick') resLine = 'Your pick for today';
-  else if (fold.resolvedBy === 'day-default') resLine = 'From the day mapping';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
+    + '<button class="btn ghost" data-p604pickedit="1">Edit</button>'
     + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
 }
 
@@ -20022,11 +20406,12 @@ function openConfigureLadder593() {
   // each door to its own full screen. No pop-ups or sheets
   // stack in this flow. The ladder's Close returns to the
   // calling surface; each screen's Close returns here.
-  // v594 Part 2 (Q5=A): THREE doors — Edit today · Edit
-  // profiles · Edit mapping — and the head states today's
-  // standing whole: "Today follows X" + "· today has its
-  // own edits" whenever a layer stands for today and the
-  // live diff against the profile is non-empty.
+  // v594 Part 2 (Q5=A): the doors — Edit today · Edit
+  // profiles (v604: the Edit mapping door is REMOVED
+  // whole with the day map) — and the head states the
+  // standing pick + "· today has its own edits" whenever
+  // a layer stands for today and the live diff against
+  // the profile is non-empty.
   var old = document.querySelector('.profladder593');
   if (old) old.remove();
   var sheet = document.createElement('div');
@@ -20035,7 +20420,6 @@ function openConfigureLadder593() {
     + '<p class="sub" data-p594ladderhead="1"></p>'
     + '<div class="card bookrow" data-p594door="today"><div class="row"><span class="grow">Edit today</span><span class="meta">›</span></div><p class="sub">Today’s prayer as it stands — changes stand for today only.</p></div>'
     + '<div class="card bookrow" data-p593door="edit"><div class="row"><span class="grow">Edit profiles</span><span class="meta">›</span></div><p class="sub">What a profile stands — changes stand in every day that follows it.</p></div>'
-    + '<div class="card bookrow" data-p593door="map"><div class="row"><span class="grow">Edit mapping</span><span class="meta">›</span></div><p class="sub">Which profile each day follows — every day and each weekday.</p></div>'
     + '<div class="row"><button class="btn ghost" data-p593ladderclose="1">Close</button></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true);
@@ -20045,102 +20429,12 @@ function openConfigureLadder593() {
     var prof = null;
     (r.profiles || []).forEach(function (p) { if (p.key === r.effective.key) prof = p; });
     var edits = !!(prof && r.todayEdit && opnTodayDivergence594(prof, r.todayEdit).length);
-    headEl.textContent = 'Today follows ' + r.effective.name + (edits ? ' · today has its own edits' : '');
+    headEl.textContent = r.effective.name + ' — your every-day profile' + (edits ? ' · today has its own edits' : '');
   }).catch(function () {});
   sheet.querySelector('[data-p594door="today"]').addEventListener('click', function () { sheet.remove(); openEditTodayScreen594(true); });
   sheet.querySelector('[data-p593door="edit"]').addEventListener('click', function () { sheet.remove(); openProfilesScreen(null, { ladder: true }); });
-  sheet.querySelector('[data-p593door="map"]').addEventListener('click', function () { sheet.remove(); openDayMappingScreen593(true); });
   var lc = sheet.querySelector('[data-p593ladderclose]');
   if (lc) lc.addEventListener('click', function () { sheet.remove(); });
-}
-function openDayMappingScreen593(fromLadder) {
-  // v593 §2 (Q5=A): the Day mapping as its OWN full screen,
-  // reached from the Configure ladder (never within the
-  // profile window). Week view: Every day + Mon–Sun, each
-  // naming its profile. A day's row turns the SAME screen
-  // to that day's assignment view — chips + one Stand act;
-  // the assignment writes at once (no draft, no Save).
-  // Editing a profile's toggles never happens here.
-  var old = document.querySelector('.profmapscreen593');
-  if (old) old.remove();
-  var sheet = document.createElement('div');
-  sheet.className = 'sheet profmapscreen593 profscreenfull592';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Day mapping</h1></div>'
-    + '<div class="profmapbody593"><p class="sub">Loading …</p></div><p class="fieldnote profmapnote593"></p></div>';
-  document.body.appendChild(sheet);
-  mountDrawer(sheet, true);
-  var body = sheet.querySelector('.profmapbody593');
-  var note = sheet.querySelector('.profmapnote593');
-  var DOWS = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']];
-  var res = null, view = 'week', selKey = null;
-  function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
-  function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
-  function dowName(scope) { var d = DOWS.filter(function (x) { return x[0] === scope; })[0]; return d ? d[1] : scope; }
-  function curKeyFor(scope) {
-    if (!res || !res.state) return null;
-    if (scope === 'standing') return res.state.standingKey;
-    var dd = res.state.dayDefaults || {};
-    return dd[scope] || res.state.standingKey;
-  }
-  function paint() {
-    if (!body || !res || !res.profiles) return;
-    var html = '';
-    if (view === 'week') {
-      html += '<p class="sub">Each day follows its profile. Sunday stands as The Benedictine Way by default — any day can be changed like any other.</p>';
-      html += '<p class="sub">Standing a profile for a day takes effect at once.</p>';
-      var stand = byKey(res.state && res.state.standingKey);
-      html += '<div class="card bookrow" data-p593mapday="standing"><div class="row"><span class="grow">Every day</span><span class="meta">' + esc(stand ? stand.name : '') + '</span></div></div>';
-      var dd = (res.state && res.state.dayDefaults) || {};
-      DOWS.forEach(function (dw) {
-        var cur = dd[dw[0]] ? byKey(dd[dw[0]]) : null;
-        html += '<div class="card bookrow" data-p593mapday="' + dw[0] + '"><div class="row"><span class="grow">' + dw[1] + '</span><span class="meta">' + (cur ? esc(cur.name) : 'Every day') + '</span></div></div>';
-      });
-      html += '<div class="row"><button class="btn ghost" data-p593mapclose="1">Close</button></div>';
-      body.innerHTML = html;
-      body.querySelectorAll('[data-p593mapday]').forEach(function (row) {
-        row.addEventListener('click', function () { view = row.getAttribute('data-p593mapday'); selKey = curKeyFor(view); paint(); });
-      });
-      var mc = body.querySelector('[data-p593mapclose]');
-      if (mc) mc.addEventListener('click', closeScreen);
-    } else {
-      var label = view === 'standing' ? 'Every day' : dowName(view);
-      var cur = curKeyFor(view);
-      if (!selKey) selKey = cur;
-      html += '<h2 class="sectionhead">' + esc(label) + '</h2>';
-      html += '<div class="profchips591">';
-      res.profiles.forEach(function (p) {
-        html += '<button class="chip591' + (p.key === selKey ? ' on' : '') + '" data-p593mapchip="' + esc(p.key) + '">' + esc(p.name) + '</button>';
-      });
-      html += '</div>';
-      if (view === 'sun') html += '<p class="sub">Sunday stands as The Benedictine Way by default — stand any profile here, like any day.</p>';
-      html += '<p class="sub">To change what a profile contains, use Configure plan.</p>';
-      html += '<div class="row"><button class="btn gold" data-p593stand="1">' + (view === 'standing' ? 'Stand as every day' : 'Stand for ' + esc(label)) + '</button>'
-        + '<button class="btn ghost" data-p593mapback="1">Back</button></div>';
-      body.innerHTML = html;
-      body.querySelectorAll('[data-p593mapchip]').forEach(function (chip) {
-        chip.addEventListener('click', function () { selKey = chip.getAttribute('data-p593mapchip'); paint(); });
-      });
-      var st = body.querySelector('[data-p593stand]');
-      if (st) st.addEventListener('click', function () {
-        var done = function (r) { if (r) res = r; view = 'week'; selKey = null; paint(); profileRebuild(); };
-        if (view === 'standing') profPut('/api/prayer/profiles/state', { standingKey: selKey }).then(done).catch(fail);
-        else {
-          var nd = opnClone((res.state && res.state.dayDefaults) || {});
-          nd[view] = selKey;
-          profPut('/api/prayer/profiles/state', { dayDefaults: nd }).then(done).catch(fail);
-        }
-      });
-      var bk = body.querySelector('[data-p593mapback]');
-      if (bk) bk.addEventListener('click', function () { view = 'week'; selKey = null; paint(); });
-    }
-  }
-  function closeScreen() { sheet.remove(); if (fromLadder) openConfigureLadder593(); }
-  function loadMap() {
-    api('/api/prayer/profiles').then(function (r) { res = r; paint(); }).catch(function () { if (body) body.innerHTML = '<p class="sub">Day mapping did not load.</p>'; });
-  }
-  // v594: a locked device vault gates the surface (its
-  // writes refuse the same way the editor's did).
-  if (!profVaultGate594(body, loadMap, closeScreen)) loadMap();
 }
 function openEditTodayScreen594(fromLadder) {
   // v594 Part 2 (doc §2.4): EDIT TODAY — today's composed
@@ -20294,11 +20588,16 @@ function openEditTodayScreen594(fromLadder) {
     if (!draftDirtyT()) return Promise.resolve();
     var chain;
     if (pickD !== standPick()) {
+      // v604: the chips are the STANDING PICK chips — a
+      // changed pick writes standingKey through the
+      // standing route (the per-date pick route is gone);
+      // the layer clears first, as the pick's clearing
+      // rule has always stood.
       chain = (res.todayEdit
         ? profPut('/api/prayer/profiles/today-edit', { date: todayChicago(), layer: null })
         : Promise.resolve(null)
       ).then(function () {
-        return profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: pickD });
+        return profPut('/api/prayer/profiles/state', { standingKey: pickD });
       });
     } else {
       var layer = clearedD ? null : layerFromDraft();
@@ -20465,13 +20764,13 @@ function openEditTodayScreen594(fromLadder) {
     var p = dprof();
     if (!p || !sp) { body.innerHTML = '<p class="sub">No profiles stand.</p>'; return; }
     var dv = divs();
-    var html = '<p class="sub">Today follows ' + esc(sp.name) + ' — the chips change today’s pick.</p>';
+    var html = '<p class="sub">Today follows ' + esc(sp.name) + ' — the chips change the standing pick.</p>';
     html += '<div class="profchips591">';
     res.profiles.forEach(function (pp) {
       html += '<button class="chip591' + (pp.key === pickD ? ' on' : '') + '" data-p594tchip="' + esc(pp.key) + '">' + esc(pp.name) + '</button>';
     });
     html += '</div>';
-    html += '<p class="sub">Change for today only.</p>';
+    html += '<p class="sub">The pick stands for every day.</p>';
     // The clearing warning stands whenever a pick change
     // would clear anything — a standing layer, or layer
     // edits the draft carries — before the tap and the
@@ -21413,36 +21712,19 @@ function openProfileSheet() {
     api('/api/prayer/profiles').then(function (res) {
       if (!res || !res.profiles || !res.state || !body) return;
       var eff = res.effective;
-      var html = '<p class="sub">For today</p>';
-      res.profiles.forEach(function (p) {
-        var mark = eff && eff.resolvedBy === 'pick' && eff.key === p.key;
-        html += '<div class="card bookrow" data-profpick="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
-      });
-      if (eff && eff.resolvedBy === 'pick') {
-        html += '<div class="card bookrow" data-profpick=""><div class="row"><span class="grow">Use the rule</span></div></div>';
-      }
+      // v604: the per-date pick rows retire with the pick
+      // route — the standing rows below are the pick.
+      var html = '';
       html += '<p class="sub">Standing default</p>';
       res.profiles.forEach(function (p) {
         var mark = res.state.standingKey === p.key;
         html += '<div class="card bookrow" data-profstand="' + esc(p.key) + '"><div class="row"><span class="grow">' + esc(p.name) + '</span>' + (mark ? '<span class="meta">\\u2713</span>' : '') + '<button class="btn ghost" data-profedit="' + esc(p.key) + '">Edit</button></div></div>';
       });
-      html += '<p class="sub">Day rule</p>';
-      html += '<div class="card bookrow" data-profrule="1"><div class="row"><span class="grow">The Benedictine Way on Sundays and solemnities</span><span class="meta">' + (res.state.dayRule ? 'On' : 'Off') + '</span></div></div>';
       body.innerHTML = html;
-      body.querySelectorAll('[data-profpick]').forEach(function (row) {
-        row.addEventListener('click', function () {
-          var key = row.getAttribute('data-profpick');
-          profPut('/api/prayer/profiles/day-pick', { date: todayChicago(), profileKey: key ? key : null }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
-        });
-      });
       body.querySelectorAll('[data-profstand]').forEach(function (row) {
         row.addEventListener('click', function () {
           profPut('/api/prayer/profiles/state', { standingKey: row.getAttribute('data-profstand') }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
         });
-      });
-      var ruleRow = body.querySelector('[data-profrule]');
-      if (ruleRow) ruleRow.addEventListener('click', function () {
-        profPut('/api/prayer/profiles/state', { dayRule: !res.state.dayRule }).then(function () { sheet.remove(); profileRebuild(); }).catch(fail);
       });
       // v517 §2: each row's Edit act — its tap is not the
       // row's pick act (stopPropagation), the sheet closes,
@@ -21757,6 +22039,7 @@ function paintListenHome(day) {
   // (name + resolution line) beside the button, and the
   // separate profile card row is gone.
   var html = profPlanRowHtml(day)
+    + opnBannerHtml604() + opnEditBarHtml604()
     + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
@@ -21784,7 +22067,7 @@ function homeBodyHtml(day) {
   // per line; the episodes group stands last, outside the
   // order, when the day carries episodes.
   var html = '';
-  orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b); });
+  orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b, day); });
   if ((day.episodes || []).length) html += episodesRowHtml(day);
   return html;
 }
