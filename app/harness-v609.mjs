@@ -105,6 +105,14 @@ async function paintHome(w) {
   const paint = () => {
     const day = O.opnFoldDay590(publicDay(TODAY, ['x', 'y']));
     O.state.dayPayload = day;
+    // v609 REPAIR: build the day's descriptor list before
+    // painting, as the real resolution does (extRebuildDescs
+    // assigns state.dayDescs — the merged set's paint source).
+    // The shipped harness skipped this build and hand-filled
+    // block tracks instead; on a real day the tracks stand
+    // empty and the descriptors carry the day — the gap hid
+    // the production break.
+    O.extRebuildDescs(day);
     O.paintPrayersView(day);
     return day;
   };
@@ -197,8 +205,8 @@ async function enterTopEdit(w, scope) {
     && (edits[0].compareDocumentPosition(set) & w.Node.DOCUMENT_POSITION_FOLLOWING) !== 0
     && !d.querySelector('[data-p604edit]') && !d.querySelector('[data-p604door]'),
     { n: edits.length });
-  check('E2 the plan-row Pick stands at the top under its own name (the switch is NOT inside the edit screen)',
-    !!d.querySelector('[data-p604pickedit]'));
+  check('E2 (v609 REPAIR, John 23:14 CT) the plan row carries NO Pick — the page top is the Edit only; the Pick stands at the edit form’s head (legged in harness-v609fix F3/F4)',
+    !d.querySelector('[data-p604pickedit]') && !d.querySelector('[data-profconfigure]'));
   const asked = await enterTopEdit(w, 'today');
   check('E3 ◆ the top Edit asks the ONE QUESTION once and the scope banner stands (the form\u2019s only head furniture besides the bar — NO switches section at the top)',
     asked && !!d.querySelector('[data-p604banner]') && d.querySelector('[data-p604banner]').textContent.includes('Editing today only')
