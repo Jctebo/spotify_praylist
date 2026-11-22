@@ -30,9 +30,7 @@ function check(name, cond, extra) {
 const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-// v610 ship: pinned to the shipped broken v609 tree (bf17613) — the legs'
-// "old" is that build; the moving main ref outgrew it once the repair landed.
-const oldClientSrc = git(['show', 'bf17613:app/worker/src/client.ts']);
+const oldClientSrc = git(['show', '70a04b1:app/worker/src/client.ts']); // fail-on-old pin: the v609 FIRST ship — pinned 2026-11-21 at v609 repair 2 (was: main, which repair 1 advanced)
 const BOOK = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/book.json', 'utf8'));
 const NOVENAS = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/novenas.json', 'utf8'));
 const PODIDX = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/podcasts-index.json', 'utf8'));
@@ -126,13 +124,21 @@ async function paintHome(w) {
 async function enterTopEdit(w, scope) {
   const d = w.document;
   click(w, d.querySelector('[data-p607edit]'));
-  const asked = await until(() => d.querySelector('.p604q'), 9000);
-  if (asked && scope) {
-    const row = [...d.querySelectorAll('[data-p604scope]')].find((r) => r.getAttribute('data-p604scope') === scope);
+  // Dual-path entry: OLD builds ask the scope question
+  // (answer it); the v609 repair-2 build opens the form
+  // directly on TODAY scope (a standing entry flips
+  // through the banner's own button).
+  const met = await until(() => d.querySelector('.p604q') || d.querySelector('[data-p604erow]'), 9000);
+  if (met && d.querySelector('.p604q')) {
+    const row = [...d.querySelectorAll('[data-p604scope]')].find((r) => r.getAttribute('data-p604scope') === (scope || 'today'));
     if (row) click(w, row);
+    return !!(await until(() => d.querySelector('[data-p604erow]'), 9000));
   }
-  await until(() => d.querySelector('[data-p604erow]'), 9000);
-  return asked;
+  if (scope === 'standing' && d.querySelector('[data-p604erow]')) {
+    click(w, d.querySelector('[data-p604change]'));
+    await until(() => d.querySelector('[data-p604erow]'), 9000);
+  }
+  return !!d.querySelector('[data-p604erow]');
 }
 
 
@@ -194,7 +200,11 @@ async function paintRealDay(w) {
   const { descs } = await paintRealDay(w);
   const d = w.document;
   const set = d.querySelector('[data-p609set]');
-  const rowTitles = [...d.querySelectorAll('[data-p609set] > *')].slice(1).map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  // v609 repair 2 (John's word: groups back): the set's
+  // children now include the quiet group heads — the row
+  // count reads the CARD rows only (heads excluded by
+  // name; harness-v609vault F5 legs the grouping itself).
+  const rowTitles = [...d.querySelectorAll('[data-p609set] > *')].slice(1).filter((r) => !r.hasAttribute('data-p609sethead')).map((r) => r.textContent.replace(/\s+/g, ' ').trim());
   check('F2 \u25c6 the fixed set PAINTS the day: one row per descriptor, in descriptor order',
     !!set && rowTitles.length === descs.length && descs.every((t, i) => rowTitles[i] && rowTitles[i].includes((t.title || '').slice(0, 18))),
     { rows: rowTitles.length, descs: descs.length, first: rowTitles[0] });

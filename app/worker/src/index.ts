@@ -1347,8 +1347,12 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         // standing keys is kept (John's word returns
         // courses through the Add path); any other course
         // key is an error — the client's mirror rule.
+        // v609 repair 2: the course selector generalizes
+        // to ANY podcast series key on both sides of the
+        // mirror (a series stands only as a contents
+        // item); a keyless course item is still an error.
         if (kind === "course") {
-          if (!["catechism-in-a-year", "bible-in-a-year", "rosary-in-a-year", "summa-in-a-year"].includes(key as string)) return { error: `bad course ${String(key)}` };
+          if (typeof key !== "string" || !key) return { error: `bad course ${String(key)}` };
         } else {
           if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
           if (typeof key !== "string" || !key) return { error: "contents item needs a key" };

@@ -30,9 +30,7 @@ function check(name, cond, extra) {
 const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-// v610 ship: pinned to the v607 ship tree (d839539) — the legs' "old" is the
-// v607 client; the moving main ref outgrew that meaning once v609 landed.
-const oldClientSrc = git(['show', 'd839539:app/worker/src/client.ts']);
+const oldClientSrc = git(['show', 'd839539:app/worker/src/client.ts']); // fail-on-old pin: v607 on main — pinned 2026-11-21 at v609 repair 2 (was: main, which has advanced)
 const BOOK = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/book.json', 'utf8'));
 const NOVENAS = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/novenas.json', 'utf8'));
 const PODIDX = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/podcasts-index.json', 'utf8'));
@@ -126,13 +124,21 @@ async function paintHome(w) {
 async function enterTopEdit(w, scope) {
   const d = w.document;
   click(w, d.querySelector('[data-p607edit]'));
-  const asked = await until(() => d.querySelector('.p604q'), 9000);
-  if (asked && scope) {
-    const row = [...d.querySelectorAll('[data-p604scope]')].find((r) => r.getAttribute('data-p604scope') === scope);
+  // Dual-path entry: OLD builds ask the scope question
+  // (answer it); the v609 repair-2 build opens the form
+  // directly on TODAY scope (a standing entry flips
+  // through the banner's own button).
+  const met = await until(() => d.querySelector('.p604q') || d.querySelector('[data-p604erow]'), 9000);
+  if (met && d.querySelector('.p604q')) {
+    const row = [...d.querySelectorAll('[data-p604scope]')].find((r) => r.getAttribute('data-p604scope') === (scope || 'today'));
     if (row) click(w, row);
+    return !!(await until(() => d.querySelector('[data-p604erow]'), 9000));
   }
-  await until(() => d.querySelector('[data-p604erow]'), 9000);
-  return asked;
+  if (scope === 'standing' && d.querySelector('[data-p604erow]')) {
+    click(w, d.querySelector('[data-p604change]'));
+    await until(() => d.querySelector('[data-p604erow]'), 9000);
+  }
+  return !!d.querySelector('[data-p604erow]');
 }
 
 // ---------- OA ◆ fail-on-old companions (old = v607 on main) ----------
@@ -163,7 +169,7 @@ async function enterTopEdit(w, scope) {
     !!set && !!body && body.contains(set)
     && !body.querySelector('[data-openblock]') && !body.querySelector('.blockrow')
     && !body.querySelector('[data-p604todaymark]')
-    && [...set.children].every((c) => c.classList.contains('p604exphead') || c.hasAttribute('data-card')),
+    && [...set.children].every((c) => c.classList.contains('p604exphead') || c.hasAttribute('data-card') || c.hasAttribute('data-p609sethead')),
     { openblocks: body ? body.querySelectorAll('[data-openblock]').length : -1, kids: set ? [...set.children].map((c) => c.className).slice(0, 4) : [] });
   const descs = O.extRebuildDescs(day);
   const painted = [...set.querySelectorAll('[data-card]')].map((r) => r.getAttribute('data-card'));
@@ -216,8 +222,8 @@ async function enterTopEdit(w, scope) {
     && !d.querySelector('[data-p607shape]'));
   const eset = d.querySelector('[data-p609set].p609edit');
   const groups = [...d.querySelectorAll('[data-p609set] [data-p604exp]')];
-  check('E4 ◆ the edit form paints the merged EDIT SET: groups under group heads (name + toggle), no block cards, no section headings',
-    !!eset && groups.length === 8 && groups.every((g) => { const h = g.querySelector('[data-p609ghead]'); return h && h.querySelector('[data-p607sw]') && !g.querySelector('.blockrow') && !g.querySelector('h1,h2,h3'); }),
+  check('E4 ◆ the edit form paints the merged EDIT SET: groups under group heads (name + toggle), no block cards, no section headings — SEVEN groups at v609 repair 2 (the Podcasts group retires with its layer)',
+    !!eset && groups.length === 7 && !groups.some((g) => g.getAttribute('data-p604exp') === 'Podcasts') && groups.every((g) => { const h = g.querySelector('[data-p609ghead]'); return h && h.querySelector('[data-p607sw]') && !g.querySelector('.blockrow') && !g.querySelector('h1,h2,h3'); }),
     { groups: groups.length });
   const erows = [...d.querySelectorAll('[data-p604erow]')];
   check('E5 ◆ edit rows are CONDENSED: every row carries the compact class; the set\u2019s text carries NO Intention line',
@@ -307,74 +313,44 @@ async function enterTopEdit(w, scope) {
   w.close();
 }
 
-// ---------- P: podcasts \u2014 in by the ladder, out by the ordinary remove (John, 22:35\u201322:37 CT) ----------
-// Fixture note: the harness day fixture carries no Podcasts
-// standings, so the P world seeds the production-shaped
-// extStanding row (the exact shape profContentsUniverse590
-// reads: block \u00b7 slotId \u00b7 source) \u2014 on John's real day the
-// build produces this row from his standing series.
+// ---------- P: podcasts — contents items only (John, 23:33–23:34 CT; REWRITTEN at v609 repair 2) ----------
+// The first-ship P legs stood on the Podcasts GROUP with
+// its layer toggle + series switches. John's final rule
+// retires that shape whole: no Podcasts group, no toggle,
+// no series rows — a podcast stands as a contents item in
+// its block (the mig609 migration lands his series in
+// Night as course items), removed by the ordinary remove.
 {
   const w = makeWorld(appJs, johnStore());
+  await sleep(400);
   await paintHome(w);
-  const O = w.__opn;
-  O.state.ownStanding = [];
-  O.state.extStanding = [{ block: 'Podcasts', slotId: 'bible-in-a-year', source: 'Bible in a Year' }];
+  const d = w.document;
   check('P0 standing scope for the podcast leg', await enterTopEdit(w, 'standing'));
-  const group = () => [...w.document.querySelectorAll('.p609group')].find((g) => g.querySelector('[data-p607sw="layer|podcasts"]'));
-  const rows = () => [...group().querySelectorAll('[data-p604erow]')];
-  const contents = async () => { const d = docOf(w); const prof = (d.profiles || []).find((x) => x.id === (d.standingPick || d.pick || d.currentPick)) || (d.profiles || [])[0]; return (prof && prof.contents && prof.contents['Podcasts']) || []; };
-  check('P1 \u25c6 the Podcasts group stands in the form with its toggle + Add button (items enter by the ladder \u2014 no standing catalog)',
-    !!group() && !!group().querySelector('[data-p604add="Podcasts"]'));
-  check('P1b \u25c6 the series switches stand inside the Podcasts group (their seat after the strip retired)',
-    await until(() => group() && group().querySelectorAll('[data-p607sw^="series|"]').length > 0, 6000),
-    group() ? group().querySelectorAll('[data-p607sw^="series|"]').length : 'no group');
-  check('P2 \u25c6 the standing podcast source stands in the group as an ordinary item', rows().length === 1 && rows()[0].getAttribute('data-p604erow') === 'source:bible-in-a-year', rows().map((r) => r.getAttribute('data-p604erow')));
-  const victimId = 'source:bible-in-a-year';
-  click(w, rows()[0].querySelector('[data-p604remove]'));
-  await sleep(150);
-  check('P3 \u25c6 a podcast item REMOVES through the ordinary remove act, like any other track', !rows().some((r) => r.getAttribute('data-p604erow') === victimId));
-  check('P4 \u25c6 the removal persists to the Podcasts contents', !(await contents()).includes(victimId), await contents());
-  // In-session: the ladder's ids() read the form-open
-  // resolution (standing v604 host behavior, untouched by
-  // v609) \u2014 the just-removed source still paints marked.
-  // (Re-seed: the write cycle rebuilt the standings from
-  // the fixture day; the production build re-produces the
-  // row on every cycle.)
-  O.state.extStanding = [{ block: 'Podcasts', slotId: 'bible-in-a-year', source: 'Bible in a Year' }];
-  click(w, group().querySelector('[data-p604add="Podcasts"]'));
-  await until(() => w.document.querySelector('.profaddladder603'));
-  click(w, w.document.querySelector('[data-p603door="sources"]'));
-  await sleep(150);
-  const marked = [...w.document.querySelectorAll('.profaddladder603 .bookrow')].find((r) => r.textContent.includes('Bible in a Year'));
-  check('P5 \u25c6 in-session the ladder paints the removed source marked \u201cAlready in Podcasts\u201d (the standing v604 host reads the form-open resolution \u2014 named, not a v609 change)',
-    !!marked && !marked.hasAttribute('data-p603additem'), marked && marked.textContent.replace(/\s+/g, ' ').slice(0, 80));
-  click(w, w.document.querySelector('[data-p603close]'));
-  await sleep(100);
-  // Re-entry recomputes the resolution from the written doc:
-  // the removal stands, and the ladder now offers the source.
-  click(w, w.document.querySelector('[data-p607done]'));
-  await until(() => !w.document.querySelector('[data-p604erow]'));
-  // The write cycle rebuilt the standings from the fixture
-  // day again; the production build re-produces the row \u2014
-  // re-seed it, as the real build would stand it.
-  O.state.extStanding = [{ block: 'Podcasts', slotId: 'bible-in-a-year', source: 'Bible in a Year' }];
-  await enterTopEdit(w, 'standing');
-  check('P5b re-entry into the standing form (the form stands again)', !!group());
-  check('P6a \u25c6 after re-entry the removed podcast stands absent from the group (the removal persisted)', rows().length === 0, rows().length);
-  O.state.extStanding = [{ block: 'Podcasts', slotId: 'bible-in-a-year', source: 'Bible in a Year' }];
-  click(w, group().querySelector('[data-p604add="Podcasts"]'));
-  await until(() => w.document.querySelector('.profaddladder603'));
-  const doors2 = [...w.document.querySelectorAll('.profaddladder603 [data-p603door]')].map((e) => e.getAttribute('data-p603door'));
-  check('P6 \u25c6 after re-entry the Podcasts Add ladder opens with its Sources door standing (the entry point for podcast adds)',
-    doors2.includes('sources'), doors2);
-  // NAMED GAP (build log): the ladder re-offer of a source
-  // removed in an earlier session is not legged here \u2014 the
-  // harness fixture's standings rebuilds (the synthetic day
-  // carries no podcast episodes) make the offer state
-  // unverifiable in this world. The add route itself is the
-  // standing v603 ladder + v604 host, untouched by v609;
-  // the remove route is legged above (P3/P6a). Field leg
-  // for John: add a podcast through the ladder.
+  const groups = [...d.querySelectorAll('.p609group')];
+  const night = groups.find((g) => g.getAttribute('data-p604exp') === 'Night');
+  check('P1 \u25c6 NO Podcasts group stands in the form — no layer toggle, no series switches anywhere',
+    !groups.some((g) => g.getAttribute('data-p604exp') === 'Podcasts')
+    && !d.querySelector('[data-p607sw="layer|podcasts"]')
+    && ![...d.querySelectorAll('[data-p607sw]')].some((b) => (b.getAttribute('data-p607sw') || '').indexOf('series|') === 0),
+    groups.map((g) => g.getAttribute('data-p604exp')));
+  const rows = () => night ? [...night.querySelectorAll('[data-p604erow]')] : [];
+  check('P2 \u25c6 the migrated series stand in Night as ordinary contents rows (course items, like any prayer)',
+    rows().some((r) => r.getAttribute('data-p604erow') === 'course:bible-in-a-year')
+    && rows().some((r) => r.getAttribute('data-p604erow') === 'course:exorcist-files'),
+    rows().map((r) => r.getAttribute('data-p604erow')));
+  const victim = rows().find((r) => r.getAttribute('data-p604erow') === 'course:bible-in-a-year');
+  if (victim) click(w, victim.querySelector('[data-p604remove]'));
+  await sleep(200);
+  const night2 = [...d.querySelectorAll('.p609group')].find((g) => g.getAttribute('data-p604exp') === 'Night');
+  const rows2 = night2 ? [...night2.querySelectorAll('[data-p604erow]')] : [];
+  check('P3 \u25c6 a podcast item REMOVES through the ordinary remove act, like any other track',
+    !rows2.some((r) => r.getAttribute('data-p604erow') === 'course:bible-in-a-year'));
+  const payload = await profilesPayload(w);
+  const sal = (payload.profiles || []).find((p) => p.key === 'salesian') || {};
+  const nightContents = (sal.contents || {}).Night || [];
+  check('P4 \u25c6 the removal persists to the Night contents (the other series stands)',
+    !nightContents.some((it) => it.kind === 'course' && it.key === 'bible-in-a-year')
+    && nightContents.some((it) => it.kind === 'course' && it.key === 'exorcist-files'), nightContents);
   w.close();
 }
 
