@@ -1573,8 +1573,16 @@ function opnBindUnlockCard(rerender) {
       if (st && st.available && st.enrolled) bio.style.display = '';
     }).catch(function () {});
     bio.addEventListener('click', function () {
-      opnBiometricUnlock().then(function () { done({}); }).catch(function () {
-        msg.textContent = 'Biometric unlock did not complete. Use your PIN.';
+      opnBiometricUnlock().then(function () { done({}); }).catch(function (e) {
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric unlock failed: ' + code);
+        if (code.indexOf('key-invalidated') !== -1) {
+          opnBiometricClear();
+          bio.style.display = 'none';
+          msg.textContent = 'Biometric unlock did not complete (key-invalidated). Your fingerprint set changed on this phone — enrol again in Settings. Use your PIN.';
+        } else {
+          msg.textContent = 'Biometric unlock did not complete (' + code + '). Use your PIN.';
+        }
       });
     });
   }
@@ -2048,6 +2056,19 @@ function opnBiometricStatus() {
   var p = oraBridgePlugin();
   if (!p || !p.vaultBiometricStatus) return Promise.resolve({ available: false, enrolled: false });
   return p.vaultBiometricStatus().catch(function () { return { available: false, enrolled: false }; });
+}
+function opnBioErr(e) {
+  var t = '';
+  try { t = String((e && e.message) || ''); } catch (err) {}
+  t = t.replace(/\s+/g, ' ').trim();
+  if (!t) return 'unknown error';
+  return t.length > 140 ? t.slice(0, 140) : t;
+}
+function opnBiometricClear() {
+  var p = oraBridgePlugin();
+  if (p && p.vaultBiometricClear) { try { p.vaultBiometricClear(); } catch (e) {} }
+  var st = opnPinLoad();
+  if (st && st.biometricEnrolled) { st.biometricEnrolled = false; opnPinSave(st); }
 }
 function opnBiometricEnroll() {
   var p = oraBridgePlugin();
@@ -11093,23 +11114,33 @@ function fillPinSection() {
         html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">Your data on this phone is encrypted with your PIN. You can also unlock it with this device:</p>'
           + '<p class="meta" id="pin-vault-note"></p>'
           + '<button class="btn ghost" id="pin-bio-enrol" style="display:none">Use fingerprint / face unlock</button> '
+          + '<button class="btn ghost" id="pin-bio-reenrol" style="display:none">Re-enrol fingerprint / face unlock</button> '
           + '<button class="btn ghost" id="pin-passkey-enrol" style="display:none">Add a passkey unlock</button></div>';
       }
       host2.innerHTML = html;
       var bioBtn = document.getElementById('pin-bio-enrol');
+      var reBioBtn = document.getElementById('pin-bio-reenrol');
+      var bioFail = function (e) {
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric enrol failed: ' + code);
+        var note2 = document.getElementById('pin-vault-note');
+        if (note2) note2.textContent = 'Biometric enrolment did not complete (' + code + '). Your PIN stands.';
+      };
+      var bioGo = function () {
+        opnBiometricEnroll().then(function () { fillPinSection(); }).catch(bioFail);
+      };
       if (bioBtn) {
         opnBiometricStatus().then(function (bst) {
           var note = document.getElementById('pin-vault-note');
           if (bst && bst.available && !bst.enrolled) { bioBtn.style.display = ''; }
-          else if (bst && bst.enrolled && note) { note.textContent = 'Fingerprint / face unlock is on for this phone.'; }
+          else if (bst && bst.enrolled) {
+            if (note) note.textContent = 'Fingerprint / face unlock is on for this phone.';
+            if (reBioBtn) reBioBtn.style.display = '';
+          }
         }).catch(function () {});
-        bioBtn.addEventListener('click', function () {
-          opnBiometricEnroll().then(function () { fillPinSection(); }).catch(function () {
-            var note2 = document.getElementById('pin-vault-note');
-            if (note2) note2.textContent = 'Biometric enrolment did not complete. Your PIN stands.';
-          });
-        });
+        bioBtn.addEventListener('click', bioGo);
       }
+      if (reBioBtn) reBioBtn.addEventListener('click', bioGo);
       var pkBtn = document.getElementById('pin-passkey-enrol');
       if (pkBtn) {
         var envNow = opnVaultPeek();
