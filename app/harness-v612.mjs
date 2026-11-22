@@ -154,7 +154,7 @@ function paintedGroups(d) {
   const out = [];
   let cur = null;
   [...set.children].forEach((el) => {
-    if (el.hasAttribute('data-p609sethead')) { cur = { block: el.getAttribute('data-p609sethead'), cards: 0, mark: (el.querySelector('.p612collmark') || {}).textContent || '' }; out.push(cur); }
+    if (el.hasAttribute('data-p609sethead')) { cur = { block: el.getAttribute('data-p609sethead'), cards: 0, mark: (el.querySelector('.p612collmark') || {}).textContent || '', cls: el.getAttribute('class') || '', chevCls: ((el.querySelector('.p612collmark') || {}).getAttribute ? (el.querySelector('.p612collmark').getAttribute('class') || '') : ''), nameTag: (el.querySelector('h2.sectionhead') || {}).tagName || '', meta: (el.querySelector('.meta') || {}).textContent || '' }; out.push(cur); }
     else if (el.hasAttribute('data-card') && cur) cur.cards++;
   });
   return out;
@@ -244,7 +244,10 @@ const headEl = (d, block) => d.querySelector('[data-p609sethead="' + block + '"]
 
 // ---------- F6 ◆ mode persists, taps do not ----------
 {
-  const w = makeWorld(appJs, { [DATA_KEY]: JSON.stringify(JOHN), [MODE_KEY]: 'expanded' });
+  // The reset flag stands in this store: a device that
+  // already ran the v612 build (its one-time reset is
+  // spent — F11/F12 below leg the reset itself).
+  const w = makeWorld(appJs, { [DATA_KEY]: JSON.stringify(JOHN), [MODE_KEY]: 'expanded', 'opn-praylistmode-v612-reset': '1' });
   await sleep(400);
   const { descs } = await paintRealDay(w);
   const runs = groupRuns(descs);
@@ -362,6 +365,49 @@ let envelope = null, rawKeyB64 = null;
     formStood && groupsWithRows.size >= 3 && !d.querySelector('[data-p609set]:not(.p609edit) [data-card]'),
     { groups: [...groupsWithRows] });
   w.close();
+}
+
+// ---------- F10 ◆ the head dress = the Favorites head dress ----------
+{
+  const w = makeWorld(appJs, { [DATA_KEY]: JSON.stringify(JOHN) });
+  await sleep(400);
+  const { descs } = await paintRealDay(w);
+  const runs = groupRuns(descs);
+  const painted = paintedGroups(w.document);
+  check('F10 ◆ head dress mirrors the Favorites folder head: favfolder-head row · favfolder-chev marker · the name as h2.sectionhead · the group count as the meta',
+    !!painted && painted.every((g, i) => g.cls.includes('favfolder-head') && g.chevCls.includes('favfolder-chev') && g.nameTag === 'H2' && g.meta === String(runs[i].count)),
+    painted && painted.map((g) => ({ cls: g.cls, chev: g.chevCls, tag: g.nameTag, meta: g.meta })));
+  w.close();
+}
+
+// ---------- F11/F12 ◆ the one-time mode reset (approved) ----------
+{
+  // A v604-era device: stored mode 'expanded', NO reset
+  // flag. First open on the v612 build must stand
+  // collapsed, the mode rewritten, the flag written.
+  const wA = makeWorld(appJs, { [DATA_KEY]: JSON.stringify(JOHN), [MODE_KEY]: 'expanded' });
+  await sleep(400);
+  await paintRealDay(wA);
+  const paintedA = paintedGroups(wA.document);
+  check('F11 ◆ first run of the v612 build: a stored "expanded" is reset ONCE — the set stands collapsed, the mode key reads "collapsed", the reset flag stands',
+    !!paintedA && paintedA.every((g) => g.cards === 0)
+    && wA.localStorage.getItem(MODE_KEY) === 'collapsed' && wA.localStorage.getItem('opn-praylistmode-v612-reset') === '1',
+    { mode: wA.localStorage.getItem(MODE_KEY), flag: wA.localStorage.getItem('opn-praylistmode-v612-reset'), cards: paintedA && paintedA.map((g) => g.cards) });
+  const storeB = {};
+  for (let i = 0; i < wA.localStorage.length; i++) { const k = wA.localStorage.key(i); storeB[k] = wA.localStorage.getItem(k); }
+  wA.close();
+  // His later choice: Expand all writes 'expanded' AFTER
+  // the reset. A second open honors it — no second reset.
+  storeB[MODE_KEY] = 'expanded';
+  const wB = makeWorld(appJs, storeB);
+  await sleep(400);
+  const { descs } = await paintRealDay(wB);
+  const runs = groupRuns(descs);
+  const paintedB = paintedGroups(wB.document);
+  check('F12 ◆ the reset fires once only: a later "expanded" choice stands untouched on the next open (every group expanded, mode still "expanded")',
+    !!paintedB && paintedB.every((g, i) => g.cards === runs[i].count) && wB.localStorage.getItem(MODE_KEY) === 'expanded',
+    { mode: wB.localStorage.getItem(MODE_KEY), cards: paintedB && paintedB.map((g) => g.cards) });
+  wB.close();
 }
 
 // ---------- OA ◆ fail-on-old (the v609-3 tree, 6d3c65e) ----------

@@ -20414,7 +20414,24 @@ var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists:
 opn604.editing = false; opn604.shape = null; opn604.series = null; opn604.arm607 = null;
 var opnFoldSession604 = {};
 var OPN_PRAYLIST_MODE_KEY_604 = 'opn-praylistmode-v604';
-function opnPraylistMode604() { try { return localStorage.getItem(OPN_PRAYLIST_MODE_KEY_604) === 'expanded' ? 'expanded' : 'collapsed'; } catch (e) { return 'collapsed'; } }
+var OPN_PRAYLIST_RESET_KEY_612 = 'opn-praylistmode-v612-reset';
+function opnPraylistMode604() {
+  try {
+    // v612 AMENDMENT (John, 2026-11-22 01:02 CT —
+    // "Approve everything" on the §2 open question):
+    // a ONE-TIME reset of the stored mode to 'collapsed'
+    // at the first mode read of the v612 build, keyed by
+    // its own flag beside the mode key, so his first open
+    // after the update stands collapsed exactly as asked.
+    // The flag stands after one firing; later Expand all /
+    // Collapse all choices are never touched again.
+    if (!localStorage.getItem(OPN_PRAYLIST_RESET_KEY_612)) {
+      localStorage.setItem(OPN_PRAYLIST_RESET_KEY_612, '1');
+      localStorage.setItem(OPN_PRAYLIST_MODE_KEY_604, 'collapsed');
+    }
+    return localStorage.getItem(OPN_PRAYLIST_MODE_KEY_604) === 'expanded' ? 'expanded' : 'collapsed';
+  } catch (e) { return 'collapsed'; }
+}
 function opnSetPraylistMode604(m) { try { localStorage.setItem(OPN_PRAYLIST_MODE_KEY_604, m); } catch (e) {} }
 function opnExpanded604(block) {
   // v607: in the edit form every block stands expanded.
@@ -22945,21 +22962,30 @@ function opnSetHtml609(day) {
   // over the stored page mode, key opn-praylistmode-v604;
   // no new state, no new key). A collapsed group emits
   // its head only; the head is the tap target (wired in
-  // wirePrayersView) and carries the standing collapse
-  // marker at its right end, flipped with the group's
-  // state. The fold gates trackCard emission ONLY — the
-  // descriptor list, the queue, and Play All are
-  // untouched.
-  var lastBlock609 = null;
-  var open609 = false;
+  // wirePrayersView). The fold gates trackCard emission
+  // ONLY — the descriptor list, the queue, and Play All
+  // are untouched.
+  // v612 AMENDMENT (John, 2026-11-22 01:02 CT: "Font for
+  // headings is way to small. follow the same format of
+  // favorites but expandable"): the head's dress is the
+  // FAVORITES folder head's, mirrored — the favfolder-head
+  // flex row, the favfolder-chev marker (a span here: the
+  // whole head is the one tap target), the name as an
+  // h2.sectionhead (16px uppercase navy, accent rule),
+  // and the group's track count as the meta at the right.
+  var runs609 = [];
   (state.dayDescs || []).forEach(function (t) {
     var b609 = t.block || 'Episodes';
-    if (b609 !== lastBlock609) {
-      open609 = opnExpanded604(b609);
-      html += '<div class="p609sethead" data-p609sethead="' + esc(b609) + '">' + esc(b609) + '<span class="p612collmark">' + (open609 ? '&#9662;' : '&#9656;') + '</span></div>';
-      lastBlock609 = b609;
-    }
-    if (open609) html += trackCard(t);
+    if (runs609.length && runs609[runs609.length - 1].block === b609) runs609[runs609.length - 1].tracks.push(t);
+    else runs609.push({ block: b609, tracks: [t] });
+  });
+  runs609.forEach(function (run) {
+    var open609 = opnExpanded604(run.block);
+    html += '<div class="p609sethead favfolder-head" data-p609sethead="' + esc(run.block) + '">'
+      + '<span class="p612collmark favfolder-chev">' + (open609 ? '&#9662;' : '&#9656;') + '</span>'
+      + '<h2 class="sectionhead grow">' + esc(run.block) + '</h2>'
+      + '<span class="meta">' + run.tracks.length + '</span></div>';
+    if (open609) run.tracks.forEach(function (t) { html += trackCard(t); });
   });
   return html + '</div>';
 }
