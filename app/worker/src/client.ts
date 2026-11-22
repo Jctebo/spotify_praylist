@@ -15080,8 +15080,31 @@ function trackDesc(t, day) {
   // without its day (queueLiveDesc's external rebuild, search
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
-  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
   if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
+  // v620: a podcast-family descriptor reaching this seam (the
+  // v590 course · v611 day · v614 episode resolvers) carries
+  // its playable identity in the podDesc shape — url (never
+  // streamUrl), kind 'podcast', podSeries / seriesKey,
+  // listened, podPositionS. Through v619 the seam read only
+  // streamUrl and dropped the rest, so a resolved podcast
+  // entry stood on the Praylist available with url null and
+  // no kind: it could not play, could not resume, and its
+  // played state read the day store instead of its series
+  // listen (John's field report, 2026-11-22: the Fr. Mike
+  // homily pinned in Midday plays from Catechesis, never
+  // from the Praylist). The podcast identity now rides the
+  // seam whole; every other family's output is unchanged.
+  if (t.kind === 'podcast') {
+    d.kind = 'podcast';
+    d.podSeries = t.podSeries || null;
+    d.seriesKey = t.seriesKey || t.episodeId;
+    d.listened = !!t.listened;
+    d.podPositionS = (t.podPositionS > 0) ? Math.floor(t.podPositionS) : null;
+    if (t.course590) d.course590 = true;
+    if (t.exegesis611) d.exegesis611 = true;
+    if (t.episode614) d.episode614 = true;
+  }
   if (d.available && day) {
     var text = introTextFor(t, day);
     if (text) d.intentionText = text;
