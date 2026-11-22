@@ -1656,12 +1656,20 @@ function opnDoc() {
           opnDocCache = d;
           if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
           if (opnMigrateProfiles604(d.sections.profiles)) opnSave();
+          if (opnMigrateProfiles609(d.sections.profiles, d.sections)) opnSave();
           return d;
         }
       }
     } catch (e) {}
   }
   opnDocCache = opnDefaultDoc();
+  // v609 repair 2: a fresh document is born migrated —
+  // mig609 runs over the seed profiles here (the seed
+  // itself keeps its historical shape, so mig590's
+  // designed-shape comparisons stand untouched; the
+  // migration computes the seed contents from the seed
+  // settings exactly as it does for a stored document).
+  opnMigrateProfiles609(opnDocCache.sections.profiles, opnDocCache.sections);
   opnSave();
   return opnDocCache;
 }
@@ -1879,6 +1887,7 @@ function opnVaultApplyKey(rawKey) {
     if (doc.sections) {
       if (opnMigrateProfiles590(doc.sections.profiles)) migrated = true;
       if (opnMigrateProfiles604(doc.sections.profiles)) migrated = true;
+      if (opnMigrateProfiles609(doc.sections.profiles, doc.sections)) migrated = true;
     }
     if (!migrated) return doc;
     return opnVaultPersist().then(function () { return doc; });
@@ -2405,6 +2414,7 @@ function opnRestoreFromText(text) {
     opnDocCache = doc;
     if (doc.sections && opnMigrateProfiles590(doc.sections.profiles)) { /* migrated in place below */ }
     if (doc.sections && opnMigrateProfiles604(doc.sections.profiles)) { /* migrated in place below */ }
+    if (doc.sections && opnMigrateProfiles609(doc.sections.profiles, doc.sections)) { /* migrated in place below */ }
     opnSave();
     // v589 (fix-forward): the file's podcastListens rows land
     // in the podcast core through the standing import seam —
@@ -2555,6 +2565,79 @@ function opnMigrateProfiles604(P) {
   P.mig604 = true;
   return true;
 }
+function opnMigrateProfiles609(P, sections) {
+  // v609 REPAIR 2 (John, 2026-11-21 23:33/23:34 CT):
+  // podcasts stand as CONTENTS items only — the
+  // Podcasts layer retires whole (no toggle, no
+  // auto-build). A profile whose layer stands ON
+  // migrates what the layer carries into contents, in
+  // the block where it stands today:
+  //  - 'daily-readings' -> the readings SEAT selector
+  //    in Morning (resolveReadingsSeat590's contents
+  //    rule reads it there);
+  //  - a series with a source-settings row of its own
+  //    (daily-gospel-exegesis) already stands by that
+  //    row under standing contents — nothing to move;
+  //  - every other series -> a COURSE item in Night
+  //    (the day's tail, where the layer block stood).
+  // A block that gains contents gains its FULL standing
+  // list (the v597 rule: a stored contents list IS the
+  // block's composition — a partial list would gate the
+  // block's own rows out), computed from the document's
+  // own source settings, sortOrder-merged as the day
+  // composes (own before external on a tie, fallbacks
+  // excluded). Stored contents are never overwritten —
+  // migration appends only what is missing. A series on
+  // a layer that stands OFF does not stand today and
+  // does not migrate. The layer then stands empty and
+  // off on every profile; every other field of every
+  // profile stands byte-identical. Runs once (mig609).
+  if (!P || !Array.isArray(P.list) || P.mig609) return false;
+  P.list.forEach(function (rec) { opnMigrateProfileRecord609(rec, sections); });
+  P.mig609 = true;
+  return true;
+}
+function opnMigrateProfileRecord609(rec, sections) {
+  // The per-record half of mig609 (see its header). The
+  // profiles Reset also calls this: Reset restores the
+  // DESIGNED seed record (the layer shape), and on a
+  // mig609-spent document the restored way must land in
+  // the migrated shape directly, or its podcasts would
+  // stand nowhere.
+  if (!rec || typeof rec !== 'object') return;
+  var rows = sections && sections.config && sections.config.sourceSettings && Array.isArray(sections.config.sourceSettings.sources) ? sections.config.sourceSettings.sources : [];
+  var seriesHasRow = {};
+  rows.forEach(function (r) { if (r && r.sourceKey) seriesHasRow[r.sourceKey] = 1; });
+  var standingList = function (block) {
+    var merged = [];
+    rows.forEach(function (r) { if (r && r.family === 'own' && r.enabled === 1 && r.block === block) merged.push({ kind: 'source', key: r.sourceKey, so: r.sortOrder }); });
+    rows.forEach(function (r) { if (r && r.family === 'external' && r.enabled === 1 && r.role !== 'fallback' && r.slotId && r.block === block) merged.push({ kind: 'source', key: r.slotId, so: r.sortOrder }); });
+    merged.sort(function (a, b) { return (a.so == null ? 1e9 : a.so) - (b.so == null ? 1e9 : b.so); });
+    return merged.map(function (m) { return { kind: m.kind, key: m.key }; });
+  };
+  var hasItem = function (list, kind, key) { return (list || []).some(function (it) { return it && it.kind === kind && it.key === key; }); };
+  var pod = rec.layers && rec.layers.podcasts ? rec.layers.podcasts : null;
+  var series = pod && Array.isArray(pod.series) ? pod.series.slice() : [];
+  var on = !!(pod && pod.on);
+  if (on && series.length) {
+    var contents = rec.contents && typeof rec.contents === 'object' && !Array.isArray(rec.contents) ? rec.contents : null;
+    var ensureBlock = function (block) {
+      if (!contents) { contents = {}; rec.contents = contents; }
+      if (!Array.isArray(contents[block])) contents[block] = standingList(block);
+      return contents[block];
+    };
+    if (series.indexOf('daily-readings') >= 0) {
+      var morning = ensureBlock('Morning');
+      if (!hasItem(morning, 'seat', 'daily-readings')) morning.push({ kind: 'seat', key: 'daily-readings' });
+    }
+    var courses = series.filter(function (k) { return k !== 'daily-readings' && !seriesHasRow[k]; });
+    if (courses.length) {
+      var night = ensureBlock('Night');
+      courses.forEach(function (k) { if (!hasItem(night, 'course', k)) night.push({ kind: 'course', key: k }); });
+    }
+  }
+  if (rec.layers && rec.layers.podcasts) { rec.layers.podcasts.on = false; rec.layers.podcasts.series = []; }
+}
 function opnResolveProfile590(P, date) {
   // v604: precedence COLLAPSES to standing pick -> today
   // layer (the layer applies in the fold, after this
@@ -2599,7 +2682,15 @@ function opnCheckContents590(contents, coreBlocks) {
         // removal, scoped). A course item naming any
         // other key is an error, as pre-v597.
         if (kind === 'course') {
-          if (OPN_COURSE_KEYS_603.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
+          // v609 REPAIR 2: the course selector generalizes
+          // to ANY podcast series key — a series stands in
+          // the day only as a contents item (John's word:
+          // podcasts function like everything else), and
+          // the resolver has always been series-general.
+          // The Add ladder still offers its named doors;
+          // this widens what a stored/written item may be,
+          // not what the ladder offers.
+          if (typeof key !== 'string' || !key) throw opnErr(400, 'bad course ' + key);
         } else {
           if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
           if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
@@ -2624,7 +2715,7 @@ function opnContentsOf590(p) {
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0; }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || it.kind !== 'course' || (typeof it.key === 'string' && !!it.key); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -2696,13 +2787,13 @@ function opnSeatPosture597(layers) {
   // absent-contents rule). Layers arrive in the stored
   // shape ({podcasts:{on,series}}) or the payload shape
   // ([{key,on,series}]); both read here.
-  var podOn = false, podSeries = [];
-  if (Array.isArray(layers)) {
-    layers.forEach(function (l) { if (l && l.key === 'podcasts') { podOn = !!l.on; podSeries = l.series || []; } });
-  } else if (layers && layers.podcasts) {
-    podOn = !!layers.podcasts.on; podSeries = layers.podcasts.series || [];
-  }
-  return podOn && podSeries.indexOf('daily-readings') >= 0;
+  // v609 REPAIR 2: the posture RETIRES with the Podcasts
+  // layer — standing contents (the absent-contents
+  // branch) never carry the seat again; the seat stands
+  // only where a stored contents entry names it
+  // (mig609 lands it in Morning). The function stands
+  // for its callers' shape and answers false.
+  return false;
 }
 function opnStandingContents597(rec, block) {
   // v597: THE standing-contents function — the one list
@@ -2831,7 +2922,13 @@ function opnApplyTodayLayer594(eff, layer) {
         // instead — its row is stood by the gate's
         // all-novenas keying, repaired in extRebuildDescs
         // in this same release.)
-        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source'; });
+        // v609 repair 2: the readings SEAT restores with
+        // the sources — it is a contents item now (the
+        // layer posture that used to carry it into the
+        // snapshot is retired), so a cold snapshot loses
+        // it exactly as it loses the sources, and the
+        // clean composition carries it.
+        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source' || it.kind === 'seat'; });
         var seen = {};
         entry.forEach(function (it) { seen[opnTodayItemId594(it)] = 1; });
         var restored = standing.filter(function (it) { return !seen[opnTodayItemId594(it)]; });
@@ -3133,6 +3230,12 @@ function opnLocalApi(path, opts, mode) {
         rp.name = des.name; rp.honorLine = des.honorLine;
         rp.coreBlocks = opnClone(des.coreBlocks); rp.layers = opnClone(des.layers);
         delete rp.contents;
+        // v609 repair 2: the designed record stands in
+        // the migrated shape (its podcasts as contents
+        // items) — the seed keeps the layer shape for
+        // mig590's comparisons, so the migration runs on
+        // the restored record here.
+        opnMigrateProfileRecord609(rp, opnDoc().sections);
         return bump();
       }
       if (p === '/api/prayer/profiles/delete') {
@@ -3644,12 +3747,13 @@ function opnFoldDay590(j) {
     return !!(f && f.on);
   };
   if (layerOn('novenas') && byName['Novenas']) { byName['Novenas'].layer = 'novenas'; out.push(byName['Novenas']); delete byName['Novenas']; }
-  if (layerOn('podcasts')) {
-    var pb = byName['Podcasts'] || { block: 'Podcasts', label: 'Podcasts', caption: 'the podcasts you added', spotifyUrl: null, tracks: [], trackCount: 0 };
-    pb.layer = 'podcasts';
-    out.push(pb);
-    delete byName['Podcasts'];
-  }
+  // v609 REPAIR 2: the Podcasts layer block RETIRES with
+  // the layer — no block synthesizes from a layer switch
+  // again. A Podcasts block stands only if a payload
+  // itself carries one (the extras rule above admits
+  // non-hour blocks other than Podcasts by name; a
+  // payload-carried Podcasts block is dropped by that
+  // same rule, as before this branch ever stood).
   j.blocks = out;
   // v591 Correction 2: a prayer standing in the effective
   // profile's contents for a block surfaces in the built
@@ -6480,6 +6584,7 @@ function paintMergedContainer(tab) {
 }
 
 function setTab(tab) {
+  if (tab !== 'prayers') opn609BioTried = false; // v609 repair 2: leaving the Pray tab ends the visit — a fresh visit to a still-locked Praylist may fire the fingerprint prompt again
   closeWatch(); // v434 §2.6.2 seat 2: any tab switch tears a standing watch frame down first — the video sounds only while its surface stands open; the harvest below then reads the restored series page, the watch's standing place
   massPodReturn = false; // v493: a tab switch ends any Mass hosting of the CatholicTV series page — the page's home reads from the tab that opens it
   podOrigin = null; // v534 F1: a tab switch likewise ends any Pray hosting of a series page
@@ -17683,14 +17788,17 @@ function resolveReadingsSeat590(day) {
   if (!day || day.readingsSeat) return;
   var eff = day.profile;
   if (!eff) return;
-  var pod = null;
-  (eff.layers || []).forEach(function (l) { if (l.key === 'podcasts') pod = l; });
-  if (!pod || !pod.on) return;
+  // v609 REPAIR 2: the Podcasts-layer branch RETIRES
+  // with the layer — the seat stands ONLY where the
+  // effective Morning contents carry its selector (the
+  // mig609 migration lands it there for every profile
+  // whose layer carried daily-readings; the designed
+  // defaults carry it in their seed contents). No
+  // contents entry, no seat: podcasts function like
+  // everything else.
   var allowed = false;
-  if (eff.contents && eff.contents.Morning) {
-    allowed = eff.contents.Morning.some(function (it) { return it.kind === 'seat' && it.key === 'daily-readings'; });
-  } else {
-    allowed = (pod.series || []).indexOf('daily-readings') >= 0;
+  if (eff.contents && Array.isArray(eff.contents.Morning)) {
+    allowed = eff.contents.Morning.some(function (it) { return it && it.kind === 'seat' && it.key === 'daily-readings'; });
   }
   if (!allowed) return;
   api('/api/player/podcasts?series=daily-readings').then(function (payload) {
@@ -19113,7 +19221,12 @@ function buildDayFromPayload(day, snap) {
     // v515 §2: the profile Podcasts layer resolves beside the
     // externals dispatch — its descriptors join the day
     // through extRebuildDescs as each series settles.
-    resolveProfilePodcasts(day);
+    // v609 REPAIR 2: this call RETIRES with the Podcasts
+    // layer (John: podcasts function like everything
+    // else — contents items only, no auto-build). The
+    // resolver stands as dead code; state.podGroups is
+    // never populated again, and its readers all guard
+    // the empty shape.
     // v590 §2.5: the on-device readings seat resolves
     // beside it. (v603: the contents course selectors
     // resolve beside it again — restored.)
@@ -19989,7 +20102,7 @@ function wirePrayersView(day) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
   view.querySelectorAll('[data-p604change]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnAskScope604(null); });
+    btn.addEventListener('click', function () { opnFlipScope609(); });
   });
   view.querySelectorAll('[data-p604savenew]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnSaveNew604(); });
@@ -20318,7 +20431,11 @@ function opnBannerHtml604() {
     ? 'Editing today only — ' + opnDateLabel604(date)
     : 'Editing standing — in ' + name + ', your every-day profile';
   var second = opn604.scopeSwitched ? '<p class="sub profbarline593">Acts already written stand where they were written.</p>' : '';
-  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">Change</button></div>' + second + '</div></div>';
+  // v609 repair 2: the banner IS the scope control — its
+  // button names the scope it flips TO (no question
+  // sheet stands anywhere in the entry or the flip).
+  var flip = opn604.scope === 'today' ? 'Edit standing instead' : 'Edit today instead';
+  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">' + flip + '</button></div>' + second + '</div></div>';
 }
 function opnEditBarHtml604() {
   if (!opn604.editing) return '';
@@ -20326,6 +20443,24 @@ function opnEditBarHtml604() {
     + '<button class="btn gold" data-p604savenew="1"' + (opn604.wrote ? '' : ' disabled') + '>Save New</button>'
     + '<button class="btn ghost" data-p607more="1" aria-label="Profile options">&#8943;</button>'
     + '<button class="btn ghost" data-p607done="1">Done</button></div></div></div>';
+}
+function opnFlipScope609() {
+  // v609 REPAIR 2: the in-form scope flip — the banner
+  // button re-targets the session to the other scope
+  // with EXACTLY the bookkeeping the retired question's
+  // answers carried (scopeSwitched stands, the session
+  // lists/base/removed reset, the shape re-seeds, the
+  // form repaints). opnAskScope604 below stands as dead
+  // code (the codebase's retirement precedent): no entry
+  // path or button calls it.
+  if (!opn604.editing || !opn604.scope) return;
+  var sc = opn604.scope === 'today' ? 'standing' : 'today';
+  opn604.scopeSwitched = true;
+  opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+  opn604.scope = sc;
+  opn604.wrote = false;
+  opnInitShape607();
+  opnRepaintHome604();
 }
 function opnAskScope604(block) {
   var old = document.querySelector('.p604q');
@@ -20457,9 +20592,9 @@ function opnStartEdit607() {
   opn604.editing = true;
   opnInitShape607();
   opnRepaintHome604();
-  if (!opn604.series) {
-    api('/api/player/podcasts').then(function (r) { opn604.series = (r && r.seriesList) || []; if (opn604.editing) opnRepaintHome604(); }).catch(function () { opn604.series = []; });
-  }
+  // v609 repair 2: the series-list fetch retires — its
+  // only live consumer was the Podcasts group's series
+  // rows, retired with the Podcasts layer.
 }
 function opnEnterEdit607() {
   // The v594 vault gate's duty passes wholly to this
@@ -20468,13 +20603,22 @@ function opnEnterEdit607() {
   opnEnsureStandings601().then(function () {
     return opn604.res ? opn604.res : opnLoadRes604();
   }).then(function () {
-    if (!opn604.scope) { opn607entry = true; opnAskScope604(null); return; }
+    // v609 REPAIR 2 (John, 2026-11-21 23:32/23:33 CT):
+    // the scope QUESTION retires from the entry path —
+    // Edit opens the form DIRECTLY, on TODAY scope at
+    // EVERY entry (no remembered last scope). The scope
+    // lives in the form: the banner's button flips it
+    // (opnFlipScope609), re-targeting the writes exactly
+    // as the question's answers did.
+    opn604.scope = 'today';
+    opn604.scopeSwitched = false;
     opnStartEdit607();
   }).catch(function () {});
 }
 function opnExitEdit607() {
   opn604.editing = false;
   opn604.arm607 = null;
+  opn604.scope = null; // v609 repair 2: the next entry starts on today again
   opnRepaintHome604();
 }
 function opnWriteShape607() {
@@ -22329,6 +22473,75 @@ function openPodcastPicker() {
     });
   }).catch(function () { if (body) body.innerHTML = '<p class="sub">Podcasts did not load.</p>'; });
 }
+var opn609BioNote = null;
+function opnLockGateHtml609() {
+  // v609 REPAIR 2: the locked Praylist's body — the
+  // standing unlock card (opnUnlockCardHtml: the large
+  // PIN pad + the passkey/biometric acts) in place of
+  // the set, plus the note line. The note's text stands
+  // in opn609BioNote (module state), so a settle repaint
+  // of the locked home re-renders it instead of wiping
+  // the failure it names.
+  return '<div data-p609lock="1">' + opnUnlockCardHtml()
+    + '<p class="sub" data-p609locknote="1"' + (opn609BioNote ? '' : ' style="display:none"') + '>' + (opn609BioNote ? esc(opn609BioNote) : '') + '</p></div>';
+}
+var opn609BioTried = false;
+function opnUnlockedRepaint609() {
+  // The vault just opened: the profiles payload and any
+  // edit session state were read under lock (the
+  // ephemeral default document) — clear them, reload the
+  // payload from the real document, and repaint the
+  // Pray side IN PLACE (no tab round trip).
+  opn609BioNote = null;
+  opn604.res = null; opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+  opnLoadRes604();
+  renderPrayersSide();
+}
+function opnBindLockGate609() {
+  // v609 REPAIR 2 (John, 2026-11-21 23:30/23:31 CT:
+  // fingerprint unlock ON VISIT, as PRIORITY): the card
+  // binds with the repaint as its proceed; then, when a
+  // biometric enrolment stands, the native prompt FIRES
+  // — first, automatically, once per visit-to-locked-
+  // state (opn609BioTried; setTab clears it when he
+  // leaves the Pray tab, so a fresh visit may fire
+  // again). The PIN pad stands as the fallback: it
+  // appears as the opening surface only when no
+  // enrolment stands, and after a dismissal/failure the
+  // pad + the card's own biometric button stand (a
+  // manual retry is his act, never a re-fire loop).
+  // Failure codes SURFACE in the card (v606 discipline);
+  // a key-invalidated failure clears the stale wrap and
+  // names the enrolment seat. The web/PWA build has no
+  // bridge: opnBiometricStatus reads unavailable there,
+  // so its gate keeps the pad + passkey as they stand.
+  var host = view.querySelector('[data-p609lock]');
+  if (!host) return;
+  opnBindUnlockCard(opnUnlockedRepaint609);
+  var note = host.querySelector('[data-p609locknote]');
+  opnBiometricStatus().then(function (st) {
+    if (!opnVaultLocked()) return;
+    if (st && st.available && st.enrolled) {
+      if (opn609BioTried) return;
+      opn609BioTried = true;
+      opnBiometricUnlock().then(function () { opnUnlockedRepaint609(); }).catch(function (e) {
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric unlock on Praylist visit failed: ' + code);
+        if (code.indexOf('key-invalidated') !== -1) {
+          opnBiometricClear();
+          opn609BioNote = 'Your fingerprint set changed on this phone \u2014 enrol again in Settings \u2192 CONFESSION PIN. Your PIN stands.';
+        } else {
+          opn609BioNote = 'Biometric unlock did not complete (' + code + '). Use your PIN.';
+        }
+        if (note) { note.style.display = ''; note.textContent = opn609BioNote; }
+        var msg = document.getElementById('opn-unlock-msg');
+        if (msg) msg.textContent = opn609BioNote;
+      });
+    } else if (st && st.available && !st.enrolled) {
+      if (note) { note.style.display = ''; note.textContent = 'Fingerprint unlock is not enrolled on this phone \u2014 enrol it in Settings \u2192 CONFESSION PIN.'; }
+    }
+  }).catch(function () {});
+}
 function paintListenHome(day) {
   // v448: the home carries no bar — a returning paint
   // clears the pushed page's bar from its host.
@@ -22364,9 +22577,17 @@ function paintListenHome(day) {
   // surface — profPlanRowHtml carries the current plan
   // (name + resolution line) beside the button, and the
   // separate profile card row is gone.
+  // v609 REPAIR 2: while the vault stands LOCKED, the
+  // home body stands the unlock GATE in place of the set
+  // — never an empty day. The fold under lock reads the
+  // ephemeral default document (opnDoc), so the set
+  // would paint the designed defaults' nothing and no
+  // settle path repaints it; the gate is the home's
+  // equivalent of the edit form's profVaultGate594.
+  var locked609 = opnVaultLocked();
   var html = profPlanRowHtml(day)
     + opnBannerHtml604() + opnEditBarHtml604()
-    + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+    + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + (locked609 ? opnLockGateHtml609() : homeBodyHtml(day)) + '</div>';
   // v609: the v607 shape strip (opnShapeHtml607) NO
   // LONGER paints here — John (2026-11-21 22:34 CT):
   // the switches section at the form's top is clutter.
@@ -22382,6 +22603,7 @@ function paintListenHome(day) {
   // Prayers page group.
   html += offlineLineHtml();
   view.innerHTML = html;
+  if (locked609) opnBindLockGate609();
   paintFavoritesFolderRow(); // v547: the Favorites folder row fills its head slot
   // v459 §2 Build 4: the Sort button's wiring retires with
   // its emission (row2HomeHtml) — Sort stands in the
@@ -22467,7 +22689,21 @@ function opnSetHtml609(day) {
   // the edit form, reading contents, stood correct. The
   // queue's __all branch reads this same list — paint
   // and queue are now one source by construction.
-  (state.dayDescs || []).forEach(function (t) { html += trackCard(t); });
+  // v609 REPAIR 2 (John, 2026-11-21 23:31 CT: "put
+  // groups back"): the one set paints GROUPED BY BLOCK —
+  // a quiet group head over each block's tracks, tracks
+  // under their group in day order, one page, one
+  // scroll. The heads carry NO acts of their own (the
+  // one Edit at the top stands alone); the fold emits
+  // block-consecutive runs by construction, so a head
+  // stands wherever the block changes; the block-less
+  // episode tail stands under 'Episodes'.
+  var lastBlock609 = null;
+  (state.dayDescs || []).forEach(function (t) {
+    var b609 = t.block || 'Episodes';
+    if (b609 !== lastBlock609) { html += '<div class="p609sethead" data-p609sethead="' + esc(b609) + '">' + esc(b609) + '</div>'; lastBlock609 = b609; }
+    html += trackCard(t);
+  });
   return html + '</div>';
 }
 function opnEditSetHtml609(day) {
@@ -22489,7 +22725,11 @@ function opnEditSetHtml609(day) {
   html += opnPickHead609();
   var seen = {};
   orderedBlocks(day).forEach(function (b) { seen[b.block] = true; html += opnEditGroupHtml609(b.block); });
-  ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas', 'Podcasts'].forEach(function (name) {
+  // v609 repair 2: 'Podcasts' leaves the canonical list —
+  // no Podcasts group stands in the form again (no layer,
+  // no toggle, no series rows); a podcast stands as a
+  // contents row inside its block's group, like a prayer.
+  ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas'].forEach(function (name) {
     if (!seen[name]) html += opnEditGroupHtml609(name);
   });
   return html + '</div>';
@@ -22498,7 +22738,6 @@ function opnGroupOn609(block) {
   var sh = opn604.shape;
   if (!sh) return true;
   if (block === 'Novenas') return !!sh.layers.novenas.on;
-  if (block === 'Podcasts') return !!sh.layers.podcasts.on;
   return sh.core.indexOf(block) >= 0;
 }
 /* v609: the series switches' seat — inside the Podcasts
@@ -22521,11 +22760,11 @@ function opnSeriesRows609() {
 function opnEditGroupHtml609(block) {
   var list = opnMaterialize604(block);
   var on = opnGroupOn609(block);
-  var kind = block === 'Novenas' ? 'layer|novenas' : block === 'Podcasts' ? 'layer|podcasts' : 'block|' + block;
+  var kind = block === 'Novenas' ? 'layer|novenas' : 'block|' + block;
   var html = '<div class="p609group' + (on ? '' : ' p609off') + '" data-p604exp="' + esc(block) + '">'
     + '<div class="row p609ghead" data-p609ghead="' + esc(block) + '"><span class="grow">' + esc(block) + '</span>'
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
-  if (block === 'Podcasts') html += opnSeriesRows609();
+  // v609 repair 2: the Podcasts series rows retire with the layer (opnSeriesRows609 stands as dead code).
   list.forEach(function (it) {
     var id = opnTodayItemId594(it);
     html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(id) + '"><div class="row">'

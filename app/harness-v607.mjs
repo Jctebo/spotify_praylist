@@ -33,7 +33,7 @@ function check(name, cond, extra) {
 const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-const oldClientSrc = git(['show', 'main:app/worker/src/client.ts']);
+const oldClientSrc = git(['show', '9e5d220:app/worker/src/client.ts']); // fail-on-old pin: pre-v607 main (the v606 ship tree) — pinned 2026-11-21 at v609 repair 2: main has advanced past the build these fail-on-old legs were written against
 const BOOK = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/book.json', 'utf8'));
 const NOVENAS = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/novenas.json', 'utf8'));
 const PODIDX = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/podcasts-index.json', 'utf8'));
@@ -123,13 +123,15 @@ async function paintHome(w) {
 async function enterTopEdit(w, scope) {
   const d = w.document;
   click(w, d.querySelector('[data-p607edit]'));
-  const asked = await until(() => d.querySelector('.p604q'), 9000);
-  if (asked && scope) {
-    const row = [...d.querySelectorAll('[data-p604scope]')].find((r) => r.getAttribute('data-p604scope') === scope);
-    if (row) click(w, row);
+  // v609 repair 2: the scope question retired — Edit
+  // opens the form directly on TODAY scope; a standing
+  // entry flips through the banner's own button.
+  const stood = await until(() => d.querySelector('[data-p604erow]'), 9000);
+  if (stood && scope === 'standing') {
+    click(w, d.querySelector('[data-p604change]'));
+    await until(() => d.querySelector('[data-p604erow]'), 9000);
   }
-  await until(() => d.querySelector('[data-p604erow]'), 9000);
-  return asked;
+  return stood;
 }
 
 // ---------- OA ◆ fail-on-old companions ----------
