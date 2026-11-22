@@ -19986,7 +19986,7 @@ function profileRebuild() {
    frozen banner; writes go through the standing stores
    AT ONCE (today layer / profile contents). Save New in
    the frozen edit bar mints the composed day. */
-var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, removed: {}, wrote: false, dragMoved: false, bookList: null, bookGroups: null };
+var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, dragMoved: false, bookList: null, bookGroups: null };
 var opnFoldSession604 = {};
 var OPN_PRAYLIST_MODE_KEY_604 = 'opn-praylistmode-v604';
 function opnPraylistMode604() { try { return localStorage.getItem(OPN_PRAYLIST_MODE_KEY_604) === 'expanded' ? 'expanded' : 'collapsed'; } catch (e) { return 'collapsed'; } }
@@ -19997,7 +19997,7 @@ function opnExpanded604(block) {
 }
 function opnToggleBlock604(block) { opnFoldSession604[block] = !opnExpanded604(block); }
 function opnDateLabel604(date) {
-  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(date || ''));
+  var m = /^(\\d{4})-(\\d{2})-(\\d{2})/.exec(String(date || ''));
   if (!m) return String(date || '');
   var dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
   return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' }).format(dt);
@@ -20049,7 +20049,14 @@ function opnEffList604(block) {
   return opnStandingContents597(rec, block);
 }
 function opnMaterialize604(block) {
-  if (!opn604.lists[block]) opn604.lists[block] = opnEffList604(block);
+  if (!opn604.lists[block]) {
+    opn604.lists[block] = opnEffList604(block);
+    // The composed list at first touch stands as the
+    // restore reference — a scope write makes the store
+    // read back the edited list, so restore positions
+    // must come from this untouched snapshot.
+    if (!opn604.base[block]) opn604.base[block] = opnClone(opn604.lists[block]);
+  }
   return opn604.lists[block];
 }
 function opnRepaintHome604() { if (state.dayPayload) paintPrayersView(state.dayPayload); }
@@ -20082,8 +20089,7 @@ function opnRemove604(block, id) {
   return opnWrite604(block);
 }
 function opnRestore604(block, id) {
-  var rec = opnProfRec604();
-  var comp = opn604.scope === 'today' ? opnTodayComposedContents594(rec, block) : opnStandingContents597(rec, block);
+  var comp = opn604.base[block] || opnEffList604(block);
   var cur = opnMaterialize604(block);
   var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
   if (restored) {
@@ -20193,7 +20199,7 @@ function opnAskScope604(block) {
   sheet.querySelectorAll('[data-p604scope]').forEach(function (row) {
     row.addEventListener('click', function () {
       var sc = row.getAttribute('data-p604scope');
-      if (opn604.scope && opn604.scope !== sc) { opn604.scopeSwitched = true; opn604.lists = {}; opn604.removed = {}; }
+      if (opn604.scope && opn604.scope !== sc) { opn604.scopeSwitched = true; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; }
       opn604.scope = sc;
       sheet.remove();
       if (block) opnStartPosture604(block);
@@ -20270,7 +20276,7 @@ function opnSaveNew604() {
     }).then(function (r) {
       if (r) opn604.res = r;
       opn604.scope = 'standing';
-      opn604.lists = {}; opn604.removed = {}; opn604.wrote = false;
+      opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opn604.wrote = false;
       opnRepaintHome604();
       profileRebuild();
     }).catch(function () {});
