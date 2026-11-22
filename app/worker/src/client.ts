@@ -2493,6 +2493,14 @@ var opnSolemnity = {};    // date -> true, learned from the day payload
 // courseless, and a course stands only in an explicit
 // contents entry a hand add created.
 var OPN_COURSE_KEYS_603 = ['catechism-in-a-year', 'bible-in-a-year', 'rosary-in-a-year', 'summa-in-a-year'];
+// v611: the one standing day selector key — the Daily
+// Gospel Exegesis episode resolved BY THE DAY (the Add
+// ladder's Daily door). The validators and the read seam
+// name this key only; the contents universe and the
+// standing contents offer no day item, so defaults and
+// Reset stay day-free and a day item stands only in an
+// explicit contents entry a hand add created.
+var OPN_DAY_KEY_611 = 'daily-gospel-exegesis';
 var OPN_OLD_SEED_590 = {
   'little-way': { coreBlocks: ['Morning', 'Night'], layers: { novenas: { on: false }, podcasts: { on: false, series: [] } } },
   'salesian': { coreBlocks: ['Morning', 'Midday', 'Evening', 'Night'], layers: { novenas: { on: true }, podcasts: { on: false, series: [] } } },
@@ -2600,6 +2608,11 @@ function opnCheckContents590(contents, coreBlocks) {
         // other key is an error, as pre-v597.
         if (kind === 'course') {
           if (OPN_COURSE_KEYS_603.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
+        } else if (kind === 'day') {
+          // v611: a day item naming the one standing key
+          // is kept; any other day key is an error,
+          // exactly the course rule's shape.
+          if (key !== OPN_DAY_KEY_611) throw opnErr(400, 'bad day ' + key);
         } else {
           if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
           if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
@@ -2620,11 +2633,13 @@ function opnContentsOf590(p) {
   // four standing keys passes through (it can paint and
   // resolve); a course item naming any other key still
   // filters out, so a foreign stored item never stands.
+  // v611: the same rule for the day item — the standing
+  // day key passes, a foreign day key filters out.
   if (!p || !p.contents || typeof p.contents !== 'object') return null;
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0; }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -17675,6 +17690,51 @@ function resolveProfileCourses590(day) {
     }).catch(function () {});
   });
 }
+function resolveExegesisDay611(day) {
+  // v611: each day selector in the effective profile's
+  // contents resolves to the Daily Gospel Exegesis
+  // episode OF THE PRESENTED DAY — the entry whose
+  // release date (America/Chicago, from publishedMs) is
+  // the presented date − 1: the production feed releases
+  // each day's episode the day before (fixtures-v536).
+  // The series payload is fetched ONCE per day build,
+  // however many jobs stand. GAP RULE: no entry released
+  // on D − 1 → no descriptor, no placeholder, no
+  // fallback to latest or nearest — the slot stands
+  // empty for that day. The descriptor stands in
+  // state.exegesisRes611 for extRebuildDescs to place in
+  // the block at its contents position.
+  state.exegesisRes611 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (it.kind === 'day') jobs.push({ block: block, key: it.key });
+    });
+  });
+  if (!jobs.length) return;
+  api('/api/player/podcasts?series=daily-gospel-exegesis').then(function (payload) {
+    if (state.dayPayload !== day) return;
+    if (!payload || !Array.isArray(payload.entries)) return;
+    var presented = day.presentedDay || day.date;
+    var want = offlineShiftDate(presented, -1);
+    jobs.forEach(function (job) {
+      var e = null;
+      payload.entries.forEach(function (x) { if (!e && ownChicagoDateStr(x.publishedMs) === want) e = x; });
+      if (!e) return;
+      state.exegesisRes611[job.block + ':' + job.key] = {
+        episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: 'daily-gospel-exegesis',
+        title: e.title || '', url: e.url || null, enclosureUrl: null,
+        available: !!e.url, block: job.block, source: '', durationS: e.durationS || 0, listened: !!e.listened,
+        podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
+        imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null, exegesis611: true
+      };
+    });
+    extRebuildDescs(day);
+    if (state.dayPayload) paintPrayersView(state.dayPayload);
+  }).catch(function () {});
+}
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -17885,6 +17945,18 @@ function extRebuildDescs(day) {
         if (it.kind !== 'course') return;
         var cd = state.courseRes590[b.block + ':' + it.key];
         if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+      });
+    }
+    // v611: the block's day selectors stand as tracks at
+    // their contents positions, beside the course leg —
+    // each resolved by resolveExegesisDay611 to the
+    // presented day's own episode; an unresolved day
+    // (the gap rule) leaves its slot empty.
+    if (c590 && state.exegesisRes611) {
+      c590.forEach(function (it) {
+        if (it.kind !== 'day') return;
+        var dd = state.exegesisRes611[b.block + ':' + it.key];
+        if (dd) expandDescs(Object.assign({}, dd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
       });
     }
   });
@@ -19121,6 +19193,11 @@ function buildDayFromPayload(day, snap) {
     // beside it. (v603: the contents course selectors
     // resolve beside it again — restored.)
     resolveProfileCourses590(day);
+    // v611: the contents day selectors resolve beside
+    // the courses (the fold's resolver pass in
+    // buildDayFromPayload — opnFoldDay590 built the
+    // profile this pass reads).
+    resolveExegesisDay611(day);
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -20135,6 +20212,7 @@ function opnBlockTodayMark604(block, day) {
 }
 function opnItemLabel604(block, it) {
   if (it.kind === 'course') return opnLadderCourseTitle603(it.key);
+  if (it.kind === 'day') return 'Daily Gospel Exegesis';
   if (it.kind === 'novena') {
     var cat = state.novenasCatalog;
     var n = cat && cat.novenas ? cat.novenas.filter(function (x) { return x.slug === it.key; })[0] : null;
@@ -20982,6 +21060,7 @@ function openEditTodayScreen594(fromLadder) {
   }
   function itemLabel(block, it) {
     if (it.kind === 'prayer') return prayerTitle(it.key);
+    if (it.kind === 'day') return 'Daily Gospel Exegesis';
     var u = null;
     profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
     return u ? u.label : (it.key || it.kind);
@@ -21460,7 +21539,7 @@ function openProfilesScreen(openKey, opts) {
       mat.forEach(function (m) {
         var u = null;
         uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
-        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (u ? u.label : (m.key || m.kind)), on: true });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (u ? u.label : (m.key || m.kind))), on: true });
       });
       uni.forEach(function (it) {
         var id = it.kind + ':' + (it.key || '');
@@ -21866,7 +21945,7 @@ function openAddLadder603(block, host) {
     sh.className = 'sheet profadd591 profaddladder603';
     document.body.appendChild(sh);
     mountDrawer(sh, true);
-    var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources'
+    var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources' | 'daily'
     var query = '';
     function isOn(item) { return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0; }
     function sources() {
@@ -21878,6 +21957,11 @@ function openAddLadder603(block, host) {
     }
     function courses() {
       return OPN_COURSE_KEYS_603.map(function (k) { return { kind: 'course', key: k, label: opnLadderCourseTitle603(k) }; });
+    }
+    function dailyItems() {
+      // v611: the Daily rung's one item — the day
+      // selector, resolved by the date at fold time.
+      return [{ kind: 'day', key: OPN_DAY_KEY_611, label: 'Daily Gospel Exegesis' }];
     }
     function novenaItems() {
       var out = [{ kind: 'all-novenas', key: '', label: 'Every active novena' }];
@@ -21908,6 +21992,7 @@ function openAddLadder603(block, host) {
           (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Prayers \u203a ' + g.name }); }); });
           groups.push({ head: 'Prayers', items: pr, path: '' });
           groups.push({ head: 'Sources', items: sources().filter(function (it) { return match(it.label); }), path: 'Sources' });
+          groups.push({ head: 'Daily', items: dailyItems().filter(function (it) { return match(it.label); }), path: 'Daily' });
         } else {
           groups.push({ head: 'Novenas', items: novenaItems().filter(function (it) { return match(it.label); }), path: 'Novenas' });
         }
@@ -21925,6 +22010,7 @@ function openAddLadder603(block, host) {
           html += doorHtml('courses', 'Courses', 'A course\u2019s next episode, by your progress');
           html += doorHtml('prayers', 'Prayers', 'The prayer book, by category');
           html += doorHtml('sources', 'Sources', 'This block\u2019s own sources');
+          html += doorHtml('daily', 'Daily', 'The day\u2019s episode, by the date');
         }
       } else if (rung === 'courses') {
         courses().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
@@ -21942,6 +22028,8 @@ function openAddLadder603(block, host) {
         novenaItems().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
       } else if (rung === 'sources') {
         sources().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
+      } else if (rung === 'daily') {
+        dailyItems().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
       }
       return html;
     }
