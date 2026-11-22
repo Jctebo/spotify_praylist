@@ -5218,6 +5218,19 @@ function queueBuild(descs) {
   for (var i = 0; i < filtered.length; i++) if (filtered[i].available) return filtered;
   return descs;
 }
+function discQueue618(descs) {
+  // v618: the Praylist head disc's build (John, 2026-11-22) —
+  // the block's UNPLAYED tracks only, through the one
+  // predicate the head count reads (opnTrackUnplayed615).
+  // NO fully-played fallback: queueBuild's §2.4 replay stands
+  // for its other consumers (Continue · the block pages' Play
+  // All acts), the disc's word is unplayed only; a fully
+  // played block builds an empty queue and startQueue no-ops
+  // — no queue, no state change. This supersedes v616's
+  // "a greyed disc replays the block in full."
+  var d = presentedDateStr();
+  return descs.filter(function (x) { return opnTrackUnplayed615(x, d); });
+}
 function sectionQueueFrom(all, tappedId) {
   // v351 §2.1: the card tap's build. The tapped prayer heads the
   // queue UNFILTERED (§2.3 — John's tap wins, even on a played
@@ -15271,6 +15284,18 @@ function blockPlayedCounts(block) {
   });
   return { total: total, played: played };
 }
+function opnTrackUnplayed615(t, d) {
+  // v618: the ONE unplayed predicate — the v615 head count
+  // reads it (opnCounts615 below) and the Praylist head
+  // disc's queue build (discQueue618) filters by it, so the
+  // count and the disc can never disagree on what "unplayed"
+  // means. Available tracks only ("nothing to play, nothing
+  // to mark"); a podcast reads its listened flag, every
+  // other descriptor reads the played store on the presented
+  // date (occurrence-aware through isPlayedDesc).
+  if (!t || !t.available) return false;
+  return t.kind === 'podcast' ? !t.listened : !(d && isPlayedDesc(t, d));
+}
 function opnCounts615(tracks) {
   // v615: the Praylist head's count discipline — AVAILABLE
   // tracks only (unavailable carry no marker and are never
@@ -15279,12 +15304,15 @@ function opnCounts615(tracks) {
   // its listened flag (the unplayedOnly precedent), every
   // other descriptor reads isPlayedDesc on the presented
   // date (occurrence-aware — _occ copies count individually).
+  // v618: the per-track test is opnTrackUnplayed615, the one
+  // predicate — this count reads it exactly as the head
+  // disc's build filters by it; counts are byte-equivalent.
   var d = presentedDateStr();
   var total = 0, unplayed = 0;
   (tracks || []).forEach(function (t) {
     if (!t || !t.available) return;
     total++;
-    if (t.kind === 'podcast' ? !t.listened : !(d && isPlayedDesc(t, d))) unplayed++;
+    if (opnTrackUnplayed615(t, d)) unplayed++;
   });
   return { total: total, unplayed: unplayed };
 }
@@ -20495,7 +20523,12 @@ function wirePrayersView(day) {
         : all.filter(function (d) { return d.block === blockName; });
       // v344 §2.4: play skips played, with the fully-played
       // fallback — queueBuild stands as it stood.
-      startQueue(queueBuild(descs));
+      // v618: the Praylist head discs (the p615disc class —
+      // the Episodes tail head included) build UNPLAYED ONLY
+      // through discQueue618; every other [data-queue] act
+      // keeps queueBuild whole, exactly as today.
+      if (btn.classList && btn.classList.contains('p615disc')) startQueue(discQueue618(descs));
+      else startQueue(queueBuild(descs));
     });
   });
   view.querySelectorAll('[data-openblock]').forEach(function (card) {
