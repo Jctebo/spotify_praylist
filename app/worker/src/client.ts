@@ -6546,7 +6546,46 @@ function loadMassFeed(dateStr) {
   api('/api/prayer/mass-readings?date=' + dateStr).then(function (p) {
     massFeed = p;
     if (state.tab === 'mass') { paintMassReadings(); paintMassAcks(); }
-  }).catch(function () {});
+    massMaybeLoadUniversalis(dateStr); // v608: the backup loads only on a lacking feed
+  }).catch(function () {
+    massMaybeLoadUniversalis(dateStr); // v608: a failed feed lacks everything — the backup stands as before
+  });
+}
+/* v608: Universalis lazy — the JSONP backup (per user, from
+   the user's own browser; the server never fetches it)
+   loads ONLY when the feed payload actually lacks a piece,
+   so most Mass opens never call universalis.com at all.
+   The lack test mirrors massReadingsHtml's fill rule: no
+   feed (or not found) lacks everything; a standing
+   memorial WITH its own parts fills the readings place
+   whole, so nothing lacks; otherwise any CANON slot
+   (r1 · ps · r2 · ga · g) absent among the feed parts'
+   non-'extra' keys is a lack. Once per date: the module
+   flag massUniversalisFor stands the loaded date, and a
+   later same-date feed answer never re-fires the script. */
+var massUniversalisFor = null;
+function massFeedLacksPiece() {
+  if (!massFeed || !massFeed.found) return true;
+  var setKey = massStandingSetKey();
+  var mem = null;
+  if (setKey.indexOf('mem:') === 0 && massFeed.memorials) mem = massFeed.memorials[parseInt(setKey.slice(4), 10)] || null;
+  if (mem && mem.parts && mem.parts.length) return false;
+  var present = {};
+  var parts = massFeed.parts || [];
+  for (var i = 0; i < parts.length; i++) {
+    if (parts[i].key !== 'extra') present[parts[i].key] = true;
+  }
+  var CANON = ['r1', 'ps', 'r2', 'ga', 'g'];
+  for (var ci = 0; ci < CANON.length; ci++) {
+    if (!present[CANON[ci]]) return true;
+  }
+  return false;
+}
+function massMaybeLoadUniversalis(dateStr) {
+  if (massUniversalisFor === dateStr) return;
+  if (!massFeedLacksPiece()) return;
+  massUniversalisFor = dateStr;
+  loadMassReadings(dateStr);
 }
 /* v488: role-aware line rendering. MASS_ROLES carries one
    code per line: P the people's part (bold) · p the priest's
@@ -7358,7 +7397,13 @@ function paintMassScroll() {
   var h = '<div class="mass-scroll ts-' + size + '">';
   /* v505: no notice at the top — the scroll opens on the
      day header; the copyright material stands beneath the
-     prayers at the tail (see the tail below). */
+     prayers at the tail (see the tail below).
+     v608: the ICEL acknowledgment now stands on the FIRST
+     frame as well — ICEL's internet-use condition names
+     the first AND last frames displaying the text; the
+     foot at the tail below is unchanged, so the notice
+     stands twice, head and tail. */
+  h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
   h += '<div class="mass-day">Daily Lectionary</div>';
   h += '<div class="mass-dayname">' + esc(p.name || 'Mass of the Day') + '</div>';
   h += '<div class="mass-date">' + esc(state.mass.dateLabel || '') + '</div>';
@@ -8107,7 +8152,9 @@ function paintMassLiturgy() {
   if (state.mass) { state.mass.ep = 'II'; state.mass.penform = 'A'; state.mass.preMassOpen = false; state.mass.universalOpen = false; state.mass.universalEditIdx = -1; }
   if (state.mass && state.mass.date === today && state.mass.payload) { paintMassScroll(); return; }
   view.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">Loading the day\u2019s Mass\u2026</div></div>';
-  loadMassReadings(today);
+  // v608: no eager Universalis load here — loadMassFeed's
+  // settle calls massMaybeLoadUniversalis, which fires the
+  // JSONP only when the feed lacks a piece.
   loadMassFeed(today);
   api('/api/prayer/mass?date=' + today).then(function (p) {
     if (state.tab !== 'mass') { state.mass = null; return; }

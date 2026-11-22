@@ -52,6 +52,12 @@ python3 runner/pass1_collect.py --date "$DATE" --out "$RUNDIR"
 # agent: read $RUNDIR/texts-needed.json, write $RUNDIR/texts-provided.json
 python3 runner/pass1b_merge.py --rundir "$RUNDIR"
 python3 runner/pass2_build.py --rundir "$RUNDIR" --publish
+# v608: the readings grab runs every night (also on ledger-skip nights). It
+# grabs RUN_DATE's readings — the USCCB feed carries no future days, so the
+# grab is for the current day, not TARGET — and stores them server-side for
+# the Mass tab. Its one line is carried into the closing report; a FAILED
+# line never blocks the run.
+python3 runner/grab_readings.py
 ```
 
 The scripts re-exec into the repo venv automatically when the system python

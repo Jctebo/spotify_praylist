@@ -401,7 +401,16 @@ async function feedXml(): Promise<string> {
   throw lastErr instanceof Error ? lastErr : new Error("usccb feed pull failed");
 }
 
-export async function massReadingsPayload(date: string): Promise<MassReadingsPayload> {
+// v608: the standing live pull, unchanged in behavior —
+// the feed ladder, the memorial merge, and the in-isolate
+// caches all stand exactly as v490/v529/v531/v537 built
+// them. What v608 adds stands BELOW this function: a
+// D1 display cache in front of it (readings_cache,
+// migration 0046), filled by the nightly grab and by
+// serve-time backfill, so a stored day costs zero
+// outbound fetches. Words are never altered on either
+// path: the stored body is this pull's own payload JSON.
+async function pullReadings(date: string): Promise<MassReadingsPayload> {
   const now = Date.now();
   if (!feedCache || now - feedCache.at > FEED_TTL_MS) {
     feedCache = { xml: await feedXml(), at: now };
@@ -430,4 +439,83 @@ export async function massReadingsPayload(date: string): Promise<MassReadingsPay
     }
   }
   return payload;
+}
+
+/* ---------- v608: the D1 display cache (readings_cache) ----------
+   A short-term display cache under the USCCB RSS display
+   clause (migration 0046) — NOT an archive: the nightly
+   grab stores the current day, serve-time misses backfill,
+   and each grab prunes the store to a rolling 35-day
+   window. The mass_cache (0031) idiom stands as the model:
+   every store read/write is guarded, so a missing table
+   (pre-migration) or a failed write never breaks the
+   serve — the standing live pull below it is untouched. */
+interface ReadingsEnv { DB: D1Database }
+
+async function storedReadings(env: ReadingsEnv, date: string): Promise<MassReadingsPayload | null> {
+  try {
+    const row = await env.DB.prepare("SELECT body FROM readings_cache WHERE date = ?").bind(date)
+      .first<{ body: string }>();
+    if (!row) return null;
+    const parsed = JSON.parse(row.body) as MassReadingsPayload;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch { return null; /* table missing pre-migration: serve live */ }
+}
+
+async function storeReadings(env: ReadingsEnv, payload: MassReadingsPayload): Promise<void> {
+  try {
+    await env.DB.prepare("INSERT INTO readings_cache (date, body, fetched_at) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET body = excluded.body, fetched_at = excluded.fetched_at")
+      .bind(payload.date, JSON.stringify(payload), new Date().toISOString()).run();
+  } catch { /* cache write is best-effort */ }
+}
+
+// v608: store-first serve. A stored day returns with ZERO
+// outbound fetches; a miss runs the standing live pull and
+// backfills the store on a found payload only (a found:false
+// day is never stored — the next open re-pulls, exactly as
+// before). A throw from the pull propagates exactly as the
+// pre-v608 payload did: the routes catch it.
+export async function massReadingsPayload(env: ReadingsEnv, date: string): Promise<MassReadingsPayload> {
+  const stored = await storedReadings(env, date);
+  if (stored) return stored;
+  const payload = await pullReadings(date);
+  if (payload.found) await storeReadings(env, payload);
+  return payload;
+}
+
+// v608: the grab's verdict on a pulled payload — the day
+// stands in the feed, carries at least one part, every
+// part carries its citation (source), and the Gospel slot
+// stands. citations rides the parts' sources in order, so
+// the nightly report and Review read what was stored.
+export function verifyReadings(payload: MassReadingsPayload): { ok: boolean; reason?: string; citations: string[] } {
+  const citations = (payload.parts || []).map((p) => p.source || "");
+  if (!payload.found) return { ok: false, reason: "the feed does not carry the date", citations };
+  if (!payload.parts || payload.parts.length === 0) return { ok: false, reason: "the payload carries no parts", citations };
+  if (payload.parts.some((p) => !(p.source || "").trim())) return { ok: false, reason: "a part carries no citation", citations };
+  if (!payload.parts.some((p) => p.key === "g")) return { ok: false, reason: "no Gospel part stands", citations };
+  return { ok: true, citations };
+}
+
+// v608: the nightly grab (door route POST
+// /api/agent/prayer/readings-grab). A FRESH pull — the
+// door call lands in a cold isolate, and pullReadings is
+// called directly so no stored row can stand in for the
+// pull. A payload that fails verification stores NOTHING;
+// a verified one stores, then prunes the rolling window
+// (rows older than 35 days before the grabbed date go).
+// A throw from the pull propagates to the route, which
+// answers it as a judged failure, never a 500.
+export async function grabReadings(env: ReadingsEnv, date: string): Promise<
+  { ok: true; date: string; parts: number; memorials: number; citations: string[] } |
+  { ok: false; date: string; reason: string }
+> {
+  const payload = await pullReadings(date);
+  const verdict = verifyReadings(payload);
+  if (!verdict.ok) return { ok: false, date, reason: verdict.reason || "verification failed" };
+  await storeReadings(env, payload);
+  try {
+    await env.DB.prepare("DELETE FROM readings_cache WHERE date < date(?, '-35 days')").bind(date).run();
+  } catch { /* prune is best-effort, like the write */ }
+  return { ok: true, date, parts: payload.parts.length, memorials: payload.memorials?.length ?? 0, citations: verdict.citations };
 }
