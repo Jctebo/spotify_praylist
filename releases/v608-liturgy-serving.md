@@ -49,4 +49,12 @@ Worktree `v608-wt`, branch `release/v608` off main d839539. Commits: ffe4655 (st
 
 ## §5 Ship
 
-_(the coordinator's section.)_
+- **Merge:** release/v608 merged to main as 9e2788d (no conflicts; whole-tree markers verified on the merged tree: readings_cache ×5 · readings-grab ×1 · massMaybeLoadUniversalis ×4 · pin ×1). Harness-v608 on the merged tree: **10 ok / 0 not-ok**.
+- **Push:** Git Data API — remote main == 9e2788de85a9ac9817fda72e89f658a667c55683, byte-identical. main pushed · remote in sync.
+- **Migration 0046** applied to the production app D1; readings_cache table read back.
+- **Deploy:** Worker **173ac975-f8b9-4b1f-b6f4-c50ea42b643f** · pin **ora-pro-nobis-v608-1** · rollback = v607 Worker 3625ed7d.
+- **Served proofs:** served sw.js carries pin ora-pro-nobis-v608-1 · served app.js (1,244,571 chars) parses whole, carries massMaybeLoadUniversalis ×4.
+- **First real grab (production):** `runner/grab_readings.py` → "Readings grab: 2026-11-21 ok — 4 parts, 1 memorials stored", exit 0. D1 read-back: readings_cache row 2026-11-21, 8,924 bytes — parts extra/ps/ga/g with citations in `source` (Gospel: Luke 20:27-40) + the Presentation of the Virgin Mary memorial with its own four parts.
+- **Nightly wiring:** runner/grab_readings.py + runner/README.md synced into the nightly fork working tree (spotify_praylist-fork) — the grab stands as a standing step in the pipeline from the 2026-11-22 00:00 CT run.
+- **Traffic claim, verified by construction + harness W1:** after ship, outbound USCCB fetches per day = the nightly grab's handful (one feed pull + the day's memorial pages), independent of user count; a store hit serves with ZERO outbound fetches; only a rare miss falls back to the standing live pull and backfills.
+- **Board closeout:** What's New **423** · row **1582 Live** · shipped_records **797** · phase records 2455/2459/2460/2464/2465 all passed · contracts 867/870/871/872/873 met · intake **1129 Done**.
