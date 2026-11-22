@@ -1858,7 +1858,22 @@ function opnVaultApplyKey(rawKey) {
     var doc = JSON.parse(new TextDecoder().decode(plain));
     if (!doc || doc.format !== 'orapronobis-personal-data' || !doc.sections) throw opnErr(500, 'vault_unreadable');
     opnDocCache = doc;
-    return doc;
+    // v604 fix (Review R3-1): the unlock path is a REAL
+    // document load — run the standing migration family
+    // in its standing order (mig590-family first, then
+    // mig604) against the decrypted document and persist
+    // through the standing vault persist path. Each
+    // migration's own flag gates re-runs, so a second
+    // unlock writes nothing. The locked posture is
+    // untouched: no migration runs against the ephemeral
+    // document and no envelope write happens pre-unlock.
+    var migrated = false;
+    if (doc.sections) {
+      if (opnMigrateProfiles590(doc.sections.profiles)) migrated = true;
+      if (opnMigrateProfiles604(doc.sections.profiles)) migrated = true;
+    }
+    if (!migrated) return doc;
+    return opnVaultPersist().then(function () { return doc; });
   }).catch(function (e) {
     opnVaultRawKey = null; opnVaultKeyObj = null;
     throw e;

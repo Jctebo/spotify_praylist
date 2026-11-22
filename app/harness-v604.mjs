@@ -4,6 +4,13 @@
 //     resolution collapse (standing pick -> today layer),
 //     mig604 deleting the stored dayDefaults + picks, the
 //     named-400 rejections, the day-pick routes gone.
+//  M4     vault-unlock migration (Review defect R3-1):
+//     an old-build (ffd1bbe) envelope over the M2 variant
+//     — locked first open byte-identical, unlock runs
+//     mig604 on the REAL document + persists, a second
+//     unlock writes nothing. M4 FAILS on the pre-fix
+//     branch HEAD f97bf40 (50 ok / 1 not ok, M4 sole
+//     failure) and PASSES with the fix (51 ok / 0).
 //  O/F    the one page: collapsed rows, independent folds,
 //     per-block today marks, prayer posture, the stored
 //     page mode + the fold option.
@@ -133,7 +140,7 @@ function serverResolver(src) {
 let JSDOM, webcrypto;
 try { ({ JSDOM } = await import('jsdom')); ({ webcrypto } = await import('node:crypto')); }
 catch (e) { check('R0 jsdom available', false, e.message); console.log('harness-v604:', ok, 'ok /', bad, 'not ok'); process.exit(1); }
-const HOOK = '\n;window.__opn = { openConfigureLadder593, openEditTodayScreen594, opnLocalApi, opnMode, state, opnResolveProfile590, opnProfilesPayload, opnCheckContents590, opnCheckTodayLayer594, opnValidateImport, opnFoldDay590, paintPrayersView, opnStandingContents597, opnTodayComposedContents594, openHeaderMenu, opnVaultLocked, opn604: (typeof opn604 !== "undefined" ? opn604 : null), opnDragOver604: (typeof opnDragOver604 === "function" ? opnDragOver604 : null), opnMigrateProfiles604: (typeof opnMigrateProfiles604 === "function" ? opnMigrateProfiles604 : null) };';
+const HOOK = '\n;window.__opn = { openConfigureLadder593, openEditTodayScreen594, opnLocalApi, opnMode, state, opnResolveProfile590, opnProfilesPayload, opnCheckContents590, opnCheckTodayLayer594, opnValidateImport, opnFoldDay590, paintPrayersView, opnStandingContents597, opnTodayComposedContents594, openHeaderMenu, opnVaultLocked, opnDoc: (typeof opnDoc === "function" ? opnDoc : null), opn604: (typeof opn604 !== "undefined" ? opn604 : null), opnDragOver604: (typeof opnDragOver604 === "function" ? opnDragOver604 : null), opnMigrateProfiles604: (typeof opnMigrateProfiles604 === "function" ? opnMigrateProfiles604 : null) };';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function fetchStub(url) {
   const u = String(url);
@@ -270,6 +277,58 @@ function dateLabelOf(dateStr) {
   check('M2 ◆ fail-on-old recorded: the ffd1bbe build leaves dayDefaults + picks standing on the variant',
     'dayDefaults' in Po && 'picks' in Po, Object.keys(Po));
   wo.close();
+}
+
+// ---------- M4: vault-unlock migration (Review defect R3-1) ----------
+// Envelope built with the OLD build (ffd1bbe, via oldJs = git main)
+// over the M2 populated variant. On the NEW build: (a) locked first
+// open leaves the envelope byte-identical, no mig604 anywhere real
+// (b) unlock runs mig604 against the REAL document and persists it
+// through the vault path (c) lock + unlock again writes nothing.
+{
+  const variant = variantDoc();
+  const expList = JSON.stringify(variant.sections.profiles.list);
+  const expToday = JSON.stringify(variant.sections.profiles.todayEdits);
+  const expStanding = variant.sections.profiles.standingKey;
+  let env = null;
+  {
+    const wOld = makeWorld(oldJs, storeOf(variantDoc()));
+    await sleep(400);
+    await wOld.__opn.opnLocalApi('/api/pin/set', { method: 'POST', body: JSON.stringify({ pin: '3141' }) }, 'device');
+    await sleep(300);
+    env = {}; for (let i = 0; i < wOld.localStorage.length; i++) { const k = wOld.localStorage.key(i); env[k] = wOld.localStorage.getItem(k); }
+    wOld.close();
+  }
+  const envBefore = env[DATA_KEY];
+  const w = makeWorld(appJs, JSON.parse(JSON.stringify(env)));
+  await sleep(500);
+  const lockedOk = w.__opn.opnVaultLocked() === true && w.localStorage.getItem(DATA_KEY) === envBefore;
+  let unlockErr = '';
+  try { await w.__opn.opnLocalApi('/api/pin/verify', { method: 'POST', body: JSON.stringify({ pin: '3141' }) }, 'device'); } catch (e) { unlockErr = String((e && e.message) || e); }
+  await sleep(300);
+  const P = w.__opn.opnDoc().sections.profiles;
+  const postUnlock = {
+    noDayDefaults: !('dayDefaults' in P), noPicks: !('picks' in P), mig604: P.mig604 === true,
+    standing: P.standingKey === expStanding,
+    list: JSON.stringify(P.list) === expList, today: JSON.stringify(P.todayEdits) === expToday,
+    envChanged: w.localStorage.getItem(DATA_KEY) !== envBefore,
+  };
+  const docAfterFirst = JSON.stringify(w.__opn.opnDoc());
+  const envAfterFirst = w.localStorage.getItem(DATA_KEY);
+  const storeAfterFirst = {}; for (let i = 0; i < w.localStorage.length; i++) { const k = w.localStorage.key(i); storeAfterFirst[k] = w.localStorage.getItem(k); }
+  w.close();
+  // lock + unlock again: a fresh world over the persisted envelope is locked.
+  const w2 = makeWorld(appJs, storeAfterFirst);
+  await sleep(500);
+  const locked2 = w2.__opn.opnVaultLocked() === true && w2.localStorage.getItem(DATA_KEY) === envAfterFirst;
+  let unlock2Err = '';
+  try { await w2.__opn.opnLocalApi('/api/pin/verify', { method: 'POST', body: JSON.stringify({ pin: '3141' }) }, 'device'); } catch (e) { unlock2Err = String((e && e.message) || e); }
+  await sleep(300);
+  const noSecondWrite = w2.localStorage.getItem(DATA_KEY) === envAfterFirst && JSON.stringify(w2.__opn.opnDoc()) === docAfterFirst;
+  w2.close();
+  check('M4 vault-unlock migration: old-build envelope over the populated variant — (a) locked first open envelope byte-identical, no mig604 anywhere real · (b) unlock deletes dayDefaults + picks on the REAL document, mig604 set, standingKey/list/contents/todayEdits byte-identical to the variant, migrated document persisted in the envelope · (c) lock + unlock again writes nothing',
+    lockedOk && !unlockErr && postUnlock.noDayDefaults && postUnlock.noPicks && postUnlock.mig604 && postUnlock.standing && postUnlock.list && postUnlock.today && postUnlock.envChanged && locked2 && !unlock2Err && noSecondWrite,
+    { lockedOk, unlockErr, postUnlock, locked2, unlock2Err, noSecondWrite, keys: Object.keys(P) });
 }
 
 // ---------- V1 ◆ validators ----------
