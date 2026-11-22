@@ -564,9 +564,10 @@ async function composeNovenas(w) {
 }
 {
   // The pre-fix defect, reproduced on the pre-fix tree
-  // (git HEAD = b4545c2, the held Review head): named
+  // (b4545c2, the held Review head — pinned by hash so
+  // the leg stands after the fix commits on top): named
   // alone on a running day composes EMPTY there.
-  const headSrc = git(['show', 'HEAD:app/worker/src/client.ts']);
+  const headSrc = git(['show', 'b4545c2:app/worker/src/client.ts']);
   const ha = headSrc.indexOf('= `') + 3, hb = headSrc.indexOf('\n`;', ha);
   const headJs = vm.runInContext('`' + headSrc.slice(ha, hb) + '`', vm.createContext({}));
   const st = johnStore();
