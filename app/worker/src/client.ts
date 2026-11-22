@@ -21335,10 +21335,10 @@ function openAddLadder603(block, host) {
       if (cl) cl.addEventListener('click', function () { sh.remove(); });
     }
     if (block !== 'Novenas' && !opnLadderSeries603) {
-      api('/api/player/podcasts').then(function (r) { opnLadderSeries603 = (r && r.seriesList) || []; if (document.body.contains(sh) && rung === 'courses') paintList(); }).catch(function () { opnLadderSeries603 = []; });
+      api('/api/player/podcasts').then(function (r) { opnLadderSeries603 = (r && r.seriesList) || []; if (document.body.contains(sh)) paintList(); }).catch(function () { opnLadderSeries603 = []; });
     }
     if (block === 'Novenas' && !state.novenasCatalog) {
-      api('/api/player/podcasts?series=novenas').then(function (res) { state.novenasCatalog = res; if (document.body.contains(sh) && rung === 'novenas') paintList(); }).catch(function () {});
+      api('/api/player/podcasts?series=novenas').then(function (res) { state.novenasCatalog = res; if (document.body.contains(sh)) paintList(); }).catch(function () {});
     }
     paint();
   });
