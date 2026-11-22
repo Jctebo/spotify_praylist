@@ -475,6 +475,12 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .profzone593 .row { gap:8px; }
 .profladder593 .bookrow { padding:8px 10px; margin:0 0 6px; }
 .profladder593 .sub { margin:0 0 8px; }
+/* v603: the Add ladder — its door rows wear the Configure
+   ladder's compact bookrow dress; an already-standing
+   item reads muted and takes no tap. */
+.profaddladder603 .bookrow { padding:8px 10px; margin:0 0 6px; }
+.profaddladder603 .sub { margin:0 0 8px; }
+.profadd-on603 { opacity:.55; cursor:default; }
 .profmapscreen593 .bookrow { padding:8px 10px; margin:0 0 6px; }
 .profmapscreen593 .sub { margin:0 0 8px; }
 .profmapscreen593 .sectionhead { margin:12px 0 6px; }

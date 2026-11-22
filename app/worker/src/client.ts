@@ -2441,9 +2441,16 @@ var opnSolemnity = {};    // date -> true, learned from the day payload
 /* ---- v590: profiles — designed defaults, migration,
    per-day resolution, contents ---- */
 var OPN_DOW_KEYS_590 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-// v597: OPN_COURSE_KEYS_590 retires with the course selectors — the
-// contents system no longer names course keys at all (any course-kind
-// item drops at validation, whatever its key).
+// v603: the course keys stand again — for the Add path
+// only. v597 removed course selectors from the contents
+// system whole; John's v603 word returns them as
+// hand-addable items (the Add ladder's Courses door), so
+// the validators and the read seam name the four keys
+// again. The standing-contents function and the contents
+// universe still offer none: defaults and Reset stay
+// courseless, and a course stands only in an explicit
+// contents entry a hand add created.
+var OPN_COURSE_KEYS_603 = ['catechism-in-a-year', 'bible-in-a-year', 'rosary-in-a-year', 'summa-in-a-year'];
 var OPN_OLD_SEED_590 = {
   'little-way': { coreBlocks: ['Morning', 'Night'], layers: { novenas: { on: false }, podcasts: { on: false, series: [] } } },
   'salesian': { coreBlocks: ['Morning', 'Midday', 'Evening', 'Night'], layers: { novenas: { on: true }, podcasts: { on: false, series: [] } } },
@@ -2529,7 +2536,8 @@ function opnCheckContents590(contents, coreBlocks) {
   // selectors; the Novenas block takes novena /
   // all-novenas only (layers stand after core, for contents
   // as for blocks). Absent contents = standing contents.
-  // v597: course selectors are out (see the drop below).
+  // v603: course selectors naming a standing key are in
+  // again — for the Add path only (see the check below).
   if (contents === undefined || contents === null) return undefined;
   if (typeof contents !== 'object' || Array.isArray(contents)) throw opnErr(400, 'contents must be an object');
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
@@ -2547,14 +2555,18 @@ function opnCheckContents590(contents, coreBlocks) {
         if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
         if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
       } else {
-        // v597: course selectors are OUT of the contents
-        // system — a course item drops at validation (never
-        // an error, never stored), so a legacy list carrying
-        // one normalizes courseless at its next write.
-        if (kind === 'course') return;
-        if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
-        if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
-        if (kind === 'seat' && key !== 'daily-readings') throw opnErr(400, 'bad seat ' + key);
+        // v603: a course item naming one of the four
+        // standing keys is a valid contents item again —
+        // for the Add path (John's word reverses v597's
+        // removal, scoped). A course item naming any
+        // other key is an error, as pre-v597.
+        if (kind === 'course') {
+          if (OPN_COURSE_KEYS_603.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
+        } else {
+          if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
+          if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
+          if (kind === 'seat' && key !== 'daily-readings') throw opnErr(400, 'bad seat ' + key);
+        }
       }
       var id = kind + ':' + key;
       if (seen[id]) return;
@@ -2566,15 +2578,15 @@ function opnCheckContents590(contents, coreBlocks) {
   return out;
 }
 function opnContentsOf590(p) {
-  // v597: the read seam the payload, both editors, and
-  // the fold all consume — course items are filtered out
-  // of the clone, so no stored list can paint or resolve
-  // a course selector before its next validated write.
+  // v603: the read seam — a course item naming one of the
+  // four standing keys passes through (it can paint and
+  // resolve); a course item naming any other key still
+  // filters out, so a foreign stored item never stands.
   if (!p || !p.contents || typeof p.contents !== 'object') return null;
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || it.kind !== 'course'; }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0; }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -17524,10 +17536,48 @@ function podGroupFacts() {
   return { series: n, episodes: eps };
 }
 
-// v597: resolveProfileCourses590 RETIRES — course selectors are out of the
-// contents system (validators drop them, the read seam filters them, the
-// universe offers none), so no contents course can resolve. Courses stand
-// as Podcasts-layer series and on the Catechesis Courses side, untouched.
+function resolveProfileCourses590(day) {
+  // v590 §2.3 (Amendment 3), RESTORED by v603 (v597 removed
+  // it whole when course selectors left the contents
+  // system; John's v603 word returns them through the Add
+  // ladder): each course selector in the effective
+  // profile's contents resolves to the course's next
+  // episode BY THE USER'S OWN PROGRESS — the standing
+  // Current pointer over the core-folded payload (the same
+  // listened set the Courses card counts). A finished or
+  // unavailable course resolves nothing: its slot stands
+  // empty. The descriptor stands in state.courseRes590 for
+  // extRebuildDescs to place in the block.
+  state.courseRes590 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (it.kind === 'course') jobs.push({ block: block, key: it.key });
+    });
+  });
+  jobs.forEach(function (job) {
+    api('/api/player/podcasts?series=' + encodeURIComponent(job.key)).then(function (payload) {
+      if (state.dayPayload !== day) return;
+      if (!payload || !Array.isArray(payload.entries)) return;
+      var curKey = payload.currentKey || opnPodCurrentKey(payload.entries);
+      if (!curKey) return;
+      var e = null;
+      payload.entries.forEach(function (x) { if (x.key === curKey) e = x; });
+      if (!e) return;
+      state.courseRes590[job.block + ':' + job.key] = {
+        episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: job.key,
+        title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || null, enclosureUrl: null,
+        available: !!e.url, block: job.block, source: '', durationS: e.durationS || 0, listened: !!e.listened,
+        podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
+        imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null, course590: true
+      };
+      extRebuildDescs(day);
+      if (state.dayPayload) paintPrayersView(state.dayPayload);
+    }).catch(function () {});
+  });
+}
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -17599,6 +17649,37 @@ function resolveProfilePodcasts(day) {
     });
   });
 }
+function opnNovenaMetas603(contents, tracks) {
+  // v603 Review fix (John's word, Ora thread, 2026-11-21
+  // 19:05 CT — "Ok. Let's do it plus fix"): a NAMED novena
+  // plays. The Novenas block's contents walk in contents
+  // order: a 'novena' item stands its own track — the
+  // day's Day n episode, present in the resolved slot
+  // only while that novena runs (the feed carries one
+  // episode per running novena per date, so slot presence
+  // IS the day standing); the 'all-novenas' item stands
+  // every running novena's track not already stood by a
+  // named item — dedupe by episodeId, so a named novena
+  // that is also active stands exactly once, at its
+  // contents position. A named novena outside its run
+  // stands nothing that day: the block is then truly
+  // empty, never gate-empty.
+  var byId = {};
+  (tracks || []).forEach(function (m) { if (m && m.episodeId && !byId[m.episodeId]) byId[m.episodeId] = m; });
+  var out = [], stood = {};
+  (contents || []).forEach(function (it) {
+    if (!it) return;
+    if (it.kind === 'novena') {
+      var m = byId['novena-' + it.key];
+      if (m && !stood[m.episodeId]) { stood[m.episodeId] = 1; out.push(m); }
+    } else if (it.kind === 'all-novenas') {
+      (tracks || []).forEach(function (t) {
+        if (t && t.episodeId && !stood[t.episodeId]) { stood[t.episodeId] = 1; out.push(t); }
+      });
+    }
+  });
+  return out;
+}
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
@@ -17652,7 +17733,10 @@ function extRebuildDescs(day) {
           // block's own row with the all-novenas item,
           // never a source selector — an entry carrying
           // all-novenas stands the novenas row.
-          || (e.own.sourceKey === 'novenas' && c590.some(function (it) { return it.kind === 'all-novenas'; }));
+          // v603 Review fix: a named novena item stands
+          // the row too — it plays its own Day n (the
+          // selection is opnNovenaMetas603's, below).
+          || (e.own.sourceKey === 'novenas' && c590.some(function (it) { return it.kind === 'all-novenas' || it.kind === 'novena'; }));
         return selIdx590('source', e.ext.slotId) >= 0 || selIdx590('source', e.ext.sourceKey) >= 0;
       });
       merged.sort(function (a, c) {
@@ -17668,9 +17752,24 @@ function extRebuildDescs(day) {
         var st = state.ownSlots[row.sourceKey];
         if (!st) return;
         if (st.state === 'present') {
-          st.tracks.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
+          // v603 Review fix: with a contents entry
+          // standing, the Novenas row emits the
+          // contents-order selection (named novenas at
+          // their contents positions, all-novenas
+          // standing the rest) — without contents the
+          // slot stands whole, exactly as before.
+          var metas = st.tracks;
+          if (row.sourceKey === 'novenas' && c590) metas = opnNovenaMetas603(c590, st.tracks);
+          metas.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
         } else if (st.state === 'missing') {
-          expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
+          // v603 Review fix: a named-only Novenas entry
+          // under a missing slot is a TRUE empty (no
+          // novena runs that day) — no missing
+          // placeholder stands. With all-novenas
+          // standing, the standing placeholder stands.
+          if (!(row.sourceKey === 'novenas' && c590 && !c590.some(function (it) { return it.kind === 'all-novenas'; }))) {
+            expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
+          }
         }
       } else {
         var slot = e.ext;
@@ -17678,6 +17777,19 @@ function extRebuildDescs(day) {
         if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
       }
     });
+    // v590 §2.3 (Amendment 3), restored by v603: the
+    // block's course selectors stand as tracks — each
+    // resolved by resolveProfileCourses590 to the course's
+    // next episode by the user's own progress; an
+    // unresolved (finished/unavailable) course leaves its
+    // slot empty and nothing else moves.
+    if (c590 && state.courseRes590) {
+      c590.forEach(function (it) {
+        if (it.kind !== 'course') return;
+        var cd = state.courseRes590[b.block + ':' + it.key];
+        if (cd) expandDescs(Object.assign({}, cd, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
+      });
+    }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   descs = foldDayAdditions(descs, date, day.readingsSeat); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold
@@ -18909,8 +19021,9 @@ function buildDayFromPayload(day, snap) {
     // through extRebuildDescs as each series settles.
     resolveProfilePodcasts(day);
     // v590 §2.5: the on-device readings seat resolves
-    // beside it. (v597: contents course selectors retire —
-    // nothing resolves beside it for them anymore.)
+    // beside it. (v603: the contents course selectors
+    // resolve beside it again — restored.)
+    resolveProfileCourses590(day);
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -19875,6 +19988,9 @@ function profContentsUniverse590(block) {
   // never per-block contents. The universe is the editor
   // paint's off-list source and both Add pickers' source,
   // so paint and picker close together here.
+  // v603: this stands — the Add ladder's Courses door is
+  // the one place a course item is offered, and it never
+  // routes through the universe or the standing contents.
   return items;
 }
 function profVaultGate594(bodyEl, proceed, onClose) {
@@ -20094,7 +20210,7 @@ function openEditTodayScreen594(fromLadder) {
   });
   if (scroller) scroller.addEventListener('scroll', function () { spyUpdateT(); });
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
-  var res = null, td = null, seriesList = null, bookList = null;
+  var res = null, td = null, seriesList = null, bookList = null, bookGroups = null, novenasCat = null;
   var pickD = null, clearedD = false;
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
@@ -20534,54 +20650,35 @@ function openEditTodayScreen594(fromLadder) {
     if (closeBtn) closeBtn.addEventListener('click', requestClose);
   }
   function openAddPickerT(block) {
-    loadBookT(function () {
-      var oldA = document.querySelector('.profadd591');
-      if (oldA) oldA.remove();
-      var sh = document.createElement('div');
-      sh.className = 'sheet profadd591';
-      var list = effList(block);
-      var html = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>';
-      var any = false;
-      profContentsUniverse590(block).forEach(function (it) {
-        var id = it.kind + ':' + (it.key || '');
-        if (list.map(opnTodayItemId594).indexOf(id) >= 0) return;
-        // v597: the seat is offered only under the posture
-        // that can compose it (opnSeatPosture597).
-        if (it.kind === 'seat' && !opnSeatPosture597(td && td.layers)) return;
-        any = true;
-        html += '<div class="card bookrow" data-p594tadditem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
-      });
-      if (block !== 'Novenas' && bookList) bookList.forEach(function (pr) {
-        var id = 'prayer:' + pr.slug;
-        if (list.map(opnTodayItemId594).indexOf(id) >= 0) return;
-        any = true;
-        html += '<div class="card bookrow" data-p594tadditem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(pr.title) + '</span><span class="meta">Prayer</span></div></div>';
-      });
-      if (!any) html += '<p class="sub">Everything addable already stands in this block.</p>';
-      html += '<div class="row"><button class="btn ghost" data-p594taddclose="1">Close</button></div></div>';
-      sh.innerHTML = html;
-      document.body.appendChild(sh);
-      mountDrawer(sh, true);
-      sh.querySelectorAll('[data-p594tadditem]').forEach(function (row) {
-        row.addEventListener('click', function () {
-          var id = row.getAttribute('data-p594tadditem');
-          var kp = id.split(':');
-          materializeT(block).push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
-          sh.remove();
-          afterEdit(null);
-        });
-      });
-      var c = sh.querySelector('[data-p594taddclose]');
-      if (c) c.addEventListener('click', function () { sh.remove(); });
+    // v603: the flat picker retires into the one Add
+    // ladder — this host supplies Edit today's standing
+    // list (effList), its draft add act (materializeT +
+    // afterEdit: the add lands in the v600 draft, nothing
+    // writes until Save today), and its layers.
+    openAddLadder603(block, {
+      ids: function () { return effList(block).map(opnTodayItemId594); },
+      add: function (item) { materializeT(block).push(item); afterEdit(null); },
+      layers: function () { return td && td.layers; },
+      groups: function () { return bookGroups; },
+      ensure: function (cb) { loadBookT(cb); }
     });
   }
   function loadBookT(cb) {
     if (bookList) { cb(); return; }
     api('/api/prayer/book').then(function (r) {
       bookList = [];
-      ((r && r.groups) || []).forEach(function (g) { (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) bookList.push({ slug: pr.slug, title: pr.title || pr.slug }); }); });
+      // v603: the served groups stand whole beside the
+      // flat list — the Add ladder's Prayers rungs descend
+      // group by group (the flat list's other consumers
+      // read bookList as before).
+      bookGroups = [];
+      ((r && r.groups) || []).forEach(function (g) {
+        var gp = { name: g.category || g.name || '', prayers: [] };
+        (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) { var p = { slug: pr.slug, title: pr.title || pr.slug }; bookList.push(p); gp.prayers.push(p); } });
+        if (gp.prayers.length) bookGroups.push(gp);
+      });
       cb();
-    }).catch(function () { bookList = []; cb(); });
+    }).catch(function () { bookList = []; bookGroups = []; cb(); });
   }
   function loadSeries() {
     api('/api/player/podcasts').then(function (r) {
@@ -20659,7 +20756,7 @@ function openProfilesScreen(openKey, opts) {
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
   var BLOCKS593 = HOURS.concat(['Novenas', 'Podcasts']);
   var DUR591 = { 'little-way': 'About 30 minutes', 'salesian': 'About 1½–2 hours', 'benedictine': 'The full day — all seven blocks' };
-  var res = null, seriesList = null, bookList = null;
+  var res = null, seriesList = null, bookList = null, bookGroups = null, novenasCat = null;
   var edKey = openKey || null, ed = null, resetArmed = false, delArmed = false;
   // The frozen zone: inserted into .inner above the
   // scrolling .panelbody (flex sibling — see header).
@@ -21028,53 +21125,36 @@ function openProfilesScreen(openKey, opts) {
     });
   }
   function openAddPicker(block, d, repaint) {
-    loadBook(function () {
-      var oldA = document.querySelector('.profadd591');
-      if (oldA) oldA.remove();
-      var sh = document.createElement('div');
-      sh.className = 'sheet profadd591';
-      var mat = d.contents[block];
-      var html = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>';
-      var any = false;
-      profContentsUniverse590(block).forEach(function (it) {
-        if (itemOn(d, block, it)) return;
-        // v597: the seat is offered only under the posture
-        // that can compose it (opnSeatPosture597).
-        if (it.kind === 'seat' && !opnSeatPosture597(d.layers)) return;
-        any = true;
-        html += '<div class="card bookrow" data-p591additem="' + esc(it.kind + ':' + (it.key || '')) + '"><div class="row"><span class="grow">' + esc(it.label) + '</span></div></div>';
-      });
-      if (block !== 'Novenas' && bookList) bookList.forEach(function (pr) {
-        var id = 'prayer:' + pr.slug;
-        if (mat && mat.some(function (m) { return (m.kind + ':' + (m.key || '')) === id; })) return;
-        any = true;
-        html += '<div class="card bookrow" data-p591additem="' + esc(id) + '"><div class="row"><span class="grow">' + esc(pr.title) + '</span><span class="meta">Prayer</span></div></div>';
-      });
-      if (!any) html += '<p class="sub">Everything addable already stands in this block.</p>';
-      html += '<div class="row"><button class="btn ghost" data-p591addclose="1">Close</button></div></div>';
-      sh.innerHTML = html;
-      document.body.appendChild(sh);
-      mountDrawer(sh, true);
-      sh.querySelectorAll('[data-p591additem]').forEach(function (row) {
-        row.addEventListener('click', function () {
-          var id = row.getAttribute('data-p591additem');
-          var kp = id.split(':');
-          materialize(d, block).push(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
-          sh.remove();
-          repaint();
-        });
-      });
-      var c = sh.querySelector('[data-p591addclose]');
-      if (c) c.addEventListener('click', function () { sh.remove(); });
+    // v603: the flat picker retires into the one Add
+    // ladder — this host supplies the profile draft's
+    // standing list (its materialized contents, else the
+    // composed standing list), its add act (materialize +
+    // repaint), and its layers.
+    openAddLadder603(block, {
+      ids: function () {
+        var list = d.contents[block] || opnStandingContents597({ contents: d.contents, layers: d.layers }, block);
+        return list.map(function (x) { return x.kind + ':' + (x.key || ''); });
+      },
+      add: function (item) { materialize(d, block).push(item); repaint(); },
+      layers: function () { return d.layers; },
+      groups: function () { return bookGroups; },
+      ensure: function (cb) { loadBook(cb); }
     });
   }
   function loadBook(cb) {
     if (bookList) { cb(); return; }
     api('/api/prayer/book').then(function (r) {
       bookList = [];
-      ((r && r.groups) || []).forEach(function (g) { (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) bookList.push({ slug: pr.slug, title: pr.title || pr.slug }); }); });
+      // v603: the served groups stand whole beside the
+      // flat list (see loadBookT).
+      bookGroups = [];
+      ((r && r.groups) || []).forEach(function (g) {
+        var gp = { name: g.category || g.name || '', prayers: [] };
+        (g.prayers || []).forEach(function (pr) { if (pr && pr.slug) { var p = { slug: pr.slug, title: pr.title || pr.slug }; bookList.push(p); gp.prayers.push(p); } });
+        if (gp.prayers.length) bookGroups.push(gp);
+      });
       cb();
-    }).catch(function () { bookList = []; cb(); });
+    }).catch(function () { bookList = []; bookGroups = []; cb(); });
   }
   function loadSeries() {
     api('/api/player/podcasts').then(function (r) {
@@ -21150,6 +21230,167 @@ function openProfilesScreen(openKey, opts) {
   // unlock card stands in the body and the load proceeds
   // only once the real document stands unlocked.
   if (!profVaultGate594(body, startLoad, function () { sheet.remove(); if (fromLadder) openConfigureLadder593(); })) startLoad();
+}
+
+/* ---- v603: the Add ladder ----
+   The contents Add act is a LADDER (John's word, on the
+   app's standing ladder pattern): kind doors first, each
+   door its own rung, one search pill at the top of every
+   rung that follows the ladder — from the head it searches
+   ALL addable items (matches grouped by kind, the rung
+   path named); inside a rung it narrows that rung only;
+   clearing restores the rung's full list. An item already
+   in the block paints marked "Already in <block>", not
+   tappable — no duplicates are ever written. A pick adds
+   through the host editor's own add act and returns to
+   the editor (Q4). One builder serves both editors; the
+   host supplies the block's standing ids, the add act,
+   the seat-posture layers, and the book access. */
+var opnLadderSeries603 = null;
+function opnLadderCourseTitle603(key) {
+  if (opnLadderSeries603) {
+    for (var i = 0; i < opnLadderSeries603.length; i++) if (opnLadderSeries603[i].series === key) return opnLadderSeries603[i].title || key;
+  }
+  return 'Course \u2014 ' + key;
+}
+function openAddLadder603(block, host) {
+  host.ensure(function () {
+    var oldA = document.querySelector('.profadd591');
+    if (oldA) oldA.remove();
+    var sh = document.createElement('div');
+    sh.className = 'sheet profadd591 profaddladder603';
+    document.body.appendChild(sh);
+    mountDrawer(sh, true);
+    var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources'
+    var query = '';
+    function isOn(item) { return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0; }
+    function sources() {
+      return profContentsUniverse590(block).filter(function (it) {
+        if (it.kind === 'source') return true;
+        if (it.kind === 'seat') return opnSeatPosture597(host.layers());
+        return false;
+      }).map(function (it) { return { kind: it.kind, key: it.key, label: it.label }; });
+    }
+    function courses() {
+      return OPN_COURSE_KEYS_603.map(function (k) { return { kind: 'course', key: k, label: opnLadderCourseTitle603(k) }; });
+    }
+    function novenaItems() {
+      var out = [{ kind: 'all-novenas', key: '', label: 'Every active novena' }];
+      var cat = state.novenasCatalog;
+      if (cat && cat.novenas) cat.novenas.forEach(function (n) { out.push({ kind: 'novena', key: n.slug, label: n.name || n.slug }); });
+      return out;
+    }
+    function match(label) { return !query.trim() || String(label).toLowerCase().indexOf(query.trim().toLowerCase()) >= 0; }
+    function rowHtml(item, path) {
+      var on = isOn(item);
+      var meta = on ? 'Already in ' + esc(block) : (path ? esc(path) : '');
+      return '<div class="card bookrow' + (on ? ' profadd-on603' : '') + '"' + (on ? '' : ' data-p603additem="' + esc(item.kind + ':' + (item.key || '')) + '"') + '><div class="row"><span class="grow">' + esc(item.label) + '</span>' + (meta ? '<span class="meta">' + meta + '</span>' : '') + '</div></div>';
+    }
+    function doorHtml(kind, title, sub) {
+      return '<div class="card bookrow" data-p603door="' + kind + '"><div class="row"><span class="grow">' + esc(title) + '</span><span class="meta">\u203a</span></div><p class="sub">' + esc(sub) + '</p></div>';
+    }
+    function listHtml() {
+      var html = '';
+      var q = query.trim();
+      if (rung === 'doors' && q) {
+        // Head search: ALL addable items, grouped by kind,
+        // the rung path named on every row.
+        var anyG = false;
+        var groups = [];
+        if (block !== 'Novenas') {
+          groups.push({ head: 'Courses', items: courses().filter(function (it) { return match(it.label); }), path: 'Courses' });
+          var pr = [];
+          (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Prayers \u203a ' + g.name }); }); });
+          groups.push({ head: 'Prayers', items: pr, path: '' });
+          groups.push({ head: 'Sources', items: sources().filter(function (it) { return match(it.label); }), path: 'Sources' });
+        } else {
+          groups.push({ head: 'Novenas', items: novenaItems().filter(function (it) { return match(it.label); }), path: 'Novenas' });
+        }
+        groups.forEach(function (g) {
+          if (!g.items.length) return;
+          anyG = true;
+          html += '<h2 class="sectionhead">' + esc(g.head) + '</h2>';
+          g.items.forEach(function (it) { html += rowHtml(it, it.path !== undefined && it.path !== '' ? it.path : g.path); });
+        });
+        if (!anyG) html += '<p class="sub">Nothing addable matches your search.</p>';
+      } else if (rung === 'doors') {
+        if (block === 'Novenas') {
+          html += doorHtml('novenas', 'Novenas', 'One novena, or every active novena');
+        } else {
+          html += doorHtml('courses', 'Courses', 'A course\u2019s next episode, by your progress');
+          html += doorHtml('prayers', 'Prayers', 'The prayer book, by category');
+          html += doorHtml('sources', 'Sources', 'This block\u2019s own sources');
+        }
+      } else if (rung === 'courses') {
+        courses().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
+      } else if (rung === 'prayers') {
+        (host.groups() || []).forEach(function (g) {
+          if (!match(g.name) && !g.prayers.some(function (p) { return match(p.title); })) return;
+          html += '<div class="card bookrow" data-p603group="' + esc(g.name) + '"><div class="row"><span class="grow">' + esc(g.name) + '</span><span class="meta">' + g.prayers.length + ' \u203a</span></div></div>';
+        });
+      } else if (rung.indexOf('prayers:') === 0) {
+        var gname = rung.slice('prayers:'.length);
+        var grp = null;
+        (host.groups() || []).forEach(function (g) { if (g.name === gname) grp = g; });
+        if (grp) grp.prayers.forEach(function (p) { if (match(p.title)) html += rowHtml({ kind: 'prayer', key: p.slug, label: p.title }, ''); });
+      } else if (rung === 'novenas') {
+        novenaItems().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
+      } else if (rung === 'sources') {
+        sources().forEach(function (it) { if (match(it.label)) html += rowHtml(it, ''); });
+      }
+      return html;
+    }
+    function paint() {
+      sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>'
+        + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="Search" value="' + esc(query) + '" autocomplete="off"></div>'
+        + '<div data-p603list="1">' + listHtml() + '</div>'
+        + (rung !== 'doors' ? '<div class="row"><button class="btn ghost" data-p603back="1">Back</button></div>' : '')
+        + '<div class="row"><button class="btn ghost" data-p603close="1">Close</button></div></div>';
+      wire();
+    }
+    function paintList() {
+      var c = sh.querySelector('[data-p603list]');
+      if (c) { c.innerHTML = listHtml(); wireList(c); }
+    }
+    function wireList(root) {
+      root.querySelectorAll('[data-p603door]').forEach(function (row) {
+        row.addEventListener('click', function () { rung = row.getAttribute('data-p603door'); query = ''; paint(); });
+      });
+      root.querySelectorAll('[data-p603group]').forEach(function (row) {
+        row.addEventListener('click', function () { rung = 'prayers:' + row.getAttribute('data-p603group'); query = ''; paint(); });
+      });
+      root.querySelectorAll('[data-p603additem]').forEach(function (row) {
+        row.addEventListener('click', function () {
+          var id = row.getAttribute('data-p603additem');
+          var kp = id.split(':');
+          host.add(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
+          sh.remove();
+        });
+      });
+    }
+    function wire() {
+      var inp = sh.querySelector('[data-p603search]');
+      if (inp) inp.addEventListener('input', function () {
+        query = inp.value;
+        // Only the list container repaints (the standing
+        // pattern) — the input keeps focus and text.
+        paintList();
+      });
+      var c = sh.querySelector('[data-p603list]');
+      if (c) wireList(c);
+      var bk = sh.querySelector('[data-p603back]');
+      if (bk) bk.addEventListener('click', function () { rung = rung.indexOf('prayers:') === 0 ? 'prayers' : 'doors'; query = ''; paint(); });
+      var cl = sh.querySelector('[data-p603close]');
+      if (cl) cl.addEventListener('click', function () { sh.remove(); });
+    }
+    if (block !== 'Novenas' && !opnLadderSeries603) {
+      api('/api/player/podcasts').then(function (r) { opnLadderSeries603 = (r && r.seriesList) || []; if (document.body.contains(sh)) paintList(); }).catch(function () { opnLadderSeries603 = []; });
+    }
+    if (block === 'Novenas' && !state.novenasCatalog) {
+      api('/api/player/podcasts?series=novenas').then(function (res) { state.novenasCatalog = res; if (document.body.contains(sh)) paintList(); }).catch(function () {});
+    }
+    paint();
+  });
 }
 
 function openProfileSheet() {
