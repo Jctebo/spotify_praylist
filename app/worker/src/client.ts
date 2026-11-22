@@ -8622,6 +8622,12 @@ function writePodMarkQuiet(seqKey, seriesKey, source) {
     opnPodCoreSetListen(seriesKey, seqKey, true, { source: source });
     if (state.podcasts && state.podcasts.series === seriesKey && state.podcasts.entries) opnPodProjectSeries(opnPodCore(), state.podcasts);
   }
+  // v615: a podcast completion moves the Praylist head in
+  // the same act (the head count reads the descriptor's
+  // listened flag, flipped above on the standing copies by
+  // podSyncQueueListened). refreshPlayedChrome guards
+  // itself (no date / no view → return).
+  refreshPlayedChrome();
 }
 function renderPodcasts() {
   readTabSide('podcasts'); // v464 §2.5: the standing side stands before any paint reads tabSideNow.podcasts
@@ -15221,6 +15227,28 @@ function blockPlayedCounts(block) {
   });
   return { total: total, played: played };
 }
+function opnCounts615(tracks) {
+  // v615: the Praylist head's count discipline — AVAILABLE
+  // tracks only (unavailable carry no marker and are never
+  // written: "nothing to play, nothing to mark"); unplayed
+  // reads each kind's own store: a podcast descriptor reads
+  // its listened flag (the unplayedOnly precedent), every
+  // other descriptor reads isPlayedDesc on the presented
+  // date (occurrence-aware — _occ copies count individually).
+  var d = presentedDateStr();
+  var total = 0, unplayed = 0;
+  (tracks || []).forEach(function (t) {
+    if (!t || !t.available) return;
+    total++;
+    if (t.kind === 'podcast' ? !t.listened : !(d && isPlayedDesc(t, d))) unplayed++;
+  });
+  return { total: total, unplayed: unplayed };
+}
+function opnBlockCounts615(block) {
+  // v615: the head pass's recompute — state.dayDescs grouped
+  // by (block || 'Episodes'), the paint's own grouping.
+  return opnCounts615((state.dayDescs || []).filter(function (x) { return (x.block || 'Episodes') === block; }));
+}
 function refreshPlayedChrome() {
   var d = presentedDateStr();
   if (!d || !view) return;
@@ -15265,6 +15293,18 @@ function refreshPlayedChrome() {
   view.querySelectorAll('[data-markblock]').forEach(function (btn) {
     var c = blockPlayedCounts(btn.getAttribute('data-markblock'));
     btn.textContent = (c.total && c.played === c.total) ? 'Mark all unplayed' : 'Mark all played';
+  });
+  // v615: the Praylist heads' live pass — each head's count
+  // re-reads as the block's UNPLAYED count and its disc
+  // greys (the "all" class) exactly when no unplayed track
+  // stands and at least one available track does. Recomputed
+  // from state like every pass above; never incremented.
+  view.querySelectorAll('[data-p615disc]').forEach(function (sp) {
+    var c = opnBlockCounts615(sp.getAttribute('data-p615disc'));
+    sp.classList.toggle('all', c.total > 0 && c.unplayed === 0);
+    var head = sp.parentElement;
+    var cnt = head ? head.querySelector('[data-p615count]') : null;
+    if (cnt) cnt.textContent = String(c.unplayed);
   });
   paintContinue();
   renderQueueList();
@@ -23337,8 +23377,7 @@ function opnPickInForm609(key) {
 function opnSetHtml609(day) {
   if (opn604.editing) return opnEditSetHtml609(day);
   var html = '<div class="p609set" data-p609set="1">'
-    + '<div class="row p604exphead"><button class="playbtn small" data-queue="__all" aria-label="Play all of the day">&#9654;</button>'
-    + '<span class="grow">Play All</span></div>';
+    + '<div class="row p604exphead"><button class="btn ghost" data-queue="__all">Play All</button></div>';
   if (!day) return html + '</div>';
   // v609 REPAIR (2026-11-21, production break — John's
   // field report: "all blocks disappeared"): the set
@@ -23387,10 +23426,19 @@ function opnSetHtml609(day) {
   });
   runs609.forEach(function (run) {
     var open609 = opnExpanded604(run.block);
+    // v615 (John, 2026-11-22): the head's count reads LIVE —
+    // the block's UNPLAYED count (opnCounts615 over the run
+    // as painted), and a disc in the played-dot dress stands
+    // between the name and the count: the hollow ring while
+    // any unplayed track stands, grey ("all") when every
+    // available track is played. The disc is a span painted
+    // inside the head — the head stays the one tap target.
+    var c615 = opnCounts615(run.tracks);
     html += '<div class="p609sethead favfolder-head" data-p609sethead="' + esc(run.block) + '">'
       + '<span class="p612collmark favfolder-chev">' + (open609 ? '&#9662;' : '&#9656;') + '</span>'
       + '<h2 class="sectionhead grow">' + esc(run.block) + '</h2>'
-      + '<span class="meta">' + run.tracks.length + '</span></div>';
+      + '<span class="played-dot p615disc' + (c615.total > 0 && c615.unplayed === 0 ? ' all' : '') + '" data-p615disc="' + esc(run.block) + '" aria-hidden="true"></span>'
+      + '<span class="meta" data-p615count="' + esc(run.block) + '">' + c615.unplayed + '</span></div>';
     if (open609) run.tracks.forEach(function (t) { html += trackCard(t); });
   });
   return html + '</div>';
