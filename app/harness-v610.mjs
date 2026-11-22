@@ -27,7 +27,10 @@ const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'ut
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const indexSrc = readFileSync(APP + 'worker/src/index.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-const oldClientSrc = git(['show', 'main:app/worker/src/client.ts']);
+// v610 ship: pinned to the v609 repair 2 ship tree (6d3c65e) — the OA
+// legs' "old" is the pre-v610 client; the moving main ref outgrew that
+// meaning the moment v610 merged. Assertions untouched.
+const oldClientSrc = git(['show', '6d3c65e:app/worker/src/client.ts']);
 const BOOK = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/book.json', 'utf8'));
 const NOVENAS = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/novenas.json', 'utf8'));
 const PODIDX = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/podcasts-index.json', 'utf8'));
