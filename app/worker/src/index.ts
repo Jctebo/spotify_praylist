@@ -91,7 +91,7 @@ import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
 import { APP_JS } from "./client";
 import { MASS_CALENDAR } from "./mass-calendar";
 import { massPayload } from "./mass";
-import { massReadingsPayload } from "./mass-readings";
+import { massReadingsPayload, grabReadings } from "./mass-readings";
 import { LOGO_PNG_B64 } from "./logo";
 import { LOGO512_PNG_B64 } from "./logo512";
 
@@ -601,7 +601,7 @@ async function dayManifestPayload(env: Env, date: string, pub = false) {
   let mass: unknown = null;
   try { mass = await massPayload(env, date); } catch { mass = null; }
   let readings: unknown = { date, found: false, parts: [], copyright: [] };
-  try { readings = await massReadingsPayload(date); } catch { /* the empty shape above stands */ }
+  try { readings = await massReadingsPayload(env, date); } catch { /* the empty shape above stands */ }
   const assets = await enumerateDayAssets(env, date);
   return { ok: true, date, day, mass, readings, assets };
 }
@@ -3607,6 +3607,24 @@ export default {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
         return json({ ok: true, date, intentions: await massUniversalIntentions(env, date) });
       }
+      if (seg[2] === "prayer" && seg[3] === "readings-grab" && request.method === "POST") {
+        // v608: the nightly readings grab — a fresh pull of
+        // the day's USCCB readings, verified, stored in the
+        // readings_cache display store (migration 0046) for
+        // the store-first serve. The verdict body is the
+        // contract: a pull that throws after its ladder
+        // answers ok:false with the reason at HTTP 200,
+        // never a 500 — the nightly run reads the verdict,
+        // prints its one line, and is never blocked by it.
+        const body = await request.json().catch(() => ({})) as { date?: string };
+        const date = String(body.date ?? "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+        try {
+          return json(await grabReadings(env, date));
+        } catch (e) {
+          return json({ ok: false, date, reason: "pull failed: " + (e instanceof Error ? e.message : String(e)) });
+        }
+      }
       if (seg[2] === "prayer" && seg[3] === "profiles" && request.method === "GET") {
         // v515 §2: the door mirror of GET /api/prayer/profiles
         // — the verification surface, read-only (writes are
@@ -3875,7 +3893,7 @@ export default {
           const date = url.searchParams.get("date") ?? pToday;
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           try {
-            return json(await massReadingsPayload(date));
+            return json(await massReadingsPayload(env, date));
           } catch {
             return json({ date, found: false, parts: [], copyright: [] });
           }
