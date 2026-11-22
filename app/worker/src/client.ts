@@ -15533,9 +15533,16 @@ function openHeaderMenu() {
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
     // v604: the fold option stood here (Expand all /
-    // Collapse all). v609: the fold RETIRES with the
-    // block sections — the merged set has nothing to
-    // fold, and the acts stand nowhere.
+    // Collapse all). v609 retired it with the block
+    // sections. v612: the fold RETURNS with the grouped
+    // set — the two acts stand again at their v604 seat,
+    // with their v604 acts verbatim (write the ONE stored
+    // page mode, clear the session map, repaint), outside
+    // the in-place edit posture only.
+    if (!opn604.editing) {
+      items.push({ label: 'Expand all', act: function () { opnSetPraylistMode604('expanded'); opnFoldSession604 = {}; opnRepaintHome604(); } });
+      items.push({ label: 'Collapse all', act: function () { opnSetPraylistMode604('collapsed'); opnFoldSession604 = {}; opnRepaintHome604(); } });
+    }
   } else if (tab === 'podcasts' && podLevel === 'index') {
     // The Formation home: the retired row-2 button's act.
     items.push({ head: true, label: 'Catechesis' });
@@ -20212,6 +20219,17 @@ function wirePrayersView(day) {
       openBlockPage(bk604);
     });
   });
+  // v612: the merged set's group heads are the fold's tap
+  // targets — v604's row-tap shape (opnToggleBlock604 +
+  // repaint) moved to the head. The head carries no inner
+  // controls, so no target guard stands; track rows keep
+  // their own acts (the head is a separate element).
+  view.querySelectorAll('[data-p609sethead]').forEach(function (head) {
+    head.addEventListener('click', function () {
+      opnToggleBlock604(head.getAttribute('data-p609sethead'));
+      opnRepaintHome604();
+    });
+  });
   view.querySelectorAll('[data-back]').forEach(function (btn) {
     btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
   });
@@ -22855,7 +22873,11 @@ function homeBodyHtml(day) {
    The blocks remain the composition unit underneath —
    the stores, the fold, and the edit form's per-block
    contents all keep working; only the page's
-   presentation merges. */
+   presentation merges.
+   v612: Repair 2 put the groups back (quiet heads over
+   each block's tracks); this release re-points the v604
+   fold at those heads — groups stand collapsed by
+   default and fold on a head tap. See opnSetHtml609. */
 function opnPickHead609() {
   // v609 REPAIR: the Pick at the edit form's HEAD — the
   // switcher emerges at the top of the form (John,
@@ -22911,16 +22933,33 @@ function opnSetHtml609(day) {
   // groups back"): the one set paints GROUPED BY BLOCK —
   // a quiet group head over each block's tracks, tracks
   // under their group in day order, one page, one
-  // scroll. The heads carry NO acts of their own (the
-  // one Edit at the top stands alone); the fold emits
-  // block-consecutive runs by construction, so a head
-  // stands wherever the block changes; the block-less
-  // episode tail stands under 'Episodes'.
+  // scroll. The fold emits block-consecutive runs by
+  // construction, so a head stands wherever the block
+  // changes; the block-less episode tail stands under
+  // 'Episodes'.
+  // v612 (John, 2026-11-22 00:21 CT: "they need to be
+  // collapsed where I can click through like before"):
+  // the v604 FOLD re-points at these heads — each group
+  // stands collapsed unless opnExpanded604(block) says
+  // open (the standing two-tier state: the session map
+  // over the stored page mode, key opn-praylistmode-v604;
+  // no new state, no new key). A collapsed group emits
+  // its head only; the head is the tap target (wired in
+  // wirePrayersView) and carries the standing collapse
+  // marker at its right end, flipped with the group's
+  // state. The fold gates trackCard emission ONLY — the
+  // descriptor list, the queue, and Play All are
+  // untouched.
   var lastBlock609 = null;
+  var open609 = false;
   (state.dayDescs || []).forEach(function (t) {
     var b609 = t.block || 'Episodes';
-    if (b609 !== lastBlock609) { html += '<div class="p609sethead" data-p609sethead="' + esc(b609) + '">' + esc(b609) + '</div>'; lastBlock609 = b609; }
-    html += trackCard(t);
+    if (b609 !== lastBlock609) {
+      open609 = opnExpanded604(b609);
+      html += '<div class="p609sethead" data-p609sethead="' + esc(b609) + '">' + esc(b609) + '<span class="p612collmark">' + (open609 ? '&#9662;' : '&#9656;') + '</span></div>';
+      lastBlock609 = b609;
+    }
+    if (open609) html += trackCard(t);
   });
   return html + '</div>';
 }

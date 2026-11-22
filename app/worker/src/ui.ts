@@ -469,7 +469,8 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    divider), and its rows are the CONDENSED form: slim
    padding, title + drag + remove only. */
 .p609set { margin:0 0 10px; }
-.p609sethead { font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; opacity:.55; margin:12px 0 4px; }
+.p609sethead { font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; opacity:.55; margin:12px 0 4px; cursor:pointer; }
+.p612collmark { float:right; }
 .p609group { margin:0 0 8px; }
 .p609ghead { align-items:center; margin:2px 0 6px; font-family:var(--sans); font-weight:600; }
 .p609off .p609erow, .p609off .sub { opacity:.5; }
@@ -1059,7 +1060,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v611-1";
+var CACHE = "ora-pro-nobis-v612-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

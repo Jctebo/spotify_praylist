@@ -1,0 +1,75 @@
+# v612 — Praylist groups fold
+
+## §1 Scope
+
+John's words (relayed from the main chat, 2026-11-22 00:21 CT), his field verdict on the v609 Repair 2 grouped set live at pin `ora-pro-nobis-v609-3` (main `6d3c65e`): "It's. Etter but they need to be collapsed where I can click through like before" — the groups stand, but each group must stand COLLAPSED by default and expand/collapse on tap of its head, click-through folding like the earlier (v604) shape.
+
+**REVERSAL, NAMED:** v609 Repair 2 (John, 2026-11-21 23:31 CT: "put groups back") shipped the grouped set with NO fold — condensed group heads carrying no acts, every track standing open on one page. This release reverses that one limb on John's field use: the group heads gain the fold. Everything else Repair 2 settled stands untouched — one page, one scroll, groups by block, one Edit at the top, tap-plays, Play All across groups, the vault gate in front of the set, podcasts as contents items.
+
+The build: the fold machinery v604 shipped — and which still stands in the client, unused by the set paint since v609 — is re-pointed at the v609 group heads. No new state, no new store: the same stored page mode, the same session overrides, the same storage key. DevOps Board row 1586. Streamlined path (Scope+Plan compressed, light Review, targeted harness). Run level: Scope+Plan now; Implement HELD for main-seat clearance (queue: v610 shipping, v611 next — both touch the same client surface).
+
+### The v604 fold, grounded from history (client at the v604 ship merge `0427223`; the machinery stands verbatim on main `6d3c65e`, `client.ts` lines 20228–20238)
+
+- **Default collapsed.** `opnPraylistMode604()` reads localStorage key `opn-praylistmode-v604`; only the exact value `'expanded'` expands — an absent key or any other value reads `'collapsed'`.
+- **Two-tier state.** (1) The stored page mode (localStorage) persists across opens and restarts until Expand all / Collapse all changes it. (2) Per-block session overrides (`opnFoldSession604`, a plain in-memory map, `{}` at every page load): a head tap writes the tapped block's override; `opnExpanded604(block)` reads the override first, the stored mode second. So v604 did NOT remember individual block taps across opens — a fresh open re-derives every block from the stored mode — and did NOT re-collapse on every open when the stored mode stood 'expanded'. This release mirrors that behavior exactly (§2).
+- **Head affordance.** On the v604 one-page home, the whole block row card (`[data-openblock]`) was the tap target: a tap anywhere on the row except its own buttons/links toggled that block only, then repainted (`opnToggleBlock604` + `opnRepaintHome604`). The row carried NO chevron and NO play disc (v449 D1). The expansion painted as the row's sibling, directly beneath it.
+- **Expand all / Collapse all.** Header (⋮) menu, Prayers-home group, standing only outside the in-place edit posture. Each act wrote the stored mode, cleared ALL session overrides, and repainted. Both items stood unconditionally.
+- **Edit posture.** Entering a block's edit posture forced that block's session override to expanded (`opnStartPosture604`). The fold never governed the edit form.
+
+### The current paint (main `6d3c65e`)
+
+- `opnSetHtml609(day)` paints the Play All head (`data-queue="__all"`), then walks `state.dayDescs`; wherever the block changes it emits a quiet group head `<div class="p609sethead" data-p609sethead="<block>">` (name only, NO acts) and one `trackCard` per descriptor under it. The block-less episode tail stands under the head 'Episodes'.
+- The v604 fold machinery stands intact in the shipped client but its only paint consumer (`blockRowHtml`) is dead code; the ⋮ menu carries the retirement comment where the fold items stood (client.ts ~15482).
+- The vault gate stands in front of the set in the home paint: `locked609 = opnVaultLocked()`; the home body is the gate HTML OR the set, never both, and `opnBindLockGate609()` binds the gate.
+- The edit form is a separate paint (`opn604.editing` → `opnEditSetHtml609`), grouped by block with ON/OFF group toggles; the fold machinery never applied to it.
+
+## §2 Plan
+
+- **FOLD IN THE SET PAINT:** `opnSetHtml609` consults the standing `opnExpanded604(block)` once per group run. A collapsed group emits its head only — no `trackCard`s. An expanded group emits head + its tracks, exactly as today. The descriptor walk, group order, and head emission points do not change; only the track emission is gated. Fold state is keyed by the same block name the head carries; the block-less tail folds under its head name, 'Episodes', by the same rule (a spec point Review checks — v604's episodes row stood outside the fold because it was a navigation row; on the merged set the tail's tracks stand inline, so the tail folds like every group).
+- **HEAD TAP:** the group head becomes the tap target, wired in the Prayers view wire pass on `[data-p609sethead]`: `opnToggleBlock604(block)` + `opnRepaintHome604()` — v604's row-tap shape, moved to the head. The head keeps its quiet dress and gains the app's standing collapse marker (the ▸/▾ mark, as the Mass collapsible head carries it) at its right end, so the fold reads as an act; the marker flips with the group's state. Track rows keep their own acts — a tap on a track still plays (the head is a separate element; no tap conflict).
+- **EXPAND ALL / COLLAPSE ALL:** the two items return to their v604 seat — the header ⋮ menu's Prayers-home group, outside the edit posture — with their v604 acts verbatim: `opnSetPraylistMode604('expanded'|'collapsed')`, clear `opnFoldSession604`, repaint. The retirement comment at that seat is replaced by the restored items.
+- **FOLD STATE — v604's semantics, unchanged, same key, same functions:** stored mode default 'collapsed', persisted in `opn-praylistmode-v604` across opens until Expand all / Collapse all changes it; per-block head taps live in the session map only and reset at page load; a fresh open derives every group from the stored mode. No new storage key, no migration: a device whose stored mode stands 'expanded' from the v604 era opens expanded — that is the v604 behavior, kept deliberately and named here.
+- **PLAY ALL — PAINT-ONLY FOLD:** the queue source is untouched. The `__all` branch builds from `state.dayDescs` whole; the fold gates only `trackCard` emission, never the descriptor list. Play All with every group collapsed queues the whole day, in day order, identical to the all-expanded queue.
+- **VAULT GATE — UNTOUCHED:** the gate/set exclusivity stands in the home paint above `opnSetHtml609`; the locked paint never calls the set paint, so no fold code runs under the gate, and no fold state is read or written while locked. After unlock, the repaint paints the set with groups folded per the standing mode.
+- **EDIT FORM — UNTOUCHED:** `opnEditSetHtml609` does not change; the fold does not apply to it (the form paints every group's rows in full, as today). No posture-forces-open counterpart is needed — the form is a separate paint, as it was in v604.
+- **PIN:** `ora-pro-nobis-v612-1` (ui.ts CACHE bump at ship, standing practice).
+
+### Harness legs (harness-v612, named here; built at Implement)
+
+Fixtures from production shapes only (Improvement D): John's real document (`john-personal-data-import-v589.json`) and the grouped descriptor list built through `extRebuildDescs` — the v609fix/v609vault recipe — never a hand-filled track list. The old-client ref for the fail-on-old companions is the immutable v609-3 tree (main `6d3c65e`), pinned by commit, not by the moving `main`.
+
+- **F1 — Collapsed by default:** fresh state (no stored mode, empty session map) → the paint emits every group head and ZERO track cards.
+- **F2 — Tap head expands that group only:** toggle 'Morning' → Morning's track cards stand; every other group still head-only.
+- **F3 — Tap again collapses:** toggle 'Morning' twice → head-only again.
+- **F4 — Per-group independence:** expand two groups, collapse one → the other stands expanded.
+- **F5 — Expand all / Collapse all:** the Expand all act → stored mode 'expanded', session map cleared, every group paints its tracks; the Collapse all act → stored mode 'collapsed', every group head-only.
+- **F6 — Mode persists, taps do not:** stored mode 'expanded' + fresh session → all groups expanded at first paint; stored mode 'collapsed' + a session tap + fresh session → collapsed again.
+- **F7 — Play All with all groups collapsed:** the `__all` queue equals the full descriptor list (count and order), identical to the all-expanded queue.
+- **F8 — Vault-locked cold open:** locked → the gate HTML stands and no `.p609set` paints in the home body; after unlock, the repaint paints the set with groups folded per the standing mode.
+- **F9 — Edit form untouched:** the editing paint emits every group's rows in full regardless of fold mode or session state.
+- **OA1–OA3 — Fail-on-old companions:** F1, F2, and F5 driven against the v609-3 client fail (all tracks paint, head taps inert, no fold menu items).
+- **Regression at Implement:** harness-v609vault (34/0 standing) re-run on the merged tree; harness-v604's standing fold legs re-proven where their surfaces survive.
+
+### Field legs (John, after ship)
+
+- Open the Praylist: groups stand collapsed; tap a group head — it opens; tap again — it closes.
+- Play All with groups collapsed plays the whole day.
+- ⋮ menu: Expand all opens every group; Collapse all closes every group.
+
+## §3 Implement
+
+Clearance granted by the main seat (v610 + v611 both shipped; main `c008aad` · pin `ora-pro-nobis-v611-1` · Worker `fc5b8beb`). Main merged into `release/v612` (`10269e0`) — zero conflicts. Whole-tree marker check on the merged tree: the fold machinery (`opnPraylistMode604` · `opnFoldSession604` · `opnExpanded604` · `opnToggleBlock604` · `opnSetPraylistMode604`) + `opnSetHtml609` + the standing markers (`opnBindLockGate609` · `opnMigrateProfiles609` · `mig609` · `opnRowId610` · `playedKeyOcc` · `OPN_DAY_KEY_611`) ALL stand.
+
+- **The paint** (`opnSetHtml609`): the descriptor walk consults `opnExpanded604(block)` once per group run; a collapsed group emits its head only, an expanded group emits head + its `trackCard`s exactly as before. The head gains the standing collapse marker (`<span class="p612collmark">▾/▸</span>`, the Mass collapsible head's shape — `&#9662;` open · `&#9656;` closed) at its right end; `.p609sethead` gains `cursor:pointer` (ui.ts). The block-less tail folds under 'Episodes' by the same rule. NO new state, NO new key, NO mode reset — the v604-era stored 'expanded' consequence stands as specced in §2.
+- **The tap** (`wirePrayersView`): `[data-p609sethead]` heads wired to `opnToggleBlock604(block)` + `opnRepaintHome604()` — v604's row-tap shape moved to the head. The head carries no inner controls, so no target guard stands; track rows keep their own acts (tap still plays).
+- **Expand all / Collapse all**: restored at their v604 seat (the header ⋮ menu's Prayers-home group) with their v604 acts verbatim — `opnSetPraylistMode604('expanded'|'collapsed')`, clear `opnFoldSession604`, repaint — guarded by `!opn604.editing` (v604's edit-posture guard in its v607 form: the acts stand outside the in-place edit posture only). The v609 retirement comment is replaced by the restoration record.
+- **Untouched, by construction and by leg**: Play All's `__all` queue builds from `state.dayDescs` whole (the fold gates card emission only) · the vault gate stands in front of the set in the home paint (the locked paint never calls the set paint, reads/writes no fold state; the unlock repaint folds per mode) · the edit form (`opnEditSetHtml609`) emits all rows regardless of fold.
+
+## §4 Review
+
+Light Review, passed. The diff is the three seats above + comments + one CSS line; read whole by the ship seat — no defects found.
+
+- **harness-v612: 17/0** on the merged tree — F1 collapsed-by-default (heads stand in fold order, zero track cards, markers ▸) · F2 tap head expands that group only (marker flips ▾) · F3 tap again collapses · F4 per-group independence · F5 Expand all / Collapse all through the real ⋮ menu (mode written, session map cleared, repaint correct both ways) · F6 mode persists across opens, session taps do not · F7 Play All all-collapsed queue == all-expanded queue (count + order) · F8 vault-locked cold open = gate, no set, no fold state read or written; PIN unlock repaints folded · F9 edit form paints all rows under stored 'collapsed' + a standing session tap · OA1–OA3 fail-on-old against the pinned v609-3 tree `6d3c65e` (all tracks paint · head tap inert · no fold menu items). Fixtures: John's v589 document + the production 2026-11-21 day, descriptors built through `extRebuildDescs` (the v609vault recipe).
+- **Regression on the merged tree**: harness-v611 **28/0** · harness-v610 **18/0** · harness-v603 **49/1** (the 1 is R2, the ladder door set gaining "Daily" — by design, identical at base) · harness-v601 **7/1** (the pre-existing T1, identical at base) · harness-v607/v597/v604 outputs identical-to-base.
+- **The fold-superseded legs, named**: three standing harnesses assert the Repair-2 open paint that this release reverses on John's word, and their paint assertions fail on the v612 tree exactly where the fold changes the paint — harness-v609vault **32/2** (F2c · F5b; base 34/0) · harness-v609 **25/3** + M6 guard-skipped (M2 painted-order · M3 "fold acts stand nowhere" — the assertion this release reverses by name · G4 rows-stand-in-set; base 29/0; M6's tap-plays leg is guarded on a painted row standing, and none stands under the collapsed default — the tap-plays wiring itself is untouched) · harness-v609fix **9/1** (F2 painted-rows; base 10/0). The substance those legs guarded is re-proven fold-aware in harness-v612: grouping order + tracks-under-head (F1/F2), unlock-repaint (F8c), whole-day queue (F7).
+- **Renders** (`v612-review-renders/`): 01 the collapsed set (5 heads, ▸ markers, zero cards) · 02 Morning expanded (its 6 tracks stand, marker ▾, the rest head-only) · 03 Expand all (all 16 tracks, mode 'expanded').
