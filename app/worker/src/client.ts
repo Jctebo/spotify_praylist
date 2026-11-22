@@ -19981,6 +19981,10 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p607more]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnProfileMenu607(btn); });
   });
+  // v609 REPAIR: the Pick chips at the edit form's head.
+  view.querySelectorAll('[data-p609pick]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnPickInForm609(btn.getAttribute('data-p609pick')); });
+  });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
@@ -20561,6 +20565,9 @@ function opnProfileMenu607(anchorEl) {
   var rec = opnProfRec604();
   if (!rec) return;
   var items = [];
+  // v609 REPAIR: Configure plan re-homes here from the
+  // plan row (the page top carries the Edit only).
+  items.push({ label: 'Configure plan', act: function () { openConfigureLadder593(); } });
   if (rec.kind === 'default') {
     items.push({ label: opn604.arm607 === 'reset' ? 'Tap again to reset' : 'Reset to Default', act: function () {
       if (opn604.arm607 !== 'reset') { opn604.arm607 = 'reset'; opnProfileMenu607(anchorEl); return; }
@@ -20627,20 +20634,25 @@ function profPlanRowHtml(day) {
   // the act standing.
   var fold = day && day.profile;
   // v607: ONE Edit at the top — the page edit form's entry
-  // (Done while it stands). The standing pick's act keeps
-  // its seat under its own name (Pick).
+  // (Done while it stands).
+  // v609 REPAIR (John, 2026-11-21 23:14 CT: "there are
+  // still three buttons period should just be one edit
+  // button"): the plan row carries the Edit ONLY. The
+  // Pick re-homes to the edit form's head (opnPickHead609
+  // — his 22:29 sentence, restored by his 23:14 count);
+  // Configure plan re-homes to the edit form's profile
+  // menu (opnProfileMenu607).
   var edit607 = opn604.editing
     ? '<button class="btn gold" data-p607done="1">Done</button>'
     : '<button class="btn gold" data-p607edit="1">Edit</button>';
-  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span>' + edit607 + '<button class="btn ghost" data-p604pickedit="1">Pick</button><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span>' + edit607 + '</div></div>';
   // v604: the resolution line collapses to the standing
   // form — the profile in force IS the standing pick.
   var resLine = 'Your every-day profile';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
     + edit607
-    + '<button class="btn ghost" data-p604pickedit="1">Pick</button>'
-    + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+    + '</div></div>';
 }
 
 
@@ -22404,15 +22416,58 @@ function homeBodyHtml(day) {
    the stores, the fold, and the edit form's per-block
    contents all keep working; only the page's
    presentation merges. */
+function opnPickHead609() {
+  // v609 REPAIR: the Pick at the edit form's HEAD — the
+  // switcher emerges at the top of the form (John,
+  // 2026-11-21 22:29 CT), restored when his 23:14 count
+  // retired it from the page top. The chips flip the
+  // standing pick AT ONCE, through the pick sheet's own
+  // commit chain (a standing today layer clears first,
+  // warned below the chips exactly as the sheet warned),
+  // then the form re-resolves to the profile in force.
+  // The Sunday flip: Edit → chip → Done — three taps.
+  var res = opn604.res;
+  if (!res || !res.profiles) return '';
+  var sel = res.state ? res.state.standingKey : (res.effective && res.effective.key);
+  var html = '<div class="p609pickhead" data-p609pickhead="1"><div class="profchips591">';
+  (res.profiles || []).forEach(function (p) { html += '<button class="chip591' + (p.key === sel ? ' on' : '') + '" data-p609pick="' + esc(p.key) + '">' + esc(p.name) + '</button>'; });
+  html += '</div>';
+  if (res.todayEdit) html += '<p class="sub">today has its own edits — changing the profile clears them</p>';
+  return html + '</div>';
+}
+function opnPickInForm609(key) {
+  var res = opn604.res;
+  if (!res) return;
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var chain = res.todayEdit ? profPut('/api/prayer/profiles/today-edit', { date: date, layer: null }) : Promise.resolve(null);
+  chain.then(function () { return profPut('/api/prayer/profiles/state', { standingKey: key }); })
+    .then(function (r) {
+      if (r) opn604.res = r;
+      opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+      opnInitShape607();
+      opnRepaintHome604();
+      profileRebuild();
+    }).catch(function () {});
+}
 function opnSetHtml609(day) {
   if (opn604.editing) return opnEditSetHtml609(day);
   var html = '<div class="p609set" data-p609set="1">'
     + '<div class="row p604exphead"><button class="playbtn small" data-queue="__all" aria-label="Play all of the day">&#9654;</button>'
     + '<span class="grow">Play All</span></div>';
-  orderedBlocks(day).forEach(function (b) {
-    (b.tracks || []).forEach(function (t) { html += trackCard(Object.assign({}, t, { _block: b.block })); });
-  });
-  (day.episodes || []).forEach(function (t) { html += trackCard(t); });
+  if (!day) return html + '</div>';
+  // v609 REPAIR (2026-11-21, production break — John's
+  // field report: "all blocks disappeared"): the set
+  // paints the day's DESCRIPTORS — state.dayDescs, the
+  // one list every working surface consumes, built by
+  // extRebuildDescs from the standings + contents +
+  // slots. The shipped paint read the payload's block
+  // tracks, which stand EMPTY on a client-composed day
+  // (the substance enters through the settings rows);
+  // the home painted a Play All head over nothing while
+  // the edit form, reading contents, stood correct. The
+  // queue's __all branch reads this same list — paint
+  // and queue are now one source by construction.
+  (state.dayDescs || []).forEach(function (t) { html += trackCard(t); });
   return html + '</div>';
 }
 function opnEditSetHtml609(day) {
@@ -22431,6 +22486,7 @@ function opnEditSetHtml609(day) {
   // unblocked episodes carry no edit rows: they are not
   // profile contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
+  html += opnPickHead609();
   var seen = {};
   orderedBlocks(day).forEach(function (b) { seen[b.block] = true; html += opnEditGroupHtml609(b.block); });
   ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas', 'Podcasts'].forEach(function (name) {
