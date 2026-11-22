@@ -2692,6 +2692,8 @@ function opnTodayEntry594(P, date) {
   return e && typeof e === 'object' && !Array.isArray(e) ? e : null;
 }
 function opnTodayItemId594(it) { return it.kind + ':' + (it.key || ''); }
+function opnRowId610(it, occ) { return opnTodayItemId594(it) + (occ ? '#' + occ : ''); }
+function opnParseRowId610(rowId) { var p = String(rowId || '').split('#'); return { id: p[0], occ: p.length > 1 ? Number(p[1] || 0) : 0 }; }
 function opnTodayUniverse594(block) {
   return profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
 }
@@ -2788,8 +2790,15 @@ function opnTodayDivergence594(rec, layer) {
     var comp = opnTodayComposedContents594(rec, block);
     var lay = layer.contents[block] || [];
     var compIds = comp.map(opnTodayItemId594), layIds = lay.map(opnTodayItemId594);
-    var removed = comp.filter(function (it) { return layIds.indexOf(opnTodayItemId594(it)) < 0; });
-    var added = lay.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
+    // v610: the diff is a MULTISET diff — a second copy of a
+    // standing item is an addition, a dropped copy a removal
+    // (duplicates stand for the Divine Office hours).
+    var layCount = {}, compCount = {};
+    layIds.forEach(function (x) { layCount[x] = (layCount[x] || 0) + 1; });
+    compIds.forEach(function (x) { compCount[x] = (compCount[x] || 0) + 1; });
+    var seenRm = {}, seenAd = {};
+    var removed = comp.filter(function (it) { var k = opnTodayItemId594(it); seenRm[k] = (seenRm[k] || 0) + 1; return seenRm[k] > (layCount[k] || 0); });
+    var added = lay.filter(function (it) { var k = opnTodayItemId594(it); seenAd[k] = (seenAd[k] || 0) + 1; return seenAd[k] > (compCount[k] || 0); });
     removed.forEach(function (it) { out.push({ kind: 'item-removed', block: block, item: opnTodayItemId594(it) }); });
     added.forEach(function (it) { out.push({ kind: 'item-added', block: block, item: opnTodayItemId594(it) }); });
     if (!removed.length && !added.length && JSON.stringify(compIds) !== JSON.stringify(layIds)) out.push({ kind: 'items-reordered', block: block });
@@ -4391,18 +4400,39 @@ function playedKey(episodeId, block) {
   if (episodeId && block && state.repeatIds && state.repeatIds[episodeId]) return episodeId + '|' + block;
   return episodeId;
 }
-function isPlayed(episodeId, dateStr, block) {
+function playedKeyOcc(episodeId, block, occ) {
+  // v610: a descriptor stamped _occ (a duplicated Divine Office
+  // hour standing again in the same block) keys per OCCURRENCE —
+  // '#n' rides the standing playedKey, so each copy carries its
+  // own played mark and its own intention draw. Callers without
+  // an occurrence read exactly the keys they read before.
+  var k = playedKey(episodeId, block);
+  return occ ? k + '#' + occ : k;
+}
+function descMarkKey(t) {
+  // v610: the one key a descriptor's marks and draws read.
+  if (!t || !t.episodeId) return null;
+  return playedKeyOcc(t.episodeId, t.block || t._block || '', t._occ || 0);
+}
+function isPlayedDesc(x, dateStr) {
+  // v610: a duplicated copy reads its own occurrence key;
+  // every standing descriptor reads exactly the key it read
+  // before (its block field as the caller passed it).
+  if (!x) return false;
+  return x._occ ? isPlayed(x.episodeId, dateStr, x.block || x._block, x._occ) : isPlayed(x.episodeId, dateStr, x.block);
+}
+function isPlayed(episodeId, dateStr, block, occ) {
   if (!episodeId || !dateStr) return false;
-  var byDate = playedMap()[playedKey(episodeId, block)];
+  var byDate = playedMap()[playedKeyOcc(episodeId, block, occ)];
   return !!(byDate && byDate[dateStr]);
 }
-function writePlayed(episodeId, dateStr, via, block) {
-  writePlayedQuiet(episodeId, dateStr, via, block);
+function writePlayed(episodeId, dateStr, via, block, occ) {
+  writePlayedQuiet(episodeId, dateStr, via, block, occ);
   refreshPlayedChrome();
 }
-function writePlayedQuiet(episodeId, dateStr, via, block) {
+function writePlayedQuiet(episodeId, dateStr, via, block, occ) {
   if (!episodeId || !dateStr) return;
-  var key = playedKey(episodeId, block);
+  var key = playedKeyOcc(episodeId, block, occ);
   var map = playedMap();
   // Prune on write: date entries older than 120 days before the
   // presented date drop (novena windows are 9 days; a season of
@@ -4455,7 +4485,7 @@ function markCompleted(desc) {
   if (desc.kind === 'homily') { if (desc.homilyId) homilySetPlayed(desc.homilyId, true); return; }
   var d = presentedDateStr();
   if (!d) return;
-  writePlayed(desc.episodeId, d, 'played', desc.block);
+  writePlayed(desc.episodeId, d, 'played', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0);
 }
 function setMediaSessionFor(desc) {
   if (oraInShell()) return; // v377 B6: in the shell the native session is the face
@@ -4601,7 +4631,7 @@ function trackKeyOf(t) {
   // rows carry no Intention line.
   if (t.kind === 'homily') return null;
   if (t.episodeId.indexOf('intro:') === 0 || t.episodeId.indexOf('seg:') === 0) return null;
-  return playedKey(t.episodeId, t.block || t._block || '');
+  return descMarkKey(t);
 }
 function trackDrawTextFor(t) {
   var k = trackKeyOf(t);
@@ -4725,7 +4755,7 @@ function startDesc(desc) {
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
   setMediaSessionFor(desc);
   setPlaybackState('playing');
-  markPlaying(desc.episodeId);
+  markPlaying(descCardKey(desc));
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
   // v466 Fork B: in the native shell the start's engine act is
@@ -4790,21 +4820,21 @@ function tapPlay(d) {
   // identity: the build re-resolves in the fresh whole-day list
   // (§2.1), never in the render-time snapshot.
   if (!d) return;
-  var key = d.episodeId || '';
+  var key = descCardKey(d);
   // v461 F1: a tap on the track whose start is still loading
   // CANCELS the start — it never rebuilds the queue, never
   // restarts the load, never stacks a second play().
-  if (state.pendingStart && state.current && state.current.episodeId === key) { cancelPendingStart(); return; }
+  if (state.pendingStart && state.current && descCardKey(state.current) === key) { cancelPendingStart(); return; }
   // v384 §2.2: the same-unit toggle at the granularity of the
   // prayer alone — the pair is the unit, so tapping the prayer
   // card while its audio plays pauses it.
-  if (state.current && transportPlaying() && state.current.episodeId === key) { pauseTransport(); return; }
+  if (state.current && transportPlaying() && descCardKey(state.current) === key) { pauseTransport(); return; }
   // v461 F3: a tap on the PAUSED standing current is an
   // unpause — the element resumes through resumeCurrent (the
   // jumpQueueTo precedent); the standing queue, its index,
   // and the track's place all stand. The rebuild below is
   // for every OTHER row.
-  if (state.current && state.current.episodeId === key) { resumeCurrent(); return; }
+  if (state.current && descCardKey(state.current) === key) { resumeCurrent(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
   // §2.7: a card in no block (the FROM TODAY'S PODCAST group)
@@ -4976,7 +5006,7 @@ function unplayedOnly(descs) {
   // v515: a podcast descriptor's played state is its series
   // listen (the descriptor's flag), never a day-store row —
   // the filter reads each kind's own store.
-  return descs.filter(function (x) { return x.kind === 'podcast' ? !x.listened : !isPlayed(x.episodeId, d, x.block); });
+  return descs.filter(function (x) { return x.kind === 'podcast' ? !x.listened : !isPlayedDesc(x, d); });
 }
 function queueBuild(descs) {
   // §2.4's fallback, at the same build-time seam: the filtered
@@ -5010,7 +5040,7 @@ function sectionQueueFrom(all, tappedId) {
   // playTrack's single play).
   var prayerId = tappedId;
   var prayer = null;
-  for (var i = 0; i < all.length; i++) { if (all[i].episodeId === prayerId) { prayer = all[i]; break; } }
+  for (var i = 0; i < all.length; i++) { if (descCardKey(all[i]) === prayerId || all[i].episodeId === prayerId) { prayer = all[i]; break; } }
   if (!prayer || !prayer.available) return [];
   if (!prayer.block) return null;
   var section = all.filter(function (x) { return x.block === prayer.block; });
@@ -5273,7 +5303,7 @@ function renderQueueList() {
     // never writes (markCompleted returns at the podcast branch:
     // the podcasts store is its record). A day row keeps the
     // isPlayed read untouched.
-    var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false);
+    var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayedDesc(desc, dstr) : false);
     var dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
     return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
       + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
@@ -5331,7 +5361,7 @@ function buildContinueQueue() {
     var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
     var d = presentedDateStr();
     var firstUnplayed = null;
-    prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d, x.block)) && !firstUnplayed) firstUnplayed = x; });
+    prayers.forEach(function (x) { if (!(d && isPlayedDesc(x, d)) && !firstUnplayed) firstUnplayed = x; });
     var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
     if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
       for (var i = 0; i < build.length; i++) {
@@ -5350,7 +5380,7 @@ function loadResume(desc, positionS) {
   setPlaybackState('paused');
   audioEl.src = desc.url;
   audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
-  markPlaying(desc.episodeId);
+  markPlaying(descCardKey(desc));
   updateDock();
   // Stands paused at the position (set on loadedmetadata); the app
   // never autoplays sound on open.
@@ -5458,7 +5488,7 @@ function standRestoredQueue(day) {
   // stored position; a resume plays the prayer.
   audioEl.src = chosen.desc.url;
   audioEl.load();
-  markPlaying(chosen.desc.episodeId);
+  markPlaying(descCardKey(chosen.desc));
   updateDock();
   renderQueueList();
 }
@@ -9712,7 +9742,7 @@ function epCardSeriesTitle(seriesKey) {
 }
 function epCardDayPlayed(d, anyDate) {
   if (anyDate) { var m = playedMap()[playedKey(d.episodeId, d.block)]; return !!(m && Object.keys(m).length); }
-  return isPlayed(d.episodeId, presentedDateStr(), d.block);
+  return isPlayedDesc(d, presentedDateStr());
 }
 function epCardPlayedOf(model) {
   var d = model.desc;
@@ -14807,6 +14837,7 @@ function trackDesc(t, day) {
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
   var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
+  if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
   if (d.available && day) {
     var text = introTextFor(t, day);
     if (text) d.intentionText = text;
@@ -14962,14 +14993,14 @@ function playedDotHtml(t) {
   // refreshPlayedChrome and the toggle repaint/write from the
   // button's own pair of attributes.
   var block = t.block || t._block || '';
-  var on = isPlayed(id, presentedDateStr(), block);
-  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
+  var on = isPlayed(id, presentedDateStr(), block, t._occ || 0);
+  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '"' + (t._occ ? ' data-playedocc="' + t._occ + '"' : '') + ' aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
 }
 function heardCls(t) {
   // v515: a podcast descriptor's heard state is its listen
   // (the playedDotHtml rule, at the title's seat).
   if (t.kind === 'podcast') return t.listened ? ' class="heard"' : '';
-  return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '') ? ' class="heard"' : '';
+  return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '', t._occ || 0) ? ' class="heard"' : '';
 }
 var BS_CH = String.fromCharCode(92);
 function novenaInfo(episodeId, title) {
@@ -15018,7 +15049,7 @@ function blockPlayedCounts(block) {
     // mark-all (a day-store act) never stands for it.
     if (!x.available || x.block !== block || x.kind === 'podcast') return;
     total++;
-    if (d && isPlayed(x.episodeId, d, x.block)) played++;
+    if (d && isPlayedDesc(x, d)) played++;
   });
   return { total: total, played: played };
 }
@@ -15027,7 +15058,7 @@ function refreshPlayedChrome() {
   if (!d || !view) return;
   view.querySelectorAll('[data-markplayed]').forEach(function (btn) {
     var id = btn.getAttribute('data-markplayed');
-    var on = isPlayed(id, d, btn.getAttribute('data-playedblock') || '');
+    var on = isPlayed(id, d, btn.getAttribute('data-playedblock') || '', Number(btn.getAttribute('data-playedocc') || 0));
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-label', on ? 'Mark as unplayed' : 'Mark as played');
     var card = btn.closest('[data-card]');
@@ -15081,10 +15112,11 @@ function wirePlayed(root) {
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-markplayed');
       var block = btn.getAttribute('data-playedblock') || '';
+      var occ = Number(btn.getAttribute('data-playedocc') || 0);
       var d = presentedDateStr();
       if (!id || !d) return;
-      if (isPlayed(id, d, block)) writePlayed(id, d, null, block);
-      else writePlayed(id, d, 'marked', block);
+      if (isPlayed(id, d, block, occ)) writePlayed(id, d, null, block, occ);
+      else writePlayed(id, d, 'marked', block, occ);
     });
   });
   (root || view).querySelectorAll('[data-markblock]').forEach(function (btn) {
@@ -15100,8 +15132,8 @@ function wirePlayed(root) {
         if (!x.available || x.block !== block) return;
         // Unavailable tracks are never written, either way; one
         // tap writes the block's whole available set.
-        if (unmark) { if (isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, null, x.block); }
-        else if (!isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, 'marked', x.block);
+        if (unmark) { if (isPlayedDesc(x, d)) writePlayedQuiet(x.episodeId, d, null, x._occ ? (x.block || x._block) : x.block, x._occ || 0); }
+        else if (!isPlayedDesc(x, d)) writePlayedQuiet(x.episodeId, d, 'marked', x._occ ? (x.block || x._block) : x.block, x._occ || 0);
       });
       refreshPlayedChrome();
     });
@@ -15792,8 +15824,15 @@ function blockDownloadAll(block) {
   offlineDownloadItems(items, null).then(function () { refreshGridDlStates(); paintOfflineLine(); });
 }
 
+function descCardKey(t) {
+  // v610: a descriptor's card/play key — its episodeId, with
+  // the occurrence suffix on a duplicated copy, so two copies
+  // of one hour stand as two cards with two play buttons.
+  if (!t) return '';
+  return (t.episodeId || '') + (t._occ ? '#' + t._occ : '');
+}
 function trackCard(t) {
-  var key = t.episodeId || ('seg:' + (t._block || ''));
+  var key = t.episodeId ? descCardKey(t) : ('seg:' + (t._block || ''));
   // v384 §2.2/§2.6: the intention ROW retires — trackCard returns
   // the prayer card alone, always. Before v384 (v361 §2.3), an
   // available paired track returned intentionRowCard + the
@@ -16516,12 +16555,29 @@ function extSwapCard(slot) {
   nodes.forEach(function (n) { old.parentNode.insertBefore(n, old); });
   old.remove();
   if (prevIntro) prevIntro.remove();
+  // v610: a duplicated hour's copy cards (data-card
+  // '<slotId>#n') re-render with the settle too — each from
+  // its own occurrence-stamped track, in place.
+  if (st.state !== 'downloading' && st.state !== 'loading') {
+    view.querySelectorAll('[data-card^="' + slot.slotId + '#"]').forEach(function (copyEl) {
+      var occ = Number(String(copyEl.getAttribute('data-card')).split('#')[1] || 0);
+      if (!occ) return;
+      var trk2 = extSlotTrack(slot, st);
+      trk2._occ = occ;
+      var tmpC = document.createElement('div');
+      tmpC.innerHTML = trackCard(trk2);
+      var cn = [];
+      while (tmpC.firstChild) cn.push(tmpC.removeChild(tmpC.firstChild));
+      cn.forEach(function (n2) { copyEl.parentNode.insertBefore(n2, copyEl); nodes.push(n2); });
+      copyEl.remove();
+    });
+  }
   nodes.forEach(function (fresh) {
     // A settled slot carries ONE play button (the prayer's own)
     // — wired by its data-playkey against the descriptor list.
     fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
+        var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b.getAttribute('data-playkey'); })[0];
         if (d) tapPlay(d);
       });
     });
@@ -16534,7 +16590,7 @@ function extSwapCard(slot) {
     wireRowActs(fresh); // v413 §2.6: the settled card's cluster wires here too
   });
   refreshPlayedChrome();
-  if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
+  if (state.current && state.current.episodeId === slot.slotId) markPlaying(descCardKey(state.current));
 }
 function blockInsertCards(day, standing) {
   // v348 §2.1: ONE merged inserter replaces extInsertCards +
@@ -16588,7 +16644,7 @@ function blockInsertCards(day, standing) {
             view.appendChild(seatEl2);
             seatEl2.querySelectorAll('[data-playkey]').forEach(function (b2) {
               b2.addEventListener('click', function () {
-                var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+                var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
                 if (d) tapPlay(d);
               });
             });
@@ -16599,7 +16655,7 @@ function blockInsertCards(day, standing) {
           view.appendChild(el);
           el.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
-              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
               if (d) tapPlay(d);
             });
           });
@@ -16628,7 +16684,7 @@ function blockInsertCards(day, standing) {
           view.appendChild(el2);
           el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
-              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
               if (d) tapPlay(d);
             });
           });
@@ -17394,7 +17450,7 @@ function applyNativeState(json) {
       var qi = state.queue.indexOf(desc);
       if (qi >= 0) state.queueIdx = qi;
       setMediaSessionFor(desc);
-      markPlaying(desc.episodeId);
+      markPlaying(descCardKey(desc));
     }
     // (The v461 ack stands above, outside this gate — v469
     // Step 6 amendment (i).)
@@ -17408,7 +17464,7 @@ function applyNativeState(json) {
     // v468 recording's disagreement: disc ❚❚, dock ▶,
     // silence). markPlaying now reads the same transport
     // fact the dock reads, at the same moment.
-    markPlaying(desc.episodeId);
+    markPlaying(descCardKey(desc));
     if (changed) drainNativeCompletions();
   }
   updateDockProgress();
@@ -17846,7 +17902,33 @@ function extRebuildDescs(day) {
         return a.sortOrder - c.sortOrder;
       });
     }
-    merged.forEach(function (e) {
+    // v610: the emission list. Without contents, the merged
+    // list emits as it stands. With contents, an external
+    // entry emits ONCE PER CONTENTS OCCURRENCE — a Divine
+    // Office selector standing twice in the list stands as
+    // two tracks, each at its own contents position, the
+    // copies after the first stamped _occ (their own card,
+    // mark, and draw keys ride the stamp). Own entries emit
+    // once, at their standing sort position, exactly as
+    // before (their selectors cannot duplicate).
+    var emit = merged.map(function (e) { return { e: e, idx: 0, occ: 0 }; });
+    if (c590) {
+      emit = [];
+      merged.forEach(function (e) {
+        if (e.own) { emit.push({ e: e, idx: selIdx590('source', e.own.sourceKey), occ: 0 }); return; }
+        var occN = 0;
+        c590.forEach(function (it, i) {
+          if (it.kind === 'source' && it.key === e.ext.slotId) { emit.push({ e: e, idx: i, occ: occN }); occN++; }
+        });
+        if (!occN) emit.push({ e: e, idx: selIdx590('source', e.ext.slotId), occ: 0 });
+      });
+      emit.sort(function (a, c) {
+        if (a.idx !== c.idx) return a.idx - c.idx;
+        return a.e.sortOrder - c.e.sortOrder;
+      });
+    }
+    emit.forEach(function (em) {
+      var e = em.e;
       if (e.own) {
         var row = e.own;
         var st = state.ownSlots[row.sourceKey];
@@ -17874,7 +17956,11 @@ function extRebuildDescs(day) {
       } else {
         var slot = e.ext;
         var st2 = state.extSlots[slot.slotId];
-        if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
+        if (st2) {
+          var trk = extSlotTrack(slot, st2);
+          if (em.occ) trk._occ = em.occ;
+          expandDescs(trk, day).forEach(function (d) { descs.push(d); });
+        }
       }
     });
     // v590 §2.3 (Amendment 3), restored by v603: the
@@ -18011,7 +18097,7 @@ function ownSwapRow(row, day) {
     first.parentNode.insertBefore(el, first);
     el.querySelectorAll('[data-playkey]').forEach(function (b2) {
       b2.addEventListener('click', function () {
-        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+        var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
         if (d) tapPlay(d);
       });
     });
@@ -19860,7 +19946,7 @@ function wirePrayersView(day) {
   // the same list the swap paths wire against.
   view.querySelectorAll('[data-playkey]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
+      var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === btn.getAttribute('data-playkey'); })[0];
       if (d) tapPlay(d);
     });
   });
@@ -20222,30 +20308,58 @@ function opnWrite604(block) {
   var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (opn604.shape ? opn604.shape.core.slice() : (rec.coreBlocks || []).slice()), layers: opn604.shape ? opnLayersOut(opn604.shape.layers) : opnLayersOut(rec.layers), contents: contents };
   return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
 }
-function opnRemove604(block, id) {
+function opnRemove604(block, rowId) {
+  // v610: the row id is occurrence-qualified — Remove takes
+  // the addressed copy only, so one of two standing copies
+  // of an hour can leave while the other stands.
+  var pr = opnParseRowId610(rowId), id = pr.id;
   var m = opnMaterialize604(block);
-  var it = m.filter(function (x) { return opnTodayItemId594(x) === id; })[0];
-  opn604.lists[block] = m.filter(function (x) { return opnTodayItemId594(x) !== id; });
+  var seen = 0, at = -1;
+  m.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  var it = at >= 0 ? m[at] : null;
+  if (at >= 0) { var nm = m.slice(); nm.splice(at, 1); opn604.lists[block] = nm; }
   if (it) (opn604.removed[block] = opn604.removed[block] || []).push(it);
   return opnWrite604(block);
 }
-function opnRestore604(block, id) {
+function opnRestore604(block, rowId) {
+  // v610: occurrence-qualified — Restore returns ONE copy:
+  // the addressed removed entry leaves the removed list and
+  // its copy re-enters at its composed position (the
+  // occurrence the composed list carries beyond the copies
+  // already standing). Without duplicates the rebuild is
+  // the standing one verbatim.
+  var pr = opnParseRowId610(rowId), id = pr.id;
   var comp = opn604.base[block] || opnEffList604(block);
   var cur = opnMaterialize604(block);
-  var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
+  var rem = opn604.removed[block] || [];
+  var seenR = 0, remAt = -1;
+  rem.forEach(function (it, i) { if (opnTodayItemId594(it) === id) { if (seenR === pr.occ) remAt = i; seenR++; } });
+  var restored = remAt >= 0 ? rem[remAt] : comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
   if (restored) {
-    var compIds = comp.map(opnTodayItemId594), curIds = cur.map(opnTodayItemId594);
+    var curCount = {};
+    cur.forEach(function (it) { var k = opnTodayItemId594(it); curCount[k] = (curCount[k] || 0) + 1; });
+    var compIds = comp.map(opnTodayItemId594);
     var kept = cur.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
-    var base = comp.filter(function (it) { return opnTodayItemId594(it) === id || curIds.indexOf(opnTodayItemId594(it)) >= 0; });
+    var used = {}, occSeen = {}, base = [], placed = false;
+    comp.forEach(function (it) {
+      var k = opnTodayItemId594(it);
+      var occK = occSeen[k] || 0; occSeen[k] = occK + 1;
+      if (k === id && occK === (curCount[k] || 0) && !placed) { base.push(restored); placed = true; return; }
+      if ((used[k] || 0) < (curCount[k] || 0)) { used[k] = (used[k] || 0) + 1; base.push(it); if (k === id) placed = true; }
+    });
+    if (!placed) base.push(restored);
     opn604.lists[block] = base.concat(kept);
-    opn604.removed[block] = (opn604.removed[block] || []).filter(function (it) { return opnTodayItemId594(it) !== id; });
+    if (remAt >= 0) { var nr = rem.slice(); nr.splice(remAt, 1); opn604.removed[block] = nr; }
   }
   return opnWrite604(block);
 }
-function opnDragOver604(block, dragId, targetId) {
+function opnDragOver604(block, dragRowId, targetRowId) {
+  // v610: row ids are occurrence-qualified — a drag moves
+  // the addressed copy, not the first copy of its id.
+  var pd = opnParseRowId610(dragRowId), pt = opnParseRowId610(targetRowId);
   var m = opnMaterialize604(block);
-  var i = -1, j = -1;
-  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === dragId) i = k; if (id === targetId) j = k; });
+  var i = -1, j = -1, sd = 0, st2 = 0;
+  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === pd.id) { if (sd === pd.occ) i = k; sd++; } if (id === pt.id) { if (st2 === pt.occ) j = k; st2++; } });
   if (i < 0 || j < 0 || i === j) return;
   var mv = m.splice(i, 1)[0];
   m.splice(j, 0, mv);
@@ -20295,18 +20409,21 @@ function opnEditPostureHtml604(b) {
   var block = b.block;
   var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
+  var seenRow610b = {};
   list.forEach(function (it) {
     var id = opnTodayItemId594(it);
-    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(id) + '"><div class="row">'
-      + '<span class="p604handle" data-p604handle="' + esc(id) + '" title="Drag to reorder">&#x2630;</span>'
+    var occ = seenRow610b[id] || 0; seenRow610b[id] = occ + 1;
+    var rid = opnRowId610(it, occ);
+    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(rid) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
-      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(id) + '">Remove</button></div></div>';
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
   var removed = opn604.removed[block] || [];
   if (removed.length) {
     html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
-      + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
   }
   html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
   return html + '</div>';
@@ -21882,7 +21999,14 @@ function openAddLadder603(block, host) {
     mountDrawer(sh, true);
     var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources'
     var query = '';
-    function isOn(item) { return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0; }
+    function isOn(item) {
+      // v610: a Divine Office source already standing stays
+      // addable — a second copy may stand (duplicates are
+      // allowed for the office hours). Every other item
+      // keeps the standing "Already in" refusal.
+      if (item.kind === 'source' && EXT_TOKENS[item.key]) return false;
+      return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0;
+    }
     function sources() {
       return profContentsUniverse590(block).filter(function (it) {
         if (it.kind === 'source') return true;
@@ -22476,18 +22600,21 @@ function opnEditGroupHtml609(block) {
     + '<div class="row p609ghead" data-p609ghead="' + esc(block) + '"><span class="grow">' + esc(block) + '</span>'
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
   if (block === 'Podcasts') html += opnSeriesRows609();
+  var seenRow610 = {};
   list.forEach(function (it) {
     var id = opnTodayItemId594(it);
-    html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(id) + '"><div class="row">'
-      + '<span class="p604handle" data-p604handle="' + esc(id) + '" title="Drag to reorder">&#x2630;</span>'
+    var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
+    var rid = opnRowId610(it, occ);
+    html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(rid) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
-      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(id) + '">Remove</button></div></div>';
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
   var removed = opn604.removed[block] || [];
   if (removed.length) {
     html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
-      + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
   }
   html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
   return html + '</div>';
