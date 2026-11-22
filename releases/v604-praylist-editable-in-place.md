@@ -254,6 +254,29 @@ v603's pin moved at its Ship.
   committed, worktree clean, branch never pushed. No
   merge, no deploy, no registry writes beyond the
   contract judgments. Stop at BRANCH READY.
+- **Fix note (Review defect R3-1, Fix seat
+  2026-11-22):** the Q3 migration now also runs on
+  the vault-unlock path. Inside `opnVaultApplyKey`
+  (client.ts:1852), after the decrypted real document
+  stands as the document, the standing migration
+  family runs in its standing order (mig590-family
+  first, then mig604) against the real document, and
+  a migration persists through the standing vault
+  persist path — exactly once (each migration's own
+  flag gates re-runs; a second unlock writes
+  nothing). The locked posture is unchanged: no
+  migration against the ephemeral document, no
+  envelope write before unlock. Proven by the new
+  harness-v604 leg **M4** (old-build envelope over
+  the M2 populated variant): M4 FAILS on the pre-fix
+  branch HEAD f97bf40 (post-unlock both fields
+  standing, `mig604` unset — harness 50 ok / 1 not
+  ok, M4 the sole failure) and PASSES with the fix —
+  harness-v604 **51 ok / 0 not ok**, harness-v603
+  **50 ok / 0 not ok**. Full evidence in the build
+  log's R3-1 fix section. Pin untouched (stays
+  `ora-pro-nobis-v603-1` until Ship); no merge, no
+  deploy in this seat.
 
 ## §4 Review — Independent Review seat, 2026-11-21 (contract 857)
 
