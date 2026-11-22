@@ -263,3 +263,46 @@ Then the chain STOPS: no merge, no pin, no deploy.
 - **Gates:** harness-v603 **50 ok / 0 not ok** (working tree AND a clean checkout of the new head abd2dae) — the prior 39 legs plus T13 (fold statics) and the N legs: N0 the fixture slot for 2026-11-21 built from the production catalog by the window rule carries the nine running novenas · N1 named ALONE on a running day composes its Day n (christ_the_king, Day 9) · N2 named ALONE outside its run (14_holy_helpers, window 2026-07-30 + 9d) composes zero tracks AND no missing placeholder — empty by truth, the reason asserted · N3 named + all-novenas: nine tracks, the named exactly once · N4 two named stand in contents order (miraculous_medal before christ_the_king — the reverse of slot order) · N5a–d the Edit today posture driven through the real screen: the pick lands in the draft, Save today writes the layer, the standing profile's contents stay byte-identical, and the saved layer composes the named novena once at its Day 4 · N6 FAIL-ON-PRE-FIX: the same named-alone world on the pre-fix tree (b4545c2, pinned by hash) composes ZERO — the defect reproduced. Equivalence A1 stands: no named novena in contents → byte-identical to the pre-v603 ship. Regression: harness-v600 **37/0** · harness-v601 **8/0** — zero delta · harness-v597 deltas exactly as §3 named (T2/T3/T4 by design, T5 pre-existing, §E extraction-table halt) — unchanged; the fix touches neither validator.
 - **Renders revised:** `novenas-4-composed.png` RE-RENDERED from the fixed fold (`app/renders-v603-fix.mjs`): posture A (named alone) now stands the one track — "Traditional Novena to Christ the King Day 9"; posture B (both standing) stands the nine running novenas with the named exactly once. `novenas-3-added.png` NOT re-rendered: the fix touches no paint code (the editor's paint is byte-identical), so the round-1 capture stands as-is.
 - **State after round 2:** branch release/v603 at abd2dae, clean (the untracked `app/node_modules` symlink is tooling only). Still held before Ship — no merge, no pin bump, no deploy, no What's New. Ship on John's word does exactly what §4 above says, plus the new field leg: add ONE named novena by hand (and, on a day it runs, switch "Every active novena" off) and watch its Day n stand in the block.
+
+## §5 Ship (2026-11-21, chain-v603-ship — John's word 19:20 CT: "Ship it")
+
+- Merge: release/v603 merged to main as 97e033f
+  (--no-ff). Main had advanced past the branch base
+  by exactly one commit (56e3693, the v599 doc §5)
+  touching only the v599 release doc — zero overlap
+  with v603's files, no hand resolution needed.
+  Whole-tree conflict-marker grep: 0. SW pin bump
+  2c3784d (ora-pro-nobis-v603-1, ui.ts CACHE).
+- Push: 8 commits replicated byte-identical via the
+  GitHub Git Data API with SHA assertions — main
+  pushed · remote in sync at 2c3784d.
+- Gates on the merged tree: harness-v603 50 ok /
+  0 not ok (also 50/0 after the pin bump) ·
+  harness-v600 37/0 · harness-v601 8/0 — zero delta.
+- Deploy (connector-surrogate driver, from the
+  standing clone at 2c3784d): Worker
+  90d4f7c0-819a-4b8c-9e1e-5968ac893123 at 100% ·
+  rollback target 3bfc4b31 (v599) · pin
+  ora-pro-nobis-v603-1 stands in the served sw.js ·
+  served app.js parses whole (1,209,846 chars) and
+  carries the ladder (openAddLadder603) and the
+  named-novena selection (opnNovenaMetas603) ·
+  served /api/prayer/book answers the nine groups
+  at the served counts (24 · 5 · 13 · 9 · 5 · 4 ·
+  7 · 2 · 8).
+- Board closeout: What's New 419 · row 1577 Live
+  (shipped_at 2026-11-22T01:25:00Z) ·
+  shipped_records 793 inserted and read back ·
+  phase records Scope 2432 · Plan 2437 · Implement
+  2438 · Review 2439 · Ship 2440, all passed ·
+  contracts 846 · 848 · 849 · 850 (Review fix) ·
+  852 (Ship), all met · intake 1121 Done, read back.
+- Field legs: Open Edit profiles, tap Add in a
+  block — the doors stand (Courses · Prayers ·
+  Sources), search at the head; hand-add Bible in
+  a Year from the Courses door and watch the next
+  day by your progress stand in the day. In Edit
+  today, Add lands in the draft until Save today.
+  In the Novenas block, hand-add one named novena,
+  switch Every active novena off on a day it runs,
+  and watch its Day n stand in the block.
