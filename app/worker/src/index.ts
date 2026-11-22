@@ -1225,8 +1225,7 @@ interface TodayLayer {
 }
 interface PrayerProfileStore {
   profiles: PrayerProfile[]; standingKey: string; dayRule: boolean;
-  version: number; picks: Record<string, string>;
-  dayDefaults: Record<string, string>;
+  version: number;
   todayEdits: Record<string, TodayLayer>;
 }
 
@@ -1286,38 +1285,10 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
       "SELECT standing_key, day_rule, version FROM prayer_profile_state WHERE id=1",
     ).first<{ standing_key: string; day_rule: number; version: number }>();
     if (!st) return null;
-    const pk = await env.DB.prepare(
-      "SELECT date, profile_key FROM prayer_profile_day_picks",
-    ).all<{ date: string; profile_key: string }>();
-    const picks: Record<string, string> = {};
-    for (const r of pk.results ?? []) picks[r.date] = r.profile_key;
-    // v590 §2.6: the per-day defaults (migration 0044's
-    // day_defaults column) — read in their own try: a
-    // pre-0044 store reads as an absent map = today's
-    // behavior exactly.
-    let dayDefaults: Record<string, string> = {};
-    try {
-      const dd = await env.DB.prepare("SELECT day_defaults FROM prayer_profile_state WHERE id=1").first<{ day_defaults: string | null }>();
-      if (dd && typeof dd.day_defaults === "string" && dd.day_defaults) {
-        const parsed = JSON.parse(dd.day_defaults) as Record<string, unknown>;
-        for (const k of ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) {
-          if (typeof parsed[k] === "string") dayDefaults[k] = parsed[k] as string;
-        }
-      }
-    } catch { dayDefaults = {}; }
-    // v591 Correction 1 (server parity with the client's
-    // mig591): the Sunday rule is just a default — a
-    // standing day_rule with no Sunday entry in the map
-    // seeds the map's Sunday entry to The Benedictine Way,
-    // and the rule retires: the stored flag is zeroed in
-    // the same write and resolution never reads it again.
-    if (st.day_rule === 1) {
-      if (!dayDefaults.sun) dayDefaults = { ...dayDefaults, sun: "benedictine" };
-      try {
-        await env.DB.prepare("UPDATE prayer_profile_state SET day_defaults = ?, day_rule = 0, updated_at = ? WHERE id = 1")
-          .bind(JSON.stringify(dayDefaults), nowISO());
-      } catch { /* the in-memory seed stands for this read */ }
-    }
+    // v604: the per-date picks read and the day-defaults
+    // read are REMOVED whole with the resolution collapse
+    // (retirement). The D1 tables/column stand dormant —
+    // no reader, no writer, no migration.
     // v594 Part 2: the today layers (migration 0045's
     // today_edits column) — read in their own try: a
     // pre-0045 store reads as an absent map = the
@@ -1332,7 +1303,7 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
         }
       }
     } catch { todayEdits = {}; }
-    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, picks, dayDefaults, todayEdits };
+    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, todayEdits };
   } catch { return null; }
 }
 
@@ -1403,21 +1374,13 @@ const DESIGNED_PROFILES_591 = [
   { key: "benedictine", name: "The Benedictine Way", honorLine: "named in honor of the tradition, not the order's own routine", coreBlocks: ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], layers: { novenas: { on: 1 }, podcasts: { on: 1, series: ["daily-readings"] } } },
 ];
 
-function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "pick" | "day-default" | "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
+function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
   const dayKind = profileDayKind(date);
   const byKey = (k: string | undefined) => store.profiles.find((p) => p.key === k);
-  const pick = byKey(store.picks[date]);
-  if (pick) return { profile: pick, resolvedBy: "pick", dayKind };
-  // v591 §2.2: the day's profile (the day map) stands
-  // between the pick and the every-day profile. The v590
-  // day-rule leg is RETIRED (Correction 1): the map's
-  // seeded Sunday entry carries what the rule carried,
-  // and a solemnity follows its weekday's profile.
-  const dowKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  const parts = date.split("-").map(Number);
-  const dow = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])).getUTCDay();
-  const dd = byKey(store.dayDefaults ? store.dayDefaults[dowKeys[dow]] : undefined);
-  if (dd) return { profile: dd, resolvedBy: "day-default", dayKind };
+  // v604: precedence COLLAPSES to the standing pick — the
+  // per-date pick leg and the day-map leg are REMOVED
+  // whole (retirement); resolution is the every-day
+  // (standing) profile, else the first.
   const standing = byKey(store.standingKey);
   if (standing) return { profile: standing, resolvedBy: "standing", dayKind };
   return { profile: store.profiles[0], resolvedBy: "standing", dayKind };
@@ -1517,7 +1480,7 @@ async function profilesPayload(env: Env, date: string) {
       },
       ...(p.contents ? { contents: p.contents } : {}),
     })),
-    state: { standingKey: store.standingKey, dayRule: store.dayRule, version: store.version, dayDefaults: store.dayDefaults },
+    state: { standingKey: store.standingKey, version: store.version },
     todayEdit: store.todayEdits && store.todayEdits[date] ? JSON.parse(JSON.stringify(store.todayEdits[date])) as TodayLayer : null,
     effective: profileFoldOf(store, date),
   };
@@ -4131,27 +4094,19 @@ export default {
           return json(await profilesPayload(env, prayerChicagoNow().date));
         }
         if (seg[2] === "profiles" && seg[3] === "state" && request.method === "PUT") {
-          // v515 §2: John's standing-default + day-rule write,
-          // in the mass-personal-prayer PUT's discipline: every
+          // v515 §2: John's standing-default write, in the
+          // mass-personal-prayer PUT's discipline: every
           // validation is a named 400 that writes nothing; the
           // write and the version bump land in one batch; the
           // response is the store re-read.
+          // v604: a dayDefaults field is REJECTED with a named
+          // 400 — the field retired with the resolution
+          // collapse (no silent strip, nothing writes).
           const body = await request.json().catch(() => ({})) as { standingKey?: unknown; dayRule?: unknown; dayDefaults?: unknown };
           const store = await prayerProfileStore(env);
           if (!store) return err(400, "profiles store unavailable");
-          if (body.standingKey === undefined && body.dayRule === undefined && body.dayDefaults === undefined) return err(400, "standingKey, dayRule or dayDefaults required");
-          let dayDefaults = store.dayDefaults;
-          if (body.dayDefaults !== undefined) {
-            if (!body.dayDefaults || typeof body.dayDefaults !== "object" || Array.isArray(body.dayDefaults)) return err(400, "dayDefaults must be an object");
-            const nd: Record<string, string> = {};
-            for (const [dow, v] of Object.entries(body.dayDefaults as Record<string, unknown>)) {
-              if (!["mon", "tue", "wed", "thu", "fri", "sat", "sun"].includes(dow)) return err(400, `bad weekday ${dow}`);
-              if (v === null || v === "") continue;
-              if (typeof v !== "string" || !store.profiles.some((p) => p.key === v)) return err(400, `bad profile ${String(v)}`);
-              nd[dow] = v;
-            }
-            dayDefaults = nd;
-          }
+          if (body.dayDefaults !== undefined) return err(400, "dayDefaults retired in v604");
+          if (body.standingKey === undefined && body.dayRule === undefined) return err(400, "standingKey or dayRule required");
           let standingKey = store.standingKey;
           if (body.standingKey !== undefined) {
             if (typeof body.standingKey !== "string" || !store.profiles.some((p) => p.key === body.standingKey)) {
@@ -4159,7 +4114,7 @@ export default {
             }
             standingKey = body.standingKey;
           }
-          // v591 Correction 1: the day rule is retired —
+          // v591 Correction 1 stands: the day rule is retired —
           // a dayRule field is validated for shape and
           // never written back on.
           let dayRule = false;
@@ -4171,48 +4126,11 @@ export default {
             env.DB.prepare("UPDATE prayer_profile_state SET standing_key = ?, day_rule = ?, updated_at = ? WHERE id = 1")
               .bind(standingKey, dayRule ? 1 : 0, ts),
           ];
-          if (body.dayDefaults !== undefined) {
-            // v590: the day-defaults write rides its own
-            // statement — a pre-0044 store (no column)
-            // fails the batch whole and nothing writes,
-            // the standing named-400 discipline.
-            stateStmts.push(env.DB.prepare("UPDATE prayer_profile_state SET day_defaults = ?, updated_at = ? WHERE id = 1")
-              .bind(JSON.stringify(dayDefaults), ts));
-          }
           stateStmts.push(profileBumpStmt(env, ts));
           await env.DB.batch(stateStmts);
           return json(await profilesPayload(env, prayerChicagoNow().date));
         }
-        if (seg[2] === "profiles" && seg[3] === "day-pick" && request.method === "PUT") {
-          // v515 §2: John's per-date pick — the pick IS the
-          // retreat-day declaration (P3). profileKey null
-          // clears the date's row and returns the date to the
-          // rule. Same discipline as the state PUT above.
-          const body = await request.json().catch(() => ({})) as { date?: unknown; profileKey?: unknown };
-          const store = await prayerProfileStore(env);
-          if (!store) return err(400, "profiles store unavailable");
-          const date = typeof body.date === "string" ? body.date : "";
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          const ts = nowISO();
-          if (body.profileKey === null) {
-            await env.DB.batch([
-              env.DB.prepare("DELETE FROM prayer_profile_day_picks WHERE date = ?").bind(date),
-              profileBumpStmt(env, ts),
-            ]);
-            return json(await profilesPayload(env, prayerChicagoNow().date));
-          }
-          if (typeof body.profileKey !== "string" || !store.profiles.some((p) => p.key === body.profileKey)) {
-            return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
-          }
-          await env.DB.batch([
-            env.DB.prepare(
-              `INSERT INTO prayer_profile_day_picks (date, profile_key, updated_at) VALUES (?, ?, ?)
-               ON CONFLICT(date) DO UPDATE SET profile_key = excluded.profile_key, updated_at = excluded.updated_at`,
-            ).bind(date, body.profileKey, ts),
-            profileBumpStmt(env, ts),
-          ]);
-          return json(await profilesPayload(env, prayerChicagoNow().date));
-        }
+        // v604: PUT /profiles/day-pick is REMOVED whole — the route falls through to the router's standing unknown-route posture.
         if (seg[2] === "profiles" && seg[3] === "today-edit" && request.method === "PUT") {
           // v594 Part 2 (doc §2.1): the today layer write —
           // {date, layer}; a null layer, or an entry
@@ -4309,6 +4227,9 @@ export default {
           const body = await request.json().catch(() => ({})) as { key?: unknown; name?: unknown; honorLine?: unknown; coreBlocks?: unknown; layers?: unknown; contents?: unknown; basedOn?: unknown };
           const store = await prayerProfileStore(env);
           if (!store) return err(400, "profiles store unavailable");
+          // v604: save payloads carrying the retired fields
+          // are REJECTED with a named 400 (no silent strip).
+          if ((body as Record<string, unknown>).dayDefaults !== undefined || (body as Record<string, unknown>).picks !== undefined) return err(400, "dayDefaults/picks retired in v604");
           const name = typeof body.name === "string" ? body.name.trim() : "";
           if (!name) return err(400, "name required");
           if (name.length > 80) return err(400, "name too long");
@@ -4412,15 +4333,9 @@ export default {
           const ts = nowISO();
           const stmts: D1PreparedStatement[] = [
             env.DB.prepare("DELETE FROM prayer_profiles WHERE key = ?").bind(profile.key),
-            env.DB.prepare("DELETE FROM prayer_profile_day_picks WHERE profile_key = ?").bind(profile.key),
           ];
           if (store.standingKey === profile.key) {
             stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET standing_key = 'salesian', updated_at = ? WHERE id = 1").bind(ts));
-          }
-          if (Object.values(store.dayDefaults).includes(profile.key)) {
-            const nd: Record<string, string> = {};
-            for (const [dow, v] of Object.entries(store.dayDefaults)) if (v !== profile.key) nd[dow] = v;
-            stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET day_defaults = ?, updated_at = ? WHERE id = 1").bind(JSON.stringify(nd), ts));
           }
           stmts.push(profileBumpStmt(env, ts));
           await env.DB.batch(stmts);

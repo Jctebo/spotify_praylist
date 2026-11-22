@@ -461,6 +461,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    Edit today's Save today bar reuses this same frozen
    dress (.proftodayfrozen600). */
 .proffrozen593 { flex:none; background:var(--card); border-bottom:1px solid var(--line); padding:6px 10px 4px; }
+.p604handle { cursor:grab; touch-action:none; padding:0 10px 0 2px; color:var(--muted); user-select:none; }
+.p604exp { margin:0 0 10px; }
+.p604exphead { align-items:center; margin:2px 0 6px; }
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
 .proffrozen593 .profchips593 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 6px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
@@ -1045,7 +1048,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v603-1";
+var CACHE = "ora-pro-nobis-v604-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
