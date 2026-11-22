@@ -1356,7 +1356,14 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         }
       }
       const id = `${kind}:${key}`;
-      if (seen.has(id)) continue;
+      // v610 (John, 2026-11-21): duplicates stand for the
+      // Divine Office hours — a source selector naming one
+      // of the eight office slots is never deduped (the
+      // client's opnCheckContents590 mirror rule; the list
+      // is a literal here because this fn is extracted
+      // standalone by the harnesses). Every other kind/key
+      // keeps the standing dedupe.
+      if (seen.has(id) && !(kind === "source" && ["ext-invitatory", "ext-morning-prayer", "ext-midmorning-prayer", "ext-midday-prayer", "ext-midafternoon-prayer", "ext-office-of-readings", "ext-evening-prayer", "ext-night-prayer"].includes(key))) continue;
       seen.add(id);
       list.push({ kind: kind as string, key: key as string });
     }

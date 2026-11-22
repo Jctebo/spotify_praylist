@@ -2607,7 +2607,13 @@ function opnCheckContents590(contents, coreBlocks) {
         }
       }
       var id = kind + ':' + key;
-      if (seen[id]) return;
+      // v610 (John, 2026-11-21): duplicates stand for the
+      // Divine Office hours — a source selector naming one
+      // of the eight office slots (EXT_TOKENS' keys) is
+      // never deduped, so the same hour may stand more
+      // than once in a block's list. Every other kind/key
+      // keeps the standing dedupe.
+      if (seen[id] && !(kind === 'source' && EXT_TOKENS[key])) return;
       seen[id] = 1;
       list.push({ kind: kind, key: key });
     });
@@ -20675,7 +20681,7 @@ function profContentsUniverse590(block) {
   var items = [];
   if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'Every active novena' }); return items; }
   (state.ownStanding || []).forEach(function (r) { if (r.block === block) items.push({ kind: 'source', key: r.sourceKey, label: r.title || r.sourceKey }); });
-  (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.source || sl.slotId }); });
+  (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.title || sl.source || sl.slotId }); });
   if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'The day\u2019s readings' });
   // v597: NO course selectors stand in the universe —
   // courses are series (Catechesis · the Podcasts layer),
