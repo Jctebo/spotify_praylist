@@ -44,4 +44,11 @@ Worktree `v609-wt`, branch `release/v609` off main d839539 (v607), rebased onto 
 
 ## §5 Ship
 
-(Completed at ship time — see the ship commit on main.)
+- **Rebase:** release/v609 rebased onto main e450a3b after v608 shipped mid-chain — client.ts merged clean; the ui.ts conflict was the pin only, resolved to ora-pro-nobis-v609-1; whole-tree conflict-marker grep clean on the merged tree.
+- **Merge:** release/v609 merged to main as 70a04b1 (parents e450a3b + f5e2c16). Markers on the merged tree: opnSetHtml609 · opnEditGroupHtml609 · opnSeriesRows609 · p609ghead all stand.
+- **Push:** Git Data API — remote main == 70a04b1d0a1dcac055c3f744650f29d7167da062, byte-identical (3 commits replicated with SHA assertions). main pushed · remote in sync.
+- **Deploy:** Worker **d4d229c3-60b5-440b-9e4e-a88405b2f815** · pin **ora-pro-nobis-v609-1** · rollback = v608 Worker 173ac975-f8b9-4b1f-b6f4-c50ea42b643f. Web only — no new APK.
+- **Gates on the shipped tree:** harness-v609 **34 ok / 0 not ok** on the branch (main then = v608) AND on a clean checkout of the committed branch HEAD f5e2c16; on the merged tree 31 ok / 3 not ok — the 3 are the OA fail-on-old companions, failing by construction because "old" (git main) is now v609 itself (the standing stale-anchor effect). harness-v603 **50 ok / 0 not ok** on the merged tree (the T11 pin leg resolves at the merge). harness-v607's expansion/strip-driving legs retire by name (§3).
+- **Served proofs:** served sw.js carries pin ora-pro-nobis-v609-1 · served app.js (1,250,830 chars) parses whole and carries opnSetHtml609 ×3 · opnSeriesRows609 ×2 · p609ghead ×2 · p609off ×1 · the `__all` queue branch ×2.
+- **Board closeout:** What's New **424** · row **1583 Live** · shipped_records **798** · phase records 2458/2461/2462/2471 + the Ship record passed · contract 874 both expectations met · intake **Done**.
+- **Field legs (John's):** the Praylist is one list — Play All at its head plays the whole day · tap a track, it plays · Edit at the top → the condensed form, groups headed by their toggles, off groups showing dimmed in full · flip a group on and its tracks join the set · add a podcast through the Podcasts group's Add ladder (the §3 named gap's field leg) · the series switches stand inside the Podcasts group (the §15 seat — his verdict can reverse it).
