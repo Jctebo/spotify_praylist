@@ -72,15 +72,15 @@ check('T3 the doors stand in the approved order in the builder (Courses · Praye
   && clientSrc.includes("doorHtml('novenas', 'Novenas'"));
 check('T4 Q3 stands: already-standing items paint marked and carry no tap attribute',
   clientSrc.includes("'Already in ' + esc(block)") && clientSrc.includes('profadd-on603'));
-check('T5 the client validator re-opens for the four keys and errors on any other course key',
+check('T5 the client validator re-opens for the four keys and errors on any other course key — SUPERSEDED at v609 repair 2: any non-empty series key validates, a keyless course errors',
   clientSrc.includes("var OPN_COURSE_KEYS_603 = ['catechism-in-a-year', 'bible-in-a-year', 'rosary-in-a-year', 'summa-in-a-year']")
-  && clientSrc.includes("if (OPN_COURSE_KEYS_603.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);")
+  && clientSrc.includes("if (typeof key !== 'string' || !key) throw opnErr(400, 'bad course ' + key);")
   && !clientSrc.includes("if (kind === 'course') return;"));
-check('T6 the read seam passes a standing course and filters a foreign one',
-  clientSrc.includes("it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0"));
-check('T7 the server validator mirrors the rule (keeps a standing key, errors on any other)',
+check('T6 the read seam passes a standing course and filters a foreign one — SUPERSEDED at v609 repair 2: any keyed course passes, a keyless one filters',
+  clientSrc.includes("it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)"));
+check('T7 the server validator mirrors the rule — v609 repair 2: mirrors the generalized rule (any keyed series kept, keyless an error)',
   indexSrc.includes('if (kind === "course") {')
-  && indexSrc.includes('["catechism-in-a-year", "bible-in-a-year", "rosary-in-a-year", "summa-in-a-year"].includes(key as string)')
+  && indexSrc.includes('if (typeof key !== "string" || !key) return { error: `bad course ${String(key)}` };')
   && !indexSrc.includes('if (kind === "course") continue;'));
 check('T8 the resolver is restored whole: the function, the buildDayFromPayload call, the placement leg',
   clientSrc.includes('function resolveProfileCourses590(day)')
@@ -134,7 +134,9 @@ function stripServerValidate(src) {
     ['const list: { kind: string; key?: string }[] = [];', 'const list = [];'],
     ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
     ['list.push({ kind: kind as string, key: key as string });', 'list.push({ kind: kind, key: key });'],
-    ['.includes(key as string)', '.includes(key)'],
+    // v609 repair 2: the server course check no longer
+    // routes through .includes(key as string) (any keyed
+    // series validates) — that normalization retires.
   ];
   for (const [a, b] of reps) { if (!f.includes(a)) throw new Error('server validate shape moved: ' + a.slice(0, 60)); f = f.split(a).join(b); }
   return f;
@@ -200,10 +202,10 @@ function docOf(w) { return JSON.parse(w.localStorage.getItem(DATA_KEY)); }
     if (JSON.stringify(cNorm) !== JSON.stringify(sOut)) { agree = false; console.log('parity diff:', JSON.stringify(item), 'client:', JSON.stringify(cNorm), 'server:', JSON.stringify(sOut)); }
     if (JSON.stringify(cOut || {}).includes('"course"')) kept = true;
   }
-  check('E1 validator parity: client == server over the battery (a standing course key kept, a foreign key an error, duplicates deduped)', agree && kept, { agree, kept });
-  const seam = O.opnContentsOf590({ contents: { Morning: [{ kind: 'course', key: 'bible-in-a-year' }, { kind: 'course', key: 'foreign' }, { kind: 'source', key: 'abc' }] } });
-  check('E2 the read seam passes the standing course and filters the foreign one',
-    !!seam && seam.Morning.length === 2 && seam.Morning[0].kind === 'course' && seam.Morning[1].kind === 'source', seam);
+  check('E1 validator parity: client == server over the battery (v609 repair 2: any keyed series kept on both sides, duplicates deduped)', agree && kept, { agree, kept });
+  const seam = O.opnContentsOf590({ contents: { Morning: [{ kind: 'course', key: 'bible-in-a-year' }, { kind: 'course', key: 'foreign' }, { kind: 'course' }, { kind: 'source', key: 'abc' }] } });
+  check('E2 the read seam passes keyed courses and filters the keyless one (v609 repair 2)',
+    !!seam && seam.Morning.length === 3 && seam.Morning[0].kind === 'course' && seam.Morning[1].kind === 'course' && seam.Morning[2].kind === 'source', seam);
   w.close();
 }
 
@@ -237,11 +239,24 @@ function docOf(w) { return JSON.parse(w.localStorage.getItem(DATA_KEY)); }
       O.opnStandingContents597(p, b).forEach((it) => { if (it.kind === 'course') courseless = false; });
     });
   });
-  check('V3 GUARD: the standing contents of every standing profile carry no course (defaults stay courseless)', courseless);
+  // v609 repair 2 SUPERSEDES the courseless guard: the
+  // designed defaults now carry their podcasts as course
+  // ITEMS in Night (the migration) — the guard's new form:
+  // courses stand ONLY there (Night, the migrated series),
+  // never in any other block's standing contents.
+  let coursesScoped = true;
+  (payload.profiles || []).forEach((p) => {
+    ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Novenas'].forEach((b) => {
+      O.opnStandingContents597(p, b).forEach((it) => { if (it.kind === 'course') coursesScoped = false; });
+    });
+  });
+  check('V3 GUARD (v609 repair 2 form): no course stands in any block but Night; the migrated defaults carry theirs in Night alone', coursesScoped && !courseless, { courseless });
   const rst = await O.opnLocalApi('/api/prayer/profiles/reset', { method: 'PUT', body: JSON.stringify({ profileKey: 'salesian' }) }, 'device').catch((e) => ({ err: String(e && e.message || e) }));
   const sal = ((rst && rst.profiles) || []).find((p) => p.key === 'salesian');
-  check('V4 GUARD: Reset restores the designed Salesian Way with no course anywhere in its contents',
-    !!sal && JSON.stringify(sal.contents || {}).indexOf('course') < 0, rst.err || (sal && sal.contents));
+  check('V4 GUARD (v609 repair 2 form): Reset restores the designed Salesian Way in the migrated shape — its podcasts stand as course items in Night, its seat in Morning',
+    !!sal && ((sal.contents || {}).Night || []).filter((it) => it.kind === 'course').length === 2
+    && ((sal.contents || {}).Morning || []).some((it) => it.kind === 'seat' && it.key === 'daily-readings')
+    && sal.layers.podcasts.on === false && (sal.layers.podcasts.series || []).length === 0, rst.err || (sal && sal.contents));
   w.close();
 }
 
@@ -635,12 +650,23 @@ async function composeWith(js, isBase) {
   return out;
 }
 {
-  const baseSrc = git(['show', 'main:app/worker/src/client.ts']);
+  const baseSrc = git(['show', 'bfb0e85:app/worker/src/client.ts']); // A1 base pin: the v609 repair-1 build (pre-repair-2) — pinned 2026-11-21 so the equivalence survives the repair-2 merge
   const ba = baseSrc.indexOf('= `') + 3, bb = baseSrc.indexOf('\n`;', ba);
   const baseJs = vm.runInContext('`' + baseSrc.slice(ba, bb) + '`', vm.createContext({}));
   const a = await composeWith(appJs, false);
   const b = await composeWith(baseJs, true);
-  check('A1 equivalence: the day composed without a hand-added course is byte-identical to the pre-v603 ship', a === b, { newLen: a.length, baseLen: b.length });
+  // v609 repair 2 re-base: the composition differs from
+  // the pre-repair build ONLY by the two migrated course
+  // tracks (the series landing as Night items) — every
+  // other descriptor byte-identical, in order.
+  const aDescs = JSON.parse(a);
+  const bDescs = JSON.parse(b);
+  const bIds = bDescs.map((t) => t.episodeId);
+  const aKept = aDescs.filter((t) => bIds.includes(t.episodeId));
+  const aNew = aDescs.filter((t) => !bIds.includes(t.episodeId));
+  check('A1 equivalence (v609 repair 2 form): the composed day is byte-identical to the base build but for the two migrated course tracks',
+    JSON.stringify(aKept) === b && aNew.length === 2 && aNew.every((t) => /biy|exorcist/.test(t.episodeId)),
+    { newLen: a.length, baseLen: b.length, added: aNew.map((t) => t.episodeId) });
 }
 
 console.log('harness-v603:', ok, 'ok /', bad, 'not ok');
