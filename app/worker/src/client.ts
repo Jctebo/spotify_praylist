@@ -20435,7 +20435,7 @@ function openConfigureLadder593() {
     var prof = null;
     (r.profiles || []).forEach(function (p) { if (p.key === r.effective.key) prof = p; });
     var edits = !!(prof && r.todayEdit && opnTodayDivergence594(prof, r.todayEdit).length);
-    headEl.textContent = r.effective.name + ' — your every-day profile' + (edits ? ' · today has its own edits' : '');
+    headEl.textContent = 'Today follows ' + r.effective.name + (edits ? ' · today has its own edits' : '');
   }).catch(function () {});
   sheet.querySelector('[data-p594door="today"]').addEventListener('click', function () { sheet.remove(); openEditTodayScreen594(true); });
   sheet.querySelector('[data-p593door="edit"]').addEventListener('click', function () { sheet.remove(); openProfilesScreen(null, { ladder: true }); });
@@ -21747,7 +21747,7 @@ function openProfileSheet() {
     }).catch(function () { if (body) body.innerHTML = '<p class="sub">Profiles did not load.</p>'; });
   }
   // v596: a locked device vault gates the slot picker
-  // too -- its day-pick rows write through the same
+  // too -- its standing rows write through the same
   // local layer and refused silently (423 vault_locked)
   // while the sheet painted from the ephemeral default
   // document. The standing unlock card stands in the
