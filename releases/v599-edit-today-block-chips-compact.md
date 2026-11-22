@@ -119,3 +119,36 @@
   strip behaves, stands frozen, and cannot dirty
   the draft (R8: document byte-identical after
   jumps + close).
+
+## §5 Ship
+
+- Merge: release/v599 fast-forwarded to main
+  (b3ff6a7 code + harness + §§1-3 · bff701f §4 ·
+  0d4e70f SW pin ora-pro-nobis-v599-1) and pushed
+  via the GitHub Git Data API, byte-identical with
+  SHA assertions — main pushed · remote in sync at
+  0d4e70f. Whole-tree conflict-marker grep: 0.
+- Harness on the merged tree: 16 ok / 1 not ok —
+  the one red is T3, whose premise (a diff against
+  main) is consumed by the merge itself; on the
+  committed branch tree it stood 17/0, and every
+  R leg stands green on the merged tree.
+- Deploy (connector-surrogate driver, from the
+  standing clone at 0d4e70f): Worker
+  3bfc4b31-465c-43c3-b41f-8b8674f9071c at 100% ·
+  rollback target 536176d5 (v596) · pin
+  ora-pro-nobis-v599-1 stands in the served sw.js ·
+  served app.js parses whole (1,197,210 B) and
+  carries the strip (data-p599jumpbtn · jumpToT ·
+  paintJumpT).
+- Board closeout: What's New 418 · row 1573 Live
+  (shipped_at 2026-11-22T00:06:56Z) ·
+  shipped_records 792 inserted and read back ·
+  phase records Scope 2410 · Plan 2433 · Implement
+  2434 · Review 2435 · Ship 2436, all passed ·
+  contracts 842 · 844 · 845 · 847, all met ·
+  intake 1116 Done, read back.
+- Field leg: Open Configure plan → Edit today — a
+  slim row of block buttons stands under Save
+  today; tap Night and the screen jumps to Night,
+  and the Night button lights as you scroll.
