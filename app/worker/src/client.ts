@@ -20073,6 +20073,26 @@ function openEditTodayScreen594(fromLadder) {
   var saveBtnT = frozenT.querySelector('[data-p600savetoday]');
   var lineT = frozenT.querySelector('[data-p600todayline]');
   if (saveBtnT) saveBtnT.addEventListener('click', function () { saveToday().catch(fail); });
+  // v599: the block jump strip — stands in the same
+  // frozen zone, under the Save today bar. It reuses
+  // Edit profiles' jump-strip component whole (the
+  // profjump593 / profjumbtn593 dress, ui.ts) so the
+  // two strips read one dress by construction (John:
+  // "more compact like edit profiles"). Painted by
+  // paintFrozenT once the screen loads — the frozen
+  // zone stands hidden until then, so the strip never
+  // paints behind the locked-vault gate. Navigation
+  // only: it never writes and never touches the draft.
+  var jumpT = document.createElement('div');
+  jumpT.className = 'profjump593';
+  jumpT.setAttribute('data-p599jump', '1');
+  jumpT.hidden = true;
+  frozenT.appendChild(jumpT);
+  jumpT.addEventListener('click', function (ev) {
+    var btn = ev.target && ev.target.closest ? ev.target.closest('[data-p599jumpbtn]') : null;
+    if (btn) jumpToT(btn.getAttribute('data-p599jumpbtn'));
+  });
+  if (scroller) scroller.addEventListener('scroll', function () { spyUpdateT(); });
   var HOURS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
   var res = null, td = null, seriesList = null, bookList = null;
   var pickD = null, clearedD = false;
@@ -20179,6 +20199,46 @@ function openEditTodayScreen594(fromLadder) {
     });
   }
   function divs() { var p = dprof(); return p ? opnTodayDivergence594(p, draftLayerObj()) : []; }
+  function jumpToT(name) {
+    // v599: Edit profiles' jumpTo math, over this
+    // screen's anchors (data-p594anchor).
+    if (!body || !scroller) return;
+    var el = body.querySelector('[data-p594anchor="' + name + '"]');
+    if (!el) return;
+    var top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 2;
+    if (scroller.scrollTo) scroller.scrollTo({ top: top, behavior: 'smooth' });
+    else scroller.scrollTop = top;
+  }
+  function spyUpdateT() {
+    // v599: Edit profiles' scrollspy math — the chip
+    // of the last block whose anchor stands at or
+    // above the scroller's top edge lights (.on).
+    if (!body || !scroller || !jumpT) return;
+    var anchors = body.querySelectorAll('[data-p594anchor]');
+    if (!anchors.length) return;
+    var topEdge = scroller.getBoundingClientRect().top + 16;
+    var cur = anchors[0].getAttribute('data-p594anchor');
+    anchors.forEach(function (el) { if (el.getBoundingClientRect().top <= topEdge) cur = el.getAttribute('data-p594anchor'); });
+    jumpT.querySelectorAll('[data-p599jumpbtn]').forEach(function (btn) {
+      if (btn.getAttribute('data-p599jumpbtn') === cur) btn.classList.add('on');
+      else btn.classList.remove('on');
+    });
+  }
+  function paintJumpT() {
+    // v599: one chip per block the screen paints, in
+    // the screen's own order — the same order
+    // paintBlocksT emits (the draft's core order, the
+    // remaining hours in HOURS order, then Novenas,
+    // then Podcasts). A block the draft turns off
+    // still stands as a card, so its chip stands too.
+    if (!jumpT || !td) { if (jumpT) jumpT.hidden = true; return; }
+    var order = td.core.slice();
+    HOURS.forEach(function (b) { if (order.indexOf(b) < 0) order.push(b); });
+    order.push('Novenas', 'Podcasts');
+    jumpT.innerHTML = order.map(function (b) { return '<button class="profjumbtn593" data-p599jumpbtn="' + esc(b) + '">' + esc(b) + '</button>'; }).join('');
+    jumpT.hidden = false;
+    spyUpdateT();
+  }
   function paintFrozenT() {
     if (!frozenT) return;
     if (!res || !td) { frozenT.hidden = true; return; }
@@ -20193,6 +20253,7 @@ function openEditTodayScreen594(fromLadder) {
         : 'Today stands as ' + (p ? p.name : '') + ' stands it.';
       lineT.textContent = txt + (dirty ? ' · unsaved changes' : '');
     }
+    paintJumpT();
   }
   function prayerTitle(slug) {
     if (bookList) for (var i = 0; i < bookList.length; i++) if (bookList[i].slug === slug) return bookList[i].title;
