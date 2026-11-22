@@ -40,10 +40,14 @@
 //   L5 the Prayers folder: its items are the book-favorite
 //      slugs; Done rewrites the slug array in dragged order
 //      through the book sync.
-//   L6 visibility: an empty default folder is absent from
-//      the mode; an empty custom folder stands (the page
-//      paints it); availability needs two visible folders
-//      or one folder with two items.
+//   L6 visibility: empty folders are absent from the mode —
+//      defaults and customs alike. SUPERSEDED BY v613: the
+//      original L6 asserted the v579 custom-folder exception
+//      ("an empty custom folder stands"); v613 aligns the
+//      mode on the page predicate (favFolderCount > 0), so
+//      the empty custom is absent and no longer counts
+//      toward availability. Availability needs two visible
+//      folders or one folder with two items.
 //   L7 the Praylist sweep is indifferent to order state: a
 //      reordered yesterday entry still resets.
 //   L8 the reorder rows: an item row carries its star key on
@@ -257,8 +261,8 @@ const BOOK = { groups: [{ category: 'Foundations', prayers: [
   const W = makeWorld(true);
   const X = W.__x;
   X.starredSet([epA, folderDef]);
-  check('L6 empty default folders are absent, the empty custom folder stands', JSON.stringify(X.favReorderVisibleFolders().map((f) => f.id)) === JSON.stringify(['praylist', 'fkeep']), X.favReorderVisibleFolders().map((f) => f.id));
-  check('L6 two visible folders make the mode available', X.favReorderAvailable() === true);
+  check('L6 empty folders are absent — defaults and customs alike (v613)', JSON.stringify(X.favReorderVisibleFolders().map((f) => f.id)) === JSON.stringify(['praylist']), X.favReorderVisibleFolders().map((f) => f.id));
+  check('L6 the empty custom no longer counts toward availability (v613)', X.favReorderAvailable() === false);
   const W2 = makeWorld(true);
   const X2 = W2.__x;
   X2.starredSet([epA]);

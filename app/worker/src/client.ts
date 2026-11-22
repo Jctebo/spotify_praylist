@@ -12141,9 +12141,10 @@ function paintFavoritesFolderRow() {
    ids in working order; items = per folder, the working
    item keys (a prayer stands as 'prayer:<slug>', any
    other item as its star key). A folder stands in the
-   mode when it holds an item or it is a custom folder
-   (the page paints a custom folder even empty); an empty
-   default folder is absent, the v581 rule. Done saves:
+   mode when it holds an item — defaults and customs
+   alike (v613: the v579 custom-folder exception
+   retires; an empty folder is absent, the v581 rule,
+   one predicate on both surfaces). Done saves:
    the folder order to the device key, each starred
    folder's items spliced back into the positions that
    folder's items already occupy in the whole list (the
@@ -12159,7 +12160,13 @@ function favReorderFolderItems(folder) {
   return favDoorsIn(folder.id).concat(favTracksIn(folder.id));
 }
 function favReorderVisibleFolders() {
-  return favFolders().filter(function (f) { return f.custom || favReorderFolderItems(f).length > 0; });
+  // v613: the mode reads the PAGE predicate — a folder
+  // stands in the mode exactly when it holds an item
+  // (favFolderCount > 0), defaults and customs alike.
+  // The v579 'f.custom ||' exception retires: an empty
+  // custom folder is absent here as it is on the page
+  // (the v581 rule, one derivation both surfaces).
+  return favFolders().filter(function (f) { return favFolderCount(f.id) > 0; });
 }
 function favReorderAvailable() {
   var vis = favReorderVisibleFolders();
@@ -12216,7 +12223,11 @@ function favReorderDone() {
   if (!favReorder) return;
   var work = favReorder;
   favReorder = null;
-  favFolderOrderSave(work.folders);
+  // v613: the saved folder order names the standing
+  // folders only — a folder emptied mid-mode is skipped
+  // (it keeps its definition and re-enters in its
+  // standing place when it holds an item again).
+  favFolderOrderSave(work.folders.filter(function (fid) { return favFolderCount(fid) > 0; }));
   var starredTouched = false;
   Object.keys(work.items).forEach(function (fid) {
     if (fid === 'prayers') return;
@@ -12769,7 +12780,11 @@ function paintFavoritesPage(day) {
     var rhtml = opnFavCard + '<div id="favorites-list">';
     favReorder.folders.forEach(function (fid) {
       var f = foldersById[fid];
-      if (!f) return;
+      // v613: the paint filters its working list through
+      // the page predicate — a folder emptied mid-mode
+      // (its last item unstarred or moved by a sync
+      // repaint) emits no section on the next paint.
+      if (!f || favFolderCount(fid) === 0) return;
       rhtml += '<div class="favfolder" data-favfolder="' + esc(fid) + '">'
         + '<div class="favfolder-head"><button class="favhandle" data-favfolderhandle="' + esc(fid) + '" aria-label="Drag to reorder folder">\u2261</button>'
         + '<h2 class="sectionhead grow">' + esc(f.name) + '</h2></div>'
