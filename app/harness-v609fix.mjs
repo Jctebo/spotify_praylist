@@ -30,7 +30,9 @@ function check(name, cond, extra) {
 const git = (args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const clientSrc = readFileSync(APP + 'worker/src/client.ts', 'utf8');
 const uiSrc = readFileSync(APP + 'worker/src/ui.ts', 'utf8');
-const oldClientSrc = git(['show', 'main:app/worker/src/client.ts']);
+// v610 ship: pinned to the shipped broken v609 tree (bf17613) — the legs'
+// "old" is that build; the moving main ref outgrew it once the repair landed.
+const oldClientSrc = git(['show', 'bf17613:app/worker/src/client.ts']);
 const BOOK = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/book.json', 'utf8'));
 const NOVENAS = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/novenas.json', 'utf8'));
 const PODIDX = JSON.parse(readFileSync(APP + 'tests/fixtures-v603/podcasts-index.json', 'utf8'));
