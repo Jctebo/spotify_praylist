@@ -81,8 +81,10 @@ check('S2 the resolver + its fold-pass call + the placement walk stand',
   && clientSrc.includes('episode614: true') && clientSrc.includes('resolveProfileEpisodes614(day);')
   && clientSrc.includes("if (it.kind !== 'episode') return;"));
 check('S3 the novena ingest-at-resolve (S3) + the homily device seam stand in the resolver',
-  clientSrc.includes("opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', [ep])")
-  && clientSrc.includes('homilyDescFor(he, job.block)'));
+  clientSrc.includes('homilyDescFor(he, job.block)'));
+check('S3b R-1 repair shape: the novenas branch ingests the FULL catalog set (allEps) in one call — the one-episode ingest stands nowhere',
+  clientSrc.includes("opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', allEps)")
+  && !clientSrc.includes("opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', [ep])"));
 const pinOf = (src) => (src.match(/ora-pro-nobis-v\d+-\d+/) || [null])[0];
 check('S4 SW pin unmoved vs main pre-Ship', pinOf(uiSrc) === pinOf(git(['show', 'main:app/worker/src/ui.ts'])), { cand: pinOf(uiSrc), main: pinOf(git(['show', 'main:app/worker/src/ui.ts'])) });
 
@@ -372,6 +374,55 @@ async function fold614(w, date, waitKey) {
   const d2 = O.state.episodeRes614['Morning:' + pinKey];
   check('L4n playing the novena pin writes novenas|<stem> through the standing mark path — the core mark is the descriptor\u2019s truth on rebuild',
     !!d2 && d2.listened === true && again.descs.some((x) => x.episodeId === NOV1_EP.key), d2 && (d2.episodeId + '|' + d2.listened));
+  w.close();
+}
+
+// ---------- L5n + L6n: R-1 two-pin — the novena ingest is non-destructive ----------
+// Review R-1: the one-episode ingest ([ep]) replaced the
+// series' episodeKeys with that one key and pruned every
+// other 'novenas|…' listen/position. These legs FAIL on
+// the pre-repair resolver and pass on the full-catalog
+// ingest. Episode A carries BOTH a listen and a position
+// in the core, seeded through the client's own writers
+// (SetPosition for the position, ImportListens for the
+// listen — ImportListens does not clear positions).
+{
+  const epA = NOV1_EP, epB = NOV1.episodes[1];
+  const pinA = 'novenas|' + epA.key, pinB = 'novenas|' + epB.key;
+  const w = makeWorld(johnStore((doc) => setSalMorning(doc, [{ kind: 'episode', key: pinB }])));
+  await sleep(300);
+  const O = w.__opn;
+  O.opnPodCoreSetPosition('novenas', epA.key, 321, 900);
+  O.opnPodCoreImportListens([{ series: 'novenas', seqKey: epA.key, listenDate: '2026-11-21', source: 'harness-v614' }]);
+  O.opnPodCoreSetPosition('novenas', epB.key, 222, 900);
+  const seeded = O.opnPodCore();
+  const seedOk = !!seeded.listens[pinA] && !!seeded.positions[pinA] && seeded.positions[pinA].positionS === 321 && !!seeded.positions[pinB];
+  const first = await fold614(w, '2026-11-22', pinB);
+  const dB = O.state.episodeRes614['Morning:' + pinB];
+  const coreAfterB = O.opnPodCore();
+  check('L5n R-1: a listen AND a position stand for novena episode A; resolving a pin for episode B leaves both standing, and B resolves with its own truth (its part-played position)',
+    seedOk && !!dB && dB.available === true && dB.listened === false && dB.podPositionS === 222
+    && !!coreAfterB.listens[pinA] && !!coreAfterB.positions[pinA] && coreAfterB.positions[pinA].positionS === 321
+    && !!coreAfterB.positions[pinB] && first.descs.some((x) => x.episodeId === epB.key),
+    { seedOk, dB: dB && (dB.listened + '|' + dB.podPositionS), listens: Object.keys(coreAfterB.listens), positions: Object.keys(coreAfterB.positions) });
+  // Then resolve A as well, in the same world on the same
+  // core: both pins stand, both marks stand.
+  const day2 = first.day;
+  day2.profile.contents.Morning = [{ kind: 'episode', key: pinA }, { kind: 'episode', key: pinB }];
+  O.state.dayPayload = day2;
+  O.resolveProfileEpisodes614(day2);
+  await until(() => O.state.episodeRes614 && O.state.episodeRes614['Morning:' + pinA] && O.state.episodeRes614['Morning:' + pinB], 6000).catch(() => false);
+  await sleep(200);
+  const descs2 = O.extRebuildDescs(day2) || [];
+  const dA2 = O.state.episodeRes614['Morning:' + pinA];
+  const dB2 = O.state.episodeRes614['Morning:' + pinB];
+  const coreAfterBoth = O.opnPodCore();
+  check('L6n R-1: resolving A as well — both pins stand as descriptors with both marks (A listened, B part-played), and the core still holds A\u2019s listen AND position and B\u2019s position',
+    !!dA2 && dA2.listened === true && !!dB2 && dB2.listened === false && dB2.podPositionS === 222
+    && descs2.some((x) => x.episodeId === epA.key) && descs2.some((x) => x.episodeId === epB.key)
+    && !!coreAfterBoth.listens[pinA] && !!coreAfterBoth.positions[pinA] && coreAfterBoth.positions[pinA].positionS === 321
+    && !!coreAfterBoth.positions[pinB],
+    { dA2: dA2 && dA2.listened, dB2: dB2 && (dB2.listened + '|' + dB2.podPositionS), listens: Object.keys(coreAfterBoth.listens), positions: Object.keys(coreAfterBoth.positions) });
   w.close();
 }
 

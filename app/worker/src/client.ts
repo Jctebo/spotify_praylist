@@ -18023,13 +18023,28 @@ function resolveProfileEpisodes614(day) {
       api('/api/player/podcasts?series=novenas').then(function (payload) {
         if (state.dayPayload !== day) return;
         if (!payload || !Array.isArray(payload.novenas)) return;
+        // v614 R-1 repair: ingest the catalog's FULL episode
+        // set in ONE call per build, never one episode per
+        // pin. The standing ingest replaces the series'
+        // episodeKeys with the ingested set and prunes
+        // listens/positions naming no standing episode, so
+        // a one-episode ingest silently wiped every OTHER
+        // novena episode's played mark. With the complete
+        // set the replacement is complete: resolving any
+        // novena pin never deletes a listen or position for
+        // any other catalog episode, and an episode absent
+        // from the catalog (genuinely rotted) is pruned
+        // exactly as the standing ingest prunes other
+        // series — no new migration path.
+        var allEps = [];
+        payload.novenas.forEach(function (n) { (n.episodes || []).forEach(function (x) { if (x && typeof x.key === 'string') allEps.push(x); }); });
+        var core = opnPodCore();
+        opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', allEps);
+        opnPodCoreSave(core);
         group.forEach(function (g) {
           var ep = null;
-          payload.novenas.forEach(function (n) { (n.episodes || []).forEach(function (x) { if (x.key === g.epKey) ep = x; }); });
+          allEps.forEach(function (x) { if (x.key === g.epKey) ep = x; });
           if (!ep) { state.episodeRes614[g.job.block + ':' + g.job.key] = missDesc(g.job, series, g.epKey); return; }
-          var core = opnPodCore();
-          opnPodCoreIngestSeries(core, 'novenas', 'Novenas', 'novenas', [ep]);
-          opnPodCoreSave(core);
           var lk = 'novenas|' + ep.key;
           var l = core.listens[lk], pos = core.positions[lk];
           state.episodeRes614[g.job.block + ':' + g.job.key] = {
