@@ -255,23 +255,205 @@ v603's pin moved at its Ship.
   merge, no deploy, no registry writes beyond the
   contract judgments. Stop at BRANCH READY.
 
-## §4 Review — skeleton
+## §4 Review — Independent Review seat, 2026-11-21 (contract 857)
 
-- **Verdict:** (written at Review)
-- **Gates on the final tree:** (written at Review)
-- **Driven renders (plan §6):** (written at Review) —
-  1. the one page, all-collapsed · 2. the one page,
-  all-expanded · 3. one block in edit posture (handles ·
-  remove acts · restore line · ADD row · the frozen
-  edit bar greyed→active) · 4. the question sheet with
-  both targets named from a live fixture · 5. the pick
-  flip sheet (standing marked · the layer-clearing
-  warning standing) · 6. locked-vault Edit tap (unlock
-  card in place of the posture) · 7. Configure ladder
-  (two doors; Edit today + Edit profiles painting whole
-  against the new payload state) · 8. the block page
-  (unchanged paint + the v585 card from a track tap).
-- **Field legs:** (written at Review)
+- **Verdict: FAIL — one named defect (R3, below).** All
+  other gates pass. Ship may NOT proceed until the
+  defect is fixed forward or John accepts it in the
+  open; the coordinator decides.
+- **DEFECT R3-1 (migration never runs on the
+  vault-unlock path):** `opnMigrateProfiles604` runs
+  only on the plain-document load path (client.ts:1650)
+  and at restore (:2371). The vault unlock path,
+  `opnVaultApplyKey` (:1852), decrypts the real
+  document into the cache and runs NO migration (the
+  same shape stands for mig590 — pre-existing there,
+  new for mig604). Driven proof (render R3, below):
+  an envelope built by the OLD build over the populated
+  variant (dayDefaults + picks standing, no mig604)
+  opens locked on the new build — ephemeral document,
+  envelope byte-identical, no phantom write (that half
+  of R3 stands) — but AFTER unlock the real document
+  still carries `dayDefaults` and `picks` with
+  `mig604` undefined. On a vaulted device (the device
+  shape; John's own shape since v578) the Q3 deletion
+  therefore never happens: the fields stand inert (no
+  reader remains; resolution and composition are
+  unaffected), but the approved migration does not
+  occur, and every later save re-persists them.
+  Build log Group B's claim "runs in the doc-load
+  path (real document only … R3 posture stands)" is
+  incomplete: the unlock path is a real-document load
+  it does not cover. Fix shape (for the coordinator,
+  not built by this seat): run mig590 + mig604 inside
+  `opnVaultApplyKey` after decrypt and persist; add a
+  harness leg for the unlock path (the M legs run the
+  plain path only — that is the coverage gap that let
+  this through).
+- **Gates on the final tree (Review's own runs,**
+  **worktree at f44087e):** harness-v604 **50 ok / 0**
+  **not ok** · harness-v603 **50 ok / 0 not ok**
+  (stands, as required) · harness-v585 39/3 ·
+  harness-v600 35/2 · harness-v601 7/1 — each count
+  identical to the build log's, the non-green legs
+  exactly the legs the build log retires by name.
+- **Fail-on-old spot-checks (Review's own, against**
+  **the ffd1bbe tree):** P1 — the old client resolves
+  the populated variant's Sunday `little-way` by
+  `pick` (new build: `benedictine` by standing) FAIL
+  on old as required · M2 — the old build leaves
+  `dayDefaults` + `picks` standing on the variant
+  (keys list read firsthand) FAIL on old as required.
+- **Driven renders (plan §6)** — jsdom drives of the
+  branch's rendered client, saved under
+  `~/workspace/projects/ora-pro-nobis/v604-review-renders/`:
+  1. `01-one-page-all-collapsed.html` — 7 collapsed
+  rows, 0 expansions, pick Edit stands, 0 edit acts.
+  2. `02-one-page-all-expanded.html` — stored mode
+  `expanded` restored at paint; 6 of 7 blocks expanded
+  (the trackless block paints no expansion host; the
+  harness F1 leg accepts blocks−1 on the same shape).
+  3. `03a-edit-posture-clean-savenew-greyed.html` —
+  handles + removes on every posture row, ADD row
+  stands, Save New disabled while clean ·
+  `03b-edit-posture-dirty-restore-line.html` — after
+  one removal: restore line stands ("Removed: Morning
+  Prayer"), Save New active, frozen banner stands
+  ("Editing today only — Saturday, Nov 21" + Change).
+  4. `04-question-sheet.html` — both targets named
+  from the live fixture: "Today only — Saturday,
+  Nov 21" · "Standing — in The Salesian Way, your
+  every-day profile".
+  5. `05-pick-flip-sheet.html` — chips for all three
+  profiles, The Salesian Way marked on, warning
+  standing verbatim: "today has its own edits —
+  changing the profile clears them" (fixture with a
+  today layer).
+  6. `06-locked-vault-edit-tap.html` — device shape,
+  vault locked: Edit tap stands the unlock card in
+  place of the posture, 0 posture rows, stored
+  envelope byte-identical (no write route ran).
+  7. `07a-configure-ladder.html` — exactly two doors
+  (Edit today · Edit profiles), head "Today follows
+  The Salesian Way" · `07b-edit-today.html` — chips
+  paint whole against the new payload, standing chip
+  (Salesian) marked on.
+  8. `08a-block-page.html` — the deep view paints
+  unchanged (track cards + Play All stand) ·
+  `08b-v585-title-card.html` — **the card itself NOT
+  RUN in this drive:** the synthetic fixture tracks
+  carry no resolvable episode descriptor, so the tap
+  opens nothing; this is a fixture limit, not a
+  regression claim — `paintBlockPage` and
+  `openEpisodeCard` stand outside the v604 diff
+  whole (grep of the diff: no hits), the one-page
+  prayer posture's card rows are proven by harness
+  O4, and harness-v585 stands at its baseline 39/3.
+  Plus the **R3 check** (`R3-check.txt`): locked at
+  first open — no mig604 write, no field deletion on
+  the ephemeral document, envelope untouched (PASS);
+  post-unlock — migration does NOT run (FAIL, defect
+  R3-1 above).
+- **NOT RUN coverage audit** (build's not-run
+  sections; behavior → disposition):
+  - v594 R worlds (vault gate on the Configure
+    surfaces, incl. the mapping screen): the mapping
+    surface is GONE by John's approval —
+    superseded-by-design for that surface; the gate
+    behavior itself is re-proven by harness-v604 W4
+    (and Review render 6, firsthand) for the in-place
+    surface and by harness-v600 R18 (green in
+    Review's 35/2 run) for Edit today. No gap.
+  - v590 §C4/C5 (contents seats reached through a
+    day-pick write): the write they ride is removed
+    whole by approval — superseded-by-design; the
+    contents behavior is re-proven by harness-v604
+    W2/S2/S3. §G1–G4 (old precedence: pick > day
+    default > standing): superseded-by-design,
+    replaced by harness-v604 P1 (Review spot-verified
+    on both trees). No gap.
+  - v591 §M1–M3 (the mig591 Sunday-seed legs):
+    mig591 is retired whole with the map it fed —
+    superseded-by-design; migration correctness is
+    re-proven by harness-v604 M1–M3 on the plain
+    path. The sections after M1 (profile data legs):
+    the legs asserting dayDefaults state writes /
+    day-pick writes are superseded-by-design; the
+    standing profile CRUD they also exercise is
+    re-proven by harness-v604 S/K/W legs. **One gap
+    stands, and it is defect R3-1's root:** no leg in
+    any suite runs a migration against a document
+    loaded through the vault-unlock path — named as
+    a coverage gap, severity HIGH for Q3 (it is
+    exactly John's device shape), LOW for day
+    composition (the fields are readerless).
+  - v593 §F1/F2 (the data layer under the picks):
+    their first act is a dayDefaults write the new
+    build rejects by design — superseded-by-design;
+    replacements harness-v604 V1 (named 400 + route
+    gone, Review-run green) and K3 (chips write the
+    standing pick). No gap.
+- **Code reads (targeted, firsthand):**
+  - `saveToday` read whole (client.ts:20586): the
+    pick leg is cut clean — a changed chip clears the
+    today layer first, then writes `standingKey` via
+    `/profiles/state`; an unchanged pick writes the
+    layer as drafted; `clearedD`/`pickD` reset and
+    the rebuild stand after the chain. R1 holds.
+  - Migration function (:2506): deletes exactly
+    `dayDefaults` + `picks`, gated by `mig604`,
+    `standingKey` never written. Call paths: plain
+    load + restore only — see defect R3-1.
+  - Third ladder host (:20244 `opnOpenAdd604`): the
+    host is a variable (`host604`) holding exactly
+    `{ids, add, layers, groups, ensure}` — the same
+    five keys, in the same order, as both standing
+    host literals (:20963 Edit today · :21438 Edit
+    profiles); `ids` reads the scope's effective
+    list, `add` materializes + writes per scope.
+    D-3's contract claim is genuine.
+  - Grep proof (Review's own): `dayDefaults` /
+    `\.picks` in client.ts + index.ts return only
+    the migration deletes, the import strip, the
+    retirement comments, and the named-400 checks —
+    zero readers, matching the build log's counts.
+    No remaining WRITER to `/profiles/day-pick`
+    exists anywhere in `app/worker/src` (only the
+    two retirement comments name the route).
+- **Deviation verdicts (build log D-1…D-6):**
+  - D-1 (slot-picker per-date rows removed): WITHIN
+    — the rows wrote the removed day-pick route; a
+    stale writer cannot stand, and the plan's sweep
+    missing them is a plan gap, not a build excess.
+  - D-2 (ladder head keeps "Today follows <profile>"):
+    WITHIN — post-collapse the followed profile IS
+    the standing pick; the words name no retired
+    mechanism, and the head's required content
+    (standing profile + today-edits fact) stands.
+  - D-3 (third host as a variable): WITHIN — the
+    contract is identical (verified above); only the
+    literal's placement differs, to keep the mandated
+    harness-v603 50/0.
+  - D-4 (two Edit today sub-lines reworded): WITHIN
+    — Review verified the claim: the pick warning
+    "Changing the pick clears today's edits." stands
+    byte-identical (1 occurrence, old tree and new);
+    the two changed sub-lines are the ones whose old
+    words ("today's pick" · "Change for today only")
+    would be false under the standing pick.
+  - D-5 (pin deferred to Ship): WITHIN — plan §1.8
+    places the bump at Ship; the standing pin legs
+    stay green meanwhile.
+  - D-6 (S3 reading): WITHIN — "original untouched"
+    can only mean untouched BY THE MINT ACT in the
+    standing scope (the session's own standing edits
+    are the writes step 19 approves); S2 proves the
+    strict byte-identity where it is claimable
+    (today scope).
+- **Field legs:** unchanged from the plan — John's
+  device legs (in-place edit at prayer time · the
+  Sunday flip by hand · Save New mint) stand open
+  and are not claimed by this Review.
 
 ## §5 Ship
 
