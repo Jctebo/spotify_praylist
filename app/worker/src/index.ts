@@ -1372,12 +1372,17 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         if (kind === "all-novenas") { if (!seen.has("all-novenas")) { seen.add("all-novenas"); list.push({ kind: "all-novenas" }); } continue; }
         if (kind !== "novena" || typeof key !== "string" || !key) return { error: "bad novena selector in contents" };
       } else {
-        // v597: a course item drops at validation (never
-        // an error, never stored) — the client's drop.
-        if (kind === "course") continue;
-        if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
-        if (typeof key !== "string" || !key) return { error: "contents item needs a key" };
-        if (kind === "seat" && key !== "daily-readings") return { error: `bad seat ${key}` };
+        // v603: a course item naming one of the four
+        // standing keys is kept (John's word returns
+        // courses through the Add path); any other course
+        // key is an error — the client's mirror rule.
+        if (kind === "course") {
+          if (!["catechism-in-a-year", "bible-in-a-year", "rosary-in-a-year", "summa-in-a-year"].includes(key as string)) return { error: `bad course ${String(key)}` };
+        } else {
+          if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
+          if (typeof key !== "string" || !key) return { error: "contents item needs a key" };
+          if (kind === "seat" && key !== "daily-readings") return { error: `bad seat ${key}` };
+        }
       }
       const id = `${kind}:${key}`;
       if (seen.has(id)) continue;
