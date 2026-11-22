@@ -478,6 +478,58 @@ v603's pin moved at its Ship.
   Sunday flip by hand · Save New mint) stand open
   and are not claimed by this Review.
 
+### §4 addendum — Fix verification (independent Fix-Verification seat, 2026-11-22)
+
+- **Defect closed: R3-1.** As recorded above, `mig604`
+  never ran on the vault-unlock path: `opnVaultApplyKey`
+  decrypted the real document and ran no migration, so
+  on a vaulted device the approved Q3 deletion of the
+  stored `dayDefaults` + `picks` never occurred.
+- **Fix seam (read firsthand in the diff
+  `f97bf40..c933281`, `app/worker/src/client.ts`):**
+  inside `opnVaultApplyKey`, immediately after the
+  decrypted real document stands as `opnDocCache`, the
+  standing migration family now runs against that
+  decrypted real document only, in the standing order
+  (`opnMigrateProfiles590` first, then
+  `opnMigrateProfiles604` — the same order as the
+  plain load path and restore), and if either migrated,
+  the result persists through the standing vault path
+  (`opnVaultPersist()`, awaited before the unlock
+  resolves). Nothing else in client behavior changed:
+  the diff is that one block plus its comment; the
+  locked posture is untouched (no migration against
+  the ephemeral document, no envelope write before
+  unlock), and each migration's own flag gates re-runs.
+- **Harness counts (this seat's own runs, worktree at
+  c933281):** harness-v604 **51 ok / 0 not ok** ·
+  harness-v603 **50 ok / 0 not ok** (stands, as
+  required). Harness diff read firsthand: it adds the
+  M4 vault-unlock leg and the `opnDoc` hook export it
+  reads through, and changes no standing leg.
+- **R3 drive (this seat's own, independent script in
+  the Review seat's pattern; output saved as
+  `R3-fix-check.txt` in
+  `~/workspace/projects/ora-pro-nobis/v604-review-renders/`):**
+  an old-build envelope over the populated variant
+  (dayDefaults + picks standing) → new build, locked
+  open: vault locked, envelope byte-identical, nothing
+  migrated → unlock: the real document carries NEITHER
+  `dayDefaults` NOR `picks`, `mig604` stands set,
+  `standingKey` (`benedictine`) byte-identical, and
+  `list` / per-profile `contents` / `todayEdits`
+  byte-identical to the variant, with the migrated
+  document persisted in the envelope → lock + unlock
+  again: no second write (envelope byte-identical,
+  document unchanged). **Drive verdict: PASS.**
+- **Review verdict updated: PASS.** Defect R3-1 is
+  verified fixed; ship may proceed. Standing note:
+  the title-card render 08b stands as **NOT RUN**,
+  with its named cover — the title-card/played-mark
+  surface is outside the v604 diff, covered by O4 +
+  the harness-v585 baseline. Field legs remain John's,
+  as recorded above, and are not claimed here.
+
 ## §5 Ship
 
 - (Written at Ship: merge · pin `ora-pro-nobis-v604-1`
