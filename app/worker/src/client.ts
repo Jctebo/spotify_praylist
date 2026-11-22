@@ -4331,6 +4331,23 @@ function readQueueSnapshot() {
   if (typeof rec.date !== 'string' || !Array.isArray(rec.ids) || !rec.ids.length) { removeQueueSnapshot(); return null; }
   return rec;
 }
+function queueMarkPos617(desc) {
+  // v617: the stored start position for a queue track, read
+  // from EXACTLY the sources startDesc reads — a podcast
+  // descriptor's podPositionS (the core fold; null when
+  // listened), else the day payload's dayPositions fold.
+  // Book prayers (kind 'prayer', v484 §2.6) and homilies
+  // (device-local, v551) hold no position: 0. A finished
+  // track reads 0 by the stores' own discipline (its
+  // position row is deleted at 'ended'; podPositionS is
+  // null when listened) — this reader adds NO threshold
+  // of its own.
+  if (!desc) return 0;
+  if (desc.kind === 'podcast') return desc.podPositionS > 0 ? Math.floor(desc.podPositionS) : 0;
+  if (desc.kind === 'prayer' || desc.kind === 'homily') return 0;
+  var fold617 = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
+  return fold617 > 0 ? Math.floor(fold617) : 0;
+}
 function queueStartPos(desc) {
   // The position a just-started track stands at: the pending
   // resume's position when this start carries one (Continue's
@@ -4877,10 +4894,31 @@ function startDesc(desc) {
   ensureTrackDraw(desc); // v528 §2.4: the by-play draw rides beside the play — fire-and-forget, a failed draw never blocks the start
   podPositionSkipAway(desc);
   dayPositionSkipAway(desc); // v412 Fix 10: the day mirror of the skip-away save
+  // v617: the current-track carry — the OUTGOING track at
+  // this funnel's head is state.current (replaced only
+  // below); when the incoming descriptor IS that track, its
+  // LIVE position is the start's carry in place of the
+  // store read, which can lag the live position (the tick's
+  // last save; in native mode the service's write-backs
+  // never enter the client fold in-session) or read 0 — the
+  // nativeResendAtCurrent precedent: a re-start of the
+  // current track carries the live position, never a stale
+  // store value. Native reads the mirror through playPos(),
+  // accepted only when the mirror names this track; the
+  // element reads audioEl.currentTime. A live carry of 0
+  // or -1 (no mirror stands) changes nothing.
+  var sameCur617 = (state.current && desc && state.current.episodeId === desc.episodeId) ? state.current : null;
+  var liveCarry617 = -1;
+  if (sameCur617) {
+    if (oraNativeMode()) { if (nativeMirror && nativeMirror.trackId === desc.episodeId) liveCarry617 = Math.floor(playPos().pos); }
+    else liveCarry617 = Math.floor(audioEl.currentTime || 0);
+  }
   if (desc.kind === 'podcast') {
-    state.pendingResume = desc.podPositionS > 0
-      ? { episodeId: desc.episodeId, positionS: desc.podPositionS }
-      : (state.pendingResume && state.pendingResume.episodeId === desc.episodeId ? null : state.pendingResume);
+    state.pendingResume = liveCarry617 > 0
+      ? { episodeId: desc.episodeId, positionS: liveCarry617 }
+      : (desc.podPositionS > 0
+        ? { episodeId: desc.episodeId, positionS: desc.podPositionS }
+        : (state.pendingResume && state.pendingResume.episodeId === desc.episodeId ? null : state.pendingResume));
     podPosSentKey = desc.podSeries + '/' + desc.seriesKey; podPosSentVal = -1;
   } else {
     podPosSentKey = null; podPosSentVal = -1;
@@ -4892,8 +4930,14 @@ function startDesc(desc) {
     // the restored queue) stands untouched.
     if (state.pendingResume && state.pendingResume.episodeId !== desc.episodeId) state.pendingResume = null;
     if (!state.pendingResume) {
-      var dayPos = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
-      if (dayPos > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) };
+      // v617: inside this guard (every deliberate carry that
+      // already stands is untouched by construction), the
+      // current track's live carry wins over the fold value.
+      if (liveCarry617 > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: liveCarry617 };
+      else {
+        var dayPos = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
+        if (dayPos > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) };
+      }
     }
     dayPosSentKey = desc.episodeId; dayPosSentVal = -1;
   }
@@ -17668,6 +17712,18 @@ function applyNativeState(json) {
       if (qi >= 0) state.queueIdx = qi;
       setMediaSessionFor(desc);
       markPlaying(descCardKey(desc));
+      // v617: the native transition seek — the engine
+      // advances through its window autonomously and the
+      // contract carries only the START item's position, so
+      // on a transition the new track seeks to its stored
+      // mark (queueMarkPos617 — the single-play discipline),
+      // once, through the scrub's own transport command. The
+      // changed gate fires once per track change, so repeat
+      // publishes never re-seek; a publish already at/past
+      // the mark sends nothing; a pending start for this
+      // descriptor is governed by its own contract carry.
+      var mark617 = queueMarkPos617(desc);
+      if (mark617 > 0 && (st.positionS || 0) < mark617 && state.pendingStart !== desc) nativeTransportSend({ command: 'seekTo', positionS: mark617 });
     }
     // (The v461 ack stands above, outside this gate — v469
     // Step 6 amendment (i).)
