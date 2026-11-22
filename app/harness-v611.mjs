@@ -131,7 +131,10 @@ function stripServerValidate(src) {
     ['const list: { kind: string; key?: string }[] = [];', 'const list = [];'],
     ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
     ['list.push({ kind: kind as string, key: key as string });', 'list.push({ kind: kind, key: key });'],
-    ['.includes(key as string)', '.includes(key)'],
+    // v611 ship: the ['.includes(key as string)', '.includes(key)'] rep is
+    // dropped — main's v609 repair 2 generalized the server course rule and
+    // the cast no longer stands in validateProfileContents (driver only;
+    // assertions untouched).
   ];
   for (const [a, b] of reps) { if (!f.includes(a)) throw new Error('server validate shape moved: ' + a.slice(0, 60)); f = f.split(a).join(b); }
   return f;
