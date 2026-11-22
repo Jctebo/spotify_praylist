@@ -1347,8 +1347,12 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         // standing keys is kept (John's word returns
         // courses through the Add path); any other course
         // key is an error — the client's mirror rule.
+        // v609 repair 2: the course selector generalizes
+        // to ANY podcast series key on both sides of the
+        // mirror (a series stands only as a contents
+        // item); a keyless course item is still an error.
         if (kind === "course") {
-          if (!["catechism-in-a-year", "bible-in-a-year", "rosary-in-a-year", "summa-in-a-year"].includes(key as string)) return { error: `bad course ${String(key)}` };
+          if (typeof key !== "string" || !key) return { error: `bad course ${String(key)}` };
         } else if (kind === "day") {
           // v611: a day item naming the one standing key
           // is kept; any other day key is an error — the
@@ -1361,7 +1365,14 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
         }
       }
       const id = `${kind}:${key}`;
-      if (seen.has(id)) continue;
+      // v610 (John, 2026-11-21): duplicates stand for the
+      // Divine Office hours — a source selector naming one
+      // of the eight office slots is never deduped (the
+      // client's opnCheckContents590 mirror rule; the list
+      // is a literal here because this fn is extracted
+      // standalone by the harnesses). Every other kind/key
+      // keeps the standing dedupe.
+      if (seen.has(id) && !(kind === "source" && ["ext-invitatory", "ext-morning-prayer", "ext-midmorning-prayer", "ext-midday-prayer", "ext-midafternoon-prayer", "ext-office-of-readings", "ext-evening-prayer", "ext-night-prayer"].includes(key))) continue;
       seen.add(id);
       list.push({ kind: kind as string, key: key as string });
     }

@@ -464,6 +464,17 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .p604handle { cursor:grab; touch-action:none; padding:0 10px 0 2px; color:var(--muted); user-select:none; }
 .p604exp { margin:0 0 10px; }
 .p604exphead { align-items:center; margin:2px 0 6px; }
+/* v609: the merged set — one continuous list; the edit
+   form's groups are invisible wrappers (no head, no
+   divider), and its rows are the CONDENSED form: slim
+   padding, title + drag + remove only. */
+.p609set { margin:0 0 10px; }
+.p609sethead { font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; opacity:.55; margin:12px 0 4px; }
+.p609group { margin:0 0 8px; }
+.p609ghead { align-items:center; margin:2px 0 6px; font-family:var(--sans); font-weight:600; }
+.p609off .p609erow, .p609off .sub { opacity:.5; }
+.p609erow { padding-top:5px; padding-bottom:5px; margin-bottom:6px; }
+.p609erow .row { min-height:32px; align-items:center; }
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
 .proffrozen593 .profchips593 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 6px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
@@ -1048,7 +1059,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v608-1";
+var CACHE = "ora-pro-nobis-v610-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

@@ -1656,12 +1656,20 @@ function opnDoc() {
           opnDocCache = d;
           if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
           if (opnMigrateProfiles604(d.sections.profiles)) opnSave();
+          if (opnMigrateProfiles609(d.sections.profiles, d.sections)) opnSave();
           return d;
         }
       }
     } catch (e) {}
   }
   opnDocCache = opnDefaultDoc();
+  // v609 repair 2: a fresh document is born migrated —
+  // mig609 runs over the seed profiles here (the seed
+  // itself keeps its historical shape, so mig590's
+  // designed-shape comparisons stand untouched; the
+  // migration computes the seed contents from the seed
+  // settings exactly as it does for a stored document).
+  opnMigrateProfiles609(opnDocCache.sections.profiles, opnDocCache.sections);
   opnSave();
   return opnDocCache;
 }
@@ -1879,6 +1887,7 @@ function opnVaultApplyKey(rawKey) {
     if (doc.sections) {
       if (opnMigrateProfiles590(doc.sections.profiles)) migrated = true;
       if (opnMigrateProfiles604(doc.sections.profiles)) migrated = true;
+      if (opnMigrateProfiles609(doc.sections.profiles, doc.sections)) migrated = true;
     }
     if (!migrated) return doc;
     return opnVaultPersist().then(function () { return doc; });
@@ -2405,6 +2414,7 @@ function opnRestoreFromText(text) {
     opnDocCache = doc;
     if (doc.sections && opnMigrateProfiles590(doc.sections.profiles)) { /* migrated in place below */ }
     if (doc.sections && opnMigrateProfiles604(doc.sections.profiles)) { /* migrated in place below */ }
+    if (doc.sections && opnMigrateProfiles609(doc.sections.profiles, doc.sections)) { /* migrated in place below */ }
     opnSave();
     // v589 (fix-forward): the file's podcastListens rows land
     // in the podcast core through the standing import seam —
@@ -2563,6 +2573,79 @@ function opnMigrateProfiles604(P) {
   P.mig604 = true;
   return true;
 }
+function opnMigrateProfiles609(P, sections) {
+  // v609 REPAIR 2 (John, 2026-11-21 23:33/23:34 CT):
+  // podcasts stand as CONTENTS items only — the
+  // Podcasts layer retires whole (no toggle, no
+  // auto-build). A profile whose layer stands ON
+  // migrates what the layer carries into contents, in
+  // the block where it stands today:
+  //  - 'daily-readings' -> the readings SEAT selector
+  //    in Morning (resolveReadingsSeat590's contents
+  //    rule reads it there);
+  //  - a series with a source-settings row of its own
+  //    (daily-gospel-exegesis) already stands by that
+  //    row under standing contents — nothing to move;
+  //  - every other series -> a COURSE item in Night
+  //    (the day's tail, where the layer block stood).
+  // A block that gains contents gains its FULL standing
+  // list (the v597 rule: a stored contents list IS the
+  // block's composition — a partial list would gate the
+  // block's own rows out), computed from the document's
+  // own source settings, sortOrder-merged as the day
+  // composes (own before external on a tie, fallbacks
+  // excluded). Stored contents are never overwritten —
+  // migration appends only what is missing. A series on
+  // a layer that stands OFF does not stand today and
+  // does not migrate. The layer then stands empty and
+  // off on every profile; every other field of every
+  // profile stands byte-identical. Runs once (mig609).
+  if (!P || !Array.isArray(P.list) || P.mig609) return false;
+  P.list.forEach(function (rec) { opnMigrateProfileRecord609(rec, sections); });
+  P.mig609 = true;
+  return true;
+}
+function opnMigrateProfileRecord609(rec, sections) {
+  // The per-record half of mig609 (see its header). The
+  // profiles Reset also calls this: Reset restores the
+  // DESIGNED seed record (the layer shape), and on a
+  // mig609-spent document the restored way must land in
+  // the migrated shape directly, or its podcasts would
+  // stand nowhere.
+  if (!rec || typeof rec !== 'object') return;
+  var rows = sections && sections.config && sections.config.sourceSettings && Array.isArray(sections.config.sourceSettings.sources) ? sections.config.sourceSettings.sources : [];
+  var seriesHasRow = {};
+  rows.forEach(function (r) { if (r && r.sourceKey) seriesHasRow[r.sourceKey] = 1; });
+  var standingList = function (block) {
+    var merged = [];
+    rows.forEach(function (r) { if (r && r.family === 'own' && r.enabled === 1 && r.block === block) merged.push({ kind: 'source', key: r.sourceKey, so: r.sortOrder }); });
+    rows.forEach(function (r) { if (r && r.family === 'external' && r.enabled === 1 && r.role !== 'fallback' && r.slotId && r.block === block) merged.push({ kind: 'source', key: r.slotId, so: r.sortOrder }); });
+    merged.sort(function (a, b) { return (a.so == null ? 1e9 : a.so) - (b.so == null ? 1e9 : b.so); });
+    return merged.map(function (m) { return { kind: m.kind, key: m.key }; });
+  };
+  var hasItem = function (list, kind, key) { return (list || []).some(function (it) { return it && it.kind === kind && it.key === key; }); };
+  var pod = rec.layers && rec.layers.podcasts ? rec.layers.podcasts : null;
+  var series = pod && Array.isArray(pod.series) ? pod.series.slice() : [];
+  var on = !!(pod && pod.on);
+  if (on && series.length) {
+    var contents = rec.contents && typeof rec.contents === 'object' && !Array.isArray(rec.contents) ? rec.contents : null;
+    var ensureBlock = function (block) {
+      if (!contents) { contents = {}; rec.contents = contents; }
+      if (!Array.isArray(contents[block])) contents[block] = standingList(block);
+      return contents[block];
+    };
+    if (series.indexOf('daily-readings') >= 0) {
+      var morning = ensureBlock('Morning');
+      if (!hasItem(morning, 'seat', 'daily-readings')) morning.push({ kind: 'seat', key: 'daily-readings' });
+    }
+    var courses = series.filter(function (k) { return k !== 'daily-readings' && !seriesHasRow[k]; });
+    if (courses.length) {
+      var night = ensureBlock('Night');
+      courses.forEach(function (k) { if (!hasItem(night, 'course', k)) night.push({ kind: 'course', key: k }); });
+    }
+  }
+  if (rec.layers && rec.layers.podcasts) { rec.layers.podcasts.on = false; rec.layers.podcasts.series = []; }
+}
 function opnResolveProfile590(P, date) {
   // v604: precedence COLLAPSES to standing pick -> today
   // layer (the layer applies in the fold, after this
@@ -2607,7 +2690,15 @@ function opnCheckContents590(contents, coreBlocks) {
         // removal, scoped). A course item naming any
         // other key is an error, as pre-v597.
         if (kind === 'course') {
-          if (OPN_COURSE_KEYS_603.indexOf(key) < 0) throw opnErr(400, 'bad course ' + key);
+          // v609 REPAIR 2: the course selector generalizes
+          // to ANY podcast series key — a series stands in
+          // the day only as a contents item (John's word:
+          // podcasts function like everything else), and
+          // the resolver has always been series-general.
+          // The Add ladder still offers its named doors;
+          // this widens what a stored/written item may be,
+          // not what the ladder offers.
+          if (typeof key !== 'string' || !key) throw opnErr(400, 'bad course ' + key);
         } else if (kind === 'day') {
           // v611: a day item naming the one standing key
           // is kept; any other day key is an error,
@@ -2620,7 +2711,13 @@ function opnCheckContents590(contents, coreBlocks) {
         }
       }
       var id = kind + ':' + key;
-      if (seen[id]) return;
+      // v610 (John, 2026-11-21): duplicates stand for the
+      // Divine Office hours — a source selector naming one
+      // of the eight office slots (EXT_TOKENS' keys) is
+      // never deduped, so the same hour may stand more
+      // than once in a block's list. Every other kind/key
+      // keeps the standing dedupe.
+      if (seen[id] && !(kind === 'source' && EXT_TOKENS[key])) return;
       seen[id] = 1;
       list.push({ kind: kind, key: key });
     });
@@ -2639,7 +2736,7 @@ function opnContentsOf590(p) {
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || OPN_COURSE_KEYS_603.indexOf(it.key) >= 0) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611); }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -2701,6 +2798,8 @@ function opnTodayEntry594(P, date) {
   return e && typeof e === 'object' && !Array.isArray(e) ? e : null;
 }
 function opnTodayItemId594(it) { return it.kind + ':' + (it.key || ''); }
+function opnRowId610(it, occ) { return opnTodayItemId594(it) + (occ ? '#' + occ : ''); }
+function opnParseRowId610(rowId) { var p = String(rowId || '').split('#'); return { id: p[0], occ: p.length > 1 ? Number(p[1] || 0) : 0 }; }
 function opnTodayUniverse594(block) {
   return profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
 }
@@ -2711,13 +2810,13 @@ function opnSeatPosture597(layers) {
   // absent-contents rule). Layers arrive in the stored
   // shape ({podcasts:{on,series}}) or the payload shape
   // ([{key,on,series}]); both read here.
-  var podOn = false, podSeries = [];
-  if (Array.isArray(layers)) {
-    layers.forEach(function (l) { if (l && l.key === 'podcasts') { podOn = !!l.on; podSeries = l.series || []; } });
-  } else if (layers && layers.podcasts) {
-    podOn = !!layers.podcasts.on; podSeries = layers.podcasts.series || [];
-  }
-  return podOn && podSeries.indexOf('daily-readings') >= 0;
+  // v609 REPAIR 2: the posture RETIRES with the Podcasts
+  // layer — standing contents (the absent-contents
+  // branch) never carry the seat again; the seat stands
+  // only where a stored contents entry names it
+  // (mig609 lands it in Morning). The function stands
+  // for its callers' shape and answers false.
+  return false;
 }
 function opnStandingContents597(rec, block) {
   // v597: THE standing-contents function — the one list
@@ -2797,8 +2896,15 @@ function opnTodayDivergence594(rec, layer) {
     var comp = opnTodayComposedContents594(rec, block);
     var lay = layer.contents[block] || [];
     var compIds = comp.map(opnTodayItemId594), layIds = lay.map(opnTodayItemId594);
-    var removed = comp.filter(function (it) { return layIds.indexOf(opnTodayItemId594(it)) < 0; });
-    var added = lay.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
+    // v610: the diff is a MULTISET diff — a second copy of a
+    // standing item is an addition, a dropped copy a removal
+    // (duplicates stand for the Divine Office hours).
+    var layCount = {}, compCount = {};
+    layIds.forEach(function (x) { layCount[x] = (layCount[x] || 0) + 1; });
+    compIds.forEach(function (x) { compCount[x] = (compCount[x] || 0) + 1; });
+    var seenRm = {}, seenAd = {};
+    var removed = comp.filter(function (it) { var k = opnTodayItemId594(it); seenRm[k] = (seenRm[k] || 0) + 1; return seenRm[k] > (layCount[k] || 0); });
+    var added = lay.filter(function (it) { var k = opnTodayItemId594(it); seenAd[k] = (seenAd[k] || 0) + 1; return seenAd[k] > (compCount[k] || 0); });
     removed.forEach(function (it) { out.push({ kind: 'item-removed', block: block, item: opnTodayItemId594(it) }); });
     added.forEach(function (it) { out.push({ kind: 'item-added', block: block, item: opnTodayItemId594(it) }); });
     if (!removed.length && !added.length && JSON.stringify(compIds) !== JSON.stringify(layIds)) out.push({ kind: 'items-reordered', block: block });
@@ -2846,7 +2952,13 @@ function opnApplyTodayLayer594(eff, layer) {
         // instead — its row is stood by the gate's
         // all-novenas keying, repaired in extRebuildDescs
         // in this same release.)
-        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source'; });
+        // v609 repair 2: the readings SEAT restores with
+        // the sources — it is a contents item now (the
+        // layer posture that used to carry it into the
+        // snapshot is retired), so a cold snapshot loses
+        // it exactly as it loses the sources, and the
+        // clean composition carries it.
+        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source' || it.kind === 'seat'; });
         var seen = {};
         entry.forEach(function (it) { seen[opnTodayItemId594(it)] = 1; });
         var restored = standing.filter(function (it) { return !seen[opnTodayItemId594(it)]; });
@@ -3148,6 +3260,12 @@ function opnLocalApi(path, opts, mode) {
         rp.name = des.name; rp.honorLine = des.honorLine;
         rp.coreBlocks = opnClone(des.coreBlocks); rp.layers = opnClone(des.layers);
         delete rp.contents;
+        // v609 repair 2: the designed record stands in
+        // the migrated shape (its podcasts as contents
+        // items) — the seed keeps the layer shape for
+        // mig590's comparisons, so the migration runs on
+        // the restored record here.
+        opnMigrateProfileRecord609(rp, opnDoc().sections);
         return bump();
       }
       if (p === '/api/prayer/profiles/delete') {
@@ -3659,12 +3777,13 @@ function opnFoldDay590(j) {
     return !!(f && f.on);
   };
   if (layerOn('novenas') && byName['Novenas']) { byName['Novenas'].layer = 'novenas'; out.push(byName['Novenas']); delete byName['Novenas']; }
-  if (layerOn('podcasts')) {
-    var pb = byName['Podcasts'] || { block: 'Podcasts', label: 'Podcasts', caption: 'the podcasts you added', spotifyUrl: null, tracks: [], trackCount: 0 };
-    pb.layer = 'podcasts';
-    out.push(pb);
-    delete byName['Podcasts'];
-  }
+  // v609 REPAIR 2: the Podcasts layer block RETIRES with
+  // the layer — no block synthesizes from a layer switch
+  // again. A Podcasts block stands only if a payload
+  // itself carries one (the extras rule above admits
+  // non-hour blocks other than Podcasts by name; a
+  // payload-carried Podcasts block is dropped by that
+  // same rule, as before this branch ever stood).
   j.blocks = out;
   // v591 Correction 2: a prayer standing in the effective
   // profile's contents for a block surfaces in the built
@@ -4400,18 +4519,39 @@ function playedKey(episodeId, block) {
   if (episodeId && block && state.repeatIds && state.repeatIds[episodeId]) return episodeId + '|' + block;
   return episodeId;
 }
-function isPlayed(episodeId, dateStr, block) {
+function playedKeyOcc(episodeId, block, occ) {
+  // v610: a descriptor stamped _occ (a duplicated Divine Office
+  // hour standing again in the same block) keys per OCCURRENCE —
+  // '#n' rides the standing playedKey, so each copy carries its
+  // own played mark and its own intention draw. Callers without
+  // an occurrence read exactly the keys they read before.
+  var k = playedKey(episodeId, block);
+  return occ ? k + '#' + occ : k;
+}
+function descMarkKey(t) {
+  // v610: the one key a descriptor's marks and draws read.
+  if (!t || !t.episodeId) return null;
+  return playedKeyOcc(t.episodeId, t.block || t._block || '', t._occ || 0);
+}
+function isPlayedDesc(x, dateStr) {
+  // v610: a duplicated copy reads its own occurrence key;
+  // every standing descriptor reads exactly the key it read
+  // before (its block field as the caller passed it).
+  if (!x) return false;
+  return x._occ ? isPlayed(x.episodeId, dateStr, x.block || x._block, x._occ) : isPlayed(x.episodeId, dateStr, x.block);
+}
+function isPlayed(episodeId, dateStr, block, occ) {
   if (!episodeId || !dateStr) return false;
-  var byDate = playedMap()[playedKey(episodeId, block)];
+  var byDate = playedMap()[playedKeyOcc(episodeId, block, occ)];
   return !!(byDate && byDate[dateStr]);
 }
-function writePlayed(episodeId, dateStr, via, block) {
-  writePlayedQuiet(episodeId, dateStr, via, block);
+function writePlayed(episodeId, dateStr, via, block, occ) {
+  writePlayedQuiet(episodeId, dateStr, via, block, occ);
   refreshPlayedChrome();
 }
-function writePlayedQuiet(episodeId, dateStr, via, block) {
+function writePlayedQuiet(episodeId, dateStr, via, block, occ) {
   if (!episodeId || !dateStr) return;
-  var key = playedKey(episodeId, block);
+  var key = playedKeyOcc(episodeId, block, occ);
   var map = playedMap();
   // Prune on write: date entries older than 120 days before the
   // presented date drop (novena windows are 9 days; a season of
@@ -4464,7 +4604,7 @@ function markCompleted(desc) {
   if (desc.kind === 'homily') { if (desc.homilyId) homilySetPlayed(desc.homilyId, true); return; }
   var d = presentedDateStr();
   if (!d) return;
-  writePlayed(desc.episodeId, d, 'played', desc.block);
+  writePlayed(desc.episodeId, d, 'played', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0);
 }
 function setMediaSessionFor(desc) {
   if (oraInShell()) return; // v377 B6: in the shell the native session is the face
@@ -4610,7 +4750,7 @@ function trackKeyOf(t) {
   // rows carry no Intention line.
   if (t.kind === 'homily') return null;
   if (t.episodeId.indexOf('intro:') === 0 || t.episodeId.indexOf('seg:') === 0) return null;
-  return playedKey(t.episodeId, t.block || t._block || '');
+  return descMarkKey(t);
 }
 function trackDrawTextFor(t) {
   var k = trackKeyOf(t);
@@ -4734,7 +4874,7 @@ function startDesc(desc) {
   state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
   setMediaSessionFor(desc);
   setPlaybackState('playing');
-  markPlaying(desc.episodeId);
+  markPlaying(descCardKey(desc));
   updateDock();
   saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
   // v466 Fork B: in the native shell the start's engine act is
@@ -4799,21 +4939,21 @@ function tapPlay(d) {
   // identity: the build re-resolves in the fresh whole-day list
   // (§2.1), never in the render-time snapshot.
   if (!d) return;
-  var key = d.episodeId || '';
+  var key = descCardKey(d);
   // v461 F1: a tap on the track whose start is still loading
   // CANCELS the start — it never rebuilds the queue, never
   // restarts the load, never stacks a second play().
-  if (state.pendingStart && state.current && state.current.episodeId === key) { cancelPendingStart(); return; }
+  if (state.pendingStart && state.current && descCardKey(state.current) === key) { cancelPendingStart(); return; }
   // v384 §2.2: the same-unit toggle at the granularity of the
   // prayer alone — the pair is the unit, so tapping the prayer
   // card while its audio plays pauses it.
-  if (state.current && transportPlaying() && state.current.episodeId === key) { pauseTransport(); return; }
+  if (state.current && transportPlaying() && descCardKey(state.current) === key) { pauseTransport(); return; }
   // v461 F3: a tap on the PAUSED standing current is an
   // unpause — the element resumes through resumeCurrent (the
   // jumpQueueTo precedent); the standing queue, its index,
   // and the track's place all stand. The rebuild below is
   // for every OTHER row.
-  if (state.current && state.current.episodeId === key) { resumeCurrent(); return; }
+  if (state.current && descCardKey(state.current) === key) { resumeCurrent(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
   // §2.7: a card in no block (the FROM TODAY'S PODCAST group)
@@ -4985,7 +5125,7 @@ function unplayedOnly(descs) {
   // v515: a podcast descriptor's played state is its series
   // listen (the descriptor's flag), never a day-store row —
   // the filter reads each kind's own store.
-  return descs.filter(function (x) { return x.kind === 'podcast' ? !x.listened : !isPlayed(x.episodeId, d, x.block); });
+  return descs.filter(function (x) { return x.kind === 'podcast' ? !x.listened : !isPlayedDesc(x, d); });
 }
 function queueBuild(descs) {
   // §2.4's fallback, at the same build-time seam: the filtered
@@ -5019,7 +5159,7 @@ function sectionQueueFrom(all, tappedId) {
   // playTrack's single play).
   var prayerId = tappedId;
   var prayer = null;
-  for (var i = 0; i < all.length; i++) { if (all[i].episodeId === prayerId) { prayer = all[i]; break; } }
+  for (var i = 0; i < all.length; i++) { if (descCardKey(all[i]) === prayerId || all[i].episodeId === prayerId) { prayer = all[i]; break; } }
   if (!prayer || !prayer.available) return [];
   if (!prayer.block) return null;
   var section = all.filter(function (x) { return x.block === prayer.block; });
@@ -5282,7 +5422,7 @@ function renderQueueList() {
     // never writes (markCompleted returns at the podcast branch:
     // the podcasts store is its record). A day row keeps the
     // isPlayed read untouched.
-    var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false);
+    var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayedDesc(desc, dstr) : false);
     var dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
     return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
       + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
@@ -5340,7 +5480,7 @@ function buildContinueQueue() {
     var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
     var d = presentedDateStr();
     var firstUnplayed = null;
-    prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d, x.block)) && !firstUnplayed) firstUnplayed = x; });
+    prayers.forEach(function (x) { if (!(d && isPlayedDesc(x, d)) && !firstUnplayed) firstUnplayed = x; });
     var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
     if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
       for (var i = 0; i < build.length; i++) {
@@ -5359,7 +5499,7 @@ function loadResume(desc, positionS) {
   setPlaybackState('paused');
   audioEl.src = desc.url;
   audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
-  markPlaying(desc.episodeId);
+  markPlaying(descCardKey(desc));
   updateDock();
   // Stands paused at the position (set on loadedmetadata); the app
   // never autoplays sound on open.
@@ -5467,7 +5607,7 @@ function standRestoredQueue(day) {
   // stored position; a resume plays the prayer.
   audioEl.src = chosen.desc.url;
   audioEl.load();
-  markPlaying(chosen.desc.episodeId);
+  markPlaying(descCardKey(chosen.desc));
   updateDock();
   renderQueueList();
 }
@@ -6495,6 +6635,7 @@ function paintMergedContainer(tab) {
 }
 
 function setTab(tab) {
+  if (tab !== 'prayers') opn609BioTried = false; // v609 repair 2: leaving the Pray tab ends the visit — a fresh visit to a still-locked Praylist may fire the fingerprint prompt again
   closeWatch(); // v434 §2.6.2 seat 2: any tab switch tears a standing watch frame down first — the video sounds only while its surface stands open; the harvest below then reads the restored series page, the watch's standing place
   massPodReturn = false; // v493: a tab switch ends any Mass hosting of the CatholicTV series page — the page's home reads from the tab that opens it
   podOrigin = null; // v534 F1: a tab switch likewise ends any Pray hosting of a series page
@@ -9721,7 +9862,7 @@ function epCardSeriesTitle(seriesKey) {
 }
 function epCardDayPlayed(d, anyDate) {
   if (anyDate) { var m = playedMap()[playedKey(d.episodeId, d.block)]; return !!(m && Object.keys(m).length); }
-  return isPlayed(d.episodeId, presentedDateStr(), d.block);
+  return isPlayedDesc(d, presentedDateStr());
 }
 function epCardPlayedOf(model) {
   var d = model.desc;
@@ -14816,6 +14957,7 @@ function trackDesc(t, day) {
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
   var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
+  if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
   if (d.available && day) {
     var text = introTextFor(t, day);
     if (text) d.intentionText = text;
@@ -14971,14 +15113,14 @@ function playedDotHtml(t) {
   // refreshPlayedChrome and the toggle repaint/write from the
   // button's own pair of attributes.
   var block = t.block || t._block || '';
-  var on = isPlayed(id, presentedDateStr(), block);
-  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
+  var on = isPlayed(id, presentedDateStr(), block, t._occ || 0);
+  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '"' + (t._occ ? ' data-playedocc="' + t._occ + '"' : '') + ' aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
 }
 function heardCls(t) {
   // v515: a podcast descriptor's heard state is its listen
   // (the playedDotHtml rule, at the title's seat).
   if (t.kind === 'podcast') return t.listened ? ' class="heard"' : '';
-  return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '') ? ' class="heard"' : '';
+  return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '', t._occ || 0) ? ' class="heard"' : '';
 }
 var BS_CH = String.fromCharCode(92);
 function novenaInfo(episodeId, title) {
@@ -15027,7 +15169,7 @@ function blockPlayedCounts(block) {
     // mark-all (a day-store act) never stands for it.
     if (!x.available || x.block !== block || x.kind === 'podcast') return;
     total++;
-    if (d && isPlayed(x.episodeId, d, x.block)) played++;
+    if (d && isPlayedDesc(x, d)) played++;
   });
   return { total: total, played: played };
 }
@@ -15036,7 +15178,7 @@ function refreshPlayedChrome() {
   if (!d || !view) return;
   view.querySelectorAll('[data-markplayed]').forEach(function (btn) {
     var id = btn.getAttribute('data-markplayed');
-    var on = isPlayed(id, d, btn.getAttribute('data-playedblock') || '');
+    var on = isPlayed(id, d, btn.getAttribute('data-playedblock') || '', Number(btn.getAttribute('data-playedocc') || 0));
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-label', on ? 'Mark as unplayed' : 'Mark as played');
     var card = btn.closest('[data-card]');
@@ -15090,10 +15232,11 @@ function wirePlayed(root) {
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-markplayed');
       var block = btn.getAttribute('data-playedblock') || '';
+      var occ = Number(btn.getAttribute('data-playedocc') || 0);
       var d = presentedDateStr();
       if (!id || !d) return;
-      if (isPlayed(id, d, block)) writePlayed(id, d, null, block);
-      else writePlayed(id, d, 'marked', block);
+      if (isPlayed(id, d, block, occ)) writePlayed(id, d, null, block, occ);
+      else writePlayed(id, d, 'marked', block, occ);
     });
   });
   (root || view).querySelectorAll('[data-markblock]').forEach(function (btn) {
@@ -15109,8 +15252,8 @@ function wirePlayed(root) {
         if (!x.available || x.block !== block) return;
         // Unavailable tracks are never written, either way; one
         // tap writes the block's whole available set.
-        if (unmark) { if (isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, null, x.block); }
-        else if (!isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, 'marked', x.block);
+        if (unmark) { if (isPlayedDesc(x, d)) writePlayedQuiet(x.episodeId, d, null, x._occ ? (x.block || x._block) : x.block, x._occ || 0); }
+        else if (!isPlayedDesc(x, d)) writePlayedQuiet(x.episodeId, d, 'marked', x._occ ? (x.block || x._block) : x.block, x._occ || 0);
       });
       refreshPlayedChrome();
     });
@@ -15389,13 +15532,10 @@ function openHeaderMenu() {
     items.push({ head: true, label: 'Pray' });
     items.push({ label: 'Sort', act: function () { openBlockOrderEditor(); } });
     items.push({ label: 'Download for offline', act: function () { offlineCompleteness(true); } });
-    // v604: the fold option — Expand all / Collapse all
-    // write the ONE stored page mode and repaint; the
-    // acts stand outside the in-place edit posture only.
-    if (!opn604.editing) {
-      items.push({ label: 'Expand all', act: function () { opnSetPraylistMode604('expanded'); opnFoldSession604 = {}; opnRepaintHome604(); } });
-      items.push({ label: 'Collapse all', act: function () { opnSetPraylistMode604('collapsed'); opnFoldSession604 = {}; opnRepaintHome604(); } });
-    }
+    // v604: the fold option stood here (Expand all /
+    // Collapse all). v609: the fold RETIRES with the
+    // block sections — the merged set has nothing to
+    // fold, and the acts stand nowhere.
   } else if (tab === 'podcasts' && podLevel === 'index') {
     // The Formation home: the retired row-2 button's act.
     items.push({ head: true, label: 'Catechesis' });
@@ -15804,8 +15944,15 @@ function blockDownloadAll(block) {
   offlineDownloadItems(items, null).then(function () { refreshGridDlStates(); paintOfflineLine(); });
 }
 
+function descCardKey(t) {
+  // v610: a descriptor's card/play key — its episodeId, with
+  // the occurrence suffix on a duplicated copy, so two copies
+  // of one hour stand as two cards with two play buttons.
+  if (!t) return '';
+  return (t.episodeId || '') + (t._occ ? '#' + t._occ : '');
+}
 function trackCard(t) {
-  var key = t.episodeId || ('seg:' + (t._block || ''));
+  var key = t.episodeId ? descCardKey(t) : ('seg:' + (t._block || ''));
   // v384 §2.2/§2.6: the intention ROW retires — trackCard returns
   // the prayer card alone, always. Before v384 (v361 §2.3), an
   // available paired track returned intentionRowCard + the
@@ -16528,12 +16675,29 @@ function extSwapCard(slot) {
   nodes.forEach(function (n) { old.parentNode.insertBefore(n, old); });
   old.remove();
   if (prevIntro) prevIntro.remove();
+  // v610: a duplicated hour's copy cards (data-card
+  // '<slotId>#n') re-render with the settle too — each from
+  // its own occurrence-stamped track, in place.
+  if (st.state !== 'downloading' && st.state !== 'loading') {
+    view.querySelectorAll('[data-card^="' + slot.slotId + '#"]').forEach(function (copyEl) {
+      var occ = Number(String(copyEl.getAttribute('data-card')).split('#')[1] || 0);
+      if (!occ) return;
+      var trk2 = extSlotTrack(slot, st);
+      trk2._occ = occ;
+      var tmpC = document.createElement('div');
+      tmpC.innerHTML = trackCard(trk2);
+      var cn = [];
+      while (tmpC.firstChild) cn.push(tmpC.removeChild(tmpC.firstChild));
+      cn.forEach(function (n2) { copyEl.parentNode.insertBefore(n2, copyEl); nodes.push(n2); });
+      copyEl.remove();
+    });
+  }
   nodes.forEach(function (fresh) {
     // A settled slot carries ONE play button (the prayer's own)
     // — wired by its data-playkey against the descriptor list.
     fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
+        var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b.getAttribute('data-playkey'); })[0];
         if (d) tapPlay(d);
       });
     });
@@ -16546,7 +16710,7 @@ function extSwapCard(slot) {
     wireRowActs(fresh); // v413 §2.6: the settled card's cluster wires here too
   });
   refreshPlayedChrome();
-  if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
+  if (state.current && state.current.episodeId === slot.slotId) markPlaying(descCardKey(state.current));
 }
 function blockInsertCards(day, standing) {
   // v348 §2.1: ONE merged inserter replaces extInsertCards +
@@ -16600,7 +16764,7 @@ function blockInsertCards(day, standing) {
             view.appendChild(seatEl2);
             seatEl2.querySelectorAll('[data-playkey]').forEach(function (b2) {
               b2.addEventListener('click', function () {
-                var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+                var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
                 if (d) tapPlay(d);
               });
             });
@@ -16611,7 +16775,7 @@ function blockInsertCards(day, standing) {
           view.appendChild(el);
           el.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
-              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
               if (d) tapPlay(d);
             });
           });
@@ -16640,7 +16804,7 @@ function blockInsertCards(day, standing) {
           view.appendChild(el2);
           el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
-              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
               if (d) tapPlay(d);
             });
           });
@@ -17406,7 +17570,7 @@ function applyNativeState(json) {
       var qi = state.queue.indexOf(desc);
       if (qi >= 0) state.queueIdx = qi;
       setMediaSessionFor(desc);
-      markPlaying(desc.episodeId);
+      markPlaying(descCardKey(desc));
     }
     // (The v461 ack stands above, outside this gate — v469
     // Step 6 amendment (i).)
@@ -17420,7 +17584,7 @@ function applyNativeState(json) {
     // v468 recording's disagreement: disc ❚❚, dock ▶,
     // silence). markPlaying now reads the same transport
     // fact the dock reads, at the same moment.
-    markPlaying(desc.episodeId);
+    markPlaying(descCardKey(desc));
     if (changed) drainNativeCompletions();
   }
   updateDockProgress();
@@ -17746,14 +17910,17 @@ function resolveReadingsSeat590(day) {
   if (!day || day.readingsSeat) return;
   var eff = day.profile;
   if (!eff) return;
-  var pod = null;
-  (eff.layers || []).forEach(function (l) { if (l.key === 'podcasts') pod = l; });
-  if (!pod || !pod.on) return;
+  // v609 REPAIR 2: the Podcasts-layer branch RETIRES
+  // with the layer — the seat stands ONLY where the
+  // effective Morning contents carry its selector (the
+  // mig609 migration lands it there for every profile
+  // whose layer carried daily-readings; the designed
+  // defaults carry it in their seed contents). No
+  // contents entry, no seat: podcasts function like
+  // everything else.
   var allowed = false;
-  if (eff.contents && eff.contents.Morning) {
-    allowed = eff.contents.Morning.some(function (it) { return it.kind === 'seat' && it.key === 'daily-readings'; });
-  } else {
-    allowed = (pod.series || []).indexOf('daily-readings') >= 0;
+  if (eff.contents && Array.isArray(eff.contents.Morning)) {
+    allowed = eff.contents.Morning.some(function (it) { return it && it.kind === 'seat' && it.key === 'daily-readings'; });
   }
   if (!allowed) return;
   api('/api/player/podcasts?series=daily-readings').then(function (payload) {
@@ -17903,7 +18070,33 @@ function extRebuildDescs(day) {
         return a.sortOrder - c.sortOrder;
       });
     }
-    merged.forEach(function (e) {
+    // v610: the emission list. Without contents, the merged
+    // list emits as it stands. With contents, an external
+    // entry emits ONCE PER CONTENTS OCCURRENCE — a Divine
+    // Office selector standing twice in the list stands as
+    // two tracks, each at its own contents position, the
+    // copies after the first stamped _occ (their own card,
+    // mark, and draw keys ride the stamp). Own entries emit
+    // once, at their standing sort position, exactly as
+    // before (their selectors cannot duplicate).
+    var emit = merged.map(function (e) { return { e: e, idx: 0, occ: 0 }; });
+    if (c590) {
+      emit = [];
+      merged.forEach(function (e) {
+        if (e.own) { emit.push({ e: e, idx: selIdx590('source', e.own.sourceKey), occ: 0 }); return; }
+        var occN = 0;
+        c590.forEach(function (it, i) {
+          if (it.kind === 'source' && it.key === e.ext.slotId) { emit.push({ e: e, idx: i, occ: occN }); occN++; }
+        });
+        if (!occN) emit.push({ e: e, idx: selIdx590('source', e.ext.slotId), occ: 0 });
+      });
+      emit.sort(function (a, c) {
+        if (a.idx !== c.idx) return a.idx - c.idx;
+        return a.e.sortOrder - c.e.sortOrder;
+      });
+    }
+    emit.forEach(function (em) {
+      var e = em.e;
       if (e.own) {
         var row = e.own;
         var st = state.ownSlots[row.sourceKey];
@@ -17931,7 +18124,11 @@ function extRebuildDescs(day) {
       } else {
         var slot = e.ext;
         var st2 = state.extSlots[slot.slotId];
-        if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
+        if (st2) {
+          var trk = extSlotTrack(slot, st2);
+          if (em.occ) trk._occ = em.occ;
+          expandDescs(trk, day).forEach(function (d) { descs.push(d); });
+        }
       }
     });
     // v590 §2.3 (Amendment 3), restored by v603: the
@@ -18080,7 +18277,7 @@ function ownSwapRow(row, day) {
     first.parentNode.insertBefore(el, first);
     el.querySelectorAll('[data-playkey]').forEach(function (b2) {
       b2.addEventListener('click', function () {
-        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+        var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b2.getAttribute('data-playkey'); })[0];
         if (d) tapPlay(d);
       });
     });
@@ -19188,7 +19385,12 @@ function buildDayFromPayload(day, snap) {
     // v515 §2: the profile Podcasts layer resolves beside the
     // externals dispatch — its descriptors join the day
     // through extRebuildDescs as each series settles.
-    resolveProfilePodcasts(day);
+    // v609 REPAIR 2: this call RETIRES with the Podcasts
+    // layer (John: podcasts function like everything
+    // else — contents items only, no auto-build). The
+    // resolver stands as dead code; state.podGroups is
+    // never populated again, and its readers all guard
+    // the empty shape.
     // v590 §2.5: the on-device readings seat resolves
     // beside it. (v603: the contents course selectors
     // resolve beside it again — restored.)
@@ -19934,7 +20136,7 @@ function wirePrayersView(day) {
   // the same list the swap paths wire against.
   view.querySelectorAll('[data-playkey]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
+      var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === btn.getAttribute('data-playkey'); })[0];
       if (d) tapPlay(d);
     });
   });
@@ -19976,7 +20178,11 @@ function wirePrayersView(day) {
       var all = extRebuildDescs(day);
       // The episodes page's Play All is the unblocked-group build:
       // the descriptors carrying no block (§2.3.4).
-      var descs = blockName === '__episodes'
+      // v609: the merged set's Play All is the whole day —
+      // the fold's composed sequence, unfiltered.
+      var descs = blockName === '__all'
+        ? all
+        : blockName === '__episodes'
         ? all.filter(function (d) { return !d.block; })
         : all.filter(function (d) { return d.block === blockName; });
       // v344 §2.4: play skips played, with the fully-played
@@ -20057,11 +20263,15 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p607more]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnProfileMenu607(btn); });
   });
+  // v609 REPAIR: the Pick chips at the edit form's head.
+  view.querySelectorAll('[data-p609pick]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnPickInForm609(btn.getAttribute('data-p609pick')); });
+  });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
   view.querySelectorAll('[data-p604change]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnAskScope604(null); });
+    btn.addEventListener('click', function () { opnFlipScope609(); });
   });
   view.querySelectorAll('[data-p604savenew]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnSaveNew604(); });
@@ -20293,30 +20503,58 @@ function opnWrite604(block) {
   var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (opn604.shape ? opn604.shape.core.slice() : (rec.coreBlocks || []).slice()), layers: opn604.shape ? opnLayersOut(opn604.shape.layers) : opnLayersOut(rec.layers), contents: contents };
   return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
 }
-function opnRemove604(block, id) {
+function opnRemove604(block, rowId) {
+  // v610: the row id is occurrence-qualified — Remove takes
+  // the addressed copy only, so one of two standing copies
+  // of an hour can leave while the other stands.
+  var pr = opnParseRowId610(rowId), id = pr.id;
   var m = opnMaterialize604(block);
-  var it = m.filter(function (x) { return opnTodayItemId594(x) === id; })[0];
-  opn604.lists[block] = m.filter(function (x) { return opnTodayItemId594(x) !== id; });
+  var seen = 0, at = -1;
+  m.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  var it = at >= 0 ? m[at] : null;
+  if (at >= 0) { var nm = m.slice(); nm.splice(at, 1); opn604.lists[block] = nm; }
   if (it) (opn604.removed[block] = opn604.removed[block] || []).push(it);
   return opnWrite604(block);
 }
-function opnRestore604(block, id) {
+function opnRestore604(block, rowId) {
+  // v610: occurrence-qualified — Restore returns ONE copy:
+  // the addressed removed entry leaves the removed list and
+  // its copy re-enters at its composed position (the
+  // occurrence the composed list carries beyond the copies
+  // already standing). Without duplicates the rebuild is
+  // the standing one verbatim.
+  var pr = opnParseRowId610(rowId), id = pr.id;
   var comp = opn604.base[block] || opnEffList604(block);
   var cur = opnMaterialize604(block);
-  var restored = comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
+  var rem = opn604.removed[block] || [];
+  var seenR = 0, remAt = -1;
+  rem.forEach(function (it, i) { if (opnTodayItemId594(it) === id) { if (seenR === pr.occ) remAt = i; seenR++; } });
+  var restored = remAt >= 0 ? rem[remAt] : comp.filter(function (it) { return opnTodayItemId594(it) === id; })[0];
   if (restored) {
-    var compIds = comp.map(opnTodayItemId594), curIds = cur.map(opnTodayItemId594);
+    var curCount = {};
+    cur.forEach(function (it) { var k = opnTodayItemId594(it); curCount[k] = (curCount[k] || 0) + 1; });
+    var compIds = comp.map(opnTodayItemId594);
     var kept = cur.filter(function (it) { return compIds.indexOf(opnTodayItemId594(it)) < 0; });
-    var base = comp.filter(function (it) { return opnTodayItemId594(it) === id || curIds.indexOf(opnTodayItemId594(it)) >= 0; });
+    var used = {}, occSeen = {}, base = [], placed = false;
+    comp.forEach(function (it) {
+      var k = opnTodayItemId594(it);
+      var occK = occSeen[k] || 0; occSeen[k] = occK + 1;
+      if (k === id && occK === (curCount[k] || 0) && !placed) { base.push(restored); placed = true; return; }
+      if ((used[k] || 0) < (curCount[k] || 0)) { used[k] = (used[k] || 0) + 1; base.push(it); if (k === id) placed = true; }
+    });
+    if (!placed) base.push(restored);
     opn604.lists[block] = base.concat(kept);
-    opn604.removed[block] = (opn604.removed[block] || []).filter(function (it) { return opnTodayItemId594(it) !== id; });
+    if (remAt >= 0) { var nr = rem.slice(); nr.splice(remAt, 1); opn604.removed[block] = nr; }
   }
   return opnWrite604(block);
 }
-function opnDragOver604(block, dragId, targetId) {
+function opnDragOver604(block, dragRowId, targetRowId) {
+  // v610: row ids are occurrence-qualified — a drag moves
+  // the addressed copy, not the first copy of its id.
+  var pd = opnParseRowId610(dragRowId), pt = opnParseRowId610(targetRowId);
   var m = opnMaterialize604(block);
-  var i = -1, j = -1;
-  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === dragId) i = k; if (id === targetId) j = k; });
+  var i = -1, j = -1, sd = 0, st2 = 0;
+  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === pd.id) { if (sd === pd.occ) i = k; sd++; } if (id === pt.id) { if (st2 === pt.occ) j = k; st2++; } });
   if (i < 0 || j < 0 || i === j) return;
   var mv = m.splice(i, 1)[0];
   m.splice(j, 0, mv);
@@ -20366,18 +20604,21 @@ function opnEditPostureHtml604(b) {
   var block = b.block;
   var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
+  var seenRow610b = {};
   list.forEach(function (it) {
     var id = opnTodayItemId594(it);
-    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(id) + '"><div class="row">'
-      + '<span class="p604handle" data-p604handle="' + esc(id) + '" title="Drag to reorder">&#x2630;</span>'
+    var occ = seenRow610b[id] || 0; seenRow610b[id] = occ + 1;
+    var rid = opnRowId610(it, occ);
+    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(rid) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
-      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(id) + '">Remove</button></div></div>';
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
   var removed = opn604.removed[block] || [];
   if (removed.length) {
     html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
-      + '<div class="row">' + removed.map(function (it) { return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnTodayItemId594(it)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
   }
   html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
   return html + '</div>';
@@ -20391,7 +20632,11 @@ function opnBannerHtml604() {
     ? 'Editing today only — ' + opnDateLabel604(date)
     : 'Editing standing — in ' + name + ', your every-day profile';
   var second = opn604.scopeSwitched ? '<p class="sub profbarline593">Acts already written stand where they were written.</p>' : '';
-  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">Change</button></div>' + second + '</div></div>';
+  // v609 repair 2: the banner IS the scope control — its
+  // button names the scope it flips TO (no question
+  // sheet stands anywhere in the entry or the flip).
+  var flip = opn604.scope === 'today' ? 'Edit standing instead' : 'Edit today instead';
+  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">' + flip + '</button></div>' + second + '</div></div>';
 }
 function opnEditBarHtml604() {
   if (!opn604.editing) return '';
@@ -20399,6 +20644,24 @@ function opnEditBarHtml604() {
     + '<button class="btn gold" data-p604savenew="1"' + (opn604.wrote ? '' : ' disabled') + '>Save New</button>'
     + '<button class="btn ghost" data-p607more="1" aria-label="Profile options">&#8943;</button>'
     + '<button class="btn ghost" data-p607done="1">Done</button></div></div></div>';
+}
+function opnFlipScope609() {
+  // v609 REPAIR 2: the in-form scope flip — the banner
+  // button re-targets the session to the other scope
+  // with EXACTLY the bookkeeping the retired question's
+  // answers carried (scopeSwitched stands, the session
+  // lists/base/removed reset, the shape re-seeds, the
+  // form repaints). opnAskScope604 below stands as dead
+  // code (the codebase's retirement precedent): no entry
+  // path or button calls it.
+  if (!opn604.editing || !opn604.scope) return;
+  var sc = opn604.scope === 'today' ? 'standing' : 'today';
+  opn604.scopeSwitched = true;
+  opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+  opn604.scope = sc;
+  opn604.wrote = false;
+  opnInitShape607();
+  opnRepaintHome604();
 }
 function opnAskScope604(block) {
   var old = document.querySelector('.p604q');
@@ -20530,9 +20793,9 @@ function opnStartEdit607() {
   opn604.editing = true;
   opnInitShape607();
   opnRepaintHome604();
-  if (!opn604.series) {
-    api('/api/player/podcasts').then(function (r) { opn604.series = (r && r.seriesList) || []; if (opn604.editing) opnRepaintHome604(); }).catch(function () { opn604.series = []; });
-  }
+  // v609 repair 2: the series-list fetch retires — its
+  // only live consumer was the Podcasts group's series
+  // rows, retired with the Podcasts layer.
 }
 function opnEnterEdit607() {
   // The v594 vault gate's duty passes wholly to this
@@ -20541,13 +20804,22 @@ function opnEnterEdit607() {
   opnEnsureStandings601().then(function () {
     return opn604.res ? opn604.res : opnLoadRes604();
   }).then(function () {
-    if (!opn604.scope) { opn607entry = true; opnAskScope604(null); return; }
+    // v609 REPAIR 2 (John, 2026-11-21 23:32/23:33 CT):
+    // the scope QUESTION retires from the entry path —
+    // Edit opens the form DIRECTLY, on TODAY scope at
+    // EVERY entry (no remembered last scope). The scope
+    // lives in the form: the banner's button flips it
+    // (opnFlipScope609), re-targeting the writes exactly
+    // as the question's answers did.
+    opn604.scope = 'today';
+    opn604.scopeSwitched = false;
     opnStartEdit607();
   }).catch(function () {});
 }
 function opnExitEdit607() {
   opn604.editing = false;
   opn604.arm607 = null;
+  opn604.scope = null; // v609 repair 2: the next entry starts on today again
   opnRepaintHome604();
 }
 function opnWriteShape607() {
@@ -20617,7 +20889,14 @@ function opnToggleShape607(kind, name) {
     var k = arr.indexOf(name);
     if (k >= 0) arr.splice(k, 1); else arr.push(name);
   }
-  return opnWriteShape607();
+  // v609: after the shape write lands, flush the
+  // session's materialized contents under the NEW shape
+  // — a group flipped ON takes its (possibly edited)
+  // list into the store with the flip; a group flipped
+  // OFF keeps its list in the session only (the store
+  // cannot hold contents for a block that does not
+  // stand — the standing validator rule).
+  return opnWriteShape607().then(function () { return opnWrite604('__shape609'); });
 }
 function opnProfileMenu607(anchorEl) {
   // The orphaned acts of the retired Edit profiles door,
@@ -20631,6 +20910,9 @@ function opnProfileMenu607(anchorEl) {
   var rec = opnProfRec604();
   if (!rec) return;
   var items = [];
+  // v609 REPAIR: Configure plan re-homes here from the
+  // plan row (the page top carries the Edit only).
+  items.push({ label: 'Configure plan', act: function () { openConfigureLadder593(); } });
   if (rec.kind === 'default') {
     items.push({ label: opn604.arm607 === 'reset' ? 'Tap again to reset' : 'Reset to Default', act: function () {
       if (opn604.arm607 !== 'reset') { opn604.arm607 = 'reset'; opnProfileMenu607(anchorEl); return; }
@@ -20697,20 +20979,25 @@ function profPlanRowHtml(day) {
   // the act standing.
   var fold = day && day.profile;
   // v607: ONE Edit at the top — the page edit form's entry
-  // (Done while it stands). The standing pick's act keeps
-  // its seat under its own name (Pick).
+  // (Done while it stands).
+  // v609 REPAIR (John, 2026-11-21 23:14 CT: "there are
+  // still three buttons period should just be one edit
+  // button"): the plan row carries the Edit ONLY. The
+  // Pick re-homes to the edit form's head (opnPickHead609
+  // — his 22:29 sentence, restored by his 23:14 count);
+  // Configure plan re-homes to the edit form's profile
+  // menu (opnProfileMenu607).
   var edit607 = opn604.editing
     ? '<button class="btn gold" data-p607done="1">Done</button>'
     : '<button class="btn gold" data-p607edit="1">Edit</button>';
-  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span>' + edit607 + '<button class="btn ghost" data-p604pickedit="1">Pick</button><button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+  if (!fold) return '<div class="card profplanrow"><div class="row"><span class="grow">Prayer plan</span>' + edit607 + '</div></div>';
   // v604: the resolution line collapses to the standing
   // form — the profile in force IS the standing pick.
   var resLine = 'Your every-day profile';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
     + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
     + edit607
-    + '<button class="btn ghost" data-p604pickedit="1">Pick</button>'
-    + '<button class="btn gold" data-profconfigure="1">Configure plan</button></div></div>';
+    + '</div></div>';
 }
 
 
@@ -20745,7 +21032,7 @@ function profContentsUniverse590(block) {
   var items = [];
   if (block === 'Novenas') { items.push({ kind: 'all-novenas', key: '', label: 'Every active novena' }); return items; }
   (state.ownStanding || []).forEach(function (r) { if (r.block === block) items.push({ kind: 'source', key: r.sourceKey, label: r.title || r.sourceKey }); });
-  (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.source || sl.slotId }); });
+  (state.extStanding || []).forEach(function (sl) { if (sl.block === block) items.push({ kind: 'source', key: sl.slotId, label: sl.title || sl.source || sl.slotId }); });
   if (block === 'Morning') items.push({ kind: 'seat', key: 'daily-readings', label: 'The day\u2019s readings' });
   // v597: NO course selectors stand in the universe —
   // courses are series (Catechesis · the Podcasts layer),
@@ -21947,7 +22234,14 @@ function openAddLadder603(block, host) {
     mountDrawer(sh, true);
     var rung = 'doors'; // 'doors' | 'courses' | 'prayers' | 'prayers:<group>' | 'novenas' | 'sources' | 'daily'
     var query = '';
-    function isOn(item) { return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0; }
+    function isOn(item) {
+      // v610: a Divine Office source already standing stays
+      // addable — a second copy may stand (duplicates are
+      // allowed for the office hours). Every other item
+      // keeps the standing "Already in" refusal.
+      if (item.kind === 'source' && EXT_TOKENS[item.key]) return false;
+      return host.ids().indexOf(item.kind + ':' + (item.key || '')) >= 0;
+    }
     function sources() {
       return profContentsUniverse590(block).filter(function (it) {
         if (it.kind === 'source') return true;
@@ -22397,6 +22691,75 @@ function openPodcastPicker() {
     });
   }).catch(function () { if (body) body.innerHTML = '<p class="sub">Podcasts did not load.</p>'; });
 }
+var opn609BioNote = null;
+function opnLockGateHtml609() {
+  // v609 REPAIR 2: the locked Praylist's body — the
+  // standing unlock card (opnUnlockCardHtml: the large
+  // PIN pad + the passkey/biometric acts) in place of
+  // the set, plus the note line. The note's text stands
+  // in opn609BioNote (module state), so a settle repaint
+  // of the locked home re-renders it instead of wiping
+  // the failure it names.
+  return '<div data-p609lock="1">' + opnUnlockCardHtml()
+    + '<p class="sub" data-p609locknote="1"' + (opn609BioNote ? '' : ' style="display:none"') + '>' + (opn609BioNote ? esc(opn609BioNote) : '') + '</p></div>';
+}
+var opn609BioTried = false;
+function opnUnlockedRepaint609() {
+  // The vault just opened: the profiles payload and any
+  // edit session state were read under lock (the
+  // ephemeral default document) — clear them, reload the
+  // payload from the real document, and repaint the
+  // Pray side IN PLACE (no tab round trip).
+  opn609BioNote = null;
+  opn604.res = null; opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+  opnLoadRes604();
+  renderPrayersSide();
+}
+function opnBindLockGate609() {
+  // v609 REPAIR 2 (John, 2026-11-21 23:30/23:31 CT:
+  // fingerprint unlock ON VISIT, as PRIORITY): the card
+  // binds with the repaint as its proceed; then, when a
+  // biometric enrolment stands, the native prompt FIRES
+  // — first, automatically, once per visit-to-locked-
+  // state (opn609BioTried; setTab clears it when he
+  // leaves the Pray tab, so a fresh visit may fire
+  // again). The PIN pad stands as the fallback: it
+  // appears as the opening surface only when no
+  // enrolment stands, and after a dismissal/failure the
+  // pad + the card's own biometric button stand (a
+  // manual retry is his act, never a re-fire loop).
+  // Failure codes SURFACE in the card (v606 discipline);
+  // a key-invalidated failure clears the stale wrap and
+  // names the enrolment seat. The web/PWA build has no
+  // bridge: opnBiometricStatus reads unavailable there,
+  // so its gate keeps the pad + passkey as they stand.
+  var host = view.querySelector('[data-p609lock]');
+  if (!host) return;
+  opnBindUnlockCard(opnUnlockedRepaint609);
+  var note = host.querySelector('[data-p609locknote]');
+  opnBiometricStatus().then(function (st) {
+    if (!opnVaultLocked()) return;
+    if (st && st.available && st.enrolled) {
+      if (opn609BioTried) return;
+      opn609BioTried = true;
+      opnBiometricUnlock().then(function () { opnUnlockedRepaint609(); }).catch(function (e) {
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric unlock on Praylist visit failed: ' + code);
+        if (code.indexOf('key-invalidated') !== -1) {
+          opnBiometricClear();
+          opn609BioNote = 'Your fingerprint set changed on this phone \u2014 enrol again in Settings \u2192 CONFESSION PIN. Your PIN stands.';
+        } else {
+          opn609BioNote = 'Biometric unlock did not complete (' + code + '). Use your PIN.';
+        }
+        if (note) { note.style.display = ''; note.textContent = opn609BioNote; }
+        var msg = document.getElementById('opn-unlock-msg');
+        if (msg) msg.textContent = opn609BioNote;
+      });
+    } else if (st && st.available && !st.enrolled) {
+      if (note) { note.style.display = ''; note.textContent = 'Fingerprint unlock is not enrolled on this phone \u2014 enrol it in Settings \u2192 CONFESSION PIN.'; }
+    }
+  }).catch(function () {});
+}
 function paintListenHome(day) {
   // v448: the home carries no bar — a returning paint
   // clears the pushed page's bar from its host.
@@ -22432,9 +22795,23 @@ function paintListenHome(day) {
   // surface — profPlanRowHtml carries the current plan
   // (name + resolution line) beside the button, and the
   // separate profile card row is gone.
+  // v609 REPAIR 2: while the vault stands LOCKED, the
+  // home body stands the unlock GATE in place of the set
+  // — never an empty day. The fold under lock reads the
+  // ephemeral default document (opnDoc), so the set
+  // would paint the designed defaults' nothing and no
+  // settle path repaints it; the gate is the home's
+  // equivalent of the edit form's profVaultGate594.
+  var locked609 = opnVaultLocked();
   var html = profPlanRowHtml(day)
-    + opnBannerHtml604() + opnEditBarHtml604() + opnShapeHtml607()
-    + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+    + opnBannerHtml604() + opnEditBarHtml604()
+    + '<div id="favorites-folder-slot"></div>' + '<div id="home-body">' + (locked609 ? opnLockGateHtml609() : homeBodyHtml(day)) + '</div>';
+  // v609: the v607 shape strip (opnShapeHtml607) NO
+  // LONGER paints here — John (2026-11-21 22:34 CT):
+  // the switches section at the form's top is clutter.
+  // Every switch re-seats at its group's head in the
+  // edit set (opnEditGroupHtml609); the strip function
+  // stands as unreachable dead code.
   // v499 (John, 2026-11-17): the bottom Play All retires — its
   // row and its wiring below go together. The offline line
   // stands under the rows alone; block-level play stands.
@@ -22444,6 +22821,7 @@ function paintListenHome(day) {
   // Prayers page group.
   html += offlineLineHtml();
   view.innerHTML = html;
+  if (locked609) opnBindLockGate609();
   paintFavoritesFolderRow(); // v547: the Favorites folder row fills its head slot
   // v459 §2 Build 4: the Sort button's wiring retires with
   // its emission (row2HomeHtml) — Sort stands in the
@@ -22460,10 +22838,169 @@ function homeBodyHtml(day) {
   // unchanged, no filter narrowing it now), one series row
   // per line; the episodes group stands last, outside the
   // order, when the day carries episodes.
-  var html = '';
-  orderedBlocks(day).forEach(function (b) { html += blockRowHtml(b, day); });
-  if ((day.episodes || []).length) html += episodesRowHtml(day);
-  return html;
+  // v609 (John, 2026-11-21 22:28 CT): "Merge everything
+  // into one set" — the home body is opnSetHtml609's ONE
+  // list. blockRowHtml / episodesRowHtml stand as
+  // unreachable dead code (codebase precedent).
+  return opnSetHtml609(day);
+}
+/* ---------------- v609: the merged set ----------------
+   The Praylist page stops segmenting block-by-block: the
+   whole day stands as ONE SET — one continuous list of
+   the day's tracks in fold order (orderedBlocks order ·
+   each block's tracks in order · the block-less episodes
+   at the tail, their fold position). No block header
+   cards, no expansions, no dividers, no block names in
+   the set; the fold option retires with the sections.
+   The blocks remain the composition unit underneath —
+   the stores, the fold, and the edit form's per-block
+   contents all keep working; only the page's
+   presentation merges. */
+function opnPickHead609() {
+  // v609 REPAIR: the Pick at the edit form's HEAD — the
+  // switcher emerges at the top of the form (John,
+  // 2026-11-21 22:29 CT), restored when his 23:14 count
+  // retired it from the page top. The chips flip the
+  // standing pick AT ONCE, through the pick sheet's own
+  // commit chain (a standing today layer clears first,
+  // warned below the chips exactly as the sheet warned),
+  // then the form re-resolves to the profile in force.
+  // The Sunday flip: Edit → chip → Done — three taps.
+  var res = opn604.res;
+  if (!res || !res.profiles) return '';
+  var sel = res.state ? res.state.standingKey : (res.effective && res.effective.key);
+  var html = '<div class="p609pickhead" data-p609pickhead="1"><div class="profchips591">';
+  (res.profiles || []).forEach(function (p) { html += '<button class="chip591' + (p.key === sel ? ' on' : '') + '" data-p609pick="' + esc(p.key) + '">' + esc(p.name) + '</button>'; });
+  html += '</div>';
+  if (res.todayEdit) html += '<p class="sub">today has its own edits — changing the profile clears them</p>';
+  return html + '</div>';
+}
+function opnPickInForm609(key) {
+  var res = opn604.res;
+  if (!res) return;
+  var date = (state.dayPayload && state.dayPayload.date) || todayChicago();
+  var chain = res.todayEdit ? profPut('/api/prayer/profiles/today-edit', { date: date, layer: null }) : Promise.resolve(null);
+  chain.then(function () { return profPut('/api/prayer/profiles/state', { standingKey: key }); })
+    .then(function (r) {
+      if (r) opn604.res = r;
+      opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+      opnInitShape607();
+      opnRepaintHome604();
+      profileRebuild();
+    }).catch(function () {});
+}
+function opnSetHtml609(day) {
+  if (opn604.editing) return opnEditSetHtml609(day);
+  var html = '<div class="p609set" data-p609set="1">'
+    + '<div class="row p604exphead"><button class="playbtn small" data-queue="__all" aria-label="Play all of the day">&#9654;</button>'
+    + '<span class="grow">Play All</span></div>';
+  if (!day) return html + '</div>';
+  // v609 REPAIR (2026-11-21, production break — John's
+  // field report: "all blocks disappeared"): the set
+  // paints the day's DESCRIPTORS — state.dayDescs, the
+  // one list every working surface consumes, built by
+  // extRebuildDescs from the standings + contents +
+  // slots. The shipped paint read the payload's block
+  // tracks, which stand EMPTY on a client-composed day
+  // (the substance enters through the settings rows);
+  // the home painted a Play All head over nothing while
+  // the edit form, reading contents, stood correct. The
+  // queue's __all branch reads this same list — paint
+  // and queue are now one source by construction.
+  // v609 REPAIR 2 (John, 2026-11-21 23:31 CT: "put
+  // groups back"): the one set paints GROUPED BY BLOCK —
+  // a quiet group head over each block's tracks, tracks
+  // under their group in day order, one page, one
+  // scroll. The heads carry NO acts of their own (the
+  // one Edit at the top stands alone); the fold emits
+  // block-consecutive runs by construction, so a head
+  // stands wherever the block changes; the block-less
+  // episode tail stands under 'Episodes'.
+  var lastBlock609 = null;
+  (state.dayDescs || []).forEach(function (t) {
+    var b609 = t.block || 'Episodes';
+    if (b609 !== lastBlock609) { html += '<div class="p609sethead" data-p609sethead="' + esc(b609) + '">' + esc(b609) + '</div>'; lastBlock609 = b609; }
+    html += trackCard(t);
+  });
+  return html + '</div>';
+}
+function opnEditSetHtml609(day) {
+  // The edit form over the set: ONE list of condensed
+  // contents rows, grouped by block under a group head
+  // carrying the block's ON/OFF toggle (John, 2026-11-21
+  // 22:34 CT: the group toggles stand in the condensed
+  // form, and toggled-off groups show too). Groups ON in
+  // the day stand in day order; groups OFF stand after
+  // them in canonical order, in full — toggle off, rows
+  // visible and dimmed, editable in place. Drags stay
+  // within their block's run by store construction
+  // (opnDragOver604 looks both ids up in the drag block's
+  // own list — a cross-boundary target is an inert
+  // no-op; no move writes between blocks' contents). The
+  // unblocked episodes carry no edit rows: they are not
+  // profile contents.
+  var html = '<div class="p609set p609edit" data-p609set="1">';
+  html += opnPickHead609();
+  var seen = {};
+  orderedBlocks(day).forEach(function (b) { seen[b.block] = true; html += opnEditGroupHtml609(b.block); });
+  // v609 repair 2: 'Podcasts' leaves the canonical list —
+  // no Podcasts group stands in the form again (no layer,
+  // no toggle, no series rows); a podcast stands as a
+  // contents row inside its block's group, like a prayer.
+  ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas'].forEach(function (name) {
+    if (!seen[name]) html += opnEditGroupHtml609(name);
+  });
+  return html + '</div>';
+}
+function opnGroupOn609(block) {
+  var sh = opn604.shape;
+  if (!sh) return true;
+  if (block === 'Novenas') return !!sh.layers.novenas.on;
+  return sh.core.indexOf(block) >= 0;
+}
+/* v609: the series switches' seat — inside the Podcasts
+   group. John's podcast selections live in layers.series
+   (the fold synthesizes their standings), NOT in the
+   Podcasts contents, which stand empty on his profiles:
+   retiring the switches with the top strip would strand
+   every standing series with no seat to switch it. They
+   stand here, with their group, on the standing wiring. */
+function opnSeriesRows609() {
+  if (!opn604.series) return '<p class="sub">Loading podcasts \u2026</p>';
+  var sh = opn604.shape;
+  var onKeys = (sh && sh.layers && sh.layers.podcasts && sh.layers.podcasts.series) || [];
+  return opn604.series.map(function (sr) {
+    var on = onKeys.indexOf(sr.series) >= 0;
+    return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(sr.title || sr.series) + '</span>'
+      + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="series|' + esc(sr.series) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
+  }).join('');
+}
+function opnEditGroupHtml609(block) {
+  var list = opnMaterialize604(block);
+  var on = opnGroupOn609(block);
+  var kind = block === 'Novenas' ? 'layer|novenas' : 'block|' + block;
+  var html = '<div class="p609group' + (on ? '' : ' p609off') + '" data-p604exp="' + esc(block) + '">'
+    + '<div class="row p609ghead" data-p609ghead="' + esc(block) + '"><span class="grow">' + esc(block) + '</span>'
+    + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
+  // v609 repair 2: the Podcasts series rows retire with the layer (opnSeriesRows609 stands as dead code).
+  var seenRow610 = {};
+  list.forEach(function (it) {
+    var id = opnTodayItemId594(it);
+    var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
+    var rid = opnRowId610(it, occ);
+    html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(rid) + '"><div class="row">'
+      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
+      + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
+  });
+  if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
+  var removed = opn604.removed[block] || [];
+  if (removed.length) {
+    html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+  }
+  html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
+  return html + '</div>';
 }
 function appendBlockPodcastCards(b) {
   // v522: the Podcasts layer shell's cards — ONE SERIES
