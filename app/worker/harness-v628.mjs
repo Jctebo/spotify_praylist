@@ -498,7 +498,7 @@ const summaryOf = (r, feed) => (r.results || []).find((x) => x.feed === feed);
   const npChoice = api628.choice(npSlot, { title: "Night Prayer", streamUrl: "https://do.example/np.mp3", backup: { streamUrl: "https://sth.example/x.mp3", source: "Sing the Hours" } }, "Divine Office");
   check("P3 ◆ the toggle touches Morning/Evening ONLY: Night Prayer never re-orders", npChoice.streamUrl === "https://do.example/np.mp3" && npChoice.backup === null, npChoice);
   const clientFull = clientSrc;
-  check("P3 ◆ Settings toggle stands (pin-sth-pref writes sthPrimary on the PIN record)", clientFull.includes('id="pin-sth-pref"') && clientFull.includes("rec.sthPrimary = !opnSthPrimary628()"));
+  check("P3 [v632: reversed by name] the Settings toggle RETIRES from the PIN section — the choice stands in its own MORNING & EVENING PRAYER section, written to the new store (opn-sth-first-v632 via opnSthFirstSet632); the flip substance is re-proven in harness-v632 legs 1-2", !clientFull.includes('id="pin-sth-pref"') && clientFull.includes("opn-sth-first-v632") && clientFull.includes("function opnSthFirstSet632("));
   check("P3 ◆ download failure flips to the backup (extDownload retries meta.backup once)", clientFull.includes("if (meta.backup && meta.backup.streamUrl)"));
 }
 

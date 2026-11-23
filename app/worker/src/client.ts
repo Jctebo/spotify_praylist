@@ -2132,20 +2132,42 @@ function opnBioPref622() {
    Hours carries — the user chooses which source stands FIRST.
    Default: Divine Office first, Sing the Hours as backup (the
    v626 shape). The toggle makes Sing the Hours primary for
-   this user, with Divine Office as the backup. The preference
-   stands on the on-device PIN record beside v622's
-   biometricPref — the one store every surface can read — as
-   sthPrimary (absent/false = the default). The server watcher
+   this user, with Divine Office as the backup. The server watcher
    stands BOTH pointers for the two slots (the payload's
    backup field); this helper pair applies the choice on the
    device at settle time, so the painted title, the source,
    and the played pointer all name the standing-first source,
    and a failed download of the first choice retries the
-   backup (the v626 flip discipline, per-user now). */
+   backup (the v626 flip discipline, per-user now).
+   v632: the preference stands in its OWN store — the plain
+   localStorage key below ('on' = Sing the Hours first /
+   'off' = Divine Office first), the Autoplay pattern:
+   readable while the vault is locked, and standing for
+   every user of the phone, PIN or no PIN. Through v631 it
+   stood on the on-device PIN record as sthPrimary; the
+   first read with the new key absent seeds the key from
+   that record — the effective value is exactly the old
+   read — and retires the field from the record, leaving
+   biometricPref and every other field byte-untouched. */
+var OPN_STH_FIRST_KEY = 'opn-sth-first-v632';
 function opnSthPrimary628() {
-  var st = null;
-  try { st = opnPinLoad(); } catch (e) { st = null; }
-  return !!(st && st.sthPrimary === true);
+  var stored = null, storeOk = true;
+  try { stored = localStorage.getItem(OPN_STH_FIRST_KEY); } catch (e) { storeOk = false; }
+  if (stored === 'on') return true;
+  if (stored === 'off') return false;
+  var rec = null;
+  try { rec = opnPinLoad(); } catch (e) { rec = null; }
+  var eff = !!(rec && rec.sthPrimary === true);
+  if (!storeOk) return eff;
+  var seeded = false;
+  try { localStorage.setItem(OPN_STH_FIRST_KEY, eff ? 'on' : 'off'); seeded = true; } catch (e) { seeded = false; }
+  if (seeded && rec && Object.prototype.hasOwnProperty.call(rec, 'sthPrimary')) {
+    try { delete rec.sthPrimary; opnPinSave(rec); } catch (e) {}
+  }
+  return eff;
+}
+function opnSthFirstSet632(sthFirst) {
+  try { localStorage.setItem(OPN_STH_FIRST_KEY, sthFirst ? 'on' : 'off'); } catch (e) {}
 }
 function opnExtChoice628(slot, e, src) {
   // Returns { title, streamUrl, source, backup } — the entry
@@ -10507,7 +10529,12 @@ function settingsFamilyLabel(row) {
   if (row.family === 'spotify') return 'Spotify-side today';
   if (row.family === 'unplaced') return 'Not placed — no app leg yet.';
   var base = row.name.split(' — ')[0];
-  return row.role === 'fallback' ? base + ' — fallback only' : base;
+  // v632 §3.4: the two Sing the Hours rows (the seed's only
+  // fallback rows) name the standing Morning & Evening
+  // choice instead of the fixed 'fallback only' wording;
+  // every other row's label stands byte-unchanged.
+  if (row.role === 'fallback') return 'Morning & Evening choice: ' + (opnSthPrimary628() ? 'stands first' : 'stands as the backup');
+  return base;
 }
 function settingsSectionOf(row) {
   if (!row.enabled) return 'Off';
@@ -10561,6 +10588,32 @@ function paintSettings() {
     + '<div class="meta">The three named ways and your own copies — blocks, layers, and contents, and the default for each day.</div>'
     + '<div class="setcontrols"><button class="btn ghost" id="set-profiles">Configure plan</button></div>'
     + '</div></div>';
+  // v632 §3.2: MORNING & EVENING PRAYER — the one choice over
+  // the two hours both sources carry, in its own section high
+  // in Settings (out of the CONFESSION PIN section entirely).
+  // Painted unconditionally — no pinSet gate, no opnMode gate:
+  // the choice stands for every user of the phone (the
+  // PLAYBACK/Autoplay precedent, a device-local choice). Both
+  // options stand visible in both states; the standing one
+  // carries the marker, the other is the tap target. A tap
+  // writes the new store (opnSthFirstSet632) and re-renders
+  // Settings, so the marker — and the Source mapping labels —
+  // follow the choice in the same paint.
+  var sthFirst632 = opnSthPrimary628();
+  html += '<h2 class="sectionhead">MORNING &amp; EVENING PRAYER</h2>'
+    + '<p class="sub">Which reading of the office plays first for Morning Prayer and Evening Prayer:</p>'
+    + '<div class="liblist">'
+    + '<div class="setrow">'
+    + '<div class="setname">Divine Office first</div>'
+    + '<div class="meta">Sing the Hours plays when Divine Office does not load.</div>'
+    + '<div class="setcontrols">' + (sthFirst632 ? '<button class="btn ghost" id="set-sth-first-do">Put first</button>' : '<span class="meta">Standing</span>') + '</div>'
+    + '</div>'
+    + '<div class="setrow">'
+    + '<div class="setname">Sing the Hours first</div>'
+    + '<div class="meta">Divine Office plays when Sing the Hours does not load.</div>'
+    + '<div class="setcontrols">' + (sthFirst632 ? '<span class="meta">Standing</span>' : '<button class="btn ghost" id="set-sth-first-sth">Put first</button>') + '</div>'
+    + '</div></div>'
+    + '<p class="meta">The other hours of the Divine Office have no second source and are not affected.</p>';
   // v358 §1 Decision 2: the Playback section stands above Source
   // mapping — the autoplay choice lives in the app's standing
   // settings home as well as on the dock and Now Playing. The
@@ -10708,6 +10761,13 @@ function paintSettings() {
   if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
   var profBtn590 = document.getElementById('set-profiles');
   if (profBtn590) profBtn590.addEventListener('click', function () { openConfigureLadder593(); });
+  // v632 §3.2: the Morning & Evening choice taps — write the
+  // new store only, then re-render Settings whole so the
+  // marker and the mapping labels follow in the same paint.
+  var sthDoBtn632 = document.getElementById('set-sth-first-do');
+  if (sthDoBtn632) sthDoBtn632.addEventListener('click', function () { opnSthFirstSet632(false); renderSettings(); });
+  var sthStBtn632 = document.getElementById('set-sth-first-sth');
+  if (sthStBtn632) sthStBtn632.addEventListener('click', function () { opnSthFirstSet632(true); renderSettings(); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -11586,22 +11646,6 @@ function fillPinSection() {
       prefHtml622 = '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">Fingerprint / face unlock is <strong>' + (on622 ? 'on' : 'off') + '</strong> for every PIN gate in the app \u2014 Conscience, the Praylist, and the unlock cards. Your PIN always stands as the fallback.</p>'
         + '<button class="btn ghost" id="pin-bio-pref">' + (on622 ? 'Turn off fingerprint / face unlock' : 'Turn on fingerprint / face unlock') + '</button></div>';
     }
-    // v628: the Sing the Hours preference switch — stands
-    // beside the v622 switch, on the same on-device record.
-    var sthHtml628 = '';
-    if (st.pinSet && opnMode() === 'device') {
-      var sthOn628 = opnSthPrimary628();
-      sthHtml628 = '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">For Morning Prayer and Evening Prayer, <strong>' + (sthOn628 ? 'Sing the Hours' : 'Divine Office') + '</strong> stands first on this phone. The other source stands as the backup and plays when the first does not load.</p>'
-        + '<button class="btn ghost" id="pin-sth-pref">' + (sthOn628 ? 'Put Divine Office first' : 'Put Sing the Hours first') + '</button></div>';
-    }
-    var bindSth628 = function () {
-      var sb = document.getElementById('pin-sth-pref');
-      if (sb) sb.addEventListener('click', function () {
-        var rec = opnPinLoad();
-        if (rec) { rec.sthPrimary = !opnSthPrimary628(); opnPinSave(rec); }
-        fillPinSection();
-      });
-    };
     var bindPref622 = function () {
       var pb = document.getElementById('pin-bio-pref');
       if (pb) pb.addEventListener('click', function () {
@@ -11628,10 +11672,8 @@ function fillPinSection() {
           + '<button class="btn ghost" id="pin-passkey-enrol" style="display:none">Add a passkey unlock</button></div>';
       }
       html += prefHtml622;
-      html += sthHtml628;
       host2.innerHTML = html;
       bindPref622();
-      bindSth628();
       var bioBtn = document.getElementById('pin-bio-enrol');
       var reBioBtn = document.getElementById('pin-bio-reenrol');
       var bioFail = function (e) {
@@ -11679,10 +11721,8 @@ function fillPinSection() {
     } else {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set.</p><button class="btn gold" id="pin-enter-open">Enter PIN</button></div>';
       html += prefHtml622;
-      html += sthHtml628;
       host2.innerHTML = html;
       bindPref622();
-      bindSth628();
       document.getElementById('pin-enter-open').addEventListener('click', function () { renderPinGate('settings', renderSettings, {}); });
     }
   }).catch(function () {});
