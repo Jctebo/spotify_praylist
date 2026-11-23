@@ -277,7 +277,19 @@ const summaryOf = (r, feed) => (r.results || []).find((x) => x.feed === feed);
   check("L1 DO 500 summary is a failed read", !!sum && sum.ok === false, sum);
   const row = db.resolutions.get(TODAY + "|ext-morning-prayer");
   check("L1 last-good resolution stands byte-identical", !!row && row.stream_url === seedRow.stream_url && row.resolved_at === seedRow.resolved_at, row);
-  check("L1 no other DO slot was written by the failed read", [...db.resolutions.keys()].filter((k) => DO_TOKENS.some(([slot]) => k === TODAY + "|" + slot)).length === 1, [...db.resolutions.keys()]);
+  // v626: REVERSED BY NAME — this check formerly read "L1 no
+  // other DO slot was written by the failed read" (count == 1,
+  // the seed alone). v626 widens the Sing the Hours fallback
+  // trigger to the DO FAILURE case (John, 2026-11-23 08:43 CT):
+  // the failed read itself still writes no DO resolution, but
+  // the fallback now fills the absent Evening slot from the
+  // StH feed in the same pass. The failure-rule substance —
+  // the DO leg writes nothing on a failed read — is re-proven
+  // here in its v626 form, and the fills themselves by
+  // harness-v626 F1/F2/F5.
+  const l1Others = [...db.resolutions.entries()].filter(([k]) => DO_TOKENS.some(([slot]) => k === TODAY + "|" + slot) && k !== TODAY + "|ext-morning-prayer");
+  check("L1 [v626: reversed by name — the fallback now fills on a failed read] failed DO read writes no DO resolution; the only other DO-slot row is the v626 Sing the Hours Evening fill",
+    l1Others.length === 1 && l1Others[0][0] === TODAY + "|ext-evening-prayer" && /episodes\.castos\.com/.test(l1Others[0][1].stream_url || ""), l1Others.map(([k]) => k));
   const fst = db.feedState.get("divine-office");
   check("L1 feed state: attempt + error recorded, success untouched", !!fst && !!fst.last_error && !fst.last_success_at, fst);
 }

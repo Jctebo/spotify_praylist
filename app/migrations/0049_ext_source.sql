@@ -1,0 +1,18 @@
+-- v626 migration 0049 — the filling source on the server-side
+-- feed resolution store (release doc §2): ext_resolutions gains
+-- source, the name of the feed that actually filled the row,
+-- stamped at write time by extResolutionWrite (appended LAST,
+-- after episode_date). The Divine Office leg writes
+-- 'Divine Office' for the Morning/Evening Prayer slots; the
+-- Sing the Hours fallback fill writes 'Sing the Hours'; every
+-- other writer passes NULL. The stored title for the two
+-- office slots is composed from this source at write time
+-- ("Morning Prayer - Divine Office" / "Morning Prayer -
+-- Sing the Hours" — John's labeling rule, 2026-11-23), and
+-- the Divine Office stand-down test reads it: a Morning/
+-- Evening row whose source is 'Sing the Hours' does NOT
+-- count as resolved, so the primary watch continues while a
+-- fallback stands. Rows written before 0049 carry NULL and
+-- were primary-written by construction, so NULL counts as
+-- resolved for stand-down.
+ALTER TABLE ext_resolutions ADD COLUMN source TEXT;

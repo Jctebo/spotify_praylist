@@ -19904,22 +19904,17 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         });
       }, 75000);
     }, 9000);
-    // Sing the Hours fallback — only after the courier settles, and
-    // only for a Morning/Evening primary that stands missing.
-    courierP.then(function () {
-      var need = standing.filter(function (s) {
-        return s.fallbackToken && s.fbRow && s.fbRow.enabled === 1 && extDayRuleFills(s.fbRow.dayRule || 'daily', wd)
-          && state.extSlots[s.slotId] && state.extSlots[s.slotId].state === 'missing';
-      });
-      if (!need.length) return;
-      extFetchText(EXT_STH_URL).then(function (text) {
-        var items = extParseFeed(text);
-        need.forEach(function (slot) {
-          var it = extMatchSth(items, date, slot.fallbackToken);
-          if (it) settleMeta(slot, { title: slot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours', imageUrl: it.imageUrl || null, descText: it.descText || null });
-        });
-      }).catch(function () { /* the slots stand named missing */ });
-    });
+    // v626: the client-side Sing the Hours fallback leg RETIRES
+    // (the v624 §1 item 8 Saint-leg precedent). The v624 server
+    // watcher's Sing the Hours fill — widened by v626 to the DO
+    // feed FAILURE case as well as the missing case — now
+    // governs the Morning/Evening fallback, and its stored
+    // title carries John's " - Sing the Hours" name; a client
+    // fill settled with the BARE slot title, so two governors
+    // would paint two labels. The shared helpers stand
+    // (extMatchSth, EXT_STH_URL, EXT_SLOTS fallbackToken, the
+    // fbRow plumbing): the audio pass-through's source routing
+    // and the settings surfaces still read them.
   };
   if (settingsOverride) { try { buildWithSettings(settingsOverride); } catch (e) {} }
   else { api('/api/player/source-settings').then(buildWithSettings).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ }); }

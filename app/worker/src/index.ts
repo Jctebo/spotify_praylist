@@ -2310,7 +2310,14 @@ async function externalsCourierPayload(env: Env, date: string): Promise<{ slots:
     const it = matches.get(slot.slotId);
     if (!it) return mkMissing(slot);
     const row = prim.get(slot.slotId)!;
-    return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order, imageUrl: it.imageUrl || doChannelImage || null, descText: it.descText || null };
+    // v626: the no-row courier path composes the same labeled
+    // title the resolver writes for a primary fill of the two
+    // office slots ("Morning Prayer - Divine Office"). Missing
+    // entries keep the bare slot title (mkMissing, above). The
+    // courier carries no Sing the Hours leg (EXT_COURIER_SLOTS
+    // stands empty), so no StH title is composed here.
+    const title = EXT_LABELED_SLOTS.has(slot.slotId) ? `${slot.title} - Divine Office` : slot.title;
+    return { slotId: slot.slotId, state: "present", title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order, imageUrl: it.imageUrl || doChannelImage || null, descText: it.descText || null };
   });
   slots.push(...(await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0)) as typeof slots);
   slots.push(...(await exegesisP) as typeof slots);
@@ -2337,6 +2344,7 @@ interface ExtResolutionRow {
   image_url: string | null; desc_text: string | null;
   resolved_at: string; feed_stamp: string | null;
   episode_date: string | null; // v625 D1 (migration 0048): the day the episode is FOR
+  source: string | null; // v626 (migration 0049): the feed that filled the row ('Divine Office' / 'Sing the Hours' / NULL)
 }
 interface ExtFeedStateRow {
   feed_key: string; last_success_at: string | null;
@@ -2369,18 +2377,21 @@ async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: 
     }
   } catch { /* feed state is bookkeeping; a write failure never fails the pass */ }
 }
-async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null): Promise<void> {
+// v626: the two office slots whose stored title carries the
+// filling source (John's labeling rule, 2026-11-23 08:43 CT).
+const EXT_LABELED_SLOTS = new Set(["ext-morning-prayer", "ext-evening-prayer"]);
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
        duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
-       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date`,
+       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date, source = excluded.source`,
   ).bind(
     slotId, date, it ? "present" : "missing", title,
     it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
     it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
-    nowISO(), stamp, episodeDate,
+    nowISO(), stamp, episodeDate, source,
   ).run();
 }
 // v624 §2 D9 stand-down, slot class: every standing slot for
@@ -2393,6 +2404,24 @@ async function extFeedStoodDown(env: Env, slotIds: string[], today: string): Pro
   return slotIds.every((id) => {
     const at = bySlot.get(id);
     return !!at && chicagoDateOf(new Date(at)) === today;
+  });
+}
+// v626: the Divine Office stand-down variant — a Morning/
+// Evening row filled by the Sing the Hours fallback (source =
+// 'Sing the Hours') does NOT count as resolved, so the primary
+// watch keeps fetching while a fallback stands and a late DO
+// post flips the row back (pointer + label together, by the
+// upsert). NULL source counts as resolved: rows written
+// before migration 0049 were primary-written by construction.
+async function extFeedStoodDownDo(env: Env, slotIds: string[], today: string): Promise<boolean> {
+  if (!slotIds.length) return true;
+  const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(today).all<ExtResolutionRow>();
+  const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x]));
+  return slotIds.every((id) => {
+    const row = bySlot.get(id);
+    if (!row) return false;
+    if (EXT_LABELED_SLOTS.has(id) && row.source === "Sing the Hours") return false;
+    return chicagoDateOf(new Date(row.resolved_at)) === today;
   });
 }
 
@@ -2437,9 +2466,11 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     titleFor: (slotId: string, it: ExtFeedItem | null) => string,
     userAgent?: string,
     episodeDateFor?: (date: string, it: ExtFeedItem) => string | null,
+    sourceFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
+    sthAwareStoodDown?: boolean,
   ): Promise<void> => {
     const todaySlots = slotsFor(today);
-    if (!forced.has(feedKey) && (await extFeedStoodDown(env, todaySlots, today))) {
+    if (!forced.has(feedKey) && (await (sthAwareStoodDown ? extFeedStoodDownDo(env, todaySlots, today) : extFeedStoodDown(env, todaySlots, today)))) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
       return;
     }
@@ -2473,7 +2504,10 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         // else the row's date (date-exact classes); a missing
         // write carries NULL (D5).
         const episodeDate = it ? (episodeDateFor ? episodeDateFor(date, it) : date) : null;
-        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate);
+        // v626: the filling source, stamped last (migration
+        // 0049) — only writers that pass sourceFor stamp one.
+        const source = sourceFor ? sourceFor(slotId, it) : null;
+        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate, source);
         written++;
       }
     }
@@ -2491,7 +2525,20 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
       if (!doMatches.has(key)) doMatches.set(key, extMatchDivineOffice(items, y, mo, d));
       return doMatches.get(key)!.get(slotId) ?? null;
     },
-    (slotId) => EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId,
+    (slotId, it) => {
+      const t = EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId;
+      // v626 labeling (John, 2026-11-23): a PRESENT Morning/
+      // Evening row names its filling source. A missing row
+      // keeps the bare slot title — no source filled it.
+      return it && EXT_LABELED_SLOTS.has(slotId) ? `${t} - Divine Office` : t;
+    },
+    undefined,
+    undefined,
+    // v626: the DO leg stamps 'Divine Office' as the source
+    // on the two labeled slots only; the other six office
+    // slots stamp NULL (only DO/StH sources are read).
+    (slotId, it) => (it && EXT_LABELED_SLOTS.has(slotId) ? "Divine Office" : null),
+    true, // v626: the DO stand-down excludes Sing the Hours fills
   );
   // Daily Gospel Exegesis day leg — extMatchLatestByDate.
   await runSlotFeed(
@@ -2526,53 +2573,68 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     (items, y, mo, d) => extMatchTvMass(items, y, mo, d),
     (_slotId, it) => it?.title ?? "Daily TV Mass",
   );
-  // Sing the Hours fallback fills (§1 item 2): Lauds fills the
-  // Morning slot, Vespers the Evening slot, ONLY where the
-  // Divine Office read succeeded and left the slot missing
-  // (the standing fallback rule, as the audio pass-through
-  // applies it). A DO failure leaves the last good standing.
+  // Sing the Hours fallback fills (§1 item 2; v626 widens the
+  // trigger per John's order, 2026-11-23 08:43 CT): Lauds fills
+  // the Morning slot, Vespers the Evening slot, whenever the
+  // slot DOES NOT RESOLVE from the Divine Office feed — a
+  // successful read with no match (row 'missing') OR a failed
+  // read (no row written). v624 gated the fill on doOkToday
+  // (the DO feed's last success being today), so the 2026-11-23
+  // HTTP 500 outage never filled; that gate is gone. Need is
+  // computed from the rows BEFORE any StH fetch, and the feed
+  // is fetched only when at least one slot needs a fill (the
+  // old fetch-first shape and the StH stand-down skip both
+  // yield to need). A fill never overwrites a present row —
+  // primary-present stands, and a standing fallback is already
+  // filled. A StH read that matches nothing writes NO row for
+  // that slot (missing remains the primary's word; an absent
+  // row keeps the unresolved paint). Morning + Evening ONLY —
+  // Night Prayer is expressly out of the order.
   {
     const feedKey = "sing-the-hours";
-    const sthState = await extFeedStateGet(env, feedKey);
-    const stoodDown = !!sthState?.last_success_at && chicagoDateOf(new Date(sthState.last_success_at)) === today;
-    if (!forced.has(feedKey) && stoodDown) {
-      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+    const needs: { date: string; slotId: string; token: string }[] = [];
+    for (const date of dates) {
+      const [y, mo, d] = date.split("-").map(Number);
+      const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+      const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(date).all<ExtResolutionRow>();
+      const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x]));
+      for (const [slotId, token] of [["ext-morning-prayer", "Lauds"], ["ext-evening-prayer", "Vespers"]] as const) {
+        if (!standingOn(slotId, date)) continue;
+        const fbRow = fallbacks.get(slotId);
+        const fills = !!fbRow && fbRow.enabled === 1 && (fbRow.day_rule === "fallback-only" || extDayRulePasses(fbRow.day_rule || "daily", wd));
+        if (!fills) continue;
+        const cur = bySlot.get(slotId);
+        if (cur && cur.state !== "missing") continue; // present — primary or an earlier fill; never overwritten
+        needs.push({ date, slotId, token });
+      }
+    }
+    if (!needs.length) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "no-fill-needed" });
     } else {
-      const doState = await extFeedStateGet(env, "divine-office");
-      const doOkToday = !!doState?.last_success_at && chicagoDateOf(new Date(doState.last_success_at)) === today;
-      let written = 0;
-      if (doOkToday) {
-        try {
-          const feed = await extFetchFeed(env.EXT_STH_FEED_URL || EXT_STH_FEED_URL);
-          if (!feed.items.length) throw new Error("zero-yield feed read");
-          for (const date of dates) {
-            const [y, mo, d] = date.split("-").map(Number);
-            const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
-            for (const [slotId, token] of [["ext-morning-prayer", "Lauds"], ["ext-evening-prayer", "Vespers"]] as const) {
-              if (!standingOn(slotId, date)) continue;
-              const fbRow = fallbacks.get(slotId);
-              const fills = !!fbRow && fbRow.enabled === 1 && (fbRow.day_rule === "fallback-only" || extDayRulePasses(fbRow.day_rule || "daily", wd));
-              if (!fills) continue;
-              const cur = await env.DB.prepare("SELECT state FROM ext_resolutions WHERE date=? AND slot_id=?").bind(date, slotId).first<{ state: string }>();
-              if (!cur || cur.state !== "missing") continue;
-              const it = extMatchSth(feed.items, y, mo, d, token);
-              if (it) {
-                const slotTitle = EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId;
-                // v625 D1: extMatchSth is title-date-exact — the fill's episode day is the row's date.
-                await extResolutionWrite(env, date, slotId, it, slotTitle, feed.channelImageUrl, stampOf(feed), date);
-                written++;
-              }
-            }
+      try {
+        const feed = await extFetchFeed(env.EXT_STH_FEED_URL || EXT_STH_FEED_URL);
+        if (!feed.items.length) throw new Error("zero-yield feed read");
+        let written = 0;
+        for (const need of needs) {
+          const [y, mo, d] = need.date.split("-").map(Number);
+          const it = extMatchSth(feed.items, y, mo, d, need.token);
+          if (it) {
+            const slotTitle = EXT_DO_SLOTS.find((sl) => sl.slotId === need.slotId)?.title ?? need.slotId;
+            // v626 labeling: the fill's stored title names the
+            // Sing the Hours source; source stamps likewise.
+            // v625 D1 stands: extMatchSth is title-date-exact —
+            // the fill's episode day is the row's date, so a
+            // today's fallback is NOT stale under the day rule.
+            await extResolutionWrite(env, need.date, need.slotId, it, `${slotTitle} - Sing the Hours`, feed.channelImageUrl, stampOf(feed), need.date, "Sing the Hours");
+            written++;
           }
-          await extFeedStateWrite(env, feedKey, true, null, null);
-          summary.push({ feed: feedKey, ok: true, slotsWritten: written });
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : "feed read failed";
-          await extFeedStateWrite(env, feedKey, false, msg, null);
-          summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
         }
-      } else {
-        summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "primary-not-resolved" });
+        await extFeedStateWrite(env, feedKey, true, null, null);
+        summary.push({ feed: feedKey, ok: true, slotsWritten: written });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "feed read failed";
+        await extFeedStateWrite(env, feedKey, false, msg, null);
+        summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
       }
     }
   }
