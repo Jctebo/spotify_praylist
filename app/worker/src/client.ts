@@ -16463,11 +16463,16 @@ function trackCard(t) {
     // .grow for the .trow-tail cluster after it (the played
     // dot follows the cluster — wrap appends it last, v344
     // chrome untouched). Read stands over the Spotify link.
+    // v627: the v363 §2.3 no-text fold was REMOVED by John's
+    // word (2026-11-23) — the meta no longer appends the
+    // " · Not available in the app yet" segment on a playable
+    // row; the phrase survives only on the genuinely-
+    // unavailable card below. noText still stands: the
+    // Read control keys on it.
     var novSpan = novenaSpanHtml(t);
     var noText = !(t.hasText && t.textUrl);
     var meta = 'Plays here'
-      + (novSpan ? novSpan + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') : ' · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : ''))
-      + (noText ? ' · Not available in the app yet' : '');
+      + (novSpan ? novSpan + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') : ' · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : ''));
     // v413 §2.6/R4: the Read control stays in the row (a
     // content act, not a menu item); the Spotify link leaves
     // the row — its one home is now the row ⋮ menu.
@@ -16526,7 +16531,7 @@ function openRead(t) {
     if (body) body.textContent = text;
   }).catch(function () {
     var body = sheet.querySelector('.readtext');
-    if (body) body.textContent = 'Not available in the app yet';
+    if (body) body.textContent = "The episode's text could not be loaded.";
   });
 }
 /* ---------------- Now Playing (v336) ----------------
