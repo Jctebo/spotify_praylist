@@ -1570,7 +1570,9 @@ function opnBindUnlockCard(rerender) {
   var bio = document.getElementById('opn-unlock-bio');
   if (bio) {
     opnBiometricStatus().then(function (st) {
-      if (st && st.available && st.enrolled) bio.style.display = '';
+      // v622: the one Touch ID preference governs this
+      // gate too — off, the button never stands.
+      if (st && st.available && st.enrolled && opnBioPref622()) bio.style.display = '';
     }).catch(function () {});
     bio.addEventListener('click', function () {
       opnBiometricUnlock().then(function () { done({}); }).catch(function (e) {
@@ -1607,7 +1609,8 @@ function opnBindUnlockCard(rerender) {
     post('/api/pin/recover', { code: code, newPin: npin }).then(function (res) {
       if (res && res.token) pinToken = res.token;
       pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
-      showRecoverySheet(res.recoveryCode, function () { rerender(); });
+      // v622: a re-set PIN offers enrolment as its next step.
+      showRecoverySheet(res.recoveryCode, function () { opnBioOffer622(rerender); });
     }).catch(function (e) {
       var d = (e && e.data) || {};
       if (e.status === 429 || d.retryAfterSeconds) { rmsg.textContent = 'Too many attempts — try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
@@ -2095,6 +2098,72 @@ function opnBiometricUnlock() {
     if (!res || !res.keyB64) throw opnErr(401, 'unlock failed');
     return opnVaultApplyKey(opnUnB64(res.keyB64));
   });
+}
+/* ---- v622: the ONE Touch ID preference ----
+   John's word (Ora thread, 2026-11-23 00:55 CT): "touch
+   id preference throughout the app" — ONE switch governs
+   every PIN gate in the app. The preference stands on the
+   on-device PIN record (OPN_PIN_KEY): that record is the
+   one store every gate can read while the vault stands
+   LOCKED (the personal document is ciphertext then), and
+   it already carries the advisory biometricEnrolled flag.
+   An absent field reads ON — the default follows his
+   standing state (fingerprint enrolled since v606; the
+   Praylist gate already prompts biometric first since
+   v609 repair 2). The switch stands in Settings →
+   CONFESSION PIN. Device mode only: on the web the gates
+   are the server's and no bridge stands, so the helper
+   reads off and every gate keeps its standing shape. */
+function opnBioPref622() {
+  if (typeof opnMode !== 'function' || opnMode() !== 'device') return false;
+  var st = opnPinLoad();
+  // No record stands: nothing has ever switched the
+  // preference off, so the read is the default — ON, the
+  // standing pre-v622 behavior (the harness-v609vault
+  // world carries a vault with no PIN record; production
+  // builds the record first in the same set action, so
+  // this read is belt-and-braces, never a widening).
+  if (!st) return true;
+  return st.biometricPref !== false;
+}
+/* ---- v622: enrolment onboarding inside PIN setup ----
+   When a PIN is (re)set — the set sheet, the Conscience
+   recovery form, the unlock card's recovery form — the
+   flow itself offers fingerprint enrolment as its next
+   step, through the standing v606 enrolment machinery
+   (opnBiometricEnroll; the raw vault key stands in memory
+   at each of those seats). The offer stands only when it
+   can complete: device mode · the preference on · a vault
+   standing · the bridge available · NOT already enrolled.
+   Skipping leaves PIN-only working whole; the Settings
+   enrol / re-enrol acts stand untouched. Change PIN does
+   NOT offer: the biometric wrap seals the raw vault key,
+   which a PIN change never rotates (v606 diagnosis), so
+   an enrolment survives a change. */
+function opnBioOffer622(next) {
+  var done = function () { if (next) next(); };
+  if (!opnBioPref622() || !opnVaultPeek()) { done(); return; }
+  opnBiometricStatus().then(function (st) {
+    if (!st || !st.available || st.enrolled) { done(); return; }
+    var old = document.querySelector('.biooffer622');
+    if (old) old.remove();
+    var sheet = document.createElement('div'); sheet.className = 'sheet biooffer622';
+    sheet.innerHTML = '<div class="inner"><h1 class="screen">Add fingerprint unlock</h1>'
+      + '<p class="meta">Your PIN is set. This phone can also unlock your data with your fingerprint or face — at the Conscience gate, the Praylist, and every other PIN gate in the app. Your PIN always stands as the fallback.</p>'
+      + '<p class="pinmsg" id="biooffer-msg"></p>'
+      + '<div class="row"><button class="btn gold" id="biooffer-go">Use fingerprint / face</button><button class="btn ghost" id="biooffer-skip">Not now</button></div></div>';
+    document.body.appendChild(sheet);
+    mountDrawer(sheet, false);
+    sheet.querySelector('#biooffer-skip').addEventListener('click', function () { sheet.remove(); done(); });
+    sheet.querySelector('#biooffer-go').addEventListener('click', function () {
+      opnBiometricEnroll().then(function () { sheet.remove(); done(); }).catch(function (e) {
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric enrolment offer failed: ' + code);
+        var m = sheet.querySelector('#biooffer-msg');
+        if (m) m.textContent = 'Biometric enrolment did not complete (' + code + '). Your PIN stands.';
+      });
+    });
+  }).catch(function () { done(); });
 }
 /* ---- device playback state (outside the file) ---- */
 function opnPlayback() {
@@ -3979,6 +4048,10 @@ function renderPinGate(tab, contentFn, opts) {
     + '<span class="pinblank"></span><button data-pinkey="0">0</button><button data-pinkey="back" aria-label="Delete last digit">&#9003;</button></div>';
   html += '<div class="pinmsg" id="pinmsg"></div>';
   html += '<button class="btn gold" id="pin-unlock" disabled>Unlock</button>';
+  // v622: the Touch ID act at this gate — painted hidden;
+  // the binding below stands it only under the preference
+  // with an enrolment standing.
+  html += '<button class="btn ghost" id="pin-bio" style="display:none">Use fingerprint / face</button>';
   html += '<p class="meta" style="margin-top:14px"><a href="#" id="pin-forgot">Forgot PIN? Use your recovery code</a></p>';
   html += '</div>';
   view.innerHTML = html;
@@ -3993,6 +4066,53 @@ function renderPinGate(tab, contentFn, opts) {
   });
   document.getElementById('pin-unlock').addEventListener('click', submitPinVerify);
   document.getElementById('pin-forgot').addEventListener('click', function (ev) { ev.preventDefault(); renderPinRecoveryForm(tab, contentFn); });
+  // v622: the Touch ID path at the PIN gate — the named
+  // defect was that this gate (Conscience above all) used
+  // the PIN only. Under the one preference, with an
+  // enrolment standing, the prompt fires FIRST on the
+  // gate's stand (once per stand) and the button stands
+  // for a manual retry. Success does what a PIN verify
+  // does: opnBiometricUnlock applies the vault key, and
+  // the session token is issued from the client's own
+  // registry (opnPinIssueToken — the one the local layer
+  // checks). Failure names its code in the gate's message
+  // and the pad stands as the fallback; a key-invalidated
+  // failure clears the stale wrap and names the re-enrol
+  // seat (the v606 discipline). Preference off: this block
+  // never runs and the gate paints exactly as before.
+  var bioBtn = document.getElementById('pin-bio');
+  if (bioBtn && opnBioPref622()) {
+    var bioBusy = false;
+    var bioFire = function () {
+      if (bioBusy || pinToken) return;
+      bioBusy = true;
+      opnBiometricUnlock().then(function () {
+        bioBusy = false;
+        if (pinToken) return; // the PIN landed meanwhile
+        var issued = opnPinIssueToken();
+        pinToken = issued.token;
+        pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
+        clearPinWait();
+        var c = pinGateCtx;
+        if (c) c.contentFn();
+      }).catch(function (e) {
+        bioBusy = false;
+        var code = opnBioErr(e);
+        console.warn('[opn] biometric unlock at the PIN gate failed: ' + code);
+        if (code.indexOf('key-invalidated') !== -1) {
+          opnBiometricClear();
+          bioBtn.style.display = 'none';
+          setPinMsg('Your fingerprint set changed on this phone \u2014 enrol again in Settings \u2192 CONFESSION PIN. Your PIN stands.', true);
+        } else {
+          setPinMsg('Biometric unlock did not complete (' + code + '). Use your PIN.', true);
+        }
+      });
+    };
+    opnBiometricStatus().then(function (st) {
+      if (st && st.available && st.enrolled) { bioBtn.style.display = ''; bioFire(); }
+    }).catch(function () {});
+    bioBtn.addEventListener('click', bioFire);
+  }
   if (opts && opts.expired) setPinMsg('Session expired \u2014 enter your PIN.', false);
   var retry = (pinStateCache && pinStateCache.retryAfterSeconds) || (opts && opts.retryAfterSeconds) || 0;
   if (retry > 0) startPinWait(retry);
@@ -4112,7 +4232,8 @@ function renderPinRecoveryForm(tab, contentFn) {
     if (!/^[0-9]{4,8}$/.test(p1)) { msg.textContent = 'The PIN must be 4-8 digits.'; return; }
     post('/api/pin/recover', { code: code, newPin: p1 }).then(function (res) {
       pinToken = res.token;
-      showRecoverySheet(res.recoveryCode, function () { contentFn(); });
+      // v622: a re-set PIN offers enrolment as its next step.
+      showRecoverySheet(res.recoveryCode, function () { opnBioOffer622(contentFn); });
     }).catch(function (e) {
       var d = e.data || {};
       if (e.status === 429 || d.retryAfterSeconds) { msg.textContent = 'Too many attempts \u2014 try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
@@ -11399,6 +11520,24 @@ function fillPinSection() {
     var host2 = document.getElementById('pin-section');
     if (!host2) return;
     var html = '<h2 class="sectionhead pinsection">CONFESSION PIN</h2>';
+    // v622: the ONE Touch ID preference switch — stands
+    // whenever a PIN is set in the device shape, locked or
+    // unlocked (the PIN record reads and writes either
+    // way; flipping it touches nothing else on the record).
+    var prefHtml622 = '';
+    if (st.pinSet && opnMode() === 'device') {
+      var on622 = opnBioPref622();
+      prefHtml622 = '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">Fingerprint / face unlock is <strong>' + (on622 ? 'on' : 'off') + '</strong> for every PIN gate in the app \u2014 Conscience, the Praylist, and the unlock cards. Your PIN always stands as the fallback.</p>'
+        + '<button class="btn ghost" id="pin-bio-pref">' + (on622 ? 'Turn off fingerprint / face unlock' : 'Turn on fingerprint / face unlock') + '</button></div>';
+    }
+    var bindPref622 = function () {
+      var pb = document.getElementById('pin-bio-pref');
+      if (pb) pb.addEventListener('click', function () {
+        var rec = opnPinLoad();
+        if (rec) { rec.biometricPref = !opnBioPref622(); opnPinSave(rec); }
+        fillPinSection();
+      });
+    };
     if (!st.pinSet) {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">No PIN is set. Confession and Examination stay locked until you set one.</p><button class="btn gold" id="pin-set-open">Set a PIN</button></div>';
       host2.innerHTML = html;
@@ -11416,7 +11555,9 @@ function fillPinSection() {
           + '<button class="btn ghost" id="pin-bio-reenrol" style="display:none">Re-enrol fingerprint / face unlock</button> '
           + '<button class="btn ghost" id="pin-passkey-enrol" style="display:none">Add a passkey unlock</button></div>';
       }
+      html += prefHtml622;
       host2.innerHTML = html;
+      bindPref622();
       var bioBtn = document.getElementById('pin-bio-enrol');
       var reBioBtn = document.getElementById('pin-bio-reenrol');
       var bioFail = function (e) {
@@ -11463,7 +11604,9 @@ function fillPinSection() {
       });
     } else {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set.</p><button class="btn gold" id="pin-enter-open">Enter PIN</button></div>';
+      html += prefHtml622;
       host2.innerHTML = html;
+      bindPref622();
       document.getElementById('pin-enter-open').addEventListener('click', function () { renderPinGate('settings', renderSettings, {}); });
     }
   }).catch(function () {});
@@ -11494,7 +11637,16 @@ function openPinSetSheet(mode) {
       pinToken = res.token;
       pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
       sheet.remove();
-      showRecoverySheet(res.recoveryCode, function () { renderSettings(); });
+      // v622: setting a PIN offers fingerprint enrolment
+      // as the flow's own next step (onboarding) once the
+      // recovery code's showing closes. Change PIN does
+      // not offer — the wrap seals the raw vault key,
+      // which a change never rotates, so an enrolment
+      // survives it (the Settings re-enrol stands).
+      showRecoverySheet(res.recoveryCode, function () {
+        if (mode === 'set') opnBioOffer622(function () { renderSettings(); });
+        else renderSettings();
+      });
     }).catch(function (e) { msg.textContent = e.message; });
   });
 }
@@ -23458,6 +23610,10 @@ function opnBindLockGate609() {
   opnBindUnlockCard(opnUnlockedRepaint609);
   var note = host.querySelector('[data-p609locknote]');
   opnBiometricStatus().then(function (st) {
+    // v622: the one preference governs the auto-fire and
+    // the enrolment note alike — off, this gate is the
+    // PIN pad only, exactly as a gate with no bridge.
+    if (!opnBioPref622()) return;
     if (!opnVaultLocked()) return;
     if (st && st.available && st.enrolled) {
       if (opn609BioTried) return;
