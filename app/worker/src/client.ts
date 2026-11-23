@@ -19773,6 +19773,35 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // retires silently and clears the flag — his action wins, and
     // the record has already been replaced or removed by that
     // action's own §2.2/§2.5 discipline.
+    // v638 §2.1.3: the no-blank guard's seat — while a flip
+    // re-settle (state.extResettleLabeled638, below) stands
+    // in flight for a labeled slot, this map holds the slot's
+    // prior PRESENT record. The standing settle below reads
+    // it: a re-settle outcome of 'missing' (both routes down)
+    // restores the prior record whole instead of blanking
+    // the standing row, and a 'present' outcome clears it.
+    // Armed only by the hook, only for a slot that stood
+    // present when the flip landed. Entries carry the
+    // arming re-settle's epoch: { rec, epoch }.
+    var extResettlePrior638 = {};
+    // v638 §4.1 (PROBE-D fix-forward): the supersession
+    // seat — a per-slot re-settle EPOCH map beside the
+    // prior map. Each hook-initiated re-settle that
+    // actually starts (the hook's no-change guard has
+    // passed) takes the slot's next epoch; the epoch rides
+    // that re-settle's whole download chain — settleMeta →
+    // extDownload → settle, INCLUDING the v628 backup flip
+    // inside extDownload (the backup retry is the same
+    // re-settle, same epoch, not a new one). settle checks
+    // the epoch FIRST, before the prior-record guard: a
+    // completion carrying a stale epoch is dropped whole —
+    // no settle, no descriptor rebuild, no cache write, no
+    // prior-record restore, and no discharge of a newer
+    // re-settle's armed guard. Settlements NOT initiated
+    // by the hook (this pass's own courier/cache settles,
+    // cold opens, the watchdogs) carry no epoch (undefined)
+    // and are never gated.
+    var extResettleEpoch638 = {};
     var restoreFired = false, restoreIntrosDone = false;
     var maybeRestoreQueue = function () {
       if (restoreFired || !state.restoredQueue) return;
@@ -19836,7 +19865,27 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       offlineSnapshotWrite(date, rec);
     };
     state.ownWriteCache = writeCache;
-    var settle = function (slot, st) {
+    var settle = function (slot, st, epoch638) {
+      // v638 §4.1 (PROBE-D fix-forward): the epoch gate
+      // fires FIRST, before the prior-record guard below.
+      // A hook-initiated completion carrying a stale epoch
+      // (a newer flip has taken the slot's next epoch since
+      // this chain started) is dropped whole: it does not
+      // settle, does not restore its stale prior record,
+      // and does not discharge the newer re-settle's armed
+      // guard. Both outcomes are gated — a stale 'present'
+      // and a stale 'missing' alike. No epoch (undefined):
+      // never gated.
+      if (epoch638 != null && epoch638 !== extResettleEpoch638[slot.slotId]) return;
+      // v638 §2.1.3 (the prior-record restore guard): a flip
+      // re-settle that would settle a labeled slot 'missing'
+      // over a standing present row restores the prior record
+      // whole — the row never blanks; a 'present' settle
+      // discharges the guard for that slot.
+      if (st && extResettlePrior638[slot.slotId]) {
+        if (st.state === 'missing') st = extResettlePrior638[slot.slotId].rec;
+        if (st.state === 'present') delete extResettlePrior638[slot.slotId];
+      }
       state.extSlots[slot.slotId] = st;
       // v343 §2.5(2): settle order flip — the descriptor rebuild
       // runs BEFORE the swap render, so the card the swap draws
@@ -19850,7 +19899,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       updateBlockCounts(day);
       writeCache();
     };
-    var extDownload = function (slot, meta) {
+    var extDownload = function (slot, meta, epoch638) {
+      // v638 §4.1: stale638() — this chain carries a hook
+      // re-settle epoch that a newer flip has superseded.
+      // Checked at each completion point: a superseded
+      // chain drops whole (no mint — a stale mint under the
+      // shared owner could revoke the newer settle's blob
+      // URL — no backup retry, no settle of either outcome).
+      var stale638 = function () { return epoch638 != null && epoch638 !== extResettleEpoch638[slot.slotId]; };
       // Amendment A1 routes: direct from the enclosure host where
       // its chain allows the read (Divine Office, Bible in a Year);
       // the Worker pass-through where it does not (Sing the Hours).
@@ -19885,28 +19941,88 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       var attempt = tryRoute(routes[0]);
       if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
       attempt.then(function (blob) {
-        var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
-        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
+        if (stale638()) return; // §4.1: superseded — drop whole, before the mint
+        // v638 §2.1.4: a slot SOUNDING at this settle (its
+        // descriptor is state.current, or stands in the
+        // already-built state.queue) is never restarted and
+        // its sounding descriptor is never swapped: the mint
+        // runs under a throwaway owner, so mintBlobUrl does
+        // NOT revoke the blob URL the sounding descriptor
+        // holds (the shared owner's standing URL is that
+        // very URL). state.current and state.queue stand
+        // untouched by the settle; only the slot record,
+        // the rebuilt descriptors, and the list paint move.
+        var sounding638 = !!((state.current && state.current.episodeId === slot.slotId)
+          || (state.queue || []).some(function (qd) { return qd && qd.episodeId === slot.slotId; }));
+        var u = mintBlobUrl(sounding638 ? {} : extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
+        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638);
       }).catch(function () {
+        if (stale638()) return; // §4.1: superseded — no backup retry, no 'missing' settle over the newer row
         // v628: the standing-first source failed to load — the
         // backup stands (the v626 flip discipline, per-user):
         // one retry with the backup pointer + its own label,
         // through this same download path (no backup rides the
         // retry, so the flip happens at most once).
         if (meta.backup && meta.backup.streamUrl) {
-          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
+          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638); // §4.1: the backup flip is the SAME re-settle — same epoch, not a new one
           return;
         }
-        settle(slot, { state: 'missing', title: meta.title, source: meta.source });
+        settle(slot, { state: 'missing', title: meta.title, source: meta.source }, epoch638);
       });
     };
-    var settleMeta = function (slot, meta) {
+    var settleMeta = function (slot, meta, epoch638) {
       var cur = state.extSlots[slot.slotId];
       if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
       state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, unresolved: !!meta.unresolved, resolvedAt: meta.resolvedAt || null, backup: meta.backup || null };
       extSwapCard(slot);
       extRebuildDescs(day);
-      extDownload(slot, meta);
+      extDownload(slot, meta, epoch638);
+    };
+    // v638 §2.1.1: the in-session re-settle hook — stood on
+    // state during this pass (the state.ownWriteCache /
+    // state.restoreProbe precedent), closing over this
+    // pass's day, standing set, and settle machinery. The
+    // Praylist edit form's choice flip calls it after the
+    // store write: it refetches the day's live payload
+    // through the standing courier route, re-applies
+    // opnExtChoice628 over each labeled slot's served entry
+    // (with its backup object — the settled record carries
+    // no backup, so the served entry is the only place the
+    // other source's pointer stands), and hands the result
+    // to the standing settleMeta, whose same-enclosure guard
+    // makes a flip to the already-standing source a no-op.
+    // With the choice re-applied the new meta's backup IS
+    // the previously standing source, so extDownload's
+    // standing failure flip lands back on it; the
+    // prior-record restore guard (extResettlePrior638,
+    // armed below for a slot standing present) covers the
+    // both-routes failure. settle writes the day cache
+    // through the standing writeCache, so the next cold
+    // start reads the new source standing (no double-flip;
+    // the v637 prune leaves it). A sounding slot is not
+    // restarted and its descriptor is not swapped — see
+    // the mint guard in extDownload (§2.1.4).
+    state.extResettleLabeled638 = function () {
+      return api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
+        var byId638 = {};
+        (res.slots || []).forEach(function (e) { byId638[e.slotId] = e; });
+        standing.forEach(function (slot) {
+          if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return;
+          var e = byId638[slot.slotId];
+          if (!e || e.state !== 'present') return;
+          var choice638 = opnExtChoice628(slot, e, slot.source || 'Divine Office');
+          var cur638 = state.extSlots[slot.slotId];
+          if (cur638 && cur638.state === 'present' && cur638.enclosureUrl === choice638.streamUrl) return; // settleMeta's own guard: already standing — no-op, guard unarmed, NO epoch taken (§4.1: a no-change flip must not strand a legitimately in-flight re-settle by bumping the epoch and starting nothing)
+          // v638 §4.1: this re-settle actually starts — it
+          // takes the slot's next epoch, superseding every
+          // earlier hook chain for the slot still in flight.
+          // The prior-record guard arms under this epoch.
+          var epoch638 = (extResettleEpoch638[slot.slotId] || 0) + 1;
+          extResettleEpoch638[slot.slotId] = epoch638;
+          if (cur638 && cur638.state === 'present') extResettlePrior638[slot.slotId] = { rec: cur638, epoch: epoch638 };
+          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638);
+        });
+      }).catch(function () { /* the refetch failed: the standing rows stand as they are */ });
     };
     var extRestoreCached = function (slot) {
       var c = rec.slots[slot.slotId];
@@ -21128,8 +21244,13 @@ function wirePrayersView(day) {
   // head — a tap writes the ONE v632 store through the ONE
   // writer, then repaints the form so the marker moves in
   // the same paint. No scope, contents, or profile write.
+  // v638: the tap ALSO calls the standing pass's re-settle
+  // hook (state.extResettleLabeled638) after the store
+  // write, so the flip re-settles the two labeled slots in
+  // the standing session — no restart. Absent hook (a flip
+  // before any resolve pass) is a safe no-op.
   view.querySelectorAll('[data-p637sth]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnSthFirstSet632(btn.getAttribute('data-p637sth') === 'sth'); opnRepaintHome604(); });
+    btn.addEventListener('click', function () { opnSthFirstSet632(btn.getAttribute('data-p637sth') === 'sth'); if (state.extResettleLabeled638) state.extResettleLabeled638(); opnRepaintHome604(); });
   });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
