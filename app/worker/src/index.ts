@@ -33,6 +33,8 @@ export interface Env {
   // the real route. Production leaves it unset and the courier uses
   // the pinned resolver URL (EXT_DO_FEED_URL below).
   EXT_DO_FEED_URL?: string;
+  EXT_SYNTH_BASE_URL?: string; // v628: filename-synthesis host seam (harness fixtures)
+  EXT_DO_SITE_BASE_URL?: string; // v628: site-scrape base seam (harness fixtures)
   EXT_BIAY_FEED_URL?: string;
   EXT_STH_FEED_URL?: string;
   // v337 harness seams, same rule: fixture-feed overrides for the
@@ -2345,6 +2347,9 @@ interface ExtResolutionRow {
   resolved_at: string; feed_stamp: string | null;
   episode_date: string | null; // v625 D1 (migration 0048): the day the episode is FOR
   source: string | null; // v626 (migration 0049): the feed that filled the row ('Divine Office' / 'Sing the Hours' / NULL)
+  backup_url: string | null; // v628 (migration 0050): the OTHER source's pointer for the two labeled slots (the per-user preference's backup)
+  backup_source: string | null; // v628 (migration 0050): the backup pointer's source name
+  route: string | null; // v628 (migration 0050): the Divine Office fetch ROUTE that filled the row ('feed' / 'synthesis' / 'scrape' / NULL)
 }
 interface ExtFeedStateRow {
   feed_key: string; last_success_at: string | null;
@@ -2380,19 +2385,31 @@ async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: 
 // v626: the two office slots whose stored title carries the
 // filling source (John's labeling rule, 2026-11-23 08:43 CT).
 const EXT_LABELED_SLOTS = new Set(["ext-morning-prayer", "ext-evening-prayer"]);
-async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null): Promise<void> {
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null, backupUrl?: string | null, backupSource?: string | null, route?: string | null): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source, backup_url, backup_source, route)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
        duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
-       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date, source = excluded.source`,
+       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date, source = excluded.source,
+       backup_url = excluded.backup_url, backup_source = excluded.backup_source, route = excluded.route`,
   ).bind(
     slotId, date, it ? "present" : "missing", title,
     it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
     it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
     nowISO(), stamp, episodeDate, source,
+    backupUrl ?? null, backupSource ?? null, route ?? null,
   ).run();
+}
+// v628: the backup-pointer write — the ONLY writer of the
+// backup columns on a standing row: it never touches the
+// primary pointer, title, source, or resolved_at (a backup
+// landing must not freshen the primary's stand-down fact).
+async function extResolutionBackupWrite(env: Env, date: string, slotId: string, backupUrl: string, backupSource: string): Promise<void> {
+  try {
+    await env.DB.prepare("UPDATE ext_resolutions SET backup_url=?, backup_source=? WHERE date=? AND slot_id=?")
+      .bind(backupUrl, backupSource, date, slotId).run();
+  } catch { /* bookkeeping; the next pass retries */ }
 }
 // v624 §2 D9 stand-down, slot class: every standing slot for
 // TODAY carries a resolution written from a successful read
@@ -2423,6 +2440,137 @@ async function extFeedStoodDownDo(env: Env, slotIds: string[], today: string): P
     if (EXT_LABELED_SLOTS.has(id) && row.source === "Sing the Hours") return false;
     return chicagoDateOf(new Date(row.resolved_at)) === today;
   });
+}
+
+
+// ---- v628: the Divine Office sourcing ladder, rungs 2 + 4 ----
+// John's final order (voice call 2026-11-23 ~09:30 CT, corrected
+// twice): (1) the RSS feed (the standing runSlotFeed leg above)
+// · (2) FILENAME SYNTHESIS · (3) the Sing the Hours fallback
+// under the user preference · (4) SITE SCRAPE. Synthesis and
+// scrape are Divine Office fetch ROUTES, not sources: their
+// rows carry source 'Divine Office', the standing labeled
+// titles, and route 'synthesis' / 'scrape' (migration 0050) so
+// every fill is flagged per slot for the nightly report — a
+// fill is never silent (the plan's memorial-day caveat).
+const EXT_SYNTH_BASE = "https://traffic.libsyn.com/divineoffice/";
+const EXT_DO_SITE_BASE = "https://divineoffice.org";
+const EXT_SYNTH_HOURS: Record<string, string[]> = {
+  "ext-invitatory": ["ip"],
+  "ext-morning-prayer": ["mp"],
+  "ext-midmorning-prayer": ["dp1"],
+  "ext-midday-prayer": ["dp2"],
+  "ext-midafternoon-prayer": ["dp3"],
+  "ext-office-of-readings": ["or"],
+  "ext-evening-prayer": ["ep1", "ep2"],
+  "ext-night-prayer": ["np"],
+};
+const EXT_SEASON_CODE: Record<string, string> = {
+  "Ordinary Time": "ord", "Advent": "adv", "Lent": "lent", "Holy Week": "hw",
+  "Easter": "easter", "Easter Time": "easter", "Christmas": "xmas", "Christmas Time": "xmas",
+};
+// The candidate names for one (date, slot), in try order:
+// the cycle form, the psalter-week form (the site's own post
+// slugs stand in it: ord-w02-mon-mp for week 34 — the four-week
+// psalter), the .w1-w3 / .w2-w4 variants, and the date family.
+// Season + week come from the app's own liturgical calendar
+// (MASS_CALENDAR's temporal version: kind 'season').
+function extSynthCandidates(date: string, slotId: string): string[] {
+  const hours = EXT_SYNTH_HOURS[slotId] ?? [];
+  if (!hours.length) return [];
+  const [y, mo, d] = date.split("-").map(Number);
+  const day = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  const out: string[] = [];
+  const cal = (MASS_CALENDAR as Record<string, { versions?: { kind?: string; season?: string; week?: number }[] }>)[date];
+  const temporal = (cal?.versions ?? []).find((v) => v.kind === "season");
+  const season = temporal?.season ? EXT_SEASON_CODE[temporal.season] : undefined;
+  const week = temporal?.week;
+  const mmdd = String(mo).padStart(2, "0") + String(d).padStart(2, "0");
+  for (const h of hours) {
+    if (season && week) {
+      out.push(`divine-${season}-w${week}-${day}-${h}.mp3`);
+      const psalter = ((week - 1) % 4) + 1;
+      out.push(`divine-${season}-w0${psalter}-${day}-${h}.mp3`);
+      out.push(`divine-${season}-w${week}-${day}-${h}.w1-w3.mp3`);
+      out.push(`divine-${season}-w${week}-${day}-${h}.w2-w4.mp3`);
+    }
+    out.push(`divine-${mmdd}-${h}.${y}.mp3`);
+  }
+  return [...new Set(out)];
+}
+// The verification bar (plan §1, operational form): a bare
+// HEAD on an existing Libsyn file answers 302 to the CDN file
+// (never 200), and a followed range GET answers 200/206 with
+// an audio content-type. No candidate stands on anything less;
+// a miss or an error verifies nothing.
+async function extSynthVerify(env: Env, name: string): Promise<string | null> {
+  const base = env.EXT_SYNTH_BASE_URL || EXT_SYNTH_BASE;
+  const url = base + name;
+  try {
+    const head = await fetch(url, { method: "HEAD", redirect: "manual" });
+    const loc = head.headers?.get ? head.headers.get("location") : null;
+    if (!(head.status === 302 && loc && loc.includes(".mp3"))) {
+      // A host that answers the HEAD directly with audio also
+      // meets the bar's substance (200 + audio content-type).
+      const ct0 = head.headers?.get ? head.headers.get("content-type") : null;
+      if (!(head.ok && ct0 && ct0.toLowerCase().startsWith("audio/"))) return null;
+    }
+    const get = await fetch(url, { headers: { range: "bytes=0-0" } });
+    const ct = get.headers?.get ? get.headers.get("content-type") : null;
+    if (!((get.status === 200 || get.status === 206) && ct && ct.toLowerCase().startsWith("audio/"))) return null;
+    return url;
+  } catch { return null; }
+}
+// Rung 4 extraction (plan §2 + the Implement live proof,
+// 2026-11-23: the day page links each hour's OWN post page —
+// slugs ord-w34-mon-or · ord-w02-mon-mp · ord-w02-mon-ep ·
+// ord-mon-np-w2-w4 — and the post page's episode player carries
+// the full-episode file). Component players are REFUSED:
+// the divine-ip- invitatory-psalm family and any .psalmNNN
+// infix. A Cloudflare challenge page is a failed read.
+const EXT_SCRAPE_SLUG_TAIL: Record<string, RegExp> = {
+  "ext-morning-prayer": /-mp$/, "ext-office-of-readings": /-or$/,
+  "ext-evening-prayer": /-ep$/, "ext-midmorning-prayer": /-dp1$/,
+  "ext-midday-prayer": /-dp2$/, "ext-midafternoon-prayer": /-dp3$/,
+  "ext-night-prayer": /-np/,
+};
+function extScrapeIsChallenge(html: string): boolean {
+  return /one moment, please|checking your browser|cf-challenge|challenge-platform/i.test(html);
+}
+function extScrapePostUrl(dayHtml: string, date: string, slotId: string): string | null {
+  const ymd = date.replace(/-/g, "");
+  const hrefRe = new RegExp(`href="(https://divineoffice\\.org/([a-z0-9-]+)/\\?date=${ymd})"`, "g");
+  let m: RegExpExecArray | null;
+  const slugs: { url: string; slug: string }[] = [];
+  while ((m = hrefRe.exec(dayHtml))) slugs.push({ url: m[1], slug: m[2] });
+  if (slotId === "ext-invitatory") {
+    const ip = slugs.find((x) => x.slug.startsWith("ip-"));
+    return ip ? ip.url : null;
+  }
+  const tail = EXT_SCRAPE_SLUG_TAIL[slotId];
+  if (!tail) return null;
+  const hit = slugs.find((x) => tail.test(x.slug));
+  return hit ? hit.url : null;
+}
+function extScrapeEpisodeUrl(postHtml: string): string | null {
+  const re = /https?:\/\/[^\s"'<>]+\.mp3(?:\?[^\s"'<>]*)?/g;
+  const urls = postHtml.match(re) ?? [];
+  for (const raw of urls) {
+    const u = raw.replace(/\?_=1$/, "");
+    const file = u.split("/").pop() ?? "";
+    if (file.startsWith("divine-ip-") || /\.psalm\d/i.test(file)) continue; // component — refused
+    return u;
+  }
+  return null;
+}
+async function extFetchText628(url: string): Promise<string> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(url, { headers: { "user-agent": EXT_BROWSER_UA }, signal: ctl.signal });
+    if (!res.ok) throw new Error(`page fetch failed: HTTP ${res.status}`);
+    return await res.text();
+  } finally { clearTimeout(timer); }
 }
 
 export interface ExtPassSummary { feed: string; ok: boolean; error?: string; slotsWritten: number; skipped?: string }
@@ -2468,6 +2616,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     episodeDateFor?: (date: string, it: ExtFeedItem) => string | null,
     sourceFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
     sthAwareStoodDown?: boolean,
+    routeFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
   ): Promise<void> => {
     const todaySlots = slotsFor(today);
     if (!forced.has(feedKey) && (await (sthAwareStoodDown ? extFeedStoodDownDo(env, todaySlots, today) : extFeedStoodDown(env, todaySlots, today)))) {
@@ -2507,7 +2656,10 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         // v626: the filling source, stamped last (migration
         // 0049) — only writers that pass sourceFor stamp one.
         const source = sourceFor ? sourceFor(slotId, it) : null;
-        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate, source);
+        // v628: the fetch route that filled the row (the DO
+        // leg stamps 'feed'; every other writer leaves NULL).
+        const route = routeFor ? routeFor(slotId, it) : null;
+        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate, source, null, null, route);
         written++;
       }
     }
@@ -2539,7 +2691,45 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     // slots stamp NULL (only DO/StH sources are read).
     (slotId, it) => (it && EXT_LABELED_SLOTS.has(slotId) ? "Divine Office" : null),
     true, // v626: the DO stand-down excludes Sing the Hours fills
+    (_slotId, it) => (it ? "feed" : null), // v628: rung 1's route stamp
   );
+  // v628 rung 2 — FILENAME SYNTHESIS (John's ladder, position
+  // 2): for every Divine Office slot rung 1 left unresolved
+  // (absent row or 'missing'), construct the day's candidate
+  // names and HEAD-verify each against the bar; only a verified
+  // file stands, as a Divine Office row (route 'synthesis').
+  // A miss or an error writes nothing. When the feed is healthy
+  // every slot stands present and this rung never fetches.
+  {
+    const feedKey = "divine-office-synthesis";
+    let attempted = 0, written628 = 0;
+    for (const date of dates) {
+      const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(date).all<ExtResolutionRow>();
+      const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x]));
+      for (const sl of EXT_DO_SLOTS) {
+        if (!standingOn(sl.slotId, date)) continue;
+        const cur = bySlot.get(sl.slotId);
+        if (cur && cur.state === "present") continue;
+        for (const name of extSynthCandidates(date, sl.slotId)) {
+          attempted++;
+          const url = await extSynthVerify(env, name);
+          if (!url) continue;
+          const it: ExtFeedItem = { title: sl.title, url, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
+          const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
+          const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
+          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, null, null, "synthesis");
+          written628++;
+          break;
+        }
+      }
+    }
+    if (attempted) {
+      await extFeedStateWrite(env, feedKey, written628 > 0, written628 > 0 ? null : "no candidate verified", null);
+      summary.push({ feed: feedKey, ok: true, slotsWritten: written628 });
+    } else {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "no-unresolved-slots" });
+    }
+  }
   // Daily Gospel Exegesis day leg — extMatchLatestByDate.
   await runSlotFeed(
     "daily-gospel-exegesis", env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL,
@@ -2593,6 +2783,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
   {
     const feedKey = "sing-the-hours";
     const needs: { date: string; slotId: string; token: string }[] = [];
+    const backupNeeds: { date: string; slotId: string; token: string }[] = []; // v628
     for (const date of dates) {
       const [y, mo, d] = date.split("-").map(Number);
       const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
@@ -2604,11 +2795,19 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         const fills = !!fbRow && fbRow.enabled === 1 && (fbRow.day_rule === "fallback-only" || extDayRulePasses(fbRow.day_rule || "daily", wd));
         if (!fills) continue;
         const cur = bySlot.get(slotId);
-        if (cur && cur.state !== "missing") continue; // present — primary or an earlier fill; never overwritten
+        if (cur && cur.state !== "missing") {
+          // v628 (the folded v629 preference): a labeled slot
+          // standing on Divine Office with no backup pointer
+          // needs the Sing the Hours pointer ALONGSIDE it — the
+          // watcher stands BOTH pointers and the device applies
+          // the user's choice at paint/play.
+          if (cur.state === "present" && cur.source === "Divine Office" && !cur.backup_url) backupNeeds.push({ date, slotId, token });
+          continue; // present — primary or an earlier fill; never overwritten
+        }
         needs.push({ date, slotId, token });
       }
     }
-    if (!needs.length) {
+    if (!needs.length && !backupNeeds.length) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "no-fill-needed" });
     } else {
       try {
@@ -2629,6 +2828,13 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
             written++;
           }
         }
+        // v628: the backup pointers for Divine Office-standing
+        // labeled slots (the preference's other half).
+        for (const need of backupNeeds) {
+          const [y, mo, d] = need.date.split("-").map(Number);
+          const it = extMatchSth(feed.items, y, mo, d, need.token);
+          if (it) { await extResolutionBackupWrite(env, need.date, need.slotId, it.url, "Sing the Hours"); written++; }
+        }
         await extFeedStateWrite(env, feedKey, true, null, null);
         summary.push({ feed: feedKey, ok: true, slotsWritten: written });
       } catch (e) {
@@ -2636,6 +2842,60 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         await extFeedStateWrite(env, feedKey, false, msg, null);
         summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
       }
+    }
+  }
+
+  // v628 rung 4 — SITE SCRAPE, the last net: for slots STILL
+  // unresolved after rungs 1-3, read each hour's OWN post page
+  // on divineoffice.org (discovered from the day page's links;
+  // never the day page itself, whose only player is the
+  // Invitatory component psalm) and stand its EPISODE player
+  // pointer. Component players are refused; a challenge page
+  // is a failed read and writes nothing. Rows are Divine
+  // Office rows (route 'scrape'). Page fetches are cached
+  // across hours within the pass.
+  {
+    const feedKey = "divine-office-scrape";
+    const siteBase = env.EXT_DO_SITE_BASE_URL || EXT_DO_SITE_BASE;
+    let written628 = 0, attempted628 = 0;
+    const dayCache = new Map<string, string | null>();
+    for (const date of dates) {
+      const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(date).all<ExtResolutionRow>();
+      const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x]));
+      for (const sl of EXT_DO_SLOTS) {
+        if (!standingOn(sl.slotId, date)) continue;
+        const cur = bySlot.get(sl.slotId);
+        if (cur && cur.state === "present") continue;
+        attempted628++;
+        if (!dayCache.has(date)) {
+          let html: string | null = null;
+          try {
+            const raw = await extFetchText628(`${siteBase}/?date=${date.replace(/-/g, "")}`);
+            html = extScrapeIsChallenge(raw) ? null : raw;
+          } catch { html = null; }
+          dayCache.set(date, html);
+        }
+        const dayHtml = dayCache.get(date);
+        if (!dayHtml) continue;
+        const postUrl = extScrapePostUrl(dayHtml, date, sl.slotId);
+        if (!postUrl) continue;
+        let postHtml: string;
+        try { postHtml = await extFetchText628(postUrl.replace(EXT_DO_SITE_BASE, siteBase)); } catch { continue; }
+        if (extScrapeIsChallenge(postHtml)) continue;
+        const epUrl = extScrapeEpisodeUrl(postHtml);
+        if (!epUrl) continue;
+        const it: ExtFeedItem = { title: sl.title, url: epUrl, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
+        const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
+        const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
+        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, null, null, "scrape");
+        written628++;
+      }
+    }
+    if (attempted628) {
+      await extFeedStateWrite(env, feedKey, written628 > 0, written628 > 0 ? null : "no episode pointer extracted", null);
+      summary.push({ feed: feedKey, ok: true, slotsWritten: written628 });
+    } else {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "no-unresolved-slots" });
     }
   }
 
@@ -2817,6 +3077,10 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
       if (res.state === "present") {
         if (res.image_url) entry.imageUrl = res.image_url;
         if (res.desc_text) entry.descText = res.desc_text;
+        // v628: the standing backup pointer (the preference's
+        // other source) + the fill route, for the nightly flag.
+        if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: `${sd.title} - ${res.backup_source ?? ""}` };
+        if (res.route) entry.route = res.route;
       }
       if (stale) entry.stale = true;
       slots.push(entry);

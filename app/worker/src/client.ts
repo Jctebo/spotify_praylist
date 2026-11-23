@@ -2126,6 +2126,39 @@ function opnBioPref622() {
   if (!st) return true;
   return st.biometricPref !== false;
 }
+/* ---- v628: the Sing the Hours preference (folded v629) ----
+   John's word (voice call 2026-11-23 ~09:30 CT): for Morning
+   Prayer and Evening Prayer — the only two hours Sing the
+   Hours carries — the user chooses which source stands FIRST.
+   Default: Divine Office first, Sing the Hours as backup (the
+   v626 shape). The toggle makes Sing the Hours primary for
+   this user, with Divine Office as the backup. The preference
+   stands on the on-device PIN record beside v622's
+   biometricPref — the one store every surface can read — as
+   sthPrimary (absent/false = the default). The server watcher
+   stands BOTH pointers for the two slots (the payload's
+   backup field); this helper pair applies the choice on the
+   device at settle time, so the painted title, the source,
+   and the played pointer all name the standing-first source,
+   and a failed download of the first choice retries the
+   backup (the v626 flip discipline, per-user now). */
+function opnSthPrimary628() {
+  var st = null;
+  try { st = opnPinLoad(); } catch (e) { st = null; }
+  return !!(st && st.sthPrimary === true);
+}
+function opnExtChoice628(slot, e, src) {
+  // Returns { title, streamUrl, source, backup } — the entry
+  // re-ordered for this user. No backup standing, or a slot
+  // outside the two labeled hours: the entry stands as served.
+  var plain = { title: e.title, streamUrl: e.streamUrl, source: src, backup: null };
+  if (!e || !e.backup || !e.backup.streamUrl) return plain;
+  if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return plain;
+  var backupTitle = slot.title + ' - ' + (e.backup.source || 'Sing the Hours');
+  var backup = { title: backupTitle, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours' };
+  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, backup: { title: e.title, streamUrl: e.streamUrl, source: 'Divine Office' } };
+  return { title: e.title, streamUrl: e.streamUrl, source: src, backup: backup };
+}
 /* ---- v622: enrolment onboarding inside PIN setup ----
    When a PIN is (re)set — the set sheet, the Conscience
    recovery form, the unlock card's recovery form — the
@@ -11545,6 +11578,22 @@ function fillPinSection() {
       prefHtml622 = '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">Fingerprint / face unlock is <strong>' + (on622 ? 'on' : 'off') + '</strong> for every PIN gate in the app \u2014 Conscience, the Praylist, and the unlock cards. Your PIN always stands as the fallback.</p>'
         + '<button class="btn ghost" id="pin-bio-pref">' + (on622 ? 'Turn off fingerprint / face unlock' : 'Turn on fingerprint / face unlock') + '</button></div>';
     }
+    // v628: the Sing the Hours preference switch — stands
+    // beside the v622 switch, on the same on-device record.
+    var sthHtml628 = '';
+    if (st.pinSet && opnMode() === 'device') {
+      var sthOn628 = opnSthPrimary628();
+      sthHtml628 = '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">For Morning Prayer and Evening Prayer, <strong>' + (sthOn628 ? 'Sing the Hours' : 'Divine Office') + '</strong> stands first on this phone. The other source stands as the backup and plays when the first does not load.</p>'
+        + '<button class="btn ghost" id="pin-sth-pref">' + (sthOn628 ? 'Put Divine Office first' : 'Put Sing the Hours first') + '</button></div>';
+    }
+    var bindSth628 = function () {
+      var sb = document.getElementById('pin-sth-pref');
+      if (sb) sb.addEventListener('click', function () {
+        var rec = opnPinLoad();
+        if (rec) { rec.sthPrimary = !opnSthPrimary628(); opnPinSave(rec); }
+        fillPinSection();
+      });
+    };
     var bindPref622 = function () {
       var pb = document.getElementById('pin-bio-pref');
       if (pb) pb.addEventListener('click', function () {
@@ -11571,8 +11620,10 @@ function fillPinSection() {
           + '<button class="btn ghost" id="pin-passkey-enrol" style="display:none">Add a passkey unlock</button></div>';
       }
       html += prefHtml622;
+      html += sthHtml628;
       host2.innerHTML = html;
       bindPref622();
+      bindSth628();
       var bioBtn = document.getElementById('pin-bio-enrol');
       var reBioBtn = document.getElementById('pin-bio-reenrol');
       var bioFail = function (e) {
@@ -11620,8 +11671,10 @@ function fillPinSection() {
     } else {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set.</p><button class="btn gold" id="pin-enter-open">Enter PIN</button></div>';
       html += prefHtml622;
+      html += sthHtml628;
       host2.innerHTML = html;
       bindPref622();
+      bindSth628();
       document.getElementById('pin-enter-open').addEventListener('click', function () { renderPinGate('settings', renderSettings, {}); });
     }
   }).catch(function () {});
@@ -19710,13 +19763,22 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
         settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
       }).catch(function () {
+        // v628: the standing-first source failed to load — the
+        // backup stands (the v626 flip discipline, per-user):
+        // one retry with the backup pointer + its own label,
+        // through this same download path (no backup rides the
+        // retry, so the flip happens at most once).
+        if (meta.backup && meta.backup.streamUrl) {
+          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
+          return;
+        }
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
       });
     };
     var settleMeta = function (slot, meta) {
       var cur = state.extSlots[slot.slotId];
       if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
-      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, unresolved: !!meta.unresolved, resolvedAt: meta.resolvedAt || null };
+      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, unresolved: !!meta.unresolved, resolvedAt: meta.resolvedAt || null, backup: meta.backup || null };
       extSwapCard(slot);
       extRebuildDescs(day);
       extDownload(slot, meta);
@@ -19850,7 +19912,11 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
             // v350: the Bible entry carries the item's RAW title;
             // the display title is built here by the standing
             // extBibleTitle construction (one title rule).
-            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null });
+            // v628: the per-user source choice for Morning/
+            // Evening — the served entry re-orders around the
+            // payload's backup pointer before it settles.
+            var choice628 = opnExtChoice628(slot, e, src);
+            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : choice628.title, enclosureUrl: choice628.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: choice628.source, backup: choice628.backup, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null });
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             // v624 §2 D5: an unresolved entry settles missing

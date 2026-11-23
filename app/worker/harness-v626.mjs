@@ -244,6 +244,12 @@ class FakeDB {
           db.resolutions.set(date + "|" + slot_id, { slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source });
           return {};
         }
+        if (sql.startsWith("UPDATE ext_resolutions SET backup_url")) {
+          // v628 machinery: the backup-pointer write (migration 0050)
+          const r = db.resolutions.get(args[2] + "|" + args[3]);
+          if (r) { r.backup_url = args[0]; r.backup_source = args[1]; }
+          return {};
+        }
         if (sql.startsWith("DELETE FROM ext_resolutions")) {
           for (const k of [...db.resolutions.keys()]) if (k.split("|")[0] < args[0]) db.resolutions.delete(k);
           return {};
@@ -401,10 +407,18 @@ const summaryOf = (r, feed) => (r.results || []).find((x) => x.feed === feed);
   const env = makeEnv(db);
   const before = count("sth");
   await agentResolve(env);
-  check("F7 both slots primary-present: the StH feed is NEVER fetched", count("sth") === before, { before, after: count("sth") });
+  // v628: REVERSED BY NAME — the folded v629 preference stands
+  // BOTH pointers for Morning/Evening, so with both slots
+  // primary-present the StH feed IS fetched once to stand the
+  // backup pointers (v628 doc §3). The no-need discipline
+  // stands one pass later: with the backups standing, the
+  // second pass fetches nothing (check below).
+  check("F7 [v628: reversed by name — both pointers stand for the preference] both slots primary-present: the StH feed is fetched ONCE to stand the backup pointers", count("sth") === before + 1, { before, after: count("sth") });
   const r2 = await agentResolve(env);
   const sum = summaryOf(r2, "sing-the-hours");
-  check("F7 second pass still fetches no StH (summary: no-fill-needed)", count("sth") === before && !!sum && sum.skipped === "no-fill-needed", sum);
+  // v628: the count baseline is the post-pass-1 count (pass 1
+  // fetched once for the backups, per the reversed check above).
+  check("F7 second pass still fetches no StH (summary: no-fill-needed)", count("sth") === before + 1 && !!sum && sum.skipped === "no-fill-needed", sum);
 }
 // ---------- F8: a primary-present row is never overwritten by a fill; a fallback row's episode_date = its row date ----------
 {
