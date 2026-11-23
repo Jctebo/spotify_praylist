@@ -29,11 +29,14 @@
 //       Read control stands, neither phrase present
 //  L3   genuinely-unavailable own card -> meta still reads
 //       "Not available in the app yet" (kept verbatim)
-//  L4 ◆ openRead with a failing text fetch -> the read body
-//       reads "The episode's text could not be loaded." and
-//       NOT the struck phrase (the REAL openRead is driven;
-//       its fetch is stubbed to reject, its promise chain is
-//       awaited, and the painted sheet body is read back)
+//  L4 ◆ [v630: reversed by name — v627's failed-fetch body
+//       "The episode's text could not be loaded." is itself
+//       struck by v630; a failing text fetch now paints
+//       NOTHING] openRead with a failing text fetch -> the
+//       read body settles EMPTY and does NOT read the struck
+//       phrase (the REAL openRead is driven; its fetch is
+//       stubbed to a 404, its promise chain is awaited, and
+//       the painted sheet body is read back)
 //  L5   novena row composition unchanged: the §2.7 span
 //       stands BEFORE the duration, and no not-available
 //       segment stands with or without text
@@ -256,11 +259,11 @@ const DUR2 = "18:12"; // fmtDur(1092)
   w.openRead({ ...ROW_WITH_TEXT });
   const painted = await until(() => {
     const b = w.document.querySelector(".readsheet .readtext");
-    return b && b.textContent !== "" && !b.querySelector(".skelbar");
+    return b && !b.querySelector(".skelbar");
   });
   const body = w.document.querySelector(".readsheet .readtext");
-  check("L4 ◆ read body paints after the failed fetch", !!painted, body && body.textContent);
-  check("L4 ◆ body reads \"The episode's text could not be loaded.\"", !!body && body.textContent === "The episode's text could not be loaded.", body && body.textContent);
+  check("L4 ◆ [v630: reversed by name] read body settles after the failed fetch (skeleton gone)", !!painted, body && body.textContent);
+  check("L4 ◆ [v630: reversed by name] body reads EMPTY — no text-load comment (v627's failure line is struck)", !!body && body.textContent === "", body && body.textContent);
   check("L4 ◆ body does NOT read the struck phrase", !!body && !body.textContent.includes(STRUCK), body && body.textContent);
 }
 

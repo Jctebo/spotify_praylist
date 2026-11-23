@@ -16583,8 +16583,9 @@ function openRead(t) {
     var body = sheet.querySelector('.readtext');
     if (body) body.textContent = text;
   }).catch(function () {
+    // v630: John (2026-11-23): the reading view carries no comment about pulling text — either read or nothing. A failed text load therefore paints nothing: the body clears to empty and the skeleton bars go with it. The sheet header (title + play control) stands.
     var body = sheet.querySelector('.readtext');
-    if (body) body.textContent = "The episode's text could not be loaded.";
+    if (body) body.textContent = '';
   });
 }
 /* ---------------- Now Playing (v336) ----------------
