@@ -2151,13 +2151,21 @@ function opnExtChoice628(slot, e, src) {
   // Returns { title, streamUrl, source, backup } — the entry
   // re-ordered for this user. No backup standing, or a slot
   // outside the two labeled hours: the entry stands as served.
-  var plain = { title: e.title, streamUrl: e.streamUrl, source: src, backup: null };
+  // v631: the served entry's own source (the source that
+  // filled the server row, carried on the payload since v631)
+  // governs over the slot default — an entry filled by Sing
+  // the Hours settles AS Sing the Hours, so its download
+  // routes through the Worker pass-through (its host forbids
+  // direct browser reads). Before v631 the choice named every
+  // no-backup entry 'Divine Office', the download went direct
+  // first, and an StH fill settled missing on the phone.
+  var plain = { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: null };
   if (!e || !e.backup || !e.backup.streamUrl) return plain;
   if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return plain;
   var backupTitle = slot.title + ' - ' + (e.backup.source || 'Sing the Hours');
   var backup = { title: backupTitle, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours' };
-  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, backup: { title: e.title, streamUrl: e.streamUrl, source: 'Divine Office' } };
-  return { title: e.title, streamUrl: e.streamUrl, source: src, backup: backup };
+  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, backup: { title: e.title, streamUrl: e.streamUrl, source: e.source || 'Divine Office' } };
+  return { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: backup };
 }
 /* ---- v622: enrolment onboarding inside PIN setup ----
    When a PIN is (re)set — the set sheet, the Conscience

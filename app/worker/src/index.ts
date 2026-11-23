@@ -3077,6 +3077,13 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
       if (res.state === "present") {
         if (res.image_url) entry.imageUrl = res.image_url;
         if (res.desc_text) entry.descText = res.desc_text;
+        // v631: the filling source rides the entry — the client
+        // routes the download by it (a Sing the Hours fill must
+        // download through the pass-through, its host forbidding
+        // direct browser reads). Without it the client settled
+        // an StH fill as 'Divine Office' and both download
+        // routes failed (see docs/releases/v631.md §2 Q3).
+        if (res.source) entry.source = res.source;
         // v628: the standing backup pointer (the preference's
         // other source) + the fill route, for the nightly flag.
         if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: `${sd.title} - ${res.backup_source ?? ""}` };
@@ -5807,7 +5814,17 @@ export default {
             } else {
               const doSlot = EXT_DO_SLOTS.find((s) => s.slotId === slotId);
               if (doSlot) {
-                const matches = extMatchDivineOffice(await extFetchFeedItems(env.EXT_DO_FEED_URL || EXT_DO_FEED_URL), yy, mm, dd);
+                // v631: a FAILED Divine Office read must not abort
+                // this route before the Sing the Hours fallback
+                // below can run — the v626 watcher discipline
+                // (a failure fills) governs here too. Before v631
+                // the throw landed in the outer catch (502) and
+                // the fallback was unreachable exactly when the
+                // feed was down, which is the only case in which
+                // an StH fill stands in the slot.
+                let doItems: ExtFeedItem[] = [];
+                try { doItems = await extFetchFeedItems(env.EXT_DO_FEED_URL || EXT_DO_FEED_URL); } catch { doItems = []; }
+                const matches = extMatchDivineOffice(doItems, yy, mm, dd);
                 item = matches.get(slotId) ?? null;
                 if (!item) {
                   const fbRow = settings.sources.find((s) => s.family === "external" && s.slotId === slotId && s.role === "fallback");
