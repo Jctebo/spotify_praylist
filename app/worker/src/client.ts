@@ -11520,6 +11520,19 @@ function fillPinSection() {
     var host2 = document.getElementById('pin-section');
     if (!host2) return;
     var html = '<h2 class="sectionhead pinsection">CONFESSION PIN</h2>';
+    // v623: in a plain browser tab there is no PIN to set
+    // or enter — the PIN and the personal data it guards
+    // live in the app, so this section stands as the
+    // pointer (the Conscience pattern, opnPointerHtml).
+    // Before v623 the tab was offered a live Set a PIN
+    // button whose save could never complete (the local
+    // layer refuses personal writes on web, and the PIN
+    // record is never read back in this mode) — the
+    // sheet stood as a dead end.
+    if (opnMode() === 'web') {
+      host2.innerHTML = html + opnPointerHtml();
+      return;
+    }
     // v622: the ONE Touch ID preference switch — stands
     // whenever a PIN is set in the device shape, locked or
     // unlocked (the PIN record reads and writes either
@@ -11615,6 +11628,19 @@ function openPinSetSheet(mode) {
   var old = document.querySelector('.pinsetsheet');
   if (old) old.remove();
   var sheet = document.createElement('div'); sheet.className = 'sheet pinsetsheet';
+  // v623: this sheet is the ONE door to the set/change
+  // flow. In a plain browser tab it stands as the pointer
+  // — the named refusal — never as live pads whose save
+  // can only refuse (the dead end the first-visit web
+  // test hit: five clicks, no confirmation, no stored
+  // PIN). The set itself is a device-shape act: the
+  // native shell and the installed PWA.
+  if (opnMode() === 'web') {
+    sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (mode === 'set' ? 'Set a PIN' : 'Change PIN') + '</h1></div>' + opnPointerHtml() + '</div>';
+    document.body.appendChild(sheet);
+    mountDrawer(sheet, false);
+    return;
+  }
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (mode === 'set' ? 'Set a PIN' : 'Change PIN') + '</h1></div>'
     + '<p class="meta">' + (mode === 'set'
       ? 'The PIN gates Confession and Examination on this device\u2019s signed-in session. When it is set you will be shown a recovery code, once, for the day the PIN is forgotten.'
