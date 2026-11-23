@@ -320,7 +320,14 @@ const summaryOf = (r, feed) => (r.results || []).find((x) => x.feed === feed);
   db.feedState.get("divine-office").last_success_at = new Date(Date.now() - 4 * 3600 * 1000).toISOString();
   const stalePayload = await live(env, TODAY);
   const staleEntry = (stalePayload.slots || []).find((e) => e.slotId === "ext-invitatory");
-  check("L5 feed silent >3h: slot carries stale:true", !!staleEntry && staleEntry.stale === true, staleEntry);
+  // v625 §2 (D2): REVERSED BY NAME — this check formerly read
+  // "L5 feed silent >3h: slot carries stale:true", encoding
+  // the 3 h rule John struck (2026-11-23 08:39 CT). The DO
+  // invitatory here was resolved for TODAY from a healthy read
+  // (a same-day episode), so under the day rule it carries NO
+  // stale even with the feed silent >3h. The not-today-warns
+  // substance is re-proven by harness-v625 S1–S5.
+  check("L5 [v625: reversed by name — the 3h rule John struck] same-day episode, feed silent >3h: NO stale under the day rule", !!staleEntry && staleEntry.stale !== true, staleEntry);
   const saintEntry = (stalePayload.slots || []).find((e) => e.slotId === "ext-saint-of-the-day");
   check("L5 fresh feed's slot carries NO stale flag", !!saintEntry && !saintEntry.stale, saintEntry);
   const clientSrc = readFileSync(path.join(APP, "worker/src/client.ts"), "utf8");

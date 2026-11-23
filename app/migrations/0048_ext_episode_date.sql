@@ -1,0 +1,12 @@
+-- v625 migration 0048 — the attributed episode day on the
+-- server-side feed resolution store (release doc §2, decision
+-- D1): ext_resolutions gains episode_date, the Chicago day the
+-- standing episode in the row is FOR, stamped at write time by
+-- extResolutionWrite (the row's date for the date-exact slot
+-- classes; Chicago release date + 1 for Daily Gospel Exegesis,
+-- the v611 attribution). The stale warning predicate (v625 D2)
+-- reads this column: a present row is stale when its episode's
+-- day is not the presented day. Rows written before 0048 carry
+-- NULL and read as their row's date (D3). Missing rows carry
+-- NULL — no episode stands to be judged (D5).
+ALTER TABLE ext_resolutions ADD COLUMN episode_date TEXT;

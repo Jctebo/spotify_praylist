@@ -2336,6 +2336,7 @@ interface ExtResolutionRow {
   stream_url: string | null; duration_s: number; size_bytes: number;
   image_url: string | null; desc_text: string | null;
   resolved_at: string; feed_stamp: string | null;
+  episode_date: string | null; // v625 D1 (migration 0048): the day the episode is FOR
 }
 interface ExtFeedStateRow {
   feed_key: string; last_success_at: string | null;
@@ -2344,7 +2345,7 @@ interface ExtFeedStateRow {
 // v624 §2 D9: the reserved feed_state key carrying the last
 // pass start (the nudge debounce, §1 item 7 / D4: 120 s).
 const EXT_PASS_KEY = "__pass__";
-const EXT_STALE_MS = 3 * 3600 * 1000; // v624 §2 D3: slot-class freshness
+const EXT_STALE_MS = 3 * 3600 * 1000; // v625: serves ONLY the nudge need-test (extNudgeFeedKeys, v624 §2 D3/D4) — the stale WARNING predicate no longer reads it; staleness is by DAY (v625 §2 D2)
 const EXT_BIBLE_GATE_MS = 2 * 3600 * 1000; // v624 §1 item 4: the Bible feed's 2 h gate
 
 async function extFeedStateGet(env: Env, feedKey: string): Promise<ExtFeedStateRow | null> {
@@ -2368,18 +2369,18 @@ async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: 
     }
   } catch { /* feed state is bookkeeping; a write failure never fails the pass */ }
 }
-async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null): Promise<void> {
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
        duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
-       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp`,
+       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date`,
   ).bind(
     slotId, date, it ? "present" : "missing", title,
     it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
     it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
-    nowISO(), stamp,
+    nowISO(), stamp, episodeDate,
   ).run();
 }
 // v624 §2 D9 stand-down, slot class: every standing slot for
@@ -2435,6 +2436,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     matchFor: (items: ExtFeedItem[], y: number, mo: number, d: number, slotId: string) => ExtFeedItem | null,
     titleFor: (slotId: string, it: ExtFeedItem | null) => string,
     userAgent?: string,
+    episodeDateFor?: (date: string, it: ExtFeedItem) => string | null,
   ): Promise<void> => {
     const todaySlots = slotsFor(today);
     if (!forced.has(feedKey) && (await extFeedStoodDown(env, todaySlots, today))) {
@@ -2466,7 +2468,12 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
       const [y, mo, d] = date.split("-").map(Number);
       for (const slotId of slotsFor(date)) {
         const it = matchFor(feed.items, y, mo, d, slotId);
-        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed));
+        // v625 D1: stamp the attributed episode day — the
+        // caller's attribution where one is given (exegesis),
+        // else the row's date (date-exact classes); a missing
+        // write carries NULL (D5).
+        const episodeDate = it ? (episodeDateFor ? episodeDateFor(date, it) : date) : null;
+        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate);
         written++;
       }
     }
@@ -2492,6 +2499,11 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     (date) => (standingOn("ext-gospel-exegesis", date) ? ["ext-gospel-exegesis"] : []),
     (items, y, mo, d) => extMatchLatestByDate(items, y, mo, d),
     (_slotId, it) => it?.title ?? "Daily Gospel Exegesis",
+    undefined,
+    // v625 D1 / v611 attribution: the episode FOR day D is the
+    // one released (Chicago) on D−1, so its day = Chicago
+    // release date + 1.
+    (date, it) => (it.pubMs != null ? chicagoShiftDate(chicagoDateOf(new Date(it.pubMs)), 1) : null),
   );
   // Bible in a Year day leg — extMatchBible (2 h gate inside).
   await runSlotFeed(
@@ -2546,7 +2558,8 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
               const it = extMatchSth(feed.items, y, mo, d, token);
               if (it) {
                 const slotTitle = EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId;
-                await extResolutionWrite(env, date, slotId, it, slotTitle, feed.channelImageUrl, stampOf(feed));
+                // v625 D1: extMatchSth is title-date-exact — the fill's episode day is the row's date.
+                await extResolutionWrite(env, date, slotId, it, slotTitle, feed.channelImageUrl, stampOf(feed), date);
                 written++;
               }
             }
@@ -2667,8 +2680,9 @@ function extFeedKeyForSlot(slotId: string): string {
 }
 // v624 §1 item 6: /api/player/externals/live reads the table —
 // same payload shape as the courier's, each entry gaining
-// resolvedAt; stale:true past the feed's 3 h freshness (D3);
-// a slot with no row and no successful read for its date is
+// resolvedAt; stale:true when the standing episode's day is
+// not the presented day (v625 §2 D2 — by DAY, not by hours;
+// the v624 3 h feed-freshness rule is struck); a slot with no row and no successful read for its date is
 // missing + unresolved:true. A slot with NO row at all falls
 // back to the standing courier behavior for that slot (the
 // courier payload, computed once; saint / TV Mass fall back
@@ -2723,9 +2737,12 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     const base = { slotId: sd.slotId, block: row.block || EXTERNAL_SLOTS[sd.slotId], sortOrder: row.sort_order };
     const res = bySlot.get(sd.slotId);
     if (res) {
-      const feedKey = extFeedKeyForSlot(sd.slotId);
-      const fst = await extFeedStateGet(env, feedKey);
-      const stale = !fst?.last_success_at || (Date.now() - Date.parse(fst.last_success_at) > EXT_STALE_MS);
+      // v625 §2 D2/D5: a PRESENT row is stale ⇔ its episode's
+      // attributed day (episode_date, D1; legacy NULL rows read
+      // as their row's date, D3) is not the presented day. No
+      // time term, no feed-state read. Missing rows carry no
+      // flag — no episode stands to be judged.
+      const stale = res.state === "present" && (res.episode_date ?? res.date) !== date;
       const entry: Record<string, unknown> = {
         ...base,
         state: res.state,
