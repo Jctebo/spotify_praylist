@@ -150,6 +150,13 @@ function publicGate(request: Request, seg: string[], url: URL): Response | null 
   if (seg[0] !== "api") return null; // the shell + static assets are the public face
   const fam = seg[1] ?? "";
   const sub = seg[2] ?? "";
+  // v624 ship-pass repair: the externals nudge is a POST with
+  // no body and no personal datum — its whole effect is global
+  // (resolve once, for everybody) — so it stands on the public
+  // host where the app itself loads from; without this exemption
+  // the public gate's non-GET refusal would dead-end it for
+  // exactly the clients it serves.
+  if (fam === "player" && sub === "externals" && seg[3] === "nudge" && request.method === "POST") return null;
   if (request.method !== "GET") {
     return json({ error: PUBLIC_POINTER, code: "personal-in-app" }, 403);
   }
@@ -2202,7 +2209,7 @@ function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
   if (rule === "fridays") return weekdayMon0 === 4;
   return false;
 }
-async function externalsLivePayload(env: Env, date: string): Promise<{ slots: unknown[]; settingsVersion: number; error?: string }> {
+async function externalsCourierPayload(env: Env, date: string): Promise<{ slots: unknown[]; settingsVersion: number; error?: string }> {
   const settings = await sourceSettingsPayload(env);
   const prim = new Map<string, SourceSettingRow & { sourceKey: string }>();
   for (const s of settings.sources) {
@@ -2309,6 +2316,484 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
   slots.push(...(await exegesisP) as typeof slots);
   slots.push(...(await bibleP) as typeof slots);
   return { settingsVersion: settings.version, slots };
+}
+
+
+// ---- Server-side feed resolution (v624) ---------------------------
+// v624 §1 items 2-7 + §2 D1-D9: the resolver pass. One pass
+// resolves Chicago today + tomorrow for every slot-class feed
+// through the STANDING matchers (no matcher edits, D8), writes
+// pointer rows into ext_resolutions (migration 0047), tracks
+// per-feed health in ext_feed_state, and refreshes the
+// snapshot class (rss_snapshots + podcast_sequences) through
+// the standing builders. Failure rule (§1 item 5): a failed
+// read — HTTP error, challenge page, parse failure, timeout,
+// or ZERO-YIELD — writes NOTHING for that feed; the last good
+// resolution/snapshot stands. A slot is written 'missing'
+// only after a SUCCESSFUL read with no match.
+interface ExtResolutionRow {
+  slot_id: string; date: string; state: string; title: string | null;
+  stream_url: string | null; duration_s: number; size_bytes: number;
+  image_url: string | null; desc_text: string | null;
+  resolved_at: string; feed_stamp: string | null;
+}
+interface ExtFeedStateRow {
+  feed_key: string; last_success_at: string | null;
+  last_attempt_at: string | null; last_error: string | null; last_stamp: string | null;
+}
+// v624 §2 D9: the reserved feed_state key carrying the last
+// pass start (the nudge debounce, §1 item 7 / D4: 120 s).
+const EXT_PASS_KEY = "__pass__";
+const EXT_STALE_MS = 3 * 3600 * 1000; // v624 §2 D3: slot-class freshness
+const EXT_BIBLE_GATE_MS = 2 * 3600 * 1000; // v624 §1 item 4: the Bible feed's 2 h gate
+
+async function extFeedStateGet(env: Env, feedKey: string): Promise<ExtFeedStateRow | null> {
+  try {
+    return await env.DB.prepare("SELECT * FROM ext_feed_state WHERE feed_key=?").bind(feedKey).first<ExtFeedStateRow>();
+  } catch { return null; }
+}
+async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: string | null, stamp: string | null): Promise<void> {
+  const t = nowISO();
+  try {
+    if (ok) {
+      await env.DB.prepare(
+        `INSERT INTO ext_feed_state (feed_key, last_success_at, last_attempt_at, last_error, last_stamp) VALUES (?, ?, ?, NULL, ?)
+         ON CONFLICT(feed_key) DO UPDATE SET last_success_at = excluded.last_success_at, last_attempt_at = excluded.last_attempt_at, last_error = NULL, last_stamp = excluded.last_stamp`,
+      ).bind(feedKey, t, t, stamp).run();
+    } else {
+      await env.DB.prepare(
+        `INSERT INTO ext_feed_state (feed_key, last_success_at, last_attempt_at, last_error, last_stamp) VALUES (?, NULL, ?, ?, NULL)
+         ON CONFLICT(feed_key) DO UPDATE SET last_attempt_at = excluded.last_attempt_at, last_error = excluded.last_error`,
+      ).bind(feedKey, t, error ?? "feed read failed").run();
+    }
+  } catch { /* feed state is bookkeeping; a write failure never fails the pass */ }
+}
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null): Promise<void> {
+  await env.DB.prepare(
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
+       duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
+       desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp`,
+  ).bind(
+    slotId, date, it ? "present" : "missing", title,
+    it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
+    it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
+    nowISO(), stamp,
+  ).run();
+}
+// v624 §2 D9 stand-down, slot class: every standing slot for
+// TODAY carries a resolution written from a successful read
+// whose Chicago date is today.
+async function extFeedStoodDown(env: Env, slotIds: string[], today: string): Promise<boolean> {
+  if (!slotIds.length) return true;
+  const r = await env.DB.prepare("SELECT slot_id, resolved_at FROM ext_resolutions WHERE date=?").bind(today).all<{ slot_id: string; resolved_at: string }>();
+  const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x.resolved_at]));
+  return slotIds.every((id) => {
+    const at = bySlot.get(id);
+    return !!at && chicagoDateOf(new Date(at)) === today;
+  });
+}
+
+export interface ExtPassSummary { feed: string; ok: boolean; error?: string; slotsWritten: number; skipped?: string }
+
+// v624 §1 item 2: one resolver pass. opts.forceFeedKeys names
+// feeds that fetch regardless of stand-down / cadence gates
+// (the nudge wake, D9; the agent door's forced pass).
+async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] }): Promise<ExtPassSummary[]> {
+  const forced = new Set(opts?.forceFeedKeys ?? []);
+  const summary: ExtPassSummary[] = [];
+  const today = prayerChicagoNow().date;
+  const dates = [today, chicagoShiftDate(today, 1)];
+  // The pass start stands for the nudge debounce (D4).
+  await extFeedStateWrite(env, EXT_PASS_KEY, true, null, null).catch(() => {});
+  // Settings gating (§1 item 2): the standing source-settings
+  // payload, exactly as the courier gates.
+  const settings = await sourceSettingsPayload(env);
+  const prim = new Map<string, SourceSettingRow & { sourceKey: string }>();
+  const fallbacks = new Map<string, SourceSettingRow & { sourceKey: string }>();
+  for (const s2 of settings.sources) {
+    if (s2.family === "external" && s2.slotId) {
+      const row = { source_key: s2.sourceKey, name: s2.name, family: s2.family, block: s2.block, day_rule: s2.dayRule, sort_order: s2.sortOrder, enabled: s2.enabled, slot_id: s2.slotId, role: s2.role };
+      if (s2.role === "fallback") fallbacks.set(s2.slotId, row); else prim.set(s2.slotId, row);
+    }
+  }
+  const standingOn = (slotId: string, date: string): boolean => {
+    const row = prim.get(slotId);
+    if (!row || row.enabled !== 1) return false;
+    const [y, mo, d] = date.split("-").map(Number);
+    const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+    return extDayRulePasses(row.day_rule || "daily", wd);
+  };
+  const stampOf = (feed: ExtFeedRead): string | null => (feed.items.length && feed.items[0].pubMs != null ? new Date(feed.items[0].pubMs).toISOString() : null);
+
+  // One slot-class feed: fetch once, run its standing matcher
+  // per date, write present/missing per standing slot.
+  const runSlotFeed = async (
+    feedKey: string, url: string,
+    slotsFor: (date: string) => string[],
+    matchFor: (items: ExtFeedItem[], y: number, mo: number, d: number, slotId: string) => ExtFeedItem | null,
+    titleFor: (slotId: string, it: ExtFeedItem | null) => string,
+    userAgent?: string,
+  ): Promise<void> => {
+    const todaySlots = slotsFor(today);
+    if (!forced.has(feedKey) && (await extFeedStoodDown(env, todaySlots, today))) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+      return;
+    }
+    if (feedKey === "bible-in-a-year" && !forced.has(feedKey)) {
+      // v624 §1 item 4: the Fireside feed fetches at most
+      // every 2 h — gated on its success/attempt stamps.
+      const st = await extFeedStateGet(env, feedKey);
+      const last = Math.max(st?.last_success_at ? Date.parse(st.last_success_at) : 0, st?.last_attempt_at ? Date.parse(st.last_attempt_at) : 0);
+      if (last && Date.now() - last < EXT_BIBLE_GATE_MS) {
+        summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "2h-gate" });
+        return;
+      }
+    }
+    let feed: ExtFeedRead;
+    try {
+      feed = await extFetchFeed(url, userAgent);
+      if (!feed.items.length) throw new Error("zero-yield feed read");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "feed read failed";
+      await extFeedStateWrite(env, feedKey, false, msg, null);
+      summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
+      return;
+    }
+    let written = 0;
+    for (const date of dates) {
+      const [y, mo, d] = date.split("-").map(Number);
+      for (const slotId of slotsFor(date)) {
+        const it = matchFor(feed.items, y, mo, d, slotId);
+        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed));
+        written++;
+      }
+    }
+    await extFeedStateWrite(env, feedKey, true, null, stampOf(feed));
+    summary.push({ feed: feedKey, ok: true, slotsWritten: written });
+  };
+
+  // Divine Office — the eight slots, one feed read (§1 item 2).
+  const doMatches = new Map<string, Map<string, ExtFeedItem>>();
+  await runSlotFeed(
+    "divine-office", env.EXT_DO_FEED_URL || EXT_DO_FEED_URL,
+    (date) => EXT_DO_SLOTS.filter((sl) => standingOn(sl.slotId, date)).map((sl) => sl.slotId),
+    (items, y, mo, d, slotId) => {
+      const key = `${y}-${mo}-${d}`;
+      if (!doMatches.has(key)) doMatches.set(key, extMatchDivineOffice(items, y, mo, d));
+      return doMatches.get(key)!.get(slotId) ?? null;
+    },
+    (slotId) => EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId,
+  );
+  // Daily Gospel Exegesis day leg — extMatchLatestByDate.
+  await runSlotFeed(
+    "daily-gospel-exegesis", env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL,
+    (date) => (standingOn("ext-gospel-exegesis", date) ? ["ext-gospel-exegesis"] : []),
+    (items, y, mo, d) => extMatchLatestByDate(items, y, mo, d),
+    (_slotId, it) => it?.title ?? "Daily Gospel Exegesis",
+  );
+  // Bible in a Year day leg — extMatchBible (2 h gate inside).
+  await runSlotFeed(
+    "bible-in-a-year", env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL,
+    (date) => (standingOn("ext-bible-in-a-year", date) ? ["ext-bible-in-a-year"] : []),
+    (items, y, mo, d) => extMatchBible(items, y, mo, d),
+    (_slotId, it) => it?.title ?? "Bible in a Year",
+  );
+  // Saint of the Day — extMatchSaint (its client leg retires, §1 item 8).
+  await runSlotFeed(
+    "saint-of-the-day", env.EXT_SAINT_FEED_URL || EXT_SAINT_FEED_URL,
+    (date) => (standingOn("ext-saint-of-the-day", date) ? ["ext-saint-of-the-day"] : []),
+    (items, y, mo, d) => extMatchSaint(items, y, mo, d),
+    (_slotId, it) => it?.title ?? "Saint of the Day",
+  );
+  // Daily TV Mass — extMatchTvMass.
+  await runSlotFeed(
+    "daily-tv-mass", env.EXT_TVMASS_FEED_URL || EXT_TVMASS_FEED_URL,
+    (date) => (standingOn("ext-daily-tv-mass", date) ? ["ext-daily-tv-mass"] : []),
+    (items, y, mo, d) => extMatchTvMass(items, y, mo, d),
+    (_slotId, it) => it?.title ?? "Daily TV Mass",
+  );
+  // Sing the Hours fallback fills (§1 item 2): Lauds fills the
+  // Morning slot, Vespers the Evening slot, ONLY where the
+  // Divine Office read succeeded and left the slot missing
+  // (the standing fallback rule, as the audio pass-through
+  // applies it). A DO failure leaves the last good standing.
+  {
+    const feedKey = "sing-the-hours";
+    const sthState = await extFeedStateGet(env, feedKey);
+    const stoodDown = !!sthState?.last_success_at && chicagoDateOf(new Date(sthState.last_success_at)) === today;
+    if (!forced.has(feedKey) && stoodDown) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+    } else {
+      const doState = await extFeedStateGet(env, "divine-office");
+      const doOkToday = !!doState?.last_success_at && chicagoDateOf(new Date(doState.last_success_at)) === today;
+      let written = 0;
+      if (doOkToday) {
+        try {
+          const feed = await extFetchFeed(env.EXT_STH_FEED_URL || EXT_STH_FEED_URL);
+          if (!feed.items.length) throw new Error("zero-yield feed read");
+          for (const date of dates) {
+            const [y, mo, d] = date.split("-").map(Number);
+            const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+            for (const [slotId, token] of [["ext-morning-prayer", "Lauds"], ["ext-evening-prayer", "Vespers"]] as const) {
+              if (!standingOn(slotId, date)) continue;
+              const fbRow = fallbacks.get(slotId);
+              const fills = !!fbRow && fbRow.enabled === 1 && (fbRow.day_rule === "fallback-only" || extDayRulePasses(fbRow.day_rule || "daily", wd));
+              if (!fills) continue;
+              const cur = await env.DB.prepare("SELECT state FROM ext_resolutions WHERE date=? AND slot_id=?").bind(date, slotId).first<{ state: string }>();
+              if (!cur || cur.state !== "missing") continue;
+              const it = extMatchSth(feed.items, y, mo, d, token);
+              if (it) {
+                const slotTitle = EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId;
+                await extResolutionWrite(env, date, slotId, it, slotTitle, feed.channelImageUrl, stampOf(feed));
+                written++;
+              }
+            }
+          }
+          await extFeedStateWrite(env, feedKey, true, null, null);
+          summary.push({ feed: feedKey, ok: true, slotsWritten: written });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "feed read failed";
+          await extFeedStateWrite(env, feedKey, false, msg, null);
+          summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
+        }
+      } else {
+        summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "primary-not-resolved" });
+      }
+    }
+  }
+
+  // Snapshot-class watcher (§1 item 3, D2): refresh the
+  // standing stores through the standing builders. Stand-down
+  // (D9): a snapshot built today (Chicago) is not re-fetched
+  // unless forced. Zero-yield = failed build, writes nothing.
+  const snapStoodDown = async (table: string, key: string): Promise<boolean> => {
+    try {
+      const row = await env.DB.prepare(`SELECT built_at FROM ${table} WHERE series=?`).bind(key).first<{ built_at: string }>();
+      return !!row?.built_at && chicagoDateOf(new Date(row.built_at)) === today;
+    } catch { return false; }
+  };
+  for (const def of POD_RSS_SERIES_LIST) {
+    const feedKey = "rss:" + def.key;
+    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("rss_snapshots", def.key))) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+      continue;
+    }
+    try {
+      const feed = await podRssFetchFeed(def.feedUrl(env));
+      const entries = podRssBuild(feed.items, feed.channelImageUrl, def.window ?? RSS_WINDOW);
+      if (!entries.length) throw new Error("zero-yield snapshot build");
+      const builtAt = nowISO();
+      const snapFull: PodRssSnapshot = { entries, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
+      await env.DB.prepare(
+        `INSERT INTO rss_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+         ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+      ).bind(def.key, JSON.stringify(snapFull), builtAt).run();
+      await extFeedStateWrite(env, feedKey, true, null, null);
+      summary.push({ feed: feedKey, ok: true, slotsWritten: entries.length });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "snapshot build failed";
+      await extFeedStateWrite(env, feedKey, false, msg, null);
+      summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
+    }
+  }
+  for (const def of POD_SERIES_LIST) {
+    const feedKey = "course:" + def.key;
+    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("podcast_sequences", def.key))) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+      continue;
+    }
+    try {
+      const feed = await extFetchFeed(def.feedUrl(env));
+      if (!feed.items.length) throw new Error("zero-yield snapshot build");
+      const build = podBuildSequence(feed.items, def, feed.channelImageUrl);
+      if (!build.entries.length) throw new Error("zero-yield snapshot build");
+      const builtAt = nowISO();
+      const snapFull: PodSnapshot = { entries: build.entries, collapses: build.collapses, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
+      await env.DB.prepare(
+        `INSERT INTO podcast_sequences (series, payload, built_at) VALUES (?, ?, ?)
+         ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+      ).bind(def.key, JSON.stringify(snapFull), builtAt).run();
+      await extFeedStateWrite(env, feedKey, true, null, null);
+      summary.push({ feed: feedKey, ok: true, slotsWritten: build.entries.length });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "snapshot build failed";
+      await extFeedStateWrite(env, feedKey, false, msg, null);
+      summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
+    }
+  }
+  {
+    const feedKey = "novenas-catalog";
+    if (!forced.has(feedKey) && (await snapStoodDown("rss_snapshots", NOVENA_CATALOG_KEY))) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+    } else {
+      try {
+        const feed = await podRssFetchFeed(ownFeedUrl(env));
+        const novenas = podNovenaBuild(feed.items);
+        if (!novenas.length) throw new Error("zero-yield snapshot build");
+        const builtAt = nowISO();
+        const cat: PodNovenaCatalog = { builtAt, novenas };
+        await env.DB.prepare(
+          `INSERT INTO rss_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+           ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+        ).bind(NOVENA_CATALOG_KEY, JSON.stringify(cat), builtAt).run();
+        await extFeedStateWrite(env, feedKey, true, null, null);
+        summary.push({ feed: feedKey, ok: true, slotsWritten: novenas.length });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "snapshot build failed";
+        await extFeedStateWrite(env, feedKey, false, msg, null);
+        summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
+      }
+    }
+  }
+  // Prune (§1 item 1): resolutions older than 35 days.
+  try {
+    await env.DB.prepare("DELETE FROM ext_resolutions WHERE date < ?").bind(chicagoShiftDate(today, -35)).run();
+  } catch { /* prune failure never fails the pass */ }
+  return summary;
+}
+
+// v624 §1 item 6: the slot -> feed key map (staleness reads the
+// FEED's last successful read, D3).
+const EXT_SLOT_FEED: Record<string, string> = {
+  "ext-gospel-exegesis": "daily-gospel-exegesis",
+  "ext-bible-in-a-year": "bible-in-a-year",
+  "ext-saint-of-the-day": "saint-of-the-day",
+  "ext-daily-tv-mass": "daily-tv-mass",
+};
+function extFeedKeyForSlot(slotId: string): string {
+  return EXT_SLOT_FEED[slotId] ?? "divine-office";
+}
+// v624 §1 item 6: /api/player/externals/live reads the table —
+// same payload shape as the courier's, each entry gaining
+// resolvedAt; stale:true past the feed's 3 h freshness (D3);
+// a slot with no row and no successful read for its date is
+// missing + unresolved:true. A slot with NO row at all falls
+// back to the standing courier behavior for that slot (the
+// courier payload, computed once; saint / TV Mass fall back
+// to their standing server-side matcher legs, as the audio
+// pass-through runs them).
+async function externalsLivePayload(env: Env, date: string): Promise<{ slots: unknown[]; settingsVersion: number; error?: string }> {
+  // The courier is the FALLBACK source only, computed lazily
+  // the first time a slot with no row needs it; the table
+  // read below governs every slot that carries a row.
+  let courierCache: { slots: unknown[]; settingsVersion: number; error?: string } | null | undefined;
+  const courierOnce = async () => {
+    if (courierCache === undefined) courierCache = await externalsCourierPayload(env, date).catch(() => null);
+    return courierCache;
+  };
+  const settings = await sourceSettingsPayload(env);
+  const prim = new Map<string, SourceSettingRow & { sourceKey: string }>();
+  for (const s2 of settings.sources) {
+    if (s2.family === "external" && s2.slotId && s2.role !== "fallback") {
+      prim.set(s2.slotId, { source_key: s2.sourceKey, name: s2.name, family: s2.family, block: s2.block, day_rule: s2.dayRule, sort_order: s2.sortOrder, enabled: s2.enabled, slot_id: s2.slotId, role: s2.role });
+    }
+  }
+  const [y, mo, d] = date.split("-").map(Number);
+  const weekdayMon0 = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+  const slotDefs: { slotId: string; title: string }[] = [
+    ...EXT_DO_SLOTS.map((sl) => ({ slotId: sl.slotId, title: sl.title })),
+    { slotId: "ext-gospel-exegesis", title: "Daily Gospel Exegesis" },
+    { slotId: "ext-bible-in-a-year", title: "Bible in a Year" },
+    { slotId: "ext-saint-of-the-day", title: "Saint of the Day" },
+    { slotId: "ext-daily-tv-mass", title: "Daily TV Mass" },
+  ];
+  const standing = slotDefs.filter((sd) => {
+    const row = prim.get(sd.slotId);
+    return !!row && row.enabled === 1 && extDayRulePasses(row.day_rule || "daily", weekdayMon0);
+  });
+  let rows: ExtResolutionRow[] = [];
+  try {
+    const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(date).all<ExtResolutionRow>();
+    rows = r.results ?? [];
+  } catch { rows = []; }
+  const bySlot = new Map(rows.map((x) => [x.slot_id, x]));
+  const courierBySlot = new Map<string, Record<string, unknown>>();
+  const courierLoaded = async () => {
+    if (courierBySlot.size) return;
+    const courier = await courierOnce();
+    for (const e of (courier?.slots ?? []) as Record<string, unknown>[]) {
+      if (e && typeof e.slotId === "string") courierBySlot.set(e.slotId, e);
+    }
+  };
+  const slots: unknown[] = [];
+  for (const sd of standing) {
+    const row = prim.get(sd.slotId)!;
+    const base = { slotId: sd.slotId, block: row.block || EXTERNAL_SLOTS[sd.slotId], sortOrder: row.sort_order };
+    const res = bySlot.get(sd.slotId);
+    if (res) {
+      const feedKey = extFeedKeyForSlot(sd.slotId);
+      const fst = await extFeedStateGet(env, feedKey);
+      const stale = !fst?.last_success_at || (Date.now() - Date.parse(fst.last_success_at) > EXT_STALE_MS);
+      const entry: Record<string, unknown> = {
+        ...base,
+        state: res.state,
+        title: res.title ?? sd.title,
+        streamUrl: res.state === "present" ? res.stream_url : null,
+        durationSec: res.duration_s || 0,
+        sizeBytes: res.size_bytes || 0,
+        resolvedAt: res.resolved_at,
+      };
+      if (res.state === "present") {
+        if (res.image_url) entry.imageUrl = res.image_url;
+        if (res.desc_text) entry.descText = res.desc_text;
+      }
+      if (stale) entry.stale = true;
+      slots.push(entry);
+      continue;
+    }
+    // No row: the standing courier behavior for this slot.
+    await courierLoaded();
+    const c = courierBySlot.get(sd.slotId);
+    if (c && c.state === "present") { slots.push({ ...c, resolvedAt: null }); continue; }
+    if ((sd.slotId === "ext-saint-of-the-day" || sd.slotId === "ext-daily-tv-mass")) {
+      // The saint / TV Mass fallback legs (their audio
+      // pass-through matchers, server-side as standing).
+      try {
+        const it = sd.slotId === "ext-saint-of-the-day"
+          ? extMatchSaint(await extFetchFeedItems(env.EXT_SAINT_FEED_URL || EXT_SAINT_FEED_URL), y, mo, d)
+          : extMatchTvMass(await extFetchFeedItems(env.EXT_TVMASS_FEED_URL || EXT_TVMASS_FEED_URL), y, mo, d);
+        if (it) {
+          slots.push({ ...base, state: "present", title: it.title || sd.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, imageUrl: it.imageUrl || null, descText: it.descText || null, resolvedAt: null });
+          continue;
+        }
+      } catch { /* falls through to unresolved */ }
+    }
+    slots.push({ ...base, state: "missing", title: sd.title, streamUrl: null, durationSec: 0, sizeBytes: 0, resolvedAt: null, unresolved: true });
+  }
+  // Courier-class entries (EXT_COURIER_SLOTS — standing empty)
+  // ride the fallback payload unchanged.
+  await courierLoaded();
+  for (const [slotId, e] of courierBySlot) {
+    if (!standing.some((sd) => sd.slotId === slotId)) slots.push(e);
+  }
+  return { settingsVersion: settings.version, slots };
+}
+
+// v624 §1 item 7: the nudge's need test — today's feeds whose
+// slots stand unresolved or whose last success is stale.
+async function extNudgeFeedKeys(env: Env): Promise<string[]> {
+  const today = prayerChicagoNow().date;
+  const settings = await sourceSettingsPayload(env);
+  const keys = new Set<string>();
+  let rows: ExtResolutionRow[] = [];
+  try {
+    const r = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=?").bind(today).all<ExtResolutionRow>();
+    rows = r.results ?? [];
+  } catch { rows = []; }
+  const bySlot = new Map(rows.map((x) => [x.slot_id, x]));
+  const [y, mo, d] = today.split("-").map(Number);
+  const wd = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+  for (const s2 of settings.sources) {
+    if (s2.family !== "external" || !s2.slotId || s2.role === "fallback" || s2.enabled !== 1) continue;
+    if (!extDayRulePasses(s2.dayRule || "daily", wd)) continue;
+    const feedKey = extFeedKeyForSlot(s2.slotId);
+    if (!bySlot.has(s2.slotId)) { keys.add(feedKey); continue; }
+    const fst = await extFeedStateGet(env, feedKey);
+    if (!fst?.last_success_at || Date.now() - Date.parse(fst.last_success_at) > EXT_STALE_MS) keys.add(feedKey);
+  }
+  return [...keys];
 }
 
 // ---- Podcasts section (v381) --------------------------------------
@@ -3558,6 +4043,11 @@ async function wallpaperManifestWrite(env: Env, manifest: WallpaperManifest): Pr
 
 // ---- Router ----------------------------------------------------------------
 export default {
+  // v624 §1 item 4: the cron trigger (wrangler.toml [triggers],
+  // every 30 minutes) runs one resolver pass.
+  async scheduled(_event: unknown, env: Env, ctx: { waitUntil: (p: Promise<unknown>) => void }): Promise<void> {
+    ctx.waitUntil(resolveExternalsPass(env));
+  },
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -3840,6 +4330,16 @@ export default {
         manifest.updated = nowISO();
         await wallpaperManifestWrite(env, manifest);
         return json({ ok: true, unchanged: false, entry });
+      }
+      if (seg[2] === "externals" && seg[3] === "resolve" && request.method === "POST") {
+        // v624 §1 item 7: the agent-door twin of the nudge —
+        // runs one resolver pass on demand (optionally forced
+        // feeds from the JSON body) and answers the per-feed
+        // summary. This is the verification path.
+        const body = await request.json().catch(() => ({})) as { forceFeedKeys?: string[] };
+        const forceFeedKeys = Array.isArray(body.forceFeedKeys) ? body.forceFeedKeys.filter((x) => typeof x === "string") : undefined;
+        const results = await resolveExternalsPass(env, { forceFeedKeys });
+        return json({ ok: true, results });
       }
       return err(404, "unknown agent route");
     }
@@ -4868,6 +5368,19 @@ export default {
           }
           if (stmts.length) await env.DB.batch(stmts);
           return json({ ok: true });
+        }
+        if (seg[2] === "externals" && seg[3] === "nudge" && request.method === "POST") {
+          // v624 §1 item 7: the client nudge — if any slot for
+          // today is unresolved or stale, run one pass forcing
+          // those feeds, for everybody. Debounce (D4): a pass
+          // that started < 120 s ago is not re-run.
+          const need = await extNudgeFeedKeys(env);
+          if (!need.length) return json({ ok: true, ran: false });
+          const passState = await extFeedStateGet(env, EXT_PASS_KEY);
+          const lastStart = passState?.last_attempt_at ? Date.parse(passState.last_attempt_at) : 0;
+          if (lastStart && Date.now() - lastStart < 120000) return json({ ok: true, ran: false });
+          await resolveExternalsPass(env, { forceFeedKeys: need });
+          return json({ ok: true, ran: true });
         }
         if (seg[2] === "externals" && seg[3] === "live" && request.method === "GET") {
           // v334 §2.2 — the courier: session-only (this whole surface

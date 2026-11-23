@@ -10123,6 +10123,8 @@ function openEpisodeCard(model, anchorEl) {
     + (model.seriesTitle ? '<div class="meta epcard-series">' + esc(model.seriesTitle) + '</div>' : '')
     + (dateLine || d.durationS ? '<div class="meta">' + esc(dateLine) + (dateLine && d.durationS ? ' \\u00b7 ' : '') + (d.durationS ? fmtDur(d.durationS) : '') + '</div>' : '')
     + (model.descText ? '<p class="sub epcard-desc">' + esc(model.descText) + '</p>' : '')
+    + (d.stale ? "<p class='sub epcard-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</p>" : '')
+    + (d.unresolved ? "<p class='sub epcard-warn'>Today's episode has not loaded yet \u2014 still checking.</p>" : '')
     + (drawText ? '<div class="intention-text track-draw-line">Intention: ' + esc(drawText) + '</div>' : '')
     + '<div class="epcard-acts">'
     + '<button class="playbtn epcard-play" data-epplay="1" aria-label="Play episode">&#9654; Play</button>'
@@ -15258,7 +15260,7 @@ function trackDesc(t, day) {
   // without its day (queueLiveDesc's external rebuild, search
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
-  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null };
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null, stale: !!t.stale, unresolved: !!t.unresolved };
   if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
   // v620: a podcast-family descriptor reaching this seam (the
   // v590 course · v611 day · v614 episode resolvers) carries
@@ -16426,7 +16428,7 @@ function trackCard(t) {
       // v417 §2.7 (D2): the meta's day word is the presented
       // day's own — 'Today' only when the presented day IS
       // today, the short form otherwise; no clock stands.
-      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + drawLine + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + snippet + '<div class="meta metarow"><span>' + presentedDayWord() + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '') + (t.source ? ' \u00b7 ' + esc(t.source) : '') + '</span>' + metaTrail('') + '</div>' + (t.stale ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '') + drawLine + '</div>');
     }
     // v363 §2.2/§2.3: the unavailable card takes the .row form
     // and the .trow height; "Not available today" folds into
@@ -16435,7 +16437,10 @@ function trackCard(t) {
     // neither a Read control nor a Spotify link.
     // v413 §2.6: the unavailable form keeps the art tile and
     // carries no cluster acts that cannot be honored.
-    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' \u00b7 ' : '') + 'Not available today</div></div></div></div>';
+    // v624 §2 D5: an unresolved slot paints the still-checking
+    // line instead of "Not available today"; a slot missing
+    // after a successful read keeps "Not available today".
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) + ' \u00b7 ' : '') + (t.unresolved ? "Today's episode has not loaded yet \u2014 still checking." : 'Not available today') + '</div></div></div></div>';
   }
   if (t.available) {
     // v344 gate correction (harness-v343 clip guard, leg 20's
@@ -16785,7 +16790,7 @@ var EXT_SLOTS = [
   { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough', courier: true },
   { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
   { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
-  { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://rss.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first' },
+  { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://rss.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first', courier: true }, // v624 §1 item 8: the Saint leg retires client-side — the slot rides the courier (server resolver) payload like every other slot,
   { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
   { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
   { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
@@ -17031,7 +17036,10 @@ function extSlotTrack(slot, st) {
     durationS: st.durationSec || 0, sizeBytes: st.sizeBytes || 0, hasText: false, textUrl: null, _block: slot.block,
     // v413 §2.3: the provider art + snippet ride the slot state
     // into the row (referenced, never re-hosted).
-    imageUrl: st.imageUrl || null, descText: st.descText || null
+    imageUrl: st.imageUrl || null, descText: st.descText || null,
+    // v624 §2 D5: the stale / unresolved flags ride the slot
+    // state into the descriptor (the row + opened view paint).
+    stale: !!st.stale, unresolved: !!st.unresolved, resolvedAt: st.resolvedAt || null
   };
 }
 function extSwapCard(slot) {
@@ -19695,7 +19703,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
       attempt.then(function (blob) {
         var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
-        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null });
+        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
       }).catch(function () {
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
       });
@@ -19703,7 +19711,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     var settleMeta = function (slot, meta) {
       var cur = state.extSlots[slot.slotId];
       if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
-      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null };
+      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, unresolved: !!meta.unresolved, resolvedAt: meta.resolvedAt || null };
       extSwapCard(slot);
       extRebuildDescs(day);
       extDownload(slot, meta);
@@ -19802,8 +19810,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // slots (USCCB Readings · Fr. Mike · Barron) — same route, same
     // settle rules; each slot's own source labels its settle.
     var courierSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId] || !!s.courier; });
-    var saintSlot = standing.filter(function (s) { return s.slotId === 'ext-saint-of-the-day'; })[0];
-    var tvMassSlot = standing.filter(function (s) { return s.slotId === 'ext-daily-tv-mass'; })[0];
+    // v624: saintSlot / tvMassSlot retire with their direct legs (above).
     // Courier leg (Divine Office + the v339 courier class) — only
     // if some courier slot is not carried by the day cache (§2.8
     // leg 3: a fully cached source issues no network work). When
@@ -19822,6 +19829,13 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       courierP = api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
         var byId = {};
         (res.slots || []).forEach(function (e) { byId[e.slotId] = e; });
+        // v624 §1 item 7: the client nudge — when today's live
+        // payload carries any stale or unresolved slot, fire
+        // the nudge once per open (fire-and-forget; the server
+        // debounces and runs one pass for everybody).
+        if (date === todayChicago() && (res.slots || []).some(function (e) { return e && (e.stale || e.unresolved); })) {
+          try { post('/api/player/externals/nudge', {}).catch(function () {}); } catch (e624) {}
+        }
         courierSlots.forEach(function (slot) {
           var e = byId[slot.slotId];
           var c = cachedIds[slot.slotId];
@@ -19831,10 +19845,12 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
             // v350: the Bible entry carries the item's RAW title;
             // the display title is built here by the standing
             // extBibleTitle construction (one title rule).
-            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src, imageUrl: e.imageUrl || null, descText: e.descText || null });
+            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null });
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
-            settle(slot, missingSt(slot, src));
+            // v624 §2 D5: an unresolved entry settles missing
+            // WITH its flag, so the row paints still-checking.
+            settle(slot, e.unresolved ? { state: 'missing', title: missingSt(slot, src).title, source: src, unresolved: true } : missingSt(slot, src));
           } else if (uncached(slot)) {
             settle(slot, missingSt(slot, src));
           }
@@ -19850,28 +19866,15 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // 9.2 MB Fireside feed server-side with the same matcher the
     // audio pass-through uses). The download still runs
     // direct-first from the enclosure via settleMeta/extDownload.
-    // Saint of the Day direct leg (v337 §2.8): the Buzzsprout feed
-    // is client-readable; latest-by-release-date with the MM/DD
-    // title check; the download is direct-first with the Worker
-    // pass-through as fallback (the slot's download pin).
-    if (saintSlot && uncached(saintSlot)) {
-      extFetchText(saintSlot.feedUrl).then(function (text) {
-        var it = extMatchSaint(extParseFeed(text), date);
-        if (it) settleMeta(saintSlot, { title: it.title || saintSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: saintSlot.source, imageUrl: it.imageUrl || null, descText: it.descText || null });
-        else settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source });
-      }).catch(function () { settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source }); });
-    }
-    // Daily TV Mass direct leg (v339 §2.3): the Buzzsprout feed is
-    // client-readable (ACAO *); the pick is the title/date match
-    // for the presented day; the download is direct-first with
-    // the Worker pass-through as fallback (the slot's pin).
-    if (tvMassSlot && uncached(tvMassSlot)) {
-      extFetchText(tvMassSlot.feedUrl).then(function (text) {
-        var it = extMatchTvMass(extParseFeed(text), date);
-        if (it) settleMeta(tvMassSlot, { title: it.title || tvMassSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: tvMassSlot.source, imageUrl: it.imageUrl || null, descText: it.descText || null });
-        else settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source });
-      }).catch(function () { settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source }); });
-    }
+    // v624 §1 item 8: the Saint of the Day direct leg RETIRES —
+    // the saint slot is courier-class now (its EXT_SLOTS row
+    // carries courier: true) and settles from the live payload
+    // in the courier leg above, like every other slot. The
+    // Daily TV Mass direct leg that stood here is likewise
+    // retired: its slot left EXT_SLOTS at v499 (no standing
+    // slot stands for it on the client), so the leg was dead
+    // code guarded by an absent slot; the server resolver
+    // resolves the TV Mass slot into the payload regardless.
     // Resolve watchdog: no slot may spin forever. A leg or restore
     // that has produced nothing after 9 s is treated as failed —
     // a cached slot re-downloads from its recorded enclosure, an
@@ -20237,7 +20240,7 @@ function offlineTomorrowBuild(tomorrow, epoch) {
     EXT_SLOTS.forEach(function (s) {
       var row = prim[s.slotId];
       if (!row || row.enabled !== 1 || !extDayRulePasses(row.dayRule || 'daily', wd)) return;
-      bySlot[s.slotId] = { slotId: s.slotId, title: s.title, block: row.block || 'Morning', source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, download: s.download || null, courier: s.courier || null, token: !!EXT_TOKENS[s.slotId] };
+      bySlot[s.slotId] = { slotId: s.slotId, title: s.title, block: row.block || 'Morning', source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, download: s.download || null, courier: s.courier || null, token: !!EXT_TOKENS[s.slotId] }; // standing shape (the v624 saint change rides s.courier)
     });
     var jobs = [];
     var hasCourier = Object.keys(bySlot).some(function (k) { return bySlot[k].token || bySlot[k].courier; });
@@ -20254,18 +20257,9 @@ function offlineTomorrowBuild(tomorrow, epoch) {
         });
       }).catch(function () {}));
     }
-    // v499: the ext-daily-tv-mass pair retires with its slot;
-    // the Saint of the Day pair stands alone.
-    [['ext-saint-of-the-day', extMatchSaint]].forEach(function (pair) {
-      var def = bySlot[pair[0]];
-      if (!def || !def.feedUrl) return;
-      jobs.push(extFetchText(def.feedUrl).then(function (text) {
-        var it = pair[1](extParseFeed(text), tomorrow);
-        if (!it) return;
-        extRec.slots[pair[0]] = { state: 'present', title: it.title || def.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: def.source };
-        items.push({ kind: 'ext', date: tomorrow, id: pair[0], enclosureUrl: it.url, source: def.source, download: def.download, title: extRec.slots[pair[0]].title, block: def.block, durationS: it.durationS || 0, key: offlineDayKey(tomorrow, pair[0]) });
-      }).catch(function () {}));
-    });
+    // v624: the Saint of the Day pair retires here too — the
+    // saint slot is courier-class, so tomorrow's saint stands
+    // from the live-payload job above (hasCourier covers it).
     jobs.push(offlineTomorrowOwn(settings, tomorrow, extRec).then(function (ownItems) { ownItems.forEach(function (it) { items.push(it); }); }));
     return Promise.all(jobs).then(function () {
       var stored = offlineSnapshotStore(tomorrow, day, settings, extRec, epoch);
