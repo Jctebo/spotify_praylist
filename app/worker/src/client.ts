@@ -23991,27 +23991,42 @@ function opnEditSetHtml609(day) {
   // contents rows, grouped by block under a group head
   // carrying the block's ON/OFF toggle (John, 2026-11-21
   // 22:34 CT: the group toggles stand in the condensed
-  // form, and toggled-off groups show too). Groups ON in
-  // the day stand in day order; groups OFF stand after
-  // them in canonical order, in full — toggle off, rows
-  // visible and dimmed, editable in place. Drags stay
-  // within their block's run by store construction
-  // (opnDragOver604 looks both ids up in the drag block's
-  // own list — a cross-boundary target is an inert
-  // no-op; no move writes between blocks' contents). The
-  // unblocked episodes carry no edit rows: they are not
-  // profile contents.
+  // form, and toggled-off groups show too). v635 (John,
+  // 2026-11-23 12:55 CT): every group stands at its DAY
+  // POSITION whether it stands ON, OFF, or EMPTY — an
+  // off group stands greyed IN PLACE, never at the tail.
+  // The paint list is the pass-1 spine — orderedBlocks
+  // (day) in their standing order (the v413 manual block
+  // order stands) — with each canonical block absent
+  // from the day INSERTED at its canonical day position
+  // relative to the spine: immediately before the first
+  // spine block that stands after it canonically, else
+  // at the end. Paint order only: no state, contents,
+  // or toggle changes. Drags stay within their block's
+  // run by store construction (opnDragOver604 looks
+  // both ids up in the drag block's own list — a
+  // cross-boundary target is an inert no-op; no move
+  // writes between blocks' contents). The unblocked
+  // episodes carry no edit rows: they are not profile
+  // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
   html += opnPickHead609();
   var seen = {};
-  orderedBlocks(day).forEach(function (b) { seen[b.block] = true; html += opnEditGroupHtml609(b.block); });
+  var paint635 = orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; });
   // v609 repair 2: 'Podcasts' leaves the canonical list —
   // no Podcasts group stands in the form again (no layer,
   // no toggle, no series rows); a podcast stands as a
   // contents row inside its block's group, like a prayer.
-  ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas'].forEach(function (name) {
-    if (!seen[name]) html += opnEditGroupHtml609(name);
+  var CANON635 = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas'];
+  CANON635.forEach(function (name) {
+    if (seen[name]) return;
+    var at = paint635.length;
+    for (var i = 0; i < paint635.length; i++) {
+      if (CANON635.indexOf(paint635[i]) > CANON635.indexOf(name)) { at = i; break; }
+    }
+    paint635.splice(at, 0, name);
   });
+  paint635.forEach(function (name) { html += opnEditGroupHtml609(name); });
   return html + '</div>';
 }
 function opnGroupOn609(block) {
