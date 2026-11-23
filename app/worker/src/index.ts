@@ -906,7 +906,7 @@ const EXTERNAL_SLOTS: Record<string, string> = {
 // contract data: a change lands in both in the same release, or in
 // neither (v339's four rows land in both).
 const INTRO_PAIRING: Record<string, string> = {
-  "morning-prayer": "Morning Prayer",
+  "morning-prayer": "Morning Offering (Extended)",
   "daily-rosary": "Daily Rosary",
   "marian-antiphon-angelus": "Morning Marian Antiphon",
   "auxilium-christianorum": "Auxilium Christianorum",
