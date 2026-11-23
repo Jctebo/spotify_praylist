@@ -10608,32 +10608,14 @@ function paintSettings() {
     + '<div class="meta">The three named ways and your own copies — blocks, layers, and contents, and the default for each day.</div>'
     + '<div class="setcontrols"><button class="btn ghost" id="set-profiles">Configure plan</button></div>'
     + '</div></div>';
-  // v632 §3.2: MORNING & EVENING PRAYER — the one choice over
-  // the two hours both sources carry, in its own section high
-  // in Settings (out of the CONFESSION PIN section entirely).
-  // Painted unconditionally — no pinSet gate, no opnMode gate:
-  // the choice stands for every user of the phone (the
-  // PLAYBACK/Autoplay precedent, a device-local choice). Both
-  // options stand visible in both states; the standing one
-  // carries the marker, the other is the tap target. A tap
-  // writes the new store (opnSthFirstSet632) and re-renders
-  // Settings, so the marker — and the Source mapping labels —
-  // follow the choice in the same paint.
-  var sthFirst632 = opnSthPrimary628();
-  html += '<h2 class="sectionhead">MORNING &amp; EVENING PRAYER</h2>'
-    + '<p class="sub">Which reading of the office plays first for Morning Prayer and Evening Prayer:</p>'
-    + '<div class="liblist">'
-    + '<div class="setrow">'
-    + '<div class="setname">Divine Office first</div>'
-    + '<div class="meta">Sing the Hours plays when Divine Office does not load.</div>'
-    + '<div class="setcontrols">' + (sthFirst632 ? '<button class="btn ghost" id="set-sth-first-do">Put first</button>' : '<span class="meta">Standing</span>') + '</div>'
-    + '</div>'
-    + '<div class="setrow">'
-    + '<div class="setname">Sing the Hours first</div>'
-    + '<div class="meta">Divine Office plays when Sing the Hours does not load.</div>'
-    + '<div class="setcontrols">' + (sthFirst632 ? '<span class="meta">Standing</span>' : '<button class="btn ghost" id="set-sth-first-sth">Put first</button>') + '</div>'
-    + '</div></div>'
-    + '<p class="meta">The other hours of the Divine Office have no second source and are not affected.</p>';
+  // v637: the MORNING & EVENING PRAYER choice section that
+  // v632 §3.2 stood here is REMOVED — the choice's one door
+  // now stands in the Praylist edit form (opnSthChoiceHtml637,
+  // under the Pick head). The store, the reader
+  // (opnSthPrimary628), and the writer (opnSthFirstSet632)
+  // stand untouched, and the Source mapping labels below
+  // still read the reader, so they follow the choice made
+  // in the editor.
   // v358 §1 Decision 2: the Playback section stands above Source
   // mapping — the autoplay choice lives in the app's standing
   // settings home as well as on the dock and Now Playing. The
@@ -10781,13 +10763,6 @@ function paintSettings() {
   if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
   var profBtn590 = document.getElementById('set-profiles');
   if (profBtn590) profBtn590.addEventListener('click', function () { openConfigureLadder593(); });
-  // v632 §3.2: the Morning & Evening choice taps — write the
-  // new store only, then re-render Settings whole so the
-  // marker and the mapping labels follow in the same paint.
-  var sthDoBtn632 = document.getElementById('set-sth-first-do');
-  if (sthDoBtn632) sthDoBtn632.addEventListener('click', function () { opnSthFirstSet632(false); renderSettings(); });
-  var sthStBtn632 = document.getElementById('set-sth-first-sth');
-  if (sthStBtn632) sthStBtn632.addEventListener('click', function () { opnSthFirstSet632(true); renderSettings(); });
   var apBtn = document.getElementById('set-autoplay');
   if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
@@ -19682,6 +19657,28 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       && (fold ? (cache.profileKey === fold.key && cache.profileVersion === fold.version) : (cache.profileKey == null && cache.profileVersion == null));
     if (cache && !cacheValid) { extDiscardCaches(); cache = null; }
     var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {}, profileKey: fold ? fold.key : null, profileVersion: fold ? fold.version : null };
+    // v637 (the blank-feed defect, field report on v632-1):
+    // the day cache's validity key — date + settings version
+    // + profile fold — never carried the Morning & Evening
+    // choice, and a cached labeled slot carries NO backup.
+    // After a choice flip the return build therefore handed
+    // the two labeled slots to the cache restore whole: the
+    // new preference never re-settled them, and a restore
+    // whose old-choice enclosure could not complete settled
+    // the slot missing with no backup to flip to — the
+    // hours stood empty. The prune: a cached labeled slot
+    // whose standing source is not the preference's first
+    // choice leaves the record here, before the seeding and
+    // the courier leg read it, so the courier re-settles
+    // the slot in place from the live payload, both sources
+    // standing, exactly as on a cold open.
+    if (cacheValid) {
+      var wantFirst637 = opnSthPrimary628() ? 'Sing the Hours' : 'Divine Office';
+      ['ext-morning-prayer', 'ext-evening-prayer'].forEach(function (sid637) {
+        var c637 = rec.slots[sid637];
+        if (c637 && c637.state === 'present' && c637.source !== wantFirst637) delete rec.slots[sid637];
+      });
+    }
     // v342 §2.3: the record gains own + intentions sections. A
     // pre-v342 record (valid, but no such sections) reads as
     // sections-empty: those families resolve fresh this open —
@@ -21067,6 +21064,13 @@ function wirePrayersView(day) {
   // v609 REPAIR: the Pick chips at the edit form's head.
   view.querySelectorAll('[data-p609pick]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnPickInForm609(btn.getAttribute('data-p609pick')); });
+  });
+  // v637: the Morning & Evening choice at the edit form's
+  // head — a tap writes the ONE v632 store through the ONE
+  // writer, then repaints the form so the marker moves in
+  // the same paint. No scope, contents, or profile write.
+  view.querySelectorAll('[data-p637sth]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnSthFirstSet632(btn.getAttribute('data-p637sth') === 'sth'); opnRepaintHome604(); });
   });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
@@ -24006,6 +24010,30 @@ function opnSetHtml609(day) {
   });
   return html + '</div>';
 }
+function opnSthChoiceHtml637() {
+  // v637: the second door to the v632 Morning & Evening
+  // choice — the same store (OPN_STH_FIRST_KEY), the same
+  // reader (opnSthPrimary628), the same writer
+  // (opnSthFirstSet632), the same wording as the Settings
+  // section. Painted at the edit form's head so the choice
+  // stands beside the Pick in both scopes. Both options
+  // stand visible; the standing one carries the marker,
+  // the other is the tap target.
+  var sthFirst637 = opnSthPrimary628();
+  return '<div class="p637sthchoice" data-p637sthchoice="1">'
+    + '<p class="sub">Which reading of the office plays first for Morning Prayer and Evening Prayer:</p>'
+    + '<div class="liblist">'
+    + '<div class="setrow">'
+    + '<div class="setname">Divine Office first</div>'
+    + '<div class="meta">Sing the Hours plays when Divine Office does not load.</div>'
+    + '<div class="setcontrols">' + (sthFirst637 ? '<button class="btn ghost" data-p637sth="do">Put first</button>' : '<span class="meta">Standing</span>') + '</div>'
+    + '</div>'
+    + '<div class="setrow">'
+    + '<div class="setname">Sing the Hours first</div>'
+    + '<div class="meta">Divine Office plays when Sing the Hours does not load.</div>'
+    + '<div class="setcontrols">' + (sthFirst637 ? '<span class="meta">Standing</span>' : '<button class="btn ghost" data-p637sth="sth">Put first</button>') + '</div>'
+    + '</div></div></div>';
+}
 function opnEditSetHtml609(day) {
   // The edit form over the set: ONE list of condensed
   // contents rows, grouped by block under a group head
@@ -24031,6 +24059,7 @@ function opnEditSetHtml609(day) {
   // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
   html += opnPickHead609();
+  html += opnSthChoiceHtml637();
   var seen = {};
   var paint635 = orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; });
   // v609 repair 2: 'Podcasts' leaves the canonical list —

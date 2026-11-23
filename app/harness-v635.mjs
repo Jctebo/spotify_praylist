@@ -286,8 +286,19 @@ async function allPresentEditHtml(js) {
     JSON.stringify(a.order) === JSON.stringify(a.spine) && JSON.stringify(a.order) === JSON.stringify(CANON7),
     { order: a.order, spine: a.spine });
   const b = await allPresentEditHtml(oldJs);
-  check('L3b ◆ ALL PRESENT: the edit-form HTML is BYTE-IDENTICAL to the base client\u2019s paint',
-    a.html === b.html, { newLen: a.html.length, oldLen: b.html.length, oldOrder: b.order });
+  // v637: reversed by name — the edit form now also carries the
+  // Morning & Evening choice block at its head (opnSthChoiceHtml637,
+  // by design); strip that one block (balanced-div scan), then the
+  // byte-identity guard stands exactly as written.
+  // v636 (cited at the v637 re-merge): the same guard also meets
+  // v636's rename — the new paint labels Ora's own prayer
+  // 'Morning Offering (Extended)' where the base paints
+  // 'Morning Prayer'; map that one label back. The failure
+  // pre-dates v637: harness-v635 on the pure v636 tree reads
+  // 14/2 with L3b among them.
+  const strip637 = (h) => { const s = h.indexOf('<div class="p637sthchoice"'); if (s < 0) return h; let d = 0, i = s; for (;;) { const o = h.indexOf('<div', i), c = h.indexOf('</div>', i); if (c < 0) return h; if (o >= 0 && o < c) { d++; i = o + 4; } else { d--; i = c + 6; if (d === 0) return h.slice(0, s) + h.slice(i); } } };
+  check('L3b ◆ [v637 + v636: reversed by name — identity asserted on the paint with the v637 choice block stripped and the v636 renamed label mapped back] ALL PRESENT: the edit-form HTML is BYTE-IDENTICAL to the base client\u2019s paint',
+    strip637(a.html).split('Morning Offering (Extended)').join('Morning Prayer') === b.html, { newLen: a.html.length, oldLen: b.html.length, oldOrder: b.order });
   a.w.close(); b.w.close();
 }
 

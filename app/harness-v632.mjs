@@ -205,16 +205,16 @@ async function leg1(js, store, label) {
 }
 {
   const a = await leg1(appJs, { [DATA_KEY]: JSON.stringify(JOHN) }, 'no-PIN');
-  check('L1 ◆ no-PIN world: MORNING & EVENING PRAYER stands immediately after PRAYER PLAN, both options visible, Divine Office marked standing, lead + foot copy stand',
-    a.stood && a.ordered && a.bothVisible && a.doStanding && a.sthTappable && a.lead && a.foot,
-    { stood: a.stood, ordered: a.ordered, both: a.bothVisible, doStanding: a.doStanding, sthTap: a.sthTappable });
+  check('L1 ◆ [v637: reversed by name — the Settings section is retired; the choice\u2019s one door stands in the Praylist edit form, harness-v637 L1] no-PIN world: NO MORNING & EVENING PRAYER section stands in Settings, no set-sth-first buttons paint',
+    !a.stood && !a.doRow && !a.w.document.getElementById('set-sth-first-do') && !a.w.document.getElementById('set-sth-first-sth'),
+    { stood: a.stood });
   check('L1b the no-PIN paint seeds the new key at the default (\'off\')', a.keySeeded === 'off', a.keySeeded);
   a.w.close();
 }
 if (snap) {
   const b = await leg1(appJs, snapWith(), 'PIN-set');
-  check('L1c ◆ PIN-set world: the section stands the same (no pinSet gate)',
-    b.stood && b.ordered && b.bothVisible && b.doStanding && b.sthTappable, { stood: b.stood, ordered: b.ordered });
+  check('L1c ◆ [v637: reversed by name — as L1] PIN-set world: NO MORNING & EVENING PRAYER section stands in Settings either',
+    !b.stood && !b.doRow, { stood: b.stood });
   check('L1d the PIN-set paint seeds \'off\' from a record carrying no sthPrimary (John\u2019s shape)', b.keySeeded === 'off', b.keySeeded);
   b.w.close();
   const old = await leg1(appJsOld, snapWith(), 'base');
@@ -233,27 +233,33 @@ if (snap) {
   const slot = { slotId: 'ext-morning-prayer', title: 'Morning Prayer' };
   const entry = { title: 'Morning Prayer - Divine Office', streamUrl: 'https://do.example/mp.mp3', source: 'Divine Office', backup: { streamUrl: 'https://sth.example/lauds.mp3', source: 'Sing the Hours' } };
   const before = w.__opn.opnExtChoice628(slot, entry, 'Divine Office');
-  click(w, w.document.getElementById('set-sth-first-sth'));
-  const repainted = await until(() => !!w.document.getElementById('set-sth-first-do'), 8000);
+  // v637: reversed by name — the Settings tap target is
+  // retired with the section; the flip is driven through
+  // the ONE writer, exactly as the edit-form door drives
+  // it (harness-v637 L2 proves the tap itself), then
+  // Settings repaints as its standing repaint does.
+  w.__opn.opnSthFirstSet632(true);
+  w.__opn.paintSettings();
+  const repainted = await until(() => { const r = w.document.querySelector('[data-setkey="sth-lauds"]'); return r && r.querySelector('.meta').textContent === 'Morning & Evening choice: stands first'; }, 8000);
   await sleep(200);
   const keyOn = w.localStorage.getItem(STH_KEY);
   const after = w.__opn.opnExtChoice628(slot, entry, 'Divine Office');
   const sthRowEl = w.document.querySelector('[data-setkey="sth-lauds"]');
   const labelAfter = sthRowEl ? sthRowEl.querySelector('.meta').textContent : null;
-  check('L2 ◆ tap Sing the Hours first: key writes \'on\', the helper reads true, the choice seam stands Sing the Hours first with Divine Office as backup',
+  check('L2 ◆ [v637: reversed by name — flip driven through the one writer, not a Settings tap] key writes \'on\', the helper reads true, the choice seam stands Sing the Hours first with Divine Office as backup',
     repainted && keyOn === 'on' && w.__opn.opnSthPrimary628() === true
     && before.streamUrl === 'https://do.example/mp.mp3'
     && after.streamUrl === 'https://sth.example/lauds.mp3' && after.source === 'Sing the Hours'
     && after.backup && after.backup.streamUrl === 'https://do.example/mp.mp3',
     { repainted, keyOn, after: after.streamUrl, labelAfter });
-  check('L2b ◆ the same repaint moves the marker AND the mapping label (Sing the Hours row reads \'stands first\')',
-    repainted && !!rowByName(w, 'Sing the Hours first') && /Standing/.test(rowByName(w, 'Sing the Hours first').textContent)
-    && labelAfter === 'Morning & Evening choice: stands first', { labelAfter });
-  click(w, w.document.getElementById('set-sth-first-do'));
-  const back = await until(() => !!w.document.getElementById('set-sth-first-sth'), 8000);
+  check('L2b ◆ [v637: reversed by name — no section marker stands to move] the Settings repaint moves the mapping label (Sing the Hours row reads \'stands first\') and no choice section stands',
+    repainted && !sectionSlice(w) && labelAfter === 'Morning & Evening choice: stands first', { labelAfter });
+  w.__opn.opnSthFirstSet632(false);
+  w.__opn.paintSettings();
+  const back = await until(() => { const r = w.document.querySelector('[data-setkey="sth-lauds"]'); return r && r.querySelector('.meta').textContent === 'Morning & Evening choice: stands as the backup'; }, 8000);
   await sleep(200);
   const backChoice = w.__opn.opnExtChoice628(slot, entry, 'Divine Office');
-  check('L2c tapping back restores \'off\' and the default order',
+  check('L2c [v637: reversed by name — as L2] flipping back restores \'off\' and the default order',
     back && w.localStorage.getItem(STH_KEY) === 'off' && w.__opn.opnSthPrimary628() === false && backChoice.streamUrl === 'https://do.example/mp.mp3',
     { back, key: w.localStorage.getItem(STH_KEY) });
   w.close();
@@ -352,8 +358,8 @@ function memStore(seed) {
   w.__opn.paintSettings();
   await sleep(300);
   const sec = sectionSlice(w);
-  check('L5 ◆ the painted section carries neither \'primary\' nor \'fallback\' (case-insensitive)',
-    !!sec && !/primary/i.test(sec.html) && !/fallback/i.test(sec.html), sec ? sec.html.slice(0, 200) : null);
+  check('L5 ◆ [v637: reversed by name — the section itself is retired; the wording rule re-proves on the edit-form door in harness-v637 L4c] no Morning & Evening section paints in Settings at all',
+    !sec, sec ? sec.html.slice(0, 200) : null);
   w.close();
 }
 
