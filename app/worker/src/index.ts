@@ -2527,7 +2527,8 @@ async function extSynthVerify(env: Env, name: string): Promise<string | null> {
 // ord-mon-np-w2-w4 — and the post page's episode player carries
 // the full-episode file). Component players are REFUSED:
 // the divine-ip- invitatory-psalm family and any .psalmNNN
-// infix. A Cloudflare challenge page is a failed read.
+// infix — v633 exception: for ext-invitatory only, that psalm file stands as the scrape fill when no non-component file stands.
+// A Cloudflare challenge page is a failed read.
 const EXT_SCRAPE_SLUG_TAIL: Record<string, RegExp> = {
   "ext-morning-prayer": /-mp$/, "ext-office-of-readings": /-or$/,
   "ext-evening-prayer": /-ep$/, "ext-midmorning-prayer": /-dp1$/,
@@ -2552,16 +2553,20 @@ function extScrapePostUrl(dayHtml: string, date: string, slotId: string): string
   const hit = slugs.find((x) => tail.test(x.slug));
   return hit ? hit.url : null;
 }
-function extScrapeEpisodeUrl(postHtml: string): string | null {
+function extScrapeEpisodeUrl(postHtml: string, slotId?: string): string | null {
   const re = /https?:\/\/[^\s"'<>]+\.mp3(?:\?[^\s"'<>]*)?/g;
   const urls = postHtml.match(re) ?? [];
+  let invitatoryPsalm: string | null = null;
   for (const raw of urls) {
     const u = raw.replace(/\?_=1$/, "");
     const file = u.split("/").pop() ?? "";
-    if (file.startsWith("divine-ip-") || /\.psalm\d/i.test(file)) continue; // component — refused
+    if (file.startsWith("divine-ip-") || /\.psalm\d/i.test(file)) {
+      if (slotId === "ext-invitatory" && file.startsWith("divine-ip-") && /\.psalm\d/i.test(file) && !invitatoryPsalm) invitatoryPsalm = u;
+      continue; // component — refused
+    }
     return u;
   }
-  return null;
+  return invitatoryPsalm;
 }
 async function extFetchText628(url: string): Promise<string> {
   const ctl = new AbortController();
@@ -2850,7 +2855,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
   // on divineoffice.org (discovered from the day page's links;
   // never the day page itself, whose only player is the
   // Invitatory component psalm) and stand its EPISODE player
-  // pointer. Component players are refused; a challenge page
+  // pointer. Component players are refused — v633 exception: for ext-invitatory only, its psalm file stands as the scrape fill when no non-component file stands; a challenge page
   // is a failed read and writes nothing. Rows are Divine
   // Office rows (route 'scrape'). Page fetches are cached
   // across hours within the pass.
@@ -2882,7 +2887,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         let postHtml: string;
         try { postHtml = await extFetchText628(postUrl.replace(EXT_DO_SITE_BASE, siteBase)); } catch { continue; }
         if (extScrapeIsChallenge(postHtml)) continue;
-        const epUrl = extScrapeEpisodeUrl(postHtml);
+        const epUrl = extScrapeEpisodeUrl(postHtml, sl.slotId);
         if (!epUrl) continue;
         const it: ExtFeedItem = { title: sl.title, url: epUrl, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
         const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
