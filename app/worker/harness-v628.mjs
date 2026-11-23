@@ -440,7 +440,7 @@ const summaryOf = (r, feed) => (r.results || []).find((x) => x.feed === feed);
   const db = new FakeDB(); const env = makeEnv(db);
   await agentResolve(env);
   const fill = db.resolutions.get(TODAY + "|ext-morning-prayer");
-  check("P2 Morning stands on Sing the Hours while the feed is down", !!fill && fill.source === "Sing the Hours" && !fill.backup_url, fill && fill.source);
+  check("P2 [v634: reversed by name] the same pass's scrape rung resolves past the fill — Morning stands on Divine Office (route scrape) with the StH backup alongside while the feed is down", !!fill && fill.source === "Divine Office" && fill.route === "scrape" && fill.backup_url === `https://episodes.castos.com/sth/${TODAY}-lauds.mp3` && fill.backup_source === "Sing the Hours", fill && { source: fill.source, route: fill.route, backup: fill.backup_url });
   setFeed("do", DO_HEALTHY);
   await agentResolve(env);
   const row = db.resolutions.get(TODAY + "|ext-morning-prayer");

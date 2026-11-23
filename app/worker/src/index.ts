@@ -2714,7 +2714,9 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
       for (const sl of EXT_DO_SLOTS) {
         if (!standingOn(sl.slotId, date)) continue;
         const cur = bySlot.get(sl.slotId);
-        if (cur && cur.state === "present") continue;
+        // v634: a labeled slot standing present on a Sing the Hours fill is NOT resolved for this rung — the Divine Office resolution must stand alongside it, so the fill is treated as unresolved and its pointer is carried as the backup on the write below.
+        const displaced634 = cur && EXT_LABELED_SLOTS.has(sl.slotId) && cur.state === "present" && cur.source === "Sing the Hours" && cur.stream_url ? cur : null;
+        if (cur && cur.state === "present" && !displaced634) continue;
         for (const name of extSynthCandidates(date, sl.slotId)) {
           attempted++;
           const url = await extSynthVerify(env, name);
@@ -2722,7 +2724,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
           const it: ExtFeedItem = { title: sl.title, url, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
           const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
           const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, null, null, "synthesis");
+          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "synthesis");
           written628++;
           break;
         }
@@ -2870,7 +2872,9 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
       for (const sl of EXT_DO_SLOTS) {
         if (!standingOn(sl.slotId, date)) continue;
         const cur = bySlot.get(sl.slotId);
-        if (cur && cur.state === "present") continue;
+        // v634: a labeled slot standing present on a Sing the Hours fill is NOT resolved for this rung — the Divine Office resolution must stand alongside it, so the fill is treated as unresolved and its pointer is carried as the backup on the write below.
+        const displaced634 = cur && EXT_LABELED_SLOTS.has(sl.slotId) && cur.state === "present" && cur.source === "Sing the Hours" && cur.stream_url ? cur : null;
+        if (cur && cur.state === "present" && !displaced634) continue;
         attempted628++;
         if (!dayCache.has(date)) {
           let html: string | null = null;
@@ -2892,7 +2896,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         const it: ExtFeedItem = { title: sl.title, url: epUrl, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
         const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
         const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, null, null, "scrape");
+        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "scrape");
         written628++;
       }
     }
