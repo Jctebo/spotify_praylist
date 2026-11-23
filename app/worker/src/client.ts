@@ -12417,8 +12417,8 @@ function openFavRowMenu(e, anchorEl) {
   var items = [];
   if (desc) items.push({ label: 'Share', act: function () { shareTrackSheet(desc); } });
   if (desc && desc.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
-  var sp = desc ? spotifyUrlFor(desc) : null;
-  if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+  var markItem = desc ? dayRowMarkItem639(desc) : null;
+  if (markItem) items.push(markItem); // v639: the mark act stands at the retired Spotify position
   items.push.apply(items, favMoveItems(e)); // v576: Move to folder
   openSheetMenu(e.title || 'Options', items, anchorEl);
 }
@@ -16240,11 +16240,70 @@ function shareTrackSheet(t) {
     url: shareUrlFor(t)
   });
 }
+/* v639 §2: the day-row mark act — ONE item builder consumed
+   by openDayRowMenu and by openFavRowMenu's mirror menu,
+   standing at the retired 'Open in Spotify' position.
+   Descriptor in → menu item or null: a row kind that carries
+   no mark (an unavailable track, a descriptor with no
+   episode identity) carries no such act. The label reads the
+   row's standing state at build time ('Mark as read' when
+   unmarked, 'Mark as unread' when marked); the act writes
+   through the standing per-family discipline (the
+   epCardTogglePlayed precedent, followed exactly): a podcast
+   episode standing in the day → its core listen; a recorded
+   homily → its homily-store played flag; every other day
+   track → its played mark under exactly the key its own
+   played dot writes (block = t.block || t._block, occ =
+   t._occ || 0 — a v610 occurrence copy takes its own mark). */
+function dayRowMarkItem639(t) {
+  if (!t || !t.available || !t.episodeId) return null;
+  var on;
+  if (t.kind === 'podcast') {
+    if (!t.seriesKey || !t.podSeries) return null;
+    on = !t.listened;
+  } else if (t.kind === 'homily') {
+    if (!t.homilyId) return null;
+    var he = homilyEntry(t.homilyId);
+    on = !(he && he.played);
+  } else {
+    on = !isPlayedDesc(t, presentedDateStr());
+  }
+  return {
+    label: on ? 'Mark as read' : 'Mark as unread',
+    act: function () { dayRowMarkApply639(t, on); }
+  };
+}
+function dayRowMarkApply639(t, on) {
+  if (t.kind === 'podcast') {
+    // The epCardTogglePlayed podcast discipline, from the
+    // descriptor alone: the standing toggle when the open
+    // series payload is this series and its entry stands
+    // (podToggleMark performs the core-store write in the
+    // device/web shapes); else the quiet mark write (which
+    // performs that same core write itself), or the unmark
+    // post with the mark-queue fallback + the queue sync.
+    if (state.podcasts && state.podcasts.series === t.podSeries && state.podcasts.entries && state.podcasts.entries.some(function (e) { return e.key === t.seriesKey; })) { podToggleMark(t.seriesKey); }
+    else if (on) { writePodMarkQuiet(t.seriesKey, t.podSeries, 'manual'); }
+    else {
+      post('/api/player/podcasts/unmark', { series: t.podSeries, seqKey: t.seriesKey }).catch(function () {
+        podMarkEnqueue({ op: 'unmark', series: t.podSeries, seqKey: t.seriesKey, queuedAt: new Date().toISOString() });
+      });
+      podSyncQueueListened(t.podSeries, t.seriesKey, false);
+    }
+    t.listened = on;
+    refreshPlayedChrome();
+    return;
+  }
+  if (t.kind === 'homily') { if (t.homilyId) homilySetPlayed(t.homilyId, on); refreshPlayedChrome(); return; }
+  // writePlayed closes with refreshPlayedChrome() itself.
+  writePlayed(t.episodeId, presentedDateStr(), on ? 'marked' : null, t.block || t._block || '', t._occ || 0);
+}
 /* FD7 day-row menu (§2.9): Share · Download (only — a day-set
    Remove is undone by the v392 convergence, so it is not
-   offered) · Open in Spotify (where a URL stands). The
-   Download item stands only while the episode is not already
-   on the device — the cache read lands before the menu opens. */
+   offered) · Mark as read (v639, at the retired Open in
+   Spotify position). The Download item stands only while
+   the episode is not already on the device — the cache read
+   lands before the menu opens. */
 function openDayRowMenu(t, anchorEl, extraItems) {
   var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
   // v542 §2 (Part 2): Add to queue stands for an available
@@ -16253,8 +16312,8 @@ function openDayRowMenu(t, anchorEl, extraItems) {
   if (t.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(t); } });
   var build = function (standing) {
     if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
-    var sp = spotifyUrlFor(t);
-    if (sp) items.push({ label: 'Open in Spotify', act: function () { window.open(sp, '_blank', 'noopener'); } });
+    var markItem = dayRowMarkItem639(t);
+    if (markItem) items.push(markItem);
     // v576: a caller may append its own items (the Favorites
     // page's Move items) — standing callers pass none and
     // the menu renders exactly as before.
