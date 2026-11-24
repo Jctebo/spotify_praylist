@@ -16462,7 +16462,15 @@ function shareAppUrlFor(t) {
     // select that source's episode where two tracks share
     // one slotId (the v650 shape). Every other form stands
     // byte-for-byte as v640 shipped it.
-    if (t.kind === 'external' && t.source) url += '&src=' + shareEnc640(t.source);
+    // v654 §2.2: the composed office descriptor carries no
+    // kind (the trackDesc seam copies kind only for
+    // podcast), so the standing condition never fired for a
+    // real day row \u2014 the branch ALSO fires when the id is
+    // one of the two labeled office slots (the only slots
+    // two tracks share), the appended value still the
+    // descriptor's own source. No other family's condition
+    // changes.
+    if (t.source && (t.kind === 'external' || opnLabeledSlot650(id))) url += '&src=' + shareEnc640(t.source);
     var repeats = (state.dayDescs || []).filter(function (x) { return x.episodeId === id; }).length > 1 || !!(state.repeatIds && state.repeatIds[id]);
     if (repeats) url += '&b=' + shareEnc640(t.block || t._block || '') + '&o=' + (t._occ || 0);
     return url;
