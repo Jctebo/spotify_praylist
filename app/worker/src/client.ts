@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], composed642: null, composedDate642: null, dayPending642: false, rebuildGuard642: false, dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -16478,9 +16478,23 @@ function shareLandingLandDay() {
   // home over a landing presented mid-build; re-present
   // (bounded) while neither the block view nor the
   // episode card stands.
-  [400, 1200].forEach(function (ms) {
+  // v642 composition: the build hook above can now land
+  // the landing DURING the build (the composed list the
+  // hook reads already carries the descriptor), and the
+  // build's own settle repaint then repaints the block
+  // page and wipes the landed mark. The re-present guard
+  // therefore also covers this landing's own block page
+  // standing with its row unmarked; another block page
+  // standing means the user has moved on and stands.
+  [400, 1200, 2500].forEach(function (ms) {
     setTimeout(function () {
-      if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind !== 'block' && !document.querySelector('.epcard')) present640();
+      if (state.tab !== 'prayers' || document.querySelector('.epcard')) return;
+      var v642v = state.prayersView;
+      if (v642v && v642v.kind === 'block') {
+        if (v642v.block !== (d.block || d._block)) return;
+        if (document.querySelector('[data-card="' + L.id + '"].landed')) return;
+      }
+      present640();
     }, ms);
   });
 }
@@ -19299,12 +19313,39 @@ function extRebuildDescs(day) {
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   descs = foldDayAdditions(descs, date, day.readingsSeat, placed619); // v510 §2.2: the additions fold, as in the initial build — the folded list IS the returned list, as the pre-v510 identity stood · v549 §2.5: the payload's readings seat rides the same fold · v619: placed619 skips the additions + seat the contents pass already stood at their contents positions
+  // v642: this rebuild IS the composed list — the paint source
+  // of record. It stands keyed by its presented date in
+  // state.composed642, so a later buildDayFromPayload for the
+  // same day paints it instead of the payload fold, and any
+  // standing cold-open loading state (dayPending642) settles:
+  // the first rebuild after a pending build repaints the home
+  // in place (the locked gate is never repainted over — the
+  // vault check stands in the guard).
+  // v642 guard: a rebuild that lands BEFORE this build's
+  // resolution pass has re-seeded the standings (the
+  // contents resolvers' synchronous settles run beside the
+  // settings read, with state.extStanding already cleared)
+  // computes a PARTIAL list — it is returned to its caller
+  // as today, but it must not become the record, must not
+  // replace state.dayDescs, and must not settle the pending
+  // state. buildWithSettings' first rebuild clears the
+  // guard (resolveExternals' settings-failure catch too).
+  if (state.rebuildGuard642) return descs;
+  var wasPending642 = !!state.dayPending642;
+  state.composed642 = descs;
+  state.composedDate642 = date;
+  state.dayPending642 = false;
   state.dayDescs = descs;
   refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   pushDaySnapshot(); // v359 §2.4: every rebuild refreshes the native side's day
   settleTrackDraws(); // v528 §2.2: a rebuild's newly settled tracks join the batch — only their missing keys are asked for
   starredLoad(); // v546: the star store settles with the day build (v547: the folder row and the Favorites page repaint on settle)
   homilySettle(); // v551: the device-local takes' blob URLs settle with the day build (a newly settled URL re-folds once)
+  // v642: the pending build's first rebuild paints the real
+  // set in place of the loading state, at once — no settle
+  // swap is waited on. Home view only, this build's own day
+  // only, never over the vault lock gate.
+  if (wasPending642 && state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'home' && day === state.dayPayload && !opnVaultLocked()) paintPrayersView(day);
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -19998,6 +20039,12 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
   // settings (+ its externals record), so ONE build serves both
   // and no second renderer exists.
   var buildWithSettings = function (settings) {
+    // v642: the settings leg has landed — the standings are
+    // re-seeded synchronously below, before any rebuild can
+    // interleave, so the build guard clears at entry: this
+    // pass's rebuilds may record the composed list and
+    // settle a pending build.
+    state.rebuildGuard642 = false;
     state.offlineSettings = settings;
     var wd = extWeekdayMon0(date);
     var prim = {}, fb = {};
@@ -20556,7 +20603,9 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // and the settings surfaces still read them.
   };
   if (settingsOverride) { try { buildWithSettings(settingsOverride); } catch (e) {} }
-  else { api('/api/player/source-settings').then(buildWithSettings).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ }); }
+  else { api('/api/player/source-settings').then(buildWithSettings).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ // v642: a failed settings read still SETTLES the build — the pending loading state clears and the home repaints on the payload fold, never a perpetual loading state
+    state.rebuildGuard642 = false;
+    if (state.dayPending642) { state.dayPending642 = false; if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'home' && day === state.dayPayload && !opnVaultLocked()) paintPrayersView(day); } }); }
 }
 function extMatchBibleDayN(dateStr) {
   var p = dateStr.split('-').map(Number);
@@ -20619,9 +20668,27 @@ function buildDayFromPayload(day, snap) {
     // and the day's descriptors for its play/pause control.
     // v510 §2.2: the additions fold weaves the day's slotted
     // prayers into the list at their anchors.
-    state.dayDescs = foldDayAdditions(allDescs, day.presentedDay || day.date, day.readingsSeat);
+    var payloadFold642 = foldDayAdditions(allDescs, day.presentedDay || day.date, day.readingsSeat);
+    state.dayDescs = payloadFold642;
     refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
     pushDaySnapshot(); // v359 §2.4: the initial build hands the native side the day shell's own tracks
+    // v642: the payload fold above keeps its standing
+    // consumers (refreshRepeatIds · pushDaySnapshot ·
+    // readTracks, below) on their standing input — but it
+    // is NOT the paint's list. When a composed list stands
+    // for this presented day (extRebuildDescs' record), it
+    // stands back in state.dayDescs for the paint and the
+    // queue, and the resolution pass refreshes it as today.
+    // When none stands (cold open, new day), the build is
+    // pending: the home set's place carries the loading
+    // state (opnSetHtml609) until the first rebuild paints.
+    if (state.composed642 && state.composedDate642 === (day.presentedDay || day.date)) { state.dayDescs = state.composed642; state.dayPending642 = false; }
+    else state.dayPending642 = true;
+    // v642: the guard stands from here until this build's
+    // resolution pass re-seeds the standings — rebuilds in
+    // that window (the contents resolvers' settles, below)
+    // never overwrite the standing/pending paint state.
+    state.rebuildGuard642 = true;
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
@@ -24440,6 +24507,13 @@ function opnPickInForm609(key) {
 }
 function opnSetHtml609(day) {
   if (opn604.editing) return opnEditSetHtml609(day);
+  // v642: a pending build (no composed list stands for the
+  // presented day yet) paints the plain loading state in
+  // the set's place — never the payload fold's empty set.
+  // The vault-locked home never reaches here: paintListen-
+  // Home's locked branch substitutes the gate before
+  // homeBodyHtml reads any list (v609 repair 2, standing).
+  if (state.dayPending642) return '<div class="p609set" data-p609set="1"><div data-p642loading="1"><p class="sub">Loading today&rsquo;s prayers&hellip;</p>' + skelHtml('prayers') + '</div></div>';
   // v616 (John, 2026-11-22 09:24 CT, field verdict on
   // v615: "The play should be gone and replaced with a
   // play disc"): the set's Play All text pill RETIRES
