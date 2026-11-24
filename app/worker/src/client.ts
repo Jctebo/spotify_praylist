@@ -12405,7 +12405,7 @@ function openFavRowMenu(e, anchorEl) {
   if (e.k === 'podcast') {
     if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) { openPodRowMenu(e.id, anchorEl, favMoveItems(e)); return; }
     var pitems = [];
-    if (desc) pitems.push({ label: 'Share', act: function () { openShareSheet({ artHtml: rowArtHtml(desc), title: desc.title || e.title || '', line: 'Episode' + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''), url: desc.url || location.origin + '/' }); } });
+    if (desc) pitems.push({ label: 'Share', act: function () { openShareSheet({ artHtml: rowArtHtml(desc), title: desc.title || e.title || '', line: 'Episode' + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''), url: shareAppUrlFor(desc) }); } }); // v640 §3: the Favorites podcast mirror routes through the app-link builder
     if (desc && desc.available && desc.url && queueKindIsPod() !== false) pitems.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
     pitems.push({ label: favPodListenedOf(e) ? 'Mark as not listened' : 'Mark as listened', act: function () { favPodToggle(e); } });
     pitems.push.apply(pitems, favMoveItems(e)); // v576: Move to folder
@@ -16231,6 +16231,11 @@ function openPlayerMenu(anchorEl) {
   // intentions toggle does NOT move (ruling R1).
   // v419: the menu anchors at its control (the NP ⋮ button).
   var playerItems = [
+    // v640 §3: Share stands FIRST in the player menu (the
+    // row-menu precedent — Share stands first in
+    // openDayRowMenu and openPodRowMenu); its act fires the
+    // one track share for the standing track.
+    { label: 'Share', act: function () { if (state.current) shareTrackSheet(state.current); } },
     { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
     { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
     { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } },
@@ -16308,12 +16313,255 @@ function openShareSheet(o) {
     else done(false);
   });
 }
+/* v640 §3 (John's amendment, governing): the link in every
+   track share is the Ora Pro Nobis APP link — never an
+   external episode link, never a Spotify link. This ONE
+   builder composes only the constant app host + the
+   descriptor's identity parameters, so no external or
+   Spotify URL can reach a share payload through it.
+   Classification order: prayer (self-describing id) →
+   homily standalone (not standing in the presented day) →
+   podcast (kind podcast with podSeries; or an own-series
+   descriptor while a series stands open and the descriptor
+   is not a presented-day row) → day (the descriptor stands
+   in state.dayDescs, or a presented date stands; office
+   hours carry date + slotId together; a repeated day id
+   carries &b=<block>&o=<occ>) → the bare app link (the
+   only fallback, for an unclassifiable descriptor). */
+var SHARE_APP_BASE640 = 'https://app.orapronobis.media';
+function shareIdOk640(v) { return typeof v === 'string' && /^[A-Za-z0-9\-_:]+$/.test(v); }
+function shareEnc640(v) { return encodeURIComponent(String(v)).replace(/%3A/g, ':'); }
+function shareInDay640(t) {
+  if (!t || !t.episodeId) return false;
+  return (state.dayDescs || []).some(function (x) { return x === t || (x.episodeId === t.episodeId && (x.block || x._block || '') === (t.block || t._block || '') && (x._occ || 0) === (t._occ || 0)); });
+}
+function shareAppUrlFor(t) {
+  var bare = SHARE_APP_BASE640 + '/';
+  if (!t) return bare;
+  var id = t.episodeId || '';
+  if (id.indexOf('prayer:') === 0 && shareIdOk640(id)) return SHARE_APP_BASE640 + '/?s=prayer&id=' + shareEnc640(id);
+  var inDay = shareInDay640(t);
+  if ((t.kind === 'homily' || id.indexOf('homily:') === 0) && !inDay) {
+    var hid = t.homilyId || (id.indexOf('homily:') === 0 ? id.slice('homily:'.length) : '');
+    if (shareIdOk640(hid)) return SHARE_APP_BASE640 + '/?s=homily&id=' + shareEnc640(hid);
+  }
+  var series = null, sid = null;
+  if (t.kind === 'podcast' && t.podSeries) { series = t.podSeries; sid = t.seriesKey || id; }
+  else if (!inDay && !t.kind && state.podcasts && state.podcasts.series && id) { series = state.podcasts.series; sid = id; }
+  if (series) {
+    if (shareIdOk640(series) && shareIdOk640(sid)) return SHARE_APP_BASE640 + '/?s=pod&series=' + shareEnc640(series) + '&id=' + shareEnc640(sid);
+    return bare;
+  }
+  var date = presentedDateStr();
+  if (id && shareIdOk640(id) && date && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)) {
+    var url = SHARE_APP_BASE640 + '/?s=day&date=' + date + '&id=' + shareEnc640(id);
+    var repeats = (state.dayDescs || []).filter(function (x) { return x.episodeId === id; }).length > 1 || !!(state.repeatIds && state.repeatIds[id]);
+    if (repeats) url += '&b=' + shareEnc640(t.block || t._block || '') + '&o=' + (t._occ || 0);
+    return url;
+  }
+  return bare;
+}
+function shareLineFor640(t) {
+  // v640 §3 payload table, the sheet's line per family:
+  // day families carry the date label; an office hour
+  // carries its source between the date and the duration;
+  // every other family keeps the standing Episode line.
+  if (!t) return 'Episode';
+  var dur = t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '';
+  if (t.kind === 'external') return presentedDayWord() + ' \u00b7 ' + (t.source || 'Divine Office') + dur;
+  if (t.kind !== 'podcast' && shareInDay640(t)) return presentedDayWord() + ' \u00b7 Episode' + dur;
+  return 'Episode' + dur;
+}
 function shareTrackSheet(t) {
   openShareSheet({
     artHtml: rowArtHtml(t), title: t.title || '',
-    line: 'Episode' + (t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : ''),
-    url: shareUrlFor(t)
+    line: shareLineFor640(t),
+    url: shareAppUrlFor(t)
   });
+}
+/* v640 §3 landing route (client only, no Worker change —
+   the query form rides the standing pathname shell serve):
+   shareLandingRead runs once at boot, before setTab; it
+   validates strictly (date YYYY-MM-DD; ids/series in the
+   descriptor charset), stashes the parsed landing, and
+   replaceState strips the query whether the landing is
+   consumed or refused. Consumption lands through the
+   standing machinery and NEVER autoplays; an unknown or
+   stale identity is discarded and the app boots exactly
+   as today — the plain app, never an error. */
+var shareLanding = null;
+function shareLandingRead() {
+  shareLanding = null;
+  var params = null;
+  try { params = new URLSearchParams(location.search || ''); } catch (e) { return; }
+  if (!params.get('s')) return;
+  var idOk = function (v) { return !!v && v.length <= 128 && /^[A-Za-z0-9\-_:]+$/.test(v); };
+  var dateOk640 = function (v) {
+    if (!v || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v)) return false;
+    var y = Number(v.slice(0, 4)), m = Number(v.slice(5, 7)), d = Number(v.slice(8, 10));
+    if (m < 1 || m > 12 || d < 1) return false;
+    var leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+    var dim = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+    return d <= dim;
+  };
+  var s = params.get('s');
+  if (s === 'day') {
+    var date = params.get('date'), id = params.get('id');
+    if (dateOk640(date) && idOk(id)) {
+      var b = params.get('b'), o = params.get('o');
+      // A present-but-invalid b or o refuses the WHOLE
+      // landing (no partial consumption on id alone).
+      if ((b != null && !idOk(b)) || (o != null && !/^[0-9]+$/.test(o))) {
+        shareLanding = null;
+      } else {
+        var L640 = { s: 'day', date: date, id: id };
+        if (b != null) L640.b = b;
+        if (o != null) L640.o = Number(o);
+        shareLanding = L640;
+      }
+    }
+  } else if (s === 'pod') {
+    var series = params.get('series'), pid = params.get('id');
+    if (idOk(series) && idOk(pid)) shareLanding = { s: 'pod', series: series, id: pid };
+  } else if (s === 'prayer') {
+    var prid = params.get('id');
+    if (prid && prid.indexOf('prayer:') === 0 && idOk(prid)) shareLanding = { s: 'prayer', id: prid };
+  } else if (s === 'homily') {
+    var hid2 = params.get('id');
+    if (idOk(hid2)) shareLanding = { s: 'homily', id: hid2 };
+  }
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+}
+function shareLandingLandDay() {
+  var L = shareLanding;
+  if (!L || L.s !== 'day') return;
+  var cand = (state.dayDescs || []).filter(function (x) { return x.episodeId === L.id; });
+  var d;
+  if (L.b != null || L.o != null) {
+    // b/o carried: select ONLY a descriptor matching block
+    // AND occurrence together on the SAME descriptor (a
+    // carried parameter must match that one descriptor).
+    // No exact match → no selection and no presentation:
+    // where copies of the id already stand, the landing
+    // is discarded to the plain app at once (the standing
+    // unknown-identity behavior), never a wrong copy.
+    // Where no copy stands yet, it stays stashed for the
+    // settle passes below.
+    d = cand.filter(function (x) {
+      if (L.b != null && (x.block || x._block || '') !== L.b) return false;
+      if (L.o != null && (x._occ || 0) !== L.o) return false;
+      return true;
+    })[0];
+    if (!d && cand.length) { shareLanding = null; return; }
+  } else {
+    d = cand[0];
+  }
+  if (!d) return; // not settled yet (externals resolve after the day build): the landing stays stashed for the consume poll; a stale identity is discarded by that poll's bound, never by an error
+  // Off the Prayers tab, the landing stays stashed and the
+  // tab switch's own day build lands it at its settle (the
+  // buildDayFromPayload hook) — a block page opened here
+  // would be repainted home by that build.
+  if (state.tab !== 'prayers') { setTab('prayers'); return; }
+  shareLanding = null;
+  var present640 = function () {
+    var block = d.block || d._block;
+    if (block) openBlockPage(block);
+    var row = null;
+    try { row = view.querySelector('[data-card="' + L.id + '"]'); } catch (e) {}
+    if (row) { row.classList.add('landed'); if (row.scrollIntoView) row.scrollIntoView({ block: 'center' }); }
+    if (typeof epCardIsEpisode === 'function' && epCardIsEpisode(d) && !document.querySelector('.epcard')) {
+      openEpisodeCard({ desc: d, entry: null, titleText: d.title, seriesTitle: d.kind === 'podcast' ? epCardSeriesTitle(d.podSeries) : (d.block || ''), dateLabel: '', descText: d.descText || null, onPlay: function () { tapPlay(d); } }, row);
+    }
+  };
+  present640();
+  // The day build's settle passes can repaint the Listen
+  // home over a landing presented mid-build; re-present
+  // (bounded) while neither the block view nor the
+  // episode card stands.
+  [400, 1200].forEach(function (ms) {
+    setTimeout(function () {
+      if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind !== 'block' && !document.querySelector('.epcard')) present640();
+    }, ms);
+  });
+}
+function shareLandingConsume() {
+  var L = shareLanding;
+  if (!L) return;
+  if (L.s === 'day') {
+    if (state.tab !== 'prayers') setTab('prayers');
+    // Bounded settle poll: the presented day's descriptors
+    // complete in passes (the build, then the external
+    // slots), so the landing is attempted as they settle —
+    // the build hook lands it early where it can, this
+    // poll lands it when its descriptor stands, and the
+    // bound discards a stale identity to the plain app.
+    var triesD = 0, fetchedD = false;
+    var ivD = setInterval(function () {
+      triesD++;
+      if (shareLanding !== L) { clearInterval(ivD); return; }
+      if (presentedDateStr() === L.date && (state.dayDescs || []).some(function (x) { return x.episodeId === L.id; })) { shareLandingLandDay(); clearInterval(ivD); return; }
+      if (!fetchedD && presentedDateStr() !== L.date) {
+        fetchedD = true;
+        api('/api/player/day?date=' + encodeURIComponent(L.date)).then(function (day) { if (day) buildDayFromPayload(day, null); }).catch(function () {});
+      }
+      if (triesD > 30) { if (shareLanding === L) shareLanding = null; clearInterval(ivD); }
+    }, 120);
+    return;
+  }
+  if (L.s === 'pod') {
+    shareLanding = null;
+    if (state.tab !== 'podcasts') setTab('podcasts');
+    openPodSeries(L.series);
+    var tries = 0;
+    var iv = setInterval(function () {
+      tries++;
+      var res = state.podcasts;
+      if (res && res.series === L.series && res.entries) {
+        clearInterval(iv);
+        var e = res.entries.filter(function (x) { return x.key === L.id; })[0];
+        if (!e) return; // stale identity: the series page stands, no error
+        var row = null;
+        try { row = view.querySelector('[data-podrow="' + L.id + '"]'); } catch (err) {}
+        if (row) { row.classList.add('landed'); if (row.scrollIntoView) row.scrollIntoView({ block: 'center' }); }
+        var desc = res.kind === 'own' ? podOwnDesc(e) : podDesc(e);
+        openEpisodeCard({ desc: desc, entry: e, titleText: e.title, seriesTitle: res.title || '', dateLabel: e.label || '', descText: e.descText || null, onPlay: function () { if (res.kind === 'own') playPodOwnFrom(e.key); else playPodFrom(e.key); } }, row);
+      } else if (tries > 50) clearInterval(iv);
+    }, 100);
+    return;
+  }
+  if (L.s === 'prayer') {
+    shareLanding = null;
+    var slug = L.id.split(':')[1];
+    if (!slug) return;
+    if (state.tab !== 'prayers') setTab('prayers');
+    var tries2 = 0;
+    var iv2 = setInterval(function () {
+      tries2++;
+      var hit = null;
+      try { hit = bookFind(slug); } catch (err) {}
+      if (hit) { clearInterval(iv2); openPrayerPage(slug); }
+      else if (tries2 === 2) { try { renderPrayerBook(); } catch (err) {} }
+      else if (tries2 > 50) clearInterval(iv2); // unknown slug: the plain app stands
+    }, 100);
+    return;
+  }
+  if (L.s === 'homily') {
+    shareLanding = null;
+    var he = null;
+    try { he = homilyEntry(L.id); } catch (err) {}
+    if (!he) return; // unknown homily: the plain app stands
+    if (state.tab !== 'podcasts') setTab('podcasts');
+    // The Homilies surface is the podcasts tab's homilies
+    // side, reached by that tab's own side switch — its
+    // paint carries the entry's row.
+    try { switchPodSide('homilies'); } catch (err) { try { paintPodcastsIndex(); } catch (e2) {} }
+    var btn = null;
+    try { btn = view.querySelector('[data-homilymenu="' + L.id + '"]'); } catch (err) {}
+    var card = btn && btn.closest ? (btn.closest('.card') || btn) : null;
+    if (card) { card.classList.add('landed'); if (card.scrollIntoView) card.scrollIntoView({ block: 'center' }); }
+    return;
+  }
+  shareLanding = null;
 }
 /* v639 §2: the day-row mark act — ONE item builder consumed
    by openDayRowMenu and by openFavRowMenu's mirror menu,
@@ -16847,7 +17095,7 @@ function openNowPlaying() {
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
-    + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
+    + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button><button class="np-tbtn" id="np-share" aria-label="Share">&#10548;</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue" class="liblist"></div>'
@@ -16862,6 +17110,10 @@ function openNowPlaying() {
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
   sheet.querySelector('#np-fwd10').addEventListener('click', function () { seekBy(10); }); // v412 Fix 12
   sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
+  // v640 §3: the player's own Share button, at the end of
+  // the transport row — it reads state.current at tap time
+  // and fires the one track share.
+  sheet.querySelector('#np-share').addEventListener('click', function () { if (state.current) shareTrackSheet(state.current); });
   // v413 §2.8: speed/sleep/autoplay leave the face — the ⋮
   // entrance opens the ONE player overflow (openPlayerMenu);
   // the intentions toggle keeps its place (ruling R1).
@@ -20397,6 +20649,9 @@ function buildDayFromPayload(day, snap) {
       var lc510 = view.querySelector('[data-card="' + pl510.episodeId + '"]');
       if (lc510) { lc510.classList.add('landed'); lc510.scrollIntoView({ block: 'center' }); }
     }
+    // v640 §3: a stashed day share-landing lands on this
+    // build's settle, through the same landed-card seam.
+    if (shareLanding && shareLanding.s === 'day' && presentedDateStr() === shareLanding.date) shareLandingLandDay();
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
     // here, immediately BEFORE the resolution pass is invoked —
@@ -21023,7 +21278,7 @@ function openPodRowMenu(key, anchorEl, extraItems) {
   var e = res.entries.filter(function (x) { return x.key === key; })[0];
   if (!e) return;
   var st = podDlStateMap[key] || {};
-  var items = [{ label: 'Share', act: function () { openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: e.url || location.origin + '/' }); } }];
+  var items = [{ label: 'Share', act: function () { openShareSheet({ artHtml: podRowArtHtml(e), title: e.title, line: 'Episode' + (e.durationS ? ' \u00b7 ' + fmtDur(e.durationS) : ''), url: shareAppUrlFor(res.kind === 'own' ? podOwnDesc(e) : podDesc(e)) }); } }]; // v640 §3: the row-menu Share routes through the app-link builder
   // v542 §2 (Part 2): Add to queue stands for an available
   // entry when no day queue stands (the kind bound, §1); the
   // descriptor resolves exactly as the row's play act resolves
@@ -25049,7 +25304,9 @@ try { daySetPrefetch(todayChicago()); } catch (e) {} // v569: the one-pass day-s
 // (opn-lasttab-v492, written by setTab), validated to a tab id.
 var bootTab = 'mass';
 try { var lt = localStorage.getItem('opn-lasttab-v492'); if (lt === 'prayers' || lt === 'mass' || lt === 'conscience' || lt === 'podcasts' || lt === 'wallpaper') bootTab = lt; } catch (e) {}
+shareLandingRead(); // v640 §3: the share landing is read once at boot, before the opening tab stands; the query is stripped as it is read
 setTab(bootTab);
+shareLandingConsume(); // v640 §3: a valid landing lands through the standing machinery (never autoplay); an invalid one was already discarded by the read
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 try { localStorage.setItem('opn-boot', 'complete'); localStorage.removeItem('opn-boot-healed'); } catch (e) {} // v429 §2.5: the boot stamp — the synchronous tail ran through; re-arm the one-shot heal
 `;
