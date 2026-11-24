@@ -16289,6 +16289,27 @@ function shareUrlFor(t) {
   }
   return location.origin + '/';
 }
+function nativeShareAvailable644() {
+  try {
+    if (!oraInShell()) return false;
+    var p = oraBridgePlugin();
+    return !!(p && typeof p.shareTrack === 'function');
+  } catch (e) { return false; }
+}
+function nativeShareTrack(o) {
+  try {
+    if (!oraInShell()) return false;
+    var p = oraBridgePlugin();
+    if (!p || typeof p.shareTrack !== 'function') return false;
+    var r = p.shareTrack({ title: o.title, text: o.title + ' \u2014 ' + o.line, url: o.url });
+    if (r && typeof r.catch === 'function') r.catch(function () {
+      // v644: a rejected native call is no dead end — reopen
+      // the sheet so the standing copy path stands.
+      try { openShareSheet(o); } catch (e) {}
+    });
+    return true;
+  } catch (e) { return false; }
+}
 function openShareSheet(o) {
   var old = document.querySelector('.sharesheet');
   if (old) old.remove();
@@ -16296,13 +16317,21 @@ function openShareSheet(o) {
   sheet.className = 'sheet sharesheet';
   sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Share</h1></div>'
     + '<div class="card"><div class="row">' + (o.artHtml || '') + '<div class="grow"><h3>' + esc(o.title) + '</h3><div class="meta">' + esc(o.line) + '</div></div></div></div>'
-    + (navigator.share ? '<button class="menurow" data-sharego="1"><span class="grow">Share&hellip;</span></button>' : '')
+    + ((navigator.share || nativeShareAvailable644()) ? '<button class="menurow" data-sharego="1"><span class="grow">Share&hellip;</span></button>' : '')
     + '<button class="menurow" data-sharecopy="1"><span class="grow">Copy link</span></button>'
     + '<p class="fieldnote" data-shareline="1"></p></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, false); // v419: FIT drawer — the header Close retires
   var go = sheet.querySelector('[data-sharego]');
   if (go) go.addEventListener('click', function () {
+    if (oraInShell() && nativeShareAvailable644()) {
+      if (nativeShareTrack(o)) { sheet.remove(); return; }
+      // Native route threw / vanished: fall back to the copy
+      // path standing in this same sheet (no dead end).
+      var cp = sheet.querySelector('[data-sharecopy]');
+      if (cp) cp.click();
+      return;
+    }
     sheet.remove();
     try { var p = navigator.share({ title: o.title, text: o.title + ' \u2014 ' + o.line, url: o.url }); if (p && p.catch) p.catch(function () {}); } catch (e) {}
   });
@@ -17109,7 +17138,7 @@ function openNowPlaying() {
     + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
-    + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button><button class="np-tbtn" id="np-share" aria-label="Share">&#10548;</button></div>'
+    + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button><button class="np-tbtn" id="np-share" aria-label="Share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;vertical-align:middle" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue" class="liblist"></div>'
