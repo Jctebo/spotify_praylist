@@ -10207,6 +10207,14 @@ function podToggleMark(key) {
 function epCardIsEpisode(d) {
   if (!d || !d.episodeId) return false;
   if (d.kind === 'podcast' || d.kind === 'homily' || d.kind === 'external') return true;
+  // v655 §2.3: a COMPOSED office descriptor carries no kind
+  // (the trackDesc seam copies kind only for podcast), so a
+  // labeled office slot whose own source stands is an
+  // episode here — the row menu's Details item stands for
+  // each office side, opening that side's own card. The
+  // guard is the descriptor's own source + the fixed slot
+  // id; no other family's recognition changes.
+  if (d.source && opnLabeledSlot650(d.episodeId)) return true;
   if (d.episodeId === 'the-ai-signal' || d.episodeId.indexOf('the-ai-signal-') === 0) return true;
   if (novenaInfo(d.episodeId, d.title)) return true;
   // The catalog stem form (the v577 canon, the server's
@@ -10256,7 +10264,12 @@ function epCardTogglePlayed(model, on, refresh) {
     return;
   }
   if (d.kind === 'homily') { if (d.homilyId) homilySetPlayed(d.homilyId, on); refresh(); return; }
-  writePlayed(d.episodeId, presentedDateStr(), on ? 'played' : null, d.block);
+  // v655 §2.3: the fall-through write carries the descriptor's
+  // own stamps, so the write lands on the key the card itself
+  // reads (epCardPlayedOf → isPlayedDesc); for a stamp-less
+  // descriptor playedKeyOcc(id, block, 0, null) is exactly
+  // the key written before.
+  writePlayed(d.episodeId, presentedDateStr(), on ? 'played' : null, d.block, d._occ || 0, d._side650 || null);
   refresh();
 }
 function openEpisodeCard(model, anchorEl) {
@@ -16482,9 +16495,14 @@ function shareLineFor640(t) {
   // day families carry the date label; an office hour
   // carries its source between the date and the duration;
   // every other family keeps the standing Episode line.
+  // v655 §2.4: the office branch ALSO fires for a composed
+  // office descriptor (no kind — the trackDesc seam copies
+  // kind only for podcast) when its own source stands and
+  // its id is a labeled office slot; the line built is the
+  // standing office form with the descriptor's own source.
   if (!t) return 'Episode';
   var dur = t.durationS ? ' \u00b7 ' + fmtDur(t.durationS) : '';
-  if (t.kind === 'external') return presentedDayWord() + ' \u00b7 ' + (t.source || 'Divine Office') + dur;
+  if (t.kind === 'external' || (t.source && opnLabeledSlot650(t.episodeId))) return presentedDayWord() + ' \u00b7 ' + (t.source || 'Divine Office') + dur;
   if (t.kind !== 'podcast' && shareInDay640(t)) return presentedDayWord() + ' \u00b7 Episode' + dur;
   return 'Episode' + dur;
 }
