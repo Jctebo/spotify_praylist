@@ -16456,6 +16456,13 @@ function shareAppUrlFor(t) {
   var date = presentedDateStr();
   if (id && shareIdOk640(id) && date && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)) {
     var url = SHARE_APP_BASE640 + '/?s=day&date=' + date + '&id=' + shareEnc640(id);
+    // v643 \u00a73.2: the office source parameter \u2014 an external
+    // descriptor's day form carries &src=<source> from the
+    // descriptor's own source label, so the track page can
+    // select that source's episode where two tracks share
+    // one slotId (the v650 shape). Every other form stands
+    // byte-for-byte as v640 shipped it.
+    if (t.kind === 'external' && t.source) url += '&src=' + shareEnc640(t.source);
     var repeats = (state.dayDescs || []).filter(function (x) { return x.episodeId === id; }).length > 1 || !!(state.repeatIds && state.repeatIds[id]);
     if (repeats) url += '&b=' + shareEnc640(t.block || t._block || '') + '&o=' + (t._occ || 0);
     return url;
@@ -16474,10 +16481,143 @@ function shareLineFor640(t) {
   return 'Episode' + dur;
 }
 function shareTrackSheet(t) {
+  // v643 \u00a73.6 (John's carve-out): a homily descriptor,
+  // standing anywhere, routes to the homily attachment
+  // share \u2014 never to the link builder, never to a page.
+  if (t && (t.kind === 'homily' || String(t.episodeId || '').indexOf('homily:') === 0)) { homilyShareSheet643(t); return; }
   openShareSheet({
     artHtml: rowArtHtml(t), title: t.title || '',
     line: shareLineFor640(t),
     url: shareAppUrlFor(t)
+  });
+}
+/* v643 \u00a73.6: the homily attachment share. The file comes
+   from the device store and nowhere else: homilyEntry for
+   the metadata, homilyTakeBlob for the assembled audio.
+   No upload, no server copy, no link is created for the
+   recording itself. Routes, in order: the APK bridge's
+   shareFile (v643, APK 1.0.54) \u00b7 navigator.share with
+   files where canShare({files}) stands \u00b7 the standing
+   copy sheet with the ?s=homily link (which lands the
+   receiver on the plain app, \u00a73.4) and the named line.
+   A note-only entry (state 'note', no chunks) shares its
+   note TEXT through the standing text-share route. */
+function homilyFileName643(entry) {
+  var extByMime = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a', 'audio/mpeg': 'mp3', 'video/mp4': 'mp4' };
+  var ext = extByMime[(entry && entry.mimeType) || ''] || 'webm';
+  var name = String((entry && entry.name) || 'Homily').replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Homily';
+  if (!/\\.[A-Za-z0-9]{2,5}$/.test(name)) name += '.' + ext;
+  return name;
+}
+function nativeShareFileAvailable643() {
+  try {
+    if (!oraInShell()) return false;
+    var p = oraBridgePlugin();
+    return !!(p && typeof p.shareFileBegin === 'function' && typeof p.shareFileChunk === 'function' && typeof p.shareFileEnd === 'function');
+  } catch (e) { return false; }
+}
+function canShareFiles643() {
+  try {
+    if (!navigator.share || !navigator.canShare) return false;
+    var probe = new File([new Blob([''], { type: 'audio/webm' })], 'probe.webm', { type: 'audio/webm' });
+    return !!navigator.canShare({ files: [probe] });
+  } catch (e) { return false; }
+}
+function blobToBase64_643(blob) {
+  return blob.arrayBuffer().then(function (buf) {
+    var bytes = new Uint8Array(buf), bin = '', CH = 32768;
+    for (var i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(bin);
+  });
+}
+/* v643 \u00a73.6, the chunked bridge form (Implement's size
+   measurement, doc \u00a74): the take crosses in
+   HOMILY_NATIVE_CHUNK-sized pieces \u2014 the readNativeTakeChunk
+   precedent \u2014 shareFileBegin opens the cache file,
+   shareFileChunk appends one base64 piece, shareFileEnd
+   starts the chooser. Any rejection reads false and the
+   sheet's copy path stands (the v644 discipline). */
+function nativeShareFile643(homilyId) {
+  var entry = null;
+  try { entry = homilyEntry(homilyId); } catch (e) {}
+  if (!entry) return Promise.resolve(false);
+  return homilyTakeBlob(homilyId).then(function (blob) {
+    if (!blob) return false;
+    var p = oraBridgePlugin();
+    var title = entry.name || 'Homily';
+    return Promise.resolve(p.shareFileBegin({ title: title, fileName: homilyFileName643(entry), mimeType: entry.mimeType || blob.type || 'audio/webm' })).then(function () {
+      var chain = Promise.resolve();
+      for (var off = 0; off < blob.size; off += HOMILY_NATIVE_CHUNK) {
+        (function (slice) {
+          chain = chain.then(function () { return blobToBase64_643(slice); }).then(function (b64) { return p.shareFileChunk({ dataBase64: b64 }); });
+        })(blob.slice(off, off + HOMILY_NATIVE_CHUNK));
+      }
+      return chain;
+    }).then(function () { return p.shareFileEnd({}); }).then(function () { return true; }, function () { return false; });
+  }).catch(function () { return false; });
+}
+function homilyShareSheet643(t) {
+  var hid = t.homilyId || (String(t.episodeId || '').indexOf('homily:') === 0 ? String(t.episodeId).slice('homily:'.length) : '');
+  var entry = null;
+  try { entry = hid ? homilyEntry(hid) : null; } catch (e) {}
+  var title = (entry && entry.name) || t.title || 'Homily';
+  var old = document.querySelector('.sharesheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet sharesheet';
+  var noteOnly = !!(entry && entry.state === 'note');
+  var fileRoute = !noteOnly && (nativeShareFileAvailable643() || canShareFiles643());
+  var copyText = noteOnly ? homilyNoteOf(entry) : (SHARE_APP_BASE640 + '/?s=homily&id=' + shareEnc640(hid));
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Share</h1></div>'
+    + '<div class="card"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(title) + '</h3><div class="meta">' + esc(noteOnly ? 'Note' : 'Homily') + '</div></div></div></div>'
+    + ((fileRoute || noteOnly) ? '<button class="menurow" data-sharego="1"><span class="grow">Share&hellip;</span></button>' : '')
+    + '<button class="menurow" data-sharecopy="1"><span class="grow">' + (noteOnly ? 'Copy note' : 'Copy link') + '</span></button>'
+    + (noteOnly ? '' : '<p class="fieldnote" data-homilyline="1">The recording itself can be sent from the app on the phone.</p>')
+    + '<p class="fieldnote" data-shareline="1"></p></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, false);
+  var copyBtn = sheet.querySelector('[data-sharecopy]');
+  var doCopy = function () { if (copyBtn) copyBtn.click(); };
+  copyBtn.addEventListener('click', function () {
+    var line = sheet.querySelector('[data-shareline]');
+    var done = function (okCopy) { if (line) line.textContent = okCopy ? (noteOnly ? 'Note copied.' : 'Link copied.') : 'Copy did not work here. ' + (noteOnly ? 'The note is: ' : 'The link is: ') + copyText; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(copyText).then(function () { done(true); }, function () { done(false); });
+    else done(false);
+  });
+  var go = sheet.querySelector('[data-sharego]');
+  if (go) go.addEventListener('click', function () {
+    if (noteOnly) {
+      // The note TEXT through the standing text-share route
+      // (bridge shareTrack / navigator.share), no URL, no file.
+      var noteText = homilyNoteOf(entry);
+      if (oraInShell() && nativeShareAvailable644()) {
+        try {
+          var p2 = oraBridgePlugin();
+          var r2 = p2.shareTrack({ title: title, text: noteText, url: '' });
+          sheet.remove();
+          if (r2 && typeof r2.catch === 'function') r2.catch(function () { try { homilyShareSheet643(t); } catch (e) {} });
+          return;
+        } catch (e) {}
+      }
+      if (navigator.share) { sheet.remove(); try { var ps = navigator.share({ title: title, text: noteText }); if (ps && ps.catch) ps.catch(function () {}); } catch (e) {} return; }
+      doCopy();
+      return;
+    }
+    if (nativeShareFileAvailable643()) {
+      nativeShareFile643(hid).then(function (okFile) {
+        if (okFile) { sheet.remove(); return; }
+        doCopy(); // v644 rejection discipline: the copy path stands in this same sheet
+      });
+      return;
+    }
+    homilyTakeBlob(hid).then(function (blob) {
+      if (!blob) { doCopy(); return; }
+      var file = new File([blob], homilyFileName643(entry), { type: (entry && entry.mimeType) || blob.type || 'audio/webm' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        sheet.remove();
+        try { var pf = navigator.share({ title: title, files: [file] }); if (pf && pf.catch) pf.catch(function () {}); } catch (e) {}
+      } else doCopy();
+    }).catch(function () { doCopy(); });
   });
 }
 /* v640 §3 landing route (client only, no Worker change —
@@ -16512,12 +16652,17 @@ function shareLandingRead() {
       var b = params.get('b'), o = params.get('o');
       // A present-but-invalid b or o refuses the WHOLE
       // landing (no partial consumption on id alone).
-      if ((b != null && !idOk(b)) || (o != null && !/^[0-9]+$/.test(o))) {
+      // v643 \u00a73.2: a present-but-invalid src refuses the
+      // whole landing by the same rule \u2014 src must name one
+      // of the standing source labels the slot records carry.
+      var src643 = params.get('src');
+      if ((b != null && !idOk(b)) || (o != null && !/^[0-9]+$/.test(o)) || (src643 != null && !shareSrcOk643(src643))) {
         shareLanding = null;
       } else {
         var L640 = { s: 'day', date: date, id: id };
         if (b != null) L640.b = b;
         if (o != null) L640.o = Number(o);
+        if (src643 != null) L640.src = src643;
         shareLanding = L640;
       }
     }
@@ -16526,78 +16671,162 @@ function shareLandingRead() {
     if (idOk(series) && idOk(pid)) shareLanding = { s: 'pod', series: series, id: pid };
   } else if (s === 'prayer') {
     var prid = params.get('id');
-    if (prid && prid.indexOf('prayer:') === 0 && idOk(prid)) shareLanding = { s: 'prayer', id: prid };
+    if (prid && prid.indexOf('prayer:') === 0 && idOk(prid)) {
+      // v643 \u00a73.2: the identity's language segment stands
+      // preserved on the landing (prayer:<slug>:<lang>).
+      var pseg643 = prid.split(':');
+      shareLanding = { s: 'prayer', id: prid, slug: pseg643[1] || '', lang: (pseg643[2] === 'la' || pseg643[2] === 'en') ? pseg643[2] : 'en' };
+    }
   } else if (s === 'homily') {
     var hid2 = params.get('id');
     if (idOk(hid2)) shareLanding = { s: 'homily', id: hid2 };
   }
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
 }
-function shareLandingLandDay() {
-  var L = shareLanding;
-  if (!L || L.s !== 'day') return;
+/* v643 \u00a73.2: the standing source labels a slot record can
+   carry \u2014 the labeled office sources plus every EXT_SLOTS
+   source. A src outside this set refuses the landing. */
+function shareSrcOk643(v) {
+  if (typeof v !== 'string' || !v || v.length > 64) return false;
+  var labels = { 'Divine Office': 1, 'Sing the Hours': 1 };
+  (EXT_SLOTS || []).forEach(function (sl) { if (sl.source) labels[sl.source] = 1; });
+  return !!labels[v];
+}
+/* v643 \u00a73.2/\u00a73.3: THE TRACK PAGE \u2014 one view for the one
+   track a share identity names: image, title, standing
+   line, one large Play, the track's text where the family
+   carries it, and a quiet act back to the plain app.
+   Public discipline (\u00a73.5): the page paints only what the
+   resolved descriptor and the public payloads carry; it
+   never calls the intention-draw machinery
+   (trackDrawTextFor / ensureTrackDraw stand excluded from
+   this view by name), and no Conscience, additions,
+   played/position, or vault data stands on it. Play is
+   the receiver's tap only \u2014 never autoplay. */
+function trackTextHtml643(text) {
+  if (!text) return '';
+  return String(text).split('\\n').map(function (ln) { return ln.trim() ? '<div>' + esc(ln) + '</div>' : '<div><br></div>'; }).join('');
+}
+function closeTrackPage643() {
+  state.prayersView = { kind: 'home' };
+  paintPrayersBar(null);
+  if (state.dayPayload) paintPrayersView(state.dayPayload);
+  window.scrollTo(0, 0);
+}
+function openTrackPage643(m) {
+  state.prayersView = { kind: 'trackpage643' };
+  paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: m.title, backAttrs: 'data-trackback643' }), 'book');
+  view.innerHTML = '<div id="track-page-643" data-trackpage-key="' + esc(m.key643 || '') + '">'
+    + '<div class="trackpage-art643"><img src="' + esc(m.imageUrl || '/logo.png') + '" alt=""></div>'
+    + '<h1 class="screen">' + esc(m.title) + '</h1>'
+    + '<p class="sub">' + esc(m.line || '') + '</p>'
+    + (m.onPlay ? '<button class="btn gold trackpage-play643" id="track-play-643">\u25b6 Play</button>' : '')
+    + (m.headHtml || '')
+    + '<div class="readtext trackpage-text643" id="track-text-643">' + (m.textHtml || '') + '</div>'
+    + '<p><button class="btn ghost" id="track-open-app-643">Open in Ora Pro Nobis</button></p></div>';
+  window.scrollTo(0, 0);
+  var bb = hdrRow2() ? hdrRow2().querySelector('[data-trackback643]') : null;
+  if (bb) bb.addEventListener('click', function () { closeTrackPage643(); });
+  var oa = document.getElementById('track-open-app-643');
+  if (oa) oa.addEventListener('click', function () { closeTrackPage643(); });
+  var pb = document.getElementById('track-play-643');
+  if (pb && m.onPlay) pb.addEventListener('click', function () { m.onPlay(); });
+  if (m.afterPaint) m.afterPaint();
+  // The day build's settle passes can repaint the Prayers
+  // home over a page painted mid-build; re-present
+  // (bounded, the v640/v642 guard shape) while neither
+  // this page nor another pushed view stands.
+  [400, 1200, 2500].forEach(function (ms) {
+    setTimeout(function () {
+      if (state.tab !== 'prayers') return;
+      var pg643 = document.getElementById('track-page-643');
+      // A page painted mid-build from a not-yet-settled
+      // descriptor (the build hook lands the landing early)
+      // is not this page: re-present with the settled model.
+      if (pg643 && pg643.getAttribute('data-trackpage-key') === (m.key643 || '')) return;
+      if (pg643) { openTrackPage643(m); return; }
+      // Another pushed surface standing (an episode card,
+      // the book page) means the user has moved on.
+      if (document.querySelector('.epcard') || document.getElementById('book-page')) return;
+      openTrackPage643(m);
+    }, ms);
+  });
+}
+/* v643 \u00a73.2 day selection: from the presented day's
+   descriptors, select the landing's track \u2014 b/o matched
+   together on the same descriptor where carried (the
+   standing exact-match rule), and src matched against the
+   descriptor's source where carried; where no standing
+   descriptor carries the src, the slot record's other
+   side (the pre-v650 backup record) builds the track.
+   Returns the descriptor, 'discard' (copies stand and
+   none matches exactly), or null (not settled yet). */
+function trackPageDaySelect643(L) {
   var cand = (state.dayDescs || []).filter(function (x) { return x.episodeId === L.id; });
-  var d;
+  if (!cand.length) return null;
+  var pool = cand;
   if (L.b != null || L.o != null) {
-    // b/o carried: select ONLY a descriptor matching block
-    // AND occurrence together on the SAME descriptor (a
-    // carried parameter must match that one descriptor).
-    // No exact match → no selection and no presentation:
-    // where copies of the id already stand, the landing
-    // is discarded to the plain app at once (the standing
-    // unknown-identity behavior), never a wrong copy.
-    // Where no copy stands yet, it stays stashed for the
-    // settle passes below.
-    d = cand.filter(function (x) {
+    pool = cand.filter(function (x) {
       if (L.b != null && (x.block || x._block || '') !== L.b) return false;
       if (L.o != null && (x._occ || 0) !== L.o) return false;
       return true;
-    })[0];
-    if (!d && cand.length) { shareLanding = null; return; }
-  } else {
-    d = cand[0];
+    });
+    if (!pool.length) return 'discard';
   }
-  if (!d) return; // not settled yet (externals resolve after the day build): the landing stays stashed for the consume poll; a stale identity is discarded by that poll's bound, never by an error
-  // Off the Prayers tab, the landing stays stashed and the
-  // tab switch's own day build lands it at its settle (the
-  // buildDayFromPayload hook) — a block page opened here
-  // would be repainted home by that build.
-  if (state.tab !== 'prayers') { setTab('prayers'); return; }
-  shareLanding = null;
-  var present640 = function () {
-    var block = d.block || d._block;
-    if (block) openBlockPage(block);
-    var row = null;
-    try { row = view.querySelector('[data-card="' + L.id + '"]'); } catch (e) {}
-    if (row) { row.classList.add('landed'); if (row.scrollIntoView) row.scrollIntoView({ block: 'center' }); }
-    if (typeof epCardIsEpisode === 'function' && epCardIsEpisode(d) && !document.querySelector('.epcard')) {
-      openEpisodeCard({ desc: d, entry: null, titleText: d.title, seriesTitle: d.kind === 'podcast' ? epCardSeriesTitle(d.podSeries) : (d.block || ''), dateLabel: '', descText: d.descText || null, onPlay: function () { tapPlay(d); } }, row);
+  if (L.src != null) {
+    var direct = pool.filter(function (x) { return (x.source || '') === L.src; });
+    if (direct.length) return direct[0];
+    var st = state.extSlots ? state.extSlots[L.id] : null;
+    if (st && st.backup && (st.backup.source || '') === L.src) {
+      var base = pool[0];
+      var slot = null;
+      (state.extStanding || []).forEach(function (sl) { if (sl.slotId === L.id) slot = sl; });
+      if (!slot) slot = { slotId: L.id, block: base._block || base.block || '' };
+      var bk = st.backup;
+      var rec = { title: bk.title, streamUrl: bk.streamUrl, source: bk.source, imageUrl: bk.imageUrl || null, durationSec: bk.durationSec || 0, descText: bk.descText || null, state: bk.streamUrl ? 'present' : 'missing' };
+      var td = extSlotTrack(slot, rec);
+      td.url = rec.streamUrl || null;
+      return td;
     }
-  };
-  present640();
-  // The day build's settle passes can repaint the Listen
-  // home over a landing presented mid-build; re-present
-  // (bounded) while neither the block view nor the
-  // episode card stands.
-  // v642 composition: the build hook above can now land
-  // the landing DURING the build (the composed list the
-  // hook reads already carries the descriptor), and the
-  // build's own settle repaint then repaints the block
-  // page and wipes the landed mark. The re-present guard
-  // therefore also covers this landing's own block page
-  // standing with its row unmarked; another block page
-  // standing means the user has moved on and stands.
-  [400, 1200, 2500].forEach(function (ms) {
-    setTimeout(function () {
-      if (state.tab !== 'prayers' || document.querySelector('.epcard')) return;
-      var v642v = state.prayersView;
-      if (v642v && v642v.kind === 'block') {
-        if (v642v.block !== (d.block || d._block)) return;
-        if (document.querySelector('[data-card="' + L.id + '"].landed')) return;
-      }
-      present640();
-    }, ms);
+    return null; // the named source has not settled yet; the poll bound discards
+  }
+  return pool[0];
+}
+function trackPagePaintDay643(L, d) {
+  var textHtml = trackTextHtml643(d.descText || null);
+  openTrackPage643({
+    key643: d.episodeId + '|' + (d.source || '') + '|' + (d.url || d.streamUrl || ''),
+    title: d.title || '', line: shareLineFor640(d), imageUrl: d.imageUrl || '/logo.png',
+    textHtml: textHtml,
+    onPlay: function () { playTrack(d); },
+    afterPaint: (d.hasText && d.textUrl) ? function () {
+      // The read-along text (the standing Read seat's own
+      // fetch): a 404 paints no text block, never an error.
+      fetch(d.textUrl).then(function (r) { return r && r.ok ? r.text() : null; }).then(function (txt) {
+        if (!txt) return;
+        var el = document.getElementById('track-text-643');
+        if (el) el.innerHTML += trackTextHtml643(txt);
+      }).catch(function () {});
+    } : null
   });
+}
+function shareLandingLandDay() {
+  // v643 \u00a73.2: the day landing paints THE TRACK PAGE for
+  // the landing's track (this seat is the build hook's
+  // landing call as well as the consume poll's \u2014 the
+  // v642 composition keeps both). An exact-match failure
+  // discards at once; an unsettled or unavailable track
+  // stays stashed for the poll, whose bound discards it
+  // to the plain app \u2014 never a dead page, never an error.
+  var L = shareLanding;
+  if (!L || L.s !== 'day') return;
+  if (state.tab !== 'prayers') { setTab('prayers'); return; }
+  var d = trackPageDaySelect643(L);
+  if (d === 'discard') { shareLanding = null; return; }
+  if (!d) return;
+  if (!d.available || !(d.url || d.streamUrl)) return;
+  shareLanding = null;
+  trackPagePaintDay643(L, d);
 }
 function shareLandingConsume() {
   var L = shareLanding;
@@ -16634,19 +16863,30 @@ function shareLandingConsume() {
       if (res && res.series === L.series && res.entries) {
         clearInterval(iv);
         var e = res.entries.filter(function (x) { return x.key === L.id; })[0];
-        if (!e) return; // stale identity: the series page stands, no error
-        var row = null;
-        try { row = view.querySelector('[data-podrow="' + L.id + '"]'); } catch (err) {}
-        if (row) { row.classList.add('landed'); if (row.scrollIntoView) row.scrollIntoView({ block: 'center' }); }
+        if (!e) return; // stale identity: the plain app stands, no error
+        // v643 \u00a73.2/\u00a73.3: the episode's own page \u2014 the
+        // descriptor and Play exactly as its episode card
+        // builds them (podDesc / podOwnDesc; playPodFrom /
+        // playPodOwnFrom). The tab returns to prayers for
+        // the page view, which stands on the prayers view
+        // record like every pushed page.
         var desc = res.kind === 'own' ? podOwnDesc(e) : podDesc(e);
-        openEpisodeCard({ desc: desc, entry: e, titleText: e.title, seriesTitle: res.title || '', dateLabel: e.label || '', descText: e.descText || null, onPlay: function () { if (res.kind === 'own') playPodOwnFrom(e.key); else playPodFrom(e.key); } }, row);
+        if (!desc || !desc.available) return;
+        if (state.tab !== 'prayers') setTab('prayers');
+        openTrackPage643({
+          key643: 'pod:' + desc.episodeId,
+          title: e.title || desc.title || '', line: (res.title || '') + (e.label ? ' \u00b7 ' + e.label : '') + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''),
+          imageUrl: e.imageUrl || res.showImageUrl || desc.imageUrl || '/logo.png',
+          textHtml: trackTextHtml643(e.descText || null),
+          onPlay: function () { if (res.kind === 'own') playPodOwnFrom(e.key); else playPodFrom(e.key); }
+        });
       } else if (tries > 50) clearInterval(iv);
     }, 100);
     return;
   }
   if (L.s === 'prayer') {
     shareLanding = null;
-    var slug = L.id.split(':')[1];
+    var slug = L.slug || L.id.split(':')[1];
     if (!slug) return;
     if (state.tab !== 'prayers') setTab('prayers');
     var tries2 = 0;
@@ -16654,28 +16894,51 @@ function shareLandingConsume() {
       tries2++;
       var hit = null;
       try { hit = bookFind(slug); } catch (err) {}
-      if (hit) { clearInterval(iv2); openPrayerPage(slug); }
+      if (hit) {
+        clearInterval(iv2);
+        // v643 \u00a73.3: the prayer's page \u2014 its book body as
+        // the text block (the openPrayerPage dress: the
+        // standing Latin switch where bodyLatin stands;
+        // the page opens on the identity's own language
+        // where it names one \u2014 the choice Implement names
+        // here and harness-v643 G3 asserts), and Play from
+        // prayerAudioDesc for the standing language, where
+        // the prayer carries audio for it; a language with
+        // no audio paints the page with no Play act.
+        var p = hit.prayer;
+        var pageLang643 = (L.lang === 'la' && p.bodyLatin) ? 'la' : 'en';
+        var paintPrayerPage643 = function () {
+          var d = prayerAudioDesc(p, pageLang643);
+          openTrackPage643({
+            key643: L.id + '|' + pageLang643,
+            title: p.title || '', line: p.source || '', imageUrl: '/logo.png',
+            headHtml: p.bodyLatin ? langSwitchHtml() : '',
+            textHtml: bookBodyHtml(pageLang643 === 'la' && p.bodyLatin ? p.bodyLatin : p.body),
+            onPlay: d ? function () { playTrack(prayerAudioDesc(p, pageLang643)); } : null,
+            afterPaint: p.bodyLatin ? function () {
+              var sw = document.getElementById('book-lang');
+              if (!sw) return;
+              sw.querySelectorAll('[data-lang]').forEach(function (b) {
+                b.classList.toggle('active', (b.getAttribute('data-lang') === 'la') === (pageLang643 === 'la'));
+                b.addEventListener('click', function () {
+                  pageLang643 = b.getAttribute('data-lang') === 'la' ? 'la' : 'en';
+                  paintPrayerPage643();
+                });
+              });
+            } : null
+          });
+        };
+        paintPrayerPage643();
+      }
       else if (tries2 === 2) { try { renderPrayerBook(); } catch (err) {} }
       else if (tries2 > 50) clearInterval(iv2); // unknown slug: the plain app stands
     }, 100);
     return;
   }
-  if (L.s === 'homily') {
-    shareLanding = null;
-    var he = null;
-    try { he = homilyEntry(L.id); } catch (err) {}
-    if (!he) return; // unknown homily: the plain app stands
-    if (state.tab !== 'podcasts') setTab('podcasts');
-    // The Homilies surface is the podcasts tab's homilies
-    // side, reached by that tab's own side switch — its
-    // paint carries the entry's row.
-    try { switchPodSide('homilies'); } catch (err) { try { paintPodcastsIndex(); } catch (e2) {} }
-    var btn = null;
-    try { btn = view.querySelector('[data-homilymenu="' + L.id + '"]'); } catch (err) {}
-    var card = btn && btn.closest ? (btn.closest('.card') || btn) : null;
-    if (card) { card.classList.add('landed'); if (card.scrollIntoView) card.scrollIntoView({ block: 'center' }); }
-    return;
-  }
+  // v643 \u00a73.4: the homily identity form is retired as a
+  // landing \u2014 it still parses (old links must not error)
+  // and its consume branch discards to the plain app. No
+  // homily page exists; the Homilies-list landing retires.
   shareLanding = null;
 }
 /* v639 §2: the day-row mark act — ONE item builder consumed
