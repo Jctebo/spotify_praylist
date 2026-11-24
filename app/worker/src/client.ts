@@ -4612,7 +4612,7 @@ function bootQueueSnapshot() {
   // Amendment A1, Moment 1 (synchronous, at boot — renderPrayers
   // invokes this immediately BEFORE resolveExternals): §2.3 steps
   // 1–2 + step 8's flag. Read + shape check; a same-day record
-  // sets the §2.4 flag at once, so no paintContinue of the pass
+  // sets the §2.4 flag at once, so no Continue paint of the pass
   // can raise the card — not even transiently — while the restore
   // question stands open; a stale-day record is removed whole
   // (decision 5: yesterday's queue never restores into today) and
@@ -5242,15 +5242,13 @@ function tapPlay(d) {
   // behavior stands for it, unchanged.
   if (build === null) { playTrack(d); return; }
   if (!build.length) return;
-  // v542 §2 (Part 1): autoplay OFF — a selected track plays as
-  // a SINGLE track and stops at its end. The tap takes the
-  // standing single-play funnel on the re-resolved tapped
-  // descriptor (build[0] — sectionQueueFrom's own resolution
-  // in the fresh whole-day list); it never builds the block
-  // queue the 'ended' advance would then play through
-  // unconditionally. Autoplay ON stands exactly as before.
-  if (!autoplayOn()) { playTrack(build[0]); return; }
-  startQueue(build, true);
+  // v645 §3.3 (Q1 A): a selected track plays as a SINGLE track
+  // and stops at its end — the single-track branch is the only
+  // path. The tap takes the standing single-play funnel on the
+  // re-resolved tapped descriptor (build[0] — sectionQueueFrom's
+  // own resolution in the fresh whole-day list); the block's
+  // unplayed remainder never enters.
+  playTrack(build[0]);
 }
 function resumeCurrent() {
   closeWatch(); // v434 §2.6.2 seat 3: a resume is an audio start — a standing watch frame is destroyed BEFORE audioEl.play() runs below
@@ -5427,8 +5425,8 @@ function discQueue618(descs) {
   // the block's UNPLAYED tracks only, through the one
   // predicate the head count reads (opnTrackUnplayed615).
   // NO fully-played fallback: queueBuild's §2.4 replay stands
-  // for its other consumers (Continue · the block pages' Play
-  // All acts), the disc's word is unplayed only; a fully
+  // for its other consumers (the non-disc [data-queue] acts
+  // alone — v645 §3.5), the disc's word is unplayed only; a fully
   // played block builds an empty queue and startQueue no-ops
   // — no queue, no state change. This supersedes v616's
   // "a greyed disc replays the block in full."
@@ -5618,14 +5616,84 @@ function addToQueue(desc) {
   // a paused engine is never force-started by a menu act.
   if (nativeSendNow()) nativeResendAtCurrent();
 }
+function queueActFinish645() {
+  // v645 §3.7/§3.8: the native leg shared by Play next and the
+  // section set acts — addToQueue's leg verbatim.
+  saveQueueSnapshot();
+  renderQueueList();
+  updateDock();
+  if (nativeSendNow()) nativeResendAtCurrent();
+}
+function queueKindOk645(isPod) {
+  var standingKind = queueKindIsPod();
+  return standingKind === null || standingKind === isPod;
+}
+function queueInsert645(tracks, afterCurrent) {
+  // v645 §3.7/§3.8: the shared insertion machinery — a standing
+  // queue takes the tracks at queueIdx + 1 (Play next) or at
+  // its end (Add); a standing single play forms the queue
+  // [current, ...tracks] at index 0. Returns false when
+  // nothing stands.
+  if (state.queue.length) {
+    var at = afterCurrent ? state.queueIdx + 1 : state.queue.length;
+    if (at < 0) at = 0;
+    if (at > state.queue.length) at = state.queue.length;
+    state.queue.splice.apply(state.queue, [at, 0].concat(tracks));
+    return true;
+  }
+  if (state.current) {
+    state.queue = [state.current].concat(tracks);
+    state.queueIdx = 0;
+    return true;
+  }
+  return false;
+}
+function playNext(desc) {
+  // v645 §3.7 (Q4 A): Play next — addToQueue's pattern (the
+  // same live re-resolution, availability guard, and kind
+  // bound), inserting directly after the current track.
+  // Nothing stands: the track plays (a Play-family act never
+  // stands silent).
+  if (!desc) return;
+  var live = queueLiveDesc(desc);
+  if (!live || !live.available || !live.url) return;
+  if (!queueKindOk645(live.kind === 'podcast')) return;
+  if (!queueInsert645([live], true)) { playTrack(live); return; }
+  queueActFinish645();
+}
+function addToQueueSet(set) {
+  // v645 §3.8: the section-head menu's Add to queue — the
+  // whole set appends in order under addToQueue's kind bound
+  // (the set is day-kind; a standing podcast queue refuses).
+  // Nothing stands: a waiting queue of the set (Add never
+  // starts playback).
+  if (!set || !set.length) return;
+  if (!queueKindOk645(set[0].kind === 'podcast')) return;
+  if (!queueInsert645(set, false)) {
+    state.queue = set.slice();
+    state.queueIdx = -1;
+  }
+  queueActFinish645();
+}
+function playNextSet(set) {
+  // v645 §3.8: the section-head menu's Play next — the whole
+  // set inserts after the current track in order, under
+  // addToQueue's kind bound. Nothing stands: the section
+  // plays through startQueue (the Play-family rule).
+  if (!set || !set.length) return;
+  if (!queueKindOk645(set[0].kind === 'podcast')) return;
+  if (!queueInsert645(set, true)) { startQueue(set, true); return; }
+  queueActFinish645();
+}
+
 function clearQueue() {
   // v542 §2 (Part 3): the Now Playing overflow's Clear queue
   // act — the playback queue empties; the standing current is
   // NOT interrupted and NOT stopped: it re-seats as a single
   // play, in the shape playTrack leaves, and its end follows
-  // the standing single-play rule (autoplay OFF — it finishes
-  // alone; autoplay ON — the day chain stands, as after any
-  // single play). No cleared track ever plays after it. The
+  // the standing single-play rule (v645 §3.2: it finishes
+  // alone, always — the end is a stop, as after any single
+  // play). No cleared track ever plays after it. The
   // snapshot record and any restored-queue stand retire with
   // the queue (saveQueueSnapshot removes the record when no
   // queue stands).
@@ -5758,31 +5826,6 @@ function openQueuePreview() {
   // tap on the handle, or a drag down, runs the same act.
   wireNpGrab(sheet, function () { state.previewQueue = null; state.queuePreviewIdx = -1; sheet.remove(); });
   renderQueueList();
-}
-function buildContinueQueue() {
-  // v347 §2.5: Continue's standing build, extracted — the remaining
-  // (unplayed-filtered) sequence with the full-replay fallback, and
-  // the carry index when the resume record points at the first
-  // unplayed track.
-  if (!state.dayPayload) return { build: [], carryIdx: -1 };
-  var full = extRebuildDescs(state.dayPayload);
-  var build = queueBuild(full);
-  var carryIdx = -1;
-  var resumeRec = readResume();
-  if (resumeRec && resumeRec.date !== state.storedDay) resumeRec = null;
-  if (resumeRec) {
-    var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
-    var d = presentedDateStr();
-    var firstUnplayed = null;
-    prayers.forEach(function (x) { if (!(d && isPlayedDesc(x, d)) && !firstUnplayed) firstUnplayed = x; });
-    var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
-    if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
-      for (var i = 0; i < build.length; i++) {
-        if (build[i].episodeId === resumeDesc.episodeId) { carryIdx = i; break; }
-      }
-    }
-  }
-  return { build: build, carryIdx: carryIdx };
 }
 function loadResume(desc, positionS) {
   state.queue = []; state.queueIdx = -1;
@@ -5923,40 +5966,6 @@ audioEl.addEventListener('loadedmetadata', function () {
   }
   updatePositionState();
 });
-/* ---------------- Autoplay (v358) ----------------
-   Continuous advance is the expected baseline (John's approval,
-   2026-11-10 15:30 CT): with autoplay ON — the default — a start
-   that reaches the end of its queue keeps going through the
-   presented day (the v358 §1 chaining scope; v351 decision 2's
-   block-end stop is superseded as the default). The toggle turns
-   that behavior OFF: OFF restores the standing stops exactly.
-   The setting is device-local, like the playback rate (§1
-   Decision 3): only an expressly stored 'off' reads OFF; a fresh
-   store reads ON. Autoplay never STARTS playback: it governs
-   only the natural end of a playing track. A restored queue
-   still stands paused (v355), and the sleep timer's stop is
-   final — the track-mode divert below stands ahead of every
-   advance and chain, and the minutes-mode stop is a pause that
-   never reaches this handler. */
-var AUTOPLAY_KEY = 'opn-autoplay-v358';
-function autoplayOn() {
-  try { return localStorage.getItem(AUTOPLAY_KEY) !== 'off'; } catch (e) { return true; }
-}
-function setAutoplay(on) {
-  try { localStorage.setItem(AUTOPLAY_KEY, on ? 'on' : 'off'); } catch (e) {}
-  syncAutoplayToggles();
-  if (oraNativeMode()) nativeTransportSend({ command: 'autoplay', on: !!on }); // v466: the engine re-windows (the chain tail joins or leaves)
-}
-function syncAutoplayToggles() {
-  var on = autoplayOn();
-  var label = on ? 'Autoplay On' : 'Autoplay Off';
-  var d = document.getElementById('dock-autoplay');
-  if (d) { d.textContent = label; d.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-  var np = document.getElementById('np-autoplay');
-  if (np) { np.textContent = label; np.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-  var st = document.getElementById('set-autoplay');
-  if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
-}
 /* ---------------- Intentions toggle (v384; re-roled v388) ----------------
    A device-local preference in the autoplay pattern in every
    particular. v388 §2.3 (D1 as approved — repurposed, not
@@ -5998,28 +6007,6 @@ function syncIntentionsToggles() {
   var st = document.getElementById('set-intentions');
   if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
 }
-function chainForward(fromDesc) {
-  // The chain: the fresh whole-day build past the ended track,
-  // filtered by the standing queue-build discipline (unplayedOnly
-  // — the played filter; a played prayer's text dies with its own
-  // descriptor under v384), started
-  // as a fresh queue. The ended track is located by (episodeId,
-  // block) — the v360 occurrence discipline — so a repeated
-  // episode chains from its own daypart. A Play All queue already
-  // holds the whole day: its end IS the day's end and the tail
-  // stands empty. Returns whether a new queue stands playing.
-  if (!fromDesc || !state.dayPayload) return false;
-  var full = extRebuildDescs(state.dayPayload);
-  var pos = -1;
-  for (var i = 0; i < full.length; i++) {
-    if (full[i].episodeId === fromDesc.episodeId && (full[i].block || '') === (fromDesc.block || '')) { pos = i; break; }
-  }
-  if (pos < 0) return false;
-  var tail = unplayedOnly(full.slice(pos + 1));
-  if (!tail.length) return false;
-  startQueue(tail, true);
-  return state.queue.length > 0 && state.queueIdx >= 0;
-}
 audioEl.addEventListener('ended', function () {
   // v344 §2.3: ONE mark call at the top of the handler — every
   // natural end passes this point exactly once, before the sleep
@@ -6037,17 +6024,13 @@ audioEl.addEventListener('ended', function () {
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) {
     if (advanceQueue(1)) return;
-    // The queue stands exhausted (advanceQueue has cleared to
-    // the standing stop): autoplay ON chains forward through the
-    // day; OFF keeps the stop exactly as it stood.
-    // v546 §2.9: a Starred-born queue stops at its own end —
-    // the day's chain never joins it, whatever autoplay reads.
-    if (autoplayOn() && state.queueFrom !== 'starred') chainForward(endedDesc);
+    // v645 §3.2 (Q2 A): the queue stands exhausted (advanceQueue
+    // has cleared to the standing stop) — the end is a stop.
+    // Every queue ends the way a Starred-born queue always did.
     return;
   }
-  // A single play's end: the same rule — autoplay ON chains from
-  // the ended track through the day; OFF stops, as before.
-  if (autoplayOn() && chainForward(endedDesc)) return;
+  // v645 §3.2: a single play's end is a stop — the terminal
+  // clear below is the stop; nothing chains.
   state.current = null; state.pendingStart = null; // v461 F1: the terminal clear (defensive — an ended implies a play landed, so the flag already stands null)
   setPlaybackState('none'); markPlaying(null);
   updateDock();
@@ -6256,7 +6239,6 @@ function updateDock() {
   // (§2.3's chain), the logo tile its fallback.
   var dt = document.getElementById('dock-thumb');
   if (dt) { var dts = cur.imageUrl || '/logo.png'; if (dt.getAttribute('src') !== dts) dt.setAttribute('src', dts); }
-  syncAutoplayToggles(); // v358: the dock toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the dock intentions switch follows the store
   dock.classList.remove('hidden');
   document.body.classList.add('dock-on');
@@ -10621,11 +10603,7 @@ function paintSettings() {
   // settings home as well as on the dock and Now Playing. The
   // setting is device-local (Decision 3); this control writes the
   // device store, never the source-mapping save below.
-  html += '<h2 class="sectionhead">PLAYBACK</h2><div class="liblist"><div class="setrow">'
-    + '<div class="setname">Autoplay</div>'
-    + '<div class="meta">Keep playing through the day when a queue ends. Off restores the stop at the end of a block.</div>'
-    + '<div class="setcontrols"><button class="settoggle' + (autoplayOn() ? ' on' : '') + '" id="set-autoplay" aria-pressed="' + (autoplayOn() ? 'true' : 'false') + '">' + (autoplayOn() ? 'On' : 'Off') + '</button></div>'
-    + '</div>'
+  html += '<h2 class="sectionhead">PLAYBACK</h2><div class="liblist">'
     // v384 §2.5: the intentions switch — its own Settings switch
     // in the standing Playback section (NOT a row of the v328
     // source-mapping table, §2.7). Device-local, default ON.
@@ -10763,8 +10741,6 @@ function paintSettings() {
   if (setBarBack && !setBarBack._row2wired) { setBarBack._row2wired = 1; setBarBack.addEventListener('click', function () { setTab(settingsReturnTab); }); }
   var profBtn590 = document.getElementById('set-profiles');
   if (profBtn590) profBtn590.addEventListener('click', function () { openConfigureLadder593(); });
-  var apBtn = document.getElementById('set-autoplay');
-  if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   var inBtn = document.getElementById('set-intentions');
   if (inBtn) inBtn.addEventListener('click', function () { setIntentions(!intentionsOn()); });
   var clrBtn = document.getElementById('set-clear-offline');
@@ -12406,6 +12382,7 @@ function openFavRowMenu(e, anchorEl) {
     if (state.podcasts && state.podcasts.series === e.series && state.podcasts.entries && state.podcasts.entries.some(function (x) { return x.key === e.id; })) { openPodRowMenu(e.id, anchorEl, favMoveItems(e)); return; }
     var pitems = [];
     if (desc) pitems.push({ label: 'Share', act: function () { openShareSheet({ artHtml: rowArtHtml(desc), title: desc.title || e.title || '', line: 'Episode' + (desc.durationS ? ' \u00b7 ' + fmtDur(desc.durationS) : ''), url: shareAppUrlFor(desc) }); } }); // v640 §3: the Favorites podcast mirror routes through the app-link builder
+    if (desc && desc.available && desc.url && queueKindIsPod() !== false) pitems.push({ label: 'Play next', act: function () { playNext(desc); } });
     if (desc && desc.available && desc.url && queueKindIsPod() !== false) pitems.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
     pitems.push({ label: favPodListenedOf(e) ? 'Mark as not listened' : 'Mark as listened', act: function () { favPodToggle(e); } });
     pitems.push.apply(pitems, favMoveItems(e)); // v576: Move to folder
@@ -12416,6 +12393,7 @@ function openFavRowMenu(e, anchorEl) {
   if (live) { openDayRowMenu(live, anchorEl, favMoveItems(e)); return; }
   var items = [];
   if (desc) items.push({ label: 'Share', act: function () { shareTrackSheet(desc); } });
+  if (desc && desc.available && queueKindIsPod() !== true) items.push({ label: 'Play next', act: function () { playNext(desc); } });
   if (desc && desc.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(desc); } });
   var markItem = desc ? dayRowMarkItem639(desc) : null;
   if (markItem) items.push(markItem); // v639: the mark act stands at the retired Spotify position
@@ -14672,6 +14650,7 @@ function openHomilyMenu(e, anchorEl) {
   }
   openSheetMenu(e.name, [
     { label: 'Play', act: function () { homilyPlayFromList(e.id); } },
+    { label: 'Play next', act: function () { homilyMint(e.id).then(function () { playNext(homilyDescFor(e)); }); } },
     { label: 'Add to queue', act: function () { homilyMint(e.id).then(function () { addToQueue(homilyDescFor(e)); }); } },
     { label: 'Add to Praylist', act: function () { openHomilySlotPicker(e, function () { paintPodcastsIndex(); }); } },
     { label: e.played ? 'Mark unplayed' : 'Mark played', act: function () { homilySetPlayed(e.id, !e.played); paintPodcastsIndex(); } },
@@ -15692,7 +15671,6 @@ function refreshPlayedChrome() {
     var cnt = head ? head.querySelector('[data-p615count]') : null;
     if (cnt) cnt.textContent = String(c.unplayed);
   });
-  paintContinue();
   renderQueueList();
 }
 function wirePlayed(root) {
@@ -16225,8 +16203,9 @@ function openHeaderMenu() {
   return card;
 }
 function openPlayerMenu(anchorEl) {
-  // §1.4 + FD3: the player-level overflow — exactly Autoplay ·
-  // Sleep timer · Playback speed, each a state line opening its
+  // §1.4 + FD3: the player-level overflow — Sleep timer ·
+  // Playback speed (v645 §3.1: the Autoplay item retires),
+  // each a state line opening its
   // standing act/sheet. Transport never enters the menu; the
   // intentions toggle does NOT move (ruling R1).
   // v419: the menu anchors at its control (the NP ⋮ button).
@@ -16236,10 +16215,17 @@ function openPlayerMenu(anchorEl) {
     // openDayRowMenu and openPodRowMenu); its act fires the
     // one track share for the standing track.
     { label: 'Share', act: function () { if (state.current) shareTrackSheet(state.current); } },
-    { label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } },
-    { label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } },
-    { label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } },
   ];
+  // v645 §3.7: Play next + Add to queue stand for the current
+  // track, immediately after Share, only while a current
+  // stands — each acts on state.current (a further instance
+  // of the playing track, after itself / at the queue's end).
+  if (state.current) {
+    playerItems.push({ label: 'Play next', act: function () { if (state.current) playNext(state.current); } });
+    playerItems.push({ label: 'Add to queue', act: function () { if (state.current) addToQueue(state.current); } });
+  }
+  playerItems.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
+  playerItems.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
   // v542 §2 (Part 3): Clear queue stands only while a queue
   // stands (the dock menu's Previous-track precedent — no
   // dead items); Exit player stands last (v491).
@@ -16264,7 +16250,6 @@ function openDockMenu(anchorEl) {
   var items = [];
   if (state.queue.length) items.push({ label: 'Previous track', act: function () { previousWithRule(); } });
   items.push({ label: 'Intentions', state: intentionsOn() ? 'On' : 'Off', stay: true, stateFn: function () { return intentionsOn() ? 'On' : 'Off'; }, act: function () { setIntentions(!intentionsOn()); } });
-  items.push({ label: 'Autoplay', state: autoplayOn() ? 'On' : 'Off', stay: true, stateFn: function () { return autoplayOn() ? 'On' : 'Off'; }, act: function () { setAutoplay(!autoplayOn()); } });
   items.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
   items.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
   items.push({ label: 'Exit player', act: function () { exitPlayer(); } }); // v491: the unload act stands last in the dock overflow (John's screenshot menu)
@@ -16675,6 +16660,7 @@ function openDayRowMenu(t, anchorEl, extraItems) {
   // v542 §2 (Part 2): Add to queue stands for an available
   // track when no podcast queue stands (the kind bound, §1);
   // the act re-resolves and appends without interrupting.
+  if (t.available && queueKindIsPod() !== true) items.push({ label: 'Play next', act: function () { playNext(t); } });
   if (t.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(t); } });
   var build = function (standing) {
     if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
@@ -17250,7 +17236,6 @@ function updateNowPlaying() {
   sheet.querySelector('#np-play').innerHTML = transportEngaged() ? '&#10073;&#10073;' : '&#9654;'; // v375 §2 step 7: the glyph reads the transport · v461 F1: the engaged read, as on the dock
   sheet.querySelector('#np-prev').disabled = !state.queue.length; // v412 Fix 8: enabled at the queue head (the rule restarts the track there)
   sheet.querySelector('#np-next').disabled = !state.queue.length;
-  syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
   syncIntentionsToggles(); // v384 §2.5: the intentions switches follow the store at every render
   var rt = state.readTracks[cur.episodeId];
   // v419 (G17/F-419-7): the Read slot is HELD, not collapsed —
@@ -18216,10 +18201,8 @@ function nativeContractItem(d) {
 function nativeContractFor(desc) {
   // The contract for the standing queue (or the single play):
   // the queue's items resolved, the user queue's length as
-  // queueEnd, and — a day queue with autoplay on — the chain
-  // tail computed at send time (the unplayed day build after
-  // the queue's last item), exactly the chain the element
-  // engine would have appended as it advanced. An item that
+  // queueEnd (v645 §3.4: exactly the standing queue, nothing
+  // after it — no chain tail). An item that
   // cannot resolve drops from the contract (its descriptor
   // drops with it, so indices stay parallel); the START item
   // unresolvable refuses the whole contract — the caller
@@ -18238,25 +18221,10 @@ function nativeContractFor(desc) {
   }
   var newStart = kept.indexOf(desc);
   if (newStart < 0) return null;
-  var queueEnd = items.length;
-  // v546 §2.9: a Starred-born queue carries no day tail — the
-  // list ends at its own end in the native engine too.
-  if (!isPod && autoplayOn() && state.queueFrom !== 'starred') {
-    var last = kept[kept.length - 1];
-    var all = state.dayDescs || [];
-    var li = -1;
-    for (var j = 0; j < all.length; j++) { if (all[j].episodeId === last.episodeId && (all[j].block || '') === (last.block || '')) li = j; }
-    if (li >= 0) {
-      var tail = unplayedOnly(all.slice(li + 1));
-      for (var k = 0; k < tail.length; k++) {
-        var ti = nativeContractItem(tail[k]);
-        if (ti) { items.push(ti); kept.push(tail[k]); }
-      }
-    }
-  }
+  var queueEnd = items.length; // v645 §3.4: the contract carries exactly the standing queue — queueEnd == items.length by construction
   return { descs: kept, contract: { form: isPod ? 'podcast' : 'day', day: presentedDateStr() || '', dateLabel: state.dateLabel || '',
     series: isPod ? (desc.podSeries || '') : '', items: items, queueEnd: queueEnd, startIndex: newStart,
-    startPositionS: queueStartPos(desc), autoplay: autoplayOn(), rate: state.rate || 1,
+    startPositionS: queueStartPos(desc), autoplay: false, rate: state.rate || 1,
     stopAtTrackEnd: !!(state.sleep && state.sleep.mode === 'track') } };
 }
 function nativeSendContract(desc) {
@@ -19562,102 +19530,6 @@ function updateBlockCounts(day) {
     el.textContent = (counts[b] || 0) + ' episodes' + (durSums[b] ? ' \u00b7 ' + fmtDurLong(durSums[b]) : '');
   });
 }
-function paintContinue() {
-  // v344 §2.6: the Resume card is REPLACED by the Continue card —
-  // one card, one place (the #continue-slot standing under the
-  // Play All row). It re-renders from the store + the standing
-  // day build on every call: the resolution pass calls it as
-  // descriptors settle, and refreshPlayedChrome calls it after
-  // every played-state write, so a mark is reflected in place —
-  // scroll and playback are never disturbed.
-  var slot = document.getElementById('continue-slot');
-  if (!slot) return;
-  view.querySelectorAll('[data-resumeat]').forEach(function (b) { b.remove(); });
-  // v355 §2.4 (decision 6): while a restored queue stands — the
-  // flag set at boot (A1 Moment 1) and held until the queue ends
-  // or is replaced — the slot renders EMPTY: no card, no button,
-  // no queue preview, whatever the played store or the v312
-  // record would otherwise show. buildContinueQueue and the
-  // card's own gate/merge logic below are not modified; they are
-  // simply not reached while the flag stands.
-  if (state.restoredQueue) { slot.innerHTML = ''; return; }
-  var d = presentedDateStr();
-  var prayers = (state.dayDescs || []).filter(function (x) { return x.available; });
-  var playedN = 0, firstUnplayed = null;
-  prayers.forEach(function (x) {
-    if (d && isPlayed(x.episodeId, d, x.block)) playedN++;
-    else if (!firstUnplayed) firstUnplayed = x;
-  });
-  // The standing resume record, under its standing stored-day
-  // check (a stale record retires, as before).
-  var resumeRec = readResume();
-  if (resumeRec && resumeRec.date !== state.storedDay) {
-    try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
-    resumeRec = null;
-  }
-  var resumeDesc = null;
-  if (resumeRec) resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
-  // Gate: the card stands iff something stands played with
-  // something left to hear, OR the resume record resolves — and
-  // only while an unplayed track stands to name (a fully-played
-  // day shows NO card; Play All replays it in full, §2.4).
-  if (!firstUnplayed || !(playedN > 0 || resumeDesc)) { slot.innerHTML = ''; return; }
-  var named = firstUnplayed;
-  // The merge rules: the two records merge, never compete. The
-  // position carries only when the resume record points at the
-  // first unplayed track itself; a record pointing at a PLAYED
-  // track stands down entirely (no resume offer on a finished
-  // prayer); a record pointing at a later unplayed track leaves
-  // the naming to play order and keeps its own in-card button.
-  var carry = !!(resumeDesc && resumeDesc.episodeId === named.episodeId);
-  var blk = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (b) { return b.block === named.block; })[0];
-  var blockLabel = blk ? (blk.label || blk.block) : named.block;
-  // v431 §2.3: the card's simple form — the resume target whole
-  // on line 1 (the duplicating h3 + "Continue — " prefix retire),
-  // the progress count verbatim on line 2 with See queue seated
-  // at its end. "Play everything instead" retires at John's word
-  // (§1.6); its listener retires with the emission.
-  slot.innerHTML = '<div class="card"><div class="row"><div class="grow">'
-    + '<div class="meta">' + esc(blockLabel) + ' · ' + esc(named.title) + '</div>'
-    + '<div class="meta">' + playedN + ' of ' + prayers.length + ' heard today · <a href="#" id="continue-queue">See queue</a></div></div>'
-    + '<button class="btn gold small" id="continue-btn">Continue</button></div></div>';
-  document.getElementById('continue-btn').addEventListener('click', function () {
-    var res = buildContinueQueue();
-    var build = res.build;
-    if (carry && resumeRec) {
-      var idx = res.carryIdx;
-      if (idx >= 0) {
-        // The queue is the filtered build rotated to start at
-        // that descriptor; the position rides the standing
-        // pendingResume mechanism (set before the start; the
-        // loadedmetadata handler seeks), and playback starts —
-        // Continue is a play action, unlike loadResume's pause.
-        state.pendingResume = { episodeId: resumeDesc.episodeId, positionS: resumeRec.positionS || 0 };
-        startQueue(build.slice(idx));
-        return;
-      }
-    }
-    startQueue(build);
-  });
-  document.getElementById('continue-queue').addEventListener('click', function (ev) {
-    ev.preventDefault();
-    var res = buildContinueQueue();
-    if (!res.build.length) return;
-    state.previewQueue = res.build;
-    state.queuePreviewIdx = res.carryIdx;
-    openQueuePreview();
-  });
-  if (resumeDesc && !carry && d && !isPlayed(resumeDesc.episodeId, d, resumeDesc.block)) {
-    var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
-    if (host) {
-      var btn = document.createElement('button');
-      btn.className = 'btn ghost small'; btn.setAttribute('data-resumeat', '1');
-      btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
-      btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
-      host.appendChild(btn);
-    }
-  }
-}
 // Downloads for own + intention audio (§2.3): the enclosure host
 // refuses browser reads, so the bytes come through the Worker
 // pass-through and land in the standing device audio cache; the
@@ -19791,7 +19663,6 @@ function ownResolveFeed(day, needed, revalidate) {
         }
       });
     }
-    paintContinue(day);
     // v355 A1: the feed-settle tail is one of the two legs that can
     // complete restore-readiness — probe it (the settings
     // callback's closure, reached through state like ownWriteCache).
@@ -20479,7 +20350,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
     if (Object.keys(ownNeeded).length || Object.keys(ownReval).length) ownResolveFeed(day, ownNeeded, ownReval);
-    else { paintContinue(day); renderQueueList(); maybeRestoreQueue(); }
+    else { renderQueueList(); maybeRestoreQueue(); }
     // Own watchdog: a row still unresolved after 9 s stands named
     // missing for this open (the resolve watchdog's posture).
     setTimeout(function () {
@@ -20487,8 +20358,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var st = state.ownSlots[row.sourceKey];
         if (st && st.state === 'loading') ownSettleMissing(day, row);
       });
-      paintContinue(day);
-    }, 9000);
+      }, 9000);
     // §2.8 ruling 3 completion: when the intros map lands, the
     // already-settled cards re-render with their intention rows
     // and the descriptor list rebuilds over the full map.
@@ -20506,8 +20376,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       // v374 §2 (site 3): intention rows enter the listing at this
       // landing — the count grows by them on any standing surface.
       updateBlockCounts(day);
-      paintContinue(day);
-      renderQueueList();
+        renderQueueList();
       maybeRestoreQueue(); // v355 A1: the intentions leg can complete readiness second
     });
     var missingSt = function (slot, source) {
@@ -20751,7 +20620,7 @@ function buildDayFromPayload(day, snap) {
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
     // here, immediately BEFORE the resolution pass is invoked —
-    // every paintContinue of the pass stands after it in program
+    // every Continue paint of the pass stands after it in program
     // order.
     bootQueueSnapshot();
     // v334: externals resolve at open, in place, after the day has
@@ -21381,6 +21250,7 @@ function openPodRowMenu(key, anchorEl, extraItems) {
   // it (podDesc / podOwnDesc by the open series' kind), and
   // the act appends without interrupting.
   var podMenuDesc = res.kind === 'own' ? podOwnDesc(e) : podDesc(e);
+  if (podMenuDesc.available && podMenuDesc.url && queueKindIsPod() !== false) items.push({ label: 'Play next', act: function () { playNext(podMenuDesc); } });
   if (podMenuDesc.available && podMenuDesc.url && queueKindIsPod() !== false) items.push({ label: 'Add to queue', act: function () { addToQueue(podMenuDesc); } });
   // v464 §2.4: for an RSS entry Share stands alone above the
   // mark — the kind is streaming-only, so no Download item
@@ -21609,6 +21479,24 @@ function wirePrayersView(day) {
     head.addEventListener('click', function () {
       opnToggleBlock604(head.getAttribute('data-p609sethead'));
       opnRepaintHome604();
+    });
+  });
+  // v645 §3.8: the section-head \u22ee menu — a tap stops
+  // propagation (never folds the head, the disc's discipline),
+  // resolves the block's descriptors from state.dayDescs (the
+  // 'Episodes' head = the block-less descriptors, the disc's
+  // __episodes rule), builds the set through discQueue618, and
+  // opens a menu of exactly Play next + Add to queue on the set.
+  view.querySelectorAll('[data-p645secmenu]').forEach(function (btn) {
+    btn.addEventListener('click', function (ev) {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      var block = btn.getAttribute('data-p645secmenu');
+      var descs = (state.dayDescs || []).filter(function (x) { return block === 'Episodes' ? !x.block : x.block === block; });
+      var set = discQueue618(descs);
+      openSheetMenu(block, [
+        { label: 'Play next', act: function () { playNextSet(set); } },
+        { label: 'Add to queue', act: function () { addToQueueSet(set); } }
+      ], btn);
     });
   });
   view.querySelectorAll('[data-back]').forEach(function (btn) {
@@ -24471,7 +24359,7 @@ function paintListenHome(day) {
 function homeBodyHtml(day) {
   // v449 §2 Build 1: the home body is the rows alone — the
   // Continue slot and the square-card grid retire with the
-  // search surface (D3 settled; paintContinue then no-ops
+  // search surface (D3 settled; the Continue paint then no-ops
   // on the home, its machinery untouched; searchResultsHtml
   // retires whole — its results paint served no other
   // surface). The blocks paint in the standing effective
@@ -24618,6 +24506,7 @@ function opnSetHtml609(day) {
       + '<span class="p612collmark favfolder-chev">' + (open609 ? '&#9662;' : '&#9656;') + '</span>'
       + '<h2 class="sectionhead grow">' + esc(run.block) + '</h2>'
       + '<button class="playbtn small p615disc' + (c615.total > 0 && c615.unplayed === 0 ? ' all' : '') + '" data-p615disc="' + esc(run.block) + '" data-queue="' + (run.block === 'Episodes' ? '__episodes' : esc(run.block)) + '" aria-label="Play ' + esc(run.block) + '">&#9654;</button>'
+      + '<button class="iconbtn p645secmenu" data-p645secmenu="' + esc(run.block) + '" aria-label="More for ' + esc(run.block) + '">\u22ee</button>'
       + '<span class="meta" data-p615count="' + esc(run.block) + '">' + c615.unplayed + '</span></div>';
     if (open609) run.tracks.forEach(function (t) { html += trackCard(t); });
   });
