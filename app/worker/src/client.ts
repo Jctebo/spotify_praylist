@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], composed642: null, composedDate642: null, dayPending642: false, rebuildGuard642: false, dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], composed642: null, composedDate642: null, dayPending642: false, rebuildGuard642: false, dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, restoredStand649: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -4617,9 +4617,20 @@ function saveQueueSnapshot(posS) {
     }));
   } catch (e) {}
 }
+function opnTouchRestored649() {
+  // v649 §3.1: a user start / transport / queue act this
+  // session touches the boot-restored stand — from here the
+  // standing current/queue blocks v647 adoption again. The
+  // restore stands themselves (standRestoredQueue,
+  // tryStandPodcastRestore) set the flag; every other
+  // clearing moment funnels through clearRestoredQueue or
+  // names this helper at its head.
+  state.restoredStand649 = false;
+}
 function clearRestoredQueue() {
   // §2.4's return path: the flag drops at the §2.5 clearing
   // moments, and Continue re-paints through its standing refresh.
+  opnTouchRestored649(); // v649: every §2.5 clearing moment is a session touch
   if (!state.restoredQueue) return;
   state.restoredQueue = false;
   refreshPlayedChrome();
@@ -4729,6 +4740,7 @@ function tryStandPodcastRestore() {
   updateDock();
   renderQueueList();
   state.podRestoreProbe = null;
+  state.restoredStand649 = true; // v649 §3.1: the podcast restore's stand is UNTOUCHED the same way
 }
 /* ---------------- Played state (v344) ----------------
    Playback memory, not a checklist (the v305 rule stands): the
@@ -4950,6 +4962,7 @@ function transportPlaying() {
   return !audioEl.paused;
 }
 function pauseTransport() {
+  opnTouchRestored649(); // v649 §3.1: a transport act this session touches the restored stand
   if (oraNativeMode()) {
     // v466: the pause is a command to the engine — and the
     // v461 cancel re-seated: a pause issued while a native
@@ -5085,6 +5098,7 @@ function refreshTrackDrawSurfaces(repaintRows) {
   }
 }
 function startDesc(desc) {
+  opnTouchRestored649(); // v649 §3.1: any start this session touches the restored stand
   // v388 §2.2: the start sequence, written-only. Bookkeeping
   // stands on the PRAYER from the unit's first instant (the
   // session names the prayer — never an intention), exactly as
@@ -5267,6 +5281,7 @@ function tapPlay(d) {
   playTrack(build[0]);
 }
 function resumeCurrent() {
+  opnTouchRestored649(); // v649 §3.1: a resume/play of the restored queue is a touch
   closeWatch(); // v434 §2.6.2 seat 3: a resume is an audio start — a standing watch frame is destroyed BEFORE audioEl.play() runs below
   // v346 §2.4: the media-session play handler's seam — the app's
   // own resume path, queue- and position-preserving. It never
@@ -5500,6 +5515,7 @@ function startQueue(descs, force) {
   saveQueueSnapshot(queueStartPos(state.queue[idx])); // v355 §2.2 trigger 1: every queue birth/replacement
 }
 function advanceQueue(dir) {
+  opnTouchRestored649(); // v649 §3.1: a queue advance act touches the restored stand (the native leg sends no startDesc)
   if (!state.queue.length) return false;
   if (oraNativeMode()) {
     // v466: the engine advances through its loaded window;
@@ -5605,6 +5621,7 @@ function addToQueue(desc) {
   if (!desc) return;
   var live = queueLiveDesc(desc);
   if (!live || !live.available || !live.url) return;
+  opnTouchRestored649(); // v649 §3.1: a queue edit this session touches the restored stand
   var isPod = live.kind === 'podcast';
   var standingKind = queueKindIsPod();
   if (standingKind !== null && standingKind !== isPod) return;
@@ -5635,6 +5652,7 @@ function addToQueue(desc) {
 function queueActFinish645() {
   // v645 §3.7/§3.8: the native leg shared by Play next and the
   // section set acts — addToQueue's leg verbatim.
+  opnTouchRestored649(); // v649 §3.1: Play next / set queue acts touch the restored stand
   saveQueueSnapshot();
   renderQueueList();
   updateDock();
@@ -5963,6 +5981,7 @@ function standRestoredQueue(day) {
   markPlaying(descCardKey(chosen.desc));
   updateDock();
   renderQueueList();
+  state.restoredStand649 = true; // v649 §3.1: the day restore's stand is UNTOUCHED until a session act touches it
 }
 audioEl.addEventListener('loadedmetadata', function () {
   if (state.pendingResume && state.current && state.pendingResume.episodeId === state.current.episodeId) {
@@ -20259,9 +20278,15 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.blob();
         }).then(function (blob) {
+          // v649 §3.2: stamp the entry with the enclosure its
+          // bytes were fetched FOR — a pass-through fetch
+          // serves the meta's enclosureUrl (the v648 src rule
+          // makes the served bytes that pointer's source); a
+          // direct fetch serves the fetched URL itself.
+          var stamp649 = (u === passthrough) ? meta.enclosureUrl : u;
           var put = ('caches' in window)
             ? caches.open('opn-ext-audio-v1').then(function (c) {
-                return c.put(offlineDayKey(date, slot.slotId), new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+                return c.put(offlineDayKey(date, slot.slotId), opnStampedResponse649(blob, stamp649));
               }).catch(function () {})
             : Promise.resolve();
           return put.then(function () { return blob; });
@@ -20331,6 +20356,34 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // the v637 prune leaves it). A sounding slot is not
     // restarted and its descriptor is not swapped — see
     // the mint guard in extDownload (§2.1.4).
+    // v649 §3.3: the no-change branch's stamp verification.
+    // The pointer already matches the choice, so settleMeta
+    // would no-op — but the AUDIO ENTRY under the slot's key
+    // may be Seam 2's poison (the other source's bytes, or a
+    // pre-v649 unstamped entry). The entry's stamp is read:
+    // a match leaves the no-op exactly as shipped (no epoch
+    // taken, nothing fetched); a mismatch or a missing stamp
+    // evicts the entry and re-settles through settleMeta
+    // under a taken epoch — the standing machinery, no new
+    // path. settleMeta's own same-enclosure guard is stepped
+    // past by re-seating the record as 'downloading' first
+    // (the shape settleMeta itself writes next).
+    var healLabeledStamp649 = function (slot, choice638, e) {
+      if (!('caches' in window)) return;
+      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(date, slot.slotId)); }).then(function (resp) {
+        if (opnStampMatches649(resp, choice638.streamUrl)) return; // the stamp stands — the no-change no-op stands whole
+        var curNow = state.extSlots[slot.slotId];
+        if (!curNow || curNow.state !== 'present' || curNow.enclosureUrl !== choice638.streamUrl) return; // the state moved since the flip — the newer state governs
+        var epoch638 = (extResettleEpoch638[slot.slotId] || 0) + 1;
+        extResettleEpoch638[slot.slotId] = epoch638;
+        extResettlePrior638[slot.slotId] = { rec: curNow, epoch: epoch638 };
+        caches.open('opn-ext-audio-v1').then(function (cache) { return cache.delete(offlineDayKey(date, slot.slotId)); }).catch(function () {}).then(function () {
+          var reseat = Object.assign({}, curNow, { state: 'downloading' });
+          state.extSlots[slot.slotId] = reseat;
+          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: choice638.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: choice638.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638);
+        });
+      }).catch(function () { /* the stamp read failed: the standing rows stand as they are */ });
+    };
     state.extResettleLabeled638 = function () {
       return api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
         var byId638 = {};
@@ -20341,7 +20394,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           if (!e || e.state !== 'present') return;
           var choice638 = opnExtChoice628(slot, e, slot.source || 'Divine Office');
           var cur638 = state.extSlots[slot.slotId];
-          if (cur638 && cur638.state === 'present' && cur638.enclosureUrl === choice638.streamUrl) return; // settleMeta's own guard: already standing — no-op, guard unarmed, NO epoch taken (§4.1: a no-change flip must not strand a legitimately in-flight re-settle by bumping the epoch and starting nothing)
+          if (cur638 && cur638.state === 'present' && cur638.enclosureUrl === choice638.streamUrl) { healLabeledStamp649(slot, choice638, e); return; } // v649 §3.3: the pointer matches — the entry's STAMP decides (heal above); on a matching stamp nothing moves and NO epoch is taken, exactly as the shipped no-op
           // v638 §4.1: this re-settle actually starts — it
           // takes the slot's next epoch, superseding every
           // earlier hook chain for the slot still in flight.
@@ -20366,6 +20419,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(date, slot.slotId)); }).then(function (resp) {
         if (done) return;
         if (!resp) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
+        // v649 §3.2: the restore trusts bytes only when the
+        // entry's stamp names THIS record's enclosure — a
+        // mismatch or a missing stamp is a cache miss, and
+        // the slot re-downloads through the standing routes
+        // (which re-stamp). The poisoned pre-v649 entry —
+        // Divine Office bytes under a whole Sing the Hours
+        // record, no stamp — can never mint again.
+        if (!opnStampMatches649(resp, meta.enclosureUrl)) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
         resp.blob().then(function (blob) {
           if (done) return;
           done = true; clearTimeout(fallback);
@@ -20793,9 +20854,37 @@ function offlineDayFallback(e) {
 }
 function offlineAudioCache() { return ('caches' in window) ? caches.open('opn-ext-audio-v1') : Promise.resolve(null); }
 function offlineCacheHas(cache, key) { return cache ? cache.match(key).then(function (r) { return !!r; }) : Promise.resolve(false); }
-function offlinePutBlob(cache, key, blob) {
+function opnStampedResponse649(blob, enclosureUrl) {
+  // v649 §3.2: a cached ext-audio entry is BOUND to the
+  // enclosure its bytes were fetched for — the stamp rides
+  // the stored Response's headers (the Cache API preserves
+  // them), and every reader compares before trusting bytes.
+  var headers = { 'Content-Type': 'audio/mpeg' };
+  if (enclosureUrl) headers['x-opn-enclosure'] = enclosureUrl;
+  return new Response(blob, { headers: headers });
+}
+function opnStampMatches649(resp, enclosureUrl) {
+  if (!resp || !enclosureUrl) return false;
+  try { return resp.headers.get('x-opn-enclosure') === enclosureUrl; } catch (e) { return false; }
+}
+function offlinePutBlob(cache, key, blob, enclosureUrl) {
   if (!cache || !blob) return Promise.resolve(false);
-  return cache.put(key, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } })).then(function () { return true; }).catch(function () { return false; });
+  return cache.put(key, opnStampedResponse649(blob, enclosureUrl)).then(function () { return true; }).catch(function () { return false; });
+}
+function offlineStanding649(cache, it) {
+  // v649 §3.2: the offline pass's reuse read — an ext item's
+  // standing entry counts only when its stamp names the
+  // item's enclosure; a mismatch or a missing stamp evicts
+  // the entry and reads as a miss (the pass re-fetches and
+  // re-stamps through the standing routes). Non-ext items
+  // keep the standing presence read.
+  if (!cache) return Promise.resolve(false);
+  return cache.match(it.key).then(function (resp) {
+    if (!resp) return false;
+    if (it.kind !== 'ext' || !it.enclosureUrl) return true;
+    if (opnStampMatches649(resp, it.enclosureUrl)) return true;
+    return cache.delete(it.key).then(function () { return false; }).catch(function () { return false; });
+  }).catch(function () { return false; });
 }
 function offlineFetchBlob(url) {
   // Per-item timeout: a stalled connection (a captive portal, a
@@ -21045,14 +21134,14 @@ function offlineDownloadItemsCache(items, epoch) {
               return offlineFetchItemAudio(it).then(function (blob) {
                 if (epoch != null && epoch !== offlineEpoch) return false;
                 if (!blob || blob.size !== it.sizeBytes) return false;
-                return offlinePutBlob(cache, it.key, blob);
+                return offlinePutBlob(cache, it.key, blob, it.enclosureUrl);
               }).then(function (okPut) { if (okPut) { have++; fireAiSwap(it); } }).catch(function () {});
             });
           });
         }
-        return offlineCacheHas(cache, it.key).then(function (has) {
+        return offlineStanding649(cache, it).then(function (has) {
           if (has) { have++; if (it.kind === 'ai') fireAiSwap(it); return; }
-          return offlineFetchItemAudio(it).then(function (blob) { if (epoch != null && epoch !== offlineEpoch) return false; return offlinePutBlob(cache, it.key, blob); })
+          return offlineFetchItemAudio(it).then(function (blob) { if (epoch != null && epoch !== offlineEpoch) return false; return offlinePutBlob(cache, it.key, blob, it.enclosureUrl); })
             .then(function (okPut) { if (okPut) { have++; if (it.kind === 'ai') fireAiSwap(it); } }).catch(function () {});
         });
       });
@@ -25409,8 +25498,15 @@ function opnAdoptRec647() {
 }
 function opnSafe647() {
   if (transportEngaged()) return false;
-  if (state.current) return false;
-  if (state.queue && state.queue.length) return false;
+  // v649 §3.1: a standing current/queue blocks ONLY when the
+  // stand is not the untouched boot restore — the restore's
+  // own stand (state.restoredStand649, set by
+  // standRestoredQueue / tryStandPodcastRestore and dropped
+  // by any session start/transport/queue act) never blocks.
+  if (!state.restoredStand649) {
+    if (state.current) return false;
+    if (state.queue && state.queue.length) return false;
+  }
   if (document.getElementById('pingate-card')) return false;
   if (document.querySelector('.pingate')) return false;
   if (document.getElementById('rec-code')) return false;

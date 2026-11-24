@@ -283,14 +283,22 @@ function fetchStub(url) {
   return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body), text: () => Promise.resolve(''), blob: () => Promise.resolve(new Blob([bytesFor(u)], { type: 'audio/mpeg' })) });
 }
 function makeFakeCaches() {
-  const store = new Map();
+  // v649 fidelity note: the real Cache API preserves a
+  // stored Response's headers — the fake now carries the
+  // v649 'x-opn-enclosure' stamp alongside the bytes (in
+  // _stamps), so legs that go through put/match read the
+  // stamp the client wrote. Entries seeded directly into
+  // _store (the L4/L12 recipes) carry NO stamp — under
+  // v649's rule they are indistinguishable from the
+  // pre-v649 poison and read as misses by design.
+  const store = new Map(); const stamps = new Map();
   const cache = {
-    put: (k, resp) => Promise.resolve(resp.blob()).then((b) => b.text()).then((t) => { store.set(String(k), t); }),
-    match: (k) => { const t = store.get(String(k)); return Promise.resolve(t === undefined ? undefined : new Response(t, { headers: { 'Content-Type': 'audio/mpeg' } })); },
-    delete: (k) => Promise.resolve(store.delete(String(k))),
+    put: (k, resp) => { const s = resp.headers.get('x-opn-enclosure'); return Promise.resolve(resp.blob()).then((b) => b.text()).then((t) => { store.set(String(k), t); if (s) stamps.set(String(k), s); else stamps.delete(String(k)); }); },
+    match: (k) => { const t = store.get(String(k)); if (t === undefined) return Promise.resolve(undefined); const h = { 'Content-Type': 'audio/mpeg' }; const s = stamps.get(String(k)); if (s) h['x-opn-enclosure'] = s; return Promise.resolve(new Response(t, { headers: h })); },
+    delete: (k) => { stamps.delete(String(k)); return Promise.resolve(store.delete(String(k))); },
     keys: () => Promise.resolve([...store.keys()].map((u) => ({ url: u }))),
   };
-  return { open: () => Promise.resolve(cache), delete: () => Promise.resolve(true), _store: store };
+  return { open: () => Promise.resolve(cache), delete: () => Promise.resolve(true), _store: store, _stamps: stamps };
 }
 function makeWorld(js, store) {
   const html = SHELL.replace('<!--OPN_SHAPE-->', 'public');
