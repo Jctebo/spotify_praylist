@@ -2166,44 +2166,93 @@ function opnSthPrimary628() {
   }
   return eff;
 }
-function opnSthFirstSet632(sthFirst) {
-  try { localStorage.setItem(OPN_STH_FIRST_KEY, sthFirst ? 'on' : 'off'); } catch (e) {}
+/* v650 \u00a73.4: the three-value office choice store. The reader
+   migrates at first read: the effective old value (read through
+   opnSthPrimary628 one last time, when an old value actually
+   stands \u2014 the old key, or the PIN record's sthPrimary field)
+   maps StH-first \u2192 'sth' \u00b7 DO-first \u2192 'do'; with nothing
+   standing anywhere the default is 'sth' (John's standing
+   preference). The migration writes the new key once; the old
+   key is left unread thereafter. opnSthPrimary628 /
+   opnSthFirstSet632 / OPN_STH_FIRST_KEY retire as governing
+   machinery \u2014 the reader above is their last governing use;
+   opnSthFirstSet632 stands below only as a thin compat alias
+   for standing harness hooks, writing the NEW store. */
+var OPN_OFFICE_CHOICE_KEY650 = 'opn-office-choice-v650';
+function opnOfficeChoice650() {
+  var v = null;
+  try { v = localStorage.getItem(OPN_OFFICE_CHOICE_KEY650); } catch (e) {}
+  if (v === 'do' || v === 'sth' || v === 'both') return v;
+  var migrated = 'sth';
+  var oldStored = null, oldStands = false;
+  try { oldStored = localStorage.getItem(OPN_STH_FIRST_KEY); } catch (e) {}
+  if (oldStored === 'on' || oldStored === 'off') oldStands = true;
+  if (!oldStands) {
+    var rec650 = null;
+    try { rec650 = opnPinLoad(); } catch (e) { rec650 = null; }
+    if (rec650 && Object.prototype.hasOwnProperty.call(rec650, 'sthPrimary')) oldStands = true;
+  }
+  if (oldStands) migrated = opnSthPrimary628() ? 'sth' : 'do';
+  try { localStorage.setItem(OPN_OFFICE_CHOICE_KEY650, migrated); } catch (e) {}
+  return migrated;
 }
-function opnExtChoice628(slot, e, src) {
-  // Returns { title, streamUrl, source, backup, imageUrl, durationSec } —
-  // the entry re-ordered for this user. No backup standing, or a slot
-  // outside the two labeled hours: the entry stands as served.
-  // v648 §3.2: the choice carries the WHOLE record — each
-  // side's imageUrl rides its own side (the chosen side's
-  // image on the result, the other source's image on the
-  // returned backup), so a settle built from the choice
-  // never borrows the standing entry's art for the chosen
-  // source's title.
-  // v648 amendment §3.7 (John, 2026-11-24): the row's title
-  // is the ORIGINAL TITLE OF THE RECORD THAT PLAYS — the
-  // backup side's title is e.backup.title VERBATIM (the
-  // record's own served title), never composed client-side
-  // from the slot title + source; if e.backup.title is
-  // somehow absent, the slot's BARE title stands. Duration
-  // travels with the record likewise: the chosen side
-  // carries its own durationSec (e.durationSec for the
-  // standing source, e.backup.durationSec for Sing the
-  // Hours) and the returned backup carries the other side's.
-  // v631: the served entry's own source (the source that
-  // filled the server row, carried on the payload since v631)
-  // governs over the slot default — an entry filled by Sing
-  // the Hours settles AS Sing the Hours, so its download
-  // routes through the Worker pass-through (its host forbids
-  // direct browser reads). Before v631 the choice named every
-  // no-backup entry 'Divine Office', the download went direct
-  // first, and an StH fill settled missing on the phone.
-  var plain = { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: null, imageUrl: e.imageUrl || null, durationSec: e.durationSec };
-  if (!e || !e.backup || !e.backup.streamUrl) return plain;
-  if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return plain;
-  var backupTitle = e.backup.title || slot.title; // §3.7: the record's own served title verbatim; absent → the slot's BARE title, never a composed source-suffixed string
-  var backup = { title: backupTitle, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours', imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec };
-  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec, backup: { title: e.title, streamUrl: e.streamUrl, source: e.source || 'Divine Office', imageUrl: e.imageUrl || null, durationSec: e.durationSec } };
-  return { title: e.title, streamUrl: e.streamUrl, source: e.source || src, imageUrl: e.imageUrl || null, durationSec: e.durationSec, backup: backup };
+function opnOfficeChoiceSet650(v) {
+  if (v !== 'do' && v !== 'sth' && v !== 'both') return;
+  try { localStorage.setItem(OPN_OFFICE_CHOICE_KEY650, v); } catch (e) {}
+}
+function opnSthFirstSet632(sthFirst) {
+  // v650 compat alias (no governing caller stands): a legacy
+  // boolean write lands on the new three-value store.
+  opnOfficeChoiceSet650(sthFirst ? 'sth' : 'do');
+}
+/* v650 \u00a73.1/\u00a73.2: the labeled office slots and their sides. */
+function opnLabeledSlot650(slotId) { return slotId === 'ext-morning-prayer' || slotId === 'ext-evening-prayer'; }
+function extSideTag650(source) {
+  if (source === 'Sing the Hours') return 'sth';
+  if (source === 'Divine Office') return 'do';
+  return String(source || '').toLowerCase().split(' ')[0] || 'do';
+}
+function extAudioKey650(date, slotId, source) {
+  if (!opnLabeledSlot650(slotId) || !source) return offlineDayKey(date, slotId);
+  return offlineDayKey(date, slotId + '~' + extSideTag650(source));
+}
+function extStandingView650(rec) {
+  if (!rec || rec.state !== 'present' || rec.standingMissing650 || !rec.enclosureUrl) return null;
+  return { state: 'present', title: rec.title, source: rec.source, imageUrl: rec.imageUrl || null, durationSec: rec.durationSec, sizeBytes: rec.sizeBytes, enclosureUrl: rec.enclosureUrl, streamUrl: rec.streamUrl, descText: rec.descText || null, stale: !!rec.stale, unresolved: !!rec.unresolved, resolvedAt: rec.resolvedAt || null };
+}
+function extSide2View650(rec) {
+  var s = rec && rec.side2;
+  if (!s || s.state !== 'present' || !s.enclosureUrl) return null;
+  return { state: 'present', title: s.title, source: s.source, imageUrl: s.imageUrl || null, durationSec: s.durationSec, sizeBytes: s.sizeBytes, enclosureUrl: s.enclosureUrl, streamUrl: s.streamUrl, descText: s.descText || null, stale: !!s.stale, unresolved: !!s.unresolved, resolvedAt: s.resolvedAt || null };
+}
+function extPaintSides650(rec) {
+  // v650 \u00a73.1 paint rule: one view per side the setting
+  // selects that stands present; if NO selected side stands
+  // but another side does, that side paints alone.
+  var views = [];
+  var sv = extStandingView650(rec); if (sv) views.push(sv);
+  var s2 = extSide2View650(rec); if (s2) views.push(s2);
+  if (!views.length) return [];
+  var choice = opnOfficeChoice650();
+  var selected;
+  if (choice === 'both') {
+    selected = views.slice().sort(function (a, c) { return (extSideTag650(a.source) === 'sth' ? 0 : 1) - (extSideTag650(c.source) === 'sth' ? 0 : 1); });
+  } else {
+    selected = views.filter(function (v) { return extSideTag650(v.source) === choice; });
+  }
+  if (!selected.length) selected = views.slice(0, 1);
+  return selected;
+}
+function extPaintTracks650(slot, rec) {
+  // v650 \u00a73.3: one descriptor per painting side, in paint
+  // order; identity follows PAINT POSITION \u2014 the first
+  // painted takes the standing identity, the second carries
+  // _side650 = its tag.
+  return extPaintSides650(rec).map(function (v, idx) {
+    var t = extSlotTrack(slot, v);
+    if (idx > 0) t._side650 = extSideTag650(v.source);
+    return t;
+  });
 }
 /* ---- v622: enrolment onboarding inside PIN setup ----
    When a PIN is (re)set — the set sheet, the Conscience
@@ -4501,7 +4550,7 @@ function mintBlobUrl(owner, blob) {
 var ownBlobOwners = {}; // v412 Fix 11: one mint owner per own-audio cache key
 function ownBlobOwner(cacheKey) { return ownBlobOwners[cacheKey] || (ownBlobOwners[cacheKey] = {}); }
 var extBlobOwners = {}; // v412 Fix 11: one mint owner per external slot
-function extSlotOwner(slot) { return extBlobOwners[slot.slotId] || (extBlobOwners[slot.slotId] = {}); }
+function extSlotOwner(slot, source) { var k650 = (slot && opnLabeledSlot650(slot.slotId) && source) ? slot.slotId + '~' + extSideTag650(source) : slot.slotId; return extBlobOwners[k650] || (extBlobOwners[k650] = {}); } // v650 \u00a73.2: the labeled mint owner is per-side, so neither side's mint revokes the other's blob URL
 function saveResume() {
   if (!state.current || !state.storedDay) return;
   try {
@@ -4801,39 +4850,41 @@ function playedKey(episodeId, block) {
   if (episodeId && block && state.repeatIds && state.repeatIds[episodeId]) return episodeId + '|' + block;
   return episodeId;
 }
-function playedKeyOcc(episodeId, block, occ) {
+function playedKeyOcc(episodeId, block, occ, side650) {
   // v610: a descriptor stamped _occ (a duplicated Divine Office
   // hour standing again in the same block) keys per OCCURRENCE —
   // '#n' rides the standing playedKey, so each copy carries its
   // own played mark and its own intention draw. Callers without
   // an occurrence read exactly the keys they read before.
   var k = playedKey(episodeId, block);
-  return occ ? k + '#' + occ : k;
+  if (occ) k += '#' + occ;
+  if (side650) k += '@' + side650; // v650 \u00a73.3: the second-painted side's played key carries its tag after any occurrence suffix
+  return k;
 }
 function descMarkKey(t) {
   // v610: the one key a descriptor's marks and draws read.
   if (!t || !t.episodeId) return null;
-  return playedKeyOcc(t.episodeId, t.block || t._block || '', t._occ || 0);
+  return playedKeyOcc(t.episodeId, t.block || t._block || '', t._occ || 0, t._side650 || null);
 }
 function isPlayedDesc(x, dateStr) {
   // v610: a duplicated copy reads its own occurrence key;
   // every standing descriptor reads exactly the key it read
   // before (its block field as the caller passed it).
   if (!x) return false;
-  return x._occ ? isPlayed(x.episodeId, dateStr, x.block || x._block, x._occ) : isPlayed(x.episodeId, dateStr, x.block);
+  return (x._occ || x._side650) ? isPlayed(x.episodeId, dateStr, x.block || x._block, x._occ || 0, x._side650 || null) : isPlayed(x.episodeId, dateStr, x.block);
 }
-function isPlayed(episodeId, dateStr, block, occ) {
+function isPlayed(episodeId, dateStr, block, occ, side650) {
   if (!episodeId || !dateStr) return false;
-  var byDate = playedMap()[playedKeyOcc(episodeId, block, occ)];
+  var byDate = playedMap()[playedKeyOcc(episodeId, block, occ, side650)];
   return !!(byDate && byDate[dateStr]);
 }
-function writePlayed(episodeId, dateStr, via, block, occ) {
-  writePlayedQuiet(episodeId, dateStr, via, block, occ);
+function writePlayed(episodeId, dateStr, via, block, occ, side650) {
+  writePlayedQuiet(episodeId, dateStr, via, block, occ, side650);
   refreshPlayedChrome();
 }
-function writePlayedQuiet(episodeId, dateStr, via, block, occ) {
+function writePlayedQuiet(episodeId, dateStr, via, block, occ, side650) {
   if (!episodeId || !dateStr) return;
-  var key = playedKeyOcc(episodeId, block, occ);
+  var key = playedKeyOcc(episodeId, block, occ, side650);
   var map = playedMap();
   // Prune on write: date entries older than 120 days before the
   // presented date drop (novena windows are 9 days; a season of
@@ -4886,7 +4937,7 @@ function markCompleted(desc) {
   if (desc.kind === 'homily') { if (desc.homilyId) homilySetPlayed(desc.homilyId, true); return; }
   var d = presentedDateStr();
   if (!d) return;
-  writePlayed(desc.episodeId, d, 'played', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0);
+  writePlayed(desc.episodeId, d, 'played', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0, desc._side650 || null);
 }
 function setMediaSessionFor(desc) {
   if (oraInShell()) return; // v377 B6: in the shell the native session is the face
@@ -10570,7 +10621,7 @@ function settingsFamilyLabel(row) {
   // fallback rows) name the standing Morning & Evening
   // choice instead of the fixed 'fallback only' wording;
   // every other row's label stands byte-unchanged.
-  if (row.role === 'fallback') return 'Morning & Evening choice: ' + (opnSthPrimary628() ? 'stands first' : 'stands as the backup');
+  if (row.role === 'fallback') return 'Morning & Evening choice: ' + ({ do: 'Divine Office', sth: 'Sing the Hours', both: 'Both' })[opnOfficeChoice650()]; // v650 \u00a73.4: the fallback label names the standing three-value setting
   return base;
 }
 function settingsSectionOf(row) {
@@ -15372,6 +15423,7 @@ function trackDesc(t, day) {
   // live day-build descriptor's field, never a render-time one.
   var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null, stale: !!t.stale, unresolved: !!t.unresolved };
   if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
+  if (t._side650) d._side650 = t._side650; // v650 §3.3: the second-painted side's tag rides the seam the same way, or the rebuilt descriptor loses its sibling identity
   // v620: a podcast-family descriptor reaching this seam (the
   // v590 course · v611 day · v614 episode resolvers) carries
   // its playable identity in the podDesc shape — url (never
@@ -16682,7 +16734,7 @@ function dayRowMarkApply639(t, on) {
   }
   if (t.kind === 'homily') { if (t.homilyId) homilySetPlayed(t.homilyId, on); refreshPlayedChrome(); return; }
   // writePlayed closes with refreshPlayedChrome() itself.
-  writePlayed(t.episodeId, presentedDateStr(), on ? 'marked' : null, t.block || t._block || '', t._occ || 0);
+  writePlayed(t.episodeId, presentedDateStr(), on ? 'marked' : null, t.block || t._block || '', t._occ || 0, t._side650 || null);
 }
 /* FD7 day-row menu (§2.9): Share · Download (only — a day-set
    Remove is undone by the v392 convergence, so it is not
@@ -16708,7 +16760,7 @@ function openDayRowMenu(t, anchorEl, extraItems) {
     openSheetMenu(t.title || 'Options', items, anchorEl);
   };
   if (!t.available || !('caches' in window)) { build(true); return; }
-  caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(presentedDateStr(), t.episodeId)); })
+  caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(extAudioKey650(presentedDateStr(), t.episodeId, t.source)); }) // v650 §3.2: the read keys by the descriptor's own side
     .then(function (r) { build(!!r); }, function () { build(false); });
 }
 function dayRowDownload(t) {
@@ -16832,12 +16884,14 @@ function refreshGridDlStates() {
     reqs.forEach(function (rq) { standing[rq.url.slice(location.origin.length + 1)] = 1; });
     var date = presentedDateStr();
     var byBlock = {};
+    var dlByCard650 = {};
     (state.dayDescs || []).forEach(function (d) {
+      dlByCard650[descCardKey(d)] = extAudioKey650(date, d.episodeId, d.source); // v650 §3.2: each descriptor's download state reads its own side's key
       if (!d.block || !d.available) return;
       if (d.kind === 'segment') return; // the Intentions segment is not part of the downloadable day set (offlineEnumerateToday's set governs)
       byBlock[d.block] = byBlock[d.block] || { total: 0, have: 0 };
       byBlock[d.block].total++;
-      if (standing[offlineDayKey(date, d.episodeId)]) byBlock[d.block].have++;
+      if (standing[extAudioKey650(date, d.episodeId, d.source)]) byBlock[d.block].have++;
     });
     state.gridDl = {};
     Object.keys(byBlock).forEach(function (b) { state.gridDl[b] = byBlock[b].total > 0 && byBlock[b].have >= byBlock[b].total; });
@@ -16850,7 +16904,8 @@ function refreshGridDlStates() {
     // universal menu's Download all item, read at open
     // (Build 3). The card/row branches below stand.
     view.querySelectorAll('[data-rowdl]').forEach(function (el) {
-      el.style.display = standing[offlineDayKey(date, el.getAttribute('data-rowdl'))] ? '' : 'none';
+      var rk650 = el.getAttribute('data-rowdl');
+      el.style.display = standing[dlByCard650[rk650] || offlineDayKey(date, rk650)] ? '' : 'none';
     });
     // v449 §2 Build 1: the standing Downloaded-filter grid
     // repaint retires with the filter chips — its one purpose
@@ -16876,7 +16931,7 @@ function descCardKey(t) {
   // the occurrence suffix on a duplicated copy, so two copies
   // of one hour stand as two cards with two play buttons.
   if (!t) return '';
-  return (t.episodeId || '') + (t._occ ? '#' + t._occ : '');
+  return (t.episodeId || '') + (t._occ ? '#' + t._occ : '') + (t._side650 ? '@' + t._side650 : ''); // v650 \u00a73.3: the second-painted side's card key carries '@' + tag after any '#occ'
 }
 function trackCard(t) {
   var key = t.episodeId ? descCardKey(t) : ('seg:' + (t._block || ''));
@@ -17593,8 +17648,46 @@ function extSlotTrack(slot, st) {
     stale: !!st.stale, unresolved: !!st.unresolved, resolvedAt: st.resolvedAt || null
   };
 }
+function extSwapLabeled650(slot, st) {
+  // v650 §3.3: a labeled slot's settle swaps ALL its cards —
+  // the standing card, its '#occ' copies, and its '@side'
+  // siblings — each re-rendered from its own side's track
+  // (the descriptor list settle just rebuilt), so a side
+  // settle swaps its own card and never clobbers the
+  // sibling's.
+  var olds = [];
+  view.querySelectorAll('[data-card="' + slot.slotId + '"], [data-card^="' + slot.slotId + '#"], [data-card^="' + slot.slotId + '@"]').forEach(function (el) { olds.push(el); });
+  if (!olds.length) return;
+  var tmp = document.createElement('div');
+  if (st.state === 'downloading') tmp.innerHTML = extDownloadingCard(slot);
+  else if (st.state === 'loading') tmp.innerHTML = extPlaceholderCard(slot);
+  else {
+    var descs650 = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; });
+    tmp.innerHTML = descs650.length ? descs650.map(function (d) { return trackCard(d); }).join('') : extPaintTracks650(slot, st).map(function (t) { return trackCard(t); }).join('');
+  }
+  var nodes = [];
+  while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+  var anchor = olds[0];
+  nodes.forEach(function (n) { anchor.parentNode.insertBefore(n, anchor); });
+  olds.forEach(function (el) { el.remove(); });
+  nodes.forEach(function (fresh) {
+    fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === b.getAttribute('data-playkey'); })[0];
+        if (d) tapPlay(d);
+      });
+    });
+    wireExpand(fresh);
+    armEllipsis(fresh);
+    wirePlayed(fresh);
+    wireRowActs(fresh);
+  });
+  refreshPlayedChrome();
+  if (state.current && state.current.episodeId === slot.slotId) markPlaying(descCardKey(state.current));
+}
 function extSwapCard(slot) {
   var st = state.extSlots[slot.slotId];
+  if (st && opnLabeledSlot650(slot.slotId)) { extSwapLabeled650(slot, st); return; }
   var old = view.querySelector('[data-card="' + slot.slotId + '"]');
   if (!old || !st) return;
   var tmp = document.createElement('div');
@@ -17736,7 +17829,7 @@ function blockInsertCards(day, standing) {
         var slot = e.ext;
         var st2 = state.extSlots[slot.slotId];
         var tmp2 = document.createElement('div');
-        tmp2.innerHTML = st2 && st2.state === 'present' ? trackCard(extSlotTrack(slot, st2)) : extPlaceholderCard(slot);
+        tmp2.innerHTML = st2 && st2.state === 'present' ? (opnLabeledSlot650(slot.slotId) ? (extPaintTracks650(slot, st2).map(function (t650) { return trackCard(t650); }).join('') || trackCard(extSlotTrack(slot, st2))) : trackCard(extSlotTrack(slot, st2))) : extPlaceholderCard(slot); // v650 §3.3: a labeled slot inserts one card per painting side
         // The fragment carries the prayer card alone under v384
         // (v361 §2.4's pair rule superseded) — take ALL of its
         // children, in order, never firstChild alone.
@@ -17819,8 +17912,12 @@ function oraSnapshotTrack(d, date) {
     // enclosure below cannot name a source; the pass-through
     // without src re-resolves Divine-Office-first.)
     if (d.episodeId === 'ext-morning-prayer' || d.episodeId === 'ext-evening-prayer') {
+      // v650 §3.3: &src= names the DESCRIPTOR's own source
+      // (falling back to the slot record's), so each of the
+      // two tracks hands the engine its own record.
+      var src650 = d.source || st.source;
       return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
-        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId) + (st.source ? '&src=' + encodeURIComponent(st.source) : ''), needsAuth: true, artUri: artUriFor(d) };
+        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId) + (src650 ? '&src=' + encodeURIComponent(src650) : ''), needsAuth: true, artUri: artUriFor(d) };
     }
     var pre2 = st.enclosureUrl || (st.streamUrl && String(st.streamUrl).indexOf('blob:') !== 0 ? String(st.streamUrl) : '');
     if (!pre2) return null;
@@ -19204,6 +19301,18 @@ function extRebuildDescs(day) {
       var slot = e.ext;
       var st2 = state.extSlots[slot.slotId];
       if (st2) {
+        // v650 §3.3: a labeled slot emits one descriptor per
+        // PAINTING side, in paint order (extPaintTracks650);
+        // with no side standing, the slot's single unavailable
+        // track stands exactly as before.
+        var tracks650 = opnLabeledSlot650(slot.slotId) ? extPaintTracks650(slot, st2) : [];
+        if (tracks650.length) {
+          tracks650.forEach(function (trk) {
+            if (occ) trk._occ = occ;
+            expandDescs(trk, day).forEach(function (d) { descs.push(d); });
+          });
+          return;
+        }
         var trk = extSlotTrack(slot, st2);
         if (occ) trk._occ = occ;
         expandDescs(trk, day).forEach(function (d) { descs.push(d); });
@@ -20052,7 +20161,8 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // the slot in place from the live payload, both sources
     // standing, exactly as on a cold open.
     if (cacheValid) {
-      var wantFirst637 = opnSthPrimary628() ? 'Sing the Hours' : 'Divine Office';
+      // v650 §3.5: the v637 choice test retires with the choice
+      // machinery \u2014 the whole-record test below stands alone.
       ['ext-morning-prayer', 'ext-evening-prayer'].forEach(function (sid637) {
         var c637 = rec.slots[sid637];
         // v648 §3.5: the prune checks the WHOLE record — a
@@ -20064,9 +20174,12 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         // in the same act, so the poisoned blob can never
         // restore under the re-settled record. A whole record
         // (first-choice source + backup + image) is untouched.
-        if (c637 && c637.state === 'present' && (c637.source !== wantFirst637 || !c637.backup || !c637.backup.streamUrl || !c637.imageUrl)) {
+        if (c637 && c637.state === 'present' && (!c637.backup || !c637.backup.streamUrl || !c637.imageUrl)) {
           delete rec.slots[sid637];
-          if ('caches' in window) { try { caches.open('opn-ext-audio-v1').then(function (cache648) { return cache648.delete(offlineDayKey(date, sid637)); }).catch(function () {}); } catch (e648) {} }
+          // v650 §3.2: the eviction names BOTH side keys and
+          // the bare key \u2014 pre-v650 bytes under the bare key
+          // can never mint under a side.
+          if ('caches' in window) { try { caches.open('opn-ext-audio-v1').then(function (cache650) { return cache650.delete(offlineDayKey(date, sid637)).then(function () { return cache650.delete(extAudioKey650(date, sid637, 'Divine Office')); }).then(function () { return cache650.delete(extAudioKey650(date, sid637, 'Sing the Hours')); }); }).catch(function () {}); } catch (e650) {} }
         }
       });
     }
@@ -20105,35 +20218,9 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // retires silently and clears the flag — his action wins, and
     // the record has already been replaced or removed by that
     // action's own §2.2/§2.5 discipline.
-    // v638 §2.1.3: the no-blank guard's seat — while a flip
-    // re-settle (state.extResettleLabeled638, below) stands
-    // in flight for a labeled slot, this map holds the slot's
-    // prior PRESENT record. The standing settle below reads
-    // it: a re-settle outcome of 'missing' (both routes down)
-    // restores the prior record whole instead of blanking
-    // the standing row, and a 'present' outcome clears it.
-    // Armed only by the hook, only for a slot that stood
-    // present when the flip landed. Entries carry the
-    // arming re-settle's epoch: { rec, epoch }.
-    var extResettlePrior638 = {};
-    // v638 §4.1 (PROBE-D fix-forward): the supersession
-    // seat — a per-slot re-settle EPOCH map beside the
-    // prior map. Each hook-initiated re-settle that
-    // actually starts (the hook's no-change guard has
-    // passed) takes the slot's next epoch; the epoch rides
-    // that re-settle's whole download chain — settleMeta →
-    // extDownload → settle, INCLUDING the v628 backup flip
-    // inside extDownload (the backup retry is the same
-    // re-settle, same epoch, not a new one). settle checks
-    // the epoch FIRST, before the prior-record guard: a
-    // completion carrying a stale epoch is dropped whole —
-    // no settle, no descriptor rebuild, no cache write, no
-    // prior-record restore, and no discharge of a newer
-    // re-settle's armed guard. Settlements NOT initiated
-    // by the hook (this pass's own courier/cache settles,
-    // cold opens, the watchdogs) carry no epoch (undefined)
-    // and are never gated.
-    var extResettleEpoch638 = {};
+    // v650 §3.5: the v638 prior-record guard map and the
+    // re-settle epoch map retire with the hook that armed
+    // them — no arming site stands (doc §2.3).
     var restoreFired = false, restoreIntrosDone = false;
     var maybeRestoreQueue = function () {
       if (restoreFired || !state.restoredQueue) return;
@@ -20150,7 +20237,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
-        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null, backup: c.backup || null }; // v648 §3.5: the cached backup seeds the record (whole-record restore)
+        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null, backup: c.backup || null, side2: (opnLabeledSlot650(slot.slotId) && c.backup && c.backup.streamUrl) ? { state: 'downloading', title: c.backup.title || null, source: c.backup.source || 'Sing the Hours', imageUrl: c.backup.imageUrl || null, durationSec: c.backup.durationSec, sizeBytes: c.backup.sizeBytes || c.sizeBytes, enclosureUrl: c.backup.streamUrl, streamUrl: null } : null }; // v648 §3.5: the cached backup seeds the record (whole-record restore) \u00b7 v650 §3.1: it seeds as the record's second SIDE, restored per side below
       } else {
         state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
       }
@@ -20170,7 +20257,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           // WHOLE — its backup rides alongside the standing
           // fields (before v648 the write dropped it, so a
           // cached record could never prove its other source).
-          if ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && st.backup && st.backup.streamUrl) {
+          if (opnLabeledSlot650(slot.slotId) && st.side2 && st.side2.state === 'present' && st.side2.enclosureUrl) {
+            // v650 §3.1: the cached backup object gains the
+            // SAME fields as a side (its enclosure rides both
+            // streamUrl \u2014 the standing cache shape \u2014 and
+            // enclosureUrl), so a cold restore re-mints per
+            // side without a courier refetch.
+            rec.slots[slot.slotId].backup = { streamUrl: st.side2.enclosureUrl, enclosureUrl: st.side2.enclosureUrl, source: st.side2.source || null, title: st.side2.title || null, imageUrl: st.side2.imageUrl || null, durationSec: st.side2.durationSec, sizeBytes: st.side2.sizeBytes || null };
+          } else if ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && st.backup && st.backup.streamUrl) {
             rec.slots[slot.slotId].backup = { streamUrl: st.backup.streamUrl, source: st.backup.source || null, title: st.backup.title || null, imageUrl: st.backup.imageUrl || null, durationSec: st.backup.durationSec }; // v648 amendment §3.7: the labeled backup's durationSec is stored with its other fields
           }
         }
@@ -20204,73 +20298,47 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       offlineSnapshotWrite(date, rec);
     };
     state.ownWriteCache = writeCache;
-    var settle = function (slot, st, epoch638) {
+    var settle = function (slot, st) {
       // v648 §3.5: the backup rides the slot record through
-      // every settle — settleMeta's downloading record carries
-      // it, but the present objects built by extDownload /
-      // extRestoreCached name only the standing source; a
-      // settle that names no backup inherits the record's
-      // standing backup, so writeCache can store the whole
-      // record (and a restore never degrades it).
-      if (st && !st.backup) { var prev648 = state.extSlots[slot.slotId]; if (prev648 && prev648.backup) st.backup = prev648.backup; }
-      // v638 §4.1 (PROBE-D fix-forward): the epoch gate
-      // fires FIRST, before the prior-record guard below.
-      // A hook-initiated completion carrying a stale epoch
-      // (a newer flip has taken the slot's next epoch since
-      // this chain started) is dropped whole: it does not
-      // settle, does not restore its stale prior record,
-      // and does not discharge the newer re-settle's armed
-      // guard. Both outcomes are gated — a stale 'present'
-      // and a stale 'missing' alike. No epoch (undefined):
-      // never gated.
-      if (epoch638 != null && epoch638 !== extResettleEpoch638[slot.slotId]) return;
-      // v638 §2.1.3 (the prior-record restore guard): a flip
-      // re-settle that would settle a labeled slot 'missing'
-      // over a standing present row restores the prior record
-      // whole — the row never blanks; a 'present' settle
-      // discharges the guard for that slot.
-      if (st && extResettlePrior638[slot.slotId]) {
-        if (st.state === 'missing') st = extResettlePrior638[slot.slotId].rec;
-        if (st.state === 'present') delete extResettlePrior638[slot.slotId];
+      // every settle \u2014 a settle that names no backup inherits
+      // the record's standing backup, so writeCache can store
+      // the whole record (and a restore never degrades it).
+      // v650 §3.1: the second SIDE inherits the same way.
+      // v650 §3.5: the v638 epoch gate and the prior-record
+      // guard retire with the re-settle hook \u2014 no arming site
+      // stands, and the paint rule (§3.1) serves the
+      // no-blank purpose the guard served.
+      if (st) {
+        var prev650 = state.extSlots[slot.slotId];
+        if (!st.backup && prev650 && prev650.backup) st.backup = prev650.backup;
+        if (st.side2 === undefined && prev650 && prev650.side2) st.side2 = prev650.side2;
       }
       state.extSlots[slot.slotId] = st;
-      // v343 §2.5(2): settle order flip — the descriptor rebuild
+      // v343 §2.5(2): settle order flip \u2014 the descriptor rebuild
       // runs BEFORE the swap render, so the card the swap draws
       // consults the descriptor built from the settle that just
       // landed (descriptor-first, introForTrack).
       extRebuildDescs(day);
       extSwapCard(slot);
       // v374 §2 (site 2): a settle changes the block's listed
-      // tracks — refresh the count on any standing surface (an
+      // tracks \u2014 refresh the count on any standing surface (an
       // all-external block's page depends on this call).
       updateBlockCounts(day);
       writeCache();
     };
-    var extDownload = function (slot, meta, epoch638) {
-      // v638 §4.1: stale638() — this chain carries a hook
-      // re-settle epoch that a newer flip has superseded.
-      // Checked at each completion point: a superseded
-      // chain drops whole (no mint — a stale mint under the
-      // shared owner could revoke the newer settle's blob
-      // URL — no backup retry, no settle of either outcome).
-      var stale638 = function () { return epoch638 != null && epoch638 !== extResettleEpoch638[slot.slotId]; };
+    var extDownload = function (slot, meta) {
       // Amendment A1 routes: direct from the enclosure host where
       // its chain allows the read (Divine Office, Bible in a Year);
       // the Worker pass-through where it does not (Sing the Hours).
-      // Any failure in a route's whole chain (fetch, body read, or
-      // cache write) retries once on the other route: a download
-      // that starts before the service worker claims the page can
-      // have its stream torn by the claim, and the retry — issued
-      // after the claim settles — is the heal. The body is
-      // materialized to a Blob BEFORE the cache write, so no
-      // stream clone is ever raced.
+      // Any failure in a route's whole chain retries once on the
+      // other route. The body is materialized to a Blob BEFORE
+      // the cache write, so no stream clone is ever raced.
+      // v650: this generic path serves UNLABELED slots (the
+      // labeled slots download per side, extDownloadSide650
+      // below); its cache key reads through extAudioKey650,
+      // which is the bare key for an unlabeled slot.
       var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId)
-        + ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && meta.source ? '&src=' + encodeURIComponent(meta.source) : ''); // v648 §3.4: a labeled slot's pass-through names the meta's (chosen) source — the Worker serves that source from the day's row, never its own re-resolution
-      // v337 §2.8: a 'passthrough' slot (Gospel Exegesis — the
-      // Anchor→CloudFront enclosure chain's final hop sends no
-      // CORS header) downloads ONLY through the Worker; every other
-      // slot keeps the A1 two-route shape (direct first unless the
-      // source is Sing the Hours, whose host forbids the read).
+        + ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && meta.source ? '&src=' + encodeURIComponent(meta.source) : '');
       var routes = slot.download === 'passthrough' ? [passthrough, passthrough]
         : (meta.source === 'Sing the Hours' ? [passthrough, meta.enclosureUrl] : [meta.enclosureUrl, passthrough]);
       var tryRoute = function (u) {
@@ -20278,15 +20346,10 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.blob();
         }).then(function (blob) {
-          // v649 §3.2: stamp the entry with the enclosure its
-          // bytes were fetched FOR — a pass-through fetch
-          // serves the meta's enclosureUrl (the v648 src rule
-          // makes the served bytes that pointer's source); a
-          // direct fetch serves the fetched URL itself.
           var stamp649 = (u === passthrough) ? meta.enclosureUrl : u;
           var put = ('caches' in window)
             ? caches.open('opn-ext-audio-v1').then(function (c) {
-                return c.put(offlineDayKey(date, slot.slotId), opnStampedResponse649(blob, stamp649));
+                return c.put(extAudioKey650(date, slot.slotId, meta.source), opnStampedResponse649(blob, stamp649));
               }).catch(function () {})
             : Promise.resolve();
           return put.then(function () { return blob; });
@@ -20295,142 +20358,156 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       var attempt = tryRoute(routes[0]);
       if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
       attempt.then(function (blob) {
-        if (stale638()) return; // §4.1: superseded — drop whole, before the mint
-        // v638 §2.1.4: a slot SOUNDING at this settle (its
-        // descriptor is state.current, or stands in the
-        // already-built state.queue) is never restarted and
-        // its sounding descriptor is never swapped: the mint
-        // runs under a throwaway owner, so mintBlobUrl does
-        // NOT revoke the blob URL the sounding descriptor
-        // holds (the shared owner's standing URL is that
-        // very URL). state.current and state.queue stand
-        // untouched by the settle; only the slot record,
-        // the rebuilt descriptors, and the list paint move.
         var sounding638 = !!((state.current && state.current.episodeId === slot.slotId)
           || (state.queue || []).some(function (qd) { return qd && qd.episodeId === slot.slotId; }));
-        var u = mintBlobUrl(sounding638 ? {} : extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
-        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638);
+        var u = mintBlobUrl(sounding638 ? {} : extSlotOwner(slot, meta.source), blob);
+        settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
       }).catch(function () {
-        if (stale638()) return; // §4.1: superseded — no backup retry, no 'missing' settle over the newer row
-        // v628: the standing-first source failed to load — the
-        // backup stands (the v626 flip discipline, per-user):
-        // one retry with the backup pointer + its own label,
-        // through this same download path (no backup rides the
-        // retry, so the flip happens at most once).
-        if (meta.backup && meta.backup.streamUrl) {
-          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.backup.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.backup.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638); // §4.1: the backup flip is the SAME re-settle — same epoch, not a new one · v648 §4 addendum F1: the flip settles the BACKUP record whole — its own imageUrl + durationSec, never the failed first choice's
+        // v650 §3.5: the v628 backup flip retires for labeled
+        // metas (a side falls alone, §3.1); unlabeled downloads
+        // never carried a backup, so this arm stands inert for
+        // them exactly as shipped.
+        if (!opnLabeledSlot650(slot.slotId) && meta.backup && meta.backup.streamUrl) {
+          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.backup.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.backup.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null });
           return;
         }
-        settle(slot, { state: 'missing', title: meta.title, source: meta.source }, epoch638);
+        settle(slot, { state: 'missing', title: meta.title, source: meta.source });
       });
     };
-    var settleMeta = function (slot, meta, epoch638) {
+    // v650 §3.1: a labeled side settles INTO the slot record —
+    // the standing side on the record's standing fields, the
+    // other side on record.side2. A side whose download fails
+    // settles THAT SIDE missing — no cross-side flip; the
+    // paint rule (§3.1) covers a missing side at paint.
+    var mergeSide650 = function (slot, sideMeta, standingSide, present, blobUrl) {
+      var cur = state.extSlots[slot.slotId] || { state: 'loading', title: slot.title };
+      var rec650 = Object.assign({}, cur);
+      var sideObj = { state: present ? 'present' : 'missing', title: sideMeta.title, source: sideMeta.source, imageUrl: sideMeta.imageUrl || null, durationSec: sideMeta.durationSec, sizeBytes: sideMeta.sizeBytes, enclosureUrl: sideMeta.enclosureUrl, streamUrl: present ? blobUrl : null, blobUrl: present ? blobUrl : null, descText: sideMeta.descText || null, stale: !!sideMeta.stale, unresolved: !!sideMeta.unresolved, resolvedAt: sideMeta.resolvedAt || null };
+      if (standingSide) {
+        if (present) {
+          rec650.state = 'present'; rec650.title = sideObj.title; rec650.streamUrl = blobUrl; rec650.blobUrl = blobUrl;
+          rec650.enclosureUrl = sideObj.enclosureUrl; rec650.durationSec = sideObj.durationSec; rec650.sizeBytes = sideObj.sizeBytes;
+          rec650.source = sideObj.source; rec650.imageUrl = sideObj.imageUrl; rec650.descText = sideObj.descText;
+          rec650.stale = sideObj.stale; rec650.resolvedAt = sideObj.resolvedAt; rec650.standingMissing650 = false;
+        } else {
+          rec650.standingMissing650 = true;
+          rec650.state = (rec650.side2 && rec650.side2.state === 'present') ? 'present' : 'missing';
+        }
+      } else {
+        rec650.side2 = sideObj;
+        if (present) rec650.state = 'present';
+        else if (!extStandingView650(rec650)) rec650.state = 'missing';
+      }
+      if (rec650.side2 && rec650.side2.enclosureUrl) rec650.backup = { title: rec650.side2.title, streamUrl: rec650.side2.enclosureUrl, source: rec650.side2.source, imageUrl: rec650.side2.imageUrl || null, durationSec: rec650.side2.durationSec };
+      settle(slot, rec650);
+    };
+    var extDownloadSide650 = function (slot, sideMeta, standingSide) {
+      // The side's own routes, by the side's own source; the
+      // pass-through names that side's source (the v648 &src=
+      // rule, per side). Bytes land under the side's own key
+      // (extAudioKey650), stamped with the side's enclosure.
+      var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId)
+        + (sideMeta.source ? '&src=' + encodeURIComponent(sideMeta.source) : '');
+      var routes = sideMeta.source === 'Sing the Hours' ? [passthrough, sideMeta.enclosureUrl] : [sideMeta.enclosureUrl, passthrough];
+      var tryRoute = function (u) {
+        return fetch(u).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        }).then(function (blob) {
+          var stamp649 = (u === passthrough) ? sideMeta.enclosureUrl : u;
+          var put = ('caches' in window)
+            ? caches.open('opn-ext-audio-v1').then(function (c) {
+                return c.put(extAudioKey650(date, slot.slotId, sideMeta.source), opnStampedResponse649(blob, stamp649));
+              }).catch(function () {})
+            : Promise.resolve();
+          return put.then(function () { return blob; });
+        });
+      };
+      var attempt = tryRoute(routes[0]).catch(function () { return tryRoute(routes[1]); });
+      attempt.then(function (blob) {
+        var sounding650 = !!((state.current && state.current.episodeId === slot.slotId)
+          || (state.queue || []).some(function (qd) { return qd && qd.episodeId === slot.slotId; }));
+        var u = mintBlobUrl(sounding650 ? {} : extSlotOwner(slot, sideMeta.source), blob); // v650 §3.2: the per-side mint owner
+        mergeSide650(slot, sideMeta, standingSide, true, u);
+      }).catch(function () {
+        mergeSide650(slot, sideMeta, standingSide, false, null);
+      });
+    };
+    var settleMeta = function (slot, meta) {
       var cur = state.extSlots[slot.slotId];
       if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
       state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, unresolved: !!meta.unresolved, resolvedAt: meta.resolvedAt || null, backup: meta.backup || null };
       extSwapCard(slot);
       extRebuildDescs(day);
-      extDownload(slot, meta, epoch638);
+      extDownload(slot, meta);
     };
-    // v638 §2.1.1: the in-session re-settle hook — stood on
-    // state during this pass (the state.ownWriteCache /
-    // state.restoreProbe precedent), closing over this
-    // pass's day, standing set, and settle machinery. The
-    // Praylist edit form's choice flip calls it after the
-    // store write: it refetches the day's live payload
-    // through the standing courier route, re-applies
-    // opnExtChoice628 over each labeled slot's served entry
-    // (with its backup object — the settled record carries
-    // no backup, so the served entry is the only place the
-    // other source's pointer stands), and hands the result
-    // to the standing settleMeta, whose same-enclosure guard
-    // makes a flip to the already-standing source a no-op.
-    // With the choice re-applied the new meta's backup IS
-    // the previously standing source, so extDownload's
-    // standing failure flip lands back on it; the
-    // prior-record restore guard (extResettlePrior638,
-    // armed below for a slot standing present) covers the
-    // both-routes failure. settle writes the day cache
-    // through the standing writeCache, so the next cold
-    // start reads the new source standing (no double-flip;
-    // the v637 prune leaves it). A sounding slot is not
-    // restarted and its descriptor is not swapped — see
-    // the mint guard in extDownload (§2.1.4).
-    // v649 §3.3: the no-change branch's stamp verification.
-    // The pointer already matches the choice, so settleMeta
-    // would no-op — but the AUDIO ENTRY under the slot's key
-    // may be Seam 2's poison (the other source's bytes, or a
-    // pre-v649 unstamped entry). The entry's stamp is read:
-    // a match leaves the no-op exactly as shipped (no epoch
-    // taken, nothing fetched); a mismatch or a missing stamp
-    // evicts the entry and re-settles through settleMeta
-    // under a taken epoch — the standing machinery, no new
-    // path. settleMeta's own same-enclosure guard is stepped
-    // past by re-seating the record as 'downloading' first
-    // (the shape settleMeta itself writes next).
-    var healLabeledStamp649 = function (slot, choice638, e) {
-      if (!('caches' in window)) return;
-      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(date, slot.slotId)); }).then(function (resp) {
-        if (opnStampMatches649(resp, choice638.streamUrl)) return; // the stamp stands — the no-change no-op stands whole
-        var curNow = state.extSlots[slot.slotId];
-        if (!curNow || curNow.state !== 'present' || curNow.enclosureUrl !== choice638.streamUrl) return; // the state moved since the flip — the newer state governs
-        var epoch638 = (extResettleEpoch638[slot.slotId] || 0) + 1;
-        extResettleEpoch638[slot.slotId] = epoch638;
-        extResettlePrior638[slot.slotId] = { rec: curNow, epoch: epoch638 };
-        caches.open('opn-ext-audio-v1').then(function (cache) { return cache.delete(offlineDayKey(date, slot.slotId)); }).catch(function () {}).then(function () {
-          var reseat = Object.assign({}, curNow, { state: 'downloading' });
-          state.extSlots[slot.slotId] = reseat;
-          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: choice638.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: choice638.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638);
-        });
-      }).catch(function () { /* the stamp read failed: the standing rows stand as they are */ });
+    // v650 §3.1: a labeled slot settles BOTH sides as sides —
+    // the served standing side on the record's standing
+    // fields, the served backup promoted to record.side2 —
+    // each downloading its own bytes through its own routes.
+    var settleMetaLabeled650 = function (slot, standingMeta, backupPtr) {
+      var cur = state.extSlots[slot.slotId];
+      if (cur && cur.state === 'present' && cur.enclosureUrl === standingMeta.enclosureUrl && (!backupPtr || (cur.side2 && cur.side2.state === 'present' && cur.side2.enclosureUrl === backupPtr.streamUrl))) return;
+      state.extSlots[slot.slotId] = { state: 'downloading', title: standingMeta.title, enclosureUrl: standingMeta.enclosureUrl, durationSec: standingMeta.durationSec, sizeBytes: standingMeta.sizeBytes, source: standingMeta.source, imageUrl: standingMeta.imageUrl || null, descText: standingMeta.descText || null, stale: !!standingMeta.stale, unresolved: !!standingMeta.unresolved, resolvedAt: standingMeta.resolvedAt || null, backup: backupPtr || null, side2: backupPtr ? { state: 'downloading', title: backupPtr.title, source: backupPtr.source, imageUrl: backupPtr.imageUrl || null, durationSec: backupPtr.durationSec, sizeBytes: standingMeta.sizeBytes, enclosureUrl: backupPtr.streamUrl, streamUrl: null, descText: standingMeta.descText || null } : null };
+      extSwapCard(slot);
+      extRebuildDescs(day);
+      extDownloadSide650(slot, standingMeta, true);
+      if (backupPtr) extDownloadSide650(slot, { title: backupPtr.title, enclosureUrl: backupPtr.streamUrl, durationSec: backupPtr.durationSec, sizeBytes: standingMeta.sizeBytes, source: backupPtr.source, imageUrl: backupPtr.imageUrl || null, descText: standingMeta.descText || null, stale: !!standingMeta.stale, resolvedAt: standingMeta.resolvedAt || null }, false);
     };
-    state.extResettleLabeled638 = function () {
-      return api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
-        var byId638 = {};
-        (res.slots || []).forEach(function (e) { byId638[e.slotId] = e; });
-        standing.forEach(function (slot) {
-          if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return;
-          var e = byId638[slot.slotId];
-          if (!e || e.state !== 'present') return;
-          var choice638 = opnExtChoice628(slot, e, slot.source || 'Divine Office');
-          var cur638 = state.extSlots[slot.slotId];
-          if (cur638 && cur638.state === 'present' && cur638.enclosureUrl === choice638.streamUrl) { healLabeledStamp649(slot, choice638, e); return; } // v649 §3.3: the pointer matches — the entry's STAMP decides (heal above); on a matching stamp nothing moves and NO epoch is taken, exactly as the shipped no-op
-          // v638 §4.1: this re-settle actually starts — it
-          // takes the slot's next epoch, superseding every
-          // earlier hook chain for the slot still in flight.
-          // The prior-record guard arms under this epoch.
-          var epoch638 = (extResettleEpoch638[slot.slotId] || 0) + 1;
-          extResettleEpoch638[slot.slotId] = epoch638;
-          if (cur638 && cur638.state === 'present') extResettlePrior638[slot.slotId] = { rec: cur638, epoch: epoch638 };
-          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: choice638.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: choice638.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638); // v648 §3.3: the flip re-settle takes the CHOICE's image, as the courier leg does · v648 amendment §3.7: it takes the CHOICE's durationSec likewise
+    // v650 §3.5: the v638 in-session re-settle hook
+    // (state.extResettleLabeled638), the v649 flip heal
+    // (healLabeledStamp649), and opnExtChoice628 RETIRE here —
+    // a choice change is a paint change only (§3.4), both
+    // sides already stand on the record, and no caller of any
+    // of the three stands (caller search, doc §2.3).
+    // v650 §3.2: a labeled side restores under its OWN key —
+    // the stamp compares against THAT side's enclosure; a
+    // mismatch or a missing stamp deletes the side's entry
+    // and re-downloads that side. The pre-v650 bare-key entry
+    // is evicted on sight and never mints.
+    var extRestoreSide650 = function (slot, sideMeta, standingSide) {
+      if (!('caches' in window)) { extDownloadSide650(slot, sideMeta, standingSide); return; }
+      var done = false;
+      var fallback = setTimeout(function () { if (!done) { done = true; extDownloadSide650(slot, sideMeta, standingSide); } }, 3000);
+      caches.open('opn-ext-audio-v1').then(function (cache) {
+        try { cache.delete(offlineDayKey(date, slot.slotId)); } catch (e) {}
+        return cache.match(extAudioKey650(date, slot.slotId, sideMeta.source));
+      }).then(function (resp) {
+        if (done) return;
+        if (!resp) { done = true; clearTimeout(fallback); extDownloadSide650(slot, sideMeta, standingSide); return; }
+        if (!opnStampMatches649(resp, sideMeta.enclosureUrl)) {
+          done = true; clearTimeout(fallback);
+          try { caches.open('opn-ext-audio-v1').then(function (cache) { return cache.delete(extAudioKey650(date, slot.slotId, sideMeta.source)); }).catch(function () {}); } catch (e) {}
+          extDownloadSide650(slot, sideMeta, standingSide);
+          return;
+        }
+        resp.blob().then(function (blob) {
+          if (done) return;
+          done = true; clearTimeout(fallback);
+          var u = mintBlobUrl(extSlotOwner(slot, sideMeta.source), blob); // v650 §3.2: the per-side mint owner
+          mergeSide650(slot, sideMeta, standingSide, true, u);
         });
-      }).catch(function () { /* the refetch failed: the standing rows stand as they are */ });
+      }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownloadSide650(slot, sideMeta, standingSide); } });
     };
     var extRestoreCached = function (slot) {
       var c = rec.slots[slot.slotId];
+      if (opnLabeledSlot650(slot.slotId)) {
+        extRestoreSide650(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null }, true);
+        if (c.backup && c.backup.streamUrl) extRestoreSide650(slot, { title: c.backup.title, enclosureUrl: c.backup.streamUrl, durationSec: c.backup.durationSec, sizeBytes: c.backup.sizeBytes || c.sizeBytes, source: c.backup.source || 'Sing the Hours', imageUrl: c.backup.imageUrl || null, descText: c.descText || null }, false);
+        return;
+      }
       var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null, backup: c.backup || null }; // v648 §3.5: the restore carries the cached backup (a re-download on a cache miss flips to it whole, image included)
       if (!('caches' in window)) { extDownload(slot, meta); return; }
-      // A cache read issued in the same moment the service worker
-      // is settling a fresh page can stall without ever settling;
-      // the fallback timer turns a stalled read into a re-download
-      // (the download path is independent of the read).
       var done = false;
       var fallback = setTimeout(function () { if (!done) { done = true; extDownload(slot, meta); } }, 3000);
-      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(offlineDayKey(date, slot.slotId)); }).then(function (resp) {
+      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(extAudioKey650(date, slot.slotId, meta.source)); }).then(function (resp) {
         if (done) return;
         if (!resp) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
-        // v649 §3.2: the restore trusts bytes only when the
-        // entry's stamp names THIS record's enclosure — a
-        // mismatch or a missing stamp is a cache miss, and
-        // the slot re-downloads through the standing routes
-        // (which re-stamp). The poisoned pre-v649 entry —
-        // Divine Office bytes under a whole Sing the Hours
-        // record, no stamp — can never mint again.
         if (!opnStampMatches649(resp, meta.enclosureUrl)) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
         resp.blob().then(function (blob) {
           if (done) return;
           done = true; clearTimeout(fallback);
-          var u = mintBlobUrl(extSlotOwner(slot), blob); // v412 Fix 11: the slot's owner holds the mint; the record carries it as blobUrl
+          var u = mintBlobUrl(extSlotOwner(slot, meta.source), blob);
           settle(slot, { state: 'present', title: meta.title, streamUrl: u, blobUrl: u, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null });
         });
       }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownload(slot, meta); } });
@@ -20540,22 +20617,24 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
             // v350: the Bible entry carries the item's RAW title;
             // the display title is built here by the standing
             // extBibleTitle construction (one title rule).
-            // v628: the per-user source choice for Morning/
-            // Evening — the served entry re-orders around the
-            // payload's backup pointer before it settles.
-            var choice628 = opnExtChoice628(slot, e, src);
-            // v648 §4 addendum F2: the pointer-confirm compares
-            // the cached record against the CHOICE-REORDERED
-            // stream, not the raw served entry — a whole cached
-            // record standing under the choice (its streamUrl is
-            // the backup pointer on a DO-standing day) is owned
-            // by the cache restore; a cached record the courier
-            // genuinely contradicts (a different enclosure than
-            // the choice's) still falls through and re-settles.
-            // For non-labeled slots the choice is the identity
-            // re-order (choice.streamUrl === e.streamUrl).
-            if (c && c.streamUrl === choice628.streamUrl) return; // the cache restore owns this slot
-            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : choice628.title, enclosureUrl: choice628.streamUrl, durationSec: (slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') ? choice628.durationSec : e.durationSec, sizeBytes: e.sizeBytes, source: choice628.source, backup: choice628.backup, imageUrl: (slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') ? (choice628.imageUrl || null) : (e.imageUrl || null), descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }); // v648 §3.3: a labeled slot settles with the CHOICE's image, never the standing entry's · v648 amendment §3.7: a labeled slot settles with the CHOICE's durationSec likewise; non-labeled slots keep e.durationSec
+            // v650 §3.1: NO choice is applied — a labeled slot
+            // settles BOTH sides as served: the standing side
+            // on the record's standing fields, the backup
+            // promoted to record.side2. The pointer-confirm
+            // compares the cached record against the SERVED
+            // standing stream: a whole cached record standing
+            // under the served entry is owned by the cache
+            // restore (which restores per side); a cached
+            // record the courier genuinely contradicts still
+            // falls through and re-settles.
+            if (c && c.streamUrl === e.streamUrl) return; // the cache restore owns this slot
+            if (opnLabeledSlot650(slot.slotId)) {
+              settleMetaLabeled650(slot,
+                { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: e.source || src, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null },
+                (e.backup && e.backup.streamUrl) ? { title: e.backup.title || slot.title, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours', imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec } : null);
+            } else {
+              settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: e.source || src, backup: null, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null });
+            }
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             // v624 §2 D5: an unresolved entry settles missing
@@ -20601,7 +20680,8 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var st = state.extSlots[slot.slotId];
         if (!st || (st.state !== 'loading' && st.state !== 'downloading')) return;
         var c = cachedIds[slot.slotId];
-        if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null });
+        if (c && opnLabeledSlot650(slot.slotId)) { /* v650 §3.2: a cached labeled slot's per-side restore (already in flight from the restore loop) owns both sides — no standing-only re-download */ }
+        else if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null });
         else if (st.state === 'loading') settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
       });
       // v350 long-stop: a download still in flight 75 s after
@@ -20941,7 +21021,16 @@ function offlineEnumerateToday(date) {
   });
   (state.extStanding || []).forEach(function (slot) {
     var st = state.extSlots[slot.slotId];
-    if (!st || st.state !== 'present' || !st.enclosureUrl) return;
+    if (!st || st.state !== 'present') return;
+    if (opnLabeledSlot650(slot.slotId)) {
+      // v650 §3.2: one item per standing SIDE, each under its
+      // own side key — the pass's reuse compare then binds
+      // per side through the standing stamp rule.
+      if (st.enclosureUrl && !st.standingMissing650) items.push({ kind: 'ext', date: date, id: slot.slotId, enclosureUrl: st.enclosureUrl, source: st.source, download: slot.download, key: extAudioKey650(date, slot.slotId, st.source) });
+      if (st.side2 && st.side2.state === 'present' && st.side2.enclosureUrl) items.push({ kind: 'ext', date: date, id: slot.slotId, enclosureUrl: st.side2.enclosureUrl, source: st.side2.source, download: slot.download, key: extAudioKey650(date, slot.slotId, st.side2.source) });
+      return;
+    }
+    if (!st.enclosureUrl) return;
     items.push({ kind: 'ext', date: date, id: slot.slotId, enclosureUrl: st.enclosureUrl, source: st.source, download: slot.download, key: offlineDayKey(date, slot.slotId) });
   });
   var seen = {}, out = [];
@@ -21009,6 +21098,17 @@ function offlineTomorrowBuild(tomorrow, epoch) {
           if (!def) return;
           var title = e.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(tomorrow)) : e.title;
           var source = def.courier ? def.source : 'Divine Office';
+          if (opnLabeledSlot650(e.slotId)) {
+            // v650 §3.2: tomorrow's labeled slot enumerates per
+            // SIDE and its record carries the backup whole, so
+            // tomorrow's restore seeds both sides.
+            var src650 = e.source || 'Divine Office';
+            extRec.slots[e.slotId] = { state: 'present', title: title, streamUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src650, imageUrl: e.imageUrl || null };
+            if (e.backup && e.backup.streamUrl) extRec.slots[e.slotId].backup = { streamUrl: e.backup.streamUrl, enclosureUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours', title: e.backup.title || null, imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec, sizeBytes: e.sizeBytes };
+            items.push({ kind: 'ext', date: tomorrow, id: e.slotId, enclosureUrl: e.streamUrl, source: src650, download: def.download, title: title, block: def.block, durationS: e.durationSec || 0, key: extAudioKey650(tomorrow, e.slotId, src650) });
+            if (e.backup && e.backup.streamUrl) items.push({ kind: 'ext', date: tomorrow, id: e.slotId, enclosureUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours', download: def.download, title: e.backup.title || title, block: def.block, durationS: e.backup.durationSec || 0, key: extAudioKey650(tomorrow, e.slotId, e.backup.source || 'Sing the Hours') });
+            return;
+          }
           extRec.slots[e.slotId] = { state: 'present', title: title, streamUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: source };
           items.push({ kind: 'ext', date: tomorrow, id: e.slotId, enclosureUrl: e.streamUrl, source: source, download: def.download, title: title, block: def.block, durationS: e.durationSec || 0, key: offlineDayKey(tomorrow, e.slotId) });
         });
@@ -21709,17 +21809,14 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p609pick]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnPickInForm609(btn.getAttribute('data-p609pick')); });
   });
-  // v637: the Morning & Evening choice at the edit form's
-  // head — a tap writes the ONE v632 store through the ONE
-  // writer, then repaints the form so the marker moves in
-  // the same paint. No scope, contents, or profile write.
-  // v638: the tap ALSO calls the standing pass's re-settle
-  // hook (state.extResettleLabeled638) after the store
-  // write, so the flip re-settles the two labeled slots in
-  // the standing session — no restart. Absent hook (a flip
-  // before any resolve pass) is a safe no-op.
-  view.querySelectorAll('[data-p637sth]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnSthFirstSet632(btn.getAttribute('data-p637sth') === 'sth'); if (state.extResettleLabeled638) state.extResettleLabeled638(); opnRepaintHome604(); });
+  // v650 §3.4: the Morning & Evening drop down at the edit
+  // form's head — a change writes the new store, then
+  // re-paints IN-SESSION (descriptor rebuild + home repaint):
+  // no refetch, no re-settle, no day rebuild — both sides
+  // already stand on the record, so a change is a paint
+  // change only.
+  view.querySelectorAll('[data-p650office]').forEach(function (sel) {
+    sel.addEventListener('change', function () { opnOfficeChoiceSet650(sel.value); if (state.dayPayload) extRebuildDescs(state.dayPayload); opnRepaintHome604(); });
   });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
@@ -24667,29 +24764,24 @@ function opnSetHtml609(day) {
   });
   return html + '</div>';
 }
-function opnSthChoiceHtml637() {
-  // v637: the second door to the v632 Morning & Evening
-  // choice — the same store (OPN_STH_FIRST_KEY), the same
-  // reader (opnSthPrimary628), the same writer
-  // (opnSthFirstSet632), the same wording as the Settings
-  // section. Painted at the edit form's head so the choice
-  // stands beside the Pick in both scopes. Both options
-  // stand visible; the standing one carries the marker,
-  // the other is the tap target.
-  var sthFirst637 = opnSthPrimary628();
-  return '<div class="p637sthchoice" data-p637sthchoice="1">'
-    + '<p class="sub">Which reading of the office plays first for Morning Prayer and Evening Prayer:</p>'
-    + '<div class="liblist">'
+function opnOfficeChoiceHtml650() {
+  // v650 §3.4: the Morning & Evening choice as a DROP DOWN at
+  // the v637 chips' seat in the Edit form — one setrow with a
+  // <select data-p650office> carrying 'Divine Office' ·
+  // 'Sing the Hours' · 'Both', the standing value selected.
+  // (John's check-box amendment was withdrawn by his later
+  // word — the drop down stands.) A change is a paint change
+  // only: both sides already stand on the record.
+  var choice650 = opnOfficeChoice650();
+  var opt650 = function (v, label) { return '<option value="' + v + '"' + (choice650 === v ? ' selected' : '') + '>' + label + '</option>'; };
+  return '<div class="p650officechoice" data-p650officechoice="1">'
     + '<div class="setrow">'
-    + '<div class="setname">Divine Office first</div>'
-    + '<div class="meta">Sing the Hours plays when Divine Office does not load.</div>'
-    + '<div class="setcontrols">' + (sthFirst637 ? '<button class="btn ghost" data-p637sth="do">Put first</button>' : '<span class="meta">Standing</span>') + '</div>'
-    + '</div>'
-    + '<div class="setrow">'
-    + '<div class="setname">Sing the Hours first</div>'
-    + '<div class="meta">Divine Office plays when Sing the Hours does not load.</div>'
-    + '<div class="setcontrols">' + (sthFirst637 ? '<span class="meta">Standing</span>' : '<button class="btn ghost" data-p637sth="sth">Put first</button>') + '</div>'
-    + '</div></div></div>';
+    + '<div class="setname">Morning &amp; Evening Prayer</div>'
+    + '<div class="meta">Which reading of the office stands for Morning Prayer and Evening Prayer.</div>'
+    + '<div class="setcontrols"><select data-p650office aria-label="Morning and Evening choice">'
+    + opt650('do', 'Divine Office') + opt650('sth', 'Sing the Hours') + opt650('both', 'Both')
+    + '</select></div>'
+    + '</div></div>';
 }
 function opnEditSetHtml609(day) {
   // The edit form over the set: ONE list of condensed
@@ -24716,7 +24808,7 @@ function opnEditSetHtml609(day) {
   // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
   html += opnPickHead609();
-  html += opnSthChoiceHtml637();
+  html += opnOfficeChoiceHtml650();
   var seen = {};
   var paint635 = orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; });
   // v609 repair 2: 'Podcasts' leaves the canonical list —
