@@ -25299,6 +25299,104 @@ try { var lt = localStorage.getItem('opn-lasttab-v492'); if (lt === 'prayers' ||
 shareLandingRead(); // v640 §3: the share landing is read once at boot, before the opening tab stands; the query is stripped as it is read
 setTab(bootTab);
 shareLandingConsume(); // v640 §3: a valid landing lands through the standing machinery (never autoplay); an invalid one was already discarded by the read
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
+/* v647: a new build takes hold without a restart. Detection
+   reads the served pin from the SW script text (the pin lives
+   nowhere else, v647 S2.4): at boot the served name is the
+   running pin; a check repeats the read, and a served pin
+   that differs from the running pin stands as an adoption
+   pending. The check also calls update() on the standing
+   registration, so the new SW installs promptly (its own
+   skipWaiting + claim already stand). A failed fetch is a
+   silent no-op. The adoption record (opn-adopt-v647, its own
+   key; the v429 opn-boot keys are never read or written
+   here) names the one target this device has fired for: the
+   record is written before the reload, a boot whose running
+   pin equals the record target clears it, and a record that
+   already names the detected target blocks any second fire
+   for that pin. A newer served pin supersedes when its turn
+   comes. The safe-moment predicate reads the client's own
+   standing signals only: transportEngaged() (the native
+   mirror / the web element, plus a pending start),
+   state.current and state.queue, the gate paints
+   (#pingate-card / .pingate from renderPinGate and its
+   setup form, #rec-code from renderPinRecoveryForm — its
+   plain card stands outside every other gate marker,
+   [data-p609lock] and .opn-unlock from the v609
+   lock gate / unlock card), the edit form (opn604.editing
+   and its .p609edit paint from opnEditSetHtml609), and the
+   shared sheet / menu layer (.sheet, .anchmenu — the same
+   read handleSystemBack uses). While an adoption stands
+   pending it is re-checked on a 5 s interval of its own
+   (opnAdoptTick647, the standing native tick's cadence).
+   The adoption act paints nothing: it writes the record,
+   then reloads. */
+var opnReg647 = null;
+var opnRunPin647 = null;
+var opnPend647 = null;
+function opnAdoptRec647() {
+  try {
+    var r = localStorage.getItem('opn-adopt-v647');
+    if (!r) return null;
+    var p = JSON.parse(r);
+    return (p && p.target) ? String(p.target) : null;
+  } catch (e) { return null; }
+}
+function opnSafe647() {
+  if (transportEngaged()) return false;
+  if (state.current) return false;
+  if (state.queue && state.queue.length) return false;
+  if (document.getElementById('pingate-card')) return false;
+  if (document.querySelector('.pingate')) return false;
+  if (document.getElementById('rec-code')) return false;
+  if (document.querySelector('[data-p609lock]')) return false;
+  if (document.querySelector('.opn-unlock')) return false;
+  if (opn604.editing) return false;
+  if (document.querySelector('.p609edit')) return false;
+  if (document.querySelector('.sheet, .anchmenu')) return false;
+  return true;
+}
+function opnTryAdopt647() {
+  if (!opnPend647) return;
+  if (opnAdoptRec647() === opnPend647) return;
+  if (!opnSafe647()) return;
+  var target = opnPend647;
+  opnPend647 = null;
+  // The one-reload guarantee rests on the record standing:
+  // if its write throws, do not reload — this attempt is
+  // skipped silently, the pending target stands again, and
+  // a later check may retry when storage works. No record
+  // stands, so no second fire is possible.
+  try { localStorage.setItem('opn-adopt-v647', JSON.stringify({ target: target })); } catch (e) { opnPend647 = target; return; }
+  location.reload();
+}
+function opnCheck647() {
+  if (typeof fetch !== 'function') return;
+  fetch('/sw.js', { cache: 'no-store' }).then(function (res) { return res.text(); }).then(function (text) {
+    var m = /ora-pro-nobis-v[0-9]+-[0-9]+/.exec(text || '');
+    if (!m) return;
+    var served = m[0];
+    if (!opnRunPin647) {
+      opnRunPin647 = served;
+      if (opnAdoptRec647() === served) { try { localStorage.removeItem('opn-adopt-v647'); } catch (e) {} }
+      return;
+    }
+    if (served === opnRunPin647) return;
+    if (opnReg647 && opnReg647.update) { try { opnReg647.update(); } catch (e) {} }
+    opnPend647 = served;
+    opnTryAdopt647();
+  }).catch(function () {});
+}
+// The whole init stands inside its own guard: a synchronous
+// throw here fails silent and whole, and can never skip the
+// boot stamp line below or break the boot.
+try {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(function (reg) { opnReg647 = reg; }).catch(function () {});
+    opnCheck647();
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') opnCheck647(); });
+    setInterval(opnCheck647, 30 * 60 * 1000);
+    setInterval(opnTryAdopt647, 5000); // opnAdoptTick647: the pending adoption's safe-moment re-check cadence
+  }
+} catch (e) {}
 try { localStorage.setItem('opn-boot', 'complete'); localStorage.removeItem('opn-boot-healed'); } catch (e) {} // v429 §2.5: the boot stamp — the synchronous tail ran through; re-arm the one-shot heal
 `;
