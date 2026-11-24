@@ -2350,6 +2350,8 @@ interface ExtResolutionRow {
   backup_url: string | null; // v628 (migration 0050): the OTHER source's pointer for the two labeled slots (the per-user preference's backup)
   backup_source: string | null; // v628 (migration 0050): the backup pointer's source name
   route: string | null; // v628 (migration 0050): the Divine Office fetch ROUTE that filled the row ('feed' / 'synthesis' / 'scrape' / NULL)
+  backup_image_url: string | null; // v648 (migration 0051): the backup pointer's image (the matched item's image else the feed's channelImageUrl — the fill write's fallback)
+  backup_duration_s: number | null; // v648 amendment (migration 0051, doc §3.7): the backup pointer's duration (the matched item's durationS, else the displaced fill row's duration_s)
 }
 interface ExtFeedStateRow {
   feed_key: string; last_success_at: string | null;
@@ -2385,30 +2387,30 @@ async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: 
 // v626: the two office slots whose stored title carries the
 // filling source (John's labeling rule, 2026-11-23 08:43 CT).
 const EXT_LABELED_SLOTS = new Set(["ext-morning-prayer", "ext-evening-prayer"]);
-async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null, backupUrl?: string | null, backupSource?: string | null, route?: string | null): Promise<void> {
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null, backupUrl?: string | null, backupSource?: string | null, route?: string | null, backupImageUrl?: string | null, backupDurationS?: number | null): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source, backup_url, backup_source, route)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source, backup_url, backup_source, route, backup_image_url, backup_duration_s)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
        duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
        desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date, source = excluded.source,
-       backup_url = excluded.backup_url, backup_source = excluded.backup_source, route = excluded.route`,
+       backup_url = excluded.backup_url, backup_source = excluded.backup_source, route = excluded.route, backup_image_url = excluded.backup_image_url, backup_duration_s = excluded.backup_duration_s`,
   ).bind(
     slotId, date, it ? "present" : "missing", title,
     it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
     it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
     nowISO(), stamp, episodeDate, source,
-    backupUrl ?? null, backupSource ?? null, route ?? null,
+    backupUrl ?? null, backupSource ?? null, route ?? null, backupImageUrl ?? null, backupDurationS ?? null,
   ).run();
 }
 // v628: the backup-pointer write — the ONLY writer of the
 // backup columns on a standing row: it never touches the
 // primary pointer, title, source, or resolved_at (a backup
 // landing must not freshen the primary's stand-down fact).
-async function extResolutionBackupWrite(env: Env, date: string, slotId: string, backupUrl: string, backupSource: string): Promise<void> {
+async function extResolutionBackupWrite(env: Env, date: string, slotId: string, backupUrl: string, backupSource: string, backupImageUrl?: string | null, backupDurationS?: number | null): Promise<void> {
   try {
-    await env.DB.prepare("UPDATE ext_resolutions SET backup_url=?, backup_source=? WHERE date=? AND slot_id=?")
-      .bind(backupUrl, backupSource, date, slotId).run();
+    await env.DB.prepare("UPDATE ext_resolutions SET backup_url=?, backup_source=?, backup_image_url=?, backup_duration_s=? WHERE date=? AND slot_id=?")
+      .bind(backupUrl, backupSource, backupImageUrl ?? null, backupDurationS ?? null, date, slotId).run();
   } catch { /* bookkeeping; the next pass retries */ }
 }
 // v624 §2 D9 stand-down, slot class: every standing slot for
@@ -2724,7 +2726,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
           const it: ExtFeedItem = { title: sl.title, url, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
           const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
           const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "synthesis");
+          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "synthesis", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null); // v648: the displaced fill's image rides as the backup image (the fill write stood it on the row: the item's image else the StH channel image) · v648 amendment §3.7: the displaced fill's duration_s rides as the backup duration alongside it
           written628++;
           break;
         }
@@ -2840,7 +2842,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         for (const need of backupNeeds) {
           const [y, mo, d] = need.date.split("-").map(Number);
           const it = extMatchSth(feed.items, y, mo, d, need.token);
-          if (it) { await extResolutionBackupWrite(env, need.date, need.slotId, it.url, "Sing the Hours"); written++; }
+          if (it) { await extResolutionBackupWrite(env, need.date, need.slotId, it.url, "Sing the Hours", it.imageUrl || feed.channelImageUrl || null, it.durationS ?? null); written++; } // v648: the backup image — the matched item's image else the feed's channel image (the fill write's fallback) · v648 amendment §3.7: the backup duration — the matched item's durationS
         }
         await extFeedStateWrite(env, feedKey, true, null, null);
         summary.push({ feed: feedKey, ok: true, slotsWritten: written });
@@ -2896,7 +2898,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         const it: ExtFeedItem = { title: sl.title, url: epUrl, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
         const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
         const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "scrape");
+        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "scrape", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null); // v648: as the synthesis displacement above — the displaced fill's image is the backup image · v648 amendment §3.7: its duration_s is the backup duration
         written628++;
       }
     }
@@ -3095,7 +3097,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
         if (res.source) entry.source = res.source;
         // v628: the standing backup pointer (the preference's
         // other source) + the fill route, for the nightly flag.
-        if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: `${sd.title} - ${res.backup_source ?? ""}` };
+        if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: `${sd.title} - ${res.backup_source ?? ""}`, imageUrl: res.backup_image_url ?? null, durationSec: res.backup_duration_s ?? null }; // v648: the backup's image rides the payload (migration 0051) · v648 amendment §3.7: its duration rides too (backup_duration_s)
         if (res.route) entry.route = res.route;
       }
       if (stale) entry.stale = true;
@@ -5793,8 +5795,32 @@ export default {
             return err(404, "slot does not stand under the current settings");
           }
           let item: ExtFeedItem | null = null;
+          // v648 §3.4: for the two labeled slots a `src` query
+          // names the source the client CHOSE — the route serves
+          // from the day's ext_resolutions row (the standing
+          // source's stream_url, or the backup_source's
+          // backup_url) instead of re-resolving the feeds
+          // Divine-Office-first. A src matching neither column
+          // answers 404: never a silent serve of the other
+          // source. No src (or a non-labeled slot): the standing
+          // re-resolution below, byte-identical.
+          const src648 = url.searchParams.get("src");
+          let srcServed648 = false;
+          if (src648 && EXT_LABELED_SLOTS.has(slotId)) {
+            let row648: ExtResolutionRow | null = null;
+            try { row648 = await env.DB.prepare("SELECT * FROM ext_resolutions WHERE date=? AND slot_id=?").bind(date, slotId).first<ExtResolutionRow>(); } catch { row648 = null; }
+            let url648: string | null = null;
+            if (row648 && row648.state === "present") {
+              if (src648 === row648.source) url648 = row648.stream_url;
+              else if (row648.backup_source && src648 === row648.backup_source) url648 = row648.backup_url;
+            }
+            if (!url648) return err(404, "no episode resolved for that source");
+            item = { title: row648?.title ?? "", url: url648, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
+            srcServed648 = true;
+          }
           try {
-            if (slotId === "ext-bible-in-a-year") {
+            if (srcServed648) { /* v648: served from the day's row above — no feed re-resolution */ }
+            else if (slotId === "ext-bible-in-a-year") {
               item = extMatchBible(await extFetchFeedItems(env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL), yy, mm, dd);
             } else if (slotId === "ext-gospel-exegesis") {
               // v337 §2.8: pass-through parity for the Exegesis port

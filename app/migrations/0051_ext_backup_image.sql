@@ -1,0 +1,22 @@
+-- v648 migration 0051 — the backup pointer's image (release
+-- doc §3.1): ext_resolutions gains backup_image_url (the
+-- Sing the Hours image for the backup pointer on the two
+-- labeled slots — the matched item's image else the feed's
+-- channelImageUrl, the same fallback the fill write uses).
+-- The choice on the client carries no image until this
+-- column stands, so a labeled settle mixed the standing
+-- entry's art (or the null-image Ora fallback) under the
+-- chosen source's title. Rows written before 0051 carry
+-- NULL until the watcher's next backup write for that day;
+-- the client treats a NULL backup image on the payload as
+-- part of an incomplete record (the v648 cache prune).
+ALTER TABLE ext_resolutions ADD COLUMN backup_image_url TEXT;
+-- v648 amendment (doc §3.7): the backup pointer's duration
+-- rides the same column family — backup_duration_s (the
+-- matched item's duration, else the displaced fill row's
+-- duration_s on the v634 displacement writes), so the
+-- payload's backup object carries durationSec and a settle
+-- built from the choice stands the CHOSEN record's duration,
+-- never the standing entry's. Rows written before this
+-- column stands carry NULL until the next backup write.
+ALTER TABLE ext_resolutions ADD COLUMN backup_duration_s INTEGER;

@@ -2170,9 +2170,25 @@ function opnSthFirstSet632(sthFirst) {
   try { localStorage.setItem(OPN_STH_FIRST_KEY, sthFirst ? 'on' : 'off'); } catch (e) {}
 }
 function opnExtChoice628(slot, e, src) {
-  // Returns { title, streamUrl, source, backup } — the entry
-  // re-ordered for this user. No backup standing, or a slot
+  // Returns { title, streamUrl, source, backup, imageUrl, durationSec } —
+  // the entry re-ordered for this user. No backup standing, or a slot
   // outside the two labeled hours: the entry stands as served.
+  // v648 §3.2: the choice carries the WHOLE record — each
+  // side's imageUrl rides its own side (the chosen side's
+  // image on the result, the other source's image on the
+  // returned backup), so a settle built from the choice
+  // never borrows the standing entry's art for the chosen
+  // source's title.
+  // v648 amendment §3.7 (John, 2026-11-24): the row's title
+  // is the ORIGINAL TITLE OF THE RECORD THAT PLAYS — the
+  // backup side's title is e.backup.title VERBATIM (the
+  // record's own served title), never composed client-side
+  // from the slot title + source; if e.backup.title is
+  // somehow absent, the slot's BARE title stands. Duration
+  // travels with the record likewise: the chosen side
+  // carries its own durationSec (e.durationSec for the
+  // standing source, e.backup.durationSec for Sing the
+  // Hours) and the returned backup carries the other side's.
   // v631: the served entry's own source (the source that
   // filled the server row, carried on the payload since v631)
   // governs over the slot default — an entry filled by Sing
@@ -2181,13 +2197,13 @@ function opnExtChoice628(slot, e, src) {
   // direct browser reads). Before v631 the choice named every
   // no-backup entry 'Divine Office', the download went direct
   // first, and an StH fill settled missing on the phone.
-  var plain = { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: null };
+  var plain = { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: null, imageUrl: e.imageUrl || null, durationSec: e.durationSec };
   if (!e || !e.backup || !e.backup.streamUrl) return plain;
   if (slot.slotId !== 'ext-morning-prayer' && slot.slotId !== 'ext-evening-prayer') return plain;
-  var backupTitle = slot.title + ' - ' + (e.backup.source || 'Sing the Hours');
-  var backup = { title: backupTitle, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours' };
-  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, backup: { title: e.title, streamUrl: e.streamUrl, source: e.source || 'Divine Office' } };
-  return { title: e.title, streamUrl: e.streamUrl, source: e.source || src, backup: backup };
+  var backupTitle = e.backup.title || slot.title; // §3.7: the record's own served title verbatim; absent → the slot's BARE title, never a composed source-suffixed string
+  var backup = { title: backupTitle, streamUrl: e.backup.streamUrl, source: e.backup.source || 'Sing the Hours', imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec };
+  if (opnSthPrimary628()) return { title: backupTitle, streamUrl: e.backup.streamUrl, source: backup.source, imageUrl: e.backup.imageUrl || null, durationSec: e.backup.durationSec, backup: { title: e.title, streamUrl: e.streamUrl, source: e.source || 'Divine Office', imageUrl: e.imageUrl || null, durationSec: e.durationSec } };
+  return { title: e.title, streamUrl: e.streamUrl, source: e.source || src, imageUrl: e.imageUrl || null, durationSec: e.durationSec, backup: backup };
 }
 /* ---- v622: enrolment onboarding inside PIN setup ----
    When a PIN is (re)set — the set sheet, the Conscience
@@ -17776,6 +17792,17 @@ function oraSnapshotTrack(d, date) {
       return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
         mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId), needsAuth: true, artUri: artUriFor(d) };
     }
+    // v648 §3.4: a labeled slot's native hand-off names the
+    // slot record's standing (chosen) source — the mediaUri
+    // is the Worker pass-through carrying &src=, so the
+    // native engine is served the chosen source from the
+    // day's row, exactly as the web download is. (The direct
+    // enclosure below cannot name a source; the pass-through
+    // without src re-resolves Divine-Office-first.)
+    if (d.episodeId === 'ext-morning-prayer' || d.episodeId === 'ext-evening-prayer') {
+      return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
+        mediaUri: origin + '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(d.episodeId) + (st.source ? '&src=' + encodeURIComponent(st.source) : ''), needsAuth: true, artUri: artUriFor(d) };
+    }
     var pre2 = st.enclosureUrl || (st.streamUrl && String(st.streamUrl).indexOf('blob:') !== 0 ? String(st.streamUrl) : '');
     if (!pre2) return null;
     var onOrigin = pre2.indexOf(origin + '/') === 0 || pre2.charAt(0) === '/';
@@ -20009,7 +20036,19 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       var wantFirst637 = opnSthPrimary628() ? 'Sing the Hours' : 'Divine Office';
       ['ext-morning-prayer', 'ext-evening-prayer'].forEach(function (sid637) {
         var c637 = rec.slots[sid637];
-        if (c637 && c637.state === 'present' && c637.source !== wantFirst637) delete rec.slots[sid637];
+        // v648 §3.5: the prune checks the WHOLE record — a
+        // cached labeled slot also leaves when its backup is
+        // missing or its imageUrl stands null (a mixed-source
+        // record's exact shape: the choice's title over the
+        // other source's audio/art, made durable by the audio
+        // cache). The slot's opn-ext-audio-v1 entry is evicted
+        // in the same act, so the poisoned blob can never
+        // restore under the re-settled record. A whole record
+        // (first-choice source + backup + image) is untouched.
+        if (c637 && c637.state === 'present' && (c637.source !== wantFirst637 || !c637.backup || !c637.backup.streamUrl || !c637.imageUrl)) {
+          delete rec.slots[sid637];
+          if ('caches' in window) { try { caches.open('opn-ext-audio-v1').then(function (cache648) { return cache648.delete(offlineDayKey(date, sid637)); }).catch(function () {}); } catch (e648) {} }
+        }
       });
     }
     // v342 §2.3: the record gains own + intentions sections. A
@@ -20092,7 +20131,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
-        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null };
+        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null, backup: c.backup || null }; // v648 §3.5: the cached backup seeds the record (whole-record restore)
       } else {
         state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
       }
@@ -20108,6 +20147,13 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         var st = state.extSlots[slot.slotId];
         if (st && st.state === 'present') {
           rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.enclosureUrl || st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder, imageUrl: st.imageUrl || null, descText: st.descText || null };
+          // v648 §3.5: a labeled slot's cache record stands
+          // WHOLE — its backup rides alongside the standing
+          // fields (before v648 the write dropped it, so a
+          // cached record could never prove its other source).
+          if ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && st.backup && st.backup.streamUrl) {
+            rec.slots[slot.slotId].backup = { streamUrl: st.backup.streamUrl, source: st.backup.source || null, title: st.backup.title || null, imageUrl: st.backup.imageUrl || null, durationSec: st.backup.durationSec }; // v648 amendment §3.7: the labeled backup's durationSec is stored with its other fields
+          }
         }
       });
       // v342 §2.3: only PRESENT own items are cached; a missing
@@ -20140,6 +20186,14 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     };
     state.ownWriteCache = writeCache;
     var settle = function (slot, st, epoch638) {
+      // v648 §3.5: the backup rides the slot record through
+      // every settle — settleMeta's downloading record carries
+      // it, but the present objects built by extDownload /
+      // extRestoreCached name only the standing source; a
+      // settle that names no backup inherits the record's
+      // standing backup, so writeCache can store the whole
+      // record (and a restore never degrades it).
+      if (st && !st.backup) { var prev648 = state.extSlots[slot.slotId]; if (prev648 && prev648.backup) st.backup = prev648.backup; }
       // v638 §4.1 (PROBE-D fix-forward): the epoch gate
       // fires FIRST, before the prior-record guard below.
       // A hook-initiated completion carrying a stale epoch
@@ -20191,7 +20245,8 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       // after the claim settles — is the heal. The body is
       // materialized to a Blob BEFORE the cache write, so no
       // stream clone is ever raced.
-      var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId);
+      var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId)
+        + ((slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') && meta.source ? '&src=' + encodeURIComponent(meta.source) : ''); // v648 §3.4: a labeled slot's pass-through names the meta's (chosen) source — the Worker serves that source from the day's row, never its own re-resolution
       // v337 §2.8: a 'passthrough' slot (Gospel Exegesis — the
       // Anchor→CloudFront enclosure chain's final hop sends no
       // CORS header) downloads ONLY through the Worker; every other
@@ -20238,7 +20293,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
         // through this same download path (no backup rides the
         // retry, so the flip happens at most once).
         if (meta.backup && meta.backup.streamUrl) {
-          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638); // §4.1: the backup flip is the SAME re-settle — same epoch, not a new one
+          extDownload(slot, { title: meta.backup.title, enclosureUrl: meta.backup.streamUrl, durationSec: meta.backup.durationSec, sizeBytes: meta.sizeBytes, source: meta.backup.source, imageUrl: meta.backup.imageUrl || null, descText: meta.descText || null, stale: !!meta.stale, resolvedAt: meta.resolvedAt || null }, epoch638); // §4.1: the backup flip is the SAME re-settle — same epoch, not a new one · v648 §4 addendum F1: the flip settles the BACKUP record whole — its own imageUrl + durationSec, never the failed first choice's
           return;
         }
         settle(slot, { state: 'missing', title: meta.title, source: meta.source }, epoch638);
@@ -20294,13 +20349,13 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           var epoch638 = (extResettleEpoch638[slot.slotId] || 0) + 1;
           extResettleEpoch638[slot.slotId] = epoch638;
           if (cur638 && cur638.state === 'present') extResettlePrior638[slot.slotId] = { rec: cur638, epoch: epoch638 };
-          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638);
+          settleMeta(slot, { title: choice638.title, enclosureUrl: choice638.streamUrl, durationSec: choice638.durationSec, sizeBytes: e.sizeBytes, source: choice638.source, backup: choice638.backup, imageUrl: choice638.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }, epoch638); // v648 §3.3: the flip re-settle takes the CHOICE's image, as the courier leg does · v648 amendment §3.7: it takes the CHOICE's durationSec likewise
         });
       }).catch(function () { /* the refetch failed: the standing rows stand as they are */ });
     };
     var extRestoreCached = function (slot) {
       var c = rec.slots[slot.slotId];
-      var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null };
+      var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source, imageUrl: c.imageUrl || null, descText: c.descText || null, backup: c.backup || null }; // v648 §3.5: the restore carries the cached backup (a re-download on a cache miss flips to it whole, image included)
       if (!('caches' in window)) { extDownload(slot, meta); return; }
       // A cache read issued in the same moment the service worker
       // is settling a fresh page can stall without ever settling;
@@ -20421,7 +20476,6 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
           var c = cachedIds[slot.slotId];
           var src = slot.courier ? slot.source : 'Divine Office';
           if (e && e.state === 'present') {
-            if (c && c.streamUrl === e.streamUrl) return; // the cache restore owns this slot
             // v350: the Bible entry carries the item's RAW title;
             // the display title is built here by the standing
             // extBibleTitle construction (one title rule).
@@ -20429,7 +20483,18 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
             // Evening — the served entry re-orders around the
             // payload's backup pointer before it settles.
             var choice628 = opnExtChoice628(slot, e, src);
-            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : choice628.title, enclosureUrl: choice628.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: choice628.source, backup: choice628.backup, imageUrl: e.imageUrl || null, descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null });
+            // v648 §4 addendum F2: the pointer-confirm compares
+            // the cached record against the CHOICE-REORDERED
+            // stream, not the raw served entry — a whole cached
+            // record standing under the choice (its streamUrl is
+            // the backup pointer on a DO-standing day) is owned
+            // by the cache restore; a cached record the courier
+            // genuinely contradicts (a different enclosure than
+            // the choice's) still falls through and re-settles.
+            // For non-labeled slots the choice is the identity
+            // re-order (choice.streamUrl === e.streamUrl).
+            if (c && c.streamUrl === choice628.streamUrl) return; // the cache restore owns this slot
+            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : choice628.title, enclosureUrl: choice628.streamUrl, durationSec: (slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') ? choice628.durationSec : e.durationSec, sizeBytes: e.sizeBytes, source: choice628.source, backup: choice628.backup, imageUrl: (slot.slotId === 'ext-morning-prayer' || slot.slotId === 'ext-evening-prayer') ? (choice628.imageUrl || null) : (e.imageUrl || null), descText: e.descText || null, stale: !!e.stale, resolvedAt: e.resolvedAt || null }); // v648 §3.3: a labeled slot settles with the CHOICE's image, never the standing entry's · v648 amendment §3.7: a labeled slot settles with the CHOICE's durationSec likewise; non-labeled slots keep e.durationSec
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             // v624 §2 D5: an unresolved entry settles missing
@@ -20750,7 +20815,8 @@ function offlineFetchItemAudio(item) {
   if (item.kind === 'own') return offlineFetchBlob('/api/player/feed-audio?url=' + encodeURIComponent(item.enclosureUrl));
   if (item.kind === 'ai') return offlineFetchBlob(item.enclosureUrl);
   if (item.kind === 'pod') return offlineFetchBlob(item.enclosureUrl).catch(function () { return offlineFetchBlob('/api/player/feed-audio?url=' + encodeURIComponent(item.enclosureUrl)); });
-  var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(item.date) + '&slot=' + encodeURIComponent(item.id);
+  var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(item.date) + '&slot=' + encodeURIComponent(item.id)
+    + ((item.id === 'ext-morning-prayer' || item.id === 'ext-evening-prayer') && item.source ? '&src=' + encodeURIComponent(item.source) : ''); // v648 §3.4 (offline extension): a labeled slot's pass-through names the source the item stands under — the Worker serves that source from the day's row, never its own re-resolution (mirrors extDownload); no source on the item → the URL stands unchanged
   if (item.download === 'passthrough') return offlineFetchBlob(passthrough);
   var first = item.source === 'Sing the Hours' ? passthrough : item.enclosureUrl;
   var second = item.source === 'Sing the Hours' ? item.enclosureUrl : passthrough;
