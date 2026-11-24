@@ -17036,7 +17036,17 @@ function wireRowActs(scope) {
   scope.querySelectorAll('[data-rowmenu]').forEach(function (b) {
     b.addEventListener('click', function () {
       var key = b.getAttribute('data-rowmenu');
-      var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
+      // v653: the attribute carries the row's CARD KEY
+      // (descCardKey — episodeId plus any #occ / @side
+      // stamps), so resolve by full card key, the play
+      // wiring's own read. The readTracks fallback stands
+      // for rows that stand in the payload build but not in
+      // the composed list; readTracks is keyed by BARE
+      // episodeId only, so the fallback reads the bare id
+      // parsed off the card key (the segment before any
+      // '#' or '@') — keyed by the card key itself it could
+      // never hit a stamped row.
+      var t = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === key; })[0] || state.readTracks[String(key || '').split(/[#@]/)[0]];
       if (!t) return;
       // v607: on the Praylist home, an EPISODE row's ⋮ menu
       // carries the v585 title card as its Details item —
@@ -17061,7 +17071,10 @@ function wireRowActs(scope) {
   scope.querySelectorAll('[data-rowshare]').forEach(function (b) {
     b.addEventListener('click', function () {
       var key = b.getAttribute('data-rowshare');
-      var t = (state.dayDescs || []).filter(function (x) { return x.episodeId === key; })[0] || state.readTracks[key];
+      // v653: same card-key read as the rowmenu handler
+      // above (full card key first, the readTracks fallback
+      // keyed by the bare episodeId parsed off the key).
+      var t = (state.dayDescs || []).filter(function (x) { return descCardKey(x) === key; })[0] || state.readTracks[String(key || '').split(/[#@]/)[0]];
       if (t) shareTrackSheet(t);
     });
   });
