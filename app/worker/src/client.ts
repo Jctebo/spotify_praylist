@@ -15834,21 +15834,96 @@ function openSheetMenu(title, items, anchorEl) {
   var vw = window.innerWidth, vh = window.innerHeight;
   var anchor = anchorEl || (document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null);
   var ar = anchor ? anchor.getBoundingClientRect() : null;
-  var width = ar ? Math.min(Math.max(232, ar.width), vw - 24) : vw - 24;
+  // v641 Q1 (F1): the width floor is viewport-keyed — 232px
+  // on phone widths, 320px at vw >= 600; the vw - 24 cap
+  // and the right-edge anchor alignment stand unchanged.
+  var wfloor = vw >= 600 ? 320 : 232;
+  var width = ar ? Math.min(Math.max(wfloor, ar.width), vw - 24) : vw - 24;
   card.style.width = width + 'px';
   card.style.visibility = 'hidden';
   var h = card.offsetHeight;
-  var left, top;
+  // v641 Q2 (F3): the Now Playing dock and the tab bar
+  // bound the placement like the viewport edges. Both
+  // bounds are measured rects read at open: the tab bar
+  // stands always; the dock counts only while it stands
+  // (updateDock hides it with the hidden class and drops
+  // body.dock-on when no track is current).
+  var tabEl = document.getElementById('tabbar');
+  var tabTop = tabEl ? tabEl.getBoundingClientRect().top : vh;
+  var dockEl = document.getElementById('dock');
+  var dockStands = !!(dockEl && !dockEl.classList.contains('hidden') && document.body.classList.contains('dock-on'));
+  var dockTop = dockStands ? dockEl.getBoundingClientRect().top : 0;
+  if (dockStands && !(dockTop > 0)) dockStands = false;
+  var boundTop = (dockStands ? dockTop : tabTop) - 6;
+  var left, top, capped = false, cappedAbove = false, cappedBound = false;
   if (ar) {
     left = Math.max(12, Math.min(ar.right - width, vw - width - 12));
-    if (ar.bottom + 6 + h <= vh - 12) top = ar.bottom + 6;
-    else if (ar.top - 6 - h >= 12) top = ar.top - 6 - h;
-    else if (vh - ar.bottom >= ar.top) { top = ar.bottom + 6; card.style.maxHeight = (vh - 12 - top) + 'px'; }
-    else { card.style.maxHeight = (ar.top - 18) + 'px'; top = ar.top - 6 - Math.min(h, ar.top - 18); }
-  } else { left = 12; top = vh - 76 - h; }
+    if (ar.bottom + 6 + h <= boundTop) top = ar.bottom + 6;
+    else if (ar.top - 6 - h >= 12) {
+      top = ar.top - 6 - h;
+      // An anchor seated inside the bars' band (a low row
+      // under the dock's top) would put even the above
+      // card's foot across the bound; cap it at boundTop
+      // so Q2's rule — the card never covers either bar —
+      // holds at that seat too.
+      if (top + h > boundTop) { card.style.maxHeight = (boundTop - top) + 'px'; capped = true; cappedBound = true; }
+    }
+    else if (boundTop - ar.bottom >= ar.top) { top = ar.bottom + 6; card.style.maxHeight = (boundTop - top) + 'px'; capped = true; }
+    else { card.style.maxHeight = (ar.top - 18) + 'px'; top = ar.top - 6 - Math.min(h, ar.top - 18); capped = true; cappedAbove = true; if (top + Math.min(h, ar.top - 18) > boundTop) { card.style.maxHeight = (boundTop - top) + 'px'; cappedBound = true; } }
+  } else {
+    left = 12;
+    if (h > boundTop - 12) { card.style.maxHeight = (boundTop - 12) + 'px'; capped = true; h = boundTop - 12; }
+    top = boundTop - h;
+  }
   card.style.left = left + 'px';
   card.style.top = top + 'px';
   card.style.visibility = '';
+  if (capped) {
+    // v641 Q5 (F4): a capped card carries the scroll sign —
+    // the cap snaps down from measured row offsets to
+    // header + full rows + ~half a row (a partial row
+    // stands at the foot), and the card wears the capped
+    // class whose foot fade clears at the scroll foot.
+    // Guard: the cap never drops below header + one full
+    // row + a partial row; the snapped cap never exceeds
+    // the Q2 bound's cap.
+    var capNow = parseFloat(card.style.maxHeight) || card.clientHeight;
+    var rows641 = card.querySelectorAll('[data-menuitem]');
+    if (rows641.length && card.scrollHeight > card.clientHeight + 1) {
+      var cardTop641 = card.getBoundingClientRect().top;
+      var lastFull641 = null;
+      rows641.forEach(function (r641) {
+        var rr641 = r641.getBoundingClientRect();
+        if (rr641.bottom - cardTop641 <= capNow + 0.5) lastFull641 = r641;
+      });
+      if (lastFull641) {
+        var lf641 = lastFull641.getBoundingClientRect();
+        var nx641 = lastFull641.nextElementSibling;
+        var half641 = nx641 ? Math.round(nx641.getBoundingClientRect().height / 2) : 22;
+        var snap641 = Math.round(lf641.bottom - cardTop641) + half641;
+        // guard minimum: header + one full row + a partial row
+        var first641 = rows641[0].getBoundingClientRect();
+        var min641 = Math.round(first641.bottom - cardTop641) + (rows641.length > 1 ? Math.round(rows641[1].getBoundingClientRect().height / 2) : Math.round(first641.height / 2));
+        if (snap641 < min641) snap641 = min641;
+        if (snap641 < capNow) {
+          card.style.maxHeight = snap641 + 'px';
+          // the roomier-above branch keeps its foot at the
+          // anchor; a bound-capped card keeps its top (its
+          // foot only pulls up, never past boundTop)
+          if (cappedAbove && !cappedBound) { top = ar.top - 6 - snap641; card.style.top = top + 'px'; }
+        }
+      }
+      if (card.scrollHeight > card.clientHeight + 1) {
+        card.classList.add('capped');
+        var syncFade641 = function () {
+          if (card.scrollTop + card.clientHeight >= card.scrollHeight - 1) card.classList.add('atfoot');
+          else card.classList.remove('atfoot');
+        };
+        card.addEventListener('scroll', syncFade641);
+        syncFade641();
+      }
+    }
+  }
   var close = function () { catcher.remove(); card.remove(); };
   catcher.addEventListener('click', close);
   card.querySelectorAll('[data-menuitem]').forEach(function (b) {

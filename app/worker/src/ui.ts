@@ -557,7 +557,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    card's 6px padding. */
 .menucatcher { position:fixed; inset:0; z-index:65; }
 .anchmenu { position:fixed; z-index:70; background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 32px rgba(42,38,32,.20); padding:6px; overflow-y:auto; animation:opnrise .18s ease; }
-.anchmenu h1.screen { font-size:12px; font-family:var(--sans); letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:4px 8px 6px; }
+.anchmenu h1.screen { font-size:12px; font-family:var(--sans); letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:4px 8px 6px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.anchmenu.capped::after { content:''; display:block; position:sticky; bottom:0; height:22px; margin-top:-22px; background:linear-gradient(to bottom, rgba(0,0,0,0), var(--card)); pointer-events:none; }
+.anchmenu.capped.atfoot::after { display:none; }
 .anchmenu .menurow { background:none; border:none; margin:0; border-radius:10px; font-size:15px; }
 /* v457: the header menu's group heads — quiet sans caps
    lines between the navigation groups; not rows (no act,
@@ -1071,7 +1073,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v638-1";
+var CACHE = "ora-pro-nobis-v641-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
