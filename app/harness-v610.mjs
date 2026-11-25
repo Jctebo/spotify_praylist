@@ -104,13 +104,13 @@ function extractServerFn(src, name) {
 function stripServerValidate(src) {
   let f = extractServerFn(src, 'validateProfileContents');
   const reps = [
-    ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-    ['const out: Record<string, { kind: string; key?: string }[]> = {};', 'const out = {};'],
+    ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+    ['const out: Record<string, { kind: string; key?: string; side?: string }[]> = {};', 'const out = {};'],
     ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
     ['const seen = new Set<string>();', 'const seen = new Set();'],
-    ['const list: { kind: string; key?: string }[] = [];', 'const list = [];'],
-    ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
-    ['list.push({ kind: kind as string, key: key as string });', 'list.push({ kind: kind, key: key });'],
+    ['const list: { kind: string; key?: string; side?: string }[] = [];', 'const list = [];'],
+    ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+    ['list.push(side670 ? { kind: kind as string, key: key as string, side: side670 } : { kind: kind as string, key: key as string });', 'list.push(side670 ? { kind: kind, key: key, side: side670 } : { kind: kind, key: key });'],
     // v610 ship (merge with v609 repair 2): the '.includes(key as string)'
     // strip anchor stood in the old four-key course check, which repair 2
     // generalized away — the extracted fn carries no such cast now, so
@@ -119,7 +119,8 @@ function stripServerValidate(src) {
   for (const [a, b] of reps) { if (!f.includes(a)) throw new Error('server validate shape moved: ' + a.slice(0, 60)); f = f.split(a).join(b); }
   return f;
 }
-const serverValidate = new Function(stripServerValidate(indexSrc) + '\nreturn validateProfileContents;')();
+const stripSide670 = (f) => f.split('let side670: string | undefined;').join('let side670;');
+const serverValidate = new Function(stripSide670(stripServerValidate(indexSrc)) + '\nreturn validateProfileContents;')();
 
 // ---------- standings builder (v603 recipe) ----------
 function buildStanding(w) {

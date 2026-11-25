@@ -122,7 +122,7 @@ const artAt = (h) => Math.max(88, Math.min(Math.min(0.72 * 390, h - BUDGET), 340
     artAt(844) === 280.8 && artAt(740) === 280.8 && artAt(667) === 253 && artAt(568) === 154,
     hs.map((h) => artAt(h)));
 }
-check("A pin: CACHE stands at ora-pro-nobis-v671-1 (its one seat — the pin value re-pointed at v671, per the standing practice)", uiSrc.includes('var CACHE = "ora-pro-nobis-v671-1";'));
+check("A pin: CACHE stands at ora-pro-nobis-v670-1 (its one seat — the pin value re-pointed at v670, per the standing practice)", uiSrc.includes('var CACHE = "ora-pro-nobis-v670-1";'));
 
 // ---------- D statics: byte-stable transport + bottom row ----------
 {

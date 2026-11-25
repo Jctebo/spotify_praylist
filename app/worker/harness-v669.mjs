@@ -137,7 +137,7 @@ async function buildServe(wt) {
   return { port: server.address().port, server, APPJS, SWJS };
 }
 const main = await buildServe(WT);
-check('F the served service worker carries the v671 pin', main.SWJS.includes('ora-pro-nobis-v671-1'), 'pin not in served /sw.js');
+check('F the served service worker carries the v670 pin', main.SWJS.includes('ora-pro-nobis-v670-1'), 'pin not in served /sw.js');
 check('F the served bundle carries the mode store + attribute', main.APPJS.includes('opn-mode-v669') && main.APPJS.includes('data-mode') && main.APPJS.includes('prefers-color-scheme'), 'mode machinery missing from /app.js');
 let base = null;
 try { base = await buildServe(BASE_WT); } catch (e) { check('B base tree builds from the pristine checkout at ' + BASE_WT, false, String(e).slice(0, 200)); }

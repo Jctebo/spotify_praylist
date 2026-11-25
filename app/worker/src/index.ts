@@ -1342,20 +1342,21 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
 // (PROFILE_COURSE_KEYS retires) — a course-kind item drops
 // at validation, exactly the client's drop, so a stored
 // list carrying one reads back courseless.
-function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string }[]> } | { error: string } {
+function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {
   if (contents === undefined || contents === null) return { normalized: undefined };
   if (typeof contents !== "object" || Array.isArray(contents)) return { error: "contents must be an object" };
   const HOURS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"];
-  const out: Record<string, { kind: string; key?: string }[]> = {};
+  const out: Record<string, { kind: string; key?: string; side?: string }[]> = {};
   for (const [block, items] of Object.entries(contents as Record<string, unknown>)) {
     if (block !== "Novenas" && !HOURS.includes(block)) return { error: `bad contents block ${block}` };
     if (block !== "Novenas" && !coreBlocks.includes(block)) return { error: `contents for a block that does not stand: ${block}` };
     if (!Array.isArray(items)) return { error: `contents.${block} must be an array` };
     const seen = new Set<string>();
-    const list: { kind: string; key?: string }[] = [];
+    const list: { kind: string; key?: string; side?: string }[] = [];
     for (const raw of items) {
-      const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown };
+      const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown };
       const kind = it.kind, key = it.key;
+      let side670: string | undefined;
       if (block === "Novenas") {
         if (kind === "all-novenas") { if (!seen.has("all-novenas")) { seen.add("all-novenas"); list.push({ kind: "all-novenas" }); } continue; }
         if (kind !== "novena" || typeof key !== "string" || !key) return { error: "bad novena selector in contents" };
@@ -1397,6 +1398,14 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           if (typeof kind !== "string" || !["source", "prayer", "seat"].includes(kind)) return { error: `bad contents kind ${String(kind)}` };
           if (typeof key !== "string" || !key) return { error: "contents item needs a key" };
           if (kind === "seat" && key !== "daily-readings") return { error: `bad seat ${key}` };
+          // v670 §3.1: a source item naming a labeled slot
+          // (Morning / Evening Prayer) carries its side —
+          // 'do' | 'sth' is preserved; any other value (or
+          // none) normalizes to 'sth', the standing default.
+          // The labeled list is a literal here because this
+          // fn is extracted standalone by the harnesses (the
+          // client's opnCheckContents590 mirror rule).
+          if (kind === "source" && (key === "ext-morning-prayer" || key === "ext-evening-prayer")) side670 = it.side === "do" || it.side === "sth" ? it.side : "sth";
         }
       }
       const id = `${kind}:${key}`;
@@ -1409,7 +1418,7 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
       // keeps the standing dedupe.
       if (seen.has(id) && !(kind === "source" && ["ext-invitatory", "ext-morning-prayer", "ext-midmorning-prayer", "ext-midday-prayer", "ext-midafternoon-prayer", "ext-office-of-readings", "ext-evening-prayer", "ext-night-prayer"].includes(key))) continue;
       seen.add(id);
-      list.push({ kind: kind as string, key: key as string });
+      list.push(side670 ? { kind: kind as string, key: key as string, side: side670 } : { kind: kind as string, key: key as string });
     }
     out[block] = list;
   }

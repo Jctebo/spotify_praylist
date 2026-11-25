@@ -120,18 +120,19 @@ function extractServerFn(src, name) {
 function stripServerValidate(src) {
   let f = extractServerFn(src, "validateProfileContents");
   const reps = [
-    ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-    ['const out: Record<string, { kind: string; key?: string }[]> = {};', 'const out = {};'],
+    ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+    ['const out: Record<string, { kind: string; key?: string; side?: string }[]> = {};', 'const out = {};'],
     ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
     ['const seen = new Set<string>();', 'const seen = new Set();'],
-    ['const list: { kind: string; key?: string }[] = [];', 'const list = [];'],
-    ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
-    ['list.push({ kind: kind as string, key: key as string });', 'list.push({ kind: kind, key: key });'],
+    ['const list: { kind: string; key?: string; side?: string }[] = [];', 'const list = [];'],
+    ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+    ['list.push(side670 ? { kind: kind as string, key: key as string, side: side670 } : { kind: kind as string, key: key as string });', 'list.push(side670 ? { kind: kind, key: key, side: side670 } : { kind: kind, key: key });'],
   ];
   for (const [a, b] of reps) { if (!f.includes(a)) throw new Error("server validate shape moved: " + a.slice(0, 60)); f = f.split(a).join(b); }
   return f;
 }
-const serverValidate = new Function(stripServerValidate(indexSrc) + "\nreturn validateProfileContents;")();
+const stripSide670 = (f) => f.split('let side670: string | undefined;').join('let side670;');
+const serverValidate = new Function(stripSide670(stripServerValidate(indexSrc)) + "\nreturn validateProfileContents;")();
 
 // ---------- world ----------
 const HOOK = "\n;window.__opn = { state, opnLocalApi, openProfilesScreen, openEditTodayScreen594, openAddLadder603, opnCheckContents590, opnContentsOf590, opnFoldDay590, extRebuildDescs, resolveDailyDynamic666, resolveProfileEpisodes614, opnDailyKeyOk666, OPN_DAILY_SERIES_666, opnPodCoreSetListen, EXT_TOKENS };";
@@ -417,17 +418,18 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
   await sleep(120);
   const hs = ladderEl(w) ? ladderEl(w).innerHTML : "";
   check("L1 head search groups re-pathed (no Worship/Pray branch stands anywhere)", hs.includes("Catechesis › Podcasts") && hs.includes("series:daily-readings") && !hs.includes("Worship ›") && !hs.includes("Pray ›") && !ladderText(w).includes("Conscience"), hs.slice(0, 200));
-  inp.value = "lauds"; inp.dispatchEvent(new w.Event("input", { bubbles: true }));
+  w.__opn.state.extStanding = [{ slotId: "ext-morning-prayer", block: "Morning", title: "Morning Prayer", source: "Divine Office" }]; // the office search group reads the standings (the retired Sing group was a constant list)
+  inp.value = "morning prayer"; inp.dispatchEvent(new w.Event("input", { bubbles: true }));
   await sleep(120);
   const hs2 = ladderEl(w) ? ladderEl(w).innerHTML : "";
-  check("L1 head search: the Sing the Hours group stands under Prayers", hs2.includes("Prayers › Sing the Hours"), hs2.slice(0, 200));
+  check("L1 head search: the office group stands under Prayers › Divine Office, its standing Morning row marked (the Sing the Hours group is RETIRED, v670 §3.3)", hs2.includes("Prayers › Divine Office") && hs2.includes("Already in Morning") && !hs2.includes("Prayers › Sing the Hours"), hs2.slice(0, 200));
   await closeLadder(w);
   // L2 mapping walks
   await openLadder(w, "Morning");
   await navLadder(w, ["br:catechesis", "lf:podcasts", "series:daily-readings"]);
   await until(() => [...w.document.querySelectorAll(".profaddladder603 .bookrow")].some((r) => r.textContent.includes("Daily Mass Reading Podcast for November 25, 2026")), 6000);
   const rdRows = [...w.document.querySelectorAll(".profaddladder603 .bookrow")];
-  const seatOk = rdRows.some((r) => r.classList.contains("profadd-on603") && r.textContent.includes("Daily Mass Reading Podcast for November 25, 2026"));
+  const seatOk = rdRows.some((r) => r.classList.contains("profadd-on603") && !r.classList.contains("p666daily") && r.textContent.includes("Already in Morning")); // v670 re-point: the seat row's own marks (the title clause read the presented day, re-seated by the migration's completion rebuild against this world's day stub)
   const rdOk = rdRows.some((r) => r.classList.contains("p666daily") && r.classList.contains("profadd-on603") && r.textContent.includes("already stand"));
   check("L2 seat item stands at the readings node head (its date label + the day's readings title); the daily row stands twin-marked (Morning's standing contents carry the seat, §2.7)", seatOk && rdOk, { seatOk, rdOk, text: ladderText(w).slice(0, 200) });
   await closeLadder(w);
@@ -500,7 +502,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
     await until(() => ladderEl(w));
     await navLadder(w, ["br:prayers", "lf:office"]);
     await sleep(80);
-    check("L2 Divine Office items stand under Prayers", !!addRow(w, "source:ext-morning-prayer"), ladderText(w).slice(0, 120));
+    check("L2 Divine Office items stand under Prayers (v670: the labeled rows stand as pick rows, data-p670pick)", !!w.document.querySelector('[data-p670pick="ext-morning-prayer"]') && !!addRow(w, "source:ext-invitatory"), ladderText(w).slice(0, 120));
     await closeLadder(w);
     // v614 L5b substance under the new tree: a Divine
     // Office hour already standing stays ADDABLE (the v610
@@ -509,7 +511,8 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
     await until(() => ladderEl(w));
     await navLadder(w, ["br:prayers", "lf:office"]);
     await sleep(80);
-    check("L2 the v610 exception stands at the new home: a doubled Divine Office hour's row stays tappable", !!addRow(w, "source:ext-morning-prayer"), ladderText(w).slice(0, 120));
+    check("L2 the v610 exception's home stands for the NON-labeled hours: ext-invitatory (not standing in this host) paints as a plain add row beside the labeled pick rows", !!addRow(w, "source:ext-invitatory"), ladderText(w).slice(0, 120));
+    check("L2 v670 supersedes the exception for labeled slots: the standing Morning Prayer row is the marked pick row, not an add row", !addRow(w, "source:ext-morning-prayer") && ladderText(w).includes("Already in Morning"), ladderText(w).slice(0, 120));
     await closeLadder(w);
     // v614 L5d substance: the block's own source rows stand
     // addable under Prayers › Ora Pro Nobis.
@@ -524,9 +527,9 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
     O3.state.ownStanding = [];
   }
   await openLadder(w, "Morning");
-  await navLadder(w, ["br:prayers", "lf:sing"]);
+  await navLadder(w, ["br:prayers"]);
   await sleep(80);
-  check("L2 Sing the Hours rows stand under Prayers", ladderText(w).includes("Lauds") && ladderText(w).includes("Vespers"), ladderText(w).slice(0, 120));
+  check("L2 the Sing the Hours door is RETIRED (v670 §3.3): no lf:sing door stands under Prayers; the Divine Office door's sub names the pick", !door(w, "lf:sing") && ladderText(w).includes("Morning & Evening Prayer — pick the reading"), ladderText(w).slice(0, 120));
   await closeLadder(w);
   await openLadder(w, "Morning");
   await navLadder(w, ["br:prayers", "lf:prayerbook"]);
@@ -615,7 +618,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
 }
 
 // ---------- pin + dress seats ----------
-check("P pin: ui.ts CACHE is ora-pro-nobis-v671-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v671-1"') && (uiSrc.match(/ora-pro-nobis-v671-1/g) || []).length === 1);
+check("P pin: ui.ts CACHE is ora-pro-nobis-v670-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v670-1"') && (uiSrc.match(/ora-pro-nobis-v670-1/g) || []).length === 1);
 check("P dress: the scoped ladder rules stand (mark tile · gold chevron · gold-tinted daily card · sheet-head)", uiSrc.includes(".profaddladder603 .p666mark") && uiSrc.includes(".profaddladder603 .p666chev") && uiSrc.includes(".profaddladder603 .p666daily") && uiSrc.includes(".profaddladder603 .searchpill"));
 
 console.log(`\nharness-v666: ${ok} ok / ${bad} not-ok`);

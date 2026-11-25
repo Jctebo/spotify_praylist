@@ -2179,7 +2179,11 @@ function opnSthPrimary628() {
    opnSthFirstSet632 stands below only as a thin compat alias
    for standing harness hooks, writing the NEW store. */
 var OPN_OFFICE_CHOICE_KEY650 = 'opn-office-choice-v650';
-function opnOfficeChoice650() {
+function opnOfficeChoiceLegacy670() {
+  // v670 \u00a73.5/\u00a73.6: the reader's LAST seat \u2014 it stands
+  // only as the migration's legacy-choice reader (it folds
+  // the v628/v632 stores and defaults 'sth', exactly as it
+  // governed). No paint, label, or control reads it again.
   var v = null;
   try { v = localStorage.getItem(OPN_OFFICE_CHOICE_KEY650); } catch (e) {}
   if (v === 'do' || v === 'sth' || v === 'both') return v;
@@ -2196,14 +2200,75 @@ function opnOfficeChoice650() {
   try { localStorage.setItem(OPN_OFFICE_CHOICE_KEY650, migrated); } catch (e) {}
   return migrated;
 }
-function opnOfficeChoiceSet650(v) {
-  if (v !== 'do' && v !== 'sth' && v !== 'both') return;
-  try { localStorage.setItem(OPN_OFFICE_CHOICE_KEY650, v); } catch (e) {}
-}
-function opnSthFirstSet632(sthFirst) {
-  // v650 compat alias (no governing caller stands): a legacy
-  // boolean write lands on the new three-value store.
-  opnOfficeChoiceSet650(sthFirst ? 'sth' : 'do');
+/* v670 \u00a73.6: the one-time silent migration \u2014 the legacy
+   global choice becomes a side stamped on every profile's
+   labeled-slot contents items. Done-flag key
+   'opn-office-mig-v670'. Pure function of (the legacy
+   choice, each profile's effective lists); idempotent \u2014
+   the flag is set only when every needed write has landed,
+   and the legacy key is removed only then. A failed write
+   (or an unreadable payload) leaves the flag unset and the
+   legacy key standing; the next boot retries. The today
+   layer is NOT rewritten. Completion triggers the standing
+   rebuild + repaint. */
+var OPN_OFFICE_MIG_KEY670 = 'opn-office-mig-v670';
+var opnMig670Promise = null;
+function opnOfficeMig670() {
+  var doneFlag = null;
+  try { doneFlag = localStorage.getItem(OPN_OFFICE_MIG_KEY670); } catch (e) {}
+  if (doneFlag) return Promise.resolve(false);
+  if (opnMig670Promise) return opnMig670Promise;
+  opnMig670Promise = (function () {
+    var choice = opnOfficeChoiceLegacy670();
+    var migSide = choice === 'do' ? 'do' : 'sth'; // 'both' collapses to 'sth', its first painted side
+    var payloadP = (opn604.res && Array.isArray(opn604.res.profiles)) ? Promise.resolve(opn604.res) : opnLoadRes604();
+    var timedP = Promise.race([payloadP, new Promise(function (res) { setTimeout(function () { res(null); }, 4000); })]);
+    return timedP.then(function (res) {
+      if (!res || !Array.isArray(res.profiles)) return false; // retry next boot
+      var saves = [];
+      var anyChange = false;
+      res.profiles.forEach(function (prof) {
+        if (!prof || !Array.isArray(prof.coreBlocks)) return;
+        // The full contents carry: stored blocks verbatim
+        // first, migrated blocks patched over them \u2014 never
+        // a partial contents object.
+        var contents = prof.contents ? opnClone(prof.contents) : {};
+        var changed = false;
+        prof.coreBlocks.forEach(function (block) {
+          var stored = prof.contents && Array.isArray(prof.contents[block]) ? prof.contents[block] : null;
+          var eff = stored || opnStandingContents597(prof, block);
+          if (!eff.some(function (it) { return it && it.kind === 'source' && opnLabeledSlot650(it.key); })) return;
+          var seenSlot = {}, outList = [];
+          eff.forEach(function (it) {
+            if (it && it.kind === 'source' && opnLabeledSlot650(it.key)) {
+              if (seenSlot[it.key]) return; // duplicate copies of one labeled slot collapse to the first
+              seenSlot[it.key] = 1;
+              outList.push({ kind: 'source', key: it.key, side: migSide });
+            } else outList.push(opnClone(it));
+          });
+          contents[block] = outList;
+          changed = true;
+        });
+        if (changed) {
+          anyChange = true;
+          saves.push(profPut('/api/prayer/profiles/save', { key: prof.key, name: prof.name, honorLine: prof.honorLine || '', coreBlocks: prof.coreBlocks.slice(), layers: opnLayersOut(prof.layers), contents: contents })
+            .then(function (r) { if (r && Array.isArray(r.profiles)) opn604.res = r; return true; }));
+        }
+      });
+      if (!saves.length) {
+        try { localStorage.removeItem(OPN_OFFICE_CHOICE_KEY650); localStorage.setItem(OPN_OFFICE_MIG_KEY670, '1'); } catch (e) {}
+        return false;
+      }
+      return Promise.all(saves).then(function () {
+        try { localStorage.removeItem(OPN_OFFICE_CHOICE_KEY650); localStorage.setItem(OPN_OFFICE_MIG_KEY670, '1'); } catch (e) {}
+        if (state.dayPayload) extRebuildDescs(state.dayPayload);
+        opnRepaintHome604();
+        profileRebuild();
+        return anyChange;
+      });
+    }).catch(function () { return false; }); // flag unset, legacy key standing \u2014 retry next boot
+  })();
+  return opnMig670Promise;
 }
 /* v669 §3.1: the dark-mode store — a three-value device
    preference in its OWN plain localStorage key, in the
@@ -2267,34 +2332,41 @@ function extSide2View650(rec) {
   if (!s || s.state !== 'present' || !s.enclosureUrl) return null;
   return { state: 'present', title: s.title, source: s.source, imageUrl: s.imageUrl || null, durationSec: s.durationSec, sizeBytes: s.sizeBytes, enclosureUrl: s.enclosureUrl, streamUrl: s.streamUrl, descText: s.descText || null, stale: !!s.stale, unresolved: !!s.unresolved, resolvedAt: s.resolvedAt || null };
 }
-function extPaintSides650(rec) {
-  // v650 \u00a73.1 paint rule: one view per side the setting
-  // selects that stands present; if NO selected side stands
-  // but another side does, that side paints alone.
+function extPaintSide670(rec, sideTag) {
+  // v670 \u00a73.2: the paint rule \u2014 the NAMED side's view if it
+  // stands present; else the OTHER side's view if it stands
+  // (the v650 missing-side fallback, carried whole); else
+  // no view. One view only: Both is retired whole.
+  var want = sideTag === 'do' ? 'do' : 'sth';
   var views = [];
   var sv = extStandingView650(rec); if (sv) views.push(sv);
   var s2 = extSide2View650(rec); if (s2) views.push(s2);
-  if (!views.length) return [];
-  var choice = opnOfficeChoice650();
-  var selected;
-  if (choice === 'both') {
-    selected = views.slice().sort(function (a, c) { return (extSideTag650(a.source) === 'sth' ? 0 : 1) - (extSideTag650(c.source) === 'sth' ? 0 : 1); });
-  } else {
-    selected = views.filter(function (v) { return extSideTag650(v.source) === choice; });
-  }
-  if (!selected.length) selected = views.slice(0, 1);
-  return selected;
+  for (var i = 0; i < views.length; i++) if (extSideTag650(views[i].source) === want) return views[i];
+  return views.length ? views[0] : null;
 }
-function extPaintTracks650(slot, rec) {
-  // v650 \u00a73.3: one descriptor per painting side, in paint
-  // order; identity follows PAINT POSITION \u2014 the first
-  // painted takes the standing identity, the second carries
-  // _side650 = its tag.
-  return extPaintSides650(rec).map(function (v, idx) {
-    var t = extSlotTrack(slot, v);
-    if (idx > 0) t._side650 = extSideTag650(v.source);
-    return t;
-  });
+function extPaintTracks650(slot, rec, sideTag) {
+  // v670 \u00a73.2: the one-track form \u2014 the single painting
+  // view's descriptor, standing identity (no _side650: with
+  // one track per slot there is no second side to stamp;
+  // the descriptor's own source names the side).
+  var v = extPaintSide670(rec, sideTag);
+  return v ? [extSlotTrack(slot, v)] : [];
+}
+function extStandingSide670(slot) {
+  // v670 \u00a73.2: the side a fallback paint seat reads for a
+  // labeled slot \u2014 the block's standing office item side
+  // through the effective list (an un-stamped item reads
+  // 'sth', \u00a73.7); without a standing item, the universe's
+  // stamped side.
+  try {
+    var list = opnEffList604(slot.block);
+    for (var i = 0; i < list.length; i++) {
+      var it = list[i];
+      if (it && it.kind === 'source' && it.key === slot.slotId) return it.side === 'do' ? 'do' : 'sth';
+    }
+  } catch (e) {}
+  var u = opnTodayUniverse594(slot.block).filter(function (x) { return x.kind === 'source' && x.key === slot.slotId; })[0];
+  return u && u.side === 'do' ? 'do' : 'sth';
 }
 /* ---- v622: enrolment onboarding inside PIN setup ----
    When a PIN is (re)set — the set sheet, the Conscience
@@ -2953,6 +3025,7 @@ function opnCheckContents590(contents, coreBlocks) {
     items.forEach(function (raw) {
       var it = raw && typeof raw === 'object' ? raw : {};
       var kind = it.kind, key = it.key;
+      var side670 = null;
       if (block === 'Novenas') {
         if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
         if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
@@ -3003,6 +3076,13 @@ function opnCheckContents590(contents, coreBlocks) {
           if (['source', 'prayer', 'seat'].indexOf(kind) < 0) throw opnErr(400, 'bad contents kind ' + String(kind));
           if (typeof key !== 'string' || !key) throw opnErr(400, 'contents item needs a key');
           if (kind === 'seat' && key !== 'daily-readings') throw opnErr(400, 'bad seat ' + key);
+          // v670 §3.1: a source item naming a labeled slot
+          // carries its side — 'do' | 'sth' preserved, any
+          // other value (or none) normalizes to 'sth' (the
+          // server validateProfileContents mirror rule; the
+          // labeled list is a literal because this fn is
+          // extracted standalone by the harnesses).
+          if (kind === 'source' && (key === 'ext-morning-prayer' || key === 'ext-evening-prayer')) side670 = (it.side === 'do' || it.side === 'sth') ? it.side : 'sth';
         }
       }
       var id = kind + ':' + key;
@@ -3014,7 +3094,7 @@ function opnCheckContents590(contents, coreBlocks) {
       // keeps the standing dedupe.
       if (seen[id] && !(kind === 'source' && EXT_TOKENS[key])) return;
       seen[id] = 1;
-      list.push({ kind: kind, key: key });
+      list.push(side670 ? { kind: kind, key: key, side: side670 } : { kind: kind, key: key });
     });
     out[block] = list;
   });
@@ -3179,7 +3259,14 @@ function opnTodayItemId594(it) { return it.kind + ':' + (it.key || ''); }
 function opnRowId610(it, occ) { return opnTodayItemId594(it) + (occ ? '#' + occ : ''); }
 function opnParseRowId610(rowId) { var p = String(rowId || '').split('#'); return { id: p[0], occ: p.length > 1 ? Number(p[1] || 0) : 0 }; }
 function opnTodayUniverse594(block) {
-  return profContentsUniverse590(block).map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; });
+  // v670 §3.1: the universe's labeled-slot entries carry
+  // side:'sth' explicitly, so every list materialized from
+  // the universe names the standing default.
+  return profContentsUniverse590(block).map(function (it) {
+    var o = it.key ? { kind: it.kind, key: it.key } : { kind: it.kind };
+    if (o.kind === 'source' && opnLabeledSlot650(o.key)) o.side = 'sth';
+    return o;
+  });
 }
 function opnSeatPosture597(layers) {
   // v597: the readings seat composes only under this
@@ -3228,7 +3315,7 @@ function opnEnsureStandings601() {
   // standings through the standing entry points, once,
   // and wait for them (bounded; on failure the surface
   // proceeds with what stands).
-  if (state.ownStanding !== undefined) return Promise.resolve();
+  if (state.ownStanding !== undefined) return opnOfficeMig670(); // v670 \u00a73.6: standings stand \u2014 the migration seam
   var start = Date.now();
   return api('/api/player/day?date=' + encodeURIComponent(todayChicago()))
     .then(function (day) { return resolveExternals(opnScrubDayPayload(day)); })
@@ -3240,7 +3327,8 @@ function opnEnsureStandings601() {
           setTimeout(poll, 50);
         })();
       });
-    });
+    })
+    .then(function () { return opnOfficeMig670(); }); // v670 \u00a73.6: profiles payload + standings stand \u2014 migrate before the first settled paint
 }
 function opnTodayComposedContents594(rec, block) {
   // The list a block composes from the profile alone —
@@ -11133,7 +11221,7 @@ function settingsFamilyLabel(row) {
   // fallback rows) name the standing Morning & Evening
   // choice instead of the fixed 'fallback only' wording;
   // every other row's label stands byte-unchanged.
-  if (row.role === 'fallback') return 'Morning & Evening choice: ' + ({ do: 'Divine Office', sth: 'Sing the Hours', both: 'Both' })[opnOfficeChoice650()]; // v650 \u00a73.4: the fallback label names the standing three-value setting
+  if (row.role === 'fallback') return base; // v670 \u00a73.5: the fallback rows carry their own standing names \u2014 no global choice is named in the mapping table again
   return base;
 }
 function settingsSectionOf(row) {
@@ -18553,7 +18641,7 @@ function extSwapLabeled650(slot, st) {
   else if (st.state === 'loading') tmp.innerHTML = extPlaceholderCard(slot);
   else {
     var descs650 = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; });
-    tmp.innerHTML = descs650.length ? descs650.map(function (d) { return trackCard(d); }).join('') : extPaintTracks650(slot, st).map(function (t) { return trackCard(t); }).join('');
+    tmp.innerHTML = descs650.length ? descs650.map(function (d) { return trackCard(d); }).join('') : extPaintTracks650(slot, st, extStandingSide670(slot)).map(function (t) { return trackCard(t); }).join(''); // v670: the direct-paint fallback paints the standing item's side alone
   }
   var nodes = [];
   while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
@@ -18719,7 +18807,7 @@ function blockInsertCards(day, standing) {
         var slot = e.ext;
         var st2 = state.extSlots[slot.slotId];
         var tmp2 = document.createElement('div');
-        tmp2.innerHTML = st2 && st2.state === 'present' ? (opnLabeledSlot650(slot.slotId) ? (extPaintTracks650(slot, st2).map(function (t650) { return trackCard(t650); }).join('') || trackCard(extSlotTrack(slot, st2))) : trackCard(extSlotTrack(slot, st2))) : extPlaceholderCard(slot); // v650 §3.3: a labeled slot inserts one card per painting side
+        tmp2.innerHTML = st2 && st2.state === 'present' ? (opnLabeledSlot650(slot.slotId) ? (extPaintTracks650(slot, st2, extStandingSide670(slot)).map(function (t650) { return trackCard(t650); }).join('') || trackCard(extSlotTrack(slot, st2))) : trackCard(extSlotTrack(slot, st2))) : extPlaceholderCard(slot); // v670: the direct-paint fallback paints the standing item's side alone // v650 §3.3: a labeled slot inserts one card per painting side
         // The fragment carries the prayer card alone under v384
         // (v361 §2.4's pair rule superseded) — take ALL of its
         // children, in order, never firstChild alone.
@@ -20500,7 +20588,7 @@ function extRebuildDescs(day) {
         }
       }
     };
-    var emitExt619 = function (e, occ) {
+    var emitExt619 = function (e, occ, item670) {
       var slot = e.ext;
       var st2 = state.extSlots[slot.slotId];
       if (st2) {
@@ -20508,7 +20596,7 @@ function extRebuildDescs(day) {
         // PAINTING side, in paint order (extPaintTracks650);
         // with no side standing, the slot's single unavailable
         // track stands exactly as before.
-        var tracks650 = opnLabeledSlot650(slot.slotId) ? extPaintTracks650(slot, st2) : [];
+        var tracks650 = opnLabeledSlot650(slot.slotId) ? extPaintTracks650(slot, st2, item670 && (item670.side === 'do' || item670.side === 'sth') ? item670.side : extStandingSide670(slot)) : []; // v670: the occurrence's item names the side; the standing emission reads the universe-stamped standing item through extStandingSide670
         if (tracks650.length) {
           tracks650.forEach(function (trk) {
             if (occ) trk._occ = occ;
@@ -20527,7 +20615,7 @@ function extRebuildDescs(day) {
       // order; no course/day/episode legs).
       emit.forEach(function (em) {
         if (em.e.own) emitOwn619(em.e);
-        else emitExt619(em.e, em.occ);
+        else emitExt619(em.e, em.occ, opnTodayUniverse594(b.block).filter(function (x) { return x.kind === 'source' && x.key === em.e.ext.slotId; })[0]); // v670: the standing emission paints the standing-universe item's side
       });
     } else {
       // v619: ONE PASS over the stored contents list —
@@ -20570,7 +20658,7 @@ function extRebuildDescs(day) {
           if (emittedCand619.indexOf(em) >= 0) return;
           emittedCand619.push(em);
           if (em.e.own) emitOwn619(em.e);
-          else emitExt619(em.e, em.occ);
+          else emitExt619(em.e, em.occ, c590[idx]);
         });
       };
       var novenasEmitted619 = false;
@@ -23057,9 +23145,6 @@ function wirePrayersView(day) {
   // no refetch, no re-settle, no day rebuild — both sides
   // already stand on the record, so a change is a paint
   // change only.
-  view.querySelectorAll('[data-p650office]').forEach(function (sel) {
-    sel.addEventListener('change', function () { opnOfficeChoiceSet650(sel.value); if (state.dayPayload) extRebuildDescs(state.dayPayload); opnRepaintHome604(); });
-  });
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
@@ -23071,6 +23156,11 @@ function wirePrayersView(day) {
   });
   view.querySelectorAll('[data-p604remove]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604remove')).split('|'); opnRemove604(p[0], p.slice(1).join('|')); });
+  });
+  // v670 \u00a73.4: the office source toggle \u2014 a tap flips
+  // the item's side through opnFlipSide670.
+  view.querySelectorAll('[data-p670side]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var host670 = btn.closest ? btn.closest('[data-p670toggle]') : null; if (!host670) return; var p = String(host670.getAttribute('data-p670toggle')).split('|'); opnFlipSide670(p[0], p.slice(1).join('|'), btn.getAttribute('data-p670side')); });
   });
   view.querySelectorAll('[data-p604restore]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604restore')).split('|'); opnRestore604(p[0], p.slice(1).join('|')); });
@@ -23284,6 +23374,9 @@ function opnItemLabel604(block, it) {
   }
   var u = null;
   profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
+  // v670 §3.1: an office item's label names its side (an
+  // un-stamped item reads 'sth', §3.7).
+  if (it.kind === 'source' && opnLabeledSlot650(it.key)) return (u ? u.label : (it.key === 'ext-morning-prayer' ? 'Morning Prayer' : 'Evening Prayer')) + ' \u00b7 ' + (it.side === 'do' ? 'Divine Office' : 'Sing the Hours');
   return u ? u.label : (it.key || it.kind);
 }
 function opnLayersStored604(layers) {
@@ -23356,6 +23449,22 @@ function opnWrite604(block) {
   Object.keys(contents).forEach(function (b3) { if (b3 !== 'Novenas' && coreNow604.indexOf(b3) < 0) delete contents[b3]; });
   var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (opn604.shape ? opn604.shape.core.slice() : (rec.coreBlocks || []).slice()), layers: opn604.shape ? opnLayersOut(opn604.shape.layers) : opnLayersOut(rec.layers), contents: contents };
   return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
+}
+function opnFlipSide670(block, rowId, side) {
+  // v670 \u00a73.4: the edit-form source toggle \u2014 flip the
+  // addressed labeled-slot item's side in the materialized
+  // list and write through the standing opnWrite604 (the
+  // profile save or the today layer, by scope); its done
+  // path rebuilds the day and repaints home.
+  if (side !== 'do' && side !== 'sth') return;
+  var pr = opnParseRowId610(rowId), id = pr.id;
+  var m = opnMaterialize604(block);
+  var seen = 0, at = -1;
+  m.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  if (at < 0 || !opnLabeledSlot650(m[at].key)) return;
+  if ((m[at].side === 'do' ? 'do' : 'sth') === side) return;
+  m[at].side = side;
+  return opnWrite604(block);
 }
 function opnRemove604(block, rowId) {
   // v610: the row id is occurrence-qualified — Remove takes
@@ -25107,6 +25216,7 @@ function openAddLadder603(block, host) {
     document.body.appendChild(sh);
     mountDrawer(sh, true);
     var rung = 'root'; // tree path rung (v614 header above)
+    var officePick670 = null; // v670: the labeled slot whose source pick stands expanded in the lf:office rung
     var query = '';
     var pay614 = {}; // series payloads fetched on node open
     function isOn(item) {
@@ -25179,6 +25289,26 @@ function openAddLadder603(block, host) {
     function match(label) { return !query.trim() || String(label).toLowerCase().indexOf(query.trim().toLowerCase()) >= 0; }
     function matchItem(it) { return match(it.label) || (it.sub && match(it.sub)); }
     function rowHtml(item, path) {
+      if (item.officeSide670) {
+        // v670 \u00a73.3: a source pick row \u2014 carries the
+        // standing add attribute plus its side; the add
+        // handler stamps the side onto the appended item.
+        return '<div class="card bookrow" data-p603additem="source:' + esc(item.key) + '" data-p670side="' + esc(item.officeSide670) + '"><div class="row"><span class="grow">' + esc(item.label) + '</span></div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
+      }
+      if (item.officePick670) {
+        // v670 \u00a73.3: a labeled office row is a PICK row.
+        // Already standing: marked + not tappable (the
+        // standing grey discipline). Else a tap expands its
+        // source pick in the same rung paint \u2014 exactly two
+        // rows, Divine Office \u00b7 Sing the Hours. NO BOTH.
+        var onP670 = host.ids().indexOf('source:' + item.key) >= 0;
+        if (onP670) return '<div class="card bookrow profadd-on603"><div class="row"><span class="grow">' + esc(item.label) + '</span><span class="meta">Already in ' + esc(block) + '</span></div></div>';
+        var head670 = '<div class="card bookrow" data-p670pick="' + esc(item.key) + '"><div class="row"><span class="grow">' + esc(item.label) + '</span><span class="meta">Pick the reading \u203a</span></div></div>';
+        if (officePick670 !== item.key) return head670;
+        return head670
+          + rowHtml({ kind: 'source', key: item.key, officeSide670: 'do', label: 'Divine Office', sub: 'Adds ' + item.label + ' \u2014 the Divine Office reading of the office' }, '')
+          + rowHtml({ kind: 'source', key: item.key, officeSide670: 'sth', label: 'Sing the Hours', sub: 'Adds ' + item.label + ' \u2014 the Sing the Hours reading of the office' }, '');
+      }
       if (item.daily666) {
         // v666 §3.5: the Add daily row — a distinct
         // gold-tinted card through the standing row paint.
@@ -25229,15 +25359,6 @@ function openAddLadder603(block, host) {
     function saintItem614() {
       var f = sources().filter(function (it) { return it.kind === 'source' && it.key === 'ext-saint-of-the-day'; });
       return f.length ? f[0] : null;
-    }
-    function singItems614() {
-      // Plan S2: no distinct Sing the Hours item stands —
-      // its rows add the standing office item under the
-      // Sing the Hours dress.
-      return [
-        { kind: 'source', key: 'ext-morning-prayer', label: 'Lauds', sub: 'Sing the Hours \u2014 adds the Morning Prayer office item' },
-        { kind: 'source', key: 'ext-evening-prayer', label: 'Vespers', sub: 'Sing the Hours \u2014 adds the Evening Prayer office item' }
-      ];
     }
     function readingsNode614() {
       var pay = fetchSeries614('daily-readings');
@@ -25362,8 +25483,7 @@ function openAddLadder603(block, host) {
         var pr = [];
         (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Prayers \u203a Prayer Book \u203a ' + g.name }); }); });
         groups.push({ head: 'Prayers \u203a Prayer Book', items: pr, path: '' });
-        groups.push({ head: 'Prayers \u203a Divine Office', items: officeItems614().filter(function (it) { return match(it.label); }), path: 'Prayers \u203a Divine Office' });
-        groups.push({ head: 'Prayers \u203a Sing the Hours', items: singItems614().filter(function (it) { return match(it.label); }), path: 'Prayers \u203a Sing the Hours' });
+        groups.push({ head: 'Prayers \u203a Divine Office', items: officeItems614().filter(function (it) { return match(it.label); }).map(function (it) { return opnLabeledSlot650(it.key) ? Object.assign({}, it, { officePick670: true }) : it; }), path: 'Prayers \u203a Divine Office' }); // v670: the Sing the Hours search group retires with the lf:sing rung
         var si = saintItem614();
         groups.push({ head: 'Catechesis \u203a Podcasts \u203a The Saint of The Day Podcast', items: si && match(si.label) ? [si] : [], path: 'Catechesis \u203a Podcasts \u203a The Saint of The Day Podcast' });
         groups.push({ head: 'Prayers \u203a Ora Pro Nobis', items: ownItems614().filter(function (it) { return match(it.label); }), path: 'Prayers \u203a Ora Pro Nobis' });
@@ -25400,12 +25520,12 @@ function openAddLadder603(block, host) {
         // carried only "Nothing to add").
         return doors614([
           ['br:catechesis', 'Catechesis', 'Podcasts \u00b7 Courses \u00b7 Novenas \u00b7 Homilies', 'Podcasts'],
-          ['br:prayers', 'Prayers', 'Prayer Book \u00b7 Divine Office \u00b7 Sing the Hours \u00b7 Ora Pro Nobis', 'Morning'],
+          ['br:prayers', 'Prayers', 'Prayer Book \u00b7 Divine Office \u00b7 Ora Pro Nobis', 'Morning'],
           ['br:videos', 'Videos', 'Virtual Mass \u00b7 Adoration', 'Mass and Homilies']
         ]);
       }
       if (rung === 'br:videos') return doors614([['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass', 'Mass and Homilies'], ['lf:adoration', 'Adoration', 'No list audio', 'Episodes']]);
-      if (rung === 'br:prayers') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category', 'Morning'], ['lf:office', 'Divine Office', 'The eight hours', 'Midday'], ['lf:sing', 'Sing the Hours', 'Lauds \u00b7 Vespers', 'Evening'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers', 'Night']]);
+      if (rung === 'br:prayers') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category', 'Morning'], ['lf:office', 'Divine Office', 'Morning & Evening Prayer \u2014 pick the reading', 'Midday'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers', 'Night']]);
       if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress', 'Podcasts'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes', 'Podcasts'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes', 'Novenas'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies', 'Mass and Homilies']]);
       if (rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
       // v656 §2.6: S1 retires — the Virtual Mass leaf opens:
@@ -25426,8 +25546,7 @@ function openAddLadder603(block, host) {
         if (grp) grp.prayers.forEach(function (p) { if (match(p.title)) gh += rowHtml({ kind: 'prayer', key: p.slug, label: p.title }, ''); });
         return gh;
       }
-      if (rung === 'lf:office') { var oh = ''; officeItems614().forEach(function (it) { if (match(it.label)) oh += rowHtml(it, ''); }); return oh || '<p class="sub">No office hours stand for this block.</p>'; }
-      if (rung === 'lf:sing') { var sh2 = ''; singItems614().forEach(function (it) { if (match(it.label)) sh2 += rowHtml(it, ''); }); return sh2; }
+      if (rung === 'lf:office') { var oh = ''; officeItems614().forEach(function (it) { if (match(it.label)) oh += rowHtml(opnLabeledSlot650(it.key) ? Object.assign({}, it, { officePick670: true }) : it, ''); }); return oh || '<p class="sub">No office hours stand for this block.</p>'; } // v670: labeled rows are pick rows; the lf:sing rung is retired whole
       if (rung === 'lf:own') { var ow = ''; ownItems614().forEach(function (it) { if (match(it.label)) ow += rowHtml(it, ''); }); return ow || '<p class="sub">Nothing to add</p>'; }
       if (rung === 'lf:courses') return doors614(OPN_COURSE_KEYS_603.map(function (k) { return ['course:' + k, opnLadderCourseTitle603(k), 'Next episode + every episode']; }));
       if (rung.indexOf('course:') === 0) return courseNode614(rung.slice('course:'.length));
@@ -25457,7 +25576,7 @@ function openAddLadder603(block, host) {
       // v666 §2.8: re-mapped to the source tree.
       if (r.indexOf('br:') === 0) return 'root';
       if (r === 'lf:virtual-mass' || r === 'lf:adoration') return 'br:videos';
-      if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:sing' || r === 'lf:own') return 'br:prayers';
+      if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:own') return 'br:prayers';
       if (r.indexOf('prayers:') === 0) return 'lf:prayerbook';
       if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies') return 'br:catechesis';
       if (r.indexOf('course:') === 0) return 'lf:courses';
@@ -25492,11 +25611,19 @@ function openAddLadder603(block, host) {
       root.querySelectorAll('[data-p603group]').forEach(function (row) {
         row.addEventListener('click', function () { rung = 'prayers:' + row.getAttribute('data-p603group'); query = ''; paint(); });
       });
+      root.querySelectorAll('[data-p670pick]').forEach(function (row) {
+        row.addEventListener('click', function () { officePick670 = row.getAttribute('data-p670pick'); paintList(); });
+      });
       root.querySelectorAll('[data-p603additem]').forEach(function (row) {
         row.addEventListener('click', function () {
           var id = row.getAttribute('data-p603additem');
           var kp = id.split(':');
-          host.add(kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] });
+          var itemA = kp[1] ? { kind: kp[0], key: kp.slice(1).join(':') } : { kind: kp[0] };
+          // v670 \u00a73.3: a labeled-slot source pick stamps
+          // its side onto the appended item.
+          var sideA = row.getAttribute('data-p670side');
+          if (sideA && kp[0] === 'source') itemA.side = sideA;
+          host.add(itemA);
           sh.remove();
         });
       });
@@ -26172,25 +26299,6 @@ function opnSetHtml609(day) {
   });
   return html + '</div>';
 }
-function opnOfficeChoiceHtml650() {
-  // v650 §3.4: the Morning & Evening choice as a DROP DOWN at
-  // the v637 chips' seat in the Edit form — one setrow with a
-  // <select data-p650office> carrying 'Divine Office' ·
-  // 'Sing the Hours' · 'Both', the standing value selected.
-  // (John's check-box amendment was withdrawn by his later
-  // word — the drop down stands.) A change is a paint change
-  // only: both sides already stand on the record.
-  var choice650 = opnOfficeChoice650();
-  var opt650 = function (v, label) { return '<option value="' + v + '"' + (choice650 === v ? ' selected' : '') + '>' + label + '</option>'; };
-  return '<div class="p650officechoice" data-p650officechoice="1">'
-    + '<div class="setrow">'
-    + '<div class="setname">Morning &amp; Evening Prayer</div>'
-    + '<div class="meta">Which reading of the office stands for Morning Prayer and Evening Prayer.</div>'
-    + '<div class="setcontrols"><select data-p650office aria-label="Morning and Evening choice">'
-    + opt650('do', 'Divine Office') + opt650('sth', 'Sing the Hours') + opt650('both', 'Both')
-    + '</select></div>'
-    + '</div></div>';
-}
 function opnEditSetHtml609(day) {
   // The edit form over the set: ONE list of condensed
   // contents rows, grouped by block under a group head
@@ -26216,7 +26324,6 @@ function opnEditSetHtml609(day) {
   // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
   html += opnPickHead609();
-  html += opnOfficeChoiceHtml650();
   var seen = {};
   var paint635 = orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; });
   // v609 repair 2: 'Podcasts' leaves the canonical list —
@@ -26271,9 +26378,20 @@ function opnEditGroupHtml609(block) {
     var id = opnTodayItemId594(it);
     var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
     var rid = opnRowId610(it, occ);
+    var tog670 = '';
+    if (it.kind === 'source' && opnLabeledSlot650(it.key)) {
+      // v670 \u00a73.4: the segmented source toggle stands on
+      // a labeled-slot row, the item's side active (an
+      // un-stamped item reads 'sth').
+      var sd670 = it.side === 'do' ? 'do' : 'sth';
+      tog670 = '<span class="segtoggle" data-p670toggle="' + esc(block) + '|' + esc(rid) + '">'
+        + '<button data-p670side="do"' + (sd670 === 'do' ? ' class="active"' : '') + '>Divine Office</button>'
+        + '<button data-p670side="sth"' + (sd670 === 'sth' ? ' class="active"' : '') + '>Sing the Hours</button></span>';
+    }
     html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(rid) + '"><div class="row">'
       + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + tog670
       + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
