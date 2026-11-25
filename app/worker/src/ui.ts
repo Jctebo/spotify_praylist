@@ -547,8 +547,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .sheet:not(.np-sheet) .inner h1.screen { font-size:17px; }
 .grabstrip { height:44px; flex:none; display:flex; align-items:center; justify-content:center; cursor:grab; touch-action:none; }
 .grabpill { width:44px; height:5px; border-radius:999px; background:var(--muted); opacity:.55; display:block; }
-.sheet.np-sheet { background:var(--cream); display:block; overflow:auto; padding:14px 14px 40px; animation:none; }
-.sheet.np-sheet .inner { background:none; border-radius:0; box-shadow:none; display:block; overflow:visible; max-height:none; animation:none; }
+.sheet.np-sheet { background:var(--cream); display:block; overflow:hidden; padding:14px 14px 40px; animation:none; }
+.sheet.np-sheet .inner { background:none; border-radius:0; box-shadow:none; display:flex; flex-direction:column; height:100%; overflow:hidden; max-height:none; animation:none; }
+.sheet.np-sheet .inner > * { flex:none; }
 .np-grab { display:flex; justify-content:center; padding:2px 0 8px; cursor:grab; touch-action:none; }
 .np-grab .grabpill { background:var(--bar-fg); }
 @keyframes opnrise { from { transform:translateY(24px); } to { transform:translateY(0); } }
@@ -613,9 +614,16 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-hero .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
 .np-preview .np-hero .npq-heading { color:var(--bar-fg); }
 .np-preview .np-hero #np-queue-pos { color:var(--bar-sub); }
-.np-art { position:relative; width:min(72vw, 340px); aspect-ratio:1; margin:4px auto 0; }
+/* v664 §3.1: the artwork is sized to the page — it takes
+   what the page leaves after the fixed stack stands at
+   full size. --art budget 470px = the measured fixed stack
+   (sheet padding 54 · hero padding/border 34 · grab 15 ·
+   art margin 4 · title 33 · meta 30 · intention 26 ·
+   litday 18 · seek 56 · transport 94 · controls 44 · door
+   56 · rounding slack 6), harness-v664 leg A. */
+.np-art { --art: clamp(88px, min(72vw, calc(100dvh - 470px)), 340px); position:relative; width:var(--art); height:var(--art); aspect-ratio:1; margin:4px auto 0; }
 .np-art .blockcover.hero { position:absolute; inset:0; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
-.np-art .blockcover.hero .blockcover-initial { font-size:128px; }
+.np-art .blockcover.hero .blockcover-initial { font-size:calc(var(--art) * 0.376); }
 .np-art img.np-art-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
 [data-lit="white"] .np-art .blockcover.hero, [data-lit="white"] .np-art img.np-art-img { box-shadow:0 10px 28px rgba(168,134,58,.25); }
 /* v354 §2.5F: the measured boundary for accent discs standing on a
@@ -636,6 +644,33 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-controls { justify-content:center; flex-wrap:wrap; }
 .npq-head { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .npq-heading { font-size:16px; letter-spacing:1.5px; color:var(--navy); }
+/* v664 §3.2: the queue door — the .npq-head dress as one
+   full-width button at the card's foot; the pos line takes
+   the room, the chevron stands at the trailing end. */
+button.npq-door { width:100%; background:none; font-family:inherit; color:inherit; cursor:pointer; text-align:left; align-items:center; }
+.npq-door .npq-pos { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.npq-chev { flex:none; color:var(--muted); font-size:20px; line-height:1; }
+/* v664 §3.2: the queue sheet — the v419 dress (scrim +
+   .inner + grab strip) with its own two-stop geometry:
+   rest 50dvh, full 92dvh (the standing TALL bound), the
+   height set in px by its own mount (client.ts); the list
+   body scrolls inside (.panelbody discipline). */
+.sheet.npq-sheet .inner { height:50dvh; max-height:92dvh; }
+.sheet.npq-sheet .npq-head { margin:2px 14px 8px; }
+.npq-mainbtn { flex:1; min-width:0; display:flex; align-items:center; gap:8px; background:none; border:none; padding:0; font-family:inherit; font-size:17px; color:var(--ink); text-align:left; cursor:pointer; }
+.npq-mainbtn:disabled { opacity:.55; cursor:default; }
+.npq-remove { flex:none; width:44px; height:44px; background:none; border:none; padding:0; font-family:inherit; font-size:16px; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+/* v664 §3.1: the short-viewport step — under 660px the
+   hero padding and the seek/transport margins compress,
+   and the title + intention clamp to two lines, so the
+   88px artwork floor never pushes an element off. */
+@media (max-height: 660px) {
+  .np-hero { padding:10px 14px 10px; }
+  .np-seekrow { margin:10px 0 2px; }
+  .np-transport { margin:8px auto 10px; }
+  .np-hero .np-title { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+  .np-intention { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+}
 /* v419 (G24): queue rows join the Compact form inside a
    .liblist container — the row's own frame (border, radius,
    margin) retires; rows separate by the container's
@@ -1092,7 +1127,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v665-1";
+var CACHE = "ora-pro-nobis-v664-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

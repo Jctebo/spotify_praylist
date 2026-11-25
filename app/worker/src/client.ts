@@ -5906,9 +5906,235 @@ function jumpQueueTo(i) {
   state.queueIdx = i;
   startDesc(live);
 }
+/* ---------------- v664: the queue door + queue sheet ----------------
+   The queue's new home (Plan §3.2/§3.3): the Now Playing
+   card carries one door at its foot; the queue itself
+   stands in a half-screen sheet over the dimmed player.
+   The sheet stands on the v419 dress with its OWN mount
+   (mountDrawer is untouched — its drag knows only
+   dismiss-or-snap-back, and this drag is two-stop). */
+function renderQueueDoor() {
+  // v664 §3.2: the door's pos line — "Track X of N", with
+  // the next-up title appended while a coming track stands;
+  // no queue reads empty (the door reads "Queue" alone).
+  var door = document.querySelector('.np-sheet #np-queue-door');
+  if (!door) return;
+  var posEl = door.querySelector('#np-queue-pos');
+  if (!posEl) return;
+  if (!state.queue.length || state.queueIdx < 0) { posEl.textContent = ''; return; }
+  var line = 'Track ' + (state.queueIdx + 1) + ' of ' + state.queue.length;
+  var next = state.queue[state.queueIdx + 1];
+  if (next) line += ' \u00b7 Next: ' + (next.title || '');
+  posEl.textContent = line;
+}
+function npqRowMain664(desc) {
+  // The queue row's main cell (title · block · duration ·
+  // availability + the played dot) — renderQueueList's own
+  // construction, carried for the sheet's rows.
+  var metaParts = [];
+  if (desc.block) metaParts.push(esc(blockDisplayName(desc.block)));
+  if (desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
+  if (!desc.available) metaParts.push('Not available');
+  var dstr = presentedDateStr();
+  var on = desc.kind === 'podcast' ? !!desc.listened : (dstr ? isPlayedDesc(desc, dstr) : false);
+  var dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
+  return '<span class="npq-main"><span class="npq-title">' + esc(desc.title || '') + '</span>'
+    + (metaParts.length ? '<span class="meta npq-meta">' + metaParts.join(' \u00b7 ') + '</span>' : '')
+    + '</span>' + dot;
+}
+function queueReorder664(order) {
+  // v664 §3.3: commit a drag reorder of the COMING rows.
+  // order names the coming range's absolute indices in
+  // their new order; it must be a permutation of
+  // queueIdx+1..end, so queueIdx and every played row are
+  // untouched by construction. A no-op order writes
+  // nothing (no snapshot, no native leg).
+  if (!state.queue.length || state.queueIdx < 0) return;
+  var start = state.queueIdx + 1;
+  if (!order || order.length !== state.queue.length - start) return;
+  var seen = {};
+  for (var i = 0; i < order.length; i++) {
+    if (typeof order[i] !== 'number' || order[i] < start || order[i] >= state.queue.length || seen[order[i]]) return;
+    seen[order[i]] = true;
+  }
+  var same = true;
+  for (var j = 0; j < order.length; j++) { if (order[j] !== start + j) { same = false; break; } }
+  if (same) return;
+  var old = state.queue;
+  state.queue = old.slice(0, start).concat(order.map(function (idx) { return old[idx]; }));
+  queueActFinish645(); // v664 §3.3: the standing edit funnel, exactly as addToQueue closes
+}
+function queueRemove664(absIdx) {
+  // v664 §3.3: ✕ drops exactly one COMING row. The sounding
+  // row (absIdx === queueIdx) and played rows cannot be
+  // removed here; Clear queue (player menu) is the
+  // wholesale act.
+  if (typeof absIdx !== 'number' || absIdx <= state.queueIdx || absIdx >= state.queue.length) return;
+  state.queue.splice(absIdx, 1);
+  queueActFinish645(); // v664 §3.3: the standing edit funnel
+}
+function paintQueueSheetList(qsheet) {
+  // v664 §3.3: the sheet's paint — the sounding track
+  // pinned first (queue-row dress, marked playing, NO
+  // handle, NO remove), then the coming rows only (played
+  // rows do not paint), each carrying its ABSOLUTE
+  // state.queue index.
+  var box = qsheet.querySelector('#npq-list');
+  if (!box) return;
+  var posEl = qsheet.querySelector('#npq-pos');
+  if (posEl) posEl.textContent = state.queue.length && state.queueIdx >= 0 ? ('Track ' + (state.queueIdx + 1) + ' of ' + state.queue.length) : '';
+  var headDesc = (state.queueIdx >= 0 && state.queue[state.queueIdx]) || state.current;
+  if (!headDesc) { box.innerHTML = ''; return; }
+  var html = '<div class="npq-row playing" data-npq-head="1" aria-current="true">' + npqRowMain664(headDesc) + '</div>';
+  var coming = [];
+  for (var i = Math.max(0, state.queueIdx + 1); i < state.queue.length; i++) coming.push(i);
+  if (!state.queue.length) {
+    html += '<p class="meta npq-empty">No queue \u2014 playing a single prayer.</p>';
+  } else if (!coming.length) {
+    html += '<p class="meta npq-empty">Nothing up next.</p>';
+  } else {
+    html += coming.map(function (abs) {
+      var desc = state.queue[abs];
+      return '<div class="npq-row favreorder-row" data-npq-row="' + abs + '">'
+        + '<button type="button" class="favhandle" data-npq-handle="' + abs + '" aria-label="Drag to reorder">\u2261</button>'
+        + '<button type="button" class="npq-mainbtn" data-npq-index="' + abs + '"' + (!desc.available ? ' disabled' : '') + '>' + npqRowMain664(desc) + '</button>'
+        + '<button type="button" class="npq-remove" data-npq-remove="' + abs + '" aria-label="Remove from queue">\u2715</button></div>';
+    }).join('');
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('[data-npq-index]').forEach(function (btn) {
+    btn.addEventListener('click', function () { jumpQueueTo(Number(btn.getAttribute('data-npq-index'))); });
+  });
+  box.querySelectorAll('[data-npq-remove]').forEach(function (btn) {
+    btn.addEventListener('click', function () { queueRemove664(Number(btn.getAttribute('data-npq-remove'))); });
+  });
+  wireQueueDrag664(qsheet, box);
+}
+function wireQueueDrag664(qsheet, box) {
+  // v664 §3.3: the row drag — the .favhandle pattern
+  // (wireFavDragList's machinery, scoped to the sheet):
+  // the row lifts, follows the pointer, swaps in the DOM
+  // as its center crosses a sibling's; pointerup reads the
+  // DOM order off the rows and commits it through
+  // queueReorder664 (a no-op order writes nothing).
+  box.querySelectorAll('[data-npq-handle]').forEach(function (h) {
+    h.addEventListener('pointerdown', function (ev) {
+      var row = h.closest('[data-npq-row]');
+      if (!row) return;
+      ev.preventDefault();
+      var listEl = row.parentElement;
+      var startY = ev.clientY;
+      row.classList.add('dragging');
+      try { h.setPointerCapture(ev.pointerId); } catch (err) {}
+      var move = function (mv) {
+        var dy = mv.clientY - startY;
+        row.style.transform = 'translateY(' + dy + 'px)';
+        var rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-npq-row]'));
+        var idx = rows.indexOf(row);
+        if (idx < 0) return;
+        var center = row.offsetTop + dy + row.offsetHeight / 2;
+        while (idx < rows.length - 1) {
+          var next = rows[idx + 1];
+          if (center <= next.offsetTop + next.offsetHeight / 2) break;
+          var before = row.offsetTop;
+          listEl.insertBefore(next, row);
+          startY += row.offsetTop - before;
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-npq-row]'));
+          idx = rows.indexOf(row);
+          center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
+        }
+        while (idx > 0) {
+          var prev = rows[idx - 1];
+          if (center >= prev.offsetTop + prev.offsetHeight / 2) break;
+          var before2 = row.offsetTop;
+          listEl.insertBefore(row, prev);
+          startY += row.offsetTop - before2;
+          rows = Array.prototype.slice.call(listEl.querySelectorAll('[data-npq-row]'));
+          idx = rows.indexOf(row);
+          center = row.offsetTop + (mv.clientY - startY) + row.offsetHeight / 2;
+        }
+        row.style.transform = 'translateY(' + (mv.clientY - startY) + 'px)';
+      };
+      var end = function () {
+        h.removeEventListener('pointermove', move);
+        h.removeEventListener('pointerup', end);
+        h.removeEventListener('pointercancel', end);
+        row.classList.remove('dragging');
+        row.style.transform = '';
+        var order = Array.prototype.slice.call(listEl.querySelectorAll('[data-npq-row]')).map(function (r) { return Number(r.getAttribute('data-npq-row')); });
+        queueReorder664(order);
+      };
+      h.addEventListener('pointermove', move);
+      h.addEventListener('pointerup', end);
+      h.addEventListener('pointercancel', end);
+    });
+  });
+}
+function mountQueueSheet664(sheet) {
+  // v664 §3.2: the sheet's own mount — two-stop drag on the
+  // grab strip. Rest 50dvh, full 92dvh; the drag moves the
+  // panel height live between the stops (and below rest
+  // toward dismiss); release past the 71dvh midpoint snaps
+  // full, below snaps back to half; from half, a downward
+  // drag of >=25% of the panel height dismisses (the
+  // standing mountDrawer threshold). A grab tap does
+  // nothing; the scrim tap dismisses. No player, queue, or
+  // playback state is written by any of it.
+  var inner = sheet.querySelector('.inner');
+  var grab = sheet.querySelector('.grabstrip');
+  if (!inner || !grab) return;
+  var vh = window.innerHeight || 0;
+  var rest = Math.round(vh * 0.5), full = Math.round(vh * 0.92), mid = Math.round(vh * 0.71);
+  inner.style.height = rest + 'px';
+  inner.style.maxHeight = full + 'px';
+  sheet.addEventListener('click', function (ev) { if (ev.target === sheet) sheet.remove(); });
+  grab.addEventListener('pointerdown', function (ev) {
+    var startY = ev.clientY;
+    var startH = parseInt(inner.style.height, 10) || rest;
+    var curH = startH;
+    var move = function (e2) {
+      curH = Math.max(0, Math.min(full, startH + (startY - e2.clientY)));
+      inner.style.transition = 'none';
+      inner.style.height = curH + 'px';
+    };
+    var up = function () {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      if (startH <= rest && (startH - curH) >= rest * 0.25) { sheet.remove(); return; }
+      inner.style.transition = 'height .22s ease';
+      inner.style.height = (curH > mid ? full : rest) + 'px';
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+function openQueueSheet() {
+  // v664 §3.2: the queue sheet — a .sheet.npq-sheet sibling
+  // overlay (NOT .np-sheet, so the standing .np-sheet
+  // queries stay unambiguous), appended after the player
+  // sheet. Reopening always starts at half.
+  if (!state.current) return;
+  var old = document.querySelector('.npq-sheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet npq-sheet';
+  sheet.innerHTML = '<div class="inner"><div class="grabstrip"><span class="grabpill"></span></div>'
+    + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="npq-pos"></span></div>'
+    + '<div class="panelbody"><div id="npq-list" class="liblist"></div></div></div>';
+  document.body.appendChild(sheet);
+  mountQueueSheet664(sheet);
+  renderQueueList();
+}
 function renderQueueList() {
   // v347 §2.3/§2.6: the queue list — a view of the standing array,
   // read fresh on every call (no captured snapshot, the v343 rule).
+  // v664 §3.4: the paint target resolves in order — the
+  // queue sheet's list (when the sheet stands) → a standing
+  // #np-queue (the preview sheet's; its branch below stands
+  // untouched). The door line refreshes in all cases.
+  renderQueueDoor();
+  var qsheet = document.querySelector('.npq-sheet');
+  if (qsheet) { paintQueueSheetList(qsheet); return; }
   var sheet = document.querySelector('.np-sheet');
   if (!sheet) return;
   var box = sheet.querySelector('#np-queue');
@@ -5918,12 +6144,14 @@ function renderQueueList() {
   var arr = preview || state.queue;
   var scroll = box.scrollTop || 0;
   if (!preview && !arr.length) {
-    if (posEl) posEl.textContent = '';
     box.innerHTML = state.current ? '<p class="meta npq-empty">No queue \u2014 playing a single prayer.</p>' : '';
     box.scrollTop = scroll;
     return;
   }
-  if (posEl) posEl.textContent = preview ? (arr.length + ' items remaining') : ('Track ' + (state.queueIdx + 1) + ' of ' + arr.length);
+  // v664 §3.4: on the player card the pos line is the door's,
+  // refreshed by renderQueueDoor above; only the preview
+  // sheet's own head line is written here, as before.
+  if (posEl && preview) posEl.textContent = arr.length + ' items remaining';
   var dstr = presentedDateStr();
   box.innerHTML = arr.map(function (desc, i) {
     // v384 §2.6: the queue holds prayers only — no intro rows,
@@ -17767,14 +17995,14 @@ function openNowPlaying() {
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-share" aria-label="Share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;vertical-align:middle" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
-    + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
-    + '<div id="np-queue" class="liblist"></div>'
+    + '<button type="button" class="npq-head npq-door" id="np-queue-door"><span class="npq-heading">Queue</span><span class="meta npq-pos" id="np-queue-pos"></span><span class="npq-chev" aria-hidden="true">›</span></button>'
     + '</div>';
   document.body.appendChild(sheet);
   // v419 (G16): the minimize chevron retires into the grab —
   // a tap on the handle, or a drag down, minimizes (the sheet
   // removes; playback is never touched).
   wireNpGrab(sheet, function () { sheet.remove(); });
+  sheet.querySelector('#np-queue-door').addEventListener('click', function () { openQueueSheet(); }); // v664 §3.2: the door opens the queue sheet
   sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.pendingStart) { cancelPendingStart(); return; } if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); }); // v461 F1: the pending head branch, as on the dock
   sheet.querySelector('#np-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the one rule
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
