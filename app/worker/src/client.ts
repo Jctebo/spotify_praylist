@@ -2205,6 +2205,48 @@ function opnSthFirstSet632(sthFirst) {
   // boolean write lands on the new three-value store.
   opnOfficeChoiceSet650(sthFirst ? 'sth' : 'do');
 }
+/* v669 §3.1: the dark-mode store — a three-value device
+   preference in its OWN plain localStorage key, in the
+   standing shape above (guarded reads, a single writer):
+   'light' | 'dark' | 'system'; absent (or unreadable) =
+   'light'. The pick resolves onto <html> as the attribute
+   data-mode="dark" — set for Dark, removed for Light; for
+   Follow the phone it follows the system's
+   prefers-color-scheme (the build's FIRST read of that
+   query), live through the change listener below. The
+   attribute stands beside data-lit; Light leaves it
+   absent, so no light rule ever reads it and the light
+   paint is structurally untouched. applyMode669() runs
+   once here, in the boot pass that reads the standing
+   device settings, before the first view paint. */
+var OPN_MODE_KEY669 = 'opn-mode-v669';
+function opnModePick669() {
+  var v = null;
+  try { v = localStorage.getItem(OPN_MODE_KEY669); } catch (e) {}
+  return (v === 'dark' || v === 'system') ? v : 'light';
+}
+function opnModeSet669(v) {
+  if (v !== 'light' && v !== 'dark' && v !== 'system') return;
+  try { localStorage.setItem(OPN_MODE_KEY669, v); } catch (e) {}
+}
+function opnSystemDark669() {
+  try { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); } catch (e) { return false; }
+}
+function applyMode669() {
+  var pick = opnModePick669();
+  var dark = pick === 'dark' || (pick === 'system' && opnSystemDark669());
+  if (dark) document.documentElement.setAttribute('data-mode', 'dark');
+  else document.documentElement.removeAttribute('data-mode');
+}
+applyMode669();
+try {
+  var opnMq669 = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  if (opnMq669) {
+    var opnMqChange669 = function () { if (opnModePick669() === 'system') applyMode669(); };
+    if (opnMq669.addEventListener) opnMq669.addEventListener('change', opnMqChange669);
+    else if (opnMq669.addListener) opnMq669.addListener(opnMqChange669); // old WebViews
+  }
+} catch (e) { /* a scheme listener can never fail the boot */ }
 /* v650 \u00a73.1/\u00a73.2: the labeled office slots and their sides. */
 function opnLabeledSlot650(slotId) { return slotId === 'ext-morning-prayer' || slotId === 'ext-evening-prayer'; }
 function extSideTag650(source) {
@@ -11140,6 +11182,22 @@ function paintSettings() {
   if (opnMode() === 'web') html += opnPointerHtml();
   // v419 (G28): the page sub — what the page holds, in one line.
   html += '<p class="sub">Playback, offline copies, and where each prayer&rsquo;s audio comes from.</p>';
+  // v669 §3.2: the DISPLAY section stands FIRST — the
+  // dark-mode control: a standing .segtoggle of Light ·
+  // Dark · Follow the phone over the device store
+  // (opn-mode-v669), the standing pick marked active. A tap
+  // writes the store, applies the mode at once, and
+  // re-paints Settings in place (the v638 in-session
+  // discipline — the flip is immediate, no reload).
+  var modePick669 = opnModePick669();
+  var modeBtn669 = function (v, label) { return '<button data-mode669="' + v + '"' + (modePick669 === v ? ' class="active"' : '') + '>' + label + '</button>'; };
+  html += '<h2 class="sectionhead">DISPLAY</h2><div class="liblist"><div class="setrow">'
+    + '<div class="setname">Dark mode</div>'
+    + '<div class="meta">The app&rsquo;s interior in dark tones. The day&rsquo;s liturgical color still stands in the accents.</div>'
+    + '<div class="setcontrols"><div class="segtoggle" id="set-mode669">'
+    + modeBtn669('light', 'Light') + modeBtn669('dark', 'Dark') + modeBtn669('system', 'Follow the phone')
+    + '</div></div>'
+    + '</div></div>';
   // v590 §2.2: the Profiles screen's Settings door.
   html += '<h2 class="sectionhead">PRAYER PLAN</h2><div class="liblist"><div class="setrow">'
     + '<div class="setname">Prayer profiles</div>'
@@ -11247,6 +11305,13 @@ function paintSettings() {
   html += '<div class="row" style="margin-top:12px"><span class="meta grow" id="set-unsaved"></span><button class="btn ghost" id="set-reset">Reset</button><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
   html += '<div id="pin-section"></div>';
   view.innerHTML = html;
+  // v669 §3.2: the DISPLAY control's wiring — a tap writes
+  // the store, applies the mode, and re-paints Settings in
+  // place; the flip is immediate, no reload.
+  var modeSeg669 = view.querySelector('#set-mode669');
+  if (modeSeg669) modeSeg669.querySelectorAll('[data-mode669]').forEach(function (b) {
+    b.addEventListener('click', function () { opnModeSet669(b.getAttribute('data-mode669')); applyMode669(); paintSettings(); });
+  });
   view.querySelectorAll('[data-setkey]').forEach(function (el) {
     var key = el.getAttribute('data-setkey');
     var row = settingsRows.filter(function (r) { return r.sourceKey === key; })[0];

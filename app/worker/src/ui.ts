@@ -111,6 +111,40 @@ export const APP_CSS = `
 [data-lit="green"] { --bar-bg:linear-gradient(135deg, #173a22, #1f4d2e); --bar-solid:#173a22; --bar-fg:#e9d9ae; --bar-sub:#b7cdb9; --accent:#2e7d46; --accent-ink:#ffffff; --accent-text:var(--accent); }
 [data-lit="violet"] { --bar-bg:linear-gradient(135deg, #2c1e40, #3d2a56); --bar-solid:#2c1e40; --bar-fg:#e9d9ae; --bar-sub:#c4b6dd; --accent:#6a4a9e; --accent-ink:#ffffff; --accent-text:var(--accent); }
 [data-lit="rose"] { --bar-bg:linear-gradient(135deg, #6d3441, #8a4453); --bar-solid:#6d3441; --bar-fg:#f9e9e4; --bar-sub:#eed3d7; --accent:#a34a5f; --accent-ink:#ffffff; --accent-text:var(--accent); }
+/* v669: dark mode — the interior tokens re-point under
+   [data-mode="dark"] (set by the client from the device
+   store, opn-mode-v669; Light = the attribute absent, so
+   the light paint above stands byte-identical). The
+   grounds are the app's red-brown family taken dark; the
+   text is the cream family's inversion. --navy lifts to a
+   light warm steel: its text seats gain contrast and its
+   fill seats invert as pairs with the darkened --cream
+   (dark text on the light fill). The accent FILLS
+   (--accent / --accent-ink / --bar-*) never move; only
+   --accent-text lifts, per liturgical theme, hue held,
+   each value measured >=4.5:1 on both dark grounds
+   (--card #2b211a and --cream #1f1811). --danger does not
+   re-point (its fill seat keeps white text on deep red);
+   its two text seats take the lifted red below. */
+[data-mode="dark"] { --cream:#1f1811; --card:#2b211a; --card-2:#17120d; --ink:#f2e9da; --muted:#b8a88f; --line:#55452f; --navy:#b7c5d8; --accent-text:#d3ab55; }
+[data-mode="dark"][data-lit="red"] { --accent-text:#e58f87; }
+[data-mode="dark"][data-lit="green"] { --accent-text:#82cc97; }
+[data-mode="dark"][data-lit="violet"] { --accent-text:#bfa6e6; }
+[data-mode="dark"][data-lit="rose"] { --accent-text:#e5a3b4; }
+/* v669: the dark-scoped seat overrides — the three #fff
+   hardcodes (form inputs · .entry · .setcontrols .mvbtn)
+   keep their light values untouched and read --card only
+   where the mode stands; .err/.pinmsg take the lifted
+   danger text; the pill segtoggle's active seat (whose
+   --cream fill would become the page ground itself) takes
+   --card; .intfab's glyph completes the pair inversion on
+   the lifted --navy fill. */
+[data-mode="dark"] input[type=text], [data-mode="dark"] input[type=date], [data-mode="dark"] select, [data-mode="dark"] textarea { background:var(--card); }
+[data-mode="dark"] .entry { background:var(--card); }
+[data-mode="dark"] .setcontrols .mvbtn { background:var(--card); }
+[data-mode="dark"] .err, [data-mode="dark"] .pinmsg { color:#e58f87; }
+[data-mode="dark"] .segtoggle.pill button.active { background:var(--card); }
+[data-mode="dark"] .intfab { color:var(--cream); }
 * { box-sizing: border-box; }
 html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); font-family: Georgia, 'Times New Roman', serif; font-size:17px; }
 .brandbar { position: sticky; top:0; z-index: 30; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:0; }
@@ -1146,7 +1180,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v668-1";
+var CACHE = "ora-pro-nobis-v669-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

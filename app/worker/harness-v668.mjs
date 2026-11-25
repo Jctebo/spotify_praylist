@@ -96,7 +96,7 @@ const SHELL = await (await WORKER.fetch(new Request('https://app.local/'), ENV))
 const APPJS = await (await WORKER.fetch(new Request('https://app.local/app.js'), ENV)).text();
 const CSS = await (await WORKER.fetch(new Request('https://app.local/styles.css'), ENV)).text();
 const SWJS = await (await WORKER.fetch(new Request('https://app.local/sw.js'), ENV)).text();
-check('F the served service worker carries the v668 pin', SWJS.includes('ora-pro-nobis-v668-1'), 'pin not in served /sw.js');
+check('F the served service worker carries the v669 pin (re-pointed at v669)', SWJS.includes('ora-pro-nobis-v669-1'), 'pin not in served /sw.js');
 const server = http.createServer((req, res) => {
   if (req.url.startsWith('/app.js')) { res.writeHead(200, { 'content-type': 'text/javascript' }); return res.end(APPJS); }
   if (req.url.startsWith('/styles.css')) { res.writeHead(200, { 'content-type': 'text/css' }); return res.end(CSS); }
