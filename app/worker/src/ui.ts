@@ -695,6 +695,21 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .favfolder-head { display:flex; align-items:center; gap:6px; }
 .favfolder-head .sectionhead { flex:1; }
+/* v659 §3.1: the Praylist's uniform section cards — one
+   .card per section (the Favorites card included), the head
+   inside the card's padding, the drawn mark in the tile,
+   the + / − toggle at the head's far right, and the open
+   body under a light divider. The card's own margin (.card)
+   replaces the head's page margin; the sectionhead inside a
+   card stands without its page margin/border rule. */
+.p659card .p609sethead, .p659card .p659favhead { cursor:pointer; }
+.p659card .sectionhead { margin:0; border-bottom:none; padding-bottom:0; }
+.p659mark { width:26px; height:26px; color:#e9d9ae; display:block; }
+.tone-gold > .p659mark { color:#16283f; }
+.p659toggle { flex:none; font-size:22px; line-height:1; color:var(--navy); padding:0 2px 0 6px; }
+.p659body { margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }
+.p659body .card:last-child { margin-bottom:0; }
+.p659favcard .favfolder:first-child .favfolder-head { margin-top:2px; }
 .favfolder-chev { flex:none; background:none; border:none; font-family:inherit; font-size:15px; line-height:1; color:var(--navy); cursor:pointer; padding:6px 4px; }
 .favfolder-head .favhandle { width:36px; height:36px; margin:0 0 0 -6px; }
 .favfolder.dragging { position:relative; z-index:6; box-shadow:0 14px 24px rgba(42,38,32,.28); }
@@ -1077,7 +1092,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v660-1";
+var CACHE = "ora-pro-nobis-v659-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
