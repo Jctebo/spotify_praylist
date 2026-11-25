@@ -19680,6 +19680,9 @@ function resolveReadingsSeat590(day) {
     if (!hit) return;
     day.readingsSeat = { series: 'daily-readings', seqKey: hit.key, title: hit.title, url: hit.url, durationS: hit.durationS || 0, imageUrl: hit.imageUrl || null, listened: !!hit.listened, positionS: hit.positionS || null };
     extRebuildDescs(day);
+    // v660 §3.2: the seat's settle repaints, like its
+    // sibling resolvers (19488 / 19613 pattern).
+    if (state.dayPayload) paintPrayersView(state.dayPayload);
   }).catch(function () {});
 }
 function resolveProfilePodcasts(day) {
@@ -19950,7 +19953,6 @@ function extRebuildDescs(day) {
         merged.forEach(function (e) { if (e.own && e.own.sourceKey === 'novenas') emitOwn619(e); });
       };
       var placedPrayer619 = {};
-      var seatIdx619 = -1;
       c590.forEach(function (it, idx) {
         if (!it) return;
         if (it.kind === 'source') {
@@ -20017,32 +20019,20 @@ function extRebuildDescs(day) {
           var recUse619 = rec619 || { block: b.block, slug: it.key, lang: 'en', afterId: null, kind: 'prayer', ref: null };
           descs.push(dayAdditionDesc(recUse619));
           placed619.adds[b.block + '|' + dayAdditionIdOf(recUse619)] = 1;
-        } else if (it.kind === 'seat') {
-          // The Morning readings seat stands at its
-          // contents position; foldReadingsSeat then
-          // skips (placed619.seat). The fold's misplace
-          // guard stands: if no daily-rosary descriptor
-          // stands in Morning today, the seat is pulled
-          // back out below and the fold decides as before.
-          if (b.block === 'Morning' && it.key === 'daily-readings' && day.readingsSeat && !placed619.seat) {
-            seatIdx619 = descs.length;
-            descs.push(readingsSeatDesc549(day.readingsSeat));
-            placed619.seat = true;
-          }
         }
+        // v660 §3.1: the 'seat' contents item stands
+        // nothing in this pass — placed619.seat is never
+        // set, so foldDayAdditions runs foldReadingsSeat
+        // on both exits and the seat (readingsSeatDesc549)
+        // splices immediately before the Morning
+        // daily-rosary descriptor, per the v549 rule.
+        // No Rosary standing → no seat.
       });
       // Any gated candidate the pass did not reach (a
       // shape the contents walk cannot name) emits in
       // contents-index order at the block tail — the
       // gate's standing is never lost.
       Object.keys(candByIdx619).map(Number).sort(function (a, c) { return a - c; }).forEach(emitCand619);
-      if (seatIdx619 >= 0) {
-        var rosary619 = false;
-        for (var ri619 = blockStart619; ri619 < descs.length; ri619++) {
-          if (descs[ri619].block === 'Morning' && descs[ri619].episodeId === 'daily-rosary') { rosary619 = true; break; }
-        }
-        if (!rosary619) { descs.splice(seatIdx619, 1); placed619.seat = false; }
-      }
     }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });

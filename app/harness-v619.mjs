@@ -59,6 +59,18 @@
 //  Q1b/Q1c and harness-v609vault F8b — both encoded the
 //  readings seat at the v549 before-rosary anchor; under
 //  v619 the seat stands at its contents position.
+// AMENDMENT (v660, 2026-11-25 — §3.3 of docs/releases/
+//  v660.md): E4 is amended to the NEW standing rule.
+//  John's 2026-11-25 direction supersedes the v619
+//  contents-position discipline for the readings seat:
+//  the seat's composed place is immediately before the
+//  Daily Rosary (the v549 fold rule, restored by v660
+//  §3.1) REGARDLESS of its selector's position in the
+//  stored Morning contents. E4a/E4b now assert that rule
+//  (before the drag AND after a drag to the head, the
+//  composed seat stands before the Rosary); the editor's
+//  contents behavior — the drag itself and the stored
+//  contents move — is otherwise unchanged (E4c).
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
@@ -293,6 +305,12 @@ async function legStandingCourse(js) {
 }
 
 // ---------- E4 ◆ TODAY scope: the readings seat dragged to the head (Morning) ----------
+// v660 AMENDMENT (see the header): the composed place is
+// the v549 before-the-Rosary place regardless of the
+// selector's contents position — before the drag (the
+// selector stands LAST in his stored contents) and after
+// a drag to the head alike. The drag's stored-contents
+// move itself stands unchanged (E4c).
 {
   const w = await unlockedWorld(appJs);
   const O = w.__opn;
@@ -303,12 +321,16 @@ async function legStandingCourse(js) {
   const { descs } = await paintRealDay(w);
   const morning = blockIds(descs, 'Morning');
   const seatCount = (descs || []).filter((d) => d.readingsSeat).length;
-  check('E4a before the drag, the seat stands at its stored contents position (the tail of Morning\u2019s contents list)',
-    morningBefore[morningBefore.length - 1] === 'daily-readings:2026-11-21', morningBefore);
-  check('E4b \u25c6 TODAY drag, seat to the head: the seat stands FIRST in Morning at its dragged contents position, exactly once in the day',
-    morning[0] === 'daily-readings:2026-11-21' && seatCount === 1
-    && JSON.stringify(morning) === JSON.stringify(['daily-readings:2026-11-21', 'ext-invitatory', 'morning-prayer', 'ext-morning-prayer', 'daily-rosary', 'marian-antiphon']),
+  const standingMorning = ['ext-invitatory', 'morning-prayer', 'ext-morning-prayer', 'daily-readings:2026-11-21', 'daily-rosary', 'marian-antiphon'];
+  check('E4a (v660-amended) before the drag, the seat stands at its v549 place — immediately before daily-rosary — NOT at its stored contents position (the tail)',
+    JSON.stringify(morningBefore) === JSON.stringify(standingMorning), morningBefore);
+  check('E4b \u25c6 (v660-amended) TODAY drag, seat to the head: the composed seat STILL stands immediately before daily-rosary, exactly once in the day — the drag no longer moves the composed row',
+    seatCount === 1 && JSON.stringify(morning) === JSON.stringify(standingMorning),
     { morning, seatCount });
+  const layer = (O.opnDoc().sections.profiles.todayEdits || {})[DATE];
+  const layerMorning = layer && layer.contents && layer.contents.Morning ? layer.contents.Morning.map((it) => it.kind + ':' + it.key) : null;
+  check('E4c (v660-amended) the editor\u2019s contents behavior is unchanged: the drag DID land in the stored today contents, seat first',
+    !!layerMorning && layerMorning[0] === 'seat:daily-readings', layerMorning);
   w.close();
 }
 
