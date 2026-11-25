@@ -25405,10 +25405,12 @@ function openAddLadder603(block, host) {
     function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung.indexOf('vmass:') === 0; } // v656: vmass: joins — the search pill narrows the node's own list
     function paint() {
       sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>'
+        + '<div class="panelbody">'
         + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="' + (rung.indexOf('vmass:') === 0 ? 'Search videos' : (isEpisodeNode614() ? 'Search episodes' : 'Search')) + '" value="' + esc(query) + '" autocomplete="off"></div>'
         + '<div data-p603list="1">' + listHtml() + '</div>'
         + (rung !== 'root' ? '<div class="row"><button class="btn ghost" data-p603back="1">Back</button></div>' : '')
-        + '<div class="row"><button class="btn ghost" data-p603close="1">Close</button></div></div>';
+        + '</div>'
+        + '<div class="row panelfoot"><button class="btn ghost" data-p603close="1">Close</button></div></div>';
       wire();
     }
     function paintList() {
