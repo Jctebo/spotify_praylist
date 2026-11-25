@@ -9347,12 +9347,22 @@ function podSyncQueueListened(series, seqKey, on) {
   // later (a queue birth, a restore) reads the flag from the
   // payload at podDesc instead; the two seats together keep
   // every queue row's dot on the one episode-level mark.
+  // v673: the discipline widens to EVERY standing copy — the
+  // composed day copies in state.dayDescs (the same objects
+  // state.composed642 names) flip beside the queue/current/
+  // preview copies. The v659 card paint and refreshPlayed-
+  // Chrome's [data-poddot] + head-count passes read those day
+  // copies, and the same episode can stand twice in dayDescs
+  // (a contents copy + the day-episodes expansion copy), so
+  // every copy keyed (podSeries, seriesKey) flips — first
+  // match, last match, and the count all read a flipped copy.
   var apply = function (d) {
     if (d && d.kind === 'podcast' && d.podSeries === series && d.seriesKey === seqKey) d.listened = !!on;
   };
   (state.queue || []).forEach(apply);
   if (state.current) apply(state.current);
   if (state.previewQueue) state.previewQueue.forEach(apply);
+  (state.dayDescs || []).forEach(apply);
 }
 function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
@@ -19504,6 +19514,10 @@ function drainNativeCompletions() {
   // payload fold's delete, done directly here. Nothing posts:
   // the service already wrote the 0/0 day-position row itself
   // when it marked the track.
+  // v673: a record resolving to a podcast descriptor routes
+  // through the podcast mark seam instead (writePodMarkQuiet
+  // — its post is that seam's standing fire-and-forget, as at
+  // markCompleted); see the v673 notes at the write below.
   try {
     var p = oraBridgePlugin();
     if (!p || !p.takeNativeCompletions) return;
@@ -19569,7 +19583,17 @@ function drainNativeCompletions() {
         if (!desc && typeof rec.mediaUri === 'string' && rec.mediaUri !== '') return;
         // (c) sole candidate.
         if (!desc && cands.length === 1) desc = cands[0];
-        if (desc) {
+        // v673: a resolved PODCAST descriptor takes the
+        // podcast seam for its mark — markCompleted's shape
+        // exactly (a series track carries no day-played
+        // record; the podcasts store is its record, and the
+        // day-store write below is a store no painter reads
+        // for the row). Every other resolved kind and the
+        // (d) fallback keep the standing day-store write.
+        var isPod673 = !!(desc && desc.kind === 'podcast' && desc.seriesKey);
+        if (desc && isPod673) {
+          writePodMarkQuiet(desc.seriesKey, desc.podSeries, 'auto');
+        } else if (desc) {
           // The write mirrors markCompleted's argument shape
           // exactly — the descriptor's full key.
           writePlayedQuiet(desc.episodeId, rec.date || presentedDateStr(), 'auto', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0, desc._side650 || null);
@@ -19579,7 +19603,15 @@ function drainNativeCompletions() {
           // with a dead contract; the named limitation).
           writePlayedQuiet(rec.episodeId, rec.date || presentedDateStr(), 'auto', recBlock);
         }
-        if (state.dayPayload && state.dayPayload.dayPositions) delete state.dayPayload.dayPositions[rec.episodeId];
+        // v673 dayPositions ruling: the delete STANDS DOWN
+        // for the resolved-podcast path — no position reader
+        // reads the dayPositions fold for a podcast kind
+        // (queueMarkPos617 and the start seam read the
+        // descriptor's podPositionS, the core fold), and the
+        // mark route's own podPosSlotDrop drops the podcast
+        // position slot in the same act. The delete stands
+        // byte-identical for every non-podcast path.
+        if (!isPod673 && state.dayPayload && state.dayPayload.dayPositions) delete state.dayPayload.dayPositions[rec.episodeId];
       });
       refreshPlayedChrome();
     }).catch(function () {});
