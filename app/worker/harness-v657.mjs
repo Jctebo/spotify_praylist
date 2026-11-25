@@ -342,7 +342,11 @@ const rowOf = (db, date, slot) => db.resolutions.get(date + "|" + slot);
   await scheduledPass(env);
   const s1Today = rowOf(db, TODAY, "ext-saint-of-the-day");
   const s1Tmr = rowOf(db, TOMORROW, "ext-saint-of-the-day");
-  check("S1 pre-release scheduled pass fetched the saint feed", count("saint") === saintBefore + 1, count("saint") - saintBefore);
+  // v665: the intended count is exactly 2 — the pass reads the saint feed
+  // once for the ext-saint-of-the-day slot resolver and once for the new
+  // rss:saint-of-the-day snapshot (the series def joins the watcher by
+  // construction; the snapshot is missing on this first pass, so it builds).
+  check("S1 pre-release scheduled pass fetched the saint feed exactly twice (ext-saint-of-the-day slot + rss:saint-of-the-day snapshot)", count("saint") === saintBefore + 2, count("saint") - saintBefore);
   check("S1 saint 'missing' for today after the pre-release pass", !!s1Today && s1Today.state === "missing", s1Today);
   check("S1 saint 'missing' for tomorrow after the pre-release pass", !!s1Tmr && s1Tmr.state === "missing", s1Tmr);
 

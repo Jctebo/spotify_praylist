@@ -4012,6 +4012,17 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   // insert paths (§2.4–§2.6). window 500 keeps the snapshot
   // feed-complete for those inserts.
   { key: "daily-readings", title: "USCCB Daily Readings Podcast", feedUrl: (env) => env.EXT_DAILY_READINGS_FEED_URL || RSS_USCCB_READINGS_FEED_URL, window: 500 },
+  // v665: The Saint of The Day Podcast (Good Catholic / The
+  // Catholic Company) joins the kind — the same feed the
+  // ext-saint-of-the-day slot resolver reads (EXT_SAINT_FEED_URL,
+  // the constant and the Env binding both standing since the
+  // resolver port), so the series def and the slot resolver can
+  // never diverge on the feed address. The day leg
+  // (ext-saint-of-the-day) is untouched; this line gives the
+  // podcast its series page, its index card, and its
+  // Podcasts-layer key. window 500 keeps the snapshot
+  // feed-complete (299 episodes standing at Plan).
+  { key: "saint-of-the-day", title: "The Saint of The Day Podcast", feedUrl: (env) => env.EXT_SAINT_FEED_URL || EXT_SAINT_FEED_URL, window: 500 },
   // v577 §2.2 (Q2 A): Ora Pro Nobis itself joins the kind —
   // John's own daily podcast stands as a series on the
   // Podcasts side, navigable and favoritable like any other
