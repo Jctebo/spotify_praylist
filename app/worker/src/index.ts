@@ -2431,6 +2431,22 @@ async function extFeedStoodDown(env: Env, slotIds: string[], today: string): Pro
     return !!at && chicagoDateOf(new Date(at)) === today;
   });
 }
+// v657 §2.4: the present-only stand-down — same read as
+// extFeedStoodDown, but a slot counts toward stand-down only
+// when its row is 'present'. A pre-release 'missing' never
+// stands the feed down for the day: the watcher keeps
+// re-reading on the cron cadence until the publisher's item
+// lands (the saint feed's 06:00Z pass runs two hours before
+// its 08:00Z release).
+async function extFeedStoodDownPresent(env: Env, slotIds: string[], today: string): Promise<boolean> {
+  if (!slotIds.length) return true;
+  const r = await env.DB.prepare("SELECT slot_id, state, resolved_at FROM ext_resolutions WHERE date=?").bind(today).all<{ slot_id: string; state: string; resolved_at: string }>();
+  const bySlot = new Map((r.results ?? []).map((x) => [x.slot_id, x]));
+  return slotIds.every((id) => {
+    const row = bySlot.get(id);
+    return !!row && row.state === "present" && chicagoDateOf(new Date(row.resolved_at)) === today;
+  });
+}
 // v626: the Divine Office stand-down variant — a Morning/
 // Evening row filled by the Sing the Hours fallback (source =
 // 'Sing the Hours') does NOT count as resolved, so the primary
@@ -2445,6 +2461,10 @@ async function extFeedStoodDownDo(env: Env, slotIds: string[], today: string): P
   return slotIds.every((id) => {
     const row = bySlot.get(id);
     if (!row) return false;
+    // v657 §3.2: present-only — a 'missing' row never counts
+    // toward the Divine Office stand-down either; rung 1
+    // re-reads while any standing slot is unresolved.
+    if (row.state !== "present") return false;
     if (EXT_LABELED_SLOTS.has(id) && row.source === "Sing the Hours") return false;
     return chicagoDateOf(new Date(row.resolved_at)) === today;
   });
@@ -2630,9 +2650,10 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     sourceFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
     sthAwareStoodDown?: boolean,
     routeFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
+    presentOnlyStoodDown?: boolean,
   ): Promise<void> => {
     const todaySlots = slotsFor(today);
-    if (!forced.has(feedKey) && (await (sthAwareStoodDown ? extFeedStoodDownDo(env, todaySlots, today) : extFeedStoodDown(env, todaySlots, today)))) {
+    if (!forced.has(feedKey) && (await (sthAwareStoodDown ? extFeedStoodDownDo(env, todaySlots, today) : presentOnlyStoodDown ? extFeedStoodDownPresent(env, todaySlots, today) : extFeedStoodDown(env, todaySlots, today)))) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
       return;
     }
@@ -2756,6 +2777,8 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     // one released (Chicago) on D−1, so its day = Chicago
     // release date + 1.
     (date, it) => (it.pubMs != null ? chicagoShiftDate(chicagoDateOf(new Date(it.pubMs)), 1) : null),
+    undefined, undefined, undefined,
+    true, // v657 §3.2: present-only stand-down (enumerated daily slot)
   );
   // Bible in a Year day leg — extMatchBible (2 h gate inside).
   await runSlotFeed(
@@ -2770,6 +2793,8 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     (date) => (standingOn("ext-saint-of-the-day", date) ? ["ext-saint-of-the-day"] : []),
     (items, y, mo, d) => extMatchSaint(items, y, mo, d),
     (_slotId, it) => it?.title ?? "Saint of the Day",
+    undefined, undefined, undefined, undefined, undefined,
+    true, // v657 §2.4: present-only stand-down
   );
   // Daily TV Mass — extMatchTvMass.
   await runSlotFeed(
@@ -2777,6 +2802,8 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     (date) => (standingOn("ext-daily-tv-mass", date) ? ["ext-daily-tv-mass"] : []),
     (items, y, mo, d) => extMatchTvMass(items, y, mo, d),
     (_slotId, it) => it?.title ?? "Daily TV Mass",
+    undefined, undefined, undefined, undefined, undefined,
+    true, // v657 §3.2: present-only stand-down (enumerated daily slot)
   );
   // Sing the Hours fallback fills (§1 item 2; v626 widens the
   // trigger per John's order, 2026-11-23 08:43 CT): Lauds fills
@@ -2920,15 +2947,20 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
   // standing stores through the standing builders. Stand-down
   // (D9): a snapshot built today (Chicago) is not re-fetched
   // unless forced. Zero-yield = failed build, writes nothing.
-  const snapStoodDown = async (table: string, key: string): Promise<boolean> => {
+  // v657 §3.3: the stand-down is the read side's own max-age
+  // discipline, per store class — stood down iff a row stands
+  // AND its built_at is inside maxAgeMs. A snapshot past its
+  // age rebuilds on the watcher's cadence instead of waiting
+  // for a read (the read path stays as the failure backstop).
+  const snapStoodDown = async (table: string, key: string, maxAgeMs: number): Promise<boolean> => {
     try {
       const row = await env.DB.prepare(`SELECT built_at FROM ${table} WHERE series=?`).bind(key).first<{ built_at: string }>();
-      return !!row?.built_at && chicagoDateOf(new Date(row.built_at)) === today;
+      return !!row?.built_at && Date.now() - Date.parse(row.built_at) < maxAgeMs;
     } catch { return false; }
   };
   for (const def of POD_RSS_SERIES_LIST) {
     const feedKey = "rss:" + def.key;
-    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("rss_snapshots", def.key))) {
+    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("rss_snapshots", def.key, RSS_SNAPSHOT_MAX_AGE_MS))) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
       continue;
     }
@@ -2952,7 +2984,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
   }
   for (const def of POD_SERIES_LIST) {
     const feedKey = "course:" + def.key;
-    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("podcast_sequences", def.key))) {
+    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("podcast_sequences", def.key, POD_SNAPSHOT_MAX_AGE_MS))) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
       continue;
     }
@@ -2977,7 +3009,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
   }
   {
     const feedKey = "novenas-catalog";
-    if (!forced.has(feedKey) && (await snapStoodDown("rss_snapshots", NOVENA_CATALOG_KEY))) {
+    if (!forced.has(feedKey) && (await snapStoodDown("rss_snapshots", NOVENA_CATALOG_KEY, RSS_SNAPSHOT_MAX_AGE_MS))) {
       summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
     } else {
       try {
@@ -2997,6 +3029,36 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         await extFeedStateWrite(env, feedKey, false, msg, null);
         summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
       }
+    }
+  }
+  // v657 §3.3: video snapshots join the watcher — the same
+  // max-age discipline as the other snapshot classes, through
+  // the standing builder's own calls (ytFetchFeedText +
+  // ytParseFeed; zero-yield throws in the parser = failed
+  // build, writes nothing). Bookkeeping under `video:<key>`
+  // in ext_feed_state, mirroring the rss/course entries.
+  for (const def of POD_VIDEO_SERIES_LIST) {
+    const feedKey = "video:" + def.key;
+    if (!forced.has(feedKey) && !forced.has(def.key) && (await snapStoodDown("video_snapshots", def.key, VIDEO_SNAPSHOT_MAX_AGE_MS))) {
+      summary.push({ feed: feedKey, ok: true, slotsWritten: 0, skipped: "stood-down" });
+      continue;
+    }
+    try {
+      const xml = await ytFetchFeedText(def.feedUrl(env));
+      const videos = ytParseFeed(xml);
+      if (!videos.length) throw new Error("zero-yield snapshot build");
+      const builtAt = nowISO();
+      const snapFull: VideoSnapshot = { videos, builtAt };
+      await env.DB.prepare(
+        `INSERT INTO video_snapshots (series, payload, built_at) VALUES (?, ?, ?)
+         ON CONFLICT(series) DO UPDATE SET payload = excluded.payload, built_at = excluded.built_at`,
+      ).bind(def.key, JSON.stringify(snapFull), builtAt).run();
+      await extFeedStateWrite(env, feedKey, true, null, null);
+      summary.push({ feed: feedKey, ok: true, slotsWritten: videos.length });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "snapshot build failed";
+      await extFeedStateWrite(env, feedKey, false, msg, null);
+      summary.push({ feed: feedKey, ok: false, error: msg, slotsWritten: 0 });
     }
   }
   // Prune (§1 item 1): resolutions older than 35 days.
