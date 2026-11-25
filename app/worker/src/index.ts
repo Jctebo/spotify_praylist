@@ -1367,6 +1367,12 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // is kept; any other day key is an error — the
           // client's mirror rule.
           if (key !== "daily-gospel-exegesis") return { error: `bad day ${String(key)}` };
+        } else if (kind === "video") {
+          // v656: a video item's key is '<series>|<videoId>',
+          // both sides non-empty, AND the series side naming
+          // one of the three standing Virtual Mass series —
+          // the client's opnVideoKeyOk656 mirror rule.
+          if (typeof key !== "string" || key.indexOf("|") <= 0 || key.indexOf("|") >= key.length - 1 || !["catholictv", "dailytvmass", "springfieldmass"].includes(key.slice(0, key.indexOf("|")))) return { error: `bad video ${String(key)}` };
         } else if (kind === "episode") {
           // v614: an episode item's key is the core listen
           // key verbatim, '<series>|<episodeKey>', both

@@ -10,7 +10,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], composed642: null, composedDate642: null, dayPending642: false, rebuildGuard642: false, dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, restoredStand649: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
+var state = { tab: 'prayers', deepIdx: 0, examCat: null, examFollowActive: false, playingUrl: null, queue: [], queueIdx: -1, queueFrom: null, current: null, pendingStart: null, nativeRefusal: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], videoRes656: null, composed642: null, composedDate642: null, dayPending642: false, rebuildGuard642: false, dayPayload: null, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, restoredStand649: false, prayersView: { kind: 'home' }, podcasts: null, podcastsIndex: null, podcastsReturn: null, book: null, starred: [], mass: null, dayAdditions: null, dayAdditionsDate: null, trackDraws: null, trackDrawsDate: null, trackDrawsPending: null };
 /* v419 (G31): the series collapse state — the standing
    series key + whether its listened-before-current run
    stands open. Reset at every index paint; stamped at every
@@ -2921,6 +2921,14 @@ function opnCheckContents590(contents, coreBlocks) {
           // is kept; any other day key is an error,
           // exactly the course rule's shape.
           if (key !== OPN_DAY_KEY_611) throw opnErr(400, 'bad day ' + key);
+        } else if (kind === 'video') {
+          // v656: a video item pins ONE Virtual Mass video —
+          // its key is '<series>|<videoId>' with the series
+          // naming one of the three standing Virtual Mass
+          // series (opnVideoKeyOk656). Core blocks only (this
+          // branch stands outside the Novenas arm). No dedupe
+          // exception: the standing seen[] drop gives dupes A.
+          if (!opnVideoKeyOk656(key)) throw opnErr(400, 'bad video ' + key);
         } else if (kind === 'episode') {
           // v614: an episode item pins ONE episode of a
           // series — its key is the core listen key
@@ -2958,6 +2966,45 @@ function opnEpisodeKeyOk614(key) {
   var i = key.indexOf('|');
   return i > 0 && i < key.length - 1;
 }
+function opnVideoKeyOk656(key) {
+  // v656: the video key shape — '<series>|<videoId>', both
+  // sides non-empty (the episode shape), AND the series side
+  // naming one of the three standing Virtual Mass series
+  // (MASS_VIRTUAL_ENTRIES' series keys). A foreign series is
+  // an error.
+  if (!opnEpisodeKeyOk614(key)) return false;
+  var series = key.slice(0, key.indexOf('|'));
+  return MASS_VIRTUAL_ENTRIES.some(function (e) { return e.series === series; });
+}
+function opnVideoSeriesTitle656(series) {
+  var e = MASS_VIRTUAL_ENTRIES.filter(function (x) { return x.series === series; })[0];
+  return e ? e.title : String(series || '');
+}
+function opnVideoReg656() {
+  try { var v = JSON.parse(localStorage.getItem('opn-video-reg-v656') || 'null'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; }
+}
+function opnVideoRegWrite656(series, videos) {
+  // v656: the title registry is written at the two seats that
+  // see a video payload — the resolver and the ladder's video
+  // node — for every video in the payload.
+  if (!Array.isArray(videos) || !videos.length) return;
+  var reg = opnVideoReg656();
+  var st = opnVideoSeriesTitle656(series);
+  videos.forEach(function (v) { if (v && v.id) reg[series + '|' + v.id] = { title: v.title || '', seriesTitle: st }; });
+  try { localStorage.setItem('opn-video-reg-v656', JSON.stringify(reg)); } catch (e) {}
+}
+function opnVideoTitle656(key) {
+  // v656: a video item's editor label — from the title
+  // registry, falling back to the series title + ' · Video'
+  // before the registry has seen the video. No network fetch
+  // for a label (the episode rule).
+  var k = String(key || '');
+  var reg = opnVideoReg656();
+  var e = reg[k];
+  if (e && e.title) return e.title;
+  var series = k.slice(0, k.indexOf('|'));
+  return opnVideoSeriesTitle656(series) + ' \u00b7 Video';
+}
 function opnEpisodeTitle614(key) {
   // v614: an episode item's editor label — from the core
   // episode registry (ingested by opnPodCoreIngestSeries),
@@ -2986,7 +3033,7 @@ function opnContentsOf590(p) {
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611) && (it.kind !== 'episode' || opnEpisodeKeyOk614(it.key)); }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611) && (it.kind !== 'episode' || opnEpisodeKeyOk614(it.key)) && (it.kind !== 'video' || opnVideoKeyOk656(it.key)); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -5083,6 +5130,7 @@ function trackKeyOf(t) {
   // for a recording) and a homily is not a day track. Its
   // rows carry no Intention line.
   if (t.kind === 'homily') return null;
+  if (t.kind === 'video') return null; // v656: no intention draw for a video (the homily exclusion's shape)
   if (t.episodeId.indexOf('intro:') === 0 || t.episodeId.indexOf('seg:') === 0) return null;
   return descMarkKey(t);
 }
@@ -5149,6 +5197,13 @@ function refreshTrackDrawSurfaces(repaintRows) {
   }
 }
 function startDesc(desc) {
+  // v656 §2.4.1: the Play-B divert — one choke point at the
+  // head, before every bookkeeping leg. Every queue path
+  // funnels through startDesc, so an available video opens
+  // the hand-off watch instead of loading as audio. A miss
+  // (available:false) never reaches here: queueLiveDesc
+  // passes it over first.
+  if (desc && desc.kind === 'video' && desc.available) { openVideoHandoff656(desc); return; }
   opnTouchRestored649(); // v649 §3.1: any start this session touches the restored stand
   // v388 §2.2: the start sequence, written-only. Bookkeeping
   // stands on the PRAYER from the unit's first instant (the
@@ -5283,7 +5338,7 @@ function playTrack(desc) {
   // The guard admits available descriptors with a URL (v384:
   // the spoken form is retired — every queue entry is a prayer
   // with audio); the toggle reads the transport predicates.
-  if (!desc || !desc.available || !desc.url) return;
+  if (!desc || !desc.available || !(desc.url || (desc.kind === 'video' && desc.videoId))) return; // v656: a video passes by identity, not by URL
   if (state.pendingStart && state.current && state.current.episodeId === desc.episodeId) { cancelPendingStart(); return; } // v461 F1: a toggle during this track's own start cancels the start — never a second startDesc
   if (state.current && state.current.episodeId === desc.episodeId && transportPlaying()) { pauseTransport(); return; }
   state.queue = []; state.queueIdx = -1;
@@ -5333,6 +5388,10 @@ function tapPlay(d) {
 }
 function resumeCurrent() {
   opnTouchRestored649(); // v649 §3.1: a resume/play of the restored queue is a touch
+  // v656 §2.4.6: a video current re-opens its hand-off watch
+  // on resume — placed BEFORE the closeWatch call below so
+  // the re-open does not tear its own frame down.
+  if (state.current && state.current.kind === 'video') { openVideoHandoff656(state.current); return; }
   closeWatch(); // v434 §2.6.2 seat 3: a resume is an audio start — a standing watch frame is destroyed BEFORE audioEl.play() runs below
   // v346 §2.4: the media-session play handler's seam — the app's
   // own resume path, queue- and position-preserving. It never
@@ -5671,7 +5730,7 @@ function addToQueue(desc) {
   // mismatch or an unavailable track returns without act.
   if (!desc) return;
   var live = queueLiveDesc(desc);
-  if (!live || !live.available || !live.url) return;
+  if (!live || !live.available || !(live.url || (live.kind === 'video' && live.videoId))) return; // v656: a video passes by identity
   opnTouchRestored649(); // v649 §3.1: a queue edit this session touches the restored stand
   var isPod = live.kind === 'podcast';
   var standingKind = queueKindIsPod();
@@ -5741,7 +5800,7 @@ function playNext(desc) {
   // stands silent).
   if (!desc) return;
   var live = queueLiveDesc(desc);
-  if (!live || !live.available || !live.url) return;
+  if (!live || !live.available || !(live.url || (live.kind === 'video' && live.videoId))) return; // v656: a video passes by identity
   if (!queueKindOk645(live.kind === 'podcast')) return;
   if (!queueInsert645([live], true)) { playTrack(live); return; }
   queueActFinish645();
@@ -6880,6 +6939,8 @@ var podLevel = 'index';
    standing place. podWatchPlayer is the IFrame API handle (its
    error events are the refusal seam, §2.6.3). */
 var podWatch = null;
+var videoHandoff656 = null; // v656: the standing Play-B hand-off record {desc, queueIdx}, or null
+var nativeVideoBoundary656 = null; // v656: the video descriptor a native contract truncated at, or null
 var podWatchPlayer = null;
 /* v436 §2.2: the CatholicTV series' FULL PAGE — the channel
    page the series page is a 15-video window onto. A client
@@ -9865,6 +9926,92 @@ function paintPodcastVideos() {
    Podcasts navigation. The frame is created at this view's
    paint and nowhere else: no pre-created or hidden frame stands
    anywhere in the tab. */
+function openVideoHandoff656(desc) {
+  // v656 §2.4.2: the Play-B hand-off opens. Silences the
+  // audio first (the openPodWatch rule — in native mode the
+  // pause goes to the engine; no contract is ever sent for a
+  // video). state.queueIdx already stands at the video's
+  // index on every queue path; a single play carries -1.
+  if (!desc || !desc.videoId) return;
+  if (!audioEl.paused || oraNativeMode()) pauseTransport();
+  podWatch = { video: { id: desc.videoId, title: desc.title, dateLabel: desc.dateLabel || '', imageUrl: desc.imageUrl || null }, scroll: window.scrollY || 0 };
+  videoHandoff656 = { desc: desc, queueIdx: state.queueIdx };
+  state.current = desc;
+  state.pendingStart = null;
+  setPlaybackState('paused');
+  markPlaying(descCardKey(desc));
+  updateDock();
+  paintVideoWatch656();
+}
+function paintVideoWatch656() {
+  // v656: the hand-off watch — paintPodWatch's form, homed on
+  // the Praylist: a row-2 bar (dest 'Praylist', the video's
+  // title, a back act that FINISHES the hand-off), the one
+  // YouTube embed frame, the standing error line seat, and
+  // the series + date meta.
+  if (!podWatch) return;
+  var v = podWatch.video;
+  podLevel = 'watch';
+  paintRow2Bar({ dest: 'Praylist', title: v.title, backAttrs: 'data-vwatchback656' });
+  var html = '';
+  html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
+  html += '<div id="podwatch-err" class="err" style="display:none"></div>';
+  var seriesTitle = (videoHandoff656 && videoHandoff656.desc) ? opnVideoSeriesTitle656(videoHandoff656.desc.vmSeries) : '';
+  html += '<div class="meta">' + esc(seriesTitle) + (v.dateLabel ? ' \u00b7 ' + esc(v.dateLabel) : '') + '</div>';
+  view.innerHTML = html;
+  var wh = hdrRow2();
+  var b = wh ? wh.querySelector('[data-vwatchback656]') : null;
+  if (b) b.addEventListener('click', function () { finishVideoHandoff656(false); });
+  wirePodWatchApi();
+}
+function finishVideoHandoff656(fromEnd) {
+  // v656 §2.4.3: the one finish act (the ENDED event · the
+  // watch's back act). Consumes the record first; marks ONLY
+  // on a natural end (the markCompleted precedent — skips and
+  // partial plays never mark); tears the frame down inline
+  // (NOT via closeWatch — its repaint seats target the series
+  // pages); repaints the Prayers view; then resumes the queue
+  // after the video in BOTH modes through handoffAdvance656.
+  var rec = videoHandoff656;
+  if (!rec) return;
+  videoHandoff656 = null;
+  var desc = rec.desc;
+  if (fromEnd && desc) writePlayed(desc.episodeId, presentedDateStr(), 'played', desc.block);
+  podWatch = null;
+  podWatchPlayer = null;
+  var f = view.querySelector('iframe.podwatch-frame');
+  if (f) f.remove();
+  if (state.dayPayload) paintPrayersView(state.dayPayload);
+  handoffAdvance656(rec);
+}
+function handoffAdvance656(rec) {
+  // v656 §2.4.3: advanceQueue's element loop as a direct-start
+  // helper — from queueIdx + 1, the first entry queueLiveDesc
+  // resolves live starts through startDesc (a further video
+  // diverts again: hand-off chains hand-off to hand-off); a
+  // non-live entry passes over with the standing markSkipped
+  // flash; past the end, advanceQueue's dir>0 exhausted body
+  // (the terminal clear). The single-play case (queueIdx -1,
+  // no queue) is the terminal stop: current null, playback
+  // 'none', nothing resumes.
+  var qi = rec ? rec.queueIdx : state.queueIdx;
+  if (!state.queue.length || qi < 0) {
+    state.current = null; state.pendingStart = null;
+    setPlaybackState('none'); markPlaying(null); updateDock(); saveQueueSnapshot();
+    return;
+  }
+  var i = qi + 1;
+  while (i < state.queue.length) {
+    var live = queueLiveDesc(state.queue[i]);
+    if (!live) { markSkipped(state.queue[i].episodeId); i++; continue; }
+    state.queue[i] = live;
+    state.queueIdx = i;
+    startDesc(live);
+    return;
+  }
+  state.queue = []; state.queueIdx = -1; state.queueFrom = null; state.current = null; state.pendingStart = null;
+  setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); pushNativeState(true);
+}
 function openPodWatch(v) {
   // §2.6.2, the forward direction: opening a video silences the
   // audio FIRST — the standing pause act (the same function the
@@ -9911,7 +10058,7 @@ function wirePodWatchApi() {
   var make = function () {
     if (!podWatch || !window.YT || !YT.Player) return;
     try {
-      podWatchPlayer = new YT.Player(frame, { events: { onError: function (e) { podWatchOnError(e && e.data); } } });
+      podWatchPlayer = new YT.Player(frame, { events: { onError: function (e) { podWatchOnError(e && e.data); }, onStateChange: function (e) { if (videoHandoff656 && e && e.data === 0) finishVideoHandoff656(true); } } }); // v656: ENDED (0) finishes a standing hand-off; with none standing the handler is inert
     } catch (e) { /* no API, no seam — the frame and the standing act still stand */ }
   };
   if (window.YT && YT.Player) { make(); return; }
@@ -9934,6 +10081,13 @@ function podWatchOnError(code) {
   if (line) { line.textContent = 'YouTube won\u2019t play this one inside the app \u2014 open it in YouTube instead.'; line.style.display = ''; }
 }
 function closeWatch() {
+  // v656 §2.4.4: abandonment — any closeWatch seat OTHER than
+  // the hand-off's own finish (a tab switch, a fresh audio
+  // start, the Now Playing sheet's open, a series re-entry)
+  // cancels the hand-off: the record dies, no mark, no
+  // resume. state.current keeps the video descriptor paused
+  // (a resume re-opens it, §2.4.6); the queue stands untouched.
+  if (videoHandoff656) videoHandoff656 = null;
   // §2.6.2: the one named teardown act — destroys the iframe
   // element, clears the standing watch record, and (when the
   // watch view is the standing view) repaints the series page
@@ -16309,13 +16463,14 @@ function openPlayerMenu(anchorEl) {
   // standing act/sheet. Transport never enters the menu; the
   // intentions toggle does NOT move (ruling R1).
   // v419: the menu anchors at its control (the NP ⋮ button).
-  var playerItems = [
-    // v640 §3: Share stands FIRST in the player menu (the
-    // row-menu precedent — Share stands first in
-    // openDayRowMenu and openPodRowMenu); its act fires the
-    // one track share for the standing track.
-    { label: 'Share', act: function () { if (state.current) shareTrackSheet(state.current); } },
-  ];
+  var playerItems = [];
+  // v640 §3: Share stands FIRST in the player menu (the
+  // row-menu precedent — Share stands first in
+  // openDayRowMenu and openPodRowMenu); its act fires the
+  // one track share for the standing track.
+  // v656 §2.7: the Share item does not stand while the
+  // current is a video (the row-menu rule, one seat earlier).
+  if (!(state.current && state.current.kind === 'video')) playerItems.push({ label: 'Share', act: function () { if (state.current) shareTrackSheet(state.current); } });
   // v645 §3.7: Play next + Add to queue stand for the current
   // track, immediately after Share, only while a current
   // stands — each acts on state.current (a further instance
@@ -17032,14 +17187,22 @@ function dayRowMarkApply639(t, on) {
    the episode is not already on the device — the cache read
    lands before the menu opens. */
 function openDayRowMenu(t, anchorEl, extraItems) {
-  var items = [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
+  // v656 §2.7 (rebased onto v655): for kind 'video', Share
+  // does NOT stand (shareAppUrlFor would build a day form
+  // the v643 landing cannot resolve to a video page),
+  // Download does NOT stand (no audio file), Details does
+  // NOT stand (epCardIsEpisode is false for the kind, so no
+  // extra item arrives). Play next · Add to queue · the
+  // standing Mark item stand as for every day row.
+  var isVideo656 = !!(t && t.kind === 'video');
+  var items = isVideo656 ? [] : [{ label: 'Share', act: function () { shareTrackSheet(t); } }];
   // v542 §2 (Part 2): Add to queue stands for an available
   // track when no podcast queue stands (the kind bound, §1);
   // the act re-resolves and appends without interrupting.
   if (t.available && queueKindIsPod() !== true) items.push({ label: 'Play next', act: function () { playNext(t); } });
   if (t.available && queueKindIsPod() !== true) items.push({ label: 'Add to queue', act: function () { addToQueue(t); } });
   var build = function (standing) {
-    if (t.available && !standing) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
+    if (t.available && !standing && !isVideo656) items.push({ label: 'Download', act: function () { dayRowDownload(t); } });
     var markItem = dayRowMarkItem639(t);
     if (markItem) items.push(markItem);
     // v576: a caller may append its own items (the Favorites
@@ -17048,7 +17211,7 @@ function openDayRowMenu(t, anchorEl, extraItems) {
     if (extraItems && extraItems.length) items.push.apply(items, extraItems);
     openSheetMenu(t.title || 'Options', items, anchorEl);
   };
-  if (!t.available || !('caches' in window)) { build(true); return; }
+  if (!t.available || isVideo656 || !('caches' in window)) { build(true); return; }
   caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(extAudioKey650(presentedDateStr(), t.episodeId, t.source)); }) // v650 §3.2: the read keys by the descriptor's own side
     .then(function (r) { build(!!r); }, function () { build(false); });
 }
@@ -17316,6 +17479,17 @@ function trackCard(t) {
   // v413 §2.6: the two-line snippet — where descText stands
   // (externals + podcasts); own Ora rows carry none (F-413-1).
   var snippet = t.descText ? '<div class="snippet">' + esc(t.descText) + '</div>' : '';
+  if (t.kind === 'video') {
+    // v656 §2.7: a video row paints whole — its thumbnail
+    // through the standing row-art chain, a 'Video · <series
+    // title>' meta tag, no duration dress, and no Intention
+    // line (trackKeyOf returns null for the kind, so no draw
+    // ever stands for it).
+    if (t.available) {
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + '</span>' + metaTrail('') + '</div></div>');
+    }
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + ' \u00b7 Not available today</div></div></div></div>';
+  }
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
     // (D5); a miss stands as "Not available today". No Read control —
@@ -18659,7 +18833,17 @@ function nativeContractFor(desc) {
   var isPod = desc.kind === 'podcast';
   var items = [];
   var kept = [];
+  // v656 §2.4.5: the truncation rule — scanning from the
+  // start index forward, the FIRST video descriptor ends the
+  // contract (it and every entry after it are excluded) and
+  // the build records it as the boundary. Dropping alone is
+  // not enough: the engine would chain straight past the
+  // video into the post-video track. A build with no video
+  // at-or-after the start clears the boundary record.
+  // Entries before the start index keep the standing drop rule.
+  nativeVideoBoundary656 = null;
   for (var i = 0; i < descs.length; i++) {
+    if (i >= startIndex && descs[i] && descs[i].kind === 'video') { nativeVideoBoundary656 = descs[i]; break; }
     var item = nativeContractItem(descs[i]);
     if (!item) { if (i === startIndex) return null; continue; }
     items.push(item); kept.push(descs[i]);
@@ -18840,6 +19024,32 @@ function applyNativeState(json) {
   try { st = JSON.parse(json || ''); } catch (e) { return; }
   if (!st || st.engine !== 'native') return;
   if (st.stopped) {
+    // v656 §2.4.5: the boundary intercept — a stopped publish
+    // while a boundary stands AND the client queue still
+    // holds that descriptor is the boundary stop, not a user
+    // stop: consume the boundary, seat the queue at the
+    // video, open its hand-off, drain the pre-video track's
+    // completion, and return. A user stop clears the client
+    // queue through the standing stop acts first, so its
+    // stopped publish finds no standing queue and falls
+    // through to the standing clear below byte-identically.
+    if (nativeVideoBoundary656) {
+      var bdesc656 = nativeVideoBoundary656;
+      var bidx656 = state.queue.indexOf(bdesc656);
+      if (bidx656 < 0) { for (var bi656 = 0; bi656 < state.queue.length; bi656++) { if (state.queue[bi656].episodeId === bdesc656.episodeId && (state.queue[bi656].block || '') === (bdesc656.block || '')) { bidx656 = bi656; break; } } }
+      if (bidx656 >= 0) {
+        nativeVideoBoundary656 = null;
+        nativeMirror = null;
+        nativeContractDescs = [];
+        nativeContractQueueEnd = 0;
+        state.queueIdx = bidx656;
+        state.current = state.queue[bidx656];
+        openVideoHandoff656(state.queue[bidx656]);
+        drainNativeCompletions();
+        return;
+      }
+      nativeVideoBoundary656 = null;
+    }
     // The engine's terminal clear — bridgeStop's shape minus
     // the command (the stop already happened natively).
     nativeMirror = null;
@@ -19373,6 +19583,67 @@ function resolveProfileEpisodes614(day) {
   // one rebuild places them (fetch legs settle themselves).
   if (jobs.some(function (j) { return j.key.indexOf('homily|') === 0; })) settle();
 }
+function resolveProfileVideos656(day) {
+  // v656: each video selector in the effective profile's
+  // contents resolves to the ONE Virtual Mass video it names.
+  // Jobs group BY SERIES: one fetch of the series' video
+  // payload per day build, however many pins of that series
+  // stand (the episode discipline). The descriptor stands in
+  // state.videoRes656 for extRebuildDescs to place at its
+  // contents position. episodeId carries the 'yt:' prefix so
+  // a bare YouTube id can never collide with a podcast entry
+  // key in the (episodeId, block) reads. url stands null —
+  // no audio consumer may ever receive a video; playability
+  // is the embed's (available:true on a found video).
+  // MISS on a LOADED payload (the video rotted out of the
+  // feed window): the descriptor stands available:false with
+  // the registry title — the "Not available" card, passed
+  // over at play. A payload that fails to load resolves
+  // NOTHING that build (the course/episode rule).
+  state.videoRes656 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (it.kind === 'video' && opnVideoKeyOk656(it.key)) jobs.push({ block: block, key: it.key });
+    });
+  });
+  if (!jobs.length) return;
+  var settle = function () { extRebuildDescs(day); if (state.dayPayload) paintPrayersView(state.dayPayload); };
+  var bySeries = {};
+  jobs.forEach(function (job) {
+    var i = job.key.indexOf('|');
+    (bySeries[job.key.slice(0, i)] = bySeries[job.key.slice(0, i)] || []).push({ job: job, videoId: job.key.slice(i + 1) });
+  });
+  Object.keys(bySeries).forEach(function (series) {
+    var group = bySeries[series];
+    api('/api/player/podcasts?series=' + encodeURIComponent(series)).then(function (payload) {
+      if (state.dayPayload !== day) return;
+      if (!payload || payload.kind !== 'video' || !Array.isArray(payload.videos)) return;
+      opnVideoRegWrite656(series, payload.videos);
+      group.forEach(function (g) {
+        var v = null;
+        payload.videos.forEach(function (x) { if (x && x.id === g.videoId) v = x; });
+        if (!v) {
+          state.videoRes656[g.job.block + ':' + g.job.key] = {
+            episodeId: 'yt:' + g.videoId, kind: 'video', videoId: g.videoId, vmSeries: series,
+            title: opnVideoTitle656(g.job.key), url: null, enclosureUrl: null,
+            available: false, block: g.job.block, durationS: 0, imageUrl: null, descText: null, dateLabel: '', video656: true
+          };
+          return;
+        }
+        state.videoRes656[g.job.block + ':' + g.job.key] = {
+          episodeId: 'yt:' + v.id, kind: 'video', videoId: v.id, vmSeries: series,
+          title: v.title || opnVideoTitle656(g.job.key), url: null, enclosureUrl: null,
+          available: true, block: g.job.block, durationS: 0, imageUrl: v.imageUrl || null,
+          descText: v.descText || null, dateLabel: v.dateLabel || '', video656: true
+        };
+      });
+      settle();
+    }).catch(function () {});
+  });
+}
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -19717,6 +19988,15 @@ function extRebuildDescs(day) {
               if (ed.kind === 'homily') descs.push(Object.assign({}, ed, { _block: b.block }));
               else expandDescs(Object.assign({}, ed, { _block: b.block }), day).forEach(function (d) { descs.push(d); });
             }
+          }
+        } else if (it.kind === 'video') {
+          // v656: resolved by resolveProfileVideos656; raw-push
+          // like the homily branch (a video is one unit —
+          // expandDescs' expansion never applies), _block
+          // stamped, at its contents position, in order.
+          if (state.videoRes656) {
+            var vd656 = state.videoRes656[b.block + ':' + it.key];
+            if (vd656) descs.push(Object.assign({}, vd656, { _block: b.block }));
           }
         } else if (it.kind === 'prayer') {
           // The contents prayer stands at its contents
@@ -21160,6 +21440,9 @@ function buildDayFromPayload(day, snap) {
     // v614: the contents episode selectors resolve beside
     // the courses/day (fixed pins, homily + novena seams).
     resolveProfileEpisodes614(day);
+    // v656: the contents video selectors resolve beside the
+    // episodes (Virtual Mass pins, one fetch per series).
+    resolveProfileVideos656(day);
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -22294,6 +22577,7 @@ function opnItemLabel604(block, it) {
   if (it.kind === 'course') return opnLadderCourseTitle603(it.key);
   if (it.kind === 'day') return 'Daily Gospel Exegesis';
   if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
+  if (it.kind === 'video') return opnVideoTitle656(it.key);
   if (it.kind === 'novena') {
     var cat = state.novenasCatalog;
     var n = cat && cat.novenas ? cat.novenas.filter(function (x) { return x.slug === it.key; })[0] : null;
@@ -23220,6 +23504,7 @@ function openEditTodayScreen594(fromLadder) {
     if (it.kind === 'prayer') return prayerTitle(it.key);
     if (it.kind === 'day') return 'Daily Gospel Exegesis';
     if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
+    if (it.kind === 'video') return opnVideoTitle656(it.key);
     var u = null;
     profContentsUniverse590(block).forEach(function (x) { if ((x.kind + ':' + (x.key || '')) === opnTodayItemId594(it)) u = x; });
     return u ? u.label : (it.key || it.kind);
@@ -23698,7 +23983,7 @@ function openProfilesScreen(openKey, opts) {
       mat.forEach(function (m) {
         var u = null;
         uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
-        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (m.kind === 'episode' ? opnEpisodeTitle614(m.key) : (u ? u.label : (m.key || m.kind)))), on: true });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (m.kind === 'episode' ? opnEpisodeTitle614(m.key) : (m.kind === 'video' ? opnVideoTitle656(m.key) : (u ? u.label : (m.key || m.kind))))), on: true });
       });
       uni.forEach(function (it) {
         var id = it.kind + ':' + (it.key || '');
@@ -24279,6 +24564,24 @@ function openAddLadder603(block, host) {
       pay.entries.forEach(function (e) { var it = epItem614(series, e); if (matchItem(it)) html += rowHtml(it, ''); });
       return html || '<p class="sub">No episodes stand.</p>';
     }
+    function videoNode656(series) {
+      // v656 §2.6: the Virtual Mass series node — the standing
+      // ladder fetch; on a kind-'video' payload, one row per
+      // video in payload order (newest first) through the
+      // standing rowHtml, so a standing video paints 'Already
+      // in <block>' and is not tappable (dupes A). The node
+      // writes the title registry for every video it lists.
+      var pay = fetchSeries614(series);
+      if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      if (pay === 'failed' || pay.kind !== 'video' || !Array.isArray(pay.videos)) return '<p class="sub">Videos did not load.</p>';
+      opnVideoRegWrite656(series, pay.videos);
+      var html = '';
+      pay.videos.forEach(function (v) {
+        var it = { kind: 'video', key: series + '|' + v.id, label: v.title, sub: v.dateLabel };
+        if (matchItem(it)) html += rowHtml(it, '');
+      });
+      return html || '<p class="sub">No videos stand.</p>';
+    }
     function novenaSeriesNode614(slug) {
       var pay = fetchSeries614('novenas');
       if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
@@ -24347,7 +24650,11 @@ function openAddLadder603(block, host) {
       if (rung === 'br:worship') return doors614([['lf:lectionary', 'Lectionary', 'USCCB Daily Readings'], ['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass'], ['lf:adoration', 'Adoration', 'No list audio']]);
       if (rung === 'br:pray') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category'], ['lf:office', 'Divine Office', 'The eight hours'], ['lf:sing', 'Sing the Hours', 'Lauds \u00b7 Vespers'], ['lf:saint', 'Saint of the Day', 'The day\u2019s saint'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers']]);
       if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies']]);
-      if (rung === 'br:conscience' || rung === 'br:sacred-art' || rung === 'lf:virtual-mass' || rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
+      if (rung === 'br:conscience' || rung === 'br:sacred-art' || rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
+      // v656 §2.6: S1 retires — the Virtual Mass leaf opens:
+      // three doors, one per MASS_VIRTUAL_ENTRIES entry.
+      if (rung === 'lf:virtual-mass') return doors614(MASS_VIRTUAL_ENTRIES.map(function (e) { return ['vmass:' + e.series, e.title, e.meta]; }));
+      if (rung.indexOf('vmass:') === 0) return videoNode656(rung.slice('vmass:'.length));
       if (rung === 'lf:lectionary') return readingsNode614();
       if (rung === 'lf:prayerbook') {
         var ph = '';
@@ -24400,13 +24707,14 @@ function openAddLadder603(block, host) {
       if (r.indexOf('course:') === 0) return 'lf:courses';
       if (r.indexOf('series:') === 0) { var sk = r.slice('series:'.length); return (sk === 'fr-mike-homilies' || sk === 'barron-sunday-sermons') ? 'lf:homilies' : 'lf:podcasts'; }
       if (r.indexOf('novena:') === 0) return 'lf:novenas';
+      if (r.indexOf('vmass:') === 0) return 'lf:virtual-mass';
       if (r === 'lf:myhomilies') return 'lf:homilies';
       return 'root';
     }
-    function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung === 'lf:lectionary'; }
+    function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung.indexOf('vmass:') === 0 || rung === 'lf:lectionary'; } // v656: vmass: joins — the search pill narrows the node's own list
     function paint() {
       sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>'
-        + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="' + (isEpisodeNode614() ? 'Search episodes' : 'Search') + '" value="' + esc(query) + '" autocomplete="off"></div>'
+        + '<div class="searchpill"><input type="text" data-p603search="1" placeholder="' + (rung.indexOf('vmass:') === 0 ? 'Search videos' : (isEpisodeNode614() ? 'Search episodes' : 'Search')) + '" value="' + esc(query) + '" autocomplete="off"></div>'
         + '<div data-p603list="1">' + listHtml() + '</div>'
         + (rung !== 'root' ? '<div class="row"><button class="btn ghost" data-p603back="1">Back</button></div>' : '')
         + '<div class="row"><button class="btn ghost" data-p603close="1">Close</button></div></div>';
@@ -24416,7 +24724,8 @@ function openAddLadder603(block, host) {
       var c = sh.querySelector('[data-p603list]');
       if (c) { c.innerHTML = listHtml(); wireList(c); }
       var inp = sh.querySelector('[data-p603search]');
-      if (inp && isEpisodeNode614()) inp.setAttribute('placeholder', 'Search episodes');
+      if (inp && rung.indexOf('vmass:') === 0) inp.setAttribute('placeholder', 'Search videos');
+      else if (inp && isEpisodeNode614()) inp.setAttribute('placeholder', 'Search episodes');
     }
     function wireList(root) {
       root.querySelectorAll('[data-p603door]').forEach(function (row) {
