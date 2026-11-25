@@ -42,6 +42,16 @@
 // byte-equal to base 14817ee · the preview sheet's
 // renderQueueList branch stands).
 //
+// v667 SUPERSESSIONS (named, Plan v667 §4): leg A (the 470
+// budget constant + its fit arithmetic) and leg D
+// (bottom-row byte-equality) are superseded by v667 —
+// re-pointed below by name (414 constant; the bottom row
+// = base five byte-equal + the Queue button appended).
+// The B/C legs' door opener is likewise re-pointed at
+// #np-queue-btn (the door retired in v667 §3.1); their
+// assertions stand unchanged. Every other leg stands as
+// written. The v667 legs proper live in harness-v667.mjs.
+//
 // jsdom carries no layout engine: heights read 0, so the
 // fit leg proves the CSS arithmetic (the budget constant
 // against the stack it names) and the drag legs drive the
@@ -83,7 +93,7 @@ check("fixture: the 2026-11-25 composed day — office pair under Both, video ro
 // ---------- A: fit (Plan §5a) ----------
 const budgetM = /calc\(100dvh - (\d+)px\)/.exec(uiSrc);
 const BUDGET = budgetM ? Number(budgetM[1]) : 0;
-check("A budget: the --art var stands with a measured budget constant (470px)", BUDGET === 470, BUDGET);
+check("A budget: SUPERSEDED by v667 (the 470 constant) — re-pointed: the --art var stands with the v667 budget constant (414px)", BUDGET === 414, BUDGET); // v667 §3.3: the retired door's 56 out
 check("A the card no longer scrolls: .sheet.np-sheet overflow hidden, .inner a full-height flex column",
   /\.sheet\.np-sheet \{[^}]*overflow:hidden/.test(uiSrc) && /\.sheet\.np-sheet \.inner \{[^}]*display:flex[^}]*height:100%/.test(uiSrc));
 check("A the short-viewport step stands: @media (max-height: 660px) with hero/seek/transport compression + 2-line clamps",
@@ -93,11 +103,11 @@ const artAt = (h) => Math.max(88, Math.min(Math.min(0.72 * 390, h - BUDGET), 340
   const hs = [844, 740, 667, 568];
   check("A fit arithmetic: art + the fixed stack fits the viewport at 844/740/667/568",
     hs.every((h) => artAt(h) + BUDGET <= h), hs.map((h) => [h, artAt(h)]));
-  check("A the artwork shrinks as the height drops (72vw binds at 390 wide: 280.8 · 270 · 197 · 98 floor-ward at 568)",
-    artAt(844) === 280.8 && artAt(740) === 270 && artAt(667) === 197 && artAt(568) === 98,
-    hs.map((h) => artAt(h)));
+  check("A the artwork shrinks as the height drops — SUPERSEDED by v667 arithmetic (72vw binds at 390 wide: 280.8 · 280.8 · 253 · 154 floor-ward at 568)",
+    artAt(844) === 280.8 && artAt(740) === 280.8 && artAt(667) === 253 && artAt(568) === 154,
+    hs.map((h) => artAt(h))); // v667 re-point
 }
-check("A pin: CACHE stands at ora-pro-nobis-v664-1 (its one seat)", uiSrc.includes('var CACHE = "ora-pro-nobis-v664-1";'));
+check("A pin: CACHE stands at ora-pro-nobis-v667-1 (its one seat; value re-pointed at v667's ship — the pin's seat stands)", uiSrc.includes('var CACHE = "ora-pro-nobis-v667-1";'));
 
 // ---------- D statics: byte-stable transport + bottom row ----------
 {
@@ -106,7 +116,13 @@ check("A pin: CACHE stands at ora-pro-nobis-v664-1 (its one seat)", uiSrc.includ
   const line = (src, needle) => { const l = src.split("\n").find((x) => x.includes(needle)); return l ? l.trim() : null; };
   check("D base tree readable at 14817ee for the byte-stability gate", !!baseSrc);
   check("D transport markup byte-equal to base", !!baseSrc && line(baseSrc, "np-transport") === line(clientSrc, "np-transport"));
-  check("D bottom-row markup byte-equal to base", !!baseSrc && line(baseSrc, "np-controls") === line(clientSrc, "np-controls"));
+  // v667 SUPERSESSION (named): the bottom-row byte-equality leg is
+  // superseded by v667 §3.1 — the row is the base five byte-equal
+  // in order + the Queue button appended after #np-menu.
+  check("D bottom-row markup: SUPERSEDED by v667 (byte-equality) — re-pointed: base five byte-equal in order + Queue appended",
+    !!baseSrc && (() => { const bc = (l) => (l ? l.split("<button").slice(1).map((c) => "<button" + c.split("</button>")[0] + "</button>") : []);
+      const b = bc(line(baseSrc, "np-controls")), n = bc(line(clientSrc, "np-controls"));
+      return b.length === 5 && n.length === 6 && b.every((x, i) => n[i] === x) && n[5].includes('id="np-queue-btn"'); })());
   check("D mountDrawer untouched (the queue sheet carries its own mount)",
     clientSrc.includes("function mountQueueSheet664(sheet)") && !clientSrc.includes("npq-sheet')\n  mountDrawer"));
 }
@@ -188,24 +204,23 @@ const snap = (w) => { try { return JSON.parse(w.localStorage.getItem("opn-queue-
   drive(() => O.openNowPlaying());
   await sleep(60);
   const np = d.querySelector(".np-sheet");
-  check("A card stands whole: grab · artwork · title · intention · seek · transport (5) · bottom row (5) · door all in the sheet, no inline queue",
+  check("A card stands whole: grab · artwork · title · intention · seek · transport (5) · bottom row (6, v667 re-point: five + Queue) all in the sheet, no inline queue, no door (v667)",
     !!np && !!np.querySelector(".np-grab") && !!np.querySelector("#np-art") && !!np.querySelector("#np-title")
     && !!np.querySelector("#np-track-intention") && !!np.querySelector("#np-seek")
     && np.querySelectorAll(".np-transport > button").length === 5
-    && np.querySelectorAll(".np-controls > button").length === 5
-    && !!np.querySelector("#np-queue-door") && !np.querySelector("#np-queue"),
+    && np.querySelectorAll(".np-controls > button").length === 6
+    && !!np.querySelector("#np-queue-btn") && !np.querySelector("#np-queue-door") && !np.querySelector("#np-queue"),
     np && np.innerHTML.slice(0, 200));
-  check("B door line: 'Track 1 of 6 · Next: Morning Prayer' (pos + next-up)",
-    (d.querySelector("#np-queue-pos") || {}).textContent === "Track 1 of 6 \u00b7 Next: Morning Prayer",
-    (d.querySelector("#np-queue-pos") || {}).textContent);
+  check("B opener (v667 re-point: the door line retired — the Queue button carries no pos line)",
+    !!d.querySelector("#np-queue-btn") && d.querySelector("#np-queue-btn").textContent === "Queue" && !d.querySelector("#np-queue-pos"));
 
   // Open at half.
-  click(w, d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(30);
   const qs = d.querySelector(".npq-sheet");
   const inner = qs && qs.querySelector(".inner");
   const vh = w.innerHeight;
-  check("B the door opens the queue sheet at 50dvh (\u00b12dvh) over the standing player",
+  check("B the Queue button opens the queue sheet (v667 re-point of the door leg) at 50dvh (\u00b12dvh) over the standing player",
     !!qs && !!inner && Math.abs(parseInt(inner.style.height, 10) - Math.round(vh * 0.5)) <= Math.round(vh * 0.02)
     && !!d.querySelector(".np-sheet") && !qs.classList.contains("np-sheet"),
     inner && inner.style.height + " / vh " + vh);
@@ -240,14 +255,14 @@ const snap = (w) => { try { return JSON.parse(w.localStorage.getItem("opn-queue-
     && JSON.stringify(qids(O)) === JSON.stringify(beforeIds) && O.state.queueIdx === beforeIdx
     && (O.state.current && O.state.current.episodeId) === beforeCur);
   // Downward drag from half dismisses.
-  click(w, d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(20);
   const qs2 = d.querySelector(".npq-sheet");
   const grab2 = qs2.querySelector(".grabstrip");
   pev(w, grab2, "pointerdown", 400); pev(w, d, "pointermove", 400 + Math.round(vh * 0.2)); pev(w, d, "pointerup", 400 + Math.round(vh * 0.2));
   check("B a downward drag \u226525% of the panel from half dismisses; reopening starts at half",
     !d.querySelector(".npq-sheet"));
-  click(w, d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(20);
   const qs3 = d.querySelector(".npq-sheet");
   check("B reopening always starts at half", !!qs3 && parseInt(qs3.querySelector(".inner").style.height, 10) === Math.round(vh * 0.5));
@@ -269,7 +284,7 @@ const snap = (w) => { try { return JSON.parse(w.localStorage.getItem("opn-queue-
     qids(O));
   // Reorder persists across close + reopen.
   qs3.remove();
-  click(w, d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(20);
   const qs4 = d.querySelector(".npq-sheet");
   const rowTitles = [...qs4.querySelectorAll("[data-npq-row] .npq-title")].map((t) => t.textContent);
@@ -326,9 +341,9 @@ const snap = (w) => { try { return JSON.parse(w.localStorage.getItem("opn-queue-
   O.state.queue = []; O.state.queueIdx = -1; O.state.current = q[0];
   drive(() => O.openNowPlaying());
   await sleep(40);
-  check("C single play: the door stands with an empty pos line",
-    !!d.querySelector("#np-queue-door") && (d.querySelector("#np-queue-pos") || {}).textContent === "");
-  click(w, d.querySelector("#np-queue-door"));
+  check("C single play: the Queue button stands (v667 re-point: the door + its pos line retired)",
+    !!d.querySelector("#np-queue-btn") && !d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(20);
   const qs = d.querySelector(".npq-sheet");
   check("C no queue: head row + the verbatim line 'No queue \u2014 playing a single prayer.'",
@@ -337,7 +352,7 @@ const snap = (w) => { try { return JSON.parse(w.localStorage.getItem("opn-queue-
   O.state.queue = [q[0], q[4]]; O.state.queueIdx = 1; O.state.current = q[4];
   drive(() => O.openNowPlaying());
   await sleep(40);
-  click(w, d.querySelector("#np-queue-door"));
+  click(w, d.querySelector("#np-queue-btn")); // v667 re-point: the button opens the sheet (the door retired)
   await sleep(20);
   const qs2 = d.querySelector(".npq-sheet");
   check("C queue exhausted: head row + 'Nothing up next.' and no coming rows",

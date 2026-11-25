@@ -5906,27 +5906,15 @@ function jumpQueueTo(i) {
   state.queueIdx = i;
   startDesc(live);
 }
-/* ---------------- v664: the queue door + queue sheet ----------------
-   The queue's new home (Plan §3.2/§3.3): the Now Playing
-   card carries one door at its foot; the queue itself
+/* ---------------- v664: the queue sheet ----------------
+   The queue's home (Plan §3.2/§3.3): the queue itself
    stands in a half-screen sheet over the dimmed player.
    The sheet stands on the v419 dress with its OWN mount
    (mountDrawer is untouched — its drag knows only
-   dismiss-or-snap-back, and this drag is two-stop). */
-function renderQueueDoor() {
-  // v664 §3.2: the door's pos line — "Track X of N", with
-  // the next-up title appended while a coming track stands;
-  // no queue reads empty (the door reads "Queue" alone).
-  var door = document.querySelector('.np-sheet #np-queue-door');
-  if (!door) return;
-  var posEl = door.querySelector('#np-queue-pos');
-  if (!posEl) return;
-  if (!state.queue.length || state.queueIdx < 0) { posEl.textContent = ''; return; }
-  var line = 'Track ' + (state.queueIdx + 1) + ' of ' + state.queue.length;
-  var next = state.queue[state.queueIdx + 1];
-  if (next) line += ' \u00b7 Next: ' + (next.title || '');
-  posEl.textContent = line;
-}
+   dismiss-or-snap-back, and this drag is two-stop).
+   v667 §3.1: the card's foot door retires — the Queue
+   button stands in the bottom row (openNowPlaying) and
+   renderQueueDoor retires with the door. */
 function npqRowMain664(desc) {
   // The queue row's main cell (title · block · duration ·
   // availability + the played dot) — renderQueueList's own
@@ -6131,8 +6119,7 @@ function renderQueueList() {
   // v664 §3.4: the paint target resolves in order — the
   // queue sheet's list (when the sheet stands) → a standing
   // #np-queue (the preview sheet's; its branch below stands
-  // untouched). The door line refreshes in all cases.
-  renderQueueDoor();
+  // untouched).
   var qsheet = document.querySelector('.npq-sheet');
   if (qsheet) { paintQueueSheetList(qsheet); return; }
   var sheet = document.querySelector('.np-sheet');
@@ -6148,9 +6135,9 @@ function renderQueueList() {
     box.scrollTop = scroll;
     return;
   }
-  // v664 §3.4: on the player card the pos line is the door's,
-  // refreshed by renderQueueDoor above; only the preview
-  // sheet's own head line is written here, as before.
+  // v664 §3.4, made true again by v667 §3.1 (the door and
+  // renderQueueDoor are retired): only the preview sheet's
+  // own head line is written here, as before.
   if (posEl && preview) posEl.textContent = arr.length + ' items remaining';
   var dstr = presentedDateStr();
   box.innerHTML = arr.map(function (desc, i) {
@@ -17994,15 +17981,14 @@ function openNowPlaying() {
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-back10" aria-label="Back 10 seconds">-10</button><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button><button class="np-tbtn" id="np-fwd10" aria-label="Forward 10 seconds">+10</button></div>'
-    + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-share" aria-label="Share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;vertical-align:middle" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button></div>'
-    + '<button type="button" class="npq-head npq-door" id="np-queue-door"><span class="npq-heading">Queue</span><span class="meta npq-pos" id="np-queue-pos"></span><span class="npq-chev" aria-hidden="true">›</span></button>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-intentions">Intentions On</button><button class="btn ghost" id="np-read">Read</button><button class="btn ghost trackstar" id="np-star" aria-label="Star">\u2606</button><button class="btn ghost" id="np-share" aria-label="Share"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;vertical-align:middle" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></button><button class="btn ghost" id="np-menu" aria-label="Playback options">\u22ee</button><button type="button" class="btn ghost" id="np-queue-btn">Queue</button></div>'
     + '</div>';
   document.body.appendChild(sheet);
   // v419 (G16): the minimize chevron retires into the grab —
   // a tap on the handle, or a drag down, minimizes (the sheet
   // removes; playback is never touched).
   wireNpGrab(sheet, function () { sheet.remove(); });
-  sheet.querySelector('#np-queue-door').addEventListener('click', function () { openQueueSheet(); }); // v664 §3.2: the door opens the queue sheet
+  sheet.querySelector('#np-queue-btn').addEventListener('click', function () { openQueueSheet(); }); // v667 §3.1: the bottom-row Queue button opens the queue sheet (the v664 foot door retires)
   sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.pendingStart) { cancelPendingStart(); return; } if (state.queue.length) { if (transportPlaying()) pauseTransport(); else resumeCurrent(); } else playTrack(state.current); }); // v461 F1: the pending head branch, as on the dock
   sheet.querySelector('#np-prev').addEventListener('click', function () { previousWithRule(); }); // v412 Fix 8: the one rule
   sheet.querySelector('#np-back10').addEventListener('click', function () { seekBy(-10); }); // v412 Fix 12
@@ -18117,7 +18103,41 @@ function updateNowPlaying() {
   refreshNpStar(); // v546: the control row's star follows the playing track
   updateNpSeek();
   renderQueueList();
+  fitNpArtToSheet667(); // v667 §3.3: the paint-time fit pass — the artwork yields for the text's real height
 }
+function fitNpArtToSheet667() {
+  // v667 §3.3: the fit pass. The --art CSS budget prices the
+  // intention at one line; a longer intention (or title /
+  // litday) overruns the sheet's overflow-hidden .inner and
+  // clips its last child. Measure the .inner's overflow; if
+  // any stands, reduce #np-art's --art by exactly the
+  // overflow via an inline property on the art element (the
+  // stylesheet var stands for the next open), re-measure
+  // once, and stop at the standing 88px floor. The inline
+  // property is cleared first, so every paint starts from
+  // the stylesheet size. The artwork stays square (width
+  // and height both read var(--art)).
+  var sheet = document.querySelector('.np-sheet');
+  if (!sheet) return;
+  var inner = sheet.querySelector('.inner');
+  var art = sheet.querySelector('#np-art');
+  if (!inner || !art) return;
+  art.style.removeProperty('--art');
+  void inner.offsetHeight; // settle layout at the stylesheet size before measuring
+  for (var pass = 0; pass < 2; pass++) {
+    var overflow = inner.scrollHeight - inner.clientHeight;
+    if (overflow <= 0) return;
+    var cur = art.getBoundingClientRect().height;
+    if (!(cur > 88)) return; // at (or under) the floor: nothing left to yield
+    var next = Math.max(88, Math.round(cur - overflow));
+    if (next >= cur) return;
+    art.style.setProperty('--art', next + 'px');
+    void inner.offsetHeight; // settle at the reduced size before the one re-measure
+  }
+}
+window.addEventListener('resize', function () { // v667 §3.3: the fit pass re-runs on resize while the sheet stands
+  if (document.querySelector('.np-sheet')) fitNpArtToSheet667();
+});
 function updateNpSeek() {
   var sheet = document.querySelector('.np-sheet');
   if (!sheet || npScrubbing) return;

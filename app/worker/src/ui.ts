@@ -614,14 +614,18 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-hero .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
 .np-preview .np-hero .npq-heading { color:var(--bar-fg); }
 .np-preview .np-hero #np-queue-pos { color:var(--bar-sub); }
-/* v664 §3.1: the artwork is sized to the page — it takes
-   what the page leaves after the fixed stack stands at
-   full size. --art budget 470px = the measured fixed stack
-   (sheet padding 54 · hero padding/border 34 · grab 15 ·
-   art margin 4 · title 33 · meta 30 · intention 26 ·
-   litday 18 · seek 56 · transport 94 · controls 44 · door
-   56 · rounding slack 6), harness-v664 leg A. */
-.np-art { --art: clamp(88px, min(72vw, calc(100dvh - 470px)), 340px); position:relative; width:var(--art); height:var(--art); aspect-ratio:1; margin:4px auto 0; }
+/* v664 §3.1, as amended by v667 §3.3: the artwork is sized
+   to the page — it takes what the page leaves after the
+   fixed stack stands at full size. --art budget 414px =
+   the measured fixed stack (sheet padding 54 · hero
+   padding/border 34 · grab 15 · art margin 4 · title 33 ·
+   meta 30 · intention 26 · litday 18 · seek 56 · transport
+   94 · controls 44 · rounding slack 6) — the v664 door's
+   56 is out with the retired foot door (v667 §3.1); the
+   intention still prices at one line here, and the
+   paint-time fit pass (client.ts fitNpArtToSheet667)
+   yields the artwork for the text's real height. */
+.np-art { --art: clamp(88px, min(72vw, calc(100dvh - 414px)), 340px); position:relative; width:var(--art); height:var(--art); aspect-ratio:1; margin:4px auto 0; }
 .np-art .blockcover.hero { position:absolute; inset:0; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
 .np-art .blockcover.hero .blockcover-initial { font-size:calc(var(--art) * 0.376); }
 .np-art img.np-art-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
@@ -641,15 +645,14 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-tbtn { background:none; border:none; color:var(--navy); font-family:inherit; font-size:26px; cursor:pointer; padding:10px; }
 .np-tbtn:disabled { opacity:.35; cursor:default; }
 .np-play { width:58px; height:58px; font-size:21px; }
-.np-controls { justify-content:center; flex-wrap:wrap; }
+.np-controls { justify-content:center; flex-wrap:nowrap; gap:4px; } /* v667 §3.2: one line always — the row never wraps a member off the card (the Queue button stands as its sixth member); compression in the Plan's order: (1) the row gap 8px -> 4px, (2) the ghost pills' horizontal padding (the rule below) */
+.np-controls .btn.ghost { padding-left:6px; padding-right:6px; } /* v667 §3.2 compression (2): the row's ghost pills at 6px horizontal padding (from 16px) — measured one line at 360px wide in measure-v667.mjs */
 .npq-head { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .npq-heading { font-size:16px; letter-spacing:1.5px; color:var(--navy); }
-/* v664 §3.2: the queue door — the .npq-head dress as one
-   full-width button at the card's foot; the pos line takes
-   the room, the chevron stands at the trailing end. */
-button.npq-door { width:100%; background:none; font-family:inherit; color:inherit; cursor:pointer; text-align:left; align-items:center; }
-.npq-door .npq-pos { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.npq-chev { flex:none; color:var(--muted); font-size:20px; line-height:1; }
+/* v667 §3.1: the v664 queue-door dress (button.npq-door ·
+   .npq-door .npq-pos · .npq-chev) retires with the door;
+   the .npq-head dress above stays — the queue sheet's own
+   head wears it. */
 /* v664 §3.2: the queue sheet — the v419 dress (scrim +
    .inner + grab strip) with its own two-stop geometry:
    rest 50dvh, full 92dvh (the standing TALL bound), the
@@ -1127,7 +1130,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v664-1";
+var CACHE = "ora-pro-nobis-v667-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
