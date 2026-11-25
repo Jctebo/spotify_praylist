@@ -6092,6 +6092,7 @@ function standRestoredQueue(day) {
   updateDock();
   renderQueueList();
   state.restoredStand649 = true; // v649 §3.1: the day restore's stand is UNTOUCHED until a session act touches it
+  drainNativeCompletions(); // v661 §3.3: the day-stand drain — records the shell stored while the page stood dead apply as the restored queue stands (the store's own 'when it next stands' promise)
 }
 audioEl.addEventListener('loadedmetadata', function () {
   if (state.pendingResume && state.current && state.pendingResume.episodeId === state.current.episodeId) {
@@ -6306,7 +6307,7 @@ document.addEventListener('visibilitychange', function () {
   if (document.visibilityState === 'hidden') { saveQueueSnapshot(); podPositionSaveCurrent(); dayPositionSaveCurrent(); } // v395 §2.6 + v412 Fix 10: a hide is a position save event
   // v346: return to the foreground (including a freeze/thaw) re-files
   // the session — metadata, handlers, state, position.
-  if (document.visibilityState === 'visible') reassertMediaSession();
+  if (document.visibilityState === 'visible') { reassertMediaSession(); drainNativeCompletions(); } // v661 §3.3: the foreground-return drain rides the same event
 });
 window.addEventListener('pagehide', function () { saveQueueSnapshot(); podPositionSaveCurrent(); dayPositionSaveCurrent(); }); // v355 §2.2 trigger 5: the discard moment itself · v395 §2.6 + v412 Fix 10: the close save rides the same moment
 var lastResumeSave = 0;
@@ -19022,7 +19023,71 @@ function drainNativeCompletions() {
       if (!records.length) return;
       records.forEach(function (rec) {
         if (!rec || !rec.episodeId) return;
-        writePlayedQuiet(rec.episodeId, rec.date || presentedDateStr(), 'auto', rec.block || '');
+        // v661 §3.2: resolve the record to its standing
+        // descriptor before writing — the record's identity
+        // alone names only the BASE key, which never marks a
+        // second office side (_side650) or a duplicate copy
+        // (_occ) and false-marks the first side. Resolution
+        // order: (a) queue index, (b) mediaUri, (c) sole
+        // candidate, (d) the standing base-key fallback.
+        var recBlock = rec.block || '';
+        var cands = [];
+        var candKeys661 = {};
+        [state.queue || [], state.dayDescs || []].forEach(function (list) {
+          list.forEach(function (d) {
+            if (!d || d.episodeId !== rec.episodeId) return;
+            if ((d.block || d._block || '') !== recBlock) return;
+            // v661 repair F2: dedupe by descriptor identity,
+            // not object reference — a lone descriptor standing
+            // as distinct-but-equal objects in queue and
+            // dayDescs counts once (first occurrence wins).
+            var candKey661 = d.episodeId + '|' + (d.block || d._block || '') + '#' + (d._occ || 0) + '@' + (d._side650 || '');
+            if (candKeys661[candKey661]) return;
+            candKeys661[candKey661] = true;
+            cands.push(d);
+          });
+        });
+        var snapUri = function (d) {
+          try { var t = oraSnapshotTrack(d, rec.date || presentedDateStr() || ''); return t ? t.mediaUri : null; } catch (e) { return null; }
+        };
+        var desc = null;
+        // (a) queue index — the contract that produced the
+        // record still stands; the mediaUri cross-check (when
+        // the record carries one) keeps a retired contract's
+        // index from naming a sibling in a new contract.
+        if (!desc && typeof rec.queueIndex === 'number' && rec.queueIndex >= 0) {
+          var byIdx = nativeContractDescs[rec.queueIndex];
+          if (byIdx && byIdx.episodeId === rec.episodeId && (byIdx.block || byIdx._block || '') === recBlock) {
+            if (!rec.mediaUri || snapUri(byIdx) === rec.mediaUri) desc = byIdx;
+          }
+        }
+        // (b) mediaUri — a candidate whose snapshot address
+        // equals the record's (for labeled slots &src= names
+        // the side); resolves records whose contract retired.
+        if (!desc && rec.mediaUri) {
+          for (var ci661 = 0; ci661 < cands.length; ci661++) {
+            if (snapUri(cands[ci661]) === rec.mediaUri) { desc = cands[ci661]; break; }
+          }
+        }
+        // v661 repair F1: a present-but-unmatched mediaUri is
+        // positive identity evidence (a 1.0.56 record names a
+        // specific recording) — if neither (a) nor (b) resolved
+        // it, skip the record entirely: no write, no
+        // dayPositions delete. Steps (c) and (d) stand only
+        // for records with an absent/empty mediaUri.
+        if (!desc && typeof rec.mediaUri === 'string' && rec.mediaUri !== '') return;
+        // (c) sole candidate.
+        if (!desc && cands.length === 1) desc = cands[0];
+        if (desc) {
+          // The write mirrors markCompleted's argument shape
+          // exactly — the descriptor's full key.
+          writePlayedQuiet(desc.episodeId, rec.date || presentedDateStr(), 'auto', desc._occ ? (desc.block || desc._block) : desc.block, desc._occ || 0, desc._side650 || null);
+        } else {
+          // (d) fallback — the standing base-key write,
+          // byte-identical (an old-shell record under Both
+          // with a dead contract; the named limitation).
+          writePlayedQuiet(rec.episodeId, rec.date || presentedDateStr(), 'auto', recBlock);
+        }
         if (state.dayPayload && state.dayPayload.dayPositions) delete state.dayPayload.dayPositions[rec.episodeId];
       });
       refreshPlayedChrome();
@@ -20835,6 +20900,7 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
     // built first.
     extRebuildDescs(day);
     updateBlockCounts(day);
+    drainNativeCompletions(); // v661 §3.3: the day-paint drain — the day's descriptors stand built, so a stored native completion record resolves and applies at stand, with no playback contact needed
     var writeCache = function () {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
