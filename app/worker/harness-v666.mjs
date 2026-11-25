@@ -615,7 +615,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
 }
 
 // ---------- pin + dress seats ----------
-check("P pin: ui.ts CACHE is ora-pro-nobis-v669-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v669-1"') && (uiSrc.match(/ora-pro-nobis-v669-1/g) || []).length === 1);
+check("P pin: ui.ts CACHE is ora-pro-nobis-v671-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v671-1"') && (uiSrc.match(/ora-pro-nobis-v671-1/g) || []).length === 1);
 check("P dress: the scoped ladder rules stand (mark tile · gold chevron · gold-tinted daily card · sheet-head)", uiSrc.includes(".profaddladder603 .p666mark") && uiSrc.includes(".profaddladder603 .p666chev") && uiSrc.includes(".profaddladder603 .p666daily") && uiSrc.includes(".profaddladder603 .searchpill"));
 
 console.log(`\nharness-v666: ${ok} ok / ${bad} not-ok`);

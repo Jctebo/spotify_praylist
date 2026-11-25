@@ -126,7 +126,7 @@ export const APP_CSS = `
    (--card #2b211a and --cream #1f1811). --danger does not
    re-point (its fill seat keeps white text on deep red);
    its two text seats take the lifted red below. */
-[data-mode="dark"] { --cream:#1f1811; --card:#2b211a; --card-2:#17120d; --ink:#f2e9da; --muted:#b8a88f; --line:#55452f; --navy:#b7c5d8; --accent-text:#d3ab55; }
+[data-mode="dark"] { --cream:#101010; --card:#1c1c1c; --card-2:#0a0a0a; --ink:#f5f5f5; --muted:#a8a8a8; --line:#333333; --navy:#d4d4d4; --accent-text:#d3ab55; }
 [data-mode="dark"][data-lit="red"] { --accent-text:#e58f87; }
 [data-mode="dark"][data-lit="green"] { --accent-text:#82cc97; }
 [data-mode="dark"][data-lit="violet"] { --accent-text:#bfa6e6; }
@@ -1180,7 +1180,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v669-1";
+var CACHE = "ora-pro-nobis-v671-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

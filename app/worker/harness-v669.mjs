@@ -35,12 +35,12 @@
 // DISPLAY control (first section · three picks · tap
 // writes + applies + repaints in place) · A dark paint
 // measured on the §2.4 checklist · B light byte-identical
-// (the same probe set on the base tree 62cbfe0, served
-// from the pristine checkout named by V669_BASE_WT,
-// default /tmp/v669-base) · C accents under green + red ·
+// (the same probe set on the base tree 21fa13b, served
+// from the pristine checkout named by V671_BASE_WT,
+// default /tmp/v671-base) · C accents under green + red ·
 // D follow the phone (Chromium color-scheme emulation) ·
 // E persistence (reload · day change) · P screenshots
-// (light/dark pairs → docs/releases/v669-screenshots/) ·
+// (light/dark pairs → docs/releases/v671-screenshots/) ·
 // G regressions (harness-v668/-v667/-v666 run green on
 // this tree, as child processes).
 //
@@ -59,8 +59,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WT = path.resolve(HERE, '..', '..');
 const W = path.join(WT, 'app/worker');
 const APP = path.join(WT, 'app');
-const BASE_WT = process.env.V669_BASE_WT || '/tmp/v669-base';
-const SHOTS = path.join(WT, 'docs/releases/v669-screenshots');
+const BASE_WT = process.env.V671_BASE_WT || '/tmp/v671-base';
+const SHOTS = path.join(WT, 'docs/releases/v671-screenshots');
 mkdirSync(SHOTS, { recursive: true });
 const EXE = process.env.HOME + '/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell';
 
@@ -137,11 +137,11 @@ async function buildServe(wt) {
   return { port: server.address().port, server, APPJS, SWJS };
 }
 const main = await buildServe(WT);
-check('F the served service worker carries the v669 pin', main.SWJS.includes('ora-pro-nobis-v669-1'), 'pin not in served /sw.js');
+check('F the served service worker carries the v671 pin', main.SWJS.includes('ora-pro-nobis-v671-1'), 'pin not in served /sw.js');
 check('F the served bundle carries the mode store + attribute', main.APPJS.includes('opn-mode-v669') && main.APPJS.includes('data-mode') && main.APPJS.includes('prefers-color-scheme'), 'mode machinery missing from /app.js');
 let base = null;
 try { base = await buildServe(BASE_WT); } catch (e) { check('B base tree builds from the pristine checkout at ' + BASE_WT, false, String(e).slice(0, 200)); }
-check('B base tree stands at ' + BASE_WT + ' (62cbfe0) for the byte-identical leg', !!base && base.SWJS.includes('ora-pro-nobis-v668-1'), base && 'base pin differs');
+check('B base tree stands at ' + BASE_WT + ' (21fa13b) for the byte-identical leg', !!base && base.SWJS.includes('ora-pro-nobis-v669-1'), base && 'base pin differs');
 
 const b = await chromium.launch({ executablePath: EXE });
 async function makePage(port, scheme) {
@@ -295,7 +295,7 @@ await pg.waitForFunction(() => !!document.querySelector('#set-mode669'), null, {
     bodyBg: getComputedStyle(document.body).getPropertyValue('background-color').trim(),
   }));
   check('S a Dark tap writes the store, sets data-mode at once, and re-paints Settings with Dark active (no reload)',
-    after.store === 'dark' && after.mode === 'dark' && /active/.test(after.active) && after.bodyBg === 'rgb(31, 24, 17)', after);
+    after.store === 'dark' && after.mode === 'dark' && /active/.test(after.active) && after.bodyBg === 'rgb(16, 16, 16)', after);
   await pg.click('#set-mode669 [data-mode669="light"]');
   await pg.waitForTimeout(400);
   const back = await pg.evaluate(() => ({ store: localStorage.getItem('opn-mode-v669'), mode: document.documentElement.getAttribute('data-mode') }));
@@ -308,8 +308,8 @@ await standDay(pg, 'green');
 {
   const p = await probePage(pg);
   check('A data-mode stands dark on the green day; the dark tokens compute to the §3.3 values',
-    p.mode === 'dark' && p.props['--cream'] === '#1f1811' && p.props['--card'] === '#2b211a' && p.props['--card-2'] === '#17120d'
-    && p.props['--ink'] === '#f2e9da' && p.props['--muted'] === '#b8a88f' && p.props['--line'] === '#55452f' && p.props['--navy'] === '#b7c5d8', p.props);
+    p.mode === 'dark' && p.props['--cream'] === '#101010' && p.props['--card'] === '#1c1c1c' && p.props['--card-2'] === '#0a0a0a'
+    && p.props['--ink'] === '#f5f5f5' && p.props['--muted'] === '#a8a8a8' && p.props['--line'] === '#333333' && p.props['--navy'] === '#d4d4d4', p.props);
   check('A Praylist: body ground luminance < 0.05, body text >= 4.5:1 on it', lumOf(p.bodyBg) < 0.05 && contrast(p.bodyColor, p.bodyBg) >= 4.5, { bg: p.bodyBg, lum: lumOf(p.bodyBg), cr: contrast(p.bodyColor, p.bodyBg) });
   check('A Praylist: a section card ground luminance < 0.05, card text >= 4.5:1, muted meta >= 4.5:1',
     lumOf(p.cardBg) < 0.05 && contrast(p.cardColor, p.cardBg) >= 4.5 && contrast(p.metaColor, p.cardBg) >= 4.5,
@@ -331,9 +331,9 @@ await standDay(pg, 'green');
   await standDay(pg, 'green');
   const s = await probeSurfaces(pg);
   check('A Settings: the liblist ground is the dark card value, the setname text >= 4.5:1 on it',
-    s.liblistBg === 'rgb(43, 33, 26)' && contrast(s.setnameColor, s.liblistBg) >= 4.5, s);
+    s.liblistBg === 'rgb(28, 28, 28)' && contrast(s.setnameColor, s.liblistBg) >= 4.5, s);
   check('A hardcode seats measure var(--card) dark, not white: .mvbtn · select · a form input (the editor\u2019s) · .entry',
-    s.mvbtnBg === 'rgb(43, 33, 26)' && s.selectBg === 'rgb(43, 33, 26)' && s.inputBg === 'rgb(43, 33, 26)' && s.entryBg === 'rgb(43, 33, 26)',
+    s.mvbtnBg === 'rgb(28, 28, 28)' && s.selectBg === 'rgb(28, 28, 28)' && s.inputBg === 'rgb(28, 28, 28)' && s.entryBg === 'rgb(28, 28, 28)',
     { mvbtn: s.mvbtnBg, select: s.selectBg, input: s.inputBg, entry: s.entryBg });
   check('A the .entry text >= 4.5:1 on its dark ground', contrast(s.entryColor, s.entryBg) >= 4.5, { color: s.entryColor, cr: contrast(s.entryColor, s.entryBg) });
   // The DISPLAY segtoggle's active seat in dark.
@@ -343,7 +343,7 @@ await standDay(pg, 'green');
     return segEl && act ? { segBg: getComputedStyle(segEl).getPropertyValue('background-color').trim(), actColor: getComputedStyle(act).getPropertyValue('color').trim() } : null;
   });
   check('A Settings: the segtoggle ground is the dark card value; its active seat (lifted navy) >= 4.5:1 on it',
-    !!seg && seg.segBg === 'rgb(43, 33, 26)' && contrast(seg.actColor, seg.segBg) >= 4.5, seg);
+    !!seg && seg.segBg === 'rgb(28, 28, 28)' && contrast(seg.actColor, seg.segBg) >= 4.5, seg);
   // A sheet + a pop-up menu.
   const sheet = await pg.evaluate(() => {
     openSpeedSheet();
@@ -353,7 +353,7 @@ await standDay(pg, 'green');
     const sh = document.querySelector('.speedsheet'); if (sh) sh.remove();
     return out;
   });
-  check('A a sheet: .inner ground is the dark card value, its head text >= 4.5:1', !!sheet && sheet.bg === 'rgb(43, 33, 26)' && contrast(sheet.hColor, sheet.bg) >= 4.5, sheet);
+  check('A a sheet: .inner ground is the dark card value, its head text >= 4.5:1', !!sheet && sheet.bg === 'rgb(28, 28, 28)' && contrast(sheet.hColor, sheet.bg) >= 4.5, sheet);
   const menu = await pg.evaluate(() => {
     openSheetMenu('Probe menu', [{ label: 'Alpha item', act: function () {} }], null);
     const card = document.querySelector('.anchmenu');
@@ -402,7 +402,7 @@ for (const [color, wantText] of [['green', '#82cc97'], ['red', '#e58f87']]) {
     { got: dark.props['--accent-text'], want: wantText, onCard: contrast(dark.props['--accent-text'], dark.props['--card']), onCream: contrast(dark.props['--accent-text'], dark.props['--cream']) });
 }
 
-// ---------- B: light byte-identical (base 62cbfe0 vs v669, no data-mode) ----------
+// ---------- B: light byte-identical (base 21fa13b vs v671, no data-mode) ----------
 if (base) {
   const bp = await makePage(base.port);
   await standDay(bp, 'green');
@@ -416,8 +416,8 @@ if (base) {
   for (const k of Object.keys(bProbe.props)) if (bProbe.props[k] !== mProbe.props[k]) diffs.push('prop ' + k + ': ' + bProbe.props[k] + ' != ' + mProbe.props[k]);
   for (const k of ['bodyBg', 'bodyColor', 'cardBg', 'cardColor', 'metaColor', 'tabbarBg', 'brandBg', 'playbtnBg']) if (bProbe[k] !== mProbe[k]) diffs.push(k + ': ' + bProbe[k] + ' != ' + mProbe[k]);
   for (const k of Object.keys(bSurf)) if (bSurf[k] !== mSurf[k]) diffs.push('surface ' + k + ': ' + bSurf[k] + ' != ' + mSurf[k]);
-  check('B LIGHT BYTE-IDENTICAL: every probed computed value on the v669 tree (no data-mode) equals the base tree 62cbfe0', diffs.length === 0 && mProbe.mode === null, diffs);
-  check('B the three #fff hardcodes still measure white in light on the v669 tree (.mvbtn · select · form input · .entry)',
+  check('B LIGHT BYTE-IDENTICAL: every probed computed value on the v671 tree (no data-mode) equals the base tree 21fa13b', diffs.length === 0 && mProbe.mode === null, diffs);
+  check('B the three #fff hardcodes still measure white in light on the v671 tree (.mvbtn · select · form input · .entry)',
     mSurf.mvbtnBg === 'rgb(255, 255, 255)' && mSurf.selectBg === 'rgb(255, 255, 255)' && mSurf.inputBg === 'rgb(255, 255, 255)' && mSurf.entryBg === 'rgb(255, 255, 255)', mSurf);
   await bp.context().close(); await mp.context().close();
 }
@@ -428,7 +428,7 @@ if (base) {
   await dp.evaluate(() => { opnModeSet669('system'); applyMode669(); });
   await dp.waitForTimeout(200);
   let st = await probePage(dp);
-  check('D Follow the phone under emulated dark paints dark', st.mode === 'dark' && st.bodyBg === 'rgb(31, 24, 17)', { mode: st.mode, bg: st.bodyBg });
+  check('D Follow the phone under emulated dark paints dark', st.mode === 'dark' && st.bodyBg === 'rgb(16, 16, 16)', { mode: st.mode, bg: st.bodyBg });
   await dp.emulateMedia({ colorScheme: 'light' });
   await dp.waitForTimeout(400);
   st = await probePage(dp);
@@ -455,7 +455,7 @@ if (base) {
   await ep.reload();
   await ep.waitForTimeout(1500);
   let st = await probePage(ep);
-  check('E Dark pick -> reload -> dark stands (attribute + paint, from the boot pass)', st.mode === 'dark' && st.bodyBg === 'rgb(31, 24, 17)', { mode: st.mode, bg: st.bodyBg });
+  check('E Dark pick -> reload -> dark stands (attribute + paint, from the boot pass)', st.mode === 'dark' && st.bodyBg === 'rgb(16, 16, 16)', { mode: st.mode, bg: st.bodyBg });
   await standDay(ep, 'red');
   st = await probePage(ep);
   check('E a day change to red rolls the accent, the mode stands', st.lit === 'red' && st.mode === 'dark' && st.props['--accent'] === '#9e2b25' && st.props['--accent-text'] === '#e58f87',
@@ -499,7 +499,7 @@ for (const h of ['harness-v668.mjs', 'harness-v667.mjs', 'harness-v666.mjs']) {
   try { out = execFileSync('node', [path.join(W, h)], { encoding: 'utf8', stdio: 'pipe', timeout: 600000 }); }
   catch (e) { code = e.status || 1; out = String(e.stdout || '') + String(e.stderr || ''); }
   const tail = out.trim().split('\n').filter((l) => /ok|not-ok/.test(l)).pop() || out.trim().split('\n').pop();
-  check('G regression ' + h + ' runs green on the v669 tree', code === 0, tail);
+  check('G regression ' + h + ' runs green on the v671 tree', code === 0, tail);
   console.log('     ' + h + ' -> ' + tail);
 }
 
