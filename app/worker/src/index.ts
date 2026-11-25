@@ -1375,6 +1375,13 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // is kept; any other day key is an error — the
           // client's mirror rule.
           if (key !== "daily-gospel-exegesis") return { error: `bad day ${String(key)}` };
+        } else if (kind === "daily") {
+          // v666: a daily item naming one of the five
+          // verified daily series is kept; any other daily
+          // key is an error — the client's mirror rule
+          // (the set is a literal here because this fn is
+          // extracted standalone by the harnesses).
+          if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints"].includes(key)) return { error: `bad daily ${String(key)}` };
         } else if (kind === "video") {
           // v656: a video item's key is '<series>|<videoId>',
           // both sides non-empty, AND the series side naming
