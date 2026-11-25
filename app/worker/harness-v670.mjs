@@ -268,7 +268,7 @@ function morningDescs(w, contents) {
 
 // ---------- (e) retirements + pin (static, served-bundle seats) ----------
 {
-  check("E pin: ui.ts CACHE is ora-pro-nobis-v670-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v670-1";') && (uiSrc.match(/ora-pro-nobis-v670-1/g) || []).length === 1);
+  check("E pin: ui.ts CACHE is ora-pro-nobis-v672-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v672-1";') && (uiSrc.match(/ora-pro-nobis-v672-1/g) || []).length === 1);
   check("E retirements read zero in the served client: no drop down (opnOfficeChoiceHtml650 / data-p650office), no extPaintSides650, no governing reader/writer (opnOfficeChoice650 / opnOfficeChoiceSet650 / opnSthFirstSet632 as functions), no singItems614, no lf:sing rung",
     !appJs.includes("function opnOfficeChoiceHtml650(") && !appJs.includes("data-p650office") && !appJs.includes("function extPaintSides650(")
     && !appJs.includes("function opnOfficeChoice650(") && !appJs.includes("function opnOfficeChoiceSet650(") && !appJs.includes("function opnSthFirstSet632(")
@@ -337,7 +337,7 @@ function morningDescs(w, contents) {
   }
   const added = await ladderWorld([]);
   const pickRow = w.document.querySelector('[data-p670pick="ext-morning-prayer"]');
-  check("(c) the lf:office rung paints the labeled rows as PICK rows (data-p670pick), the Divine Office door's sub names the pick",
+  check("(c) the lf:office rung paints the labeled rows as PICK rows (data-p670pick), the Liturgy of the Hours door's sub names the pick",
     !!pickRow && w.document.querySelector(".profaddladder603").textContent.includes("Morning Prayer"), {});
   click(w, pickRow); await sleep(120);
   const sideRows = [...w.document.querySelectorAll('[data-p670side]')];

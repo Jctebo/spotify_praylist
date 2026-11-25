@@ -25483,7 +25483,7 @@ function openAddLadder603(block, host) {
         var pr = [];
         (host.groups() || []).forEach(function (g) { g.prayers.forEach(function (p) { if (match(p.title)) pr.push({ kind: 'prayer', key: p.slug, label: p.title, path: 'Prayers \u203a Prayer Book \u203a ' + g.name }); }); });
         groups.push({ head: 'Prayers \u203a Prayer Book', items: pr, path: '' });
-        groups.push({ head: 'Prayers \u203a Divine Office', items: officeItems614().filter(function (it) { return match(it.label); }).map(function (it) { return opnLabeledSlot650(it.key) ? Object.assign({}, it, { officePick670: true }) : it; }), path: 'Prayers \u203a Divine Office' }); // v670: the Sing the Hours search group retires with the lf:sing rung
+        groups.push({ head: 'Prayers \u203a Liturgy of the Hours', items: officeItems614().filter(function (it) { return match(it.label); }).map(function (it) { return opnLabeledSlot650(it.key) ? Object.assign({}, it, { officePick670: true }) : it; }), path: 'Prayers \u203a Liturgy of the Hours' }); // v670: the Sing the Hours search group retires with the lf:sing rung
         var si = saintItem614();
         groups.push({ head: 'Catechesis \u203a Podcasts \u203a The Saint of The Day Podcast', items: si && match(si.label) ? [si] : [], path: 'Catechesis \u203a Podcasts \u203a The Saint of The Day Podcast' });
         groups.push({ head: 'Prayers \u203a Ora Pro Nobis', items: ownItems614().filter(function (it) { return match(it.label); }), path: 'Prayers \u203a Ora Pro Nobis' });
@@ -25520,12 +25520,12 @@ function openAddLadder603(block, host) {
         // carried only "Nothing to add").
         return doors614([
           ['br:catechesis', 'Catechesis', 'Podcasts \u00b7 Courses \u00b7 Novenas \u00b7 Homilies', 'Podcasts'],
-          ['br:prayers', 'Prayers', 'Prayer Book \u00b7 Divine Office \u00b7 Ora Pro Nobis', 'Morning'],
+          ['br:prayers', 'Prayers', 'Prayer Book \u00b7 Liturgy of the Hours \u00b7 Ora Pro Nobis', 'Morning'],
           ['br:videos', 'Videos', 'Virtual Mass \u00b7 Adoration', 'Mass and Homilies']
         ]);
       }
       if (rung === 'br:videos') return doors614([['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass', 'Mass and Homilies'], ['lf:adoration', 'Adoration', 'No list audio', 'Episodes']]);
-      if (rung === 'br:prayers') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category', 'Morning'], ['lf:office', 'Divine Office', 'Morning & Evening Prayer \u2014 pick the reading', 'Midday'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers', 'Night']]);
+      if (rung === 'br:prayers') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category', 'Morning'], ['lf:office', 'Liturgy of the Hours', 'Morning & Evening Prayer \u2014 pick the reading', 'Midday'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers', 'Night']]);
       if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress', 'Podcasts'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes', 'Podcasts'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes', 'Novenas'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies', 'Mass and Homilies']]);
       if (rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
       // v656 §2.6: S1 retires — the Virtual Mass leaf opens:

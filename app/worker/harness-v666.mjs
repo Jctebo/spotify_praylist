@@ -422,7 +422,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
   inp.value = "morning prayer"; inp.dispatchEvent(new w.Event("input", { bubbles: true }));
   await sleep(120);
   const hs2 = ladderEl(w) ? ladderEl(w).innerHTML : "";
-  check("L1 head search: the office group stands under Prayers › Divine Office, its standing Morning row marked (the Sing the Hours group is RETIRED, v670 §3.3)", hs2.includes("Prayers › Divine Office") && hs2.includes("Already in Morning") && !hs2.includes("Prayers › Sing the Hours"), hs2.slice(0, 200));
+  check("L1 head search: the office group stands under Prayers › Liturgy of the Hours, its standing Morning row marked (the Sing the Hours group is RETIRED, v670 §3.3)", hs2.includes("Prayers › Liturgy of the Hours") && hs2.includes("Already in Morning") && !hs2.includes("Prayers › Sing the Hours"), hs2.slice(0, 200));
   await closeLadder(w);
   // L2 mapping walks
   await openLadder(w, "Morning");
@@ -529,7 +529,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
   await openLadder(w, "Morning");
   await navLadder(w, ["br:prayers"]);
   await sleep(80);
-  check("L2 the Sing the Hours door is RETIRED (v670 §3.3): no lf:sing door stands under Prayers; the Divine Office door's sub names the pick", !door(w, "lf:sing") && ladderText(w).includes("Morning & Evening Prayer — pick the reading"), ladderText(w).slice(0, 120));
+  check("L2 the Sing the Hours door is RETIRED (v670 §3.3): no lf:sing door stands under Prayers; the Liturgy of the Hours door's sub names the pick", !door(w, "lf:sing") && ladderText(w).includes("Morning & Evening Prayer — pick the reading"), ladderText(w).slice(0, 120));
   await closeLadder(w);
   await openLadder(w, "Morning");
   await navLadder(w, ["br:prayers", "lf:prayerbook"]);
@@ -618,7 +618,7 @@ const WARN666 = "Today's episode has not updated yet — showing the last one th
 }
 
 // ---------- pin + dress seats ----------
-check("P pin: ui.ts CACHE is ora-pro-nobis-v670-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v670-1"') && (uiSrc.match(/ora-pro-nobis-v670-1/g) || []).length === 1);
+check("P pin: ui.ts CACHE is ora-pro-nobis-v672-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v672-1"') && (uiSrc.match(/ora-pro-nobis-v672-1/g) || []).length === 1);
 check("P dress: the scoped ladder rules stand (mark tile · gold chevron · gold-tinted daily card · sheet-head)", uiSrc.includes(".profaddladder603 .p666mark") && uiSrc.includes(".profaddladder603 .p666chev") && uiSrc.includes(".profaddladder603 .p666daily") && uiSrc.includes(".profaddladder603 .searchpill"));
 
 console.log(`\nharness-v666: ${ok} ok / ${bad} not-ok`);
