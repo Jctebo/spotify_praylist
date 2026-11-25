@@ -12716,47 +12716,20 @@ function paintFavoritesFolderRow() {
   // and the block rows. No play disc, no chevron (the
   // block-row form); its tap opens the Favorites page
   // through the standing [data-openblock] wiring.
-  // v659 §3.1: the row re-forms as the Favorites CARD — the
-  // uniform .card dress at the bottom of the window (its
-  // slot now stands below #home-body), a head carrying the
-  // gold ★ tile (its standing mark), the name, its meta
-  // line, and the + / − toggle at the right. It carries NO
-  // disc and NO section ⋮ (it has none today; its tracks
-  // are a cross-day collection, not a day section). Its
-  // open state lives in the fold session map under its
-  // standing key '__favorites', under the accordion. When
-  // open, the card's body carries the Favorites page's
-  // folder sections — favFolderSectionHtml over the
-  // standing visible folder list (v613's empty-folder
-  // hiding included), REUSED, not copied (§3.5). The card
-  // repaints with the home; a settle while the home stands
-  // repaints the home whole (paintFavoritesSurfaces), so
-  // the paint-once discipline retires with the move — the
-  // closed-card settle keeps its cheap meta-only update.
   var slot = document.getElementById('favorites-folder-slot');
   if (!slot) return;
   var list = favoritesList();
   var dur = list.reduce(function (a, e) { return a + (e.durationS || 0); }, 0);
   var meta = list.length ? (list.length + (list.length === 1 ? ' track' : ' tracks') + (dur > 0 ? ' \u00b7 ' + fmtDurLong(dur) : '')) : 'No starred tracks yet';
-  // The edit form's all-expanded read (opnExpanded604 under
-  // opn604.editing) serves the set's groups, not this card —
-  // the card reads its own fold state.
-  var open659 = !opn604.editing && opnExpanded604('__favorites');
-  var card659 = slot.querySelector('[data-p659favcard]');
-  if (card659 && !open659) { var m = card659.querySelector('.meta'); if (m) m.textContent = meta; return; }
-  var html659 = '<div class="card p659card p659favcard" data-p659card="__favorites" data-p659favcard="1">'
-    + '<div class="p659favhead favfolder-head" data-p659favhead="1">'
+  // The row paints ONCE (paintListenHome, before
+  // wirePrayersView's [data-openblock] pass wires it); a
+  // settle or toggle updates only its meta line — a
+  // repainted row would stand unwired.
+  var row = slot.querySelector('[data-openblock="__favorites"]');
+  if (row) { var m = row.querySelector('.meta'); if (m) m.textContent = meta; return; }
+  slot.innerHTML = '<div class="card blockrow" data-openblock="__favorites"><div class="row">'
     + '<div class="blockcover tone-gold sm"><span class="blockcover-initial">\u2605</span></div>'
-    + '<h2 class="sectionhead grow">Favorites</h2>'
-    + '<span class="meta">' + esc(meta) + '</span>'
-    + '<span class="p659toggle" aria-hidden="true">' + (open659 ? '\u2212' : '+') + '</span></div>';
-  if (open659) {
-    var folders659 = favVisibleFolders();
-    html659 += '<div class="p659body">'
-      + (folders659.length ? folders659.map(favFolderSectionHtml).join('') : '<div class="card"><div class="meta">No favorites yet \u2014 tap \u2606 on a track, a prayer, a podcast, or a novena and it will stand here.</div></div>')
-      + '</div>';
-  }
-  slot.innerHTML = html659 + '</div>';
+    + '<div class="grow"><h3>Favorites</h3><div class="meta">' + esc(meta) + '</div></div></div></div>';
 }
 /* v550 §2.4 (Q4 A): the reorder mode — module state only,
    never persisted. It is set only by the header menu's
@@ -13550,13 +13523,6 @@ function paintFavoritesSurfaces() {
   // v547: the folder's paints after a store settle or
   // toggle — the home's folder row (its count) and the
   // Favorites page when it stands.
-  // v659 §3.1: while the Praylist HOME stands with the
-  // Favorites card OPEN, a settle repaints the home whole —
-  // the expansion's folder sections must follow the store,
-  // as the set's do (the card's wiring is the home's own
-  // passes, re-run by the repaint). Closed, the standing
-  // meta-only update stands.
-  if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'home' && !opn604.editing && opnExpanded604('__favorites')) { paintPrayersView(state.dayPayload); return; }
   paintFavoritesFolderRow();
   if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'favorites' && document.getElementById('favorites-list')) paintFavoritesPage(state.dayPayload);
 }
@@ -22372,79 +22338,6 @@ function wirePrayersView(day) {
       opnRepaintHome604();
     });
   });
-  // v659 §3.1: the Favorites card's head is its fold tap
-  // target — the same toggle + repaint shape as the set's
-  // heads, under its standing '__favorites' key (the
-  // accordion closes every other card when it opens, and
-  // opening any section closes it). The folder sections
-  // inside the expansion wire here, scoped to the card's
-  // slot (the Favorites page wires its own copies in
-  // paintFavoritesPage; the slot never stands there, so no
-  // element is ever wired twice): folder collapse chevrons,
-  // custom-folder menus, door taps + menus, prayer plays +
-  // menus, starred plays, row menus, pod marks, Read.
-  var favSlot659 = document.getElementById('favorites-folder-slot');
-  if (favSlot659) {
-    var favHead659 = favSlot659.querySelector('[data-p659favhead]');
-    if (favHead659) favHead659.addEventListener('click', function () {
-      opnToggleBlock604('__favorites');
-      opnRepaintHome604();
-    });
-    favSlot659.querySelectorAll('[data-favcollapse]').forEach(function (b) {
-      b.addEventListener('click', function (ev) { if (ev && ev.stopPropagation) ev.stopPropagation(); favToggleCollapse(b.getAttribute('data-favcollapse')); });
-    });
-    favSlot659.querySelectorAll('[data-favfoldermenu]').forEach(function (b) {
-      b.addEventListener('click', function (ev) {
-        if (ev && ev.stopPropagation) ev.stopPropagation();
-        var f = favFolders().filter(function (x) { return x.id === b.getAttribute('data-favfoldermenu'); })[0];
-        if (f) openFavFolderMenu(f, b);
-      });
-    });
-    favSlot659.querySelectorAll('[data-favdoor]').forEach(function (c) {
-      c.addEventListener('click', function (ev) {
-        if (ev.target.closest('[data-trackstar]') || ev.target.closest('[data-favdoormenu]')) return;
-        goSeries(c.getAttribute('data-favdoor'));
-      });
-    });
-    favSlot659.querySelectorAll('[data-favdoormenu]').forEach(function (b) {
-      b.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var e = starredEntryByKey(b.getAttribute('data-favdoormenu'));
-        if (e) openFavDoorMenu(e, b);
-      });
-    });
-    favSlot659.querySelectorAll('[data-favprayerplay]').forEach(function (b) {
-      b.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var f = bookFind(b.getAttribute('data-favprayerplay'));
-        var d = f && prayerAudioDesc(f.prayer, 'en');
-        if (d) playTrack(d);
-      });
-    });
-    favSlot659.querySelectorAll('[data-favprayermenu]').forEach(function (b) {
-      b.addEventListener('click', function () { openFavPrayerMenu(b.getAttribute('data-favprayermenu'), b); });
-    });
-    favSlot659.querySelectorAll('[data-starplay]').forEach(function (b) {
-      b.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var e = starredEntryByKey(b.getAttribute('data-starplay'));
-        var d = e && starredDescFor(e);
-        if (d) playTrack(d);
-      });
-    });
-    favSlot659.querySelectorAll('[data-favmenu]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var e = starredEntryByKey(b.getAttribute('data-favmenu'));
-        if (e) openFavRowMenu(e, b);
-      });
-    });
-    favSlot659.querySelectorAll('[data-favpodmark]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var e = starredEntryByKey(b.getAttribute('data-favpodmark'));
-        if (e) favPodToggle(e);
-      });
-    });
-  }
   // v645 §3.8: the section-head \u22ee menu — a tap stops
   // propagation (never folds the head, the disc's discipline),
   // resolves the block's descriptors from state.dayDescs (the
