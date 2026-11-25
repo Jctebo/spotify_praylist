@@ -2966,19 +2966,39 @@ function opnEpisodeKeyOk614(key) {
   var i = key.indexOf('|');
   return i > 0 && i < key.length - 1;
 }
+// v663 §5.3: the ladder-reachable PODCASTS video series —
+// a video series that stands in the Catechesis › Podcasts
+// index (server-side: the flagged def, §3.2) is reachable
+// from the Add ladder's Podcasts branch, so its contents
+// keys pass the video gate beside the Virtual Mass series.
+// One named list, consulted by both the gate and the title
+// reader below.
+var PODCASTS_VIDEO_SERIES663 = [
+  { series: 'catholicsaints', title: 'Catholic Saints & Feasts' }
+];
+function opnPodcastsVideoSeries663(series) {
+  return PODCASTS_VIDEO_SERIES663.filter(function (x) { return x.series === series; })[0] || null;
+}
 function opnVideoKeyOk656(key) {
   // v656: the video key shape — '<series>|<videoId>', both
   // sides non-empty (the episode shape), AND the series side
   // naming one of the three standing Virtual Mass series
   // (MASS_VIRTUAL_ENTRIES' series keys). A foreign series is
   // an error.
+  // v663 §5.3: the gate widens by the named Podcasts list
+  // above — a ladder-added saints video's key stands.
   if (!opnEpisodeKeyOk614(key)) return false;
   var series = key.slice(0, key.indexOf('|'));
-  return MASS_VIRTUAL_ENTRIES.some(function (e) { return e.series === series; });
+  return MASS_VIRTUAL_ENTRIES.some(function (e) { return e.series === series; }) || !!opnPodcastsVideoSeries663(series);
 }
 function opnVideoSeriesTitle656(series) {
   var e = MASS_VIRTUAL_ENTRIES.filter(function (x) { return x.series === series; })[0];
-  return e ? e.title : String(series || '');
+  if (e) return e.title;
+  // v663 §5.3: the Podcasts video series names itself from
+  // the same named list, so the registry and editor labels
+  // read 'Catholic Saints & Feasts', never the raw key.
+  var p = opnPodcastsVideoSeries663(series);
+  return p ? p.title : String(series || '');
 }
 function opnVideoReg656() {
   try { var v = JSON.parse(localStorage.getItem('opn-video-reg-v656') || 'null'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; }
@@ -9881,7 +9901,10 @@ function paintPodcastRss() {
    YouTube's hosts, never re-hosted) · the title · the published
    date. No current-episode card, no collapse, no marks, no
    partway bar, no download cluster — the row's one act is
-   open-and-watch. The page builds on the standing v427-ship
+   open-and-watch. (v663 §4: that no-marks discipline stands
+   for the Virtual Mass series; a Podcasts-side video payload
+   carrying the marks marker paints its rows' played state —
+   the fold below.) The page builds on the standing v427-ship
    Podcasts grammar (the back row, the page head); no offline
    line is added to or removed from any surface by v434. */
 function paintPodcastVideos() {
@@ -9913,8 +9936,17 @@ function paintPodcastVideos() {
   (res.videos || []).forEach(function (v) {
     var tile = '<span class="rowart tile tone-navy"><span>\u266b</span></span>';
     var art = '<span class="rowartwrap">' + tile + (v.imageUrl ? '<img class="rowart" src="' + esc(v.imageUrl) + '" alt="" onerror="this.remove()">' : '') + '</span>';
-    html += '<div class="card" data-podvideo="' + esc(v.id) + '"><div class="row">' + art
+    // v663 §4: the played dress, ONLY when the payload carries
+    // the marks marker — the standing listened check of the
+    // Podcasts kinds (the .podmark.on disc, §ui) as a plain
+    // span: this surface carries no mark act (no button, no
+    // toggle — the mark lands on a natural end only). The
+    // Virtual Mass payloads carry no marker and their rows
+    // render byte-identically to before.
+    var played663 = !!(res.marks && v.listened);
+    html += '<div class="card" data-podvideo="' + esc(v.id) + '"' + (played663 ? ' data-podvideoplayed="1"' : '') + '><div class="row">' + art
       + '<div class="grow"><h3>' + esc(v.title) + '</h3><div class="meta">' + esc(v.dateLabel) + '</div></div>'
+      + (played663 ? '<span class="podmark on" aria-hidden="true">&#10003;</span>' : '')
       + '</div></div>';
   });
   view.innerHTML = html;
@@ -10038,10 +10070,16 @@ function paintPodWatch() {
   // The back row's act is closeWatch (one act, two triggers —
   // the disc tap and the system-back dispatch, §2.6.2 seat 1).
   // v457: the back stands in the header's row 2.
-  paintRow2Bar({ dest: 'CatholicTV', title: v.title, backAttrs: 'data-podwatchback' });
+  // v663 §6.3: the back bar's dest and the meta line's tail
+  // name the STANDING series (state.podcasts.title), not a
+  // hardcoded CatholicTV — for CatholicTV's own page the
+  // rendered text is unchanged (its title IS CatholicTV).
+  // podSeriesDest / the Mass homing stand untouched.
+  var watchSeriesTitle663 = (state.podcasts && state.podcasts.title) || 'CatholicTV';
+  paintRow2Bar({ dest: watchSeriesTitle663, title: v.title, backAttrs: 'data-podwatchback' });
   html += '<div class="watchframe-wrap"><iframe class="podwatch-frame" src="https://www.youtube.com/embed/' + esc(v.id) + '?enablejsapi=1&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="' + esc(v.title) + '"></iframe></div>';
   html += '<div id="podwatch-err" class="err" style="display:none"></div>';
-  html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 CatholicTV</div>';
+  html += '<div class="meta">' + esc(v.dateLabel) + ' \u00b7 ' + esc(watchSeriesTitle663) + '</div>';
   // §2.6.3 (F-434-4): the Open in YouTube act stood
   // PERMANENTLY under the frame. v459 §2 Build 4: the
   // anchor retires from the page — Open in YouTube stands
@@ -10063,7 +10101,7 @@ function wirePodWatchApi() {
   var make = function () {
     if (!podWatch || !window.YT || !YT.Player) return;
     try {
-      podWatchPlayer = new YT.Player(frame, { events: { onError: function (e) { podWatchOnError(e && e.data); }, onStateChange: function (e) { if (videoHandoff656 && e && e.data === 0) finishVideoHandoff656(true); } } }); // v656: ENDED (0) finishes a standing hand-off; with none standing the handler is inert
+      podWatchPlayer = new YT.Player(frame, { events: { onError: function (e) { podWatchOnError(e && e.data); }, onStateChange: function (e) { if (videoHandoff656 && e && e.data === 0) { finishVideoHandoff656(true); return; } if (e && e.data === 0) markPodVideoEnded663(); } } }); // v656: ENDED (0) finishes a standing hand-off · v663 §4: with none standing, an ENDED on a marks-carrying series page writes the video's played mark
     } catch (e) { /* no API, no seam — the frame and the standing act still stand */ }
   };
   if (window.YT && YT.Player) { make(); return; }
@@ -10072,6 +10110,32 @@ function wirePodWatchApi() {
   var tag = document.createElement('script');
   tag.src = 'https://www.youtube.com/iframe_api';
   document.head.appendChild(tag);
+}
+function markPodVideoEnded663() {
+  // v663 §4: the natural-end mark for a Podcasts-side video
+  // series. Stands ONLY when no hand-off stands (the caller
+  // guarantees it), the standing series payload carries the
+  // marks marker, and a series-page watch stands. The write
+  // rides the standing listen-write route the RSS rows use —
+  // POST /api/player/podcasts/mark, keyed (series, 'yt:' +
+  // videoId), source 'auto' (the completion seam's source) —
+  // with the standing offline enqueue on failure
+  // (writePodMarkQuiet's discipline). The row state folds
+  // into the standing payload client-side in the same act, so
+  // closeWatch's repaint from that payload shows the mark;
+  // the server store (podcast_listens) guarantees it stands
+  // after a full reload, when the page next reads the payload.
+  // An early close/back never reaches here — it writes
+  // nothing (closeWatch carries no mark).
+  var res = state.podcasts;
+  if (!res || !res.marks || res.kind !== 'video' || !podWatch || !podWatch.video) return;
+  var v = podWatch.video;
+  if (v.listened) return;
+  v.listened = true;
+  var seqKey = 'yt:' + v.id;
+  post('/api/player/podcasts/mark', { series: res.series, seqKey: seqKey, source: 'auto' }).catch(function () {
+    podMarkEnqueue({ op: 'mark', series: res.series, seqKey: seqKey, source: 'auto', queuedAt: new Date().toISOString() });
+  });
 }
 function podWatchOnError(code) {
   // §2.6.3: error codes 100, 101, and 150 (not found / embedding
@@ -24688,6 +24752,12 @@ function openAddLadder603(block, host) {
       if (series === 'daily-gospel-exegesis') return exegesisNode614();
       var pay = fetchSeries614(series);
       if (!pay || pay === 'loading') return '<p class="sub">Loading \u2026</p>';
+      // v663 §5.2: the kind dispatch — a VIDEO payload has no
+      // entries to list; the series: rung renders the standing
+      // video node for it. The dispatch keys on the payload
+      // kind, not the series key, so it stays honest for any
+      // video series that ever stands in the index.
+      if (pay !== 'failed' && pay.kind === 'video') return videoNode656(series);
       if (pay === 'failed' || !Array.isArray(pay.entries)) return '<p class="sub">Episodes did not load.</p>';
       var html = '';
       pay.entries.forEach(function (e) { var it = epItem614(series, e); if (matchItem(it)) html += rowHtml(it, ''); });

@@ -79,6 +79,11 @@ export interface Env {
   // govern.
   EXT_YT_DAILYTV_FEED_URL?: string;
   EXT_YT_SPRINGFIELD_FEED_URL?: string;
+  // v663 harness seam, same rule: a fixture-feed override for
+  // the Podcasts section's Catholic Saints & Feasts video
+  // series build (the YouTube channel feed). Production
+  // leaves it unset; the pinned feed URL below governs.
+  EXT_YT_CATHOLICSAINTS_FEED_URL?: string;
   // v464 harness seams, same rule: fixture-feed overrides for
   // the Podcasts section's RSS series builds (The Exorcist
   // Files · The Counsel of Trent). Production leaves them
@@ -199,12 +204,15 @@ function publicGate(request: Request, seg: string[], url: URL): Response | null 
 // listen state — every entry's listened/listenDate/listenedAt/
 // source/positionS fields are removed whole (the client's fresh
 // state), recursively, wherever the builders folded them.
+// v663: the video payload's `marks` marker strips with them —
+// a public payload carrying John's marks (or the flag that
+// paints them) is a leak of the same class.
 function stripListenState(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(stripListenState);
   if (v && typeof v === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-      if (k === "listened" || k === "listenDate" || k === "listenedAt" || k === "positionS") continue;
+      if (k === "listened" || k === "listenDate" || k === "listenedAt" || k === "positionS" || k === "marks") continue;
       out[k] = stripListenState(val);
     }
     return out;
@@ -3546,6 +3554,23 @@ async function podIndexPayload(env: Env): Promise<unknown> {
   for (const rdef of POD_RSS_SERIES_LIST) {
     seriesList.push(await podRssIndexEntry(env, rdef));
   }
+  // v663 §3.2: the flagged VIDEO defs append here — after the
+  // RSS loop, before the own gate (the own series keeps its
+  // guaranteed last seat) — through the standing builder, with
+  // the entry's category overridden to "podcasts" (the builder
+  // files video under "video"; the retired 'video' side no
+  // longer exists client-side, and the Podcasts side key IS
+  // the category value). Only defs carrying podcastsIndex
+  // stand here: the three Virtual Mass defs never enter the
+  // index. Podcasts-side construction order is therefore: the
+  // RSS series in def order · Catholic Saints & Feasts · the
+  // own series, last.
+  for (const vdef of POD_VIDEO_SERIES_LIST) {
+    if (!vdef.podcastsIndex) continue;
+    const vEntry = (await podVideoIndexEntry(env, vdef)) as Record<string, unknown>;
+    vEntry.category = "podcasts";
+    seriesList.push(vEntry);
+  }
   // v451 §2.1: the OWN series appends AFTER the video loop — its
   // seat, LAST (fifth), is guaranteed by construction, and the
   // standing entries' order and shape are byte-untouched (the
@@ -3584,11 +3609,25 @@ const YT_CATHOLICTV_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel
 // and evidence: the v499 release doc §2.
 const YT_DAILYTV_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCi6JtCVy4XKu4BSG-AE2chg";
 const YT_SPRINGFIELD_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCP7JPwhCx2UBbnRk_TjLrHg";
+// v663: the Catholic Saints & Feasts channel (a daily
+// saint-of-the-day video channel) — identification and
+// evidence: the v663 release doc §2.
+const YT_CATHOLICSAINTS_FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCHjS4-XMF2KSuil6tzqUG9Q";
 const VIDEO_SNAPSHOT_MAX_AGE_MS = 2 * 3600 * 1000;
 
 interface PodVideoSeriesDef {
   key: string; title: string;
   feedUrl: (env: Env) => string;
+  // v663 §3.2/§3.3: ONE flag, two seats, both Podcasts-side —
+  // set ONLY on a def that stands as a series in Catechesis ›
+  // Podcasts: (1) podIndexPayload appends its index entry
+  // (category "podcasts") after the RSS loop and before the
+  // own gate; (2) podVideoPayload folds the podcast_listens
+  // marks (a payload `marks: true` marker + per-video
+  // `listened`, keyed 'yt:' + videoId, §4). The Virtual Mass
+  // defs carry neither seat: no index entry, and their
+  // payloads stay byte-identical in shape.
+  podcastsIndex?: boolean;
 }
 const POD_VIDEO_SERIES_LIST: PodVideoSeriesDef[] = [
   { key: "catholictv", title: "CatholicTV", feedUrl: (env) => env.EXT_YT_CATHOLICTV_FEED_URL || YT_CATHOLICTV_FEED_URL },
@@ -3598,6 +3637,13 @@ const POD_VIDEO_SERIES_LIST: PodVideoSeriesDef[] = [
   // uncalled (v493), so neither enters the Catechesis index.
   { key: "dailytvmass", title: "Daily TV Mass", feedUrl: (env) => env.EXT_YT_DAILYTV_FEED_URL || YT_DAILYTV_FEED_URL },
   { key: "springfieldmass", title: "Springfield Mass", feedUrl: (env) => env.EXT_YT_SPRINGFIELD_FEED_URL || YT_SPRINGFIELD_FEED_URL },
+  // v663: Catholic Saints & Feasts stands as a series in
+  // Catechesis › Podcasts (John, 2026-11-25) — the one
+  // flagged def: index seat + played marks (§§3.2–4). The
+  // payload route, the snapshot discipline, and the v657
+  // watcher (feed key video:catholicsaints) are already
+  // generic over this list.
+  { key: "catholicsaints", title: "Catholic Saints & Feasts", feedUrl: (env) => env.EXT_YT_CATHOLICSAINTS_FEED_URL || YT_CATHOLICSAINTS_FEED_URL, podcastsIndex: true },
 ];
 function podVideoSeriesDef(key: string): PodVideoSeriesDef | null {
   return POD_VIDEO_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -3729,21 +3775,46 @@ function videoDateLabel(publishedMs: number): string {
 interface PodVideoPayload {
   ok: boolean; kind: "video"; series: string; title: string; available: boolean;
   stale: boolean; builtAt: string | null;
-  videos: { id: string; title: string; url: string; publishedMs: number; dateLabel: string; imageUrl: string | null; descText: string | null }[];
+  // v663 §3.3: present ONLY on a flagged def's payload (the
+  // def's podcastsIndex flag) — `marks: true` at the payload
+  // level and a `listened` boolean on every video. Unflagged
+  // defs' payloads carry neither field (byte-identical shape).
+  marks?: true;
+  videos: { id: string; title: string; url: string; publishedMs: number; dateLabel: string; imageUrl: string | null; descText: string | null; listened?: boolean }[];
 }
 async function podVideoPayload(env: Env, def: PodVideoSeriesDef): Promise<PodVideoPayload> {
   const seq = await videoSequence(env, def);
   if (!seq) {
-    return { ok: true, kind: "video", series: def.key, title: def.title, available: false, stale: false, builtAt: null, videos: [] };
+    const empty: PodVideoPayload = { ok: true, kind: "video", series: def.key, title: def.title, available: false, stale: false, builtAt: null, videos: [] };
+    if (def.podcastsIndex) empty.marks = true;
+    return empty;
   }
-  return {
+  // v663 §3.3/§4: the marks fold, flagged defs only — the RSS
+  // payload's fold (podRssPayload) is the precedent, clause
+  // for clause: the standing podcast_listens store, read by
+  // series, keyed here 'yt:' + videoId (the store is not
+  // date-scoped, so a mark survives reloads and the feed
+  // window's rotation).
+  let listenedKeys: Set<string> | null = null;
+  if (def.podcastsIndex) {
+    const lr = await env.DB.prepare("SELECT seq_key FROM podcast_listens WHERE series=?")
+      .bind(def.key).all<{ seq_key: string }>();
+    listenedKeys = new Set((lr.results ?? []).map((x) => x.seq_key));
+  }
+  const payload: PodVideoPayload = {
     ok: true, kind: "video", series: def.key, title: def.title, available: true,
     stale: seq.stale, builtAt: seq.snap.builtAt,
-    videos: seq.snap.videos.map((v) => ({
-      id: v.id, title: v.title, url: v.url, publishedMs: v.publishedMs,
-      dateLabel: videoDateLabel(v.publishedMs), imageUrl: v.imageUrl, descText: v.descText,
-    })),
+    videos: seq.snap.videos.map((v) => {
+      const row: PodVideoPayload["videos"][number] = {
+        id: v.id, title: v.title, url: v.url, publishedMs: v.publishedMs,
+        dateLabel: videoDateLabel(v.publishedMs), imageUrl: v.imageUrl, descText: v.descText,
+      };
+      if (listenedKeys) row.listened = listenedKeys.has("yt:" + v.id);
+      return row;
+    }),
   };
+  if (def.podcastsIndex) payload.marks = true;
+  return payload;
 }
 
 // The index entry (§2.1): built from the same videoSequence read
@@ -5569,12 +5640,22 @@ export default {
           const markSeriesKey = String(body.series ?? "");
           const markDef = podSeriesDef(markSeriesKey);
           const markRssDef = markDef ? null : podRssSeriesDef(markSeriesKey);
-          if (!markDef && !markRssDef) return err(400, "unknown series");
+          // v663 §4: the resolution gains the VIDEO branch —
+          // a flagged Podcasts video series' natural-end mark
+          // rides this same route, keyed (series, 'yt:' +
+          // videoId), validated against the video snapshot.
+          // Flagged defs only: the Virtual Mass series carry
+          // no marks (§4's discipline stands for them), so
+          // their keys stay unknown here.
+          const markVideoCand = (!markDef && !markRssDef) ? podVideoSeriesDef(markSeriesKey) : null;
+          const markVideoDef = markVideoCand && markVideoCand.podcastsIndex ? markVideoCand : null;
+          if (!markDef && !markRssDef && !markVideoDef) return err(400, "unknown series");
           if (!["auto", "manual"].includes(body.source ?? "")) return err(400, "source must be auto or manual");
           const seqKey = String(body.seqKey ?? "");
           let markKnown = false;
           if (markDef) { const seq = await podSequence(env, markDef); markKnown = !!seq && seq.snap.entries.some((e) => e.key === seqKey); }
           else if (markRssDef) { const seq = await podRssSequence(env, markRssDef); markKnown = !!seq && seq.snap.entries.some((e) => e.key === seqKey); }
+          else if (markVideoDef) { const seq = await videoSequence(env, markVideoDef); markKnown = !!seq && seqKey.startsWith("yt:") && seq.snap.videos.some((v) => v.id === seqKey.slice(3)); }
           if (!markKnown) return err(400, "unknown seqKey");
           await env.DB.prepare(
             "INSERT OR IGNORE INTO podcast_listens (series, seq_key, listened_at, listen_date, source) VALUES (?, ?, ?, ?, ?)",
@@ -5603,7 +5684,13 @@ export default {
           const unmarkSeriesKey = String(body.series ?? "");
           const unmarkDef = podSeriesDef(unmarkSeriesKey);
           const unmarkRssDef = unmarkDef ? null : podRssSeriesDef(unmarkSeriesKey);
-          if (!unmarkDef && !unmarkRssDef) return err(400, "unknown series");
+          // v663 §4: the registry check gains the flagged
+          // video def, mirroring the mark route — the delete
+          // itself is the standing form (no snapshot
+          // validation).
+          const unmarkVideoCand = (!unmarkDef && !unmarkRssDef) ? podVideoSeriesDef(unmarkSeriesKey) : null;
+          const unmarkVideoDef = unmarkVideoCand && unmarkVideoCand.podcastsIndex ? unmarkVideoCand : null;
+          if (!unmarkDef && !unmarkRssDef && !unmarkVideoDef) return err(400, "unknown series");
           await env.DB.prepare("DELETE FROM podcast_listens WHERE series=? AND seq_key=?")
             .bind(unmarkSeriesKey, String(body.seqKey ?? "")).run();
           // v395 §2.5 (D5): unmark wipes the episode's whole
