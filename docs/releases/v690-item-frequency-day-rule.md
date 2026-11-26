@@ -188,3 +188,16 @@ Legs:
 - The one named deviation stands as recorded in §3: the gate also stands inside `emitCand619` (the candidate map is pre-populated, so the pass-head gate alone cannot cover the tail reach) — same helper, same rule, inside G1's intent. No other deviation found; nothing in the diff contradicts Plan §§2–3.
 
 **Commits on `release/v690` at this verdict:** build `fa2c2bc` · `ad3d9cd` · `cfe2c2a` · `09ffbc5` · `182428b` (§3) · Review re-points `c15a698` (v688) · `5402629` (v687) · this record.
+
+## §5 Ship record
+
+**SHIPPED · LIVE 2026-11-26T14:56:09Z** — pin `ora-pro-nobis-v690-1` · Worker `f2bea0f7-3162-4ee3-b6e9-6b571cc18eae`.
+
+- **Merge:** tree-exact Git Data API (push-v690-github.py) — remote main read fresh at ship (`19cc5c2`, the chain-start base; remote-vs-base delta empty, nothing dropped, no force-push) · remote ship commit `180d93d7`, tree `029ee54a`, local mirror `aaa6c856`. Every delta blob asserted equal to the `release/v690` branch tree (7 paths: `client.ts` · `index.ts` · `ui.ts` · `harness-v690.mjs` · the two re-pointed regression harnesses · this doc). Read-back: **main pushed · remote in sync**.
+- **Harnesses at the merged tree:** harness-v690 **33 ok / 0 bad** · harness-v688 **65 ok / 0 not-ok** · harness-v687 **42 ok / 0 bad** (re-run in the standing clone at the merged main head before deploy).
+- **Deploy:** deploy-app-v690-ship.py from the merged main head `aaa6c856` (EXPECTED_HEAD sentinel) · dry-run clean, then deploy.
+- **Production verified from served bytes** (app.orapronobis.media): served sw.js reads the `ora-pro-nobis-v690-1` pin only · served app.js carries `opnItemPaints690` ×9 · `opnSetItemDay690` ×2 · the Frequency menu section (`Frequency` ×7) · v687 markers stand (`opn687FreqText` ×3 · `opnContentsRowHtml687` ×3) · v688 markers stand (`resolveMassDynamic688` ×3 · `OPN_MASS_SERIES_688` ×2 · `massRow688` ×4). Rollback: pin `ora-pro-nobis-v688-1`.
+- **Closeout (all read back):** release 1668 → Live, shipped_at 2026-11-26T14:56:09Z · phase records Scope 2868 / Plan 2870 / Implement 2872 / Review 2873 / Ship 2875 — all passed · What's New **505** · shipped_records **879**.
+- **Standing note (a) — coordinator contract 1187:** its two judgments returned **409** — the door had closed that contract mid-chain. Both states are proven without it: Plan record **2870** stands passed, and Implement record **2872** / contract **1191** stand on the board.
+- **Standing note (b) — harness re-points:** `c15a698` re-points harness-v688's extraction recipe to the S2-widened validator signature (recipe only, no assertion touched; 65/0 after) and `5402629` re-points harness-v687 (same recipe, plus the L7 ×2 + L8 menu-act expected arrays superseded-by-v690 for the §2.4 Frequency section and L8's Enable click index 1 → 7; L9 legs untouched; 42/0 after). Justification stands in §4: both harnesses hard-coded the pre-v690 validator signature / contents-menu shape that Plan §§2.2/2.4 prescribe changing; no assertion was weakened.
+- **Field leg (John's, not claimed):** set a frequency in an item's ⋮ menu (Stations → Fridays only, a homily → Sundays only) and confirm the item stands only on its days, while still standing in the Edit form on off days.
