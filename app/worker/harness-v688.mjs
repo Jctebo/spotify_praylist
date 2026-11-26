@@ -326,7 +326,16 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   await until(() => !ladderEl(w), 3000);
   const saveBtn = w.document.querySelector('[data-p593save="profile"]');
   if (saveBtn) click(w, saveBtn);
-  const landed = await until(async () => { const p = await profilesPayload(w); const s = (p.profiles || []).find((x) => x.key === "salesian"); return s && ((s.contents && s.contents.Morning) || []).some((it) => it.kind === "massdaily" && it.key === "catholictv"); }, 6000);
+  // RE-POINTED BY v692 (seat moved — no assertion weakened): the leg's
+  // host profile was the standing pick named by its key, "salesian".
+  // Under v692 the Ways leave the profile list: this fixture's standing
+  // Way migrates to its own copy (the-salesian-way-own) and the editor
+  // opens the EFFECTIVE profile — so the saved-contents read now finds
+  // the profile by the payload's effective key. On the pre-v692 tree
+  // effective.key IS "salesian"; the assertion (the massdaily item
+  // stands in the saved standing profile's Morning contents) is
+  // byte-identical.
+  const landed = await until(async () => { const p = await profilesPayload(w); const s = (p.profiles || []).find((x) => x.key === (p.effective && p.effective.key)); return s && ((s.contents && s.contents.Morning) || []).some((it) => it.kind === "massdaily" && it.key === "catholictv"); }, 6000);
   check("M2 profile-editor host: adding the dynamic Mass stands {kind:massdaily, key:catholictv} in the saved profile contents", landed);
   // The standing card now paints marked, not tappable.
   await openLadder(w, "Morning");

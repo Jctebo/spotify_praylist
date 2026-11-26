@@ -1245,6 +1245,9 @@ interface PrayerProfile {
   key: string; name: string; honorLine: string; kind: string;
   coreBlocks: string[]; layers: PrayerProfileLayers;
   contents?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]>;
+  // v692 Q6 A: provenance of a migrated own copy — rides
+  // the layers JSON beside contents (no new column).
+  startedFrom?: string;
 }
 interface TodayLayer {
   baseProfileKey: string;
@@ -1273,6 +1276,67 @@ function profileDayKind(date: string): "sunday" | "solemnity" | "weekday" {
   if (v.rank === "Sunday" || v.part === "sunday") return "sunday";
   if (v.rank === "S" || v.rank === "s") return "solemnity";
   return "weekday";
+}
+
+// v692 §2.3 (OPEN-3 default): the server mirror of the
+// client's mig692 — a PURE transform over the store
+// shape, keyed idempotently on any kind='default' row
+// naming a designed key standing (no schema change; after
+// one run no default rows stand). The standing Way is
+// preserved whole as an own copy (kind 'custom', name
+// unchanged, key = slug + '-own' deduped, startedFrom
+// provenance — Q6 A); standingKey and today-layer bases
+// re-point at the copy; other designed rows leave
+// without a copy (OPEN-2 default). PHANTOM-EDITS scrub:
+// a today entry that does not diverge from its base
+// profile (todayLayerDiverges594) is not a real
+// today-edits set and is dropped, as is an entry whose
+// base no longer stands. Returns null when nothing
+// changes.
+function profileSlug692(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "profile";
+}
+function migrateStore692(store: PrayerProfileStore): { profiles: PrayerProfile[]; standingKey: string; todayEdits: Record<string, TodayLayer>; copy?: PrayerProfile; removedKeys: string[] } | null {
+  const seedKeys = new Set(DESIGNED_PROFILES_591.map((d) => d.key));
+  const isWay = (p: PrayerProfile) => p.kind === "default" && seedKeys.has(p.key);
+  const hasWay = store.profiles.some(isWay);
+  let profiles = store.profiles;
+  let standingKey = store.standingKey;
+  const todayEdits: Record<string, TodayLayer> = JSON.parse(JSON.stringify(store.todayEdits || {})) as Record<string, TodayLayer>;
+  let copy: PrayerProfile | undefined;
+  const removedKeys: string[] = [];
+  let changed = false;
+  const standing = store.profiles.find((p) => p.key === store.standingKey);
+  if (standing && isWay(standing)) {
+    const taken = new Set(store.profiles.map((p) => p.key));
+    const slug = profileSlug692(standing.name) + "-own";
+    let key = slug;
+    for (let n = 2; taken.has(key); n++) key = slug + "-" + n;
+    copy = JSON.parse(JSON.stringify(standing)) as PrayerProfile;
+    copy.kind = "custom";
+    copy.startedFrom = standing.key;
+    copy.key = key;
+    profiles = profiles.map((p) => (p.key === standing.key ? copy! : p));
+    for (const e of Object.values(todayEdits)) if (e && e.baseProfileKey === standing.key) e.baseProfileKey = key;
+    standingKey = key;
+    changed = true;
+  }
+  if (hasWay) {
+    for (const p of profiles) if (isWay(p)) removedKeys.push(p.key);
+    profiles = profiles.filter((p) => !isWay(p));
+    changed = true;
+  }
+  if (standingKey && !profiles.some((p) => p.key === standingKey)) {
+    standingKey = profiles.length ? profiles[0].key : "";
+    changed = true;
+  }
+  for (const d of Object.keys(todayEdits)) {
+    const e = todayEdits[d];
+    const base = e ? profiles.find((x) => x.key === e.baseProfileKey) : undefined;
+    if (!base || !todayLayerDiverges594(base, e)) { delete todayEdits[d]; changed = true; }
+  }
+  if (!changed) return null;
+  return { profiles, standingKey, todayEdits, copy, removedKeys };
 }
 
 async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> {
@@ -1318,6 +1382,9 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
           : [];
         const checkedContents = validateProfileContents686(rawContents, prof.coreBlocks, storedExtra686);
         if (rawContents !== undefined && !("error" in checkedContents) && checkedContents.normalized) prof.contents = checkedContents.normalized;
+        // v692: provenance rides the layers JSON beside contents.
+        const rawStartedFrom = (rawLayers as { startedFrom?: unknown }).startedFrom;
+        if (typeof rawStartedFrom === "string" && rawStartedFrom) prof.startedFrom = rawStartedFrom;
         profiles.push(prof);
       } catch { /* an unparseable row does not stand */ }
     }
@@ -1344,7 +1411,38 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
         }
       }
     } catch { todayEdits = {}; }
-    return { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, todayEdits };
+    const store: PrayerProfileStore = { profiles, standingKey: st.standing_key, dayRule: false, version: st.version, todayEdits };
+    // v692 §2.3: the one-time migration, persisted on the
+    // read that first sees a default row (idempotent —
+    // after it lands, migrateStore692 answers null).
+    const mig692 = migrateStore692(store);
+    if (mig692) {
+      try {
+        const ts = nowISO();
+        const stmts: D1PreparedStatement[] = [];
+        let copySort = 0;
+        if (mig692.copy) {
+          const wayRow = await env.DB.prepare("SELECT sort_order FROM prayer_profiles WHERE key = ?").bind(mig692.copy.startedFrom).first<{ sort_order: number }>();
+          copySort = wayRow && typeof wayRow.sort_order === "number" ? wayRow.sort_order : 0;
+          const cl = mig692.copy.layers;
+          const storedLayers: Record<string, unknown> = {
+            novenas: { on: cl.novenas.on ? 1 : 0 },
+            podcasts: { on: cl.podcasts.on ? 1 : 0, series: cl.podcasts.series },
+          };
+          if (mig692.copy.contents) storedLayers.contents = mig692.copy.contents;
+          if (mig692.copy.startedFrom) storedLayers.startedFrom = mig692.copy.startedFrom;
+          stmts.push(env.DB.prepare("INSERT INTO prayer_profiles (key, name, honor_line, kind, core_blocks, layers, sort_order, updated_at) VALUES (?, ?, ?, 'custom', ?, ?, ?, ?)")
+            .bind(mig692.copy.key, mig692.copy.name, mig692.copy.honorLine, JSON.stringify(mig692.copy.coreBlocks), JSON.stringify(storedLayers), copySort, ts));
+        }
+        for (const k of mig692.removedKeys) stmts.push(env.DB.prepare("DELETE FROM prayer_profiles WHERE key = ?").bind(k));
+        stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET standing_key = ?, today_edits = ?, updated_at = ? WHERE id = 1")
+          .bind(mig692.standingKey, JSON.stringify(mig692.todayEdits), ts));
+        stmts.push(profileBumpStmt(env, ts));
+        await env.DB.batch(stmts);
+        return { profiles: mig692.profiles, standingKey: mig692.standingKey, dayRule: false, version: st.version + 1, todayEdits: mig692.todayEdits };
+      } catch { /* a failed migration write leaves the read standing; the next read retries */ }
+    }
+    return store;
   } catch { return null; }
 }
 
@@ -1512,6 +1610,73 @@ const DESIGNED_PROFILES_591 = [
   { key: "benedictine", name: "The Benedictine Way", honorLine: "named in honor of the tradition, not the order's own routine", coreBlocks: ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"], layers: { novenas: { on: 1 }, podcasts: { on: 1, series: ["daily-readings"] } } },
 ];
 
+// v692 Review repair: the server port of the client's
+// opnMigrateProfileRecord609 (client.ts), applied to a
+// DESIGNED starter at the reset route so the STORED
+// record lands in the migrated shape — the exact shape
+// the client reset route lands (Plan §2.4.2: "Server
+// mirror identical"). The seat is the reset route
+// itself, not store load / payload time: the client
+// mirror transforms at its reset route, and a stored
+// record that converges at write needs no transform on
+// every later read (a load-time transform would also
+// have to be persisted or re-run forever). Semantics,
+// mirrored line for line from the client transform
+// against the server's source-settings rows (the same
+// row shape the client reads from its document):
+//  - a series that already stands by a source row
+//    (daily-gospel-exegesis) moves nowhere;
+//  - 'daily-readings' -> a seat item in Morning, whose
+//    contents list first gains the block's FULL standing
+//    list (own enabled rows, then external enabled
+//    non-fallback rows, sortOrder-merged);
+//  - every other series -> a course item in Night, whose
+//    contents list gains its standing list the same way;
+//  - the Podcasts layer then stands OFF with its series
+//    emptied; the Novenas layer stands as seeded.
+// The designed record carries no contents, exactly as
+// the client reset deletes contents before migrating —
+// so the transform starts from no contents. The return
+// is the stored form (layers on as 0/1, contents riding
+// the layers JSON beside them, the standing store form).
+function migratedStarterShape609(
+  des: (typeof DESIGNED_PROFILES_591)[number],
+  rows: { sourceKey: string; family: string; block: string; sortOrder: number | null; enabled: number; slotId: string | null; role: string }[],
+): { coreBlocks: string[]; layers: { novenas: { on: number }; podcasts: { on: number; series: string[] }; contents?: Record<string, { kind: string; key: string }[]> } } {
+  const seriesHasRow = new Set<string>(rows.map((r) => r.sourceKey));
+  const standingList = (block: string): { kind: string; key: string }[] => {
+    const merged: { kind: string; key: string; so: number | null }[] = [];
+    for (const r of rows) if (r.family === "own" && r.enabled === 1 && r.block === block) merged.push({ kind: "source", key: r.sourceKey, so: r.sortOrder });
+    for (const r of rows) if (r.family === "external" && r.enabled === 1 && r.role !== "fallback" && r.slotId && r.block === block) merged.push({ kind: "source", key: r.slotId, so: r.sortOrder });
+    merged.sort((a, b) => (a.so == null ? 1e9 : a.so) - (b.so == null ? 1e9 : b.so));
+    return merged.map((m) => ({ kind: m.kind, key: m.key }));
+  };
+  const contents: Record<string, { kind: string; key: string }[]> = {};
+  let hasContents = false;
+  const series = [...des.layers.podcasts.series];
+  if (des.layers.podcasts.on && series.length) {
+    const ensureBlock = (block: string): { kind: string; key: string }[] => {
+      if (!contents[block]) { contents[block] = standingList(block); hasContents = true; }
+      return contents[block];
+    };
+    if (series.includes("daily-readings")) {
+      const morning = ensureBlock("Morning");
+      if (!morning.some((it) => it.kind === "seat" && it.key === "daily-readings")) morning.push({ kind: "seat", key: "daily-readings" });
+    }
+    const courses = series.filter((k) => k !== "daily-readings" && !seriesHasRow.has(k));
+    if (courses.length) {
+      const night = ensureBlock("Night");
+      for (const k of courses) if (!night.some((it) => it.kind === "course" && it.key === k)) night.push({ kind: "course", key: k });
+    }
+  }
+  const layers: { novenas: { on: number }; podcasts: { on: number; series: string[] }; contents?: Record<string, { kind: string; key: string }[]> } = {
+    novenas: { on: des.layers.novenas.on ? 1 : 0 },
+    podcasts: { on: 0, series: [] },
+  };
+  if (hasContents) layers.contents = contents;
+  return { coreBlocks: [...des.coreBlocks], layers };
+}
+
 function profileResolve(store: PrayerProfileStore, date: string): { profile: PrayerProfile; resolvedBy: "standing"; dayKind: "sunday" | "solemnity" | "weekday" } {
   const dayKind = profileDayKind(date);
   const byKey = (k: string | undefined) => store.profiles.find((p) => p.key === k);
@@ -1557,6 +1722,7 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
   contents: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> | null;
   version: number;
   todayEdits?: boolean;
+  startedFrom?: string;
 } {
   const { profile, resolvedBy, dayKind } = profileResolve(store, date);
   const fold: {
@@ -1566,8 +1732,10 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
     contents: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> | null;
     version: number;
     todayEdits?: boolean;
+    startedFrom?: string;
   } = {
     key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy, dayKind,
+    ...(profile.startedFrom ? { startedFrom: profile.startedFrom } : {}),
     coreBlocks: [...profile.coreBlocks],
     layers: [
       { key: "novenas", on: profile.layers.novenas.on },
@@ -1617,6 +1785,7 @@ async function profilesPayload(env: Env, date: string) {
         podcasts: { on: p.layers.podcasts.on, series: [...p.layers.podcasts.series] },
       },
       ...(p.contents ? { contents: p.contents } : {}),
+      ...(p.startedFrom ? { startedFrom: p.startedFrom } : {}),
     })),
     state: { standingKey: store.standingKey, version: store.version },
     todayEdit: store.todayEdits && store.todayEdits[date] ? JSON.parse(JSON.stringify(store.todayEdits[date])) as TodayLayer : null,
@@ -5359,7 +5528,15 @@ export default {
               if ("error" in checkedC) return err(400, checkedC.error);
               if (checkedC.normalized && Object.keys(checkedC.normalized).length) entry.contents = checkedC.normalized;
             }
-            if (entry.coreBlocks !== undefined || entry.layers !== undefined || entry.contents !== undefined) next[date] = entry;
+            if (entry.coreBlocks !== undefined || entry.layers !== undefined || entry.contents !== undefined) {
+              // v692 PHANTOM-EDITS guard (client parity):
+              // a layer that does not diverge from its
+              // base profile is not a real today-edits
+              // set — storing it would let a later
+              // standing edit light the today note with
+              // no today act made. It stores nothing.
+              if (todayLayerDiverges594(base, entry)) next[date] = entry;
+            }
           }
           const ts = nowISO();
           await env.DB.batch([
@@ -5430,7 +5607,10 @@ export default {
             if (!HOUR_BLOCKS.includes(raw)) return err(400, `bad block ${raw || "(empty)"}`);
             if (!coreBlocks.includes(raw)) coreBlocks.push(raw);
           }
-          if (!coreBlocks.length) return err(400, "a profile needs at least one core block");
+          // v692 Q4 A: the Add flow's "Start empty" mint —
+          // and only that mint (startEmpty692 named on the
+          // payload) — may stand with no core blocks on.
+          if (!coreBlocks.length && (body as Record<string, unknown>).startEmpty692 !== true) return err(400, "a profile needs at least one core block");
           const checked = validateProfileLayers(body.layers);
           if ("error" in checked) return err(400, checked.error);
           // v590 §2.3: contents validate with the save and
@@ -5487,23 +5667,41 @@ export default {
           return json(await profilesPayload(env, prayerChicagoNow().date));
         }
         if (seg[2] === "profiles" && seg[3] === "reset" && request.method === "PUT") {
-          // v591 §2.2 RESET TO DEFAULT (server parity): a
-          // named way returns to its DESIGNED config,
-          // discarding edits made to it. His own profiles
-          // carry no designed default behind them.
-          const body = await request.json().catch(() => ({})) as { profileKey?: unknown };
+          // v692 §2.4 (Q3 A): RESET TO A STARTER (server
+          // parity) — {profileKey, starterKey}; starterKey
+          // must name a DESIGNED record; the target may be
+          // any standing profile. The profile's key, name
+          // and honorLine STAND (identity preserved); only
+          // coreBlocks + layers are replaced (the layers
+          // JSON is replaced whole, so the target's stored
+          // contents drop with it). v692 Review repair:
+          // the replacement shape is the MIGRATED starter
+          // shape — migratedStarterShape609 (the server
+          // port of the client's opnMigrateProfileRecord609,
+          // fed by the standing source-settings rows)
+          // lands the starter's series as contents and its
+          // Podcasts layer off/empty in the STORED record,
+          // exactly as the client reset route lands them —
+          // never the designed layer shape whole. A
+          // missing starterKey falls back to the profile's
+          // own designed record for a default (the pre-v692
+          // callers' shape) and refuses for an own profile.
+          const body = await request.json().catch(() => ({})) as { profileKey?: unknown; starterKey?: unknown };
           const store = await prayerProfileStore(env);
           if (!store) return err(400, "profiles store unavailable");
           const profile = typeof body.profileKey === "string"
             ? store.profiles.find((p) => p.key === body.profileKey)
             : undefined;
           if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
-          const des = DESIGNED_PROFILES_591.find((d) => d.key === profile.key);
-          if (profile.kind !== "default" || !des) return err(400, "only the named ways carry a designed default");
+          const desKey = typeof body.starterKey === "string" ? body.starterKey : (profile.kind === "default" ? profile.key : null);
+          const des = DESIGNED_PROFILES_591.find((d) => d.key === desKey);
+          if (!des) return err(400, `bad starter ${typeof body.starterKey === "string" ? body.starterKey : "(empty)"}`);
+          const settings609 = await sourceSettingsPayload(env);
+          const shape609 = migratedStarterShape609(des, settings609.sources);
           const ts = nowISO();
           await env.DB.batch([
-            env.DB.prepare("UPDATE prayer_profiles SET name = ?, honor_line = ?, core_blocks = ?, layers = ?, updated_at = ? WHERE key = ?")
-              .bind(des.name, des.honorLine, JSON.stringify(des.coreBlocks), JSON.stringify(des.layers), ts, profile.key),
+            env.DB.prepare("UPDATE prayer_profiles SET core_blocks = ?, layers = ?, updated_at = ? WHERE key = ?")
+              .bind(JSON.stringify(shape609.coreBlocks), JSON.stringify(shape609.layers), ts, profile.key),
             profileBumpStmt(env, ts),
           ]);
           return json(await profilesPayload(env, prayerChicagoNow().date));
@@ -5522,13 +5720,20 @@ export default {
             ? store.profiles.find((p) => p.key === body.profileKey)
             : undefined;
           if (!profile) return err(400, `bad profile ${typeof body.profileKey === "string" ? body.profileKey : "(empty)"}`);
-          if (profile.kind === "default") return err(400, "the named profiles cannot be deleted");
+          // v692 §2.1.2 #7: Delete's gate is unconditional
+          // (the store holds own profiles only — the
+          // migration removed the designed rows). The
+          // standing fallback MUST NOT name 'salesian':
+          // the first remaining own profile, else the
+          // no-pick startup state (empty key; the store
+          // then reads as no store once no rows stand).
           const ts = nowISO();
           const stmts: D1PreparedStatement[] = [
             env.DB.prepare("DELETE FROM prayer_profiles WHERE key = ?").bind(profile.key),
           ];
           if (store.standingKey === profile.key) {
-            stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET standing_key = 'salesian', updated_at = ? WHERE id = 1").bind(ts));
+            const rest = store.profiles.filter((p) => p.key !== profile.key);
+            stmts.push(env.DB.prepare("UPDATE prayer_profile_state SET standing_key = ?, updated_at = ? WHERE id = 1").bind(rest.length ? rest[0].key : "", ts));
           }
           stmts.push(profileBumpStmt(env, ts));
           await env.DB.batch(stmts);

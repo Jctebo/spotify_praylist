@@ -1626,7 +1626,11 @@ function opnDefaultDoc() {
       intentions: [],
       conscience: { runs: [], entries: [], confessions: [], promptTexts: {}, guideSteps: null },
       profiles: {
-        list: opnClone(OPN_SEED_PROFILES), standingKey: 'salesian', version: 1, mig590: true, mig604: true, todayEdits: {}
+        // v692: a store is born EMPTY — no profile, no pick.
+        // The three Ways stand only as starter templates
+        // (OPN_SEED_PROFILES); the first-run offer (§2.2)
+        // mints the first OWN profile from a starter.
+        list: [], standingKey: null, version: 1, mig590: true, mig604: true, mig692: true, todayEdits: {}
       },
       config: {
         sourceSettings: { version: 1, sources: opnClone(OPN_SEED_SOURCES) },
@@ -1660,18 +1664,18 @@ function opnDoc() {
           if (opnMigrateProfiles590(d.sections.profiles)) opnSave();
           if (opnMigrateProfiles604(d.sections.profiles)) opnSave();
           if (opnMigrateProfiles609(d.sections.profiles, d.sections)) opnSave();
+          if (opnMigrateProfiles692(d.sections.profiles)) opnSave();
           return d;
         }
       }
     } catch (e) {}
   }
   opnDocCache = opnDefaultDoc();
-  // v609 repair 2: a fresh document is born migrated —
-  // mig609 runs over the seed profiles here (the seed
-  // itself keeps its historical shape, so mig590's
-  // designed-shape comparisons stand untouched; the
-  // migration computes the seed contents from the seed
-  // settings exactly as it does for a stored document).
+  // v609 repair 2: a fresh document is born migrated.
+  // v692: the fresh document's profile list is EMPTY
+  // (opnDefaultDoc) — mig609 stands as a no-op over it;
+  // the starter templates are migrated per mint by
+  // opnStarterRecord692, from this document's settings.
   opnMigrateProfiles609(opnDocCache.sections.profiles, opnDocCache.sections);
   opnSave();
   return opnDocCache;
@@ -3005,6 +3009,90 @@ function opnMigrateProfileRecord609(rec, sections) {
   }
   if (rec.layers && rec.layers.podcasts) { rec.layers.podcasts.on = false; rec.layers.podcasts.series = []; }
 }
+function opnProfileSlug692(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profile';
+}
+function opnStarterRecord692(starterKey, sections) {
+  // v692 §2.1.1: a starter's effective shape — the seed
+  // record with opnMigrateProfileRecord609 applied (the
+  // standing Reset transform). Returns a fresh clone, or
+  // null when the key names no seed record.
+  var seed = null;
+  OPN_SEED_PROFILES.forEach(function (d) { if (d.key === starterKey) seed = d; });
+  if (!seed) return null;
+  var rec = opnClone(seed);
+  opnMigrateProfileRecord609(rec, sections || (opnDocCache ? opnDocCache.sections : null));
+  return rec;
+}
+function opnMigrateProfiles692(P) {
+  // v692 §2.3: the Ways leave the profile list — they
+  // stand only as starter templates (OPN_SEED_PROFILES).
+  // One-time (mig692 flag), keyed ONLY on kind 'default'
+  // records naming a seed key:
+  //  - the standing pick, when it IS a Way, is preserved
+  //    whole as an own-profile copy minted from the Way
+  //    AS IT STANDS (in-place edits included), kind
+  //    'custom', name unchanged, key = slug + '-own'
+  //    deduped, carrying startedFrom: '<way-key>' (Q6 A);
+  //    standingKey re-points at the copy and todayEdits
+  //    entries based on the Way re-point with it
+  //    (opnCheckTodayLayer594 refuses an orphan base).
+  //  - every other default record leaves the list
+  //    without a copy (OPEN-2 default).
+  //  - PHANTOM-EDITS scrub (the folded-in defect): a
+  //    today entry whose live divergence against its
+  //    base profile is EMPTY is not a real today-edits
+  //    set — it is a snapshot a today-scope shape write
+  //    seeded (opnWriteShape607 writes coreBlocks/layers
+  //    unconditionally), and any later standing edit
+  //    would move the live diff and light the "today
+  //    has its own edits" note with no today act made.
+  //    Such entries, and entries whose base no longer
+  //    stands, are deleted here; a real (divergent)
+  //    entry stands byte-identical.
+  // Custom records — John's "Daily" included — are
+  // untouched by construction.
+  if (!P || !Array.isArray(P.list) || P.mig692) return false;
+  var seedKeys = {};
+  OPN_SEED_PROFILES.forEach(function (d) { seedKeys[d.key] = 1; });
+  var isWay = function (p) { return !!p && p.kind === 'default' && !!seedKeys[p.key]; };
+  var taken = {};
+  P.list.forEach(function (p) { if (p) taken[p.key] = 1; });
+  var standing = null;
+  P.list.forEach(function (p) { if (p && p.key === P.standingKey) standing = p; });
+  if (standing && isWay(standing)) {
+    var copy = opnClone(standing);
+    copy.kind = 'custom';
+    copy.startedFrom = standing.key;
+    var slug = opnProfileSlug692(copy.name) + '-own';
+    var key = slug;
+    for (var n = 2; taken[key]; n++) key = slug + '-' + n;
+    copy.key = key;
+    taken[key] = 1;
+    P.list[P.list.indexOf(standing)] = copy;
+    if (P.todayEdits && typeof P.todayEdits === 'object') {
+      Object.keys(P.todayEdits).forEach(function (d) {
+        var e = P.todayEdits[d];
+        if (e && e.baseProfileKey === standing.key) e.baseProfileKey = key;
+      });
+    }
+    P.standingKey = key;
+  }
+  P.list = P.list.filter(function (p) { return !isWay(p); });
+  if (P.standingKey && !P.list.some(function (p) { return p.key === P.standingKey; })) {
+    P.standingKey = P.list.length ? P.list[0].key : null;
+  }
+  if (P.todayEdits && typeof P.todayEdits === 'object') {
+    Object.keys(P.todayEdits).forEach(function (d) {
+      var e = P.todayEdits[d];
+      var base = e ? P.list.filter(function (x) { return x.key === e.baseProfileKey; })[0] : null;
+      if (!base || !opnTodayDivergence594(base, e).length) delete P.todayEdits[d];
+    });
+  }
+  P.version = (typeof P.version === 'number' ? P.version : 1) + 1;
+  P.mig692 = true;
+  return true;
+}
 function opnResolveProfile590(P, date) {
   // v604: precedence COLLAPSES to standing pick -> today
   // layer (the layer applies in the fold, after this
@@ -3259,6 +3347,8 @@ function opnProfilesPayload(date) {
     profiles: P.list.map(function (p) {
       var o = { key: p.key, name: p.name, honorLine: p.honorLine, kind: p.kind, coreBlocks: p.coreBlocks.slice(),
         layers: { novenas: { on: !!p.layers.novenas.on }, podcasts: { on: !!p.layers.podcasts.on, series: (p.layers.podcasts.series || []).slice() } } };
+      // v692 Q6 A: provenance rides the payload when it stands.
+      if (p.startedFrom) o.startedFrom = p.startedFrom;
       var c = opnContentsOf590(p);
       if (c) o.contents = c;
       return o;
@@ -3267,6 +3357,7 @@ function opnProfilesPayload(date) {
     todayEdit: opnTodayEntry594(P, date) ? opnClone(opnTodayEntry594(P, date)) : null,
     effective: {
       key: profile.key, name: profile.name, honorLine: profile.honorLine, resolvedBy: r.resolvedBy, dayKind: r.dayKind,
+      ...(profile.startedFrom ? { startedFrom: profile.startedFrom } : {}),
       coreBlocks: profile.coreBlocks.slice(),
       layers: [{ key: 'novenas', on: !!profile.layers.novenas.on }, { key: 'podcasts', on: !!profile.layers.podcasts.on, series: (profile.layers.podcasts.series || []).slice() }],
       contents: opnContentsOf590(profile),
@@ -3738,7 +3829,19 @@ function opnLocalApi(path, opts, mode) {
         if (body.layer === null || body.layer === undefined) { delete P.todayEdits[tdate]; return bump(); }
         var tchk = opnCheckTodayLayer594(P, body.layer);
         if (tchk.error) throw opnErr(400, tchk.error);
-        if (tchk.layer) P.todayEdits[tdate] = tchk.layer; else delete P.todayEdits[tdate];
+        if (tchk.layer) {
+          // v692 PHANTOM-EDITS guard: a layer that does
+          // not diverge from its base profile is NOT a
+          // real today-edits set — storing it would let a
+          // later STANDING edit move the live diff and
+          // light the "today has its own edits" note with
+          // no today act made (opnWriteShape607's today
+          // branch seeds exactly such equal-shape layers).
+          // A non-divergent write stores nothing.
+          var tbase692 = findP(tchk.layer.baseProfileKey);
+          if (tbase692 && !opnTodayDivergence594(tbase692, tchk.layer).length) delete P.todayEdits[tdate];
+          else P.todayEdits[tdate] = tchk.layer;
+        } else delete P.todayEdits[tdate];
         return bump();
       }
       if (p === '/api/prayer/profiles/layers') {
@@ -3770,7 +3873,10 @@ function opnLocalApi(path, opts, mode) {
           if (HOURS.indexOf(rawB) < 0) throw opnErr(400, 'bad block ' + (rawB || '(empty)'));
           if (core.indexOf(rawB) < 0) core.push(rawB);
         });
-        if (!core.length) throw opnErr(400, 'a profile needs at least one core block');
+        // v692 Q4 A: the Add flow's "Start empty" mint —
+        // and only that mint (startEmpty692 named on the
+        // payload) — may stand with no core blocks on.
+        if (!core.length && body.startEmpty692 !== true) throw opnErr(400, 'a profile needs at least one core block');
         var layers = opnLayersOut(opnCheckLayers(body.layers));
         var contents = opnCheckContents590(body.contents, core);
         if (typeof body.key === 'string' && body.key !== '') {
@@ -3800,19 +3906,25 @@ function opnLocalApi(path, opts, mode) {
         return bump();
       }
       if (p === '/api/prayer/profiles/reset') {
-        // v591 §2.2 RESET TO DEFAULT: a named way returns
-        // to its DESIGNED config (the seed record), saved
-        // and draft edits alike discarded. His own profiles
-        // carry no designed default behind them.
+        // v692 §2.4 (Q3 A): RESET TO A STARTER — any own
+        // profile's shape is replaced by the chosen
+        // starter's shape ({profileKey, starterKey};
+        // starterKey must name a seed record). The
+        // profile's key, name and honorLine STAND (Q3 A:
+        // identity is preserved — the v591 route restored
+        // the seed name with the shape; that is retired).
+        // A missing starterKey falls back to the profile's
+        // own seed record for a default (the pre-v692
+        // callers' shape), and refuses for an own profile.
         var rp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
         if (!rp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
         var des = null;
-        OPN_SEED_PROFILES.forEach(function (d) { if (d.key === rp.key) des = d; });
-        if (rp.kind !== 'default' || !des) throw opnErr(400, 'only the named ways carry a designed default');
-        rp.name = des.name; rp.honorLine = des.honorLine;
+        var desKey = typeof body.starterKey === 'string' ? body.starterKey : (rp.kind === 'default' ? rp.key : null);
+        OPN_SEED_PROFILES.forEach(function (d) { if (d.key === desKey) des = d; });
+        if (!des) throw opnErr(400, 'bad starter ' + (typeof body.starterKey === 'string' ? body.starterKey : '(empty)'));
         rp.coreBlocks = opnClone(des.coreBlocks); rp.layers = opnClone(des.layers);
         delete rp.contents;
-        // v609 repair 2: the designed record stands in
+        // v609 repair 2: the starter record stands in
         // the migrated shape (its podcasts as contents
         // items) — the seed keeps the layer shape for
         // mig590's comparisons, so the migration runs on
@@ -3823,9 +3935,13 @@ function opnLocalApi(path, opts, mode) {
       if (p === '/api/prayer/profiles/delete') {
         var dp = typeof body.profileKey === 'string' ? findP(body.profileKey) : null;
         if (!dp) throw opnErr(400, 'bad profile ' + (typeof body.profileKey === 'string' ? body.profileKey : '(empty)'));
-        if (dp.kind === 'default') throw opnErr(400, 'the named profiles cannot be deleted');
+        // v692 §2.1.2 #7: Delete's gate is unconditional
+        // (the list holds own profiles only). The
+        // standing fallback MUST NOT name 'salesian' —
+        // no such record stands: the first remaining own
+        // profile, else the no-pick startup state.
         P.list = P.list.filter(function (x) { return x.key !== dp.key; });
-        if (P.standingKey === dp.key) P.standingKey = 'salesian';
+        if (P.standingKey === dp.key) P.standingKey = P.list.length ? P.list[0].key : null;
         return bump();
       }
     }
@@ -24013,8 +24129,16 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p607sw]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p607sw')).split('|'); opnToggleShape607(p[0], p.slice(1).join('|')); });
   });
-  view.querySelectorAll('[data-p604change]').forEach(function (btn) {
-    btn.addEventListener('click', function () { opnFlipScope609(); });
+  // v692 §2.6: the segtoggle — a tap on the INACTIVE
+  // state flips; a tap on the active state does nothing.
+  view.querySelectorAll('[data-p692scope]').forEach(function (btn) {
+    btn.addEventListener('click', function () { if (btn.getAttribute('data-p692scope') !== opn604.scope) opnFlipScope609(); });
+  });
+  // v692: the first-run starter offer's cards (home paint).
+  view.querySelectorAll('[data-p692starter]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      opnMintStarter692(card.getAttribute('data-p692starter'), function (mint) { if (mint) { opnRepaintHome604(); profileRebuild(); } });
+    });
   });
   view.querySelectorAll('[data-p604savenew]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnSaveNew604(); });
@@ -24170,7 +24294,7 @@ function profileRebuild() {
    Edit entry (opnEnterEdit607), written whole per source-row
    act (opnSaveSourceSettings686, §2.5). */
 var opn686 = { rows: [], version: null, err: '' };
-var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, bookList: null, bookGroups: null };
+var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, bookList: null, bookGroups: null, sessions692: null };
 // v607: the page-wide edit form — editing stands on the
 // whole page (opn604.block's single-block posture retires);
 // shape carries the block/layer switches' working shape
@@ -25020,11 +25144,16 @@ function opnBannerHtml604() {
     ? 'Editing today only — ' + opnDateLabel604(date)
     : 'Editing standing — in ' + name + ', your every-day profile';
   var second = opn604.scopeSwitched ? '<p class="sub profbarline593">Acts already written stand where they were written.</p>' : '';
-  // v609 repair 2: the banner IS the scope control — its
-  // button names the scope it flips TO (no question
-  // sheet stands anywhere in the entry or the flip).
-  var flip = opn604.scope === 'today' ? 'Edit standing instead' : 'Edit today instead';
-  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span><button class="btn ghost" data-p604change="1">' + flip + '</button></div>' + second + '</div></div>';
+  // v692 §2.6 (Q5 A): the banner IS the scope control —
+  // the flip BUTTON retires for a two-state segtoggle
+  // (Today | Standing) in the same seat; the active
+  // state IS opn604.scope. A tap on the inactive state
+  // flips (opnFlipScope609); a tap on the active state
+  // does nothing (the wiring reads the scope first).
+  var seg = '<span class="p692segtoggle" data-p692segtoggle="1" role="group" aria-label="Edit scope">'
+    + '<button class="btn ' + (opn604.scope === 'today' ? 'gold' : 'ghost') + '" data-p692scope="today">Today</button>'
+    + '<button class="btn ' + (opn604.scope === 'standing' ? 'gold' : 'ghost') + '" data-p692scope="standing">Standing</button></span>';
+  return '<div class="proffrozen593 p604banner" data-p604banner="1"><div class="profbar593"><div class="row"><span class="grow">' + esc(line) + '</span>' + seg + '</div>' + second + '</div></div>';
 }
 function opnEditBarHtml604() {
   if (!opn604.editing) return '';
@@ -25035,20 +25164,38 @@ function opnEditBarHtml604() {
 }
 function opnFlipScope609() {
   // v609 REPAIR 2: the in-form scope flip — the banner
-  // button re-targets the session to the other scope
-  // with EXACTLY the bookkeeping the retired question's
-  // answers carried (scopeSwitched stands, the session
-  // lists/base/removed reset, the shape re-seeds, the
-  // form repaints). opnAskScope604 below stands as dead
-  // code (the codebase's retirement precedent): no entry
-  // path or button calls it.
+  // control re-targets the session to the other scope.
+  // opnAskScope604 below stands as dead code (the
+  // codebase's retirement precedent): no entry path or
+  // button calls it.
+  // v692 Q5 A: PER-SCOPE SESSION PRESERVATION — the
+  // scope left behind keeps its session (lists/base/
+  // removed/wrote/shape) and flip-back restores it
+  // whole: "each scope keeps its own draft: flipping
+  // loses nothing". A scope never visited starts fresh
+  // (lists reset, shape re-seeds from its stored shape).
+  // WRITES ARE UNCHANGED: acts write at once through
+  // opnWrite604 / opnWriteShape607 to the scope the
+  // toggle names — written acts stand where they were
+  // written (OPEN-6 reconciliation: no Save today / Save
+  // button is added; the document's "Save act follows
+  // the toggle" is the write-target-follows-toggle
+  // behavior of the at-once form).
   if (!opn604.editing || !opn604.scope) return;
   var sc = opn604.scope === 'today' ? 'standing' : 'today';
   opn604.scopeSwitched = true;
-  opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+  if (!opn604.sessions692) opn604.sessions692 = {};
+  opn604.sessions692[opn604.scope] = { lists: opn604.lists, base: opn604.base, removed: opn604.removed, wrote: opn604.wrote, shape: opn604.shape };
   opn604.scope = sc;
-  opn604.wrote = false;
-  opnInitShape607();
+  var saved692 = opn604.sessions692[sc];
+  if (saved692) {
+    opn604.lists = saved692.lists; opn604.base = saved692.base; opn604.removed = saved692.removed;
+    opn604.wrote = saved692.wrote; opn604.shape = saved692.shape;
+  } else {
+    opn604.lists = {}; opn604.base = {}; opn604.removed = {};
+    opn604.wrote = false;
+    opnInitShape607();
+  }
   opnRepaintHome604();
 }
 function opnAskScope604(block) {
@@ -25155,6 +25302,155 @@ function opnSaveNew604() {
     }).catch(function () {});
   });
 }
+/* ---------------- v692: starter profiles ----------------
+   The three Ways stand as STARTER templates only
+   (OPN_SEED_PROFILES), at three seats: the first-run
+   offer (the home, when no own profile stands), the Add
+   act, and Reset. A starter used mints an OWN profile
+   (kind 'custom') through the save route's no-key
+   branch, named for its starter (Q2 A — no name step on
+   the starter path); the standing pick switches to the
+   mint. Card copy: the Q8 guidance lines verbatim from
+   the scope document, the DUR591 time facts, the seed
+   honor line, and the becoming-yours line. */
+var OPN_STARTER_GUIDE692 = {
+  'little-way': 'Two anchors in the day — a gentle start that fits around anything.',
+  'salesian': 'Prayer at the day’s hinges, with the Rosary — a full rhythm for an ordinary working day.',
+  'benedictine': 'Every hour of the day — the monastic shape, for retreats and days given wholly to prayer.'
+};
+var OPN_STARTER_TIME692 = { 'little-way': 'About 30 minutes', 'salesian': 'About 1½–2 hours', 'benedictine': 'The full day — all seven blocks' };
+function opnStarterName692(key) {
+  var s = OPN_SEED_PROFILES.filter(function (d) { return d.key === key; })[0];
+  return s ? s.name : String(key || '');
+}
+function opnStarterCardHtml692(seed, sel, attr) {
+  return '<div class="card bookrow p692card' + (sel ? ' on' : '') + '" ' + attr + '="' + esc(seed.key) + '"><div class="grow">'
+    + '<div><strong>' + esc(seed.name) + '</strong>' + (sel ? ' <span class="meta">Start here</span>' : '') + '</div>'
+    + '<p class="sub">' + esc((seed.coreBlocks || []).join(' · ')) + '</p>'
+    + '<p class="sub">' + esc(OPN_STARTER_TIME692[seed.key] || '') + '</p>'
+    + '<p class="sub">' + esc(OPN_STARTER_GUIDE692[seed.key] || '') + '</p>'
+    + '<p class="sub">' + esc(seed.honorLine || '') + '</p>'
+    + '<p class="sub">Becomes your own profile — change anything afterwards</p>'
+    + '</div></div>';
+}
+function opnOpenStarterPick692(opts) {
+  // The shared starter pick (Reset + Add seats). The
+  // "Start empty" row stands ONLY when the caller names
+  // it — the Add seat (Q4 A); never at startup, never at
+  // Reset. onPick receives the starter key, or
+  // '__empty' for the empty mint.
+  opts = opts || {};
+  var old = document.querySelector('.p692pick');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet p692pick';
+  var html = '<div class="inner"><div class="row"><h1 class="screen grow">' + esc(opts.title || 'Start from a starter profile') + '</h1></div>';
+  OPN_SEED_PROFILES.forEach(function (s) { html += opnStarterCardHtml692(s, s.key === 'salesian', 'data-p692pick'); });
+  if (opts.includeEmpty) html += '<div class="card bookrow p692empty" data-p692empty="1"><div class="grow"><div>Start empty</div><p class="sub">No blocks on, no contents — build the shape yourself.</p></div></div>';
+  html += '<div class="row"><button class="btn ghost" data-p692pickclose="1">Cancel</button></div></div>';
+  sheet.innerHTML = html;
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  sheet.querySelectorAll('[data-p692pick]').forEach(function (card) {
+    card.addEventListener('click', function () { var k = card.getAttribute('data-p692pick'); sheet.remove(); if (opts.onPick) opts.onPick(k); });
+  });
+  var em = sheet.querySelector('[data-p692empty]');
+  if (em) em.addEventListener('click', function () { sheet.remove(); if (opts.onPick) opts.onPick('__empty'); });
+  var cc = sheet.querySelector('[data-p692pickclose]');
+  if (cc) cc.addEventListener('click', function () { sheet.remove(); });
+}
+function opnMintStarter692(starterKey, done) {
+  // Q2 A: the mint takes the STARTER'S NAME as its own —
+  // no name step. The record is the starter template
+  // (seed shape + opnMigrateProfileRecord609), kind
+  // 'custom' by the save route's no-key branch; its key
+  // is the route's slug mint from that name, deduped.
+  // The standing pick switches to the mint.
+  var rec = opnStarterRecord692(starterKey, opnDoc().sections);
+  if (!rec) { if (done) done(null); return; }
+  var before = {};
+  api('/api/prayer/profiles').then(function (res) {
+    (res.profiles || []).forEach(function (p) { before[p.key] = 1; });
+    var payload = { name: rec.name, honorLine: rec.honorLine || '', coreBlocks: rec.coreBlocks.slice(), layers: opnLayersOut(rec.layers) };
+    if (rec.contents) payload.contents = opnClone(rec.contents);
+    return profPut('/api/prayer/profiles/save', payload);
+  }).then(function (r) {
+    if (r) opn604.res = r;
+    var mint = (opn604.res.profiles || []).filter(function (p) { return !before[p.key]; })[0] || null;
+    if (!mint) { if (done) done(null); return null; }
+    return profPut('/api/prayer/profiles/state', { standingKey: mint.key }).then(function (r2) {
+      if (r2) opn604.res = r2;
+      if (done) done(mint);
+    });
+  }).catch(function () { if (done) done(null); });
+}
+function opnMintEmpty692(name, done) {
+  // Q4 A: the Start-empty mint — a blank own profile (no
+  // blocks on, no contents) under the name the rename
+  // sheet required (no starter name exists to inherit).
+  var before = {};
+  api('/api/prayer/profiles').then(function (res) {
+    (res.profiles || []).forEach(function (p) { before[p.key] = 1; });
+    var payload = { name: name, honorLine: '', coreBlocks: [], layers: { novenas: { on: false }, podcasts: { on: false, series: [] } }, contents: {}, startEmpty692: true };
+    return profPut('/api/prayer/profiles/save', payload);
+  }).then(function (r) {
+    if (r) opn604.res = r;
+    var mint = (opn604.res.profiles || []).filter(function (p) { return !before[p.key]; })[0] || null;
+    if (!mint) { if (done) done(null); return null; }
+    return profPut('/api/prayer/profiles/state', { standingKey: mint.key }).then(function (r2) {
+      if (r2) opn604.res = r2;
+      if (done) done(mint);
+    });
+  }).catch(function () { if (done) done(null); });
+}
+function opnStarterOfferStands692() {
+  // §2.2 (Q1 A): with an empty own list the Praylist home
+  // stands the starter offer first, in place of the set.
+  // DEVICE MODE ONLY: the on-device document is the
+  // store of record there. In server mode the server
+  // store governs (the local document is a sync copy —
+  // an absent one must never mask a standing server
+  // day); web mode never offers a pick (Q10 A) — the
+  // web Benedictine display stands there instead.
+  if (opnMode() !== 'device' || opn604.editing) return false;
+  var P = opnDoc().sections.profiles;
+  return !!P && Array.isArray(P.list) && !P.list.length;
+}
+function opnStarterOfferHtml692() {
+  var html = '<div class="p692offer" data-p692offer="1"><h3>Begin with a way of prayer</h3>';
+  OPN_SEED_PROFILES.forEach(function (s) { html += opnStarterCardHtml692(s, s.key === 'salesian', 'data-p692starter'); });
+  html += '<p class="sub">You can change everything later — nothing here is a grade.</p></div>';
+  return html;
+}
+function opnWebBenedictineHtml692() {
+  // W (John's correction, 2026-11-26 09:21 CT): WEB
+  // USERS ONLY — on the plain-tab surface (Mode 3, Q10
+  // A: no profiles, no starter pick, nothing stored, no
+  // pick offered), the Benedictine Way's FULL prayer
+  // shape stands in detail: every block with its
+  // contents standing (the effective post-mig609 shape,
+  // opnStarterRecord692 + the standing-contents read).
+  // Read-only display; the honor line stands. Native +
+  // installed-PWA starter picks keep the summary cards.
+  if (opnMode() !== 'web') return '';
+  var rec = opnStarterRecord692('benedictine', opnDoc().sections);
+  if (!rec) return '';
+  var html = '<div class="card p692webben" data-p692webben="1"><h3>The Benedictine Way</h3>'
+    + '<p class="sub">' + esc(rec.honorLine || '') + '</p>'
+    + '<p class="sub">A complete day of prayer, shown in full. Profiles themselves live in the app — nothing here is stored, and no pick is offered.</p>';
+  (rec.coreBlocks || []).forEach(function (b) {
+    var items = opnStandingContents597(rec, b);
+    html += '<h4>' + esc(b) + '</h4><ul class="p692weblist">'
+      + items.map(function (it) { return '<li>' + esc(opnItemLabel604(b, it)) + '</li>'; }).join('') + '</ul>';
+  });
+  if (rec.layers && rec.layers.novenas && rec.layers.novenas.on) {
+    var nov = opnStandingContents597(rec, 'Novenas');
+    html += '<h4>Novenas</h4><ul class="p692weblist">'
+      + nov.map(function (it) { return '<li>' + esc(opnItemLabel604('Novenas', it)) + '</li>'; }).join('') + '</ul>';
+  }
+  return html + '</div>';
+}
+
 /* ---------------- v607: one Edit at the top ----------------
    The page-wide edit form. Entry (opnEnterEdit607) stands
    behind the v594 vault gate, awaits the standings, loads
@@ -25196,15 +25492,20 @@ function opnEnterEdit607() {
     // read paints contents only + an error line.
     return api('/api/player/source-settings').then(function (r) { opn686.rows = (r && r.sources) || []; opn686.version = r ? r.version : null; opn686.err = ''; }).catch(function () { opn686.rows = []; opn686.err = 'Daily sources did not load \u2014 contents only.'; });
   }).then(function () {
+    // v692: with NO own profile standing (the first-run
+    // state) there is nothing to edit — the starter
+    // offer on the home is the surface; Edit stands down.
+    if (!opn604.res || !opn604.res.effective) return;
     // v609 REPAIR 2 (John, 2026-11-21 23:32/23:33 CT):
     // the scope QUESTION retires from the entry path —
     // Edit opens the form DIRECTLY, on TODAY scope at
     // EVERY entry (no remembered last scope). The scope
-    // lives in the form: the banner's button flips it
+    // lives in the form: the banner's toggle flips it
     // (opnFlipScope609), re-targeting the writes exactly
     // as the question's answers did.
     opn604.scope = 'today';
     opn604.scopeSwitched = false;
+    opn604.sessions692 = {};
     opnStartEdit607();
   }).catch(function () {});
 }
@@ -25212,6 +25513,7 @@ function opnExitEdit607() {
   opn604.editing = false;
   opn604.arm607 = null;
   opn604.scope = null; // v609 repair 2: the next entry starts on today again
+  opn604.sessions692 = null; // v692: per-scope sessions die with the form
   opnRepaintHome604();
 }
 function opnWriteShape607() {
@@ -25291,35 +25593,70 @@ function opnToggleShape607(kind, name) {
   return opnWriteShape607().then(function () { return opnWrite604('__shape609'); });
 }
 function opnProfileMenu607(anchorEl) {
-  // The orphaned acts of the retired Edit profiles door,
-  // re-homed: Reset to Default (a default profile) ·
-  // Delete profile (a custom profile) — two-tap armed,
-  // exactly as the door armed them, on the standing
-  // reset/delete routes, acting on the profile in force.
-  // No rename act stands here: no rename of a standing
-  // profile exists in the app — a name is given only at
-  // the Save New mint.
+  // The profile acts, acting on the profile in force.
+  // v692: Reset stands for EVERY (own) profile — the
+  // kind === 'default' gate retires; Delete's gate is
+  // unconditional. Two new acts stand here: Add profile
+  // (§2.5 + Q4 A) and Rename profile… (Q2 A).
   var rec = opnProfRec604();
   if (!rec) return;
   var items = [];
   // v609 REPAIR: Configure plan re-homes here from the
   // plan row (the page top carries the Edit only).
   items.push({ label: 'Configure plan', act: function () { openConfigureLadder593(); } });
-  if (rec.kind === 'default') {
-    items.push({ label: opn604.arm607 === 'reset' ? 'Tap again to reset' : 'Reset to Default', act: function () {
-      if (opn604.arm607 !== 'reset') { opn604.arm607 = 'reset'; opnProfileMenu607(anchorEl); return; }
-      opn604.arm607 = null;
-      profPut('/api/prayer/profiles/reset', { profileKey: rec.key }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnInitShape607(); opnRepaintHome604(); profileRebuild(); }).catch(function () {});
+  items.push({ label: 'Add profile', act: function () {
+    // §2.5 + Q4 A: the starter pick is the add flow's
+    // first step; FROM THIS SEAT ONLY it carries the
+    // fourth quiet row, "Start empty".
+    opnOpenStarterPick692({ title: 'Add a profile — start from a starter profile', includeEmpty: true, onPick: function (pick) {
+      var openMint692 = function (mint) {
+        if (!mint) return;
+        // OPEN-4 default: the standing pick switched to
+        // the mint inside the mint functions; the new
+        // profile opens in the Edit form, standing scope.
+        opn604.scope = 'standing';
+        opn604.sessions692 = {};
+        opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opn604.wrote = false;
+        opnInitShape607();
+        opnRepaintHome604();
+        profileRebuild();
+      };
+      if (pick === '__empty') {
+        // No starter name exists to inherit — the empty
+        // mint asks a name (required) on the rename sheet.
+        openRenameCopySheet590('', function (name) { opnMintEmpty692(name, openMint692); }, { title: 'Name your profile', sub: 'The empty profile starts with no blocks on and no contents. It saves under the name you give it.' });
+        return;
+      }
+      opnMintStarter692(pick, openMint692);
     } });
-  }
-  if (rec.kind === 'custom') {
-    items.push({ label: opn604.arm607 === 'delete' ? 'Tap again to delete' : 'Delete profile', act: function () {
-      if (opn604.arm607 !== 'delete') { opn604.arm607 = 'delete'; opnProfileMenu607(anchorEl); return; }
-      opn604.arm607 = null;
-      profPut('/api/prayer/profiles/delete', { profileKey: rec.key }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnExitEdit607(); profileRebuild(); }).catch(function () {});
+  } });
+  items.push({ label: 'Rename profile…', act: function () {
+    // Q2 A: rename in place — the profile's name changes;
+    // its KEY does not (identity and the standing pick
+    // stand). The save route's key branch renames.
+    openRenameCopySheet590(rec.name, function (name) {
+      var payload = { key: rec.key, name: name, honorLine: rec.honorLine || '', coreBlocks: (rec.coreBlocks || []).slice(), layers: opnLayersOut(rec.layers) };
+      if (rec.contents) payload.contents = opnClone(rec.contents);
+      profPut('/api/prayer/profiles/save', payload).then(function (r) { if (r) opn604.res = r; opnRepaintHome604(); profileRebuild(); }).catch(function () {});
+    }, { title: 'Rename profile', sub: 'Only the name changes — the profile keeps its place, its shape, and the standing pick.' });
+  } });
+  items.push({ label: opn604.arm607 === 'reset' ? 'Tap again to reset' : 'Reset this profile…', act: function () {
+    // §2.4.3: the two-tap arm stands — first tap arms,
+    // second tap opens the STARTER PICK; the pick is
+    // the confirming act. Session bookkeeping after
+    // the write stands as today (lists reset, shape
+    // re-seeds through opnInitShape607).
+    if (opn604.arm607 !== 'reset') { opn604.arm607 = 'reset'; opnProfileMenu607(anchorEl); return; }
+    opn604.arm607 = null;
+    opnOpenStarterPick692({ title: 'Reset ' + (rec.name || 'this profile') + ' to…', onPick: function (starterKey) {
+      profPut('/api/prayer/profiles/reset', { profileKey: rec.key, starterKey: starterKey }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnInitShape607(); opnRepaintHome604(); profileRebuild(); }).catch(function () {});
     } });
-  }
-  if (!items.length) items.push({ label: 'No profile acts stand for this profile', act: function () {} });
+  } });
+  items.push({ label: opn604.arm607 === 'delete' ? 'Tap again to delete' : 'Delete profile', act: function () {
+    if (opn604.arm607 !== 'delete') { opn604.arm607 = 'delete'; opnProfileMenu607(anchorEl); return; }
+    opn604.arm607 = null;
+    profPut('/api/prayer/profiles/delete', { profileKey: rec.key }).then(function (r) { if (r) opn604.res = r; opn604.lists = {}; opn604.base = {}; opn604.removed = {}; opnExitEdit607(); profileRebuild(); }).catch(function () {});
+  } });
   openSheetMenu(rec.name || 'Profile', items, anchorEl);
 }
 
@@ -25335,7 +25672,12 @@ function opnOpenPickEdit604() {
       + '<p class="sub">The profile every day follows.</p><div class="profchips591">';
     (res.profiles || []).forEach(function (p) { html += '<button class="chip591' + (p.key === sel ? ' on' : '') + '" data-p604pickchip="' + esc(p.key) + '">' + esc(p.name) + '</button>'; });
     html += '</div>';
-    if (res.todayEdit) html += '<p class="sub" data-p604pickwarn="1">today has its own edits — changing the profile clears them</p>';
+    // v692 PHANTOM-EDITS: the warning reads the SAME
+    // fact as every other surface — a REAL today-edits
+    // set: an entry stands AND its live divergence
+    // against its base profile is non-empty.
+    var warnRec604 = res.todayEdit ? (res.profiles || []).filter(function (p) { return p.key === res.todayEdit.baseProfileKey; })[0] : null;
+    if (res.todayEdit && warnRec604 && opnTodayDivergence594(warnRec604, res.todayEdit).length) html += '<p class="sub" data-p604pickwarn="1">today has its own edits — changing the profile clears them</p>';
     html += '<div class="row"><button class="btn gold" data-p604picksave="1">Save</button><button class="btn ghost" data-p604pickclose="1">Cancel</button></div></div>';
     sheet.innerHTML = html;
     document.body.appendChild(sheet);
@@ -25386,24 +25728,33 @@ function profPlanRowHtml(day) {
   // v604: the resolution line collapses to the standing
   // form — the profile in force IS the standing pick.
   var resLine = 'Your every-day profile';
+  // v692 Q6 A: a migrated own copy's provenance paints
+  // as the profile's sub-line, at the meta seat.
+  var fromLine692 = fold.startedFrom ? '<div class="meta">Your profile — started from ' + esc(opnStarterName692(fold.startedFrom)) + '</div>' : '';
   return '<div class="card profplanrow"><div class="row"><div class="grow"><h3>' + esc(fold.name) + '</h3>'
-    + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div></div>'
+    + '<div class="meta">' + esc(resLine + (fold.todayEdits ? ' · today has its own edits' : '')) + '</div>' + fromLine692 + '</div>'
     + edit607
     + '</div></div>';
 }
 
 
-function openRenameCopySheet590(suggested, onConfirm) {
+function openRenameCopySheet590(suggested, onConfirm, opts692) {
   // v590 §2.4 (Amendment 1): the rename step — a copy
   // lands only under a name John gives. Cancel (or an
   // empty name) confirms nothing: no copy is minted and
   // the pending change does not take effect.
+  // v692: opts692 {title, sub} re-words the sheet for its
+  // two new callers (the Rename act · the Start-empty
+  // mint); the Save New callers pass nothing and keep
+  // the standing words.
+  var title692 = (opts692 && opts692.title) || 'Name the new profile';
+  var sub692 = (opts692 && opts692.sub) || 'The new profile saves under the name you give it. The profile you opened does not change.';
   var old = document.querySelector('.profrename590');
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet profrename590';
-  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Name the new profile</h1></div>'
-    + '<p class="sub">The new profile saves under the name you give it. The profile you opened does not change.</p>'
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + esc(title692) + '</h1></div>'
+    + '<p class="sub">' + esc(sub692) + '</p>'
     + '<label class="f">Name</label><input type="text" data-rename590="1" value="' + esc(suggested || '') + '">'
     + '<p class="fieldnote" data-rename590note="1"></p>'
     + '<div class="row"><button class="btn gold" data-rename590save="1">Save</button>'
@@ -26152,7 +26503,7 @@ function openProfilesScreen(openKey, opts) {
   function fail(e) { if (note) note.textContent = (e && e.data && e.data.error) || 'Could not save — try again.'; }
   function byKey(k) { return res && res.profiles ? res.profiles.filter(function (x) { return x.key === k; })[0] || null : null; }
   function draftOf(rec) {
-    var d = { key: rec.key, kind: rec.kind, name: rec.name, honor: rec.honorLine || '',
+    var d = { key: rec.key, kind: rec.kind, name: rec.name, honor: rec.honorLine || '', startedFrom: rec.startedFrom || null,
       core: (rec.coreBlocks || []).slice(), layers: JSON.parse(JSON.stringify(rec.layers)), contents: {} };
     d.core.concat(['Novenas']).forEach(function (b) {
       d.contents[b] = (rec.contents && rec.contents[b]) ? opnClone(rec.contents[b]) : null;
@@ -26547,14 +26898,21 @@ function openProfilesScreen(openKey, opts) {
     var html = '<h2 class="sectionhead">' + esc(ed.name) + '</h2>';
     html += '<p class="sub" data-p594warn="1">Changes here stand in every day that follows this profile.</p>';
     if (ed.honor) html += '<p class="sub">' + esc(ed.honor) + '</p>';
+    // v692 Q6 A: the migrated copy's provenance sub-line,
+    // at this surface's meta seat too.
+    if (ed.startedFrom) html += '<p class="sub">Your profile — started from ' + esc(opnStarterName692(ed.startedFrom)) + '</p>';
     if (DUR591[ed.key]) html += '<p class="sub">' + DUR591[ed.key] + '</p>';
     html += '<p class="sub">' + esc(explainEd(ed)) + '</p>';
     if (draftDirty(ed)) html += '<p class="sub">Unsaved changes — Save writes them into ' + esc(ed.name) + '.</p>';
+    // v692 Q9 A: Reset stands on the Configure surface
+    // for EVERY profile (the same arm + starter pick as
+    // the Edit form's menu); Delete stands for every
+    // profile too (the menu's unconditional gate).
     html += '<div class="profzone593"><div class="row">'
       + '<button class="btn ghost" data-p593savenew="1">Save New</button>'
-      + (ed.kind === 'default' ? '<button class="btn ghost" data-p593reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset to Default') + '</button>' : '')
-      + (ed.kind === 'custom' ? '<button class="btn ghost" data-p593delete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>' : '')
-      + '</div><p class="sub">' + (ed.kind === 'default' ? 'Reset returns this way to its designed shape. ' : '') + 'Save New makes another profile from these toggles, named at the save.</p></div>';
+      + '<button class="btn ghost" data-p593reset="1">' + (resetArmed ? 'Tap again to reset' : 'Reset this profile…') + '</button>'
+      + '<button class="btn ghost" data-p593delete="1">' + (delArmed ? 'Tap again to delete' : 'Delete profile') + '</button>'
+      + '</div><p class="sub">Reset replaces this profile’s blocks and contents with a starter’s shape — its name stands. Save New makes another profile from these toggles, named at the save.</p></div>';
     html += paintBlocks(ed);
     html += '<div class="row"><button class="btn ghost" data-p593close="1">' + (draftDirty(ed) ? 'Close without saving' : 'Close') + '</button></div>';
     body.innerHTML = html;
@@ -26568,10 +26926,16 @@ function openProfilesScreen(openKey, opts) {
     if (sn) sn.addEventListener('click', function () { doSaveNew(); });
     var resetBtn = body.querySelector('[data-p593reset]');
     if (resetBtn) resetBtn.addEventListener('click', function () {
+      // v692 Q9 A: arm, then the STARTER PICK confirms —
+      // the pick replaces the shape; the name stands.
       if (!resetArmed) { resetArmed = true; paint(); return; }
-      profPut('/api/prayer/profiles/reset', { profileKey: ed.key }).then(function (r) {
-        res = r; ed = null; resetArmed = false; paint(); profileRebuild();
-      }).catch(fail);
+      resetArmed = false;
+      var key593 = ed.key;
+      opnOpenStarterPick692({ title: 'Reset ' + ed.name + ' to…', onPick: function (starterKey) {
+        profPut('/api/prayer/profiles/reset', { profileKey: key593, starterKey: starterKey }).then(function (r) {
+          res = r; ed = null; paint(); profileRebuild();
+        }).catch(fail);
+      } });
     });
     var delBtn = body.querySelector('[data-p593delete]');
     if (delBtn) delBtn.addEventListener('click', function () {
@@ -27563,9 +27927,15 @@ function paintListenHome(day) {
   // v659 §3.1: the Favorites card moves to the BOTTOM of the
   // window — its slot stands below #home-body (before the
   // offline line), the last card of the Praylist.
+  // v692 §2.2: with no own profile standing, the starter
+  // offer stands in place of the set (device modes); on
+  // the web surface the Benedictine detail card stands
+  // under the plan row instead (W — web users only).
+  var offer692 = opnStarterOfferStands692();
   var html = profPlanRowHtml(day)
+    + (opnMode() === 'web' ? opnWebBenedictineHtml692() : '')
     + opnBannerHtml604() + opnEditBarHtml604()
-    + '<div id="home-body">' + (locked609 ? opnLockGateHtml609() : homeBodyHtml(day)) + '</div>' + '<div id="favorites-folder-slot"></div>';
+    + '<div id="home-body">' + (locked609 ? opnLockGateHtml609() : (offer692 ? opnStarterOfferHtml692() : homeBodyHtml(day))) + '</div>' + '<div id="favorites-folder-slot"></div>';
   // v609: the v607 shape strip (opnShapeHtml607) NO
   // LONGER paints here — John (2026-11-21 22:34 CT):
   // the switches section at the form's top is clutter.
@@ -27636,7 +28006,12 @@ function opnPickHead609() {
   var html = '<div class="p609pickhead" data-p609pickhead="1"><div class="profchips591">';
   (res.profiles || []).forEach(function (p) { html += '<button class="chip591' + (p.key === sel ? ' on' : '') + '" data-p609pick="' + esc(p.key) + '">' + esc(p.name) + '</button>'; });
   html += '</div>';
-  if (res.todayEdit) html += '<p class="sub">today has its own edits — changing the profile clears them</p>';
+  // v692 PHANTOM-EDITS: the note reads the same fact as
+  // the plan row — a REAL today-edits set (an entry
+  // stands AND diverges from its base profile), never
+  // the entry's mere presence.
+  var noteRec609 = res.todayEdit ? (res.profiles || []).filter(function (p) { return p.key === res.todayEdit.baseProfileKey; })[0] : null;
+  if (res.todayEdit && noteRec609 && opnTodayDivergence594(noteRec609, res.todayEdit).length) html += '<p class="sub">today has its own edits — changing the profile clears them</p>';
   return html + '</div>';
 }
 function opnPickInForm609(key) {
