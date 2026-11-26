@@ -3424,11 +3424,46 @@ function opnApplyTodayLayer594(eff, layer) {
         // snapshot is retired), so a cold snapshot loses
         // it exactly as it loses the sources, and the
         // clean composition carries it.
-        var standing = opnStandingContents597(out, b).filter(function (it) { return it.kind === 'source' || it.kind === 'seat'; });
+        var standingAll = opnStandingContents597(out, b);
+        var standing = standingAll.filter(function (it) { return it.kind === 'source' || it.kind === 'seat'; });
         var seen = {};
         entry.forEach(function (it) { seen[opnTodayItemId594(it)] = 1; });
         var restored = standing.filter(function (it) { return !seen[opnTodayItemId594(it)]; });
-        entry = restored.concat(entry);
+        // v683: standing-order merge (replaces the v601
+        // whole-set prepend, which painted every entry item
+        // after the last restored source — a daily row at
+        // its block's tail). Each item takes its standing
+        // index from the block's standing list, keyed by
+        // opnTodayItemId594 + occurrence (the v610 multiset
+        // discipline: duplicate standing items keep their
+        // own indices). Restored items and entry items
+        // interleave by that index. An entry item with no
+        // standing index (a today-only add) anchors after
+        // the nearest preceding entry item that has one
+        // (tier 2 at that index, so restored items never
+        // cross it from behind), or at the head when none
+        // precedes. Kind-blind: every contents kind the
+        // guard can displace re-seats by the same rule.
+        var sIdx = {}, sOcc = {};
+        standingAll.forEach(function (it, i) {
+          var k = opnTodayItemId594(it); var o = sOcc[k] || 0; sOcc[k] = o + 1;
+          (sIdx[k] = sIdx[k] || []).push(i);
+        });
+        function standingIdx683(it, occ) { var l = sIdx[opnTodayItemId594(it)]; return l && occ < l.length ? l[occ] : -1; }
+        var rOcc = {}, keyedOrd683 = 0;
+        var keyed = restored.map(function (it) {
+          var k = opnTodayItemId594(it); var o = rOcc[k] || 0; rOcc[k] = o + 1;
+          return { it: it, idx: standingIdx683(it, o), tier: 0, ord: keyedOrd683++ };
+        });
+        var eOcc = {}, anchor = -1;
+        entry.forEach(function (it) {
+          var k = opnTodayItemId594(it); var o = eOcc[k] || 0; eOcc[k] = o + 1;
+          var ix = standingIdx683(it, o);
+          if (ix >= 0) { anchor = ix; keyed.push({ it: it, idx: ix, tier: 1, ord: keyedOrd683++ }); }
+          else keyed.push({ it: it, idx: anchor, tier: 2, ord: keyedOrd683++ });
+        });
+        keyed.sort(function (x, y) { return (x.idx - y.idx) || (x.tier - y.tier) || (x.ord - y.ord); });
+        entry = keyed.map(function (x) { return x.it; });
       }
       merged[b] = entry;
     });
