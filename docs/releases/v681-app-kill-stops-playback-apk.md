@@ -151,3 +151,79 @@ Exactly five files:
 
 - Base-refresh route: Git Data API blob reconstruction instead of the tarball (tarball redirect 404 on the private repo) — same source commit, tree SHA asserted against the v661 §8 read-back. No other deviation from Plan.
 - The DEVICE leg is John's field check (§2.7) — not claimed.
+
+### §3 addendum — publish (2026-11-25)
+
+- Web main (Jctebo/spotify_praylist) pushed tree-exact via the Git Data API: parent c49fd575 → commit **e9a67a84c9fcfcbccfc4e81d495f7d3b03d6e10d**, tree 34c772f3. Entries: `config/site/ora-pro-nobis.apk` swapped to the CI artifact (blob fec5242b), root `ora-pro-nobis-1.0.57.apk` added with the same blob, root `ora-pro-nobis-1.0.56.apk` removed, and this doc added. Read-back: `refs/heads/main` = e9a67a84. **Main pushed · remote in sync.**
+- Deploy: workflow "Deploy GitHub Pages (deploy-only)" (deploy_pages.yml) dispatched on main — **run 45756426071, completed success** on the first dispatch (no re-dispatch needed).
+- Live fetch of https://orapronobis.media/ora-pro-nobis.apk: SHA-256 **57f7d8387f7059788ec5e83a01dbd746875f23fb5e7f545773d66c7b96a6ef2c** — byte-identical to the CI artifact. APK 1.0.57 is served.
+- Android repo main was NOT fast-forwarded by this seat (that stands with the coordinator's Ship closeout, per the run-level split); remote branch `release/v681` stands at 21c9d071.
+- Implement stops here: BRANCH READY for Review. The DEVICE leg is John's field check (§2.7) — not claimed.
+
+## §4 Review (chain-v681 Review seat, contract 1146, 2026-11-25) — PASS
+
+Light review, independently re-checked — no item below is copied from §3; each was re-derived by this seat.
+
+### Verdict: PASS
+
+No defect found. No product code changed by Review. The DEVICE leg (§2.7) remains John's field check, unclaimed by this seat and by the chain.
+
+### 1. Diff shape — verified
+
+- Android worktree `~/workspace/.worktrees/v681-android`, local commit `454e343622e3a00f31aa00c021fa599730309604`, tree `9efd08a9170f90f1a2f79b2ebad2afad8af4cfb3`; base commit `8395562`, whose tree this seat recomputed as `2f2aec7b890d57d351cbcb5f0e29c801d2144c9e` (matches the Plan/§3 base tree).
+- `git diff 8395562..454e343`: **exactly 5 files, 170 insertions / 19 deletions** — `android/app/build.gradle`, `auto/FaceServicePolicy.kt`, `auto/OraLibraryService.kt`, `auto/FaceServicePolicyTaskRemovedTest.kt`, `auto/FaceServicePolicyTaskRemovedV681Test.kt` (new). Nothing else.
+- `FaceServicePolicy.kt` base→new diff is a pure addition (the `decideTaskRemoved` block only): `decideStop`'s body is byte-identical.
+- `OraLibraryService.kt` diff is a **single hunk** at the `onTaskRemoved` seat (`@@ -539,26 +539,41 @@`). The watchdog, `evaluateStop`, and `onEngineEnded` stand outside that hunk and are therefore byte-identical.
+- `OfflineAudioStore` occurrences in the full diff: **0** (grep count). `markItemPlayed` occurrences in the full diff: **0** — the function and both callers are untouched.
+- `build.gradle` hunk: versionCode 56 → **57**, versionName "1.0.56" → **"1.0.57"**, plus the v681 comment lines. No other gradle change.
+
+### 2. The stop chain — verified from the final body
+
+Final `onTaskRemoved` (read directly from the committed tree) is gated on `FaceServicePolicy.decideTaskRemoved(contractStanding(), playerHoldsItems(), carBound) == STOP`, and `decideTaskRemoved` returns `StopDecision.STOP` unconditionally (single-expression body, all three parameters unused for the outcome). Inside the gate, in order:
+
+1. `publishNativeStopped()`
+2. `queueStore.clear()` + `faceStore.clear()`
+3. `stopEngineQueue()` — read at its definition: `exo.stop()` + `nativeContractStanding = null` + `stopAtTrackEnd = false`. The stop is `exo.stop()`; no `pause()` and no `playWhenReady = false` assignment stands anywhere in the diff hunks (grep hits are comment text only).
+4. `stopPromotion()`
+5. `stopSelf()`
+
+Then `super.onTaskRemoved(rootIntent)` unconditional, last. The v472 spare is gone from this seat only: the old body's `decideStop(...)` call (under which contract / items / car-bound each spared the service) no longer stands in `onTaskRemoved`; `decideStop` itself survives for its other seats.
+
+### 3. No-regress reasoning — verified from the code
+
+- **(a) No completion record:** `markItemPlayed` (definition :849 in the final tree) has exactly two call sites, both re-read by this seat: :760 in `onEngineTransition`, guarded by `reasonAuto` (natural auto-advance only), and :785 in `onEngineEnded`. `onEngineEnded` is invoked only from `EngineListener.onPlaybackStateChanged` when `playbackState == Player.STATE_ENDED` (:707). `exo.stop()` drives the player to STATE_IDLE — it fires neither a media-item transition nor STATE_ENDED — so neither call site is reachable from the kill chain.
+- **(b) No position write-back:** the pause write-back stands in `onEnginePlayWhenReady`'s else arm and fires only on a playWhenReady → false flip; the chain contains no such flip (see §4.2), so that arm cannot fire. `onDestroy`'s v479 flush reads `nativeContractStanding` first and writes only if non-null; `stopEngineQueue()` (step 3, before `stopSelf()` triggers `onDestroy`) has already nulled it, so the flush reads null and writes nothing. Order in the committed body matches this reasoning.
+- **(c) Background playback untouched:** the service diff's sole hunk is `onTaskRemoved`; no other lifecycle seat, transport arm, watchdog, or Auto seat changed. Background playback with the task standing runs through none of the changed code.
+
+### 4. Tests — verified
+
+- New file `FaceServicePolicyTaskRemovedV681Test.kt`: **8 `@Test` legs** (counted by this seat), covering all 2³ combinations of (contractStanding × playerHoldsItems × carBound), each asserting STOP — including both reversals named in §3: playing + contract standing (`taskRemoved_playingContractStanding_stops`) and car bound (`taskRemoved_carBound_stops`, plus the three car-bound combinations).
+- `FaceServicePolicyTaskRemovedTest.kt` diff is header-comment lines only (10 added comment lines, no test body change): the TR6 `decideStop` legs are unmodified in substance.
+- CI execution evidence: this seat could **not** re-read run 45754697334 — `gh` on this VM is unauthenticated (`gh auth login` required, no token in env). The run's success therefore stands on §3's record plus the artifact checks in §4.5, which corroborate that the CI build produced and verified the 1.0.57 APK. Named as a limitation, not re-claimed as independently re-read.
+
+### 5. Artifact — verified
+
+- Staged APK `~/workspace/projects/ora-pro-nobis/ora-pro-nobis-1.0.57.apk`, SHA-256 recomputed by this seat: **57f7d8387f7059788ec5e83a01dbd746875f23fb5e7f545773d66c7b96a6ef2c** — equals the expected hash. Size 6,842,585 bytes.
+- Live fetch of https://orapronobis.media/ora-pro-nobis.apk by this seat: SHA-256 **57f7d8387f7059788ec5e83a01dbd746875f23fb5e7f545773d66c7b96a6ef2c**, size 6,842,585 bytes, `cmp` against the staged APK: **byte-identical**. Served bytes equal the artifact.
+- Badging / signer: `aapt`/`aapt2`/`apksigner` are **not installed on this VM**, so this seat did not independently re-badge. Version 57 / "1.0.57" is verified at the source seat (the `build.gradle` hunk, §4.1) and the signer equality stands on §3's apksigner record plus the CI workflow's own verify step; the served-bytes equality above proves the published APK is the same file §3 verified.
+
+### 6. Doc consistency — verified
+
+§§1–3 are consistent with every item of evidence above (file set, chain order, test count, hashes, publish read-backs). The field check text (§2.7) names the device leg as John's, and §3 (record + addendum) expressly does not claim it. No inconsistency found.
+
+### Residual risk
+
+- Device behavior on John's phone class (Recents swipe delivering `onTaskRemoved`, notification clearing) is proven only by the field leg, which is John's and outstanding — by design, per §2.7.
+- CI run status and APK badging/signer were not independently re-read by this seat (tooling/auth limits named in §4.4–4.5); both are corroborated indirectly (source-seat version lines; served-bytes hash equality with the §3-verified artifact).
+- Force-stop remains the named no-callback limitation of §2.5 — outcome-equivalent (process death ends playback), unchanged by this review.
+
+## 5. Ship
+
+- Verdict in: Plan §2 (commit f5e060b) · Implement §3 (commits b861884, c044adb) · Review §4 PASS (commit 9b4d342, independent evidence; limitations named there stand: CI run status and badging/signer rest on §3 + the CI verify step, `gh`/`aapt` being unavailable on the review VM).
+- The shell change: `OraLibraryService.onTaskRemoved` rewritten — the v467/v472 swipe-away spare is reversed at this seat only. On task removal the service now runs the bridge-stop chain (`publishNativeStopped()` → queue/face stores cleared → `stopEngineQueue()` → `stopPromotion()` → `stopSelf()` → super last), gated on `FaceServicePolicy.decideTaskRemoved` (unconditional STOP). `decideStop` and its other seats byte-identical; no completion record, no position write, offline store untouched (Review §4, items 1–3).
+- APK: versionCode 57 · versionName "1.0.57" · SHA-256 57f7d8387f7059788ec5e83a01dbd746875f23fb5e7f545773d66c7b96a6ef2c · signer cert 13cfc44f…dc0, byte-identical to 1.0.56's. CI run 45754697334 ("Build signed APK (v359)") success — unit tests (incl. the 8 new task-removal legs; TR6 unmodified), assemble, bundle, workflow verify all green.
+- Android repo: branch `release/v681` (21c9d071) fast-forwarded to main at ship — main 89fbb78f → 21c9d071, non-force, read back.
+- Publish (v661 route): web main e9a67a84 (config/site APK swapped tree-exact), Pages deploy run 45756426071 success; live fetch of https://orapronobis.media/ora-pro-nobis.apk SHA-256 equals the CI artifact (Review §4 item 5, byte-identical, 6,842,585 bytes). Rollback APK: 1.0.56.
+- Board closeout (read back): release 1659 Live, shipped_at 2026-11-26T04:55:00Z · phase records Scope 2823 · Plan 2824 · Implement 2825 · Review 2826 · Ship 2827 — all passed · What's New 496 · shipped_records 870 · contracts 1144 / 1145 / 1146 — every expectation met · Goals Board intake 1289 Done, state CLOSED.
+- This doc: pushed tree-exact to web main as the ship commit (the commit carrying this §5); read-back "main pushed · remote in sync" stands in the chain's ship report.
+- FIELD LEG (John's, open): install APK 1.0.57 → play a track → swipe Ora Pro Nobis away from recents → the sound stops and the media notification is gone; reopen → the track resumes from its last saved position (v680) and does NOT stand read unless it had crossed 95%.
