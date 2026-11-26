@@ -226,3 +226,21 @@ Every §2.10 seat re-read against the current tree. Seat shifts (old → current
 1. **queueLiveDesc fixed** (§3.2) — the Plan's flagged check, resolved as "fix that seat minimally" per §2.10.
 2. **Helper end-of-string edge** (§3.3): the DO date-segment regex accepts the segment at end-of-string so a date-only title cleans to null (the §2.5 fallback then stands) instead of standing as a raw date stamp. Form only; the §2.2 rule (remove exactly the date segment) is unchanged for every real title.
 3. Nothing else. No merge, no deploy, no remote migration application, no DevOps Board writes — Review, migration application, merge, and Ship stand with the coordinator.
+
+## §4 Review (chain-v695-review, 2026-11-26) — PASS
+
+- Independent verdict **PASS** on all seven checks: the diff against the §2.4 prescription seat by seat · §2.6 label seats untouched (no diff line) · the queueLiveDesc fix minimal and correct (labeled slots rebuild from the descriptor's own side's view; unlabeled byte-identical) · pin exactly one line in ui.ts · fixtures are the verbatim production strings.
+- Harnesses re-run independently: harness-v695 **24/0** · harness-v690 **33/0** · harness-v677 **18/0** · harness-v670 17 ok / 5 FAIL + crash at line 396 — **identical on the pristine base 97c7c47** (pre-existing breakage superseded by v684–v694; not a v695 effect).
+- One informational concern carried, not blocking: harness leg 5's non-office byte-identity check is weak as written (title-only comparison through trackDesc); byte-identity stands independently on the diff (zero non-office server-leg changes; the sole client change is gated to labeled slots). A harness-strength gap for a future harness pass; the shipped code is unaffected.
+- Worker bundle builds clean (esbuild, exit 0).
+
+## §5 Ship record
+
+- **SHIPPED LIVE 2026-11-26T16:34:07Z** · pin **ora-pro-nobis-v695-1** · Worker **09b00140-24b8-47e2-8cc3-fb35cfbc9116** (100%).
+- **Resume chain:** the Plan stood published at base 7e85dea; v691 (pin v691-1), v692 (pin v692-1), and v694 (pin v694-1) shipped in between. `release/v695` rebased clean onto main 97c7c47 (v694 ship record, tree 7017f2a8); §3.1's re-diff found every Plan seat standing as cited modulo line shift (~+180–190 server, similar client), and the Plan's one flagged check — `queueLiveDesc` rebuilding a side2-painted descriptor from the standing view only — proved a real defect and was fixed minimally (§3.2).
+- **Merge:** tree-exact Git Data API (push-v695-github.py) — remote-vs-base delta EMPTY (no nightly commit landed in between); remote ship commit **4242e0cd**, merged tree **7befb905** == branch tree asserted blob-exact on all six delta paths; local mirror c359e7b4. **Main pushed · remote in sync.**
+- **Migration 0052 applied** to the app D1 before deploy and verified by read-back (`pragma_table_info('ext_resolutions')` carries `backup_title`). Rows written before 0052 carry NULL and serve the composed legacy backup title until the watcher next writes that backup (§2.5, by design); standing rows for already-written days keep their composed titles until the resolver's next write for those days (OP3 — no backfill).
+- **Harnesses:** harness-v695 **24/0** · harness-v690 **33/0** · harness-v677 **18/0** (Review's independent runs, §4) · harness-v670's 17/5 + crash pre-existing on the base, unchanged.
+- **Production verified from served bytes:** GET / 200 · served sw.js reads pin ora-pro-nobis-v695-1 · deployment 2026-11-26T16:34:07Z carries Worker 09b00140 at 100%.
+- **Closeout:** releases row 1673 Live · What's New 510 · shipped_records 884 · phase records Scope 2885 · Plan 2888 · Implement 2899 · Review 2900 · Ship 2901, all passed, each held by its own phase seat (chain-v695-impl · chain-v695-review · chain-v695-ship) · intake 1311 CLOSED/Done.
+- **Field check (John's leg, open):** open the Praylist — the Morning Prayer row reads the episode's own title (e.g. "Morning Prayer – Divine Office: Liturgy of the Hours" on the Divine Office side, "Divine Office | Thursday Morning Prayer | Lauds" on the Sing the Hours side) instead of the standing name, and Now Playing and the lock screen carry the same title. Rows for a day resolve under the new titles at the resolver's next write for that day (the standing 30-minute cadence).
