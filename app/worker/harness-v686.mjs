@@ -248,8 +248,14 @@ const groupSeq = (block) => pg.evaluate((bl) => {
 const srcRow = (key) => pg.evaluate((k) => {
   const r = document.querySelector('[data-p686src="' + k + '"]');
   if (!r) return null;
-  const t = r.querySelector('[data-p686toggle]'), d = r.querySelector('[data-p686day]');
-  return { tag: (r.querySelector('.p686tag') || {}).textContent || '', on: t ? t.getAttribute('aria-checked') : null, day: d ? d.value : null, tDisabled: t ? t.disabled : null, dDisabled: d ? d.disabled : null,
+  const t = r.querySelector('[data-p686toggle]');
+  // v687 re-point (forced, named in v687 §3): the day-pick
+  // select retired — the standing dayRule reads from the
+  // row's frequency subtitle; the select's disabled seat
+  // reads from the toggle (the off block's inert control).
+  const sub = (r.querySelector('.p687sub') || {}).textContent || '';
+  const day = { 'Generates daily': 'daily', 'Generates Sundays': 'sundays', 'Generates Fridays': 'fridays', 'Generates weekdays': 'weekdays', 'Generates weekends': 'weekends', 'Generates as a fallback': 'fallback-only' }[sub.trim()] || null;
+  return { tag: (r.querySelector('.p686tag') || {}).textContent || '', on: t ? t.getAttribute('aria-checked') : null, day: day, tDisabled: t ? t.disabled : null, dDisabled: t ? t.disabled : null,
     remove: !!r.querySelector('[data-p604remove]'), move: !!r.querySelector('[data-p684move]'), menu: !!r.querySelector('[data-p686menu]') };
 }, key);
 const lastSrcCap = () => pg.evaluate(() => window.__store.srcCaps[window.__store.srcCaps.length - 1] || null);
@@ -341,8 +347,18 @@ await openForm();
 
 // ---------- L3: day pick ----------
 {
-  await pg.selectOption('[data-p686day="saint-of-the-day"]', 'sundays');
-  await pg.waitForTimeout(800);
+  // v687 re-point (forced, named in v687 §3): the day pick
+  // rides the menu now — open the Saint row's menu and pick
+  // Sundays (menu: Move up · Move down · Frequency head ·
+  // Daily · Sundays only · Fridays only · Remove).
+  {
+    const mb = pg.locator('[data-p686menu="src|Afternoon|saint-of-the-day|source:ext-saint-of-the-day"]');
+    await mb.evaluate((el) => el.scrollIntoView({ block: 'center' })).catch(() => null);
+    await tryClick(mb);
+    await pg.waitForTimeout(400);
+    await tryClick(pg.locator('.anchmenu [data-menuitem="4"]'));
+    await pg.waitForTimeout(800);
+  }
   const cap = await lastSrcCap();
   const row = cap ? cap.sources.filter((r) => r.sourceKey === 'saint-of-the-day')[0] : null;
   check('L3 day-pick change writes Sundays for Saint of the Day (whole-table PUT)', !!row && row.dayRule === 'sundays' && cap.sources.length === 26, row);
@@ -357,8 +373,14 @@ await openForm();
   });
   check('L3 the composed weekday drops Saint of the Day and the composed Sunday stands it',
     !gates['2026-11-25'].includes('ext-saint-of-the-day') && gates['2026-11-29'].includes('ext-saint-of-the-day'), gates);
-  await pg.selectOption('[data-p686day="saint-of-the-day"]', 'daily');
-  await pg.waitForTimeout(800);
+  {
+    const mb = pg.locator('[data-p686menu="src|Afternoon|saint-of-the-day|source:ext-saint-of-the-day"]');
+    await mb.evaluate((el) => el.scrollIntoView({ block: 'center' })).catch(() => null);
+    await tryClick(mb);
+    await pg.waitForTimeout(400);
+    await tryClick(pg.locator('.anchmenu [data-menuitem="3"]'));
+    await pg.waitForTimeout(800);
+  }
 }
 
 // ---------- L4: Move ----------
@@ -464,8 +486,16 @@ async function driveMove(fromBlock, rid, toBlock) {
   const rows = await pg.evaluate(() => [...document.querySelectorAll('[data-p686src]')].map((r) => ({
     k: r.getAttribute('data-p686src'), remove: !!r.querySelector('[data-p604remove]'), move: !!r.querySelector('[data-p684move]'), menu: !!r.querySelector('[data-p686menu]'), handle: !!r.querySelector('[data-p604handle]'),
   })));
-  check('L7 no source row carries Remove, data-p684move buttons, a Move menu, or a drag handle',
-    rows.length >= 10 && rows.every((r) => !r.remove && !r.move && !r.menu && !r.handle), rows.filter((r) => r.remove || r.move || r.menu || r.handle));
+  // v687 re-point (C-687-3, John's 07:28 word supersedes
+  // v686 Q1): source rows whose representation stands in
+  // the list NOW carry data-p684move buttons and a menu;
+  // spliced-in and closing rows carry no move buttons; no
+  // source row carries the CONTENTS Remove attribute (its
+  // Remove rides the v687 icon attribute) or a drag handle.
+  check('L7 (re-pointed per C-687-3) source rows carry Move buttons + a menu where their representation stands, none where it does not, and no contents-Remove attribute or drag handle anywhere',
+    rows.length >= 10 && rows.every((r) => !r.remove && !r.handle)
+    && rows.filter((r) => r.k === 'do-invitatory' || r.k === 'usccb-daily-readings').every((r) => r.move && r.menu)
+    && rows.filter((r) => ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross', 'do-midday-prayer'].includes(r.k)).every((r) => !r.move), rows);
   const before = await groupSeq('Morning');
   // Morning Offering (source:morning-prayer) moved to Night in L4; the
   // standing Morning contents pair to sort is Saint daily over the
@@ -533,21 +563,23 @@ async function driveMove(fromBlock, rid, toBlock) {
   let SV = null;
   try {
     const vBody = stripNamed(indexSrc, 'validateProfileContents', [
-      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-      ['const out: Record<string, { kind: string; key?: string; side?: string }[]> = {};', 'const out = {};'],
+      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+      ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> = {};', 'const out = {};'],
       ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
       ['const seen = new Set<string>();', 'const seen = new Set();'],
-      ['const list: { kind: string; key?: string; side?: string }[] = [];', 'const list = [];'],
-      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+      ['const list: { kind: string; key?: string; side?: string; off?: number }[] = [];', 'const list = [];'],
+      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
       ['let side670: string | undefined;', 'let side670;'],
-      ['list.push(side670 ? { kind: kind as string, key: key as string, side: side670 } : { kind: kind as string, key: key as string });', 'list.push(side670 ? { kind: kind, key: key, side: side670 } : { kind: kind, key: key });'],
+      ['let off687: number | undefined;', 'let off687;'],
+      ['if (side670 || off687) { const built687: { kind: string; key?: string; side?: string; off?: number } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }', 'if (side670 || off687) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }'],
+      ['else list.push({ kind: kind as string, key: key as string });', 'else list.push({ kind: kind, key: key });'],
     ]);
     const pBody = stripNamed(indexSrc, 'parseMoveEnvelope686', [
       ['function parseMoveEnvelope686(raw: unknown): { move?: { from: string; to: string } } | { error: string } {', 'function parseMoveEnvelope686(raw) {'],
       ['const m = raw as { from?: unknown; to?: unknown };', 'const m = raw;'],
     ]);
     const wBody = stripNamed(indexSrc, 'validateProfileContents686', [
-      ['function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {', 'function validateProfileContents686(contents, coreBlocks, extraBlocks) {'],
+      ['function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents686(contents, coreBlocks, extraBlocks) {'],
       ['const core: string[] = coreBlocks.slice();', 'const core = coreBlocks.slice();'],
     ]);
     SV = new Function(vBody + '\n' + pBody + '\n' + wBody + '\nreturn { v: validateProfileContents, parse: parseMoveEnvelope686, v686: validateProfileContents686 };')();

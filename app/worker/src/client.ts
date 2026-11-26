@@ -3040,6 +3040,7 @@ function opnCheckContents590(contents, coreBlocks) {
       var it = raw && typeof raw === 'object' ? raw : {};
       var kind = it.kind, key = it.key;
       var side670 = null;
+      var off687 = null;
       if (block === 'Novenas') {
         if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
         if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
@@ -3097,6 +3098,10 @@ function opnCheckContents590(contents, coreBlocks) {
           // labeled list is a literal because this fn is
           // extracted standalone by the harnesses).
           if (kind === 'source' && (key === 'ext-morning-prayer' || key === 'ext-evening-prayer')) side670 = (it.side === 'do' || it.side === 'sth') ? it.side : 'sth';
+          // v687 §2.7 (Amendment A scope): the off flag
+          // stands ONLY on the labeled-slot office items;
+          // it is preserved here exactly as side is.
+          if (kind === 'source' && (key === 'ext-morning-prayer' || key === 'ext-evening-prayer') && it.off) off687 = 1;
         }
       }
       var id = kind + ':' + key;
@@ -3108,7 +3113,8 @@ function opnCheckContents590(contents, coreBlocks) {
       // keeps the standing dedupe.
       if (seen[id] && !(kind === 'source' && EXT_TOKENS[key])) return;
       seen[id] = 1;
-      list.push(side670 ? { kind: kind, key: key, side: side670 } : { kind: kind, key: key });
+      if (side670 || off687) { var built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }
+      else list.push({ kind: kind, key: key });
     });
     out[block] = list;
   });
@@ -16742,7 +16748,7 @@ function openSheetMenu(title, items, anchorEl) {
       // data-menuitem read stands). Additive: no standing
       // caller passes a key, so every standing card renders
       // byte-identically.
-      return '<button class="menurow" data-menuitem="' + i + '"' + (it.key ? ' data-menukey="' + esc(it.key) + '"' : '') + '>' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
+      return '<button class="menurow" data-menuitem="' + i + '"' + (it.key ? ' data-menukey="' + esc(it.key) + '"' : '') + (it.disabled ? ' disabled' : '') + '>' + (it.glyph ? '<span class="menuglyph">' + it.glyph + '</span>' : '') + '<span class="grow">' + esc(it.label) + '</span>' + (it.state ? '<span class="meta" data-menustate="' + i + '">' + esc(it.state) + '</span>' : '') + '</button>';
     }).join('');
   document.body.appendChild(catcher);
   document.body.appendChild(card);
@@ -21138,6 +21144,11 @@ function extRebuildDescs(day) {
         candByIdx619[k].sort(function (a, c) { return a.e.sortOrder - c.e.sortOrder; });
       });
       var emitCand619 = function (idx) {
+        // v687 §2.7: an off office item emits nothing —
+        // its candidate never stands (the tail reach
+        // included).
+        var itAt687 = c590[idx];
+        if (itAt687 && itAt687.off && itAt687.kind === 'source' && opnLabeledSlot650(itAt687.key)) return;
         (candByIdx619[idx] || []).forEach(function (em) {
           if (emittedCand619.indexOf(em) >= 0) return;
           emittedCand619.push(em);
@@ -21152,8 +21163,20 @@ function extRebuildDescs(day) {
         merged.forEach(function (e) { if (e.own && e.own.sourceKey === 'novenas') emitOwn619(e); });
       };
       var placedPrayer619 = {};
+      var seatPos687 = -1, seatIdx687 = -1;
       c590.forEach(function (it, idx) {
         if (!it) return;
+        // v687 §2.7: an off office item composes nothing
+        // (its candidate is guarded in emitCand619 too).
+        if (it.off && it.kind === 'source' && opnLabeledSlot650(it.key)) return;
+        if (it.kind === 'seat') {
+          // v687 §2.5: the readings seat learns its seat —
+          // record the composed position; the descriptor
+          // stands there after the pass when the Rosary
+          // stands in Morning (the v660 gate).
+          if (b.block === 'Morning' && seatPos687 < 0) { seatPos687 = descs.length; seatIdx687 = idx; }
+          return;
+        }
         if (it.kind === 'source') {
           emitCand619(idx);
           if (it.key === 'novenas') emitNovenas619();
@@ -21251,6 +21274,33 @@ function extRebuildDescs(day) {
       // contents-index order at the block tail — the
       // gate's standing is never lost.
       Object.keys(candByIdx619).map(Number).sort(function (a, c) { return a - c; }).forEach(emitCand619);
+      // v687 §2.5: stand the readings descriptor from the
+      // seat item and mark the seat placed, so
+      // foldDayAdditions skips foldReadingsSeat. Gates
+      // preserved: no seat item -> seatPos687 stays -1;
+      // no Rosary standing in Morning -> no seat.
+      // Seat position (deviation from §2.5's literal rank
+      // seat, named in §3): §2.5's premise — the seat item
+      // stands immediately before the Rosary item — does
+      // not hold on John's real list (the stray readings
+      // item and the Morning Prayer item stand between),
+      // so a pure rank seat would MOVE the readings on an
+      // untouched list and break §2.10's byte-identical
+      // gate. The seat therefore keeps its standing fold
+      // seat (immediately before the Rosary descriptor)
+      // while the seat item precedes the Rosary item, and
+      // takes its composed position once it stands after
+      // the Rosary item — the move leg's crossing.
+      if (seatPos687 >= 0 && day.readingsSeat && day.readingsSeat.seqKey) {
+        var rosaryPos687 = -1, rosaryIdx687 = -1;
+        for (var ri687 = blockStart619; ri687 < descs.length; ri687++) if (descs[ri687].block === 'Morning' && descs[ri687].episodeId === 'daily-rosary') rosaryPos687 = ri687;
+        c590.forEach(function (it2, i2) { if (it2 && it2.kind === 'source' && it2.key === 'daily-rosary') rosaryIdx687 = i2; });
+        if (rosaryPos687 >= 0) {
+          var at687 = (rosaryIdx687 >= 0 && seatIdx687 > rosaryIdx687) ? seatPos687 : rosaryPos687;
+          descs.splice(at687, 0, readingsSeatDesc549(day.readingsSeat));
+          placed619.seat = true;
+        }
+      }
     }
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
@@ -23664,11 +23714,27 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p686toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () { if (btn.disabled) return; opnToggleSource686(btn.getAttribute('data-p686toggle')); });
   });
-  view.querySelectorAll('[data-p686day]').forEach(function (sel) {
-    sel.addEventListener('change', function () { opnSetSourceDay686(sel.getAttribute('data-p686day'), sel.value); });
-  });
+  // v687: the day-pick select retired — frequency rides
+  // the source row's menu (opnOpenSourceMenu687).
   view.querySelectorAll('[data-p686menu]').forEach(function (btn) {
-    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p686menu')).split('|'); opnOpenMoveMenu686(p[0], p.slice(1).join('|'), btn); });
+    btn.addEventListener('click', function () {
+      var p = String(btn.getAttribute('data-p686menu')).split('|');
+      if (p[0] === 'src') opnOpenSourceMenu687(p[1], p[2], p.slice(3).join('|'), btn);
+      else opnOpenMoveMenu686(p[0], p.slice(1).join('|'), btn);
+    });
+  });
+  // v687 §1.4: the row icons — source-row Remove (the
+  // standing contents Remove on the representation item),
+  // source-row Disable (the standing store write), and the
+  // office contents item's Disable (its off flag).
+  view.querySelectorAll('[data-p687srcremove]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p687srcremove')).split('|'); opnRemove604(p[0], p.slice(1).join('|')); });
+  });
+  view.querySelectorAll('[data-p687srcdisable]').forEach(function (btn) {
+    btn.addEventListener('click', function () { if (btn.disabled) return; opnToggleSource686(btn.getAttribute('data-p687srcdisable')); });
+  });
+  view.querySelectorAll('[data-p687disable]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p687disable')).split('|'); opnToggleOff687(p[0], p.slice(1).join('|')); });
   });
   view.querySelectorAll('[data-p604restore]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604restore')).split('|'); opnRestore604(p[0], p.slice(1).join('|')); });
@@ -23888,7 +23954,17 @@ function opnItemLabel604(block, it) {
   // v670 §3.1: an office item's label names its side (an
   // un-stamped item reads 'sth', §3.7).
   if (it.kind === 'source' && opnLabeledSlot650(it.key)) return (u ? u.label : (it.key === 'ext-morning-prayer' ? 'Morning Prayer' : 'Evening Prayer')) + ' \u00b7 ' + (it.side === 'do' ? 'Divine Office' : 'Sing the Hours');
-  return u ? u.label : (it.key || it.kind);
+  if (u) return u.label;
+  // v687 §2.4: a source item whose key is a seed slotId
+  // resolves to that row's seed display name — no raw
+  // ext- id paints as a title anywhere (Removed line
+  // included).
+  if (it.kind === 'source' && it.key) {
+    var seed687 = null;
+    for (var si687 = 0; si687 < OPN_SEED_SOURCES.length; si687++) if (OPN_SEED_SOURCES[si687].slotId === it.key) { seed687 = OPN_SEED_SOURCES[si687]; break; }
+    if (seed687) return opnSeedDisplayName636(seed687);
+  }
+  return (it.key || it.kind);
 }
 function opnLayersStored604(layers) {
   // Payload layers stand in two shapes (stored object /
@@ -24030,7 +24106,25 @@ function opnMove684(block, rowId, dir) {
    switch + day pick on the row; no Remove, no data-p684move,
    no menu/Move. In an off block the controls stand inert. */
 var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
-var OPN686_SLOT_ROW = { 'ext-invitatory': 'do-invitatory', 'ext-gospel-exegesis': 'daily-gospel-exegesis', 'ext-midmorning-prayer': 'do-midmorning-prayer', 'ext-midday-prayer': 'do-midday-prayer', 'ext-saint-of-the-day': 'saint-of-the-day', 'ext-midafternoon-prayer': 'do-midafternoon-prayer', 'ext-office-of-readings': 'do-office-of-readings', 'ext-night-prayer': 'do-night-prayer' };
+var OPN686_SLOT_ROW = { 'ext-invitatory': 'do-invitatory', 'ext-gospel-exegesis': 'daily-gospel-exegesis', 'ext-midmorning-prayer': 'do-midmorning-prayer', 'ext-midday-prayer': 'do-midday-prayer', 'ext-saint-of-the-day': 'saint-of-the-day', 'ext-midafternoon-prayer': 'do-midafternoon-prayer', 'ext-office-of-readings': 'do-office-of-readings', 'ext-night-prayer': 'do-night-prayer', 'ext-usccb-readings': 'usccb-daily-readings', 'ext-daily-tv-mass': 'daily-tv-mass', 'ext-fr-mike-homily': 'fr-mike-homily', 'ext-barron-sermon': 'barron-sermon' };
+/* v687 §1.4 (Amendment A): the pinned Divine Office source
+   rows — movable, NOT removable; Disable (the store write)
+   instead of Remove. The Office of Readings is the named
+   exception: removable, no Disable. */
+var OPN687_PINNED = ['do-invitatory', 'do-midmorning-prayer', 'do-midday-prayer', 'do-midafternoon-prayer', 'do-night-prayer'];
+var OPN687_FREQ_TEXT = { 'daily': 'Generates daily', 'sundays': 'Generates Sundays', 'fridays': 'Generates Fridays', 'weekdays': 'Generates weekdays', 'weekends': 'Generates weekends', 'fallback-only': 'Generates as a fallback' };
+function opn687FreqText(rule) { return OPN687_FREQ_TEXT[rule] || 'Generates daily'; }
+/* v687 §1.4: the row acts as DRAWN icons (the section-mark
+   idiom: inline SVG, stroke currentColor) — no emoji, no
+   text buttons for Remove / Disable. */
+function opn687Icon(name) {
+  var body = name === 'remove'
+    ? '<path d="M4 7h16"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v5"/><path d="M14 11v5"/>'
+    : '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+}
+function opn687RemoveIcon(attrs, label) { return '<button class="p687icon" ' + attrs + ' aria-label="' + esc(label || 'Remove') + '">' + opn687Icon('remove') + '</button>'; }
+function opn687DisableIcon(attrs, label) { return '<button class="p687icon" ' + attrs + ' aria-label="' + esc(label || 'Disable') + '">' + opn687Icon('disable') + '</button>'; }
 var OPN686_BLOCK_ROWS = { 'Morning': ['do-invitatory', 'usccb-daily-readings'], 'Midmorning': ['daily-gospel-exegesis', 'do-midmorning-prayer'], 'Midday': ['do-midday-prayer'], 'Afternoon': ['saint-of-the-day', 'do-midafternoon-prayer'], 'Evening': ['do-office-of-readings'], 'Night': ['do-night-prayer'] };
 var OPN686_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal', 'No block', 'Off'];
 function opn686Row(key) { return opn686.rows.filter(function (r) { return r.sourceKey === key; })[0] || null; }
@@ -24087,29 +24181,85 @@ function opn686DayOptions(cur) {
   return keys.map(function (k) { return '<option value="' + esc(k) + '"' + (cur === k ? ' selected' : '') + '>' + esc(DAY_RULE_LABELS[k] || k) + '</option>'; }).join('');
 }
 function opnSourceRowHtml686(row, opts) {
+  // v687 §§2.1/2.2/2.8 + §1.4: the select and the pin glyph
+  // retire — frequency rides the menu, the subtitle paints
+  // it. Dress: grow (title + tag, subtitle under) · ▲▼
+  // (representation standing only) · Disable/Remove icon
+  // (per the §1.4 table) · ⋮ · toggle LAST, its right edge
+  // in the contents rows' Remove-icon column. A disabled
+  // PINNED row dims whole; no other source row dims.
   opts = opts || {};
   var off = !!opts.off;
   var tag = opts.tag || 'Daily source';
   var on = row.enabled ? 1 : 0;
-  return '<div class="card bookrow p604erow p609erow p686srcrow" data-p686src="' + esc(row.sourceKey) + '"><div class="row">'
-    + '<span class="p686pin" aria-hidden="true">📌</span>'
-    + '<span class="grow">' + esc(opnSeedDisplayName636(row)) + ' <span class="p686tag">' + esc(tag) + '</span></span>'
-    + '<button class="switch591' + (on ? ' on' : '') + '" data-p686toggle="' + esc(row.sourceKey) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (off ? ' disabled' : '') + '><span class="knob591"></span></button>'
-    + '<select data-p686day="' + esc(row.sourceKey) + '"' + (off ? ' disabled' : '') + '>' + opn686DayOptions(row.dayRule) + '</select>'
+  var key = row.sourceKey;
+  var pinned = OPN687_PINNED.indexOf(key) >= 0;
+  var block = opts.block || '';
+  var rid = opts.repRid || '';
+  var html = '<div class="card bookrow p604erow p609erow p686srcrow' + (pinned && !on ? ' p687dim' : '') + '" data-p686src="' + esc(key) + '"><div class="row">'
+    + '<span class="grow"><span class="p687title">' + esc(opnSeedDisplayName636(row)) + '</span> <span class="p686tag">' + esc(tag) + '</span>'
+    + '<span class="p687sub">' + esc(opn687FreqText(row.dayRule)) + '</span></span>';
+  if (rid) html += opnMoveButtons684(block, rid, opts.paintIdx || 0, opts.paintLen || 1);
+  if (pinned) html += opn687DisableIcon('data-p687srcdisable="' + esc(key) + '"', on ? 'Disable' : 'Enable');
+  else if (rid) html += opn687RemoveIcon('data-p687srcremove="' + esc(block) + '|' + esc(rid) + '"');
+  html += '<button class="btn ghost" data-p686menu="src|' + esc(block) + '|' + esc(key) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
+    + '<button class="switch591' + (on ? ' on' : '') + '" data-p686toggle="' + esc(key) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (off ? ' disabled' : '') + '><span class="knob591"></span></button>'
     + '</div></div>';
+  return html;
+}
+function opn687RepIds687(sk) {
+  // The contents ids that can represent a source key in a
+  // block list: the seat item for the readings, else the
+  // slot's source item (the SLOT_ROW inverse).
+  if (sk === 'usccb-daily-readings') return ['seat:daily-readings', 'source:ext-usccb-readings'];
+  var ids = [];
+  Object.keys(OPN686_SLOT_ROW).forEach(function (slot) { if (OPN686_SLOT_ROW[slot] === sk) ids.push('source:' + slot); });
+  return ids;
 }
 function opnSpliceSourceRows686(block, list) {
-  var entries = list.map(function (it, idx) { return { t: 'c', it: it, idx: idx }; });
+  // v687: every entry carries its occurrence-qualified rid
+  // (counted over the whole list, converted items included)
+  // so a source row's acts address its representation item
+  // exactly as opnMove684 / opnRemove604 count it.
+  var occ687 = {};
+  var entries = list.map(function (it, idx) {
+    var id = opnTodayItemId594(it);
+    var occ = occ687[id] || 0; occ687[id] = occ + 1;
+    return { t: 'c', it: it, idx: idx, rid: opnRowId610(it, occ) };
+  });
   if (!opn686.rows.length) return entries;
   var rowKeys = OPN686_BLOCK_ROWS[block] || [];
   if (!rowKeys.length) return entries;
+  // v687 §2.6: a source key whose representation id stands
+  // in the block's removed set is suppressed whole — no
+  // conversion, no rank splice — inside this session.
+  var removedIds687 = {};
+  (opn604.removed[block] || []).forEach(function (it) { removedIds687[opnTodayItemId594(it)] = 1; });
   var seenSrc = {}, present = {};
+  // v687 §2.5: the readings' representation is the SEAT
+  // item — where both the seat item and a stray
+  // source:ext-usccb-readings item stand, the seat item
+  // converts and the stray drops, in either list order
+  // (the stray is inert in composition; a row addressed
+  // to it would move and remove nothing that plays).
+  var seatEntry687 = null;
+  entries.forEach(function (e) { if (opnTodayItemId594(e.it) === 'seat:daily-readings') seatEntry687 = e; });
   entries.forEach(function (e) {
     var id = opnTodayItemId594(e.it);
     var sk = id === 'seat:daily-readings' ? 'usccb-daily-readings' : (e.it.kind === 'source' ? OPN686_SLOT_ROW[e.it.key] : null);
-    if (sk && rowKeys.indexOf(sk) >= 0 && !seenSrc[sk] && opn686Row(sk)) { seenSrc[sk] = 1; present[sk] = 1; e.t = 's'; e.row = opn686Row(sk); }
+    if (sk && rowKeys.indexOf(sk) >= 0 && opn686Row(sk)) {
+      // v687 §2.4 merge rule: an entry mapping to an
+      // already-converted source key is DROPPED from the
+      // painted entries (the list item itself untouched);
+      // a source key with ANY representation in the
+      // removed set converts nothing (§2.6).
+      if (seenSrc[sk] || opn687RepIds687(sk).some(function (rid2) { return removedIds687[rid2]; })) { e.t = 'x'; return; }
+      if (sk === 'usccb-daily-readings' && seatEntry687 && e !== seatEntry687) { e.t = 'x'; return; }
+      seenSrc[sk] = 1; present[sk] = 1; e.t = 's'; e.row = opn686Row(sk); e.repRid = e.rid;
+    }
   });
-  var missing = rowKeys.filter(function (sk) { return !present[sk] && opn686Row(sk); });
+  entries = entries.filter(function (e) { return e.t !== 'x'; });
+  var missing = rowKeys.filter(function (sk) { return !present[sk] && opn686Row(sk) && !opn687RepIds687(sk).some(function (id) { return removedIds687[id]; }); });
   missing.sort(function (a, b) { var pa = opn686RankPair(a), pb = opn686RankPair(b); return pa[0] - pb[0] || pa[1] - pb[1]; });
   missing.forEach(function (sk) {
     var rank = opn686RankPair(sk), pos = 0;
@@ -24122,7 +24272,7 @@ function opnMassHomiliesSectionHtml686() {
   if (!opn686.rows.length) return '';
   var keys = ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross'];
   var html = '<div class="p609group p686mass" data-p686mass="1"><div class="row p609ghead"><span class="grow">Mass and Homilies</span></div>';
-  keys.forEach(function (k) { var r = opn686Row(k); if (r) html += opnSourceRowHtml686(r, { tag: k === 'stations-of-the-cross' ? 'Not placed' : 'Daily source' }); });
+  keys.forEach(function (k) { var r = opn686Row(k); if (r) html += opnSourceRowHtml686(r, { tag: k === 'stations-of-the-cross' ? 'Not placed' : 'Daily source', closing: true }); });
   return html + '</div>';
 }
 /* §2.5: the whole-table write — every act PUTs all 26 rows in
@@ -24243,8 +24393,67 @@ function opnOpenMovePicker686(fromBlock, rowId) {
     });
   });
 }
+function opn687FindItem(block, rid) {
+  var pr = opnParseRowId610(rid), id = pr.id;
+  var m = opnMaterialize604(block);
+  var seen = 0, at = -1;
+  m.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  return at >= 0 ? m[at] : null;
+}
+function opnToggleOff687(block, rid) {
+  // v687 §2.7 (Amendment A scope): Disable/Enable for an
+  // office CONTENTS item only — the item's off flag flips
+  // and the standing write persists it (both validators
+  // preserve the field on labeled-slot items).
+  var it = opn687FindItem(block, rid);
+  if (!it || !(it.kind === 'source' && opnLabeledSlot650(it.key))) return;
+  if (it.off) delete it.off; else it.off = 1;
+  return opnWrite604(block);
+}
 function opnOpenMoveMenu686(block, rid, anchorEl) {
-  openSheetMenu('Move', [{ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid); } }], anchorEl);
+  // v687 §1.4: the contents row's menu — Move to block… ·
+  // (office: Disable/Enable · other: Remove).
+  var it = opn687FindItem(block, rid);
+  var office = !!(it && it.kind === 'source' && opnLabeledSlot650(it.key));
+  var items = [{ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid); } }];
+  if (office) items.push({ label: it.off ? 'Enable' : 'Disable', act: function () { opnToggleOff687(block, rid); } });
+  else items.push({ label: 'Remove', act: function () { opnRemove604(block, rid); } });
+  openSheetMenu('Options', items, anchorEl);
+}
+function opn687FreqItems(key) {
+  var row = opn686Row(key);
+  if (!row) return [];
+  var cur = row.dayRule;
+  var keys = ['daily', 'sundays', 'fridays'];
+  if (cur && keys.indexOf(cur) < 0) keys.push(cur);
+  var items = [{ head: true, label: 'Frequency — ' + (DAY_RULE_LABELS[cur] || cur) }];
+  keys.forEach(function (k) {
+    items.push({ label: DAY_RULE_LABELS[k] || k, state: k === cur ? 'Current' : '', act: function () { opnSetSourceDay686(key, k); } });
+  });
+  return items;
+}
+function opnOpenSourceMenu687(block, key, rid, anchorEl) {
+  // v687 §1.4 menu table: block rows — Move up/down (the
+  // ▲▼ acts, representation standing only) · Frequency ·
+  // pinned: Disable/Enable · removable: Remove. Closing
+  // rows — Frequency only.
+  var row = opn686Row(key);
+  if (!row) return;
+  var items = [];
+  if (block && rid) {
+    var group = document.querySelector('[data-p604exp="' + block + '"]');
+    var rows = group ? [...group.querySelectorAll('.p604erow')] : [];
+    var pos = -1;
+    rows.forEach(function (r, i) { if (r.getAttribute('data-p686src') === key) pos = i; });
+    items.push({ label: 'Move up', disabled: pos <= 0, act: function () { opnMove684(block, rid, 'up'); } });
+    items.push({ label: 'Move down', disabled: pos < 0 || pos >= rows.length - 1, act: function () { opnMove684(block, rid, 'down'); } });
+  }
+  items = items.concat(opn687FreqItems(key));
+  if (block) {
+    if (OPN687_PINNED.indexOf(key) >= 0) items.push({ label: row.enabled ? 'Disable' : 'Enable', act: function () { opnToggleSource686(key); } });
+    else if (rid) items.push({ label: 'Remove', act: function () { opnRemove604(block, rid); } });
+  }
+  openSheetMenu(opnSeedDisplayName636(row), items, anchorEl);
 }
 function opnRemove604(block, rowId) {
   // v610: the row id is occurrence-qualified — Remove takes
@@ -24308,19 +24517,10 @@ function opnEditPostureHtml604(b) {
   var block = b.block;
   var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
-  var seenRow610b = {};
   var entries686b = opnSpliceSourceRows686(block, list);
-  entries686b.forEach(function (e686) {
-    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !opnGroupOn609(block) }); return; }
-    var it = e686.it, idx = e686.idx;
-    var id = opnTodayItemId594(it);
-    var occ = seenRow610b[id] || 0; seenRow610b[id] = occ + 1;
-    var rid = opnRowId610(it, occ);
-    html += '<div class="card bookrow p604erow" data-p604erow="' + esc(rid) + '"><div class="row">'
-      + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
-      + opnMoveButtons684(block, rid, idx, list.length)
-      + '<button class="btn ghost" data-p686menu="' + esc(block) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
-      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
+  entries686b.forEach(function (e686, pi686) {
+    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !opnGroupOn609(block), block: block, repRid: e686.repRid || '', paintIdx: pi686, paintLen: entries686b.length }); return; }
+    html += opnContentsRowHtml687(block, e686, pi686, entries686b.length, false);
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
   var removed = opn604.removed[block] || [];
@@ -27115,6 +27315,45 @@ function opnSeriesRows609() {
       + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="series|' + esc(sr.series) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div></div>';
   }).join('');
 }
+function opnContentsRowHtml687(block, e686, paintIdx, paintLen, grouped) {
+  // v687 §1.4: a contents row — grow (title; a daily item
+  // paints its subtitle "Generates daily" and no " · Daily"
+  // suffix, §2.8) · ▲▼ (painted-order boundaries) ·
+  // [segtoggle, office rows] · Disable icon (office) or
+  // Remove icon (all other kinds) · ⋮. An off office row
+  // dims whole.
+  var it = e686.it, rid = e686.rid;
+  var office = it.kind === 'source' && opnLabeledSlot650(it.key);
+  var label, sub = '';
+  if (it.kind === 'daily') { label = opnDailySeriesTitle666(it.key); sub = 'Generates daily'; }
+  else label = opnItemLabel604(block, it);
+  var tog670 = '';
+  if (grouped && office) {
+    // v670 §3.4: the segmented source toggle stands on a
+    // labeled-slot row, the item's side active (an
+    // un-stamped item reads 'sth').
+    // v687 §2.9 deviation (named in §3): the toggle seats
+    // UNDER the title inside the grow column, not in the
+    // flex line — with the Amendment A acts (▲▼ · ⋮ ·
+    // Disable icon) the line leaves the label a ~32px
+    // column at 390px and the title wraps word-per-line
+    // (the field defect itself). Under the title the
+    // toggle stands whole at its compact dress and the
+    // label takes the column's full width.
+    var sd670 = it.side === 'do' ? 'do' : 'sth';
+    tog670 = '<span class="p687togline"><span class="segtoggle" data-p670toggle="' + esc(block) + '|' + esc(rid) + '">'
+      + '<button data-p670side="do"' + (sd670 === 'do' ? ' class="active"' : '') + '>Divine Office</button>'
+      + '<button data-p670side="sth"' + (sd670 === 'sth' ? ' class="active"' : '') + '>Sing the Hours</button></span></span>';
+  }
+  var icon = office
+    ? opn687DisableIcon('data-p687disable="' + esc(block) + '|' + esc(rid) + '"', it.off ? 'Enable' : 'Disable')
+    : opn687RemoveIcon('data-p604remove="' + esc(block) + '|' + esc(rid) + '"');
+  return '<div class="card bookrow p604erow' + (grouped ? ' p609erow' : '') + (office && it.off ? ' p687dim' : '') + '" data-p604erow="' + esc(rid) + '"><div class="row">'
+    + '<span class="grow"><span class="p687title">' + esc(label) + '</span>' + (sub ? '<span class="p687sub">' + esc(sub) + '</span>' : '') + tog670 + '</span>'
+    + opnMoveButtons684(block, rid, paintIdx, paintLen)
+    + '<button class="btn ghost" data-p686menu="' + esc(block) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
+    + icon + '</div></div>';
+}
 function opnEditGroupHtml609(block) {
   var list = opnMaterialize604(block);
   var on = opnGroupOn609(block);
@@ -27123,30 +27362,10 @@ function opnEditGroupHtml609(block) {
     + '<div class="row p609ghead" data-p609ghead="' + esc(block) + '"><span class="grow">' + esc(block) + '</span>'
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
   // v609 repair 2: the Podcasts series rows retire with the layer (opnSeriesRows609 stands as dead code).
-  var seenRow610 = {};
   var entries686 = opnSpliceSourceRows686(block, list);
-  entries686.forEach(function (e686) {
-    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !on }); return; }
-    var it = e686.it, idx = e686.idx;
-    var id = opnTodayItemId594(it);
-    var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
-    var rid = opnRowId610(it, occ);
-    var tog670 = '';
-    if (it.kind === 'source' && opnLabeledSlot650(it.key)) {
-      // v670 \u00a73.4: the segmented source toggle stands on
-      // a labeled-slot row, the item's side active (an
-      // un-stamped item reads 'sth').
-      var sd670 = it.side === 'do' ? 'do' : 'sth';
-      tog670 = '<span class="segtoggle" data-p670toggle="' + esc(block) + '|' + esc(rid) + '">'
-        + '<button data-p670side="do"' + (sd670 === 'do' ? ' class="active"' : '') + '>Divine Office</button>'
-        + '<button data-p670side="sth"' + (sd670 === 'sth' ? ' class="active"' : '') + '>Sing the Hours</button></span>';
-    }
-    html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(rid) + '"><div class="row">'
-      + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
-      + opnMoveButtons684(block, rid, idx, list.length)
-      + tog670
-      + '<button class="btn ghost" data-p686menu="' + esc(block) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
-      + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
+  entries686.forEach(function (e686, pi686) {
+    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !on, block: block, repRid: e686.repRid || '', paintIdx: pi686, paintLen: entries686.length }); return; }
+    html += opnContentsRowHtml687(block, e686, pi686, entries686.length, true);
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
   var removed = opn604.removed[block] || [];

@@ -533,9 +533,25 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .p609erow { padding-top:5px; padding-bottom:5px; margin-bottom:6px; }
 .p609erow .row { min-height:32px; align-items:center; }
 /* v686 §2.2: the source row's dress — pin seat, tag, day pick. */
-.p686pin { flex:0 0 auto; margin-right:2px; }
+/* v687 §§2.1/2.8/2.9: the pin glyph and the day-pick select
+   retire (frequency rides the menu); the grow column gains
+   min-width:0 so the title flexes inside its own column;
+   the subtitle paints the frequency small; the office
+   segtoggle takes its compact seat; the row acts are drawn
+   icons; a disabled office/pinned row dims whole. */
 .p686tag { font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 7px; white-space:nowrap; }
-.p686srcrow select { flex:0 0 auto; margin-left:8px; min-height:32px; }
+.p686srcrow .grow { min-width:0; }
+.p604erow .grow, .p609erow .grow { min-width:0; }
+.p687sub { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
+.p687dim { opacity:.5; }
+.p687icon { flex:none; width:40px; min-width:40px; height:44px; padding:0; background:none; border:0; font-family:inherit; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.p687icon svg { width:20px; height:20px; display:block; }
+.p687togline { display:block; margin-top:4px; }
+[data-p670toggle] { flex:none; margin:0; }
+[data-p670toggle] button { flex:none; min-height:30px; font-size:12px; padding:4px 6px; }
+.p604erow .row, .p609erow .row { gap:6px; }
+.p604erow [data-p686menu], .p609erow [data-p686menu] { flex:none; width:34px; min-width:34px; padding:0; }
+.menurow:disabled { opacity:.45; cursor:default; }
 .p686off { opacity:.5; }
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
@@ -1193,7 +1209,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v686-1";
+var CACHE = "ora-pro-nobis-v687-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
