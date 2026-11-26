@@ -1396,6 +1396,13 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // (the set is a literal here because this fn is
           // extracted standalone by the harnesses).
           if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints"].includes(key)) return { error: `bad daily ${String(key)}` };
+        } else if (kind === "massdaily") {
+          // v688: a massdaily item naming one of the four
+          // Mass sources is kept; any other massdaily key
+          // is an error — the client's mirror rule (the set
+          // is a literal here because this fn is extracted
+          // standalone by the harnesses).
+          if (typeof key !== "string" || !["daily-tv-mass", "catholictv", "dailytvmass", "springfieldmass"].includes(key)) return { error: `bad massdaily ${String(key)}` };
         } else if (kind === "video") {
           // v656: a video item's key is '<series>|<videoId>',
           // both sides non-empty, AND the series side naming

@@ -2850,6 +2850,20 @@ var OPN_DAY_KEY_611 = 'daily-gospel-exegesis';
 // error at both validators and filters out at the read seam.
 var OPN_DAILY_SERIES_666 = ['saint-of-the-day', 'daily-gospel-exegesis', 'daily-readings', 'bible-in-a-year', 'catholicsaints'];
 function opnDailyKeyOk666(key) { return typeof key === 'string' && OPN_DAILY_SERIES_666.indexOf(key) >= 0; }
+/* v688 §2.2/§2.3: the dynamic Mass kind — a SIBLING kind
+   ('massdaily') beside 'daily', NEVER an extension of it:
+   OPN_DAILY_SERIES_666 stands closed and unwidened. The
+   closed set: 'daily-tv-mass' is the AUDIO source key (the
+   seed sourceKey, slot ext-daily-tv-mass); 'dailytvmass'
+   is the VIDEO series key — different keys, two forms of
+   one production, both stand. */
+var OPN_MASS_SERIES_688 = ['daily-tv-mass', 'catholictv', 'dailytvmass', 'springfieldmass'];
+function opnMassKeyOk688(key) { return typeof key === 'string' && OPN_MASS_SERIES_688.indexOf(key) >= 0; }
+function opnMassSeriesTitle688(series) {
+  if (series === 'daily-tv-mass') return 'Daily TV Mass';
+  return opnVideoSeriesTitle656(series);
+}
+function opnMassLabel688(series) { return opnMassSeriesTitle688(series) + ' \u00b7 Daily'; }
 function opnDailySeriesTitle666(series) {
   if (series === 'catholicsaints') return opnVideoSeriesTitle656(series);
   if (opnLadderSeries603) for (var i = 0; i < opnLadderSeries603.length; i++) if (opnLadderSeries603[i].series === series) return opnLadderSeries603[i].title || series;
@@ -3070,6 +3084,13 @@ function opnCheckContents590(contents, coreBlocks) {
           // verified daily series stands; any other daily
           // key is an error, exactly the day rule's shape.
           if (!opnDailyKeyOk666(key)) throw opnErr(400, 'bad daily ' + key);
+        } else if (kind === 'massdaily') {
+          // v688 §2.3: a massdaily item naming one of the
+          // four Mass sources stands; any other massdaily
+          // key is an error, exactly the daily rule's shape.
+          // No dedupe exception: the standing seen[] drop
+          // gives once-per-block.
+          if (!opnMassKeyOk688(key)) throw opnErr(400, 'bad massdaily ' + key);
         } else if (kind === 'video') {
           // v656: a video item pins ONE Virtual Mass video —
           // its key is '<series>|<videoId>' with the series
@@ -3214,7 +3235,7 @@ function opnContentsOf590(p) {
   var out = {};
   Object.keys(p.contents).forEach(function (b) {
     var items = Array.isArray(p.contents[b]) ? p.contents[b] : [];
-    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611) && (it.kind !== 'daily' || opnDailyKeyOk666(it.key)) && (it.kind !== 'episode' || opnEpisodeKeyOk614(it.key)) && (it.kind !== 'video' || opnVideoKeyOk656(it.key)); }).map(function (it) { return opnClone(it); });
+    out[b] = items.filter(function (it) { return !it || (it.kind !== 'course' || (typeof it.key === 'string' && !!it.key)) && (it.kind !== 'day' || it.key === OPN_DAY_KEY_611) && (it.kind !== 'daily' || opnDailyKeyOk666(it.key)) && (it.kind !== 'massdaily' || opnMassKeyOk688(it.key)) && (it.kind !== 'episode' || opnEpisodeKeyOk614(it.key)) && (it.kind !== 'video' || opnVideoKeyOk656(it.key)); }).map(function (it) { return opnClone(it); });
   });
   return out;
 }
@@ -18290,7 +18311,7 @@ function trackCard(t) {
     // line (trackKeyOf returns null for the kind, so no draw
     // ever stands for it).
     if (t.available) {
-      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + '</span>' + metaTrail('') + '</div>' + ((t.daily666 && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '') + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + '</span>' + metaTrail('') + '</div>' + (((t.daily666 || t.mass688) && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '') + '</div>');
     }
     return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + ' \u00b7 Not available today</div></div></div></div>';
   }
@@ -18355,8 +18376,8 @@ function trackCard(t) {
     // shape (' · ' + source) — and a stale one carries the
     // v625 warning line under the metarow. Both gate on
     // daily666: every non-daily row's paint is byte-unchanged.
-    if (t.daily666 && t.source) meta += ' \u00b7 ' + esc(t.source);
-    var staleWarn666 = (t.daily666 && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '';
+    if ((t.daily666 || t.mass688) && t.source) meta += ' \u00b7 ' + esc(t.source);
+    var staleWarn666 = ((t.daily666 || t.mass688) && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '';
     // v413 §2.6/R4: the Read control stays in the row (a
     // content act, not a menu item); the Spotify link leaves
     // the row — its one home is now the row ⋮ menu.
@@ -20844,6 +20865,202 @@ function resolveDailyDynamic666(day) {
     }).catch(function () {});
   });
 }
+/* ---------------- v688: the Mass settled-pick store ----
+   Plan §2.4: the v677 discipline carried whole in its own
+   store — a dynamic Mass row settles its Mass ONCE for the
+   presented (Chicago) date and holds it all day; a day
+   settled on the not-updated fallback never advances
+   mid-day; the date turn is the only advance. Shape
+   identical to opn-daily-settled-v1:
+   { [presentedDate]: { [block + ':' + key]:
+     { episodeId, stale, desc } } } — pruned at write to the
+   current + previous presented date. */
+var OPN_MASS_SETTLED_KEY = 'opn-mass-settled-v1';
+function opnMassSettled688() {
+  if (state.massSettled688) return state.massSettled688;
+  var v = null;
+  try { v = JSON.parse(localStorage.getItem(OPN_MASS_SETTLED_KEY) || 'null'); } catch (e) {}
+  state.massSettled688 = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  return state.massSettled688;
+}
+function opnMassSettledSave688() {
+  try { localStorage.setItem(OPN_MASS_SETTLED_KEY, JSON.stringify(state.massSettled688 || {})); } catch (e) {}
+}
+function opnMassSettlePut688(presented, jobKey, episodeId, stale, desc) {
+  var all = opnMassSettled688();
+  var prev = opnDailyPrevDate677(presented);
+  Object.keys(all).forEach(function (d) { if (d !== presented && d !== prev) delete all[d]; });
+  if (!all[presented]) all[presented] = {};
+  all[presented][jobKey] = { episodeId: episodeId, stale: !!stale, desc: opnClone(desc) };
+  opnMassSettledSave688();
+}
+function opnMassMatch688(key, videos, presented) {
+  // v688 §2.4: title-date is PRIMARY (opnDailyTitleDate666's
+  // reading of the 'Month D, YYYY' form in the title). The
+  // Mass term is load-bearing where prescribed:
+  // catholictv 'Catholic Mass Today' — ENGLISH ONLY (John's
+  // amendment, 2026-11-26: 'La Santa Misa' NEVER resolves,
+  // neither as the day's Mass nor as the fallback);
+  // dailytvmass 'Daily TV Mass' (the channel is mixed —
+  // Shorts/Rosary/hymns never carry it with a title date);
+  // springfieldmass no term (every video in the window is
+  // a Mass). Fallback: the newest earlier matching video,
+  // stale: true. Neither stands -> null (the slot stands
+  // empty).
+  var term = key === 'catholictv' ? 'Catholic Mass Today' : (key === 'dailytvmass' ? 'Daily TV Mass' : null);
+  var hit = null;
+  (videos || []).forEach(function (v) {
+    if (hit || !v || !v.title) return;
+    if (term && String(v.title).indexOf(term) < 0) return;
+    if (opnDailyTitleDate666(v.title) === presented) hit = v;
+  });
+  if (hit) return { v: hit, stale: false };
+  var prev = (videos || []).filter(function (v) {
+    if (!v || !v.title) return false;
+    if (term && String(v.title).indexOf(term) < 0) return false;
+    var d = opnDailyTitleDate666(v.title);
+    return d && d.length === 10 && d < presented;
+  }).sort(function (a, b) { return opnDailyTitleDate666(b.title) < opnDailyTitleDate666(a.title) ? -1 : 1; });
+  return prev.length ? { v: prev[0], stale: true } : null;
+}
+function opnMassAudioEntry688(payload) {
+  // The externals/live slot entry for the audio Mass, or
+  // null when the payload carries no such slot.
+  if (!payload || !Array.isArray(payload.slots)) return null;
+  var e = null;
+  payload.slots.forEach(function (s) { if (!e && s && s.slotId === 'ext-daily-tv-mass') e = s; });
+  return e;
+}
+function opnMassAudioDesc688(entry, stale, block) {
+  // v688 §2.4: the ext descriptor shape — episodeId is the
+  // slot id (constant across days; the per-day played store
+  // keys the mark by presented date, §2.7).
+  return {
+    episodeId: 'ext-daily-tv-mass', kind: 'external',
+    title: entry.title || 'Daily TV Mass', streamUrl: entry.streamUrl || null, url: entry.streamUrl || null,
+    available: !!entry.streamUrl, block: block, source: 'Daily TV Mass',
+    durationS: entry.durationSec || 0, imageUrl: entry.imageUrl || null, descText: entry.descText || null,
+    stale: !!stale, mass688: true, massSeries: 'daily-tv-mass'
+  };
+}
+function resolveMassDynamic688(day) {
+  // v688 §2.4: each 'massdaily' selector in the effective
+  // profile's contents resolves to its source's Mass OF THE
+  // PRESENTED DAY, with the not-updated fallback (the last
+  // Mass that loaded, stale: true). Jobs group BY KEY: one
+  // fetch per key per day build. NO suppression seat (§2.4:
+  // no Mass source has a standing seat twin). A payload
+  // that fails to load resolves NOTHING that build. The
+  // descriptor stands in state.massRes688 for
+  // extRebuildDescs to place at its contents position,
+  // carrying mass688 + massSeries + source (§2.4).
+  // R-688-1 fetch seat (named in §3): the audio leg reads
+  // the standing courier route the other slots ride —
+  // api('/api/player/externals/live?date=' + presented),
+  // the resolveExternals courier leg's own fetch — for the
+  // presented date; the not-updated fallback first reads
+  // THAT payload's stale present entry (the payload's own
+  // stale rule: a present row is stale iff its episode_date
+  // is not the presented date), and only when the slot
+  // stands missing/unresolved does it make the per-date
+  // live read for the PREVIOUS date.
+  var prevRes688 = state.massRes688 || {};
+  state.massRes688 = {};
+  var eff = day && day.profile;
+  if (!eff || !eff.contents) return;
+  var jobs = [];
+  Object.keys(eff.contents).forEach(function (block) {
+    (eff.contents[block] || []).forEach(function (it) {
+      if (!it || it.kind !== 'massdaily' || !opnMassKeyOk688(it.key)) return;
+      jobs.push({ block: block, key: it.key });
+    });
+  });
+  if (!jobs.length) return;
+  var settle = function () { extRebuildDescs(day); if (state.dayPayload) paintPrayersView(state.dayPayload); };
+  var presented = day.presentedDay || day.date;
+  var byKey = {};
+  jobs.forEach(function (job) { (byKey[job.key] = byKey[job.key] || []).push(job); });
+  Object.keys(byKey).forEach(function (key) {
+    var group = byKey[key];
+    var settled688 = (opnMassSettled688()[presented] || {});
+    var anyUnsettled688 = group.some(function (job) { return !settled688[job.block + ':' + key]; });
+    var standSettled688 = function (job) {
+      // A settled job rebuilds from the settled identity;
+      // listened refreshes at settle (§2.7): video reads
+      // the day played store (isPlayed — the fold's read
+      // seat, named in §3; no payload listened fold exists
+      // for these series), audio reads the same store by
+      // its constant slot id + the presented date.
+      var jobKey = job.block + ':' + key;
+      var rec = settled688[jobKey];
+      if (!rec || !rec.desc) return false;
+      var d = opnClone(rec.desc);
+      d.block = job.block;
+      d.stale = !!rec.stale;
+      var prevD = prevRes688[jobKey];
+      d.listened = !!((prevD && prevD.listened) || rec.desc.listened || isPlayed(rec.episodeId, presented, job.block));
+      state.massRes688[jobKey] = d;
+      return true;
+    };
+    if (key === 'daily-tv-mass') {
+      api('/api/player/externals/live?date=' + encodeURIComponent(presented)).then(function (payload) {
+        if (state.dayPayload !== day) return;
+        if (!payload) return;
+        var entry = opnMassAudioEntry688(payload);
+        var m = null;
+        if (entry && entry.state === 'present' && entry.streamUrl) m = { e: entry, stale: !!entry.stale };
+        var finishAudio688 = function () {
+          group.forEach(function (job) {
+            var jobKey = job.block + ':' + key;
+            if (standSettled688(job)) return;
+            if (!m) return;
+            var desc = opnMassAudioDesc688(m.e, m.stale, job.block);
+            desc.listened = isPlayed(desc.episodeId, presented, job.block);
+            state.massRes688[jobKey] = desc;
+            opnMassSettlePut688(presented, jobKey, desc.episodeId, !!m.stale, desc);
+          });
+          settle();
+        };
+        if (m || !anyUnsettled688) { finishAudio688(); return; }
+        // The slot stands missing/unresolved on the
+        // presented payload: the per-date live read for
+        // the previous date supplies the fallback.
+        var prevDate688 = opnDailyPrevDate677(presented);
+        if (!prevDate688) { finishAudio688(); return; }
+        api('/api/player/externals/live?date=' + encodeURIComponent(prevDate688)).then(function (prevPayload) {
+          if (state.dayPayload !== day) return;
+          var pe = opnMassAudioEntry688(prevPayload);
+          if (pe && pe.state === 'present' && pe.streamUrl) m = { e: pe, stale: true };
+          finishAudio688();
+        }).catch(function () { finishAudio688(); });
+      }).catch(function () {});
+      return;
+    }
+    api('/api/player/podcasts?series=' + encodeURIComponent(key)).then(function (payload) {
+      if (state.dayPayload !== day) return;
+      if (!payload || payload.kind !== 'video' || !Array.isArray(payload.videos)) return;
+      opnVideoRegWrite656(key, payload.videos);
+      var m = anyUnsettled688 ? opnMassMatch688(key, payload.videos, presented) : null;
+      group.forEach(function (job) {
+        var jobKey = job.block + ':' + key;
+        if (standSettled688(job)) return;
+        if (!m) return;
+        var v = m.v;
+        var desc = {
+          episodeId: 'yt:' + v.id, kind: 'video', videoId: v.id, vmSeries: key,
+          title: v.title || '', url: null, enclosureUrl: null,
+          available: true, block: job.block, durationS: 0, imageUrl: v.imageUrl || null,
+          descText: v.descText || null, dateLabel: v.dateLabel || '',
+          listened: isPlayed('yt:' + v.id, presented, job.block),
+          source: opnMassSeriesTitle688(key), stale: !!m.stale, mass688: true, massSeries: key
+        };
+        state.massRes688[jobKey] = desc;
+        opnMassSettlePut688(presented, jobKey, desc.episodeId, !!m.stale, desc);
+      });
+      settle();
+    }).catch(function () {});
+  });
+}
 function resolveReadingsSeat590(day) {
   // v590 §2.5: the Daily Readings seat, resolved on-device
   // — the server gate's key check becomes the contents
@@ -21218,6 +21435,25 @@ function extRebuildDescs(day) {
                 // standing fields only — the daily marks
                 // re-stamp onto the day's own descriptor.
                 if (d.episodeId === yd666.episodeId) { d.daily666 = true; d.dailySeries = yd666.dailySeries; }
+                descs.push(d);
+              });
+            }
+          }
+        } else if (it.kind === 'massdaily') {
+          // v688 §2.3: resolved by resolveMassDynamic688;
+          // audio through expandDescs (the ext/episode
+          // shape — the seam copies the standing fields
+          // only, so the mass marks re-stamp onto the day's
+          // own descriptor, the daily branch's discipline),
+          // a video descriptor raw-pushed (the video
+          // branch's shape). An unresolved massdaily (no
+          // Mass and no earlier Mass) leaves its slot empty.
+          if (state.massRes688) {
+            var md688 = state.massRes688[b.block + ':' + it.key];
+            if (md688) {
+              if (md688.kind === 'video') descs.push(Object.assign({}, md688, { _block: b.block }));
+              else expandDescs(Object.assign({}, md688, { _block: b.block }), day).forEach(function (d) {
+                if (d.episodeId === md688.episodeId) { d.mass688 = true; d.massSeries = md688.massSeries; d.stale = !!md688.stale; d.source = md688.source; }
                 descs.push(d);
               });
             }
@@ -22712,6 +22948,9 @@ function buildDayFromPayload(day, snap) {
     // v666: the contents daily selectors resolve beside
     // the videos (per-series daily resolution, §2.5).
     resolveDailyDynamic666(day);
+    // v688: the contents massdaily selectors resolve beside
+    // the daily selectors (per-source Mass resolution, §2.4).
+    resolveMassDynamic688(day);
     resolveReadingsSeat590(day);
     // v528 §2.2: the build settle — the built day's track
     // keys go to the draw store in one batch; the returned
@@ -23942,6 +24181,7 @@ function opnItemLabel604(block, it) {
   if (it.kind === 'course') return opnLadderCourseTitle603(it.key);
   if (it.kind === 'day') return 'Daily Gospel Exegesis';
   if (it.kind === 'daily') return opnDailySeriesTitle666(it.key) + ' \u00b7 Daily';
+  if (it.kind === 'massdaily') return opnMassLabel688(it.key);
   if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
   if (it.kind === 'video') return opnVideoTitle656(it.key);
   if (it.kind === 'novena') {
@@ -25261,6 +25501,7 @@ function openEditTodayScreen594(fromLadder) {
     if (it.kind === 'prayer') return prayerTitle(it.key);
     if (it.kind === 'day') return 'Daily Gospel Exegesis';
     if (it.kind === 'daily') return opnDailySeriesTitle666(it.key) + ' \u00b7 Daily';
+    if (it.kind === 'massdaily') return opnMassLabel688(it.key);
     if (it.kind === 'episode') return opnEpisodeTitle614(it.key);
     if (it.kind === 'video') return opnVideoTitle656(it.key);
     var u = null;
@@ -25741,7 +25982,7 @@ function openProfilesScreen(openKey, opts) {
       mat.forEach(function (m) {
         var u = null;
         uni.forEach(function (it) { if ((it.kind + ':' + (it.key || '')) === (m.kind + ':' + (m.key || ''))) u = it; });
-        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (m.kind === 'daily' ? opnDailySeriesTitle666(m.key) + ' \u00b7 Daily' : (m.kind === 'episode' ? opnEpisodeTitle614(m.key) : (m.kind === 'video' ? opnVideoTitle656(m.key) : (u ? u.label : (m.key || m.kind)))))), on: true });
+        disp.push({ kind: m.kind, key: m.key || '', label: m.kind === 'prayer' ? prayerTitle(m.key) : (m.kind === 'day' ? 'Daily Gospel Exegesis' : (m.kind === 'daily' ? opnDailySeriesTitle666(m.key) + ' \u00b7 Daily' : (m.kind === 'massdaily' ? opnMassLabel688(m.key) : (m.kind === 'episode' ? opnEpisodeTitle614(m.key) : (m.kind === 'video' ? opnVideoTitle656(m.key) : (u ? u.label : (m.key || m.kind))))))), on: true });
       });
       uni.forEach(function (it) {
         var id = it.kind + ':' + (it.key || '');
@@ -26208,6 +26449,28 @@ function openAddLadder603(block, host) {
         sub: twin || 'The day\u2019s episode, standing new every day' };
       return matchItem(it) ? rowHtml(it, '') : '';
     }
+    function massRow688(series) {
+      // v688 §2.5: the gold dynamic Mass card — the sibling
+      // of dailyRow614 (which is NOT widened: it gates on
+      // opnDailyKeyOk666 and returns '' for these series).
+      // The dailytvmass card's sub names the video form, so
+      // no two cards in the ladder share a label+sub pair
+      // with the audio door.
+      if (!opnMassKeyOk688(series)) return '';
+      var it = { kind: 'massdaily', key: series, mass688: true,
+        label: opnMassLabel688(series),
+        sub: series === 'dailytvmass' ? 'The day\u2019s Mass on video, standing new every day' : 'The day\u2019s Mass, standing new every day' };
+      return matchItem(it) ? rowHtml(it, '') : '';
+    }
+    function massAudioNode688() {
+      // v688 §2.5: the audio Mass has no series node (it is
+      // not on the podcasts route) — its door's node paints
+      // the gold dynamic card for 'daily-tv-mass' and one
+      // note line; the card is the node's whole content.
+      var html = massRow688('daily-tv-mass');
+      html += '<p class="sub">The Daily TV Mass as audio \u2014 no fixed episodes stand for this source; the day\u2019s Mass stands new every day.</p>';
+      return html;
+    }
     function novenaItems() {
       var out = [{ kind: 'all-novenas', key: '', label: 'Every active novena' }];
       var cat = state.novenasCatalog;
@@ -26268,6 +26531,17 @@ function openAddLadder603(block, host) {
         var markedD = onD || !!item.seatTwin;
         var metaD = onD ? 'Already in ' + esc(block) : 'Daily';
         return '<div class="card bookrow p666daily' + (markedD ? ' profadd-on603' : '') + '"' + (markedD ? '' : ' data-p603additem="daily:' + esc(item.key) + '"') + '><div class="row"><span class="grow">' + esc(item.label) + '</span><span class="meta">' + esc(metaD) + '</span></div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
+      }
+      if (item.mass688) {
+        // v688 §2.5: the dynamic Mass row — the gold card's
+        // dress (.p666daily) through the standing row paint,
+        // the sibling of the daily666 arm above (NOT a
+        // widening of it). isOn marks it from host.ids()
+        // ('massdaily:<key>'): a standing item paints
+        // 'Already in <block>', not tappable.
+        var onM688 = isOn(item);
+        var metaM688 = onM688 ? 'Already in ' + esc(block) : 'Daily';
+        return '<div class="card bookrow p666daily' + (onM688 ? ' profadd-on603' : '') + '"' + (onM688 ? '' : ' data-p603additem="massdaily:' + esc(item.key) + '"') + '><div class="row"><span class="grow">' + esc(item.label) + '</span><span class="meta">' + esc(metaM688) + '</span></div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
       }
       if (item.noAdd) {
         return '<div class="card bookrow"><div class="row"><span class="grow">' + esc(item.label) + '</span></div>' + (item.sub ? '<p class="sub">' + esc(item.sub) + '</p>' : '') + '</div>';
@@ -26400,7 +26674,11 @@ function openAddLadder603(block, host) {
       // daily series' video node (dailyRow614 returns '' for
       // any series outside the set — the Virtual Mass series
       // get NO daily row).
-      var html = dailyRow614(series);
+      // v688 §2.5: the gold dynamic Mass card stands at the
+      // head of each Virtual Mass series node, above its
+      // fixed video rows (massRow688 returns '' for any
+      // series outside the Mass set).
+      var html = dailyRow614(series) + massRow688(series);
       pay.videos.forEach(function (v) {
         var it = { kind: 'video', key: series + '|' + v.id, label: v.title, sub: v.dateLabel };
         if (matchItem(it)) html += rowHtml(it, '');
@@ -26438,6 +26716,14 @@ function openAddLadder603(block, host) {
         groups.push({ head: 'Prayers \u203a Ora Pro Nobis', items: ownItems614().filter(function (it) { return match(it.label); }), path: 'Prayers \u203a Ora Pro Nobis' });
         groups.push({ head: 'Catechesis \u203a Courses', items: courses().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Courses' });
         groups.push({ head: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis', items: dailyItems().filter(function (it) { return match(it.label); }), path: 'Catechesis \u203a Podcasts \u203a Daily Gospel Exegesis' });
+        // v688 §2.5: the head search carries a 'Videos ›
+        // Virtual Mass' group with the four dynamic Mass
+        // cards (the head-search groups mirror the tree).
+        var massItems688 = ['catholictv', 'dailytvmass', 'springfieldmass', 'daily-tv-mass'].map(function (k688) {
+          return { kind: 'massdaily', key: k688, mass688: true, label: opnMassLabel688(k688),
+            sub: k688 === 'dailytvmass' ? 'The day\u2019s Mass on video, standing new every day' : (k688 === 'daily-tv-mass' ? 'The day\u2019s Mass as audio, standing new every day' : 'The day\u2019s Mass, standing new every day') };
+        });
+        groups.push({ head: 'Videos \u203a Virtual Mass', items: massItems688.filter(function (it) { return match(it.label) || match(it.sub); }), path: 'Videos \u203a Virtual Mass' });
         var doors = [];
         (opnLadderSeries603 || []).forEach(function (sd) { if (match(sd.title || sd.series)) doors.push({ door: 'series:' + sd.series, label: sd.title || sd.series }); });
         if (state.novenasCatalog && state.novenasCatalog.novenas) state.novenasCatalog.novenas.forEach(function (n) { if (match(n.name || n.slug)) doors.push({ door: 'novena:' + n.slug, label: n.name || n.slug }); });
@@ -26479,7 +26765,8 @@ function openAddLadder603(block, host) {
       if (rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
       // v656 §2.6: S1 retires — the Virtual Mass leaf opens:
       // three doors, one per MASS_VIRTUAL_ENTRIES entry.
-      if (rung === 'lf:virtual-mass') return doors614(MASS_VIRTUAL_ENTRIES.map(function (e) { return ['vmass:' + e.series, e.title, e.meta]; }));
+      if (rung === 'lf:virtual-mass') return doors614(MASS_VIRTUAL_ENTRIES.map(function (e) { return ['vmass:' + e.series, e.title, e.meta]; }).concat([['vmass-audio:daily-tv-mass', 'Daily TV Mass \u00b7 Audio', 'Daily TV Mass \u2014 audio']]));
+      if (rung.indexOf('vmass-audio:') === 0) return massAudioNode688();
       if (rung.indexOf('vmass:') === 0) return videoNode656(rung.slice('vmass:'.length));
       if (rung === 'lf:prayerbook') {
         var ph = '';
@@ -26532,6 +26819,7 @@ function openAddLadder603(block, host) {
       if (r.indexOf('series:') === 0) { var sk = r.slice('series:'.length); return (sk === 'fr-mike-homilies' || sk === 'barron-sunday-sermons') ? 'lf:homilies' : 'lf:podcasts'; }
       if (r.indexOf('novena:') === 0) return 'lf:novenas';
       if (r.indexOf('vmass:') === 0) return 'lf:virtual-mass';
+      if (r.indexOf('vmass-audio:') === 0) return 'lf:virtual-mass';
       if (r === 'lf:myhomilies') return 'lf:homilies';
       return 'root';
     }
@@ -27326,6 +27614,7 @@ function opnContentsRowHtml687(block, e686, paintIdx, paintLen, grouped) {
   var office = it.kind === 'source' && opnLabeledSlot650(it.key);
   var label, sub = '';
   if (it.kind === 'daily') { label = opnDailySeriesTitle666(it.key); sub = 'Generates daily'; }
+  else if (it.kind === 'massdaily') { label = opnMassSeriesTitle688(it.key); sub = 'Generates daily'; }
   else label = opnItemLabel604(block, it);
   var tog670 = '';
   if (grouped && office) {
