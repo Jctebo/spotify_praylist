@@ -22263,6 +22263,13 @@ function resolveExternals(day, settingsOverride, snapshotRec) {
       // tracks \u2014 refresh the count on any standing surface (an
       // all-external block's page depends on this call).
       updateBlockCounts(day);
+      // v682: a settle also changes the section card's counted
+      // set (an unavailable descriptor becomes available) — the
+      // swap's own refresh stands unreachable when the card is
+      // closed (its rows stand nowhere in the DOM), so the head
+      // count [data-p615count] recomputes here, from live
+      // state.dayDescs, at the settle moment.
+      refreshPlayedChrome();
       writeCache();
     };
     var extDownload = function (slot, meta) {
