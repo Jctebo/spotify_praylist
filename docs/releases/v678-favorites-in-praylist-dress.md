@@ -250,3 +250,13 @@ Built exactly per §2 including the §2.9 amendment (reading (i)). Commits on `r
 - **Own run — fail-on-old:** `ORA_WT` at `7f72a5f`, one run: **7 ok / 23 bad** — the required failures stand (L1, L3, L4, L6 fail; L5's row-face half passes, its count half fails; L2's absence half passes, its line-text half fails; L7's head-shape checks fail, its door-tap half passes).
 - **Final judged HEAD:** `0952bedb75f83559c30c1a2d4c9996efab7718f3` on `release/v678` — product-identical to the §4-judged tree `82fd849`.
 - **Verdict: PASS.**
+
+## §5 Ship record (chain-v678, 2026-11-26) — LIVE
+
+Review PASS (§4 closing, judged tree `0952bed` — product-identical to `82fd849`; branch head `08f355e` adds only the §4 closing doc commit). Run level: To Ship.
+
+- **Merge:** release/v678 → main, tree-exact via the Git Data API (push-v678-github.py). Local merge `fbc6703` over v677 main `7f72a5f`; product paths asserted against the judged tree `0952bed` before anything moved (client.ts `07fd4f1668c9064010394b6f92f39bdfbfba7510` · index.ts `205f6597cf5a8dcbb313004a30d71025f1c5c4ca` · ui.ts `11d6006014d14a6845ff3512a5b22d090ab3103d`); remote-vs-base delta empty (remote main `6647588` tree == local base tree `6465d87` — no runner commits to reconcile, nothing dropped, no force-push). Remote ship commit **0c05fbba3c4650647b1a12807bed0e2e879db32d**, tree **876215b3592d3b9066646052fab67f5d4858b64d**; local mirror `ed83a404`, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** `harness-v678: 30 ok, 0 bad` (standing clone, merged main) — matches the built-tree tally.
+- **Deploy:** deploy-app-v678-ship.py with EXPECTED_HEAD filled to the merged main head (`ed83a404`); dry-run → deploy clean. Worker **2ed6132d-8023-4744-817f-19d4b1e6df65**, pin **ora-pro-nobis-v678-1**. Production verification: the served sw.js (app.orapronobis.media) reads pin ora-pro-nobis-v678-1 (×1, the only pin served); the served app.js carries the dress markers (`favFolderSectionHtml` ×4 · `data-favcount678` ×3 · `data-favdisc678` ×4 · `data-favsecmenu678` ×3 · `favUnplayedCount678` ×3). No APK, no migration.
+- **Board closeout (D1-direct, all read back):** release 1656 → Live, shipped_at 2026-11-26T03:33:28Z, whats_new_id 493 · What's New **493** ("Favorites wear the Praylist dress now") · shipped_records **867** · phase records: Implement **2814** passed · Review **2815** passed · Ship **2816** passed (commit_hash = the remote ship commit 0c05fbb). Goals Board intake 1285 → Done, state line CLOSED.
+- **Rollback:** pin ora-pro-nobis-v677-1 (Worker a895f5c5-24d2-4c1f-98ea-97f338224fa3), the v677 driver (`~/workspace/.tools/deploy-app-v677-ship.py`) untouched.
