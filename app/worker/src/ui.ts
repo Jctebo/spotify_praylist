@@ -532,6 +532,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .p609off .p609erow, .p609off .sub { opacity:.5; }
 .p609erow { padding-top:5px; padding-bottom:5px; margin-bottom:6px; }
 .p609erow .row { min-height:32px; align-items:center; }
+/* v686 §2.2: the source row's dress — pin seat, tag, day pick. */
+.p686pin { flex:0 0 auto; margin-right:2px; }
+.p686tag { font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 7px; white-space:nowrap; }
+.p686srcrow select { flex:0 0 auto; margin-left:8px; min-height:32px; }
+.p686off { opacity:.5; }
 .profbar593 .row { gap:8px; margin:0 0 2px; }
 .profbarline593 { margin:2px 0 4px; }
 .proffrozen593 .profchips593 { display:flex; flex-wrap:nowrap; gap:6px; overflow-x:auto; margin:0 0 6px; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
@@ -1188,7 +1193,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v684-1";
+var CACHE = "ora-pro-nobis-v686-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

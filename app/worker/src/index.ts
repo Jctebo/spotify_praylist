@@ -1292,7 +1292,19 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
         // contents field reads as absent = standing
         // contents.
         const rawContents = (rawLayers as { contents?: unknown }).contents;
-        const checkedContents = validateProfileContents(rawContents, prof.coreBlocks);
+        // v686 Review repair (C3 read seat): a Move-written
+        // off-block list legitimately stands in the stored
+        // record (every write that could store one was
+        // envelope-gated), so the read validates the stored
+        // contents with the blocks the record itself carries
+        // standing beside the core — otherwise the store
+        // re-read would drop the whole contents field and a
+        // persisted Move would silently vanish. Item-shape
+        // validation runs whole, exactly as at write.
+        const storedExtra686 = rawContents && typeof rawContents === "object" && !Array.isArray(rawContents)
+          ? Object.keys(rawContents as Record<string, unknown>).filter((b) => ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"].includes(b) && !prof.coreBlocks.includes(b))
+          : [];
+        const checkedContents = validateProfileContents686(rawContents, prof.coreBlocks, storedExtra686);
         if (rawContents !== undefined && !("error" in checkedContents) && checkedContents.normalized) prof.contents = checkedContents.normalized;
         profiles.push(prof);
       } catch { /* an unparseable row does not stand */ }
@@ -1423,6 +1435,35 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
     out[block] = list;
   }
   return { normalized: out };
+}
+
+// v686 Review repair (C3, §2.6 step 5): the Move envelope.
+// A Move write (and only a Move write) may carry a top-level
+// `move686: {from, to}` field naming the two blocks the Move
+// touches. validateProfileContents itself stands UNCHANGED —
+// every decision it makes is byte-for-byte today's. The
+// wrapper below is the one narrow door: with no extra blocks
+// it delegates to the standing validator untouched; with the
+// envelope's two blocks it validates against the profile's
+// core plus exactly those two, so a Move-written contents
+// list for its off (non-core) source or target block stands,
+// and every other non-core block is still refused whole. The
+// envelope rides the write only — the validators' item
+// rebuild ({kind, key, side}) stands, so no marker persists
+// in stored contents.
+function parseMoveEnvelope686(raw: unknown): { move?: { from: string; to: string } } | { error: string } {
+  if (raw === undefined) return {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "bad move envelope" };
+  const m = raw as { from?: unknown; to?: unknown };
+  const HOURS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"];
+  if (typeof m.from !== "string" || typeof m.to !== "string" || !HOURS.includes(m.from) || !HOURS.includes(m.to) || m.from === m.to) return { error: "bad move envelope" };
+  return { move: { from: m.from, to: m.to } };
+}
+function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string }[]> } | { error: string } {
+  if (!extraBlocks || !extraBlocks.length) return validateProfileContents(contents, coreBlocks);
+  const core: string[] = coreBlocks.slice();
+  for (const b of extraBlocks) if (!core.includes(b)) core.push(b);
+  return validateProfileContents(contents, core);
 }
 
 // v591 §2.2: the DESIGNED configs — Reset to Default's
@@ -5235,7 +5276,11 @@ export default {
               entry.layers = { novenas: { on: !!checkedL.normalized.novenas.on }, podcasts: { on: !!checkedL.normalized.podcasts.on, series: checkedL.normalized.podcasts.series } };
             }
             if (L.contents !== undefined) {
-              const checkedC = validateProfileContents(L.contents, entry.coreBlocks || base.coreBlocks);
+              // v686 Review repair (C3): the today-edit twin
+              // takes the same Move envelope as profiles/save.
+              const mv686 = parseMoveEnvelope686((body as { move686?: unknown }).move686);
+              if ("error" in mv686) return err(400, mv686.error);
+              const checkedC = validateProfileContents686(L.contents, entry.coreBlocks || base.coreBlocks, mv686.move ? [mv686.move.from, mv686.move.to] : undefined);
               if ("error" in checkedC) return err(400, checkedC.error);
               if (checkedC.normalized && Object.keys(checkedC.normalized).length) entry.contents = checkedC.normalized;
             }
@@ -5315,7 +5360,14 @@ export default {
           if ("error" in checked) return err(400, checked.error);
           // v590 §2.3: contents validate with the save and
           // ride the layers JSON.
-          const checkedContents = validateProfileContents(body.contents, coreBlocks);
+          // v686 Review repair (C3): a Move write carries the
+          // move686 envelope naming its from/to blocks; only
+          // those two blocks gain the non-core exception, and
+          // only for this request. No envelope = today's
+          // refusal whole.
+          const mv686 = body.contents === undefined ? {} : parseMoveEnvelope686((body as { move686?: unknown }).move686);
+          if ("error" in mv686) return err(400, mv686.error);
+          const checkedContents = validateProfileContents686(body.contents, coreBlocks, mv686.move ? [mv686.move.from, mv686.move.to] : undefined);
           if ("error" in checkedContents) return err(400, checkedContents.error);
           const layersJson = JSON.stringify(checkedContents.normalized ? { ...checked.normalized, contents: checkedContents.normalized } : checked.normalized);
           const coreJson = JSON.stringify(coreBlocks);

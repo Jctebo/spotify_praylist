@@ -3004,6 +3004,20 @@ function opnResolveProfile590(P, date) {
   if (st) return { profile: st, resolvedBy: 'standing', dayKind: dayKind };
   return { profile: P.list[0], resolvedBy: 'standing', dayKind: dayKind };
 }
+/* v686 §2.6 step 5 (C3): the Move act's narrow write exception —
+   while a Move write stands in flight, opnWrite604 keeps a
+   contents list for an off (non-core) block as written and the
+   contents validator accepts that entry, for the Move's two
+   named blocks only (opn686MoveBlocks — the client mirror of
+   the server envelope). No other writer sets this flag.
+   Review repair: opnWrite604 carries the same {from, to} pair
+   on the write envelope itself (payload.move686) so the
+   Worker's validateProfileContents686 (index.ts) permits
+   exactly those two blocks for that request; the envelope is
+   a write-path fact only — no marker persists in stored
+   contents (the validators' {kind, key, side} rebuild stands). */
+var opn686MoveWrite = false;
+var opn686MoveBlocks = null;
 function opnCheckContents590(contents, coreBlocks) {
   // v590 §2.3: contents validation — per block, the ordered
   // selector list. Core blocks take source/prayer/seat
@@ -3018,7 +3032,7 @@ function opnCheckContents590(contents, coreBlocks) {
   var out = {};
   Object.keys(contents).forEach(function (block) {
     if (block !== 'Novenas' && HOURS.indexOf(block) < 0) throw opnErr(400, 'bad contents block ' + block);
-    if (block !== 'Novenas' && coreBlocks && coreBlocks.indexOf(block) < 0) throw opnErr(400, 'contents for a block that does not stand: ' + block);
+    if (block !== 'Novenas' && coreBlocks && coreBlocks.indexOf(block) < 0 && !(opn686MoveWrite && opn686MoveBlocks && (block === opn686MoveBlocks.from || block === opn686MoveBlocks.to))) throw opnErr(400, 'contents for a block that does not stand: ' + block);
     var items = contents[block];
     if (!Array.isArray(items)) throw opnErr(400, 'contents.' + block + ' must be an array');
     var seen = {}, list = [];
@@ -11442,83 +11456,13 @@ function drainPodPositions() {
    renumbers each block's sequence gapless from that order and
    increments the settings version. The Intentions card is not a
    settings row and never appears here (A1.2a). */
-var settingsRows = [];
-/* v419 (G28): the Settings unsaved-changes snapshot — taken
-   at every Settings paint; the count of rows differing from
-   it (plus 1 for a moved order) reads beside the save row. */
-var settingsSnapshot = null;
-function snapshotSettings() {
-  settingsSnapshot = settingsRows.map(function (r) { return { sourceKey: r.sourceKey, block: r.block, dayRule: r.dayRule, enabled: r.enabled }; });
-}
-function settingsOrderDiffers() {
-  if (!settingsSnapshot) return false;
-  var curSecs = {}, snapSecs = {};
-  settingsRows.forEach(function (r) { var s = settingsSectionOf(r); (curSecs[s] = curSecs[s] || []).push(r.sourceKey); });
-  settingsSnapshot.forEach(function (s) { var sec = !s.enabled ? 'Off' : (!s.block ? 'No block' : s.block); (snapSecs[sec] = snapSecs[sec] || []).push(s.sourceKey); });
-  for (var sec in curSecs) {
-    var common = (snapSecs[sec] || []);
-    var cur = curSecs[sec].filter(function (k) { return common.indexOf(k) >= 0; });
-    var snap = common.filter(function (k) { return curSecs[sec].indexOf(k) >= 0; });
-    if (cur.join('|') !== snap.join('|')) return true;
-  }
-  return false;
-}
-function settingsDirtyCount() {
-  if (!settingsSnapshot) return 0;
-  var snap = {};
-  settingsSnapshot.forEach(function (s) { snap[s.sourceKey] = s; });
-  var n = 0;
-  settingsRows.forEach(function (r) {
-    var s = snap[r.sourceKey];
-    if (!s || !!r.enabled !== !!s.enabled || (r.block || '') !== (s.block || '') || r.dayRule !== s.dayRule) n++;
-  });
-  if (settingsOrderDiffers()) n++;
-  return n;
-}
-function refreshUnsaved() {
-  var el = document.getElementById('set-unsaved');
-  if (!el) return;
-  var n = settingsDirtyCount();
-  el.textContent = n === 0 ? '' : (n === 1 ? '1 change not saved' : n + ' changes not saved');
-}
-var settingsVersion = null;
+/* v686 §2.4: the Settings source-editor's globals (settingsRows /
+   settingsVersion / settingsNote), its unsaved-snapshot machinery,
+   SET_BLOCKS / SET_SECTIONS, settingsFamilyLabel, settingsSectionOf
+   and settingsSections are DELETED with the section. DAY_RULE_LABELS
+   moved to the v686 source-row seat (its only remaining reader).
+   opnSeedDisplayName636 stands (the day build reads it). */
 var settingsReturnTab = 'prayers'; // v534 F3: the tab Settings was opened from, recorded at renderSettings entry (state.tab becomes 'settings' there, so the origin is captured, never re-read); the back acts return to it
-var settingsNote = '';
-// v451 §2.3 census: 'The AI Signal' STANDS in both lists — the
-// 'the-ai-signal' row itself stands assigned to it, the section
-// grouping (settingsSections) keys on the name, and the server's
-// whole-table validation accepts the standing value for its own
-// row; retiring the name would strand the row and break every
-// Settings save. It seats nothing on the Prayers side now: the
-// day carries no such block, so no source placed there stands
-// anywhere in the day.
-var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal'];
-var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal', 'No block', 'Off'];
-var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
-function settingsFamilyLabel(row) {
-  if (row.sourceKey === 'saint-of-the-day') return 'Spotify-side today — this row governs from the day a source leg brings this source into the app.';
-  if (row.family === 'own') return 'Own podcast';
-  if (row.family === 'spotify') return 'Spotify-side today';
-  if (row.family === 'unplaced') return 'Not placed — no app leg yet.';
-  var base = opnSeedDisplayName636(row).split(' — ')[0];
-  // v632 §3.4: the two Sing the Hours rows (the seed's only
-  // fallback rows) name the standing Morning & Evening
-  // choice instead of the fixed 'fallback only' wording;
-  // every other row's label stands byte-unchanged.
-  if (row.role === 'fallback') return base; // v670 \u00a73.5: the fallback rows carry their own standing names \u2014 no global choice is named in the mapping table again
-  return base;
-}
-function settingsSectionOf(row) {
-  if (!row.enabled) return 'Off';
-  if (!row.block) return 'No block';
-  return row.block;
-}
-function settingsSections() {
-  var out = {};
-  SET_SECTIONS.forEach(function (s) { out[s] = []; });
-  settingsRows.forEach(function (r) { out[settingsSectionOf(r)].push(r); });
-  return out;
-}
 function renderSettings() {
   // v534 F3: record the origin tab BEFORE the 'settings'
   // assignment below overwrites state.tab — a re-entry
@@ -11534,18 +11478,9 @@ function renderSettings() {
   // failure paint carry it too); its back is wired by
   // paintSettings against the standing row.
   paintRow2Bar({ dest: ({ prayers: 'Pray', mass: 'Worship', podcasts: 'Catechesis', conscience: 'Conscience', wallpaper: 'Sacred Art' })[settingsReturnTab] || 'Pray', title: 'Settings', backAttrs: 'data-settingsback' }); // v534 F3: the bar names the recorded origin tab · v544: the mass origin reads Worship (Q1)
-  view.innerHTML = skelHtml('settings');
-  api('/api/player/source-settings').then(function (res) {
-    settingsRows = res.sources || [];
-    settingsVersion = res.version;
-    settingsNote = '';
-    paintSettings();
-  }).catch(function (e) {
-    // v419 (G22): the authored failure — a plain sentence and
-    // a Ghost Retry wired to this surface's own re-render.
-    view.innerHTML = '<p class="err">Settings did not load.</p><p><button class="btn ghost" id="set-retry">Retry</button></p>';
-    document.getElementById('set-retry').addEventListener('click', renderSettings);
-  });
+  // v686 §2.4: Settings no longer reads the source-settings
+  // store at open — paintSettings() stands directly.
+  paintSettings();
 }
 function paintSettings() {
   var html = '';
@@ -11642,39 +11577,12 @@ function paintSettings() {
     + '<div class="setname">Sacred Art</div>'
     + '<div class="meta">Sacred Art controls live in the Sacred Art tab.</div>'
     + '</div></div>';
-  html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
-  if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
   html += '<p class="err" id="set-err"></p>';
-  // v419 (G28): the mapping explanation stands at the mapping
-  // itself — directly above the first mapping section head.
-  html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
-  var secs = settingsSections();
-  SET_SECTIONS.forEach(function (sec) {
-    var rows = secs[sec];
-    if (!rows.length) return;
-    html += '<h2 class="sectionhead">' + esc(sec.toUpperCase()) + '</h2><div class="liblist">';
-    rows.forEach(function (row, idx) {
-      html += '<div class="setrow" data-setkey="' + esc(row.sourceKey) + '">';
-      html += '<div class="setname">' + esc(opnSeedDisplayName636(row)) + '</div>';
-      html += '<div class="meta">' + esc(settingsFamilyLabel(row)) + '</div>';
-      if (row.sourceKey === 'marian-antiphon') {
-        html += '<div class="meta">One antiphon episode is produced each day and stands here, in Morning. The day also carries Midday and Afternoon antiphon prayer slots, which no produced episode fills.</div>';
-      }
-      html += '<div class="setcontrols">';
-      html += '<button class="settoggle' + (row.enabled ? ' on' : '') + '" data-setact="toggle" aria-pressed="' + (row.enabled ? 'true' : 'false') + '">' + (row.enabled ? 'On' : 'Off') + '</button>';
-      html += '<select data-setfield="block">' + [''].concat(SET_BLOCKS).map(function (b) {
-        return '<option value="' + esc(b) + '"' + (row.block === b ? ' selected' : '') + '>' + (b || 'No block') + '</option>';
-      }).join('') + '</select>';
-      html += '<select data-setfield="dayRule">' + Object.keys(DAY_RULE_LABELS).map(function (r) {
-        return '<option value="' + esc(r) + '"' + (row.dayRule === r ? ' selected' : '') + '>' + DAY_RULE_LABELS[r] + '</option>';
-      }).join('') + '</select>';
-      html += '<button class="mvbtn" data-setact="up" aria-label="Move up"' + (idx === 0 ? ' disabled' : '') + '>&#9650;</button>';
-      html += '<button class="mvbtn" data-setact="down" aria-label="Move down"' + (idx === rows.length - 1 ? ' disabled' : '') + '>&#9660;</button>';
-      html += '</div></div>';
-    });
-    html += '</div>';
-  });
-  html += '<div class="row" style="margin-top:12px"><span class="meta grow" id="set-unsaved"></span><button class="btn ghost" id="set-reset">Reset</button><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
+  // v686 §2.4: the source-editor section is DELETED WHOLE —
+  // the mapping explanation, every SET_SECTIONS paint, and the
+  // Reset / Save mapping / unsaved row come out; the Back
+  // button stands in a slim row of its own (wiring unchanged).
+  html += '<div class="row" style="margin-top:12px"><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
   html += '<div id="pin-section"></div>';
   view.innerHTML = html;
   // v669 §3.2: the DISPLAY control's wiring — a tap writes
@@ -11684,42 +11592,6 @@ function paintSettings() {
   if (modeSeg669) modeSeg669.querySelectorAll('[data-mode669]').forEach(function (b) {
     b.addEventListener('click', function () { opnModeSet669(b.getAttribute('data-mode669')); applyMode669(); paintSettings(); });
   });
-  view.querySelectorAll('[data-setkey]').forEach(function (el) {
-    var key = el.getAttribute('data-setkey');
-    var row = settingsRows.filter(function (r) { return r.sourceKey === key; })[0];
-    // v411 §2.4: the state flips paint their own row, never the
-    // page — the toggle flips its own class/label in place, the
-    // selects keep the value they show, and the arrows swap
-    // their two row elements and recompute the section's
-    // disabled states in place. paintSettings() stands only on
-    // its named paths (the open paint, the PIN fills, the
-    // mapping Save result), each wrapped by capture/restore.
-    el.querySelector('[data-setact="toggle"]').addEventListener('click', function () {
-      row.enabled = row.enabled ? 0 : 1;
-      settingsRebuildOrder();
-      var b = el.querySelector('[data-setact="toggle"]');
-      b.classList.toggle('on', !!row.enabled);
-      b.setAttribute('aria-pressed', row.enabled ? 'true' : 'false');
-      b.textContent = row.enabled ? 'On' : 'Off';
-      refreshUnsaved();
-    });
-    el.querySelector('[data-setfield="block"]').addEventListener('change', function (ev) {
-      row.block = ev.target.value;
-      settingsRebuildOrder();
-      refreshUnsaved();
-    });
-    el.querySelector('[data-setfield="dayRule"]').addEventListener('change', function (ev) {
-      row.dayRule = ev.target.value;
-      refreshUnsaved();
-    });
-    el.querySelector('[data-setact="up"]').addEventListener('click', function () { settingsMoveDom(el, row, -1); });
-    el.querySelector('[data-setact="down"]').addEventListener('click', function () { settingsMoveDom(el, row, 1); });
-  });
-  document.getElementById('set-save').addEventListener('click', saveSettings);
-  // v419 (G28): Reset re-renders from the server — the
-  // standing values return, and the unsaved line clears with
-  // the fresh paint's snapshot.
-  document.getElementById('set-reset').addEventListener('click', renderSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab(settingsReturnTab); });
   // v447: the bar's back — the same standing act as the
   // footer's Back (setTab('prayers'), place kept). v457:
@@ -11805,31 +11677,9 @@ function paintSettings() {
   });
   opnBindUnlockCard(function () { paintSettings(); fillPinSection(); });
   fillPinSection();
-  snapshotSettings(); // v419 (G28): the paint IS the saved state — the unsaved line starts clean
-  refreshUnsaved();
   armPlaceRestore('settings'); // v411 §2.4: a legitimate full repaint never moves the page
 }
-function settingsMoveDom(el, row, dir) {
-  // v411 §2.4: the arrows' in-place half — settingsMove swaps
-  // the rows in the standing array (and no longer repaints);
-  // here the two row elements swap in the DOM and the whole
-  // section's arrow disabled states recompute in place.
-  var list = el.parentElement;
-  if (!list) return;
-  var rows = Array.prototype.slice.call(list.querySelectorAll('[data-setkey]'));
-  var i = rows.indexOf(el);
-  var j = i + dir;
-  if (j < 0 || j >= rows.length) return;
-  settingsMove(row, dir);
-  if (dir < 0) list.insertBefore(el, rows[j]); else list.insertBefore(rows[j], el);
-  var now = list.querySelectorAll('[data-setkey]');
-  now.forEach(function (r, idx) {
-    var up = r.querySelector('[data-setact="up"]'), dn = r.querySelector('[data-setact="down"]');
-    if (up) up.disabled = idx === 0;
-    if (dn) dn.disabled = idx === now.length - 1;
-  });
-  refreshUnsaved(); // v419 (G28): a moved order counts once
-}
+
 /* ---------------- Settings \u2014 WALLPAPER section (v394 \u00a72.4) ----------------
    The wallpaper controls: two surface switches (lock \u00b7 home)
    and the two folder roots (phone \u00b7 watch), in the standing
@@ -12743,44 +12593,11 @@ function openPinSetSheet(mode) {
     }).catch(function (e) { msg.textContent = e.message; });
   });
 }
-function settingsRebuildOrder() {
-  // After a structural change (toggle, block move) the row stands
-  // at the end of its new section: rebuild the array as the
-  // sections concatenated, so displayed order is always sent order.
-  var secs = settingsSections();
-  var out = [];
-  SET_SECTIONS.forEach(function (s) { secs[s].forEach(function (r) { out.push(r); }); });
-  settingsRows = out;
-}
-function settingsMove(row, dir) {
-  // v411 §2.4: the array swap only — the repaint retires; the
-  // wiring's settingsMoveDom carries the visible half in place.
-  var secs = settingsSections();
-  var list = secs[settingsSectionOf(row)];
-  var i = list.indexOf(row);
-  var j = i + dir;
-  if (j < 0 || j >= list.length) return;
-  list[i] = list[j]; list[j] = row;
-  var out = [];
-  SET_SECTIONS.forEach(function (s) { secs[s].forEach(function (r) { out.push(r); }); });
-  settingsRows = out;
-}
-function saveSettings() {
-  var errEl = document.getElementById('set-err');
-  var body = { sources: settingsRows.map(function (r) { return { sourceKey: r.sourceKey, block: r.block, dayRule: r.dayRule, enabled: r.enabled }; }) };
-  api('/api/player/source-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-    .then(function (res) {
-      settingsVersion = res.version;
-      settingsNote = 'Saved — settings version ' + res.version + '. The next nightly push uses it.';
-      return api('/api/player/source-settings');
-    })
-    .then(function (res) {
-      settingsRows = res.sources || [];
-      settingsVersion = res.version;
-      paintSettings();
-    })
-    .catch(function (e) { if (errEl) errEl.textContent = e.message; });
-}
+/* v686 §2.4/§2.5: settingsRebuildOrder, settingsMove and
+   saveSettings are DELETED with the Settings editor (grep proof
+   in §3: no other callers). The Edit form's whole-table writer
+   is opnSaveSourceSettings686. The GET/PUT source-settings
+   routes stand. */
 document.getElementById('hdr-menu').addEventListener('click', function () { openHeaderMenu(); });
 
 /* ---------------- Forms that answer (v411 §2.6) ----------------
@@ -23843,6 +23660,16 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p670side]').forEach(function (btn) {
     btn.addEventListener('click', function () { var host670 = btn.closest ? btn.closest('[data-p670toggle]') : null; if (!host670) return; var p = String(host670.getAttribute('data-p670toggle')).split('|'); opnFlipSide670(p[0], p.slice(1).join('|'), btn.getAttribute('data-p670side')); });
   });
+  // v686: source-row acts + the contents-row Move menu.
+  view.querySelectorAll('[data-p686toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () { if (btn.disabled) return; opnToggleSource686(btn.getAttribute('data-p686toggle')); });
+  });
+  view.querySelectorAll('[data-p686day]').forEach(function (sel) {
+    sel.addEventListener('change', function () { opnSetSourceDay686(sel.getAttribute('data-p686day'), sel.value); });
+  });
+  view.querySelectorAll('[data-p686menu]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p686menu')).split('|'); opnOpenMoveMenu686(p[0], p.slice(1).join('|'), btn); });
+  });
   view.querySelectorAll('[data-p604restore]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604restore')).split('|'); opnRestore604(p[0], p.slice(1).join('|')); });
   });
@@ -23950,6 +23777,10 @@ function profileRebuild() {
    frozen banner; writes go through the standing stores
    AT ONCE (today layer / profile contents). Save New in
    the frozen edit bar mints the composed day. */
+/* v686: the Edit form's source-settings copy — read once at
+   Edit entry (opnEnterEdit607), written whole per source-row
+   act (opnSaveSourceSettings686, §2.5). */
+var opn686 = { rows: [], version: null, err: '' };
 var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, bookList: null, bookGroups: null };
 // v607: the page-wide edit form — editing stands on the
 // whole page (opn604.block's single-block posture retires);
@@ -24113,12 +23944,21 @@ function opnWrite604(block) {
     // against the layer's own coreBlocks when they stand
     // (a shape switch wrote them) — drop entries for
     // blocks that do not stand in that core.
-    if (Array.isArray(layer.coreBlocks)) Object.keys(layer.contents).forEach(function (b4) { if (b4 !== 'Novenas' && layer.coreBlocks.indexOf(b4) < 0) delete layer.contents[b4]; });
+    if (Array.isArray(layer.coreBlocks) && !opn686MoveWrite) Object.keys(layer.contents).forEach(function (b4) { if (b4 !== 'Novenas' && layer.coreBlocks.indexOf(b4) < 0) delete layer.contents[b4]; });
     Object.keys(layer.contents).forEach(function (b2) {
       if (JSON.stringify(layer.contents[b2]) === JSON.stringify(opnTodayComposedContents594(rec, b2))) delete layer.contents[b2];
     });
     var has = layer.coreBlocks !== undefined || layer.layers !== undefined || Object.keys(layer.contents).length > 0;
-    return profPut('/api/prayer/profiles/today-edit', { date: date, layer: has ? layer : null }).then(done).catch(function () {});
+    var body686 = { date: date, layer: has ? layer : null };
+    // v686 Review repair (C3): the Move envelope rides the
+    // today-edit write too, naming the Move's from/to blocks.
+    if (opn686MoveWrite && opn686MoveBlocks && has) body686.move686 = { from: opn686MoveBlocks.from, to: opn686MoveBlocks.to };
+    var req686 = profPut('/api/prayer/profiles/today-edit', body686);
+    // A Move write's failure must reach opnMove686 (it
+    // restores the lists and surfaces the failure); every
+    // other writer keeps the standing swallow.
+    if (opn686MoveWrite) return req686.then(done);
+    return req686.then(done).catch(function () {});
   }
   var contents = rec.contents ? opnClone(rec.contents) : {};
   Object.keys(opn604.lists).forEach(function (b2) { contents[b2] = opnClone(opn604.lists[b2]); });
@@ -24126,9 +23966,16 @@ function opnWrite604(block) {
   // contents entry for a block that does not stand under
   // the session's current shape.
   var coreNow604 = opn604.shape ? opn604.shape.core : (rec.coreBlocks || []);
-  Object.keys(contents).forEach(function (b3) { if (b3 !== 'Novenas' && coreNow604.indexOf(b3) < 0) delete contents[b3]; });
+  Object.keys(contents).forEach(function (b3) { if (b3 !== 'Novenas' && coreNow604.indexOf(b3) < 0 && !opn686MoveWrite) delete contents[b3]; });
   var payload = { key: rec.key, name: rec.name, honorLine: rec.honorLine || '', coreBlocks: (opn604.shape ? opn604.shape.core.slice() : (rec.coreBlocks || []).slice()), layers: opn604.shape ? opnLayersOut(opn604.shape.layers) : opnLayersOut(rec.layers), contents: contents };
-  return profPut('/api/prayer/profiles/save', payload).then(done).catch(function () {});
+  // v686 Review repair (C3): the Move envelope rides the
+  // save write, naming the Move's from/to blocks — the
+  // server permits non-core contents for those two blocks
+  // in this request only.
+  if (opn686MoveWrite && opn686MoveBlocks) payload.move686 = { from: opn686MoveBlocks.from, to: opn686MoveBlocks.to };
+  var req686s = profPut('/api/prayer/profiles/save', payload);
+  if (opn686MoveWrite) return req686s.then(done);
+  return req686s.then(done).catch(function () {});
 }
 function opnFlipSide670(block, rowId, side) {
   // v670 \u00a73.4: the edit-form source toggle \u2014 flip the
@@ -24173,6 +24020,231 @@ function opnMove684(block, rowId, dir) {
   if (to < 0 || to >= m.length) return;
   var mv = m[at]; m[at] = m[to]; m[to] = mv;
   return opnWrite604(block);
+}
+
+/* ---------------- v686: source rows in the Edit form ----------------
+   §2.1 seat rule: a gated source paints as a SOURCE ROW in place
+   of its contents representation (first occurrence only); a
+   representation that never stood splices in by standing rank.
+   §2.2 dress: pin seat, seed name, "Daily source" tag, On/Off
+   switch + day pick on the row; no Remove, no data-p684move,
+   no menu/Move. In an off block the controls stand inert. */
+var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
+var OPN686_SLOT_ROW = { 'ext-invitatory': 'do-invitatory', 'ext-gospel-exegesis': 'daily-gospel-exegesis', 'ext-midmorning-prayer': 'do-midmorning-prayer', 'ext-midday-prayer': 'do-midday-prayer', 'ext-saint-of-the-day': 'saint-of-the-day', 'ext-midafternoon-prayer': 'do-midafternoon-prayer', 'ext-office-of-readings': 'do-office-of-readings', 'ext-night-prayer': 'do-night-prayer' };
+var OPN686_BLOCK_ROWS = { 'Morning': ['do-invitatory', 'usccb-daily-readings'], 'Midmorning': ['daily-gospel-exegesis', 'do-midmorning-prayer'], 'Midday': ['do-midday-prayer'], 'Afternoon': ['saint-of-the-day', 'do-midafternoon-prayer'], 'Evening': ['do-office-of-readings'], 'Night': ['do-night-prayer'] };
+var OPN686_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal', 'No block', 'Off'];
+function opn686Row(key) { return opn686.rows.filter(function (r) { return r.sourceKey === key; })[0] || null; }
+function opn686SectionOf(row) { if (!row.enabled) return 'Off'; if (!row.block) return 'No block'; return row.block; }
+function opn686Rank(key) { if (key === 'usccb-daily-readings') return 3.5; var r = opn686Row(key); return r && r.sortOrder != null ? r.sortOrder : 999; }
+/* v686 Repair (Finding 1, §4.4/§4.5): a standing rank is a
+   pair [sortOrder, family] — family 0 = own, 1 = external,
+   so a tie reads own-before-external (the mig609 merged
+   rule, §2.1). EVERY list item ranks, not only source-kind
+   items: a contents item's standing is read from the seed
+   the same way the splice already read source items —
+   by sourceKey, by slotId (the ext-* contents keys), by
+   the own row's episode id, and, for a prayer/daily item
+   whose key names a standing row of its own block in
+   words (e.g. prayer:angelus-midday, the block's Marian
+   Antiphon own row at sort 1), by a unique in-block match
+   on the item key's stem against the seed row's name /
+   episode id / sourceKey. An item with no seed standing
+   in the block ranks null and never moves a splice. */
+function opn686RankPair(key) {
+  if (key === 'usccb-daily-readings') return [3.5, 1];
+  var r = opn686Row(key);
+  return [r && r.sortOrder != null ? r.sortOrder : 999, r && r.family === 'own' ? 0 : 1];
+}
+function opn686SeedRank(block, it) {
+  if (!it || !it.key) return null;
+  var key = String(it.key), row = null, i;
+  for (i = 0; i < OPN_SEED_SOURCES.length && !row; i++) if (OPN_SEED_SOURCES[i].sourceKey === key) row = OPN_SEED_SOURCES[i];
+  for (i = 0; i < OPN_SEED_SOURCES.length && !row; i++) if (OPN_SEED_SOURCES[i].slotId && OPN_SEED_SOURCES[i].slotId === key) row = OPN_SEED_SOURCES[i];
+  for (i = 0; i < OPN_SEED_SOURCES.length && !row; i++) if (OWN_ROW_EPISODE[OPN_SEED_SOURCES[i].sourceKey] === key) row = OPN_SEED_SOURCES[i];
+  if (!row && block) {
+    var stem = key.toLowerCase(), suf = '-' + String(block).toLowerCase();
+    if (stem.slice(-suf.length) === suf) stem = stem.slice(0, -suf.length);
+    var cands = OPN_SEED_SOURCES.filter(function (s) {
+      if (s.block !== block) return false;
+      var ep = OWN_ROW_EPISODE[s.sourceKey] || '';
+      return s.name.toLowerCase().indexOf(stem) >= 0 || ep.toLowerCase().indexOf(stem) >= 0 || s.sourceKey.toLowerCase().indexOf(stem) >= 0;
+    });
+    if (cands.length === 1) row = cands[0];
+  }
+  if (!row || row.sortOrder == null) return null;
+  return [row.sortOrder, row.family === 'own' ? 0 : 1];
+}
+function opn686EntryRank(block, e) {
+  if (e.t === 's') return opn686RankPair(e.row.sourceKey);
+  var it = e.it;
+  if (it.kind === 'seat' && it.key === 'daily-readings') return [3.5, 1];
+  return opn686SeedRank(block, it);
+}
+function opn686RankLt(a, b) { return a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]); }
+function opn686DayOptions(cur) {
+  var keys = ['daily', 'sundays', 'fridays'];
+  if (cur && keys.indexOf(cur) < 0) keys.push(cur);
+  return keys.map(function (k) { return '<option value="' + esc(k) + '"' + (cur === k ? ' selected' : '') + '>' + esc(DAY_RULE_LABELS[k] || k) + '</option>'; }).join('');
+}
+function opnSourceRowHtml686(row, opts) {
+  opts = opts || {};
+  var off = !!opts.off;
+  var tag = opts.tag || 'Daily source';
+  var on = row.enabled ? 1 : 0;
+  return '<div class="card bookrow p604erow p609erow p686srcrow" data-p686src="' + esc(row.sourceKey) + '"><div class="row">'
+    + '<span class="p686pin" aria-hidden="true">📌</span>'
+    + '<span class="grow">' + esc(opnSeedDisplayName636(row)) + ' <span class="p686tag">' + esc(tag) + '</span></span>'
+    + '<button class="switch591' + (on ? ' on' : '') + '" data-p686toggle="' + esc(row.sourceKey) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (off ? ' disabled' : '') + '><span class="knob591"></span></button>'
+    + '<select data-p686day="' + esc(row.sourceKey) + '"' + (off ? ' disabled' : '') + '>' + opn686DayOptions(row.dayRule) + '</select>'
+    + '</div></div>';
+}
+function opnSpliceSourceRows686(block, list) {
+  var entries = list.map(function (it, idx) { return { t: 'c', it: it, idx: idx }; });
+  if (!opn686.rows.length) return entries;
+  var rowKeys = OPN686_BLOCK_ROWS[block] || [];
+  if (!rowKeys.length) return entries;
+  var seenSrc = {}, present = {};
+  entries.forEach(function (e) {
+    var id = opnTodayItemId594(e.it);
+    var sk = id === 'seat:daily-readings' ? 'usccb-daily-readings' : (e.it.kind === 'source' ? OPN686_SLOT_ROW[e.it.key] : null);
+    if (sk && rowKeys.indexOf(sk) >= 0 && !seenSrc[sk] && opn686Row(sk)) { seenSrc[sk] = 1; present[sk] = 1; e.t = 's'; e.row = opn686Row(sk); }
+  });
+  var missing = rowKeys.filter(function (sk) { return !present[sk] && opn686Row(sk); });
+  missing.sort(function (a, b) { var pa = opn686RankPair(a), pb = opn686RankPair(b); return pa[0] - pb[0] || pa[1] - pb[1]; });
+  missing.forEach(function (sk) {
+    var rank = opn686RankPair(sk), pos = 0;
+    entries.forEach(function (e, i) { var r = opn686EntryRank(block, e); if (r !== null && opn686RankLt(r, rank)) pos = i + 1; });
+    entries.splice(pos, 0, { t: 's', row: opn686Row(sk) });
+  });
+  return entries;
+}
+function opnMassHomiliesSectionHtml686() {
+  if (!opn686.rows.length) return '';
+  var keys = ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross'];
+  var html = '<div class="p609group p686mass" data-p686mass="1"><div class="row p609ghead"><span class="grow">Mass and Homilies</span></div>';
+  keys.forEach(function (k) { var r = opn686Row(k); if (r) html += opnSourceRowHtml686(r, { tag: k === 'stations-of-the-cross' ? 'Not placed' : 'Daily source' }); });
+  return html + '</div>';
+}
+/* §2.5: the whole-table write — every act PUTs all 26 rows in
+   standing section order (the deleted editor's settingsSectionOf
+   order over SET_SECTIONS, kept here as OPN686_SECTIONS), within
+   a section by sortOrder, primary before fallback on a tie,
+   the unplaced row last; block always as read. Success and
+   failure both read back; failure restores standing values and
+   names the error on the form's error line. */
+function opn686OrderedRows() {
+  var idx = {}; opn686.rows.forEach(function (r, i) { idx[r.sourceKey] = i; });
+  return opn686.rows.slice().sort(function (a, b) {
+    var sa = OPN686_SECTIONS.indexOf(opn686SectionOf(a)), sb = OPN686_SECTIONS.indexOf(opn686SectionOf(b));
+    if (sa !== sb) return sa - sb;
+    var oa = a.sortOrder == null ? 999 : a.sortOrder, ob = b.sortOrder == null ? 999 : b.sortOrder;
+    if (oa !== ob) return oa - ob;
+    var fa = a.role === 'fallback' ? 1 : 0, fb = b.role === 'fallback' ? 1 : 0;
+    if (fa !== fb) return fa - fb;
+    return idx[a.sourceKey] - idx[b.sourceKey];
+  });
+}
+function opnSaveSourceSettings686() {
+  var body = { sources: opn686OrderedRows().map(function (r) { return { sourceKey: r.sourceKey, block: r.block, dayRule: r.dayRule, enabled: r.enabled ? 1 : 0 }; }) };
+  return api('/api/player/source-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function () { return api('/api/player/source-settings'); })
+    .then(function (res) { opn686.rows = (res && res.sources) || []; opn686.version = res ? res.version : opn686.version; opn686.err = ''; opnRepaintHome604(); profileRebuild(); })
+    .catch(function (e) {
+      opn686.err = 'That change did not save.' + (e && e.message ? ' ' + e.message : '');
+      return api('/api/player/source-settings').then(function (res) { opn686.rows = (res && res.sources) || opn686.rows; opn686.version = res ? res.version : opn686.version; }).catch(function () {}).then(function () { opnRepaintHome604(); });
+    });
+}
+function opnToggleSource686(key) { var r = opn686Row(key); if (!r) return; r.enabled = r.enabled ? 0 : 1; return opnSaveSourceSettings686(); }
+function opnSetSourceDay686(key, rule) { var r = opn686Row(key); if (!r || r.dayRule === rule) return; r.dayRule = rule; return opnSaveSourceSettings686(); }
+/* §2.6: the Move act. */
+function opnMove686(fromBlock, rowId, toBlock) {
+  var pr = opnParseRowId610(rowId), id = pr.id;
+  var src = opnMaterialize604(fromBlock);
+  var seen = 0, at = -1;
+  src.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  if (at < 0) return { ok: false };
+  var it = src[at];
+  if (it.kind === 'source' && EXT_TOKENS[it.key]) {
+    var tgt0 = opnMaterialize604(toBlock);
+    if (tgt0.some(function (x) { return x.kind === 'source' && x.key === it.key; })) {
+      var hour = opnItemLabel604(fromBlock, it).split(' · ')[0];
+      return { ok: false, reason: hour + ' already stands in ' + toBlock + '.', sub: 'An office hour stands once in a block — remove it there first, or pick another block.' };
+    }
+  }
+  // v686 Review repair: snapshot both lists before the move
+  // so a refused/failed persist restores the standing lists
+  // whole — no optimistic residue — and the failure surfaces
+  // (the picker's reason line + the form's error line)
+  // instead of closing silently.
+  var tgt = opnMaterialize604(toBlock);
+  var snapFrom = opnClone(src), snapTo = opnClone(tgt);
+  var nm = src.slice(); nm.splice(at, 1); opn604.lists[fromBlock] = nm;
+  tgt.push(it);
+  opn686MoveWrite = true;
+  opn686MoveBlocks = { from: fromBlock, to: toBlock };
+  var p = opnWrite604(fromBlock);
+  var clear = function () { opn686MoveWrite = false; opn686MoveBlocks = null; };
+  return Promise.resolve(p).then(function () {
+    clear();
+    if (opn686.err) { opn686.err = ''; opnRepaintHome604(); }
+    return { ok: true };
+  }, function (e) {
+    clear();
+    opn604.lists[fromBlock] = snapFrom;
+    opn604.lists[toBlock] = snapTo;
+    opn686.err = 'That move did not save.' + (e && e.message ? ' ' + e.message : '');
+    opnRepaintHome604();
+    return { ok: false, reason: 'That move did not save.', sub: (e && e.message) || 'Try again.' };
+  });
+}
+function opnPaintBlocks686() {
+  var day = state.dayPayload;
+  var seen = {};
+  var order = day ? orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; }) : [];
+  var CANON = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Novenas'];
+  CANON.forEach(function (name) {
+    if (seen[name]) return;
+    var at = order.length;
+    for (var i = 0; i < order.length; i++) { if (CANON.indexOf(order[i]) > CANON.indexOf(name)) { at = i; break; } }
+    order.splice(at, 0, name);
+  });
+  return order;
+}
+function opnOpenMovePicker686(fromBlock, rowId) {
+  var old = document.querySelector('.p686picker'); if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet p686picker';
+  var rows = opnPaintBlocks686().map(function (name) {
+    var on = opnGroupOn609(name);
+    var here = name === fromBlock;
+    return '<div class="card bookrow p686pickrow' + (on ? '' : ' p686off') + '" data-p686pick="' + esc(name) + '"><div class="row"><span class="grow">' + esc(name) + (on ? '' : ' · Off') + '</span>' + (here ? '<span class="meta">Here</span>' : '') + '</div></div>';
+  }).join('');
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Move to block…</h1></div>' + rows
+    + '<p class="fieldnote" data-p686reason="1"></p><p class="sub" data-p686sub="1"></p>'
+    + '<div class="row"><button class="btn ghost" data-p686pickclose="1">Cancel</button></div></div>';
+  document.body.appendChild(sheet);
+  mountDrawer(sheet, true);
+  sheet.querySelector('[data-p686pickclose]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelectorAll('[data-p686pick]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var to = el.getAttribute('data-p686pick');
+      if (to === fromBlock) return;
+      // opnMove686 resolves async now (the persist settles
+      // first): a refusal OR a failed save keeps the picker
+      // open with its reason line; only a saved move closes.
+      Promise.resolve(opnMove686(fromBlock, rowId, to)).then(function (res) {
+        if (res && res.ok === false && res.reason) {
+          var rEl = sheet.querySelector('[data-p686reason]'); if (rEl) rEl.textContent = res.reason;
+          var sEl = sheet.querySelector('[data-p686sub]'); if (sEl) sEl.textContent = res.sub || '';
+          return;
+        }
+        sheet.remove();
+      });
+    });
+  });
+}
+function opnOpenMoveMenu686(block, rid, anchorEl) {
+  openSheetMenu('Move', [{ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid); } }], anchorEl);
 }
 function opnRemove604(block, rowId) {
   // v610: the row id is occurrence-qualified — Remove takes
@@ -24237,13 +24309,17 @@ function opnEditPostureHtml604(b) {
   var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
   var seenRow610b = {};
-  list.forEach(function (it, idx) {
+  var entries686b = opnSpliceSourceRows686(block, list);
+  entries686b.forEach(function (e686) {
+    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !opnGroupOn609(block) }); return; }
+    var it = e686.it, idx = e686.idx;
     var id = opnTodayItemId594(it);
     var occ = seenRow610b[id] || 0; seenRow610b[id] = occ + 1;
     var rid = opnRowId610(it, occ);
     html += '<div class="card bookrow p604erow" data-p604erow="' + esc(rid) + '"><div class="row">'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
       + opnMoveButtons684(block, rid, idx, list.length)
+      + '<button class="btn ghost" data-p686menu="' + esc(block) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
       + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
@@ -24435,6 +24511,10 @@ function opnEnterEdit607() {
   if (profVaultGate594(view, function () { opnRepaintHome604(); opnEnterEdit607(); }, function () { opnRepaintHome604(); })) return;
   opnEnsureStandings601().then(function () {
     return opn604.res ? opn604.res : opnLoadRes604();
+  }).then(function () {
+    // v686 §2.2: the settings load at Edit entry — a failed
+    // read paints contents only + an error line.
+    return api('/api/player/source-settings').then(function (r) { opn686.rows = (r && r.sources) || []; opn686.version = r ? r.version : null; opn686.err = ''; }).catch(function () { opn686.rows = []; opn686.err = 'Daily sources did not load \u2014 contents only.'; });
   }).then(function () {
     // v609 REPAIR 2 (John, 2026-11-21 23:32/23:33 CT):
     // the scope QUESTION retires from the entry path —
@@ -26992,6 +27072,7 @@ function opnEditSetHtml609(day) {
   // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
   html += opnPickHead609();
+  if (opn686.err) html += '<p class="err" data-p686err="1">' + esc(opn686.err) + '</p>';
   var seen = {};
   var paint635 = orderedBlocks(day).map(function (b) { seen[b.block] = true; return b.block; });
   // v609 repair 2: 'Podcasts' leaves the canonical list —
@@ -27008,6 +27089,7 @@ function opnEditSetHtml609(day) {
     paint635.splice(at, 0, name);
   });
   paint635.forEach(function (name) { html += opnEditGroupHtml609(name); });
+  html += opnMassHomiliesSectionHtml686();
   return html + '</div>';
 }
 function opnGroupOn609(block) {
@@ -27042,7 +27124,10 @@ function opnEditGroupHtml609(block) {
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
   // v609 repair 2: the Podcasts series rows retire with the layer (opnSeriesRows609 stands as dead code).
   var seenRow610 = {};
-  list.forEach(function (it, idx) {
+  var entries686 = opnSpliceSourceRows686(block, list);
+  entries686.forEach(function (e686) {
+    if (e686.t === 's') { html += opnSourceRowHtml686(e686.row, { off: !on }); return; }
+    var it = e686.it, idx = e686.idx;
     var id = opnTodayItemId594(it);
     var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
     var rid = opnRowId610(it, occ);
@@ -27060,6 +27145,7 @@ function opnEditGroupHtml609(block) {
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
       + opnMoveButtons684(block, rid, idx, list.length)
       + tog670
+      + '<button class="btn ghost" data-p686menu="' + esc(block) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
       + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
