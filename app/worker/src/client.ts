@@ -5282,6 +5282,12 @@ function opnDailySettlePut677(presented, jobKey, episodeId, stale, desc) {
   var prev = opnDailyPrevDate677(presented);
   Object.keys(all).forEach(function (d) { if (d !== presented && d !== prev) delete all[d]; });
   if (!all[presented]) all[presented] = {};
+  // v694 §2.5: a stale: true record for this date (a
+  // pre-v694 fallback settle) is dropped at this write —
+  // the put seat is the store's save path for the date.
+  // After this release every caller passes stale: false
+  // (hit-only settles, §2.3 seat 2 + §2.4's twin).
+  Object.keys(all[presented]).forEach(function (k) { var r = all[presented][k]; if (r && r.stale) delete all[presented][k]; });
   all[presented][jobKey] = { episodeId: episodeId, stale: !!stale, desc: opnClone(desc) };
   opnDailySettledSave677();
 }
@@ -18462,7 +18468,7 @@ function trackCard(t) {
     // line (trackKeyOf returns null for the kind, so no draw
     // ever stands for it).
     if (t.available) {
-      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + '</span>' + metaTrail('') + '</div>' + (((t.daily666 || t.mass688) && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '') + '</div>');
+      return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + '</span>' + metaTrail('') + '</div>' + '</div>');
     }
     return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Video \u00b7 ' + esc(opnVideoSeriesTitle656(t.vmSeries)) + ' \u00b7 Not available today</div></div></div></div>';
   }
@@ -18528,7 +18534,12 @@ function trackCard(t) {
     // v625 warning line under the metarow. Both gate on
     // daily666: every non-daily row's paint is byte-unchanged.
     if ((t.daily666 || t.mass688) && t.source) meta += ' \u00b7 ' + esc(t.source);
-    var staleWarn666 = ((t.daily666 || t.mass688) && t.stale) ? "<div class='meta ext-stale-warn'>Today's episode has not updated yet \u2014 showing the last one that loaded.</div>" : '';
+    // v694 §2.3 seat 5: the (daily666 || mass688) stale
+    // warning arm (staleWarn666) is REMOVED — after seats
+    // 1–2 no daily/Mass descriptor can carry stale: true,
+    // and the v625 warning text must not survive as a
+    // reachable paint for a daily/Mass row. Genuine ext
+    // descriptors keep their own stale line above.
     // v413 §2.6/R4: the Read control stays in the row (a
     // content act, not a menu item); the Spotify link leaves
     // the row — its one home is now the row ⋮ menu.
@@ -18537,7 +18548,7 @@ function trackCard(t) {
     var readCtl = !noText ? readButton(t, key) : '';
     // v424 §2.3 (FD3): Read trails the meta line in the box,
     // after the ⤓ — v413's R4 stands (visible, not a menu item).
-    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + staleWarn666 + drawLine + '</div>');
+    return wrap(rowArtHtml(t, thumbDisc) + '<div class="grow">' + titleRow() + '<div class="meta metarow"><span>' + meta + '</span>' + metaTrail(readCtl) + '</div>' + drawLine + '</div>');
   }
   // v363 §2.2/§2.3: the own unavailable card takes the .row form
   // and the .trow height; "Not available in the app yet" folds
@@ -18551,6 +18562,20 @@ function trackCard(t) {
   // Read trails the meta line in the box and no controls line
   // stands; without text the card stands as it stood (no Read,
   // no cluster — no acts exist to honor).
+  // v694 §2.1: ONE new arm in this generic unavailable
+  // tail, gated (daily666 || mass688) — the §2.1
+  // placeholder's paint for the audio series and the Mass
+  // audio leg (whose composed copy rides this seam):
+  // <h3> = the series title · meta = <source> · "Not
+  // available today" (the client's standing form for this
+  // meaning — the video and external branches' own words;
+  // duration omitted, the placeholder's durationS is 0).
+  // No play disc, no cluster, no draw line — the standing
+  // unavailable form, as prescribed.
+  if (t.daily666 || t.mass688) {
+    var metaN694 = (t.source ? esc(t.source) + ' · ' : '') + 'Not available today';
+    return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + metaN694 + '</div></div></div></div>';
+  }
   var metaU = (t.durationS ? fmtDur(t.durationS) + ' · ' : '') + 'Not available in the app yet';
   var growU = (t.hasText && t.textUrl)
     ? '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta metarow"><span>' + metaU + '</span>' + readButton(t, key) + '</div></div>'
@@ -20844,6 +20869,14 @@ function opnDailyMatch666(series, list, presented) {
   // entry (stale false), or the not-updated fallback (the
   // newest entry BEFORE the presented window, stale true);
   // null when neither stands (the slot stands empty).
+  // v694 §2.3 seat 1 (John, 2026-11-26 09:26 CT: "No
+  // fallback. Not available yet."): every fallback arm is
+  // DELETED — each arm returns its presented-day hit
+  // { e, stale: false } or null, and the resolver stands
+  // the §2.1 not-available placeholder on null. The
+  // exegesis presented−1 hit is that series' own day rule
+  // and stands; the catholicsaints same-day-publish hit
+  // stands.
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var parts = String(presented || '').split('-');
   var mmdd = parts.length >= 3 ? (parts[1] + '/' + parts[2]) : '';
@@ -20856,8 +20889,7 @@ function opnDailyMatch666(series, list, presented) {
     // qualifying hits the latest publishedMs wins, as today.
     var hits = list.filter(function (e) { var t = String(e.title || '').trim(); if (t.indexOf(mmdd) !== 0) return false; var cd = ownChicagoDateStr(e.publishedMs); return !!cd && cd <= presented; }).sort(byPub);
     if (hits.length) return { e: hits[0], stale: false };
-    var prev = list.filter(function (e) { var d = ownChicagoDateStr(e.publishedMs); return d && d < presented; }).sort(byPub);
-    return prev.length ? { e: prev[0], stale: true } : null;
+    return null; // v694: the prev (newest-earlier, stale) arm is deleted
   }
   if (series === 'daily-gospel-exegesis') {
     // v677 §2.3.3: never-later by construction — the match
@@ -20867,8 +20899,7 @@ function opnDailyMatch666(series, list, presented) {
     var hit = null;
     list.forEach(function (e) { if (!hit && ownChicagoDateStr(e.publishedMs) === want) hit = e; });
     if (hit) return { e: hit, stale: false };
-    var prev2 = list.filter(function (e) { var d = ownChicagoDateStr(e.publishedMs); return d && d < want; }).sort(byPub);
-    return prev2.length ? { e: prev2[0], stale: true } : null;
+    return null; // v694: the prev2 (older-than-want, stale) arm is deleted — a hit on want is the day's OWN episode and stands above
   }
   if (series === 'daily-readings') {
     var plain = 'Daily Mass Reading Podcast for ' + MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0];
@@ -20881,8 +20912,7 @@ function opnDailyMatch666(series, list, presented) {
     list.forEach(function (e) { if (!hit2 && e.title && String(e.title).trim() === plain && opnDailyTitleDate666(e.title) === presented) hit2 = e; });
     if (!hit2) list.forEach(function (e) { if (!hit2 && e.title && String(e.title).indexOf(MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0]) >= 0 && opnDailyTitleDate666(e.title) === presented) hit2 = e; });
     if (hit2) return { e: hit2, stale: false };
-    var prev3 = list.filter(function (e) { var d = opnDailyTitleDate666(e.title); return d && d.length === 10 && d < presented; }).sort(function (a, b) { return opnDailyTitleDate666(b.title) < opnDailyTitleDate666(a.title) ? -1 : 1; });
-    return prev3.length ? { e: prev3[0], stale: true } : null;
+    return null; // v694: the prev3 (newest title-date < presented, stale) arm is deleted
   }
   if (series === 'bible-in-a-year') {
     // v677 §2.3.3: never-later by construction — the match
@@ -20894,8 +20924,7 @@ function opnDailyMatch666(series, list, presented) {
     var hit3 = null;
     list.forEach(function (e) { if (!hit3 && e.day === doy) hit3 = e; });
     if (hit3) return { e: hit3, stale: false };
-    var prev4 = list.filter(function (e) { return typeof e.day === 'number' && e.day < doy; }).sort(function (a, b) { return b.day - a.day; });
-    return prev4.length ? { e: prev4[0], stale: true } : null;
+    return null; // v694: the prev4 (day < doy, stale) arm is deleted
   }
   if (series === 'catholicsaints') {
     var md = parts.length >= 3 ? (parts[1] + '-' + parts[2]) : '';
@@ -20910,10 +20939,36 @@ function opnDailyMatch666(series, list, presented) {
     var hit5 = null;
     list.forEach(function (v) { if (!hit5 && ownChicagoDateStr(v.publishedMs) === presented) hit5 = v; });
     if (hit5) return { e: hit5, stale: false };
-    var prev5 = list.filter(function (v) { var d = opnDailyTitleDate666(v.title); if (d && d.length === 5) return d < md; var cd = ownChicagoDateStr(v.publishedMs); return cd && cd < presented; }).sort(byPub);
-    return prev5.length ? { e: prev5[0], stale: true } : null;
+    return null; // v694: the prev5 (before-presented, stale) arm is deleted — the same-day-publish hit5 above is the day's own and stands
   }
   return null;
+}
+function opnDailyPlaceholder694(series, block, showImageUrl) {
+  // v694 §2.1: the NOT-AVAILABLE placeholder descriptor —
+  // stood in state.dailyRes666[jobKey] when a loaded payload
+  // carries no presented-day entry (the matcher returned
+  // null). The row STANDS at its contents position painting
+  // the series title + "Not available today"; yesterday's
+  // episode never paints in today's place. episodeId is a
+  // non-episode sentinel, stable per series: never a real
+  // episode key, never written to the played store or the
+  // podmark routes (unavailable rows carry no mark acts),
+  // and excluded from intention draws (trackKeyOf returns
+  // null for 'seg:' ids — §3.2's R2 finding). stale stands
+  // false explicitly: no daily descriptor carries
+  // stale: true after this release.
+  var title = opnDailySeriesTitle666(series);
+  var isVideo = series === 'catholicsaints';
+  var d = {
+    episodeId: 'seg:unavailable-v694-' + series, kind: isVideo ? 'video' : 'podcast',
+    title: title, url: null, enclosureUrl: null,
+    available: false, block: block, source: title, durationS: 0, listened: false,
+    podPositionS: null, imageUrl: showImageUrl || null, descText: null,
+    stale: false, daily666: true, dailySeries: series
+  };
+  if (isVideo) { d.videoId = null; d.vmSeries = series; d.dateLabel = ''; }
+  else { d.seriesKey = d.episodeId; d.podSeries = series; d.spotifyUrl = null; }
+  return d;
 }
 function resolveDailyDynamic666(day) {
   // v666 §3.3: each 'daily' selector in the effective
@@ -20985,7 +21040,14 @@ function resolveDailyDynamic666(day) {
       // before the settle repaint. The date turn is the
       // only advance (§2.3.6): the store is keyed by the
       // presented date, so a new date finds no entry.
-      var settled677 = (opnDailySettled677()[presented] || {});
+      // v694 §2.5 migration: a pre-v694 record carrying
+      // stale: true (a fallback settle) is treated as NO
+      // record — the job stands unsettled, the matcher
+      // runs, and the stale record is dropped at the next
+      // store write for that date (the put seat's purge).
+      var settledRaw677 = (opnDailySettled677()[presented] || {});
+      var settled677 = {};
+      Object.keys(settledRaw677).forEach(function (k) { var r = settledRaw677[k]; if (r && !r.stale) settled677[k] = r; });
       var anyUnsettled677 = group.some(function (job) { return !settled677[job.block + ':' + series]; });
       var m = anyUnsettled677 ? opnDailyMatch666(series, list, presented) : null;
       group.forEach(function (job) {
@@ -21006,7 +21068,18 @@ function resolveDailyDynamic666(day) {
           state.dailyRes666[jobKey] = d677;
           return;
         }
-        if (!m) return;
+        if (!m) {
+          // v694 §2.3 seat 2: a null match on a LOADED
+          // payload stands the §2.1 placeholder and writes
+          // NOTHING to the settle store — the day stays
+          // unsettled, so the next standing compose re-runs
+          // the matcher and settles the real episode when
+          // it lands. (A FAILED payload load never reaches
+          // here: the standing rule above resolves nothing
+          // that build and mints no placeholder.)
+          state.dailyRes666[jobKey] = opnDailyPlaceholder694(series, job.block, payload.showImageUrl);
+          return;
+        }
         var e = m.e;
         if (isVideo) {
           state.dailyRes666[jobKey] = {
@@ -21058,8 +21131,36 @@ function opnMassSettlePut688(presented, jobKey, episodeId, stale, desc) {
   var prev = opnDailyPrevDate677(presented);
   Object.keys(all).forEach(function (d) { if (d !== presented && d !== prev) delete all[d]; });
   if (!all[presented]) all[presented] = {};
+  // v694 §2.5 (the daily store's twin rule): a stale: true
+  // record for this date is dropped at this write; after
+  // this release every caller passes stale: false.
+  Object.keys(all[presented]).forEach(function (k) { var r = all[presented][k]; if (r && r.stale) delete all[presented][k]; });
   all[presented][jobKey] = { episodeId: episodeId, stale: !!stale, desc: opnClone(desc) };
   opnMassSettledSave688();
+}
+function opnMassPlaceholder694(key, block, showImageUrl) {
+  // v694 §2.4/§2.1: the Mass not-available placeholder —
+  // stood in state.massRes688[jobKey] on a null match (video
+  // arms) or a stale/missing audio slot. Same sentinel
+  // discipline as opnDailyPlaceholder694: stable per key,
+  // never a real episode key, never settled, never marked.
+  var title = opnMassSeriesTitle688(key);
+  if (key === 'daily-tv-mass') {
+    return {
+      episodeId: 'seg:unavailable-v694-daily-tv-mass', kind: 'external',
+      title: title, streamUrl: null, url: null, enclosureUrl: null,
+      available: false, block: block, source: title,
+      durationS: 0, listened: false, podPositionS: null, imageUrl: null, descText: null,
+      stale: false, mass688: true, massSeries: key
+    };
+  }
+  return {
+    episodeId: 'seg:unavailable-v694-' + key, kind: 'video', videoId: null, vmSeries: key,
+    title: title, url: null, enclosureUrl: null,
+    available: false, block: block, durationS: 0, imageUrl: showImageUrl || null,
+    descText: null, dateLabel: '', listened: false,
+    source: title, stale: false, mass688: true, massSeries: key
+  };
 }
 function opnMassMatch688(key, videos, presented) {
   // v688 §2.4: title-date is PRIMARY (opnDailyTitleDate666's
@@ -21082,13 +21183,14 @@ function opnMassMatch688(key, videos, presented) {
     if (opnDailyTitleDate666(v.title) === presented) hit = v;
   });
   if (hit) return { v: hit, stale: false };
-  var prev = (videos || []).filter(function (v) {
-    if (!v || !v.title) return false;
-    if (term && String(v.title).indexOf(term) < 0) return false;
-    var d = opnDailyTitleDate666(v.title);
-    return d && d.length === 10 && d < presented;
-  }).sort(function (a, b) { return opnDailyTitleDate666(b.title) < opnDailyTitleDate666(a.title) ? -1 : 1; });
-  return prev.length ? { v: prev[0], stale: true } : null;
+  // v694 §2.4: the fallback return (newest earlier matching
+  // video, stale: true) is DELETED — no title-date hit for
+  // the presented day means null, and the resolver stands
+  // the not-available placeholder. The English-only term
+  // above stands as a DAY-MATCH rule: a Spanish-titled
+  // video dated the presented day resolves neither as the
+  // day's Mass nor as anything else.
+  return null;
 }
 function opnMassAudioEntry688(payload) {
   // The externals/live slot entry for the audio Mass, or
@@ -21154,7 +21256,13 @@ function resolveMassDynamic688(day) {
   jobs.forEach(function (job) { (byKey[job.key] = byKey[job.key] || []).push(job); });
   Object.keys(byKey).forEach(function (key) {
     var group = byKey[key];
-    var settled688 = (opnMassSettled688()[presented] || {});
+    // v694 §2.5 migration (the daily seat's twin): a
+    // stale: true record is NO record — standSettled688
+    // never rebuilds from it, the job stands unsettled,
+    // and the record drops at the next store write.
+    var settledRaw688 = (opnMassSettled688()[presented] || {});
+    var settled688 = {};
+    Object.keys(settledRaw688).forEach(function (k) { var r = settledRaw688[k]; if (r && !r.stale) settled688[k] = r; });
     var anyUnsettled688 = group.some(function (job) { return !settled688[job.block + ':' + key]; });
     var standSettled688 = function (job) {
       // A settled job rebuilds from the settled identity;
@@ -21175,36 +21283,30 @@ function resolveMassDynamic688(day) {
       return true;
     };
     if (key === 'daily-tv-mass') {
+      // v694 §2.4: the audio leg's stale-slot resolution AND
+      // its previous-date live fetch are REMOVED whole. A
+      // present, NON-stale entry (its episode_date IS the
+      // presented date) resolves and settles exactly as
+      // before; a stale entry is NOT today's Mass, and a
+      // missing/unresolved slot is NOT rescued by the
+      // previous date — either stands the §2.1 placeholder
+      // in state.massRes688 and settles nothing.
       api('/api/player/externals/live?date=' + encodeURIComponent(presented)).then(function (payload) {
         if (state.dayPayload !== day) return;
         if (!payload) return;
         var entry = opnMassAudioEntry688(payload);
         var m = null;
-        if (entry && entry.state === 'present' && entry.streamUrl) m = { e: entry, stale: !!entry.stale };
-        var finishAudio688 = function () {
-          group.forEach(function (job) {
-            var jobKey = job.block + ':' + key;
-            if (standSettled688(job)) return;
-            if (!m) return;
-            var desc = opnMassAudioDesc688(m.e, m.stale, job.block);
-            desc.listened = isPlayed(desc.episodeId, presented, job.block);
-            state.massRes688[jobKey] = desc;
-            opnMassSettlePut688(presented, jobKey, desc.episodeId, !!m.stale, desc);
-          });
-          settle();
-        };
-        if (m || !anyUnsettled688) { finishAudio688(); return; }
-        // The slot stands missing/unresolved on the
-        // presented payload: the per-date live read for
-        // the previous date supplies the fallback.
-        var prevDate688 = opnDailyPrevDate677(presented);
-        if (!prevDate688) { finishAudio688(); return; }
-        api('/api/player/externals/live?date=' + encodeURIComponent(prevDate688)).then(function (prevPayload) {
-          if (state.dayPayload !== day) return;
-          var pe = opnMassAudioEntry688(prevPayload);
-          if (pe && pe.state === 'present' && pe.streamUrl) m = { e: pe, stale: true };
-          finishAudio688();
-        }).catch(function () { finishAudio688(); });
+        if (entry && entry.state === 'present' && entry.streamUrl && !entry.stale) m = { e: entry, stale: false };
+        group.forEach(function (job) {
+          var jobKey = job.block + ':' + key;
+          if (standSettled688(job)) return;
+          if (!m) { state.massRes688[jobKey] = opnMassPlaceholder694(key, job.block, null); return; }
+          var desc = opnMassAudioDesc688(m.e, false, job.block);
+          desc.listened = isPlayed(desc.episodeId, presented, job.block);
+          state.massRes688[jobKey] = desc;
+          opnMassSettlePut688(presented, jobKey, desc.episodeId, false, desc);
+        });
+        settle();
       }).catch(function () {});
       return;
     }
@@ -21216,7 +21318,12 @@ function resolveMassDynamic688(day) {
       group.forEach(function (job) {
         var jobKey = job.block + ':' + key;
         if (standSettled688(job)) return;
-        if (!m) return;
+        if (!m) {
+          // v694 §2.4: video null -> the §2.1 placeholder in
+          // state.massRes688, no settle written.
+          state.massRes688[jobKey] = opnMassPlaceholder694(key, job.block, payload.showImageUrl);
+          return;
+        }
         var v = m.v;
         var desc = {
           episodeId: 'yt:' + v.id, kind: 'video', videoId: v.id, vmSeries: key,

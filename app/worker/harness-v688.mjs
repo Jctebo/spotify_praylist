@@ -416,24 +416,35 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   const O = w.__opn;
   const f = await fold688(w, "2026-11-24");
   const m = bySeries688(f.descs);
-  check("M5 catholictv falls back to the previous day's Mass, stale:true", !!m.catholictv && m.catholictv.episodeId === "yt:wpOyueDj_eY" && m.catholictv.stale === true, m.catholictv && [m.catholictv.episodeId, m.catholictv.stale]);
-  check("M5 dailytvmass falls back to yt:Z8rfD0h0xH8, stale:true", !!m.dailytvmass && m.dailytvmass.episodeId === "yt:Z8rfD0h0xH8" && m.dailytvmass.stale === true, m.dailytvmass && [m.dailytvmass.episodeId, m.dailytvmass.stale]);
-  check("M5 springfieldmass falls back to yt:QomObkUkfos, stale:true", !!m.springfieldmass && m.springfieldmass.episodeId === "yt:QomObkUkfos" && m.springfieldmass.stale === true, m.springfieldmass && [m.springfieldmass.episodeId, m.springfieldmass.stale]);
-  check("M5 audio falls back to the stale slot entry (the Nov 23 Mass), stale:true", !!m["daily-tv-mass"] && m["daily-tv-mass"].url === "https://example.invalid/tvmass-2026-11-23.mp3" && m["daily-tv-mass"].stale === true, m["daily-tv-mass"]);
+  // RE-POINTED BY v694 (Plan §2.4/§2.6, John's 2026-11-26
+  // word): M5's four fallback-resolution checks asserted
+  // the previous day's Mass standing stale:true. The
+  // fallback is DELETED — each row stands NOT AVAILABLE
+  // (the §2.1 placeholder, stale:false, nothing settled).
+  // Check counts stand.
+  check("M5 catholictv stands NOT AVAILABLE (the v694 placeholder — the previous day's Mass never paints)", !!m.catholictv && m.catholictv.episodeId === "seg:unavailable-v694-catholictv" && m.catholictv.available === false && m.catholictv.stale === false && m.catholictv.title === "Catholic TV Mass", m.catholictv && [m.catholictv.episodeId, m.catholictv.stale]);
+  check("M5 dailytvmass stands NOT AVAILABLE (the v694 placeholder, stale:false)", !!m.dailytvmass && m.dailytvmass.episodeId === "seg:unavailable-v694-dailytvmass" && m.dailytvmass.available === false && m.dailytvmass.stale === false, m.dailytvmass && [m.dailytvmass.episodeId, m.dailytvmass.stale]);
+  check("M5 springfieldmass stands NOT AVAILABLE (the v694 placeholder, stale:false)", !!m.springfieldmass && m.springfieldmass.episodeId === "seg:unavailable-v694-springfieldmass" && m.springfieldmass.available === false && m.springfieldmass.stale === false, m.springfieldmass && [m.springfieldmass.episodeId, m.springfieldmass.stale]);
+  check("M5 audio stands NOT AVAILABLE (the stale slot entry is NOT today's Mass — the v694 placeholder, url null, stale:false)", !!m["daily-tv-mass"] && m["daily-tv-mass"].episodeId === "seg:unavailable-v694-daily-tv-mass" && m["daily-tv-mass"].available === false && m["daily-tv-mass"].url === null && m["daily-tv-mass"].stale === false, m["daily-tv-mass"]);
+  // RE-POINTED BY v694: M5's three stale-paint checks —
+  // the v625 warning arms for daily/Mass rows are REMOVED;
+  // the rows paint "Not available today" and no warning.
   const htmlV = m.catholictv ? O.trackCard(m.catholictv) : "";
-  check("M5 the stale VIDEO row paints the v625 warning line + the source-name meta (trackCard video branch)", htmlV.includes("ext-stale-warn") && htmlV.includes(WARN) && htmlV.includes("Video · Catholic TV Mass"), htmlV.slice(0, 300));
+  check("M5 the not-available VIDEO row paints 'Not available today' + the source-name meta and NO warning line (trackCard video branch)", htmlV.includes("Not available today") && !htmlV.includes("ext-stale-warn") && !htmlV.includes(WARN) && htmlV.includes("Video · Catholic TV Mass"), htmlV.slice(0, 300));
   const htmlA = m["daily-tv-mass"] ? O.trackCard(m["daily-tv-mass"]) : "";
-  check("M5 the stale AUDIO row paints the v625 warning line + the source-name meta (trackCard generic branch)", htmlA.includes("ext-stale-warn") && htmlA.includes(WARN) && htmlA.includes("Daily TV Mass"), htmlA.slice(0, 300));
+  check("M5 the not-available AUDIO row paints 'Not available today' + the source name and NO warning line (trackCard generic branch, the v694 arm)", htmlA.includes("Not available today") && !htmlA.includes("ext-stale-warn") && !htmlA.includes(WARN) && htmlA.includes("Daily TV Mass"), htmlA.slice(0, 300));
   // The episode-card seat: its stale line is the standing
-  // generic d.stale paint — a stale mass descriptor's card
-  // carries it.
+  // generic d.stale paint — a not-available mass
+  // descriptor carries stale:false (and never opens), so
+  // its card paints NO warning. (Seat itself untouched
+  // by v694, per Plan §2.3 seat 5.)
   let epHtml = "";
   try {
     O.openEpisodeCard({ desc: Object.assign({}, m.catholictv), titleText: m.catholictv.title, seriesTitle: "Catholic TV Mass", dateLabel: m.catholictv.dateLabel || "" }, null);
     const ep = w.document.querySelector(".epcard");
     epHtml = ep ? ep.innerHTML : "";
   } catch (e) { epHtml = "ERR " + e.message; }
-  check("M5 the episode-card seat paints the warning for a stale mass descriptor (generic d.stale paint)", epHtml.includes("epcard-warn") && epHtml.includes(WARN), epHtml.slice(0, 200));
+  check("M5 the episode-card seat paints NO warning for a not-available mass descriptor (stale:false — the warning is unreachable for a Mass row)", !epHtml.includes("epcard-warn") && !epHtml.includes(WARN), epHtml.slice(0, 200));
   w.close();
   CTV = saveC; DTV = saveD; SPR = saveS; LIVE["2026-11-24"] = saveLive24;
 }
@@ -446,7 +457,10 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   await sleep(300);
   const f = await fold688(w, "2026-11-24");
   const m = bySeries688(f.descs);
-  check("M5 audio slot missing on the presented payload: the PREVIOUS date's live payload present entry is the fallback, stale:true", !!m["daily-tv-mass"] && m["daily-tv-mass"].url === "https://example.invalid/tvmass-2026-11-23.mp3" && m["daily-tv-mass"].stale === true, m["daily-tv-mass"]);
+  // RE-POINTED BY v694 (Plan §2.4/§2.6): the previous-date
+  // live fetch is REMOVED whole — a missing slot is not
+  // rescued by the previous date.
+  check("M5 audio slot missing on the presented payload: the row stands NOT AVAILABLE (the v694 placeholder — the PREVIOUS date's entry is never fetched or painted)", !!m["daily-tv-mass"] && m["daily-tv-mass"].episodeId === "seg:unavailable-v694-daily-tv-mass" && m["daily-tv-mass"].available === false && m["daily-tv-mass"].url === null && m["daily-tv-mass"].stale === false, m["daily-tv-mass"]);
   w.close();
   LIVE["2026-11-24"] = saveLive24;
 }
@@ -464,7 +478,11 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   const w = makeWorld(johnStore((doc) => setSalMorning(doc, MASS_CONTENTS.slice(1, 5))));
   await sleep(300);
   const f = await fold688(w, "2026-11-24");
-  check("M5 a payload with NO earlier Mass resolves nothing (the slot stands empty)", massDescs(f.descs).length === 0, f.descs.map((d) => d.episodeId));
+  // RE-POINTED BY v694 (consequence of the same word,
+  // named in v694 doc §3): a loaded payload with no Mass
+  // at all stands each row NOT AVAILABLE — the placeholder
+  // stands in the slot, the slot no longer stands empty.
+  check("M5 a payload with NO Mass at all stands every Mass row NOT AVAILABLE (four v694 placeholders, none available)", massDescs(f.descs).length === 4 && massDescs(f.descs).every((d) => d.available === false && d.stale === false), f.descs.map((d) => d.episodeId));
   w.close();
   CTV = saveC; DTV = saveD; SPR = saveS; LIVE["2026-11-24"] = saveL24; LIVE["2026-11-23"] = saveL23;
 }
@@ -477,7 +495,11 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   const O = w.__opn;
   const eng23 = CTV0.videos.filter((v) => v.id === "wpOyueDj_eY");
   const mA = O.opnMassMatch688("catholictv", [spanish].concat(eng23), "2026-11-24");
-  check("English-only: a Spanish-titled video dated the presented day NEVER resolves as the day's Mass — the fallback is the newest earlier ENGLISH Mass, stale:true", !!mA && mA.v.id === "wpOyueDj_eY" && mA.stale === true, mA);
+  // RE-POINTED BY v694 (Plan §2.4): the day-match half
+  // stands (a Spanish title never resolves); the fallback
+  // OUTCOME half is re-pointed — there is no fallback, so
+  // the matcher returns null (not-available).
+  check("English-only: a Spanish-titled video dated the presented day NEVER resolves as the day's Mass — and no fallback stands in its place (the matcher returns null)", mA === null, mA);
   const mB = O.opnMassMatch688("catholictv", [spanish], "2026-11-24");
   check("English-only: a payload whose ONLY Mass-term video for the presented date is Spanish resolves nothing (never the Spanish video, not even as fallback)", mB === null, mB);
   const realSpanish = CTV0.videos.filter((v) => String(v.title).includes("La Santa Misa"));
@@ -544,13 +566,18 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   await sleep(300);
   const f1 = await fold688(w, "2026-11-24");
   const m1 = bySeries688(f1.descs);
-  check("M9 day settles on the fallback (Nov 23 Masses, stale:true)", !!m1.catholictv && m1.catholictv.episodeId === "yt:wpOyueDj_eY" && m1.catholictv.stale === true, m1.catholictv && m1.catholictv.episodeId);
+  // RE-POINTED BY v694 (Plan §2.4/§2.6): M9's fallback-
+  // settle checks — a day with no Mass of its own settles
+  // NOTHING and stands not-available; the next compose
+  // after the day's Mass lands resolves it stale:false.
+  check("M9 a day with no Mass of its own settles NOTHING — the rows stand NOT AVAILABLE (v694 placeholders, stale:false)", !!m1.catholictv && m1.catholictv.episodeId === "seg:unavailable-v694-catholictv" && m1.catholictv.available === false && m1.catholictv.stale === false, m1.catholictv && m1.catholictv.episodeId);
   // The day's Mass appears in a refreshed payload mid-day:
-  // the settled rows STAND (no mid-day advance).
+  // nothing was settled, so the next compose resolves the
+  // day's own Masses.
   CTV = JSON.parse(JSON.stringify(CTV0)); DTV = JSON.parse(JSON.stringify(DTV0)); SPR = JSON.parse(JSON.stringify(SPR0));
   const f2 = await fold688(w, "2026-11-24");
   const m2 = bySeries688(f2.descs);
-  check("M9 a day settled on the fallback does NOT advance mid-day when the day's Mass appears", !!m2.catholictv && m2.catholictv.episodeId === "yt:wpOyueDj_eY" && m2.catholictv.stale === true && !!m2.dailytvmass && m2.dailytvmass.episodeId === "yt:Z8rfD0h0xH8" && m2.dailytvmass.stale === true, { ctv: m2.catholictv && m2.catholictv.episodeId, dtv: m2.dailytvmass && m2.dailytvmass.episodeId });
+  check("M9 the next compose after the day's Mass lands resolves it (catholictv yt:D-CPXkxCLRM + dailytvmass yt:qLQDKW65m8k, stale:false — the landing advances because no fallback settle exists)", !!m2.catholictv && m2.catholictv.episodeId === "yt:D-CPXkxCLRM" && m2.catholictv.stale === false && !!m2.dailytvmass && m2.dailytvmass.episodeId === "yt:qLQDKW65m8k" && m2.dailytvmass.stale === false, { ctv: m2.catholictv && m2.catholictv.episodeId, dtv: m2.dailytvmass && m2.dailytvmass.episodeId });
   // The next presented date resolves its own Mass.
   const f3 = await fold688(w, "2026-11-23");
   const m3 = bySeries688(f3.descs);

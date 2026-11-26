@@ -304,9 +304,16 @@ const L1_CONTENTS = {
   check('L9 Thursday: NO v677 settled pick is written for the gated day',
     !thu.settled || !thu.settled.includes('2026-11-26'), thu.settled);
   const fri = await compose690('2026-11-27', L9, { daily: true });
-  check('L9 Friday: the daily item resolves and paints (the production Nov 25 entry as the not-updated fallback)',
-    fri.list.some((d) => d.daily === 'daily-readings') && 'Afternoon:daily-readings' in fri.res666, { res: Object.keys(fri.res666), list: fri.list.map((d) => d.id + '/' + d.daily) });
-  check('L9 Friday: the settled pick IS written for the painting day', !!fri.settled && fri.settled.includes('2026-11-27'), fri.settled);
+  // RE-POINTED BY v694 (Plan §2.6 miss, named in v694 doc
+  // §3): the pre-v694 leg asserted the Nov 25 entry as the
+  // not-updated FALLBACK for presented Nov 27, settled.
+  // John's 2026-11-26 correction kills the fallback whole:
+  // Nov 27 has no readings entry, so the row stands
+  // NOT AVAILABLE (the §2.1 placeholder) and nothing
+  // settles. Check count stands.
+  check('L9 Friday: the daily item paints the v694 not-available placeholder (no Nov 27 entry stands; the Nov 25 fallback never paints)',
+    fri.list.some((d) => d.daily === 'daily-readings' && d.id === 'seg:unavailable-v694-daily-readings') && 'Afternoon:daily-readings' in fri.res666 && fri.res666['Afternoon:daily-readings'].available === false, { res: Object.keys(fri.res666), list: fri.list.map((d) => d.id + '/' + d.daily) });
+  check('L9 Friday: NO settled pick is written for the not-available day (v694: a settle exists only for a presented-day episode that stood)', !fri.settled || !fri.settled.includes('2026-11-27'), fri.settled);
 }
 
 // ---------- L10: office AND (dayRule x side x off) ----------

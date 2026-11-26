@@ -47,6 +47,10 @@
 //    stale:true; restoring today's entries does NOT
 //    upgrade mid-day (second half v677-only, MUST FAIL
 //    on the v676 tree).
+//    RE-POINTED BY v694 (Plan §2.6): leg 5's shape is now
+//    today absent → NOT AVAILABLE (nothing settled);
+//    restoring today's entries → the next compose
+//    resolves today's own episodes. See the leg-5 block.
 //
 // Run: node app/worker/harness-v677.mjs
 //      ORA_WT=/path/to/old-tree node /path/to/harness-v677.mjs
@@ -182,7 +186,7 @@ async function rows(pg) {
     const descs = extRebuildDescs(day) || state.dayDescs || [];
     const out = {};
     descs.filter((d) => d && d.daily666).forEach((d) => {
-      out[d.dailySeries] = { episodeId: d.episodeId, listened: !!d.listened, stale: !!d.stale, title: d.title, url: d.url || null, draw: (typeof trackDrawTextFor === 'function') ? trackDrawTextFor(d) : null };
+      out[d.dailySeries] = { episodeId: d.episodeId, available: !!d.available, listened: !!d.listened, stale: !!d.stale, title: d.title, url: d.url || null, draw: (typeof trackDrawTextFor === 'function') ? trackDrawTextFor(d) : null };
     });
     return out;
   });
@@ -236,15 +240,22 @@ const pg5 = await newWorld();
 await pg5.evaluate(({ noBiay, noReadings }) => { window.__pod.biay = noBiay; window.__pod.readings = noReadings; }, { noBiay: BIAY_NO329, noReadings: READINGS_NO25 });
 await build(pg5, '2026-11-25');
 r = await rows(pg5);
-check('L5 today absent: BIAY row = biy:day-328 with stale:true (NOT-UPDATED)', r['bible-in-a-year'] && r['bible-in-a-year'].episodeId === 'biy:day-328' && r['bible-in-a-year'].stale === true, r['bible-in-a-year']);
-check('L5 today absent: readings row = the November 24, 2026 entry with stale:true (NOT-UPDATED)',
-  r['daily-readings'] && r['daily-readings'].title === 'Daily Mass Reading Podcast for November 24, 2026' && r['daily-readings'].stale === true, r['daily-readings']);
+// RE-POINTED BY v694 (Plan §2.6, John's 2026-11-26 word):
+// L5 asserted the SAME daily fallback this release kills
+// (today absent -> yesterday stale:true; restored mid-day
+// -> the stale settle stands). Re-pointed to the
+// not-available / landing shapes — today absent ->
+// not-available with nothing settled; today landing ->
+// the next compose resolves it. The 18-check count stands.
+check('L5 today absent: BIAY row stands NOT AVAILABLE (the v694 placeholder, stale:false — biy:day-328 never paints)', r['bible-in-a-year'] && r['bible-in-a-year'].episodeId === 'seg:unavailable-v694-bible-in-a-year' && r['bible-in-a-year'].available === false && r['bible-in-a-year'].stale === false && r['bible-in-a-year'].title === 'Bible in a Year', r['bible-in-a-year']);
+check('L5 today absent: readings row stands NOT AVAILABLE (the v694 placeholder, stale:false — the November 24 entry never paints)',
+  r['daily-readings'] && r['daily-readings'].episodeId === 'seg:unavailable-v694-daily-readings' && r['daily-readings'].available === false && r['daily-readings'].stale === false && r['daily-readings'].title === 'USCCB Daily Readings Podcast', r['daily-readings']);
 await pg5.evaluate(({ biay, readings }) => { window.__pod.biay = biay; window.__pod.readings = readings; }, { biay: BIBLE, readings: READINGS });
 await build(pg5, '2026-11-25');
 r = await rows(pg5);
-check('L5 today restored mid-day: the stale settled BIAY row STANDS (biy:day-328, stale:true — no mid-day upgrade)', r['bible-in-a-year'] && r['bible-in-a-year'].episodeId === 'biy:day-328' && r['bible-in-a-year'].stale === true, r['bible-in-a-year']);
-check('L5 today restored mid-day: the stale settled readings row STANDS (November 24, stale:true — no mid-day upgrade)',
-  r['daily-readings'] && r['daily-readings'].title === 'Daily Mass Reading Podcast for November 24, 2026' && r['daily-readings'].stale === true, r['daily-readings']);
+check('L5 today restored mid-day: the next compose resolves the BIAY row to today\'s own episode (biy:day-329, stale:false — nothing was settled, so the landing advances)', r['bible-in-a-year'] && r['bible-in-a-year'].episodeId === 'biy:day-329' && r['bible-in-a-year'].stale === false, r['bible-in-a-year']);
+check('L5 today restored mid-day: the next compose resolves the readings row to today\'s own entry (November 25, stale:false)',
+  r['daily-readings'] && r['daily-readings'].title === 'Daily Mass Reading Podcast for November 25, 2026' && r['daily-readings'].stale === false, r['daily-readings']);
 await pg5.context().close();
 
 await b.close();
