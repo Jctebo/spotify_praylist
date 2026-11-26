@@ -153,3 +153,14 @@ The count computation (`opnCounts615` / `opnTrackUnplayed615` / `opnBlockCounts6
 **4. Gate honesty:** every tally above is from a harness run Review executed in this seat on the named tree. No check is recorded as passed that did not run. No device/field leg was run in Review — none is claimed; the field confirmation (John's closed Morning count standing correct after the ext settle on his phone) remains a post-ship field leg, not a Review pass.
 
 **State at Review close:** §4 written and committed on `release/v682`. Not merged, not deployed, board untouched — the line stops here for Ship.
+
+## §5 Ship record (ship-v682, 2026-11-26) — LIVE
+
+Review PASS (§4, judged tree `daffa34`; product-code tip `c26e5b1` + §4 doc commit). Run level: To Ship.
+
+- **Merge:** release/v682 → main, tree-exact via the Git Data API (push-v682-github.py). Judged delta asserted blob-exact: client.ts `03d4a871` · ui.ts `36951682` · index.ts `205f6597` (unchanged) · harness-v682.mjs `05a8d52d` · this doc. Remote main had advanced past the branch base (`3d87110`) by two nightly wallpaper commits (`18dad36`); remote-vs-base delta was assets only (3 wallpaper files) — reproduced into the target tree, nothing dropped, no force-push. Remote ship commit **3c42237ea0da219075df33333c6b5819aaf0202b**, tree **568ca790ddc0fb06c373ab630015cae94fef3314**; local mirror `c5573b8d`, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** harness-v682 **25 ok, 0 bad** (standing clone, merged main).
+- **Deploy:** deploy-app-v682-ship.py with EXPECTED_HEAD = merged main head (`c5573b8d`); dry-run → deploy clean. Worker **dc74ed7f-e5af-40f0-8a0f-9b2de4ce96ca**, pin **ora-pro-nobis-v682-1**. Production verification: the served sw.js (app.orapronobis.media) reads pin ora-pro-nobis-v682-1 (×1, the only pin served); the served app.js carries the fix (the v682 settle seat: `updateBlockCounts(day);` → v682 comment → `refreshPlayedChrome();` → `writeCache();`) and the v678/v679 markers stand (`favFolderSectionHtml` ×4 · `data-favcount678` ×3 · `podSyncQueueListened` present). No APK, no migration.
+- **Board closeout (D1-direct, all read back):** release 1660 → Live, shipped_at 2026-11-26T07:03:44Z, whats_new_id 497 · What's New **497** ("Fixed: a section card's unplayed count now stands correct whether the card is open or closed.") · shipped_records **871** · Ship phase record **2843** passed (commit_hash = the remote ship commit 3c42237e). Door read-back: release 1660 Live with shipped_at + whats_new_id standing. Ship contract 1160's expectation judged **met** via the door. Goals Board intake 1295 → Done, state line CLOSED.
+- **Field check (stands open for John's confirmation):** the Morning card's count stands the same closed and open, and updates in place when a track is marked.
+- **Rollback:** pin ora-pro-nobis-v680-1 (the v680 driver, `~/workspace/.tools/deploy-app-v680-ship.py`).
