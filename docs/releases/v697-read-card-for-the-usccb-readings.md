@@ -253,3 +253,13 @@ All line numbers below are the rebased tree (`app/worker/src/client.ts` unless n
 3. **§1.5(b)'s stale-dress description is legacy after v694** (§3.2): v694 deleted the daily fallback arms; the predicate and descriptor fields are unchanged, and D1 constructs the Nov 25 dress directly per §2.5.
 
 Implement stops here: no merge, no deploy, no board records touched.
+
+## §5 Ship record (2026-11-26, seat chain-v697-ship, contract 1231)
+
+- **SHIPPED LIVE 2026-11-26T17:07:58Z** · pin **ora-pro-nobis-v697-1** · Worker **13fd0345-9a6b-445b-aa29-504df3e0e3aa** (100%).
+- **Merge:** tree-exact Git Data API (push-v697-github.py) — remote main stood at **5dd67ca** (the v696 ship head; it had not moved, remote-vs-base delta EMPTY, no runner commits in between, no rebase needed); remote ship commit **e3324c42a04b41e3e285ffe32d18201b2c435863**, merged tree **e9dc6530156d0cca9776badc09cc83c89ddd3a04** == branch tree (head 1eada6a), asserted blob-exact on all four delta paths (client.ts · ui.ts · harness-v697.mjs · this doc); local mirror 62bc1ca2. **Main pushed · remote in sync.**
+- **Pin:** the branch already carried CACHE `ora-pro-nobis-v697-1` at ui.ts:1214 (bumped in Implement) — no Ship pin bump was needed or made.
+- **Harnesses (Review §4, re-run firsthand):** harness-v697 **74/0** · fail-on-old **35 ok / 39 bad** in the prescribed pattern (P/T/D/N legs fail on the old tree, C legs pass) · harness-v677 **18/0** · harness-v690 **33/0** · harness-v676 **49/1** (the 1 bad is only the pin leg) · harness-v675 **44/3** (the pin leg + the two retired plain-text legs).
+- **Production verified from served bytes:** GET / **200** (complete document) · served sw.js reads pin **ora-pro-nobis-v697-1** only · served app.js (1,608,204 bytes, stable across three fetches) carries `usccbReadings697` (6 occurrences) and **"Readings not available for this day."** (1 occurrence).
+- **Named follow-up (not fixed in this release):** the Nov 26 readings_cache production finding (§3.3) — the route's own payload for 2026-11-26 carries `parts: []` because `parseUsccbFeed`'s link test matches the feed's link-list item on Thanksgiving Day; the Mass scroll masks it via its Universalis backup fill, which this card by prescription does not take. On 2026-11-26 itself the shipped card therefore paints "Readings not available for this day." for the Nov 26 episode; every day with a normal payload paints its full card. This is a server-side parser defect in its own right — flagged for the coordinator/John as a follow-up matter, out of v697's client-only scope.
+- **Board closeout:** not written by Ship — the coordinator closes the board from this report (contract 1231 · phase record 2907).
