@@ -233,3 +233,13 @@ Each re-point was read in the harness diffs, old assertion against new. A re-poi
 - R1/R2 (§3.6) stand as Implement recorded them and are consistent with what Review read: `trackKeyOf` excludes `seg:` ids, and legs A/C prove the composed placeholder keeps its marks and paints the §2.1 arm.
 
 **No defects found. v694 is ready for Ship (pin bump in `ui.ts` remains Ship's step, per §3.3).**
+
+## §5 Ship record
+
+- **SHIPPED LIVE 2026-11-26T16:21:47Z** · pin **ora-pro-nobis-v694-1** · Worker **8720c732-83a2-4661-b104-12330fc162af** (100%).
+- **Resume chain:** the Plan stood published at base 7e85dea; v691 (pin v691-1) and v692 (pin v692-1) shipped in between. `release/v694` rebased clean onto main ac12853 (v692 ship record, tree 12243a85); §3.1's re-diff found every Plan seat standing as cited modulo line shift (+135 / +116), with one adjacent v691 change inside `extRebuildDescs` named and the fold bodies text-identical.
+- **Merge:** tree-exact Git Data API (push-v694-github.py) — remote-vs-base delta EMPTY (no nightly commit landed in between); remote ship commit **ff80963b**, merged tree **1b85a589** == branch tree asserted blob-exact on all seven delta paths; local mirror f92906d1. **Main pushed · remote in sync.**
+- **Harnesses at the ship tip (2d98757):** harness-v694 **26/0** re-run after the pin bump · fail-on-old 7 ok / 19 bad (legs A/B/F fail on the pre-v694 tree) · regressions harness-v677 **18/0** · harness-v690 **33/0** · harness-v688 **65/0**, all re-points named in §3.5 and upheld at Review (§4, PASS, no defects).
+- **Production verified from served bytes:** GET / 200 · served sw.js reads pin ora-pro-nobis-v694-1 only · served app.js carries `opnDailyPlaceholder694`, `opnMassPlaceholder694`, the `unavailable-v694` sentinel, and the "Not available today" paint; the one `prev5` string in the bundle is v694's own deletion comment — the fallback arm itself is gone.
+- **Closeout:** releases row 1672 Live · What's New 509 · shipped_records 883 · phase records Scope 2884 · Plan 2886 · Implement 2896 · Review 2897 · Ship 2898, all passed · intake 1310 CLOSED/Done.
+- **Field check (John's leg, open):** on a morning when a daily episode is late, its row reads "<series> · Not available today" with no yesterday episode standing in its place and nothing playable from it; when the episode lands, the row shows today's episode on the next open.
