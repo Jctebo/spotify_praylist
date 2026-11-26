@@ -16453,7 +16453,7 @@ function trackDesc(t, day) {
   // without its day (queueLiveDesc's external rebuild, search
   // rows) resolves no text here; the start step always reads the
   // live day-build descriptor's field, never a render-time one.
-  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null, stale: !!t.stale, unresolved: !!t.unresolved };
+  var d = { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || t.url || null, enclosureUrl: t.enclosureUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0, imageUrl: t.imageUrl || null, descText: t.descText || null, spotifyUrl: t.spotifyUrl || null, stale: !!t.stale, unresolved: !!t.unresolved, hasText: !!t.hasText, textUrl: t.textUrl || null }; // v696 §2.5 seat 2: the text seat rides the seam — hasText/textUrl were dropped here, so a composed descriptor could not answer the Read question
   if (t._occ) d._occ = t._occ; // v610: a duplicated copy's occurrence stamp rides the seam
   if (t._side650) d._side650 = t._side650; // v650 §3.3: the second-painted side's tag rides the seam the same way, or the rebuilt descriptor loses its sibling identity
   // v620: a podcast-family descriptor reaching this seam (the
@@ -18604,7 +18604,9 @@ function openRead(t, opts) {
   if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet readsheet';
-  sheet.innerHTML = '<div class="inner"><div class="row"><button class="playbtn" data-playkey="' + esc(t.episodeId) + '">&#9654;</button><div class="grow"><h1 class="screen">' + esc(t.title) + '</h1><p class="sub">the episode&rsquo;s text</p></div></div><div class="readtext" data-skeleton="1"><span class="skelbar" style="width:96%"></span><span class="skelbar" style="width:88%"></span><span class="skelbar" style="width:93%"></span><span class="skelbar" style="width:76%"></span><span class="skelbar" style="width:90%"></span></div></div>';
+  // v696 §2.5 seat 1: the sub-line paints the track's own descText where carried; where none is carried the <p class="sub"> element does not stand at all (no placeholder). An office track keeps the element (empty) — the office branch below replaces it with the widget head.
+  var sub696 = (t.descText || lohOffice676(t)) ? '<p class="sub">' + (t.descText ? esc(t.descText) : '') + '</p>' : '';
+  sheet.innerHTML = '<div class="inner"><div class="row"><button class="playbtn" data-playkey="' + esc(t.episodeId) + '">&#9654;</button><div class="grow"><h1 class="screen">' + esc(t.title) + '</h1>' + sub696 + '</div></div><div class="readtext" data-skeleton="1"><span class="skelbar" style="width:96%"></span><span class="skelbar" style="width:88%"></span><span class="skelbar" style="width:93%"></span><span class="skelbar" style="width:76%"></span><span class="skelbar" style="width:90%"></span></div></div>';
   document.body.appendChild(sheet);
   mountDrawer(sheet, true); // v419: TALL drawer — the header Close retires; the text paints as skeleton lines (SK-8)
   sheet.querySelector('[data-playkey]').addEventListener('click', function () {
@@ -21974,6 +21976,7 @@ function ownSlotTrack(row, meta, date) {
     // stands on its row and the no-text fold names it in the meta
     // (the v363 convention). No standing meta sets the flag.
     hasText: present && !(meta && meta.hasText === false), textUrl: present ? '/api/player/text/' + date + '/' + (meta ? meta.episodeId : row.episodeId) : null,
+    descText: meta && meta.descText ? meta.descText : null, // v696 §2.5 seat 1: the meta's own description rides the track (v483 imageUrl forwarding precedent) so openRead can paint it as the sub-line
     _block: row.block
   };
 }
@@ -22242,7 +22245,8 @@ function ownResolveFeed(day, needed, revalidate) {
       // session like every other kind's art (v480's path); before
       // v483 the meta named none and the system player stamped
       // nothing on own prayers.
-      imageUrl: '/logo.png'
+      imageUrl: '/logo.png',
+      descText: it.descText || null // v696 §2.5 seat 1: the feed item's own description (extParseFeed computes it) rides the meta birth, so ownSlotTrack can forward it to the Read sheet's sub-line
     };
     (found[fam.family] = found[fam.family] || []).push(meta);
     if (fam.family !== 'novenas') {
