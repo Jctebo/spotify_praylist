@@ -17356,6 +17356,87 @@ function shareSrcOk643(v) {
    this view by name), and no Conscience, additions,
    played/position, or vault data stands on it. Play is
    the receiver's tap only \u2014 never autoplay. */
+/* v675 §3.1: the LOH widget predicate — true iff the
+   descriptor's episodeId is one of the eight Divine Office
+   hour slots (the literal set drawn from the EXT_SLOTS defs:
+   ext-invitatory · ext-morning-prayer · ext-midmorning-prayer
+   · ext-midday-prayer · ext-midafternoon-prayer ·
+   ext-office-of-readings · ext-evening-prayer ·
+   ext-night-prayer). Slot identity only — never source, kind,
+   or title. */
+var LOH_OFFICE_SLOTS_675 = { 'ext-invitatory': 1, 'ext-morning-prayer': 1, 'ext-midmorning-prayer': 1, 'ext-midday-prayer': 1, 'ext-midafternoon-prayer': 1, 'ext-office-of-readings': 1, 'ext-evening-prayer': 1, 'ext-night-prayer': 1 };
+function lohOffice675(t) {
+  return !!(t && t.episodeId && LOH_OFFICE_SLOTS_675[t.episodeId]);
+}
+/* v675 §3.2: the widget header lines — heading, the hour (the
+   EXT_SLOTS def title for the slot, falling back to t.title),
+   the track's own date, the Q3 A text line, the Q4 A
+   audio/text line for Sing the Hours, and the Q5 A note. */
+function lohWidgetHead675(t, dateStr) {
+  var hour = (t && t.title) || '';
+  (EXT_SLOTS || []).forEach(function (sl) { if (t && sl.slotId === t.episodeId && sl.title) hour = sl.title; });
+  var dateLine = '';
+  if (dateStr) { try { var dl = homilyLongDate(dateStr); dateLine = (dl && dl !== 'Invalid Date') ? dl : String(dateStr); } catch (e) { dateLine = String(dateStr); } }
+  var h = '<div class="lohhead675"><div class="lohhead-title675">Liturgy of the Hours</div>'
+    + '<div class="lohhead-hour675">' + esc(hour) + '</div>'
+    + (dateLine ? '<div class="lohhead-date675">' + esc(dateLine) + '</div>' : '')
+    + '<div class="lohhead-text675">Text: Divine Office — the widget always shows today&rsquo;s Hours</div>';
+  if (t && t.source === 'Sing the Hours') h += '<div class="lohhead-audio675">Audio: Sing the Hours · Text: Divine Office (today)</div>';
+  h += '<div class="lohhead-note675">Playing inside the frame is separate from the app player.</div></div>';
+  return h;
+}
+/* v675 §3.2: the frame block — the loading line, the Q1 A
+   widget iframe exactly as offered (no sandbox attribute, no
+   src rewriting), and the hidden fallback row. */
+function lohWidgetBody675() {
+  return '<div class="lohframe675"><div class="lohloading675">Loading today&rsquo;s Hours…</div>'
+    + '<iframe src="https://divineoffice.org/widget" title="Liturgy of the Hours"></iframe>'
+    + '<div class="lohfail675" hidden><a href="https://divineoffice.org" target="_blank" rel="noopener">Text unavailable — open Divine Office</a></div></div>';
+}
+/* v675 §3.2: the frame wiring — the frame's load clears the
+   loading line; a 6-second timer with no load, or an error
+   event, replaces the frame block with the failure row.
+   Never a blank box. One refinement, named in §6: Chromium
+   fires the frame's load event for a FAILED navigation too
+   (the browser's own error page — measured in the harness
+   sandbox: load at ~0.4s while the host is unreachable), so
+   a bare load cannot prove the widget stands. On load, a
+   no-cors fetch probe to the widget URL decides: resolved —
+   the host is reachable and the load stands (loading line
+   clears, timer cancelled); rejected — the failure row
+   replaces the block, exactly as the timer/error paths do.
+   The 6s timer still bounds every path (a hung probe falls
+   to it). */
+function lohWidgetWire675(root) {
+  if (!root) return;
+  var block = root.querySelector('.lohframe675');
+  if (!block) return;
+  var frame = block.querySelector('iframe');
+  var loading = block.querySelector('.lohloading675');
+  var done = false;
+  function fail675() {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    block.innerHTML = '<div class="lohfail675"><a href="https://divineoffice.org" target="_blank" rel="noopener">Text unavailable — open Divine Office</a></div>';
+  }
+  function succeed675() {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    if (loading) loading.remove();
+  }
+  var timer = setTimeout(fail675, 6000);
+  if (frame) {
+    frame.addEventListener('load', function () {
+      if (done) return;
+      try {
+        fetch('https://divineoffice.org/widget', { mode: 'no-cors' }).then(function () { succeed675(); }).catch(function () { fail675(); });
+      } catch (e) { succeed675(); }
+    });
+    frame.addEventListener('error', fail675);
+  }
+}
 function trackTextHtml643(text) {
   if (!text) return '';
   return String(text).split('\\n').map(function (ln) { return ln.trim() ? '<div>' + esc(ln) + '</div>' : '<div><br></div>'; }).join('');
@@ -17446,13 +17527,18 @@ function trackPageDaySelect643(L) {
   return pool[0];
 }
 function trackPagePaintDay643(L, d) {
-  var textHtml = trackTextHtml643(d.descText || null);
+  var office675 = lohOffice675(d); // v675 §3.5: an office descriptor's text seat IS the widget — descText does not paint, no textUrl fetch runs
+  var textHtml = office675 ? '' : trackTextHtml643(d.descText || null);
   openTrackPage643({
     key643: d.episodeId + '|' + (d.source || '') + '|' + (d.url || d.streamUrl || ''),
     title: d.title || '', line: shareLineFor640(d), imageUrl: d.imageUrl || '/logo.png',
+    headHtml: office675 ? lohWidgetHead675(d, L.date) : undefined,
     textHtml: textHtml,
     onPlay: function () { playTrack(d); },
-    afterPaint: (d.hasText && d.textUrl) ? function () {
+    afterPaint: office675 ? function () {
+      var el = document.getElementById('track-text-643');
+      if (el) { el.innerHTML = lohWidgetBody675(); lohWidgetWire675(el); }
+    } : (d.hasText && d.textUrl) ? function () {
       // The read-along text (the standing Read seat's own
       // fetch): a 404 paints no text block, never an error.
       fetch(d.textUrl).then(function (r) { return r && r.ok ? r.text() : null; }).then(function (txt) {
@@ -18053,7 +18139,7 @@ function trackCard(t) {
     : '<div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">' + metaU + '</div></div>';
   return '<div class="card trow prow" data-card="' + esc(key) + '"><div class="row">' + rowArtHtml(t) + growU + '</div></div>';
 }
-function openRead(t) {
+function openRead(t, opts) {
   // v318 T9: the reading view — the episode's full text within the
   // Prayers tab, set at the app's reading size under the font floor.
   // Its play/pause control calls playTrack on the SAME descriptor
@@ -18075,6 +18161,18 @@ function openRead(t) {
   });
   if (state.current && state.current.episodeId === t.episodeId) markPlaying(t.episodeId);
   updateDock();
+  // v675 §3.3: an office descriptor paints the widget branch —
+  // the sheet stands as today (title, play control, markPlaying,
+  // updateDock above) but the sub carries the widget header and
+  // the body carries the frame; NO textUrl fetch runs. The
+  // player caller opts out explicitly with plainText675 (§3.4).
+  if (lohOffice675(t) && !(opts && opts.plainText675)) {
+    var sub675 = sheet.querySelector('.sub');
+    if (sub675) sub675.innerHTML = lohWidgetHead675(t, presentedDateStr());
+    var body675 = sheet.querySelector('.readtext');
+    if (body675) { body675.innerHTML = lohWidgetBody675(); lohWidgetWire675(body675); }
+    return;
+  }
   fetch(t.textUrl).then(function (r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
@@ -18194,7 +18292,7 @@ function openNowPlaying() {
   sheet.querySelector('#np-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
     var t = state.current && state.readTracks[state.current.episodeId];
-    if (t && t.hasText && t.textUrl) openRead(t); // stacks over this sheet; closing Read returns here
+    if (t && t.hasText && t.textUrl) openRead(t, { plainText675: true }); // v675 §3.4: the player's bottom-row Read stays on the plain-text path for every track, office included — explicit opt-out; stacks over this sheet; closing Read returns here
   });
   // v546 (Q1 A): the Star act in the control row — it toggles
   // the playing track's star (starEntryForDesc builds the

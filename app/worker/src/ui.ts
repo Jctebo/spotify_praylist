@@ -361,6 +361,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 /* v363 §2.3: the .notavail rule retires with its last row use —
    the not-available signal folds into the row's meta line. */
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
+/* v675 §3.6: the LOH widget frame sizing (the standing style
+   seat, beside .readtext). No frame-interior styling. */
+.lohframe675 iframe { width:100%; height:68vh; border:0; display:block; }
  .bookresp { font-weight:700; }
 .trackpage-art643 img { width:100%; max-width:340px; border-radius:14px; display:block; }
 .trackpage-play643 { font-size:1.25rem; padding:14px 34px; margin:14px 0; }
@@ -1180,7 +1183,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v673-1";
+var CACHE = "ora-pro-nobis-v675-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
