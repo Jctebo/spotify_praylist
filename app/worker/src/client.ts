@@ -17870,6 +17870,115 @@ function lohWidgetWire675(root) {
     frame.addEventListener('error', fail675);
   }
 }
+/* v697 §2.1: the USCCB readings predicate — true iff the
+   descriptor is the Daily Mass Reading Podcast episode in
+   any of its three dresses (§1.5): (a) the composed fold
+   seat (its own readingsSeat flag), (b) the daily-kind
+   contents item (the v666 dynamic stamp), (c) the ext slot
+   (the slot id rides episodeId, or slotId on slotId-carrying
+   copies). Identity fields ONLY — never kind (the dresses
+   disagree), never source (shape (a) carries ''), never
+   hasText/textUrl (never set for this episode), never title
+   text. Disjoint from lohOffice676 on the identity fields
+   (§2.1's proof): a readings descriptor's episodeId is a
+   feed GUID key or 'ext-usccb-readings' — never an office
+   slot — and its source is never an office source; an
+   office descriptor carries none of these fields. */
+function usccbReadings697(t) {
+  if (!t) return false;
+  if (t.readingsSeat === true) return true;              // shape (a): the fold seat's own flag
+  if (t.podSeries === 'daily-readings') return true;     // shapes (a)+(b): the series key both carry
+  if (t.dailySeries === 'daily-readings') return true;   // shape (b): the v666 dynamic stamp
+  if (t.episodeId === 'ext-usccb-readings') return true; // shape (c): the slot id rides episodeId
+  if (t.slotId === 'ext-usccb-readings') return true;    // shape (c), slotId-carrying copies
+  return false;
+}
+/* v697 §2.4: the episode's own date — PRIMARY: the title
+   date (opnDailyTitleDate666's reading of the 'Month D,
+   YYYY' the episode's title carries; all three dresses
+   carry this title). FALLBACK, only where the title yields
+   no full date: the presented date — sound because every
+   dress is built for the presented day. Never a date from
+   resolvedAt, publish stamps, or "today" as such. */
+function episodeDate697(t) {
+  var d = t ? opnDailyTitleDate666(t.title) : null;
+  if (d && d.length === 10) return d;
+  return presentedDateStr();
+}
+/* v697 §2.3: the card header, in the .lohhead675 dress —
+   heading "Daily Readings" · the day name (the payload's
+   title where it stands — the fetch driver names it in
+   when the payload lands; until then the descriptor's own
+   long date) · the date line (the episode's date, via
+   homilyLongDate, the office head's formatter). No
+   "always shows today" line — the opposite is true here
+   (§2.4) and no line claims otherwise. */
+function readingsCardHead697(t, dateStr) {
+  var dateLine = '';
+  if (dateStr) { try { var dl = homilyLongDate(dateStr); dateLine = (dl && dl !== 'Invalid Date') ? dl : String(dateStr); } catch (e) { dateLine = String(dateStr); } }
+  return '<div class="lohhead675 readingshead697"><div class="lohhead-title675">Daily Readings</div>'
+    + '<div class="lohhead-hour675 readings-day697">' + esc(dateLine) + '</div>'
+    + (dateLine ? '<div class="lohhead-date675">' + esc(dateLine) + '</div>' : '')
+    + '</div>';
+}
+/* v697 §2.3: the card body, built ONLY from payload fields
+   — each part in payload order through the Mass surface's
+   own renderer (massFeedPartHtml with the slot label and
+   NO setKey, the ferial arm exactly as massReadingsHtml
+   paints it), then the acknowledgment: every payload
+   copyright[] line as a .mass-ack line, exactly as
+   massAcksHtml paints them. Memorial sets do not paint.
+   The not-available state: where the payload answers
+   found:false, carries no parts, or the fetch failed
+   (payload null), the body paints the one honest line
+   alone — no parts, no acknowledgment, no other day's
+   text. No hardcoded content strings stand in this card
+   (the v696 lesson): every heading, citation, and word is
+   built from the payload's own fields at paint time. */
+function readingsCardPaint697(root, payload) {
+  if (!root) return;
+  if (!payload || !payload.found || !payload.parts || !payload.parts.length) {
+    root.innerHTML = '<div class="mass-line readings-none697">Readings not available for this day.</div>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < payload.parts.length; i++) {
+    var part = payload.parts[i];
+    h += massFeedPartHtml(part, MASS_SLOT_LABELS[part.key], i);
+  }
+  if (payload.copyright) {
+    for (var j = 0; j < payload.copyright.length; j++) {
+      h += '<div class="mass-ack">' + esc(payload.copyright[j]) + '</div>';
+    }
+  }
+  root.innerHTML = h;
+}
+/* v697 §2.3: the fetch-and-paint driver — the standing
+   route (store-first / live-pull-on-miss behind the server
+   seam; the client adds no cache of its own), asked for
+   the EPISODE's date and only that date. resolve697 is a
+   function returning { body, head } AT SETTLE TIME (R4:
+   the track page's repaints can replace #track-text-643
+   while the fetch is in flight — the element is read when
+   the payload lands, never captured). On settle the body
+   is replaced whole; where the payload carries its day
+   title, the head's day-name line takes it. A rejected
+   fetch takes the same not-available path. */
+function readingsCardDrive697(t, resolve697) {
+  var dateStr = episodeDate697(t);
+  api('/api/prayer/mass-readings?date=' + dateStr).then(function (payload) {
+    var r = resolve697 ? resolve697() : null;
+    if (!r || !r.body) return;
+    if (payload && payload.title && r.head) {
+      var dn = r.head.querySelector('.readings-day697');
+      if (dn) dn.textContent = payload.title;
+    }
+    readingsCardPaint697(r.body, payload);
+  }).catch(function () {
+    var r = resolve697 ? resolve697() : null;
+    if (r && r.body) readingsCardPaint697(r.body, null);
+  });
+}
 function trackTextHtml643(text) {
   if (!text) return '';
   return String(text).split('\\n').map(function (ln) { return ln.trim() ? '<div>' + esc(ln) + '</div>' : '<div><br></div>'; }).join('');
@@ -17961,16 +18070,28 @@ function trackPageDaySelect643(L) {
 }
 function trackPagePaintDay643(L, d) {
   var office675 = lohOffice676(d); // v675 §3.5 + v676 §3.3: an office descriptor's text seat IS the widget — descText does not paint, no textUrl fetch runs; the office test is the widened lohOffice676 predicate
-  var textHtml = office675 ? '' : trackTextHtml643(d.descText || null);
+  var readings697 = usccbReadings697(d); // v697 §2.2 seat 2: a readings descriptor's text seat IS the readings card — descText does not paint, no textUrl fetch runs; the office test stands first (the predicates are disjoint, §2.1)
+  var textHtml = (office675 || readings697) ? '' : trackTextHtml643(d.descText || null);
   openTrackPage643({
     key643: d.episodeId + '|' + (d.source || '') + '|' + (d.url || d.streamUrl || ''),
     title: d.title || '', line: shareLineFor640(d), imageUrl: d.imageUrl || '/logo.png',
-    headHtml: office675 ? lohWidgetHead675(d, L.date) : undefined,
+    headHtml: office675 ? lohWidgetHead675(d, L.date) : (readings697 ? readingsCardHead697(d, L.date) : undefined),
     textHtml: textHtml,
     onPlay: function () { playTrack(d); },
     afterPaint: office675 ? function () {
       var el = document.getElementById('track-text-643');
       if (el) { el.innerHTML = lohWidgetBody675(); lohWidgetWire675(el); }
+    } : readings697 ? function () {
+      // v697 §2.2 seat 2 + R4: the card body paints into
+      // #track-text-643 at settle time — the driver reads
+      // the element when the payload lands, never a
+      // captured node.
+      readingsCardDrive697(d, function () {
+        var el = document.getElementById('track-text-643');
+        if (!el) return null;
+        var pg = document.getElementById('track-page-643');
+        return { body: el, head: pg ? pg.querySelector('.readingshead697') : null };
+      });
     } : (d.hasText && d.textUrl) ? function () {
       // The read-along text (the standing Read seat's own
       // fetch): a 404 paints no text block, never an error.
@@ -18630,6 +18751,29 @@ function openRead(t, opts) {
     if (body675) { body675.innerHTML = lohWidgetBody675(); lohWidgetWire675(body675); }
     return;
   }
+  // v697 §2.2 seat 3: a readings descriptor paints the
+  // readings card — the sub carries the card head and the
+  // body is filled by the fetch-and-paint driver from the
+  // Mass's own payload for the EPISODE's date (§2.4); NO
+  // textUrl fetch runs on this branch. v696's sub rule
+  // stands the .sub element only where descText or the
+  // office predicate stands, so a readings descriptor
+  // without descText (the fold seat) has none — the branch
+  // stands the element itself, after the sheet's title.
+  if (usccbReadings697(t)) {
+    var sub697 = sheet.querySelector('.sub');
+    if (!sub697) {
+      sub697 = document.createElement('p');
+      sub697.className = 'sub';
+      var grow697 = sheet.querySelector('.grow');
+      if (grow697) grow697.appendChild(sub697);
+    }
+    if (sub697) sub697.innerHTML = readingsCardHead697(t, episodeDate697(t));
+    readingsCardDrive697(t, function () {
+      return { body: sheet.querySelector('.readtext'), head: sub697 };
+    });
+    return;
+  }
   fetch(t.textUrl).then(function (r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
@@ -18753,6 +18897,11 @@ function openNowPlaying() {
     // state.current when it satisfies the predicate, else the
     // readTracks descriptor; no opts (the opt-out is retired).
     if (lohOffice676(state.current) || lohOffice676(t)) { openRead(lohOffice676(state.current) ? state.current : t); return; }
+    // v697 §2.2 seat 1: a readings track paints the card —
+    // the office arm's own preference shape (state.current
+    // first when it satisfies the predicate, else the
+    // readTracks descriptor).
+    if (usccbReadings697(state.current) || usccbReadings697(t)) { openRead(usccbReadings697(state.current) ? state.current : t); return; }
     if (t && t.hasText && t.textUrl) openRead(t); // standing behavior; stacks over this sheet; closing Read returns here
   });
   // v546 (Q1 A): the Star act in the control row — it toggles
@@ -18849,7 +18998,10 @@ function updateNowPlaying() {
   // v676 §3.4: the Read button also stands where the playing
   // descriptor or its readTracks entry is an office track
   // (lohOffice676), in addition to the standing text test.
-  if ((rt && rt.hasText && rt.textUrl) || lohOffice676(cur) || lohOffice676(rt)) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
+  // v697 §2.2 seat 1: the Read button also stands where
+  // the playing descriptor or its readTracks entry is a
+  // readings track (usccbReadings697).
+  if ((rt && rt.hasText && rt.textUrl) || lohOffice676(cur) || lohOffice676(rt) || usccbReadings697(cur) || usccbReadings697(rt)) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
   else { readBtn.style.visibility = 'hidden'; readBtn.setAttribute('aria-hidden', 'true'); }
   refreshNpStar(); // v546: the control row's star follows the playing track
   updateNpSeek();
