@@ -9398,6 +9398,13 @@ function podSyncQueueListened(series, seqKey, on) {
   // match, last match, and the count all read a flipped copy.
   var apply = function (d) {
     if (d && d.kind === 'podcast' && d.podSeries === series && d.seriesKey === seqKey) d.listened = !!on;
+    // v679 Leg 1 (§2.5's named widening): the video arm stands
+    // in this apply too, keyed on episodeId exactly as the
+    // v677 daily arm below — the standing dayDescs video copy
+    // is an Object.assign copy of the dailyRes666 descriptor,
+    // so flipping the dailyRes copy alone leaves the standing
+    // day copy at its resolve-time flag until a rebuild.
+    else if (d && d.kind === 'video' && (d.episodeId === seqKey || d.episodeId === 'yt:' + seqKey)) d.listened = !!on;
   };
   (state.queue || []).forEach(apply);
   if (state.current) apply(state.current);
@@ -10574,6 +10581,14 @@ function markPodVideoEnded663() {
   post('/api/player/podcasts/mark', { series: res.series, seqKey: seqKey, source: 'auto' }).catch(function () {
     podMarkEnqueue({ op: 'mark', series: res.series, seqKey: seqKey, source: 'auto', queuedAt: new Date().toISOString() });
   });
+  // v679 Leg 1: the in-memory leg rides the standing sync, as
+  // every audio completion seat does — its video arm (keyed on
+  // episodeId === seqKey) flips the dailyRes666 copy and the
+  // settled-pick store, so the Praylist daily video copy stands
+  // read in the same act instead of keeping its resolve-time
+  // listened:false until a rebuild re-reads the server fold.
+  podSyncQueueListened(res.series, seqKey, true);
+  refreshPlayedChrome();
 }
 function podWatchOnError(code) {
   // §2.6.3: error codes 100, 101, and 150 (not found / embedding
@@ -10841,7 +10856,20 @@ function podToggleMark(key) {
     opnPodCoreSetListen(res.series, key, entry.listened, { source: 'manual' });
     opnPodProjectSeries(opnPodCore(), res);
   }
-  if (state.tab === 'podcasts') { if (res.kind === 'rss') paintPodcastRss(); else paintPodcasts(); }
+  // v679 Leg 2: the repaint is hosting-free — the standing
+  // series-page dispatch paints every hosting (Catechesis,
+  // Pray-homed via podOrigin, Mass-homed via massPodReturn)
+  // and every kind (rss/video/own/novena/audio), where the old
+  // podcasts-tab gate left the Pray/Mass hostings unpainted.
+  // The dispatch runs only when a series page actually stands
+  // in the view (every series painter emits [data-podrow]
+  // rows): this same act is also reached from surfaces where
+  // no series page stands (the Favorites series-open route,
+  // episode-card and Praylist row acts), and painting there
+  // would clobber the standing surface. paintFavoritesSurfaces
+  // (internally guarded) closes every route, Favorites included.
+  if (view && view.querySelector('[data-podrow]')) paintPodSeriesPage();
+  paintFavoritesSurfaces();
   var call = wasListened
     ? post('/api/player/podcasts/unmark', { series: res.series, seqKey: key })
     : post('/api/player/podcasts/mark', { series: res.series, seqKey: key, source: 'manual' });
