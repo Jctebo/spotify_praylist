@@ -2360,6 +2360,27 @@ function extMatchSth(items: ExtFeedItem[], y: number, mo: number, d: number, tok
   }
   return null;
 }
+// v695 §2.2/§2.4: the natural-title cleaning — remove exactly
+// the date segment each matcher required, nothing else; the
+// remainder stands verbatim. Divine Office form: the leading
+// "<Month> <D><ordinal>, <YYYY> – " segment. Sing the Hours
+// form: the M.D.YY token (built exactly as extMatchSth builds
+// it) with its orphaned separator spacing. Anything else
+// returns the raw title trimmed. Empty result → null (the
+// caller falls back to the standing/composed form, §2.5).
+function extNaturalTitle695(rawTitle: string | null | undefined, y: number, mo: number, d: number): string | null {
+  if (!rawTitle) return null;
+  let t = String(rawTitle).trim();
+  if (!t) return null;
+  const month = EXT_MONTHS_FULL[mo - 1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const doRe = new RegExp(`^${month}\\s+${d}(?:st|nd|rd|th),\\s+${y}\\s+–(?:\\s+|$)`);
+  if (doRe.test(t)) t = t.replace(doRe, "").trim();
+  else {
+    const token = `${mo}.${d}.${String(y).slice(2)}`;
+    if (t.includes(token)) t = t.replace(token, "").replace(/\s{2,}/g, " ").trim();
+  }
+  return t || null;
+}
 const EXT_DGE_FEED_URL = "https://anchor.fm/s/1025ef1c/podcast/rss";
 const EXT_SAINT_FEED_URL = "https://feeds.buzzsprout.com/2216056.rss";
 function extMatchLatestByDate(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
@@ -2595,7 +2616,7 @@ async function externalsCourierPayload(env: Env, date: string): Promise<{ slots:
     // entries keep the bare slot title (mkMissing, above). The
     // courier carries no Sing the Hours leg (EXT_COURIER_SLOTS
     // stands empty), so no StH title is composed here.
-    const title = EXT_LABELED_SLOTS.has(slot.slotId) ? `${slot.title} - Divine Office` : slot.title;
+    const title = extNaturalTitle695(it.title, y, mo, d) ?? (EXT_LABELED_SLOTS.has(slot.slotId) ? `${slot.title} - Divine Office` : slot.title); // v695 §2.4.3: the cleaned natural title; the v626 composed form is the named fallback (§2.5)
     return { slotId: slot.slotId, state: "present", title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order, imageUrl: it.imageUrl || doChannelImage || null, descText: it.descText || null };
   });
   slots.push(...(await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0)) as typeof slots);
@@ -2629,6 +2650,7 @@ interface ExtResolutionRow {
   route: string | null; // v628 (migration 0050): the Divine Office fetch ROUTE that filled the row ('feed' / 'synthesis' / 'scrape' / NULL)
   backup_image_url: string | null; // v648 (migration 0051): the backup pointer's image (the matched item's image else the feed's channelImageUrl — the fill write's fallback)
   backup_duration_s: number | null; // v648 amendment (migration 0051, doc §3.7): the backup pointer's duration (the matched item's durationS, else the displaced fill row's duration_s)
+  backup_title: string | null; // v695 (migration 0052): the backup pointer's natural title (the matched StH item's cleaned title, else the displaced fill row's stored title)
 }
 interface ExtFeedStateRow {
   feed_key: string; last_success_at: string | null;
@@ -2664,30 +2686,30 @@ async function extFeedStateWrite(env: Env, feedKey: string, ok: boolean, error: 
 // v626: the two office slots whose stored title carries the
 // filling source (John's labeling rule, 2026-11-23 08:43 CT).
 const EXT_LABELED_SLOTS = new Set(["ext-morning-prayer", "ext-evening-prayer"]);
-async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null, backupUrl?: string | null, backupSource?: string | null, route?: string | null, backupImageUrl?: string | null, backupDurationS?: number | null): Promise<void> {
+async function extResolutionWrite(env: Env, date: string, slotId: string, it: ExtFeedItem | null, title: string, imageFallback: string | null, stamp: string | null, episodeDate: string | null, source: string | null, backupUrl?: string | null, backupSource?: string | null, route?: string | null, backupImageUrl?: string | null, backupDurationS?: number | null, backupTitle?: string | null): Promise<void> {
   await env.DB.prepare(
-    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source, backup_url, backup_source, route, backup_image_url, backup_duration_s)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ext_resolutions (slot_id, date, state, title, stream_url, duration_s, size_bytes, image_url, desc_text, resolved_at, feed_stamp, episode_date, source, backup_url, backup_source, route, backup_image_url, backup_duration_s, backup_title)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(date, slot_id) DO UPDATE SET state = excluded.state, title = excluded.title, stream_url = excluded.stream_url,
        duration_s = excluded.duration_s, size_bytes = excluded.size_bytes, image_url = excluded.image_url,
        desc_text = excluded.desc_text, resolved_at = excluded.resolved_at, feed_stamp = excluded.feed_stamp, episode_date = excluded.episode_date, source = excluded.source,
-       backup_url = excluded.backup_url, backup_source = excluded.backup_source, route = excluded.route, backup_image_url = excluded.backup_image_url, backup_duration_s = excluded.backup_duration_s`,
+       backup_url = excluded.backup_url, backup_source = excluded.backup_source, route = excluded.route, backup_image_url = excluded.backup_image_url, backup_duration_s = excluded.backup_duration_s, backup_title = excluded.backup_title`,
   ).bind(
     slotId, date, it ? "present" : "missing", title,
     it ? it.url : null, it ? it.durationS : 0, it ? it.length : 0,
     it ? (it.imageUrl || imageFallback || null) : null, it ? (it.descText || null) : null,
     nowISO(), stamp, episodeDate, source,
-    backupUrl ?? null, backupSource ?? null, route ?? null, backupImageUrl ?? null, backupDurationS ?? null,
+    backupUrl ?? null, backupSource ?? null, route ?? null, backupImageUrl ?? null, backupDurationS ?? null, backupTitle ?? null,
   ).run();
 }
 // v628: the backup-pointer write — the ONLY writer of the
 // backup columns on a standing row: it never touches the
 // primary pointer, title, source, or resolved_at (a backup
 // landing must not freshen the primary's stand-down fact).
-async function extResolutionBackupWrite(env: Env, date: string, slotId: string, backupUrl: string, backupSource: string, backupImageUrl?: string | null, backupDurationS?: number | null): Promise<void> {
+async function extResolutionBackupWrite(env: Env, date: string, slotId: string, backupUrl: string, backupSource: string, backupImageUrl?: string | null, backupDurationS?: number | null, backupTitle?: string | null): Promise<void> {
   try {
-    await env.DB.prepare("UPDATE ext_resolutions SET backup_url=?, backup_source=?, backup_image_url=?, backup_duration_s=? WHERE date=? AND slot_id=?")
-      .bind(backupUrl, backupSource, backupImageUrl ?? null, backupDurationS ?? null, date, slotId).run();
+    await env.DB.prepare("UPDATE ext_resolutions SET backup_url=?, backup_source=?, backup_image_url=?, backup_duration_s=?, backup_title=? WHERE date=? AND slot_id=?")
+      .bind(backupUrl, backupSource, backupImageUrl ?? null, backupDurationS ?? null, backupTitle ?? null, date, slotId).run();
   } catch { /* bookkeeping; the next pass retries */ }
 }
 // v624 §2 D9 stand-down, slot class: every standing slot for
@@ -2915,7 +2937,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     feedKey: string, url: string,
     slotsFor: (date: string) => string[],
     matchFor: (items: ExtFeedItem[], y: number, mo: number, d: number, slotId: string) => ExtFeedItem | null,
-    titleFor: (slotId: string, it: ExtFeedItem | null) => string,
+    titleFor: (slotId: string, it: ExtFeedItem | null, y: number, mo: number, d: number) => string,
     userAgent?: string,
     episodeDateFor?: (date: string, it: ExtFeedItem) => string | null,
     sourceFor?: (slotId: string, it: ExtFeedItem | null) => string | null,
@@ -2964,7 +2986,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         // v628: the fetch route that filled the row (the DO
         // leg stamps 'feed'; every other writer leaves NULL).
         const route = routeFor ? routeFor(slotId, it) : null;
-        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it), feed.channelImageUrl, stampOf(feed), episodeDate, source, null, null, route);
+        await extResolutionWrite(env, date, slotId, it, titleFor(slotId, it, y, mo, d), feed.channelImageUrl, stampOf(feed), episodeDate, source, null, null, route);
         written++;
       }
     }
@@ -2982,12 +3004,16 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
       if (!doMatches.has(key)) doMatches.set(key, extMatchDivineOffice(items, y, mo, d));
       return doMatches.get(key)!.get(slotId) ?? null;
     },
-    (slotId, it) => {
+    (slotId, it, y, mo, d) => {
       const t = EXT_DO_SLOTS.find((sl) => sl.slotId === slotId)?.title ?? slotId;
       // v626 labeling (John, 2026-11-23): a PRESENT Morning/
       // Evening row names its filling source. A missing row
       // keeps the bare slot title — no source filled it.
-      return it && EXT_LABELED_SLOTS.has(slotId) ? `${t} - Divine Office` : t;
+      // v695 §2.4.2: a present match stores the episode's
+      // cleaned natural title instead; the v626 composed form
+      // stands only as the named fallback (§2.5).
+      if (!it) return t;
+      return extNaturalTitle695(it.title, y, mo, d) ?? (EXT_LABELED_SLOTS.has(slotId) ? `${t} - Divine Office` : t);
     },
     undefined,
     undefined,
@@ -3024,7 +3050,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
           const it: ExtFeedItem = { title: sl.title, url, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
           const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
           const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "synthesis", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null); // v648: the displaced fill's image rides as the backup image (the fill write stood it on the row: the item's image else the StH channel image) · v648 amendment §3.7: the displaced fill's duration_s rides as the backup duration alongside it
+          await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "synthesis", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null, displaced634 ? (displaced634.title ?? null) : null); // v695 §2.4.5: the displaced fill's stored row title rides as backup_title · v648: the displaced fill's image rides as the backup image (the fill write stood it on the row: the item's image else the StH channel image) · v648 amendment §3.7: the displaced fill's duration_s rides as the backup duration alongside it
           written628++;
           break;
         }
@@ -3137,7 +3163,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
             // v625 D1 stands: extMatchSth is title-date-exact —
             // the fill's episode day is the row's date, so a
             // today's fallback is NOT stale under the day rule.
-            await extResolutionWrite(env, need.date, need.slotId, it, `${slotTitle} - Sing the Hours`, feed.channelImageUrl, stampOf(feed), need.date, "Sing the Hours");
+            await extResolutionWrite(env, need.date, need.slotId, it, extNaturalTitle695(it.title, y, mo, d) ?? `${slotTitle} - Sing the Hours`, feed.channelImageUrl, stampOf(feed), need.date, "Sing the Hours"); // v695 §2.4.4: the fill stores the StH item's cleaned natural title; the composed form is the named fallback (§2.5)
             written++;
           }
         }
@@ -3146,7 +3172,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         for (const need of backupNeeds) {
           const [y, mo, d] = need.date.split("-").map(Number);
           const it = extMatchSth(feed.items, y, mo, d, need.token);
-          if (it) { await extResolutionBackupWrite(env, need.date, need.slotId, it.url, "Sing the Hours", it.imageUrl || feed.channelImageUrl || null, it.durationS ?? null); written++; } // v648: the backup image — the matched item's image else the feed's channel image (the fill write's fallback) · v648 amendment §3.7: the backup duration — the matched item's durationS
+          if (it) { await extResolutionBackupWrite(env, need.date, need.slotId, it.url, "Sing the Hours", it.imageUrl || feed.channelImageUrl || null, it.durationS ?? null, extNaturalTitle695(it.title, y, mo, d)); written++; } // v648: the backup image — the matched item's image else the feed's channel image (the fill write's fallback) · v648 amendment §3.7: the backup duration — the matched item's durationS · v695 §2.4.5: the backup title — the matched item's cleaned natural title
         }
         await extFeedStateWrite(env, feedKey, true, null, null);
         summary.push({ feed: feedKey, ok: true, slotsWritten: written });
@@ -3202,7 +3228,7 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
         const it: ExtFeedItem = { title: sl.title, url: epUrl, length: 0, pubMs: null, durationS: 0, imageUrl: null, descText: null };
         const title = EXT_LABELED_SLOTS.has(sl.slotId) ? `${sl.title} - Divine Office` : sl.title;
         const source = EXT_LABELED_SLOTS.has(sl.slotId) ? "Divine Office" : null;
-        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "scrape", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null); // v648: as the synthesis displacement above — the displaced fill's image is the backup image · v648 amendment §3.7: its duration_s is the backup duration
+        await extResolutionWrite(env, date, sl.slotId, it, title, null, null, date, source, displaced634 ? displaced634.stream_url : null, displaced634 ? "Sing the Hours" : null, "scrape", displaced634 ? (displaced634.image_url ?? null) : null, displaced634 ? (displaced634.duration_s ?? null) : null, displaced634 ? (displaced634.title ?? null) : null); // v695 §2.4.5: as the synthesis displacement above — the displaced fill's stored row title rides as backup_title · v648: as the synthesis displacement above — the displaced fill's image is the backup image · v648 amendment §3.7: its duration_s is the backup duration
         written628++;
       }
     }
@@ -3436,7 +3462,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
         if (res.source) entry.source = res.source;
         // v628: the standing backup pointer (the preference's
         // other source) + the fill route, for the nightly flag.
-        if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: `${sd.title} - ${res.backup_source ?? ""}`, imageUrl: res.backup_image_url ?? null, durationSec: res.backup_duration_s ?? null }; // v648: the backup's image rides the payload (migration 0051) · v648 amendment §3.7: its duration rides too (backup_duration_s)
+        if (res.backup_url) entry.backup = { streamUrl: res.backup_url, source: res.backup_source ?? null, title: res.backup_title ?? `${sd.title} - ${res.backup_source ?? ""}`, imageUrl: res.backup_image_url ?? null, durationSec: res.backup_duration_s ?? null }; // v648: the backup's image rides the payload (migration 0051) · v648 amendment §3.7: its duration rides too (backup_duration_s) · v695 §2.4.5: the stored backup_title serves; rows written before 0052 carry none — the composed form stands for them until rewritten (named legacy fallback, §2.5)
         if (res.route) entry.route = res.route;
       }
       if (stale) entry.stale = true;

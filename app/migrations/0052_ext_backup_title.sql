@@ -1,0 +1,12 @@
+-- v695 migration 0052 — the backup pointer's natural title
+-- (release doc §2.4.5): ext_resolutions gains backup_title
+-- (the Sing the Hours episode's cleaned natural title for the
+-- backup pointer on the two labeled slots — the matched
+-- item's cleaned title at the backup write, else the displaced
+-- fill row's stored title on the v634 displacement writes).
+-- Before 0052 the payload composed the backup title from the
+-- slot title + source; rows written before this column stands
+-- carry NULL until the watcher's next backup write for that
+-- day, and the payload keeps the composed form for them
+-- (named legacy fallback, doc §2.5).
+ALTER TABLE ext_resolutions ADD COLUMN backup_title TEXT;

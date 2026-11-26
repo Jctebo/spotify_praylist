@@ -5943,7 +5943,16 @@ function queueLiveDesc(d) {
   if (!st || st.state !== 'present') return null;
   var slot = (state.extStanding || []).filter(function (s) { return s.slotId === d.episodeId; })[0];
   if (!slot) return null;
-  var live = trackDesc(extSlotTrack(slot, st), state.dayPayload); // v388 §2.5 (D4): the rebuild passes the live day — the one day-less call; the rebuilt descriptor carries its drawn intentionText
+  // v695 §2.10 (the flagged seat): the rebuild must not use
+  // the whole record (the standing view only) for a labeled
+  // slot — a side2-painted descriptor frozen unavailable
+  // would come back under the standing side's title, source
+  // and URL. Rebuild from the descriptor's OWN side's view
+  // through the standing paint rule (the named side if it
+  // stands, else the other side — §2.7); unlabeled slots keep
+  // the whole-record rebuild exactly as before.
+  var view695 = opnLabeledSlot650(d.episodeId) ? extPaintSide670(st, extSideTag650(d.source)) : null;
+  var live = trackDesc(extSlotTrack(slot, view695 || st), state.dayPayload); // v388 §2.5 (D4): the rebuild passes the live day — the one day-less call; the rebuilt descriptor carries its drawn intentionText
   return live.available ? live : null;
 }
 function unplayedOnly(descs) {
