@@ -257,3 +257,13 @@ Single Implement seat, in order:
 
 - Note (not a defect): in a plain run without `V698_BASE_WT`, harness-v698 legs O1/N2 prove byte-identity structurally and print BYTE lines for external diff; the dual-bundle byte comparison runs when `V698_BASE_WT` is set (as in §3's runs and in Review's fail-on-old run, where O1/N2 passed against the base tree). The starter-card and offer/pick outputs carry the honor lines and all standing facts, and the client.ts diff shows no starter seat touched — the byte-identity claim stands on the diff plus these legs.
 - Standing regressions (v687/v688/v690/v691) were not re-run by Review; §3.4 records them at standing tallies and the diff touches no seat they exercise beyond the one function, whose behavior they do not assert.
+
+## §5 Ship record (2026-11-26, seat chain-v698-ship, contract 1236)
+
+- **SHIPPED LIVE 2026-11-26T18:19:03Z** · pin **ora-pro-nobis-v698-1** · Worker **c02afdaf-a920-4525-ac1f-e4ae2df6bbdd** (100%).
+- **Merge:** tree-exact Git Data API (push-v698-github.py) — remote main stood at **4b80a80** (the v697 ship-record head; its tree `d66c8af8` == the branch base `1f3fc7c` tree, remote-vs-base delta EMPTY, no runner commits in between, no rebase needed); remote ship commit **c6b2db98d2eea64a4e7830daff0ab81262a4acc3**, merged tree **c37c7cefbe0b091f2bf1b6e02b45b77eddb4257f** == branch tree (head 9d40b45, the pin-bump commit on top of Review 6841584), asserted blob-exact on all five delta paths (client.ts · ui.ts · harness-v698.mjs · harness-v692.mjs · this doc) and tree-exact overall; local mirror 14ec7787. **Main pushed · remote in sync.**
+- **Pin:** Ship bumped CACHE `ora-pro-nobis-v697-1` → `ora-pro-nobis-v698-1` at ui.ts:1214 (commit 9d40b45, the only pin seat in the app tree; harness-v697's F leg names the old pin in its own historical harness and was not re-pointed).
+- **Harnesses (Ship, re-run after the pin bump):** harness-v698 **20 ok / 0 bad** · harness-v692 **72 ok / 0 bad** — no pin-sensitive leg failed on the new pin.
+- **Production verified from served bytes:** GET / **200** · served sw.js reads pin **ora-pro-nobis-v698-1** only (no v697-1 string stands) · served app.js (1,608,125 bytes) carries NO "A complete day of prayer, shown in full" (the descriptive paragraph is absent), the `p692webben` / `p692weblist` markers STAND, and "named in honor of the tradition" still STANDS elsewhere in the bundle (3 occurrences — seed/cards; no over-deletion).
+- **Rollback:** pin **ora-pro-nobis-v697-1** (the prior production build; redeploy the v697 tree).
+- **Board closeout:** written by Ship — releases row 1676 Live, What's New + shipped_records inserted and read back, intake 1314 Done, contract 1236 judged (ids in the Ship report).
