@@ -162,3 +162,17 @@ Literals, NOT `var(--ink)` / `var(--muted)` — the class now owns its text/fill
 **5. Adversarial — Plan's seat map stands.** Whole-repo grep for `p666daily`: paint seats are exactly the two `client.ts` builders Plan named (`client.ts:26627` daily arm · `client.ts:26638` Mass arm, both in the Add ladder's `rowHtml`; the `client.ts:26631` hit is a comment) plus the definition in `ui.ts`; every other hit is a harness reader or a release doc. No `[data-mode="dark"]`-scoped `p666daily` rule stands anywhere in the source, and harness C5 confirms none stands in the served CSS. No missed seat found.
 
 **Verdict: PASS.** The class owns its text/fill pairing in both modes at full contrast, the gold signal and every out-of-scope surface stand untouched, and the regression tally is identical to base. Ready for Ship. The field leg stays John's, unclaimed by this seat.
+
+## §5 Ship record — LIVE
+
+**Ship seat:** ship-v693. **Base movement:** remote main had advanced one commit past the Plan base (`180d93d7` → `2459256f`, the v690 §5 ship-record commit, doc-only) before Ship ran. `release/v693` was rebased onto `2459256f` (no conflicts; `ui.ts` untouched by the delta) and `harness-v693.mjs` re-run on the rebased tree: **26 ok / 0 bad**. Rebased Review tip `1ed0b6d`; ship pin commit `52b33aa` ("v693: pin ora-pro-nobis-v693-1", the `ui.ts` CACHE bump, standing ship pattern).
+
+**Merge — tree-exact via the Git Data API** (`push-v693-github.py`): remote-vs-base delta empty; branch-tree assertion passed (all 5 delta blobs match); merged tree `2cbcb1a673bf75d4d8adfad70043b73087bf7281` **equals the branch tree exactly**; remote ship commit `07c0fe1ac729c9aa0e1ffb7b63887a6df85d115a`; local mirror `1ae4dd9d`. Read-back: local main tree == origin/main tree — **main pushed · remote in sync**. No force-push; nothing dropped.
+
+**Deploy** (`deploy-app-v693-ship.py`, EXPECTED_HEAD = merged local main `1ae4dd9d`): Worker `ora-pro-nobis-app`, **pin `ora-pro-nobis-v693-1`**, **Worker version `c2711988-1c5e-4062-bdaa-bf9aca6de2ad`**, deployment created **2026-11-26T15:08:00Z** at 100%.
+
+**Production verification (firsthand, post-deploy):** `https://app.orapronobis.media/sw.js` serves `ora-pro-nobis-v693-1`; the served `/styles.css` carries the amended rule verbatim — `.profaddladder603 .p666daily { background:#f6ecd3; border-color:var(--gold); box-shadow:0 1px 4px rgba(168,134,58,.25); color:#2a2620; }` — plus the scoped `.profaddladder603 .p666daily .sub { color:#6d6353; }` and `.meta { color:#6d6353; }` rules. The fix production serves is the fix Review passed.
+
+**Board closeout (DevOps Board, D1-direct + door read-back):** What's New row **506** (body: "Fixed: the gold daily cards in Add read clearly now — dark lettering on the gold, in light and dark mode alike."); releases row **1671** → status `Live`, `shipped_at` `2026-11-26T15:08:00Z`, `whats_new_id` 506; shipped_records row **880** inserted and read back (project 3 · v693 · row 1671's title · same shipped_at · whats_new_id 506); Ship phase record **2882** (holder ship-v693) → `passed`. Agent-door read-back: search `v693` → derivedStatus **Live**; D1 read-back of row 1671 shows Live with shipped_at and whats_new_id set. Local `release/v693` branch deleted after merge per standing practice.
+
+**Field leg stays John's, unclaimed** — the gold card's readability on his phone in dark mode is his to confirm.
