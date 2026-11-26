@@ -192,3 +192,13 @@ Review also delivers the standing screenshots into this doc: the Virtual Mass la
 **Regression verified by this seat:** harness-v687 re-run → **42 ok / 0 bad**, identical to the base reading in §3. The remaining base-identical readings in §3 (v677 18/0 · v663 37/3 same legs · v666 load-crash at base · v656 harness absent at base) stand as recorded; not re-run per the light-review scope.
 
 **Field leg stays John's, unclaimed** (§2.9 ship shape): the gold Mass cards in the ladder, a dynamic Mass row standing in a block, a video Mass hand-off inside a block play.
+
+## §5 Ship record
+
+**SHIPPED · LIVE 2026-11-26T14:52:00Z** — pin `ora-pro-nobis-v688-1` · Worker `a097be9b-082d-43f4-9965-94eb0e3e08c6`.
+
+- **Queue/rebase:** v689 shipped while this chain ran (main eafdf2f → 93ef2f8, index.ts stock route only). release/v688 rebased clean onto 93ef2f8 (5 commits, no conflicts); the §2.9 seats re-verified standing on the rebased tree; harness-v688 re-run at the rebased tip and again at the merged tree: **65 ok / 0 not-ok** both times.
+- **Merge:** tree-exact Git Data API (push-v688-github.py) — remote-vs-base delta empty, nothing dropped, no force-push · remote ship commit `844710b7`, tree `dfa74c37`, local mirror `a88b33b9`. Read-back: **main pushed · remote in sync**.
+- **Deploy:** deploy-app-v688-ship.py from the merged main head · production verified from served bytes: sw.js serves the v688-1 pin only; served app.js carries OPN_MASS_SERIES_688 ×2 · resolveMassDynamic688 ×3 · massRow688 ×4 · opn-mass-settled-v1 · the 'Daily TV Mass · Audio' door. Rollback: pin ora-pro-nobis-v689-1.
+- **Closeout (all read back):** release 1666 → Live, shipped_at 2026-11-26T14:52:00Z · phase records Scope 2854 / Plan 2855 / Implement 2864 / Review 2866 / Ship 2867 — all passed · What's New **504** · shipped_records **878** · contracts 1183 + 1185 + 1186 judged met (1174's Implement-seated judgment returned 409 — the door had already closed that contract, the standing v679-pattern behavior; the evidence stands in records 2864/2866) · Goals Board intake **1303 → Done**, CLOSED.
+- **Field leg (John's, not claimed):** Add → Videos → Virtual Mass → the gold dynamic card on a Mass source → it stands in the block and plays today's Mass; tomorrow it plays tomorrow's. The Daily TV Mass audio card stands on its own 'Daily TV Mass · Audio' door in the same rung.
