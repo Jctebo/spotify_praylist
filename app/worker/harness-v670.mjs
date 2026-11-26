@@ -268,7 +268,7 @@ function morningDescs(w, contents) {
 
 // ---------- (e) retirements + pin (static, served-bundle seats) ----------
 {
-  check("E pin: ui.ts CACHE is ora-pro-nobis-v672-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v672-1";') && (uiSrc.match(/ora-pro-nobis-v672-1/g) || []).length === 1);
+  check("E pin: ui.ts CACHE is ora-pro-nobis-v684-1 at its one seat", uiSrc.includes('var CACHE = "ora-pro-nobis-v684-1";') && (uiSrc.match(/ora-pro-nobis-v684-1/g) || []).length === 1);
   check("E retirements read zero in the served client: no drop down (opnOfficeChoiceHtml650 / data-p650office), no extPaintSides650, no governing reader/writer (opnOfficeChoice650 / opnOfficeChoiceSet650 / opnSthFirstSet632 as functions), no singItems614, no lf:sing rung",
     !appJs.includes("function opnOfficeChoiceHtml650(") && !appJs.includes("data-p650office") && !appJs.includes("function extPaintSides650(")
     && !appJs.includes("function opnOfficeChoice650(") && !appJs.includes("function opnOfficeChoiceSet650(") && !appJs.includes("function opnSthFirstSet632(")
@@ -401,8 +401,8 @@ function officeItem(payload, profKey, block) {
   await O.opnLoadRes604();
   O.opn604.lists = {}; O.opn604.base = {};
   const html = drive(() => O.opnEditGroupHtml609("Morning")) || "";
-  check("(b)+(d) the migrated Morning block stands in the Edit form: the office row carries drag handle · Remove · the segtoggle with Sing the Hours active, and its label names the side",
-    html.includes('data-p670toggle="Morning|source:ext-morning-prayer"') && html.includes('data-p670side="sth" class="active"') && html.includes("Morning Prayer \u00b7 Sing the Hours") && html.includes("Remove") && html.includes("data-p604handle"), html.slice(0, 300));
+  check("(b)+(d) the migrated Morning block stands in the Edit form: the office row carries move buttons (data-p684move up + down) · Remove · the segtoggle with Sing the Hours active, and its label names the side",
+    html.includes('data-p670toggle="Morning|source:ext-morning-prayer"') && html.includes('data-p670side="sth" class="active"') && html.includes("Morning Prayer \u00b7 Sing the Hours") && html.includes("Remove") && html.includes('data-p684move="Morning|source:ext-morning-prayer|up"') && html.includes('data-p684move="Morning|source:ext-morning-prayer|down"'), html.slice(0, 300));
   // (d) the toggle flip, end to end.
   const flip = drive(() => O.opnFlipSide670("Morning", "source:ext-morning-prayer", "do"));
   await (flip || Promise.resolve()); await sleep(400);

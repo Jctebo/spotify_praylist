@@ -501,13 +501,18 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    Edit today's Save today bar reuses this same frozen
    dress (.proftodayfrozen600). */
 .proffrozen593 { flex:none; background:var(--card); border-bottom:1px solid var(--line); padding:6px 10px 4px; }
-.p604handle { cursor:grab; touch-action:none; padding:0 10px 0 2px; color:var(--muted); user-select:none; }
+/* v684: the Edit-form move buttons — real buttons, a
+   >=44px tall x >=40px wide hit box (the .favhandle
+   discipline), ghost dress; the disabled boundary button
+   stands in its seat, visibly inert, so rows never reflow. */
+.p684move { flex:none; width:40px; min-width:40px; height:44px; padding:0; background:none; border:0; font-family:inherit; font-size:15px; line-height:1; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.p684move:disabled { opacity:.35; cursor:default; }
 .p604exp { margin:0 0 10px; }
 .p604exphead { align-items:center; margin:2px 0 6px; }
 /* v609: the merged set — one continuous list; the edit
    form's groups are invisible wrappers (no head, no
    divider), and its rows are the CONDENSED form: slim
-   padding, title + drag + remove only. */
+   padding, title + move buttons + remove only. */
 .p609set { margin:0 0 10px; }
 /* v612 amendment: the set head's dress is the Favorites
    folder head's (.favfolder-head + .sectionhead + .meta
@@ -1183,7 +1188,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v683-1";
+var CACHE = "ora-pro-nobis-v684-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

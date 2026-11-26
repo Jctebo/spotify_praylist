@@ -23832,6 +23832,12 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p604remove]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604remove')).split('|'); opnRemove604(p[0], p.slice(1).join('|')); });
   });
+  // v684: the Edit-form move buttons — a tap moves the
+  // addressed row one seat through opnMove684 (the only
+  // reorder mechanism in the Edit form; the drag retired).
+  view.querySelectorAll('[data-p684move]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p684move')).split('|'); opnMove684(p[0], p[1], p[2]); });
+  });
   // v670 \u00a73.4: the office source toggle \u2014 a tap flips
   // the item's side through opnFlipSide670.
   view.querySelectorAll('[data-p670side]').forEach(function (btn) {
@@ -23843,7 +23849,6 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p604add]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnOpenAdd604(btn.getAttribute('data-p604add')); });
   });
-  opnWireDrag604(view);
   view.querySelectorAll('[data-podpick]').forEach(function (btn) {
     btn.addEventListener('click', function () { openPodcastPicker(); });
   });
@@ -23945,7 +23950,7 @@ function profileRebuild() {
    frozen banner; writes go through the standing stores
    AT ONCE (today layer / profile contents). Save New in
    the frozen edit bar mints the composed day. */
-var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, dragMoved: false, bookList: null, bookGroups: null };
+var opn604 = { scope: null, scopeSwitched: false, block: null, res: null, lists: {}, base: {}, removed: {}, wrote: false, bookList: null, bookGroups: null };
 // v607: the page-wide edit form — editing stands on the
 // whole page (opn604.block's single-block posture retires);
 // shape carries the block/layer switches' working shape
@@ -24141,6 +24146,34 @@ function opnFlipSide670(block, rowId, side) {
   m[at].side = side;
   return opnWrite604(block);
 }
+function opnMoveButtons684(block, rid, idx, len) {
+  // v684 §2.1: the row's two move buttons, standing after
+  // the label and before the segtoggle / Remove. Boundary
+  // shape: the first row's up button and the last row's
+  // down button stand DISABLED in their seats, so a row's
+  // layout never shifts as it moves through the list.
+  return '<button class="p684move" data-p684move="' + esc(block) + '|' + esc(rid) + '|up" aria-label="Move up"' + (idx === 0 ? ' disabled' : '') + '>&#9650;</button>'
+    + '<button class="p684move" data-p684move="' + esc(block) + '|' + esc(rid) + '|down" aria-label="Move down"' + (idx === len - 1 ? ' disabled' : '') + '>&#9660;</button>';
+}
+function opnMove684(block, rowId, dir) {
+  // v684 §2.2: move the ADDRESSED copy (the opnRemove604 /
+  // opnFlipSide670 occurrence walk) one seat in the
+  // materialized list — the item object moves whole, so an
+  // office item keeps its side stamp — then persist through
+  // the standing opnWrite604 (today-edit or profiles/save
+  // by scope; its done path repaints + rebuilds). Boundary
+  // is a defensive no-op: no swap, no write.
+  if (dir !== 'up' && dir !== 'down') return;
+  var pr = opnParseRowId610(rowId), id = pr.id;
+  var m = opnMaterialize604(block);
+  var seen = 0, at = -1;
+  m.forEach(function (x, i) { if (opnTodayItemId594(x) === id) { if (seen === pr.occ) at = i; seen++; } });
+  if (at < 0) return;
+  var to = dir === 'up' ? at - 1 : at + 1;
+  if (to < 0 || to >= m.length) return;
+  var mv = m[at]; m[at] = m[to]; m[to] = mv;
+  return opnWrite604(block);
+}
 function opnRemove604(block, rowId) {
   // v610: the row id is occurrence-qualified — Remove takes
   // the addressed copy only, so one of two standing copies
@@ -24186,45 +24219,6 @@ function opnRestore604(block, rowId) {
   }
   return opnWrite604(block);
 }
-function opnDragOver604(block, dragRowId, targetRowId) {
-  // v610: row ids are occurrence-qualified — a drag moves
-  // the addressed copy, not the first copy of its id.
-  var pd = opnParseRowId610(dragRowId), pt = opnParseRowId610(targetRowId);
-  var m = opnMaterialize604(block);
-  var i = -1, j = -1, sd = 0, st2 = 0;
-  m.forEach(function (x, k) { var id = opnTodayItemId594(x); if (id === pd.id) { if (sd === pd.occ) i = k; sd++; } if (id === pt.id) { if (st2 === pt.occ) j = k; st2++; } });
-  if (i < 0 || j < 0 || i === j) return;
-  var mv = m.splice(i, 1)[0];
-  m.splice(j, 0, mv);
-  opn604.dragMoved = true;
-}
-function opnWireDrag604(scopeEl) {
-  scopeEl.querySelectorAll('[data-p604handle]').forEach(function (h) {
-    h.addEventListener('pointerdown', function (ev) {
-      if (ev && ev.preventDefault) ev.preventDefault();
-      var expEl = h.closest ? h.closest('[data-p604exp]') : null;
-      var block = expEl ? expEl.getAttribute('data-p604exp') : null;
-      if (!block) return;
-      var dragId = h.getAttribute('data-p604handle');
-      var move = function (e2) {
-        try {
-          var el = document.elementFromPoint(e2.clientX, e2.clientY);
-          var row = el && el.closest ? el.closest('[data-p604erow]') : null;
-          if (row) { var tid = row.getAttribute('data-p604erow'); if (tid && tid !== dragId) opnDragOver604(block, dragId, tid); }
-        } catch (e) {}
-        if (e2.clientY < 80) window.scrollBy(0, -12);
-        else if (window.innerHeight && e2.clientY > window.innerHeight - 80) window.scrollBy(0, 12);
-      };
-      var up = function () {
-        document.removeEventListener('pointermove', move);
-        document.removeEventListener('pointerup', up);
-        if (opn604.dragMoved) { opn604.dragMoved = false; opnWrite604(block); }
-      };
-      document.addEventListener('pointermove', move);
-      document.addEventListener('pointerup', up);
-    });
-  });
-}
 function opnExpansionHtml604(b, day) {
   var block = b.block;
   // v607: the edit form is page-wide — while it stands,
@@ -24243,13 +24237,13 @@ function opnEditPostureHtml604(b) {
   var list = opnMaterialize604(block);
   var html = '<div class="p604exp p604edit" data-p604exp="' + esc(block) + '">';
   var seenRow610b = {};
-  list.forEach(function (it) {
+  list.forEach(function (it, idx) {
     var id = opnTodayItemId594(it);
     var occ = seenRow610b[id] || 0; seenRow610b[id] = occ + 1;
     var rid = opnRowId610(it, occ);
     html += '<div class="card bookrow p604erow" data-p604erow="' + esc(rid) + '"><div class="row">'
-      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + opnMoveButtons684(block, rid, idx, list.length)
       + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
   if (!list.length) html += '<p class="sub">Nothing stands in this block.</p>';
@@ -26990,11 +26984,10 @@ function opnEditSetHtml609(day) {
   // relative to the spine: immediately before the first
   // spine block that stands after it canonically, else
   // at the end. Paint order only: no state, contents,
-  // or toggle changes. Drags stay within their block's
-  // run by store construction (opnDragOver604 looks
-  // both ids up in the drag block's own list — a
-  // cross-boundary target is an inert no-op; no move
-  // writes between blocks' contents). The unblocked
+  // or toggle changes. Moves stay within their block's
+  // run by construction (opnMove684 looks the row id up
+  // in the acted block's own list — no move writes
+  // between blocks' contents). The unblocked
   // episodes carry no edit rows: they are not profile
   // contents.
   var html = '<div class="p609set p609edit" data-p609set="1">';
@@ -27049,7 +27042,7 @@ function opnEditGroupHtml609(block) {
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p607sw="' + esc(kind) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"><span class="knob591"></span></button></div>';
   // v609 repair 2: the Podcasts series rows retire with the layer (opnSeriesRows609 stands as dead code).
   var seenRow610 = {};
-  list.forEach(function (it) {
+  list.forEach(function (it, idx) {
     var id = opnTodayItemId594(it);
     var occ = seenRow610[id] || 0; seenRow610[id] = occ + 1;
     var rid = opnRowId610(it, occ);
@@ -27064,8 +27057,8 @@ function opnEditGroupHtml609(block) {
         + '<button data-p670side="sth"' + (sd670 === 'sth' ? ' class="active"' : '') + '>Sing the Hours</button></span>';
     }
     html += '<div class="card bookrow p604erow p609erow" data-p604erow="' + esc(rid) + '"><div class="row">'
-      + '<span class="p604handle" data-p604handle="' + esc(rid) + '" title="Drag to reorder">&#x2630;</span>'
       + '<span class="grow">' + esc(opnItemLabel604(block, it)) + '</span>'
+      + opnMoveButtons684(block, rid, idx, list.length)
       + tog670
       + '<button class="btn ghost" data-p604remove="' + esc(block) + '|' + esc(rid) + '">Remove</button></div></div>';
   });
