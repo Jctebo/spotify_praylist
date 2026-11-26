@@ -182,3 +182,29 @@ Fixture discipline (production-sourced, per the standing rule): the fixture imag
 
 - The served read-back host (`app.orapronobis.media`) answers the manifest/file GETs without a token (the Plan took them live); if a future Access change gates them, delete `--apply` will fail read-back and write no tombstone — safe failure, but C5 would block.
 - First real `--apply` (C5) performs the live ledger's v1→v2 migration; verify the tombstones for both garbled keys and the 97-key stocked count (minus the 2 garbled keys = 95 stocked) after it.
+
+## §4 Review record
+
+**Holder:** chain-v689-review · **Time contract:** 1181 (both expectations judged **met**) · **Review phase record:** 2863 **passed** · **Verdict: PASS.**
+
+- Independent line-by-line diff read of the app commit (route + pin + harness) and the fork commit (delete mode, Drive guard, v2 tombstone ledger, test).
+- Both check suites re-run on the built trees: harness-v689 **19 ok, 0 bad** · `test_wallpaper_stock_delete.py` **33 ok, 0 bad**.
+- Adversarial probes: **9/9** on the app side (exact-name discipline, manifest-first ordering, orphan cleanup, auth) and **5/5** on the fork side (guard refusals, tombstone blocks re-post, migration key count).
+- The §3 count discrepancy stands as recorded: the live ledger held **97 keys** (49 phone + 48 watch), not the Plan's 98 — both garbled and both clean Sylvester keys present; no key lost.
+- Ship held at Review on the queue gate (v687 ships first), per the chain's prescription; the resume re-verifies the route seat on the post-v687 tree before merging.
+
+## §5 Ship record (chain-v689-ship, 2026-11-26) — LIVE
+
+**Resume + rebase:** the queue gate stood met (v687 Live 2026-11-26T14:09:23Z, pin ora-pro-nobis-v687-1). `release/v689` was rebased onto post-v687 main `143b3f3`: the three chain commits replayed (Plan `988eb82` · build `fbca3cf` · §3 record `e7c7966`); the single conflict was the ui.ts pin seat, resolved to `ora-pro-nobis-v689-1`. The route seat re-verified on the rebased tree (DELETE branch inside the agent-door block beside the stock POST, index.ts:4909) and harness-v689 re-run at the rebased tip: **19 ok, 0 bad**. Ship time contract **1184** seated at the resume; all three expectations judged **met**.
+
+**Merge:** tree-exact Git Data API merge (`push-v689-github.py`) onto origin/main — remote-vs-base delta **empty** (no nightly-runner commits had landed since the v687 ship; nothing carried, nothing dropped, no force-push). All four delta blobs asserted equal to the rebased branch tree; every non-delta path kept origin/main's blob; path set exact. Remote ship commit **`51dec6b4c1cdf64db1837bf1853cba23222b65ae`**, tree **`e0ad54593f3f019d998656d87b995141523d0a3e`**; local mirror `44159688`. Read-back: **main pushed · remote in sync**. Harness-v689 at the merged tree: **19 ok, 0 bad**.
+
+**Deploy:** `deploy-app-v689-ship.py` (modeled on the v687 driver, EXPECTED_HEAD = merged main head `44159688`) — dry-run clean, deploy from the merged tree. **Pin `ora-pro-nobis-v689-1` · Worker version `bc3284b7-f91f-443e-8d49-c36954d71a60`** (created 2026-11-26T14:14:51Z).
+
+**Production verification (served bytes, app.orapronobis.media):** served `sw.js` reads `var CACHE = "ora-pro-nobis-v689-1"` and no other pin; the served manifest stood at 97 entries with both garbled entries beside both clean ones — the exact pre-C5 state.
+
+**First use (C5, live):** `wallpaper_stock.py --delete p2-st-sylvester-abbot-1962-calendar__2026-11-26.jpg` — dry-run first (named exactly the two garbled entries per store; the Drive current/queue guard passed both variants; Drive untouched), then `--apply`. The route removed each manifest entry first, then its R2 object; the tool verified each removal remotely before writing its tombstone. **Independent read-back after apply:** served manifest **95 entries**, the garbled name absent for both variants, the clean `st-sylvester-abbot-1962-calendar__2026-11-26.jpg` entries standing untouched (phone sha `ef1aa1e6…`, watch sha `89d5738e…`); the file route answers **404** for the garbled name on both variants and **200** for the clean name on both; the ledger stands migrated to **v2 with 95 stocked keys + 2 tombstones** (the §3 watch item closed exactly as predicted: 97 − 2 = 95). Google Drive was never written.
+
+**Closeout:** Ship phase record **2865 → passed** · release row **1667 → Live**, `shipped_at` `2026-11-26T14:14:51Z`, `whats_new_id` **503** · What's New row **503**: "Fixed: stale wallpaper stock entries can now be removed — the garbled Nov 26 entries are gone from the stock lists." · shipped_records row **877** inserted and **read back** (D1 and through the agent door: row Live, all five phase records passed) · contracts: 1178 (Plan), 1179 (Implement), 1181 (Review), 1184 (Ship) — every expectation judged **met** · Goals Board intake **1304 → Done**, CLOSED state line appended to its notes. One bookkeeping note: coordinator contract **1177** was closed by the door itself before its two expectations could be judged (judgment returns 409 — the standing door pattern); both are proven by the records instead (Plan published: doc §§1–2 + record 2859 + contract 1178 · Implement seated: record 2861 + contract 1179).
+
+**Field check (John's terms):** the stock lists are clean — the garbled "P2] □ ST. SYLVESTER" entries are gone from the app stock for Nov 26 on phone and watch, and the clean Sylvester wallpaper stands untouched; today's phone wallpaper was already clean in Drive current and stays exactly as it was. The delete path now stands for any future stale entry: one exact name, a dry-run that names what would go, and a removal verified from the served stock itself.
