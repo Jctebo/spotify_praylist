@@ -157,3 +157,15 @@ Redeploy pin ora-pro-nobis-v673-1 (Worker 4b9b6e7b) — the v673 driver (~/works
 2. Repeat on a Sing the Hours Evening Prayer page → the header also names "Audio: Sing the Hours · Text: Divine Office (today)".
 3. Confirm the app player and the frame never sound together unless play is tapped inside the frame (the Q5 A note stands in the header).
 4. Failure shape, if a frame ever cannot load: the "Text unavailable — open Divine Office" row stands in its place — never a blank box.
+
+## §9 Ship record (chain-v675, 2026-11-26) — LIVE
+
+John's word: "Ship it" (Ora thread, 2026-11-25 18:55 CT), lifting the Stop. Ship contract 1120 (holder chain-v675) · Ship phase record 2797.
+
+- **Merge:** release/v675 → main in the standing clone, tree-exact via the Git Data API (push-v675-github.py). Local merge a9f90cc over v673 main 88b28a3; code paths (client.ts · ui.ts · harness-v675.mjs) asserted blob-identical to the Review-judged tree f826050 before anything moved; remote-vs-base delta empty (no runner commits to reconcile, nothing dropped, no force-push). Remote ship commit **3857ce4**, tree **da34c8f**; local mirror 331c0ef, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** `harness-v675: 47 ok, 0 bad` (standing clone, merged main) — matches the built-tree tally.
+- **Deploy:** deploy-app-v675-ship.py with EXPECTED_HEAD filled to the merged main head (331c0ef); deployments → dry-run → deploy all clean. Worker **d42fa21c-e0a3-4c19-8e4c-022a86c786f6**, pin **ora-pro-nobis-v675-1**. Production verification: the served sw.js reads pin ora-pro-nobis-v675-1; the served app.js carries the widget branch (lohOffice675 ×3 · lohfail675 ×2 · divineoffice.org/widget ×2). No APK, no migration, no index.ts change.
+- **Board closeout (D1-direct, read back through the door):** release 1653 → Live, shipped_at 2026-11-26T00:59:00Z, whats_new_id 490 · What's New **490** ("The Hours, as text", the §8 draft as body) · shipped_records **864** · Ship phase record 2797 passed · Ship contract 1120 expectation met; all v675 contracts (1116/1117/1119/1120) stand met, all five phase records passed. Goals Board intake 1280 → Done, state line CLOSED.
+- **Rollback:** pin ora-pro-nobis-v673-1 (Worker 4b9b6e7b), v673 driver untouched.
+- **Field check (John, standing open):** the §8 list — the Morning Prayer track page shows the app header over the LIVE Divine Office widget, loading and scrolling inside the app; a Sing the Hours Evening Prayer page names both sources in its header; no double sound unless play is tapped inside the frame; a frame that cannot load shows the "Text unavailable — open Divine Office" row, never a blank box.
+- **Artifact clock:** the scope-loh-widget-on-track-pages Space's 3-day expiry starts at this ship — expires **2026-11-28**.
