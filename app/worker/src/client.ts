@@ -5040,6 +5040,46 @@ function playedMap() {
   if (!state.playedCache) state.playedCache = readPlayed();
   return state.playedCache;
 }
+/* ---------------- v677: the daily settled-pick store ----
+   Plan §2.3.1: a v666 daily row settles its episode ONCE
+   for the presented (Chicago) date and holds it all day.
+   The record stands in localStorage beside the played
+   store / podcast core (the resolver and every rebuild
+   path are client code in all three app shapes; the pick
+   is a per-device presentation fact whose played state
+   already reconciles through the standing listen stores;
+   no migration, no new route). Shape:
+   { [presentedDate]: { [block + ':' + series]:
+     { episodeId, stale, desc } } } — desc carries the
+   settled descriptor's stable fields (title, url,
+   durationS, imageUrl, descText, kind, videoId where
+   applicable) plus its last known listened/podPositionS.
+   Written at first settle for a date; pruned at write to
+   the current + previous presented date. */
+var OPN_DAILY_SETTLED_KEY = 'opn-daily-settled-v1';
+function opnDailySettled677() {
+  if (state.dailySettled677) return state.dailySettled677;
+  var v = null;
+  try { v = JSON.parse(localStorage.getItem(OPN_DAILY_SETTLED_KEY) || 'null'); } catch (e) {}
+  state.dailySettled677 = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  return state.dailySettled677;
+}
+function opnDailySettledSave677() {
+  try { localStorage.setItem(OPN_DAILY_SETTLED_KEY, JSON.stringify(state.dailySettled677 || {})); } catch (e) {}
+}
+function opnDailyPrevDate677(dateStr) {
+  var ms = Date.parse(String(dateStr || '') + 'T12:00:00Z');
+  if (!isFinite(ms)) return null;
+  return new Date(ms - 86400000).toISOString().slice(0, 10);
+}
+function opnDailySettlePut677(presented, jobKey, episodeId, stale, desc) {
+  var all = opnDailySettled677();
+  var prev = opnDailyPrevDate677(presented);
+  Object.keys(all).forEach(function (d) { if (d !== presented && d !== prev) delete all[d]; });
+  if (!all[presented]) all[presented] = {};
+  all[presented][jobKey] = { episodeId: episodeId, stale: !!stale, desc: opnClone(desc) };
+  opnDailySettledSave677();
+}
 function presentedDateStr() {
   return state.presentedDay || (state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date)) || null;
 }
@@ -9363,6 +9403,30 @@ function podSyncQueueListened(series, seqKey, on) {
   if (state.current) apply(state.current);
   if (state.previewQueue) state.previewQueue.forEach(apply);
   (state.dayDescs || []).forEach(apply);
+  // v677 §2.3.4(ii): the mark lands on the settled daily
+  // copies too — state.dailyRes666 descriptors (podcast on
+  // kind + podSeries/seriesKey, video on episodeId) and
+  // the settled-pick store's stored desc — so a rebuild
+  // between resolves stops re-copying a stale
+  // listened:false over a completed play.
+  var applyDaily677 = function (d) {
+    if (!d || !d.daily666) return;
+    if (d.kind === 'podcast' && d.podSeries === series && d.seriesKey === seqKey) d.listened = !!on;
+    else if (d.kind === 'video' && (d.episodeId === seqKey || d.episodeId === 'yt:' + seqKey)) d.listened = !!on;
+  };
+  Object.keys(state.dailyRes666 || {}).forEach(function (k) { applyDaily677(state.dailyRes666[k]); });
+  try {
+    var all677 = opnDailySettled677();
+    Object.keys(all677).forEach(function (dt) {
+      Object.keys(all677[dt] || {}).forEach(function (jk) {
+        var rec = all677[dt][jk];
+        if (!rec || !rec.desc) return;
+        var dd = rec.desc;
+        if ((dd.kind === 'podcast' && dd.podSeries === series && dd.seriesKey === seqKey) || (dd.kind === 'video' && (dd.episodeId === seqKey || dd.episodeId === 'yt:' + seqKey))) dd.listened = !!on;
+      });
+    });
+    opnDailySettledSave677();
+  } catch (e) {}
 }
 function writePodMarkQuiet(seqKey, seriesKey, source) {
   // §2.4: the auto-mark write is fire-and-forget from the
@@ -20399,12 +20463,20 @@ function opnDailyMatch666(series, list, presented) {
   var mmdd = parts.length >= 3 ? (parts[1] + '/' + parts[2]) : '';
   var byPub = function (a, b) { return (b.publishedMs || 0) - (a.publishedMs || 0); };
   if (series === 'saint-of-the-day') {
-    var hits = list.filter(function (e) { var t = String(e.title || '').trim(); return t.indexOf(mmdd) === 0; }).sort(byPub);
+    // v677 §2.3.3 never-later guard: a title-prefix hit
+    // counts only when its Chicago publish date is on or
+    // before the presented date — a future-year entry with
+    // the same MM/DD title prefix is excluded; among
+    // qualifying hits the latest publishedMs wins, as today.
+    var hits = list.filter(function (e) { var t = String(e.title || '').trim(); if (t.indexOf(mmdd) !== 0) return false; var cd = ownChicagoDateStr(e.publishedMs); return !!cd && cd <= presented; }).sort(byPub);
     if (hits.length) return { e: hits[0], stale: false };
     var prev = list.filter(function (e) { var d = ownChicagoDateStr(e.publishedMs); return d && d < presented; }).sort(byPub);
     return prev.length ? { e: prev[0], stale: true } : null;
   }
   if (series === 'daily-gospel-exegesis') {
+    // v677 §2.3.3: never-later by construction — the match
+    // is Chicago publish date == presented − 1 exactly; the
+    // equality IS the guard. No behavior change.
     var want = offlineShiftDate(presented, -1);
     var hit = null;
     list.forEach(function (e) { if (!hit && ownChicagoDateStr(e.publishedMs) === want) hit = e; });
@@ -20414,14 +20486,24 @@ function opnDailyMatch666(series, list, presented) {
   }
   if (series === 'daily-readings') {
     var plain = 'Daily Mass Reading Podcast for ' + MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0];
+    // v677 §2.3.3 never-later guard: a title hit (exact or
+    // contains) counts only when its parsed title date
+    // EQUALS the presented date — the batch-ahead entries
+    // (e.g. December 31, 2026 standing at the head of the
+    // November 25 list) can never stand for today.
     var hit2 = null;
-    list.forEach(function (e) { if (!hit2 && e.title && String(e.title).trim() === plain) hit2 = e; });
-    if (!hit2) list.forEach(function (e) { if (!hit2 && e.title && String(e.title).indexOf(MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0]) >= 0) hit2 = e; });
+    list.forEach(function (e) { if (!hit2 && e.title && String(e.title).trim() === plain && opnDailyTitleDate666(e.title) === presented) hit2 = e; });
+    if (!hit2) list.forEach(function (e) { if (!hit2 && e.title && String(e.title).indexOf(MONTHS[Number(parts[1]) - 1] + ' ' + Number(parts[2]) + ', ' + parts[0]) >= 0 && opnDailyTitleDate666(e.title) === presented) hit2 = e; });
     if (hit2) return { e: hit2, stale: false };
     var prev3 = list.filter(function (e) { var d = opnDailyTitleDate666(e.title); return d && d.length === 10 && d < presented; }).sort(function (a, b) { return opnDailyTitleDate666(b.title) < opnDailyTitleDate666(a.title) ? -1 : 1; });
     return prev3.length ? { e: prev3[0], stale: true } : null;
   }
   if (series === 'bible-in-a-year') {
+    // v677 §2.3.3: never-later by construction — the match
+    // is day == doy(presented) exactly; a later episode is
+    // a greater day number and cannot match, and the
+    // fallback takes lesser day numbers only. No behavior
+    // change.
     var doy = opnDailyDoy666(presented);
     var hit3 = null;
     list.forEach(function (e) { if (!hit3 && e.day === doy) hit3 = e; });
@@ -20431,8 +20513,12 @@ function opnDailyMatch666(series, list, presented) {
   }
   if (series === 'catholicsaints') {
     var md = parts.length >= 3 ? (parts[1] + '-' + parts[2]) : '';
+    // v677 §2.3.3 never-later guard: the title carries no
+    // year, so a title MM-DD hit counts only when its
+    // Chicago publish date is on or before the presented
+    // date — a next-year same-date video is excluded.
     var hit4 = null;
-    list.forEach(function (v) { if (!hit4 && opnDailyTitleDate666(v.title) === md) hit4 = v; });
+    list.forEach(function (v) { if (!hit4 && opnDailyTitleDate666(v.title) === md) { var cdv = ownChicagoDateStr(v.publishedMs); if (cdv && cdv <= presented) hit4 = v; } });
     if (hit4) return { e: hit4, stale: false };
     // §2.5 fallback matcher: the publish stamp's Chicago date.
     var hit5 = null;
@@ -20459,6 +20545,11 @@ function resolveDailyDynamic666(day) {
   // state.dailyRes666 for extRebuildDescs to place at its
   // contents position, in the standing episode/video shapes
   // (§2.6), carrying daily666 + dailySeries + source.
+  // v677 §2.3.2: the standing copies are captured before
+  // the reset — a completion mark flipped on them by
+  // podSyncQueueListened is a last-known listened value
+  // the settled rebuild below reads.
+  var prevRes677 = state.dailyRes666 || {};
   state.dailyRes666 = {};
   var eff = day && day.profile;
   if (!eff || !eff.contents) return;
@@ -20488,12 +20579,46 @@ function resolveDailyDynamic666(day) {
       if (isVideo && payload.kind !== 'video') return;
       if (!Array.isArray(list)) return;
       if (isVideo) opnVideoRegWrite656(series, list);
-      var m = opnDailyMatch666(series, list, presented);
-      if (!m) return;
+      // v677 §2.3.2: the settled record is read FIRST. A
+      // job with a settled entry for (presented, block,
+      // series) rebuilds its descriptor from the settled
+      // identity — stable fields from the stored desc;
+      // listened / podPositionS read FRESH off the current
+      // payload entry with that same key/id when it stands,
+      // else from the last known values (the standing copy
+      // flipped by a mark, then the stored desc). The
+      // matcher runs ONLY for jobs with no settled entry,
+      // and its result — the stale NOT-UPDATED fallback
+      // included (§2.3.5: a late-landing episode stands
+      // tomorrow, never mid-day) — is written to the store
+      // before the settle repaint. The date turn is the
+      // only advance (§2.3.6): the store is keyed by the
+      // presented date, so a new date finds no entry.
+      var settled677 = (opnDailySettled677()[presented] || {});
+      var anyUnsettled677 = group.some(function (job) { return !settled677[job.block + ':' + series]; });
+      var m = anyUnsettled677 ? opnDailyMatch666(series, list, presented) : null;
       group.forEach(function (job) {
+        var jobKey = job.block + ':' + series;
+        var rec = settled677[jobKey];
+        if (rec && rec.desc) {
+          var d677 = opnClone(rec.desc);
+          d677.block = job.block;
+          d677.stale = !!rec.stale;
+          var fe = null;
+          list.forEach(function (x) { if (!fe && x && (isVideo ? ('yt:' + x.id) === rec.episodeId : x.key === rec.episodeId)) fe = x; });
+          var prevD = prevRes677[jobKey];
+          d677.listened = !!((fe && fe.listened) || (prevD && prevD.listened) || rec.desc.listened);
+          if (!isVideo) {
+            if (d677.listened) d677.podPositionS = null;
+            else if (fe && fe.positionS > 0) d677.podPositionS = Math.floor(fe.positionS);
+          }
+          state.dailyRes666[jobKey] = d677;
+          return;
+        }
+        if (!m) return;
         var e = m.e;
         if (isVideo) {
-          state.dailyRes666[job.block + ':' + series] = {
+          state.dailyRes666[jobKey] = {
             episodeId: 'yt:' + e.id, kind: 'video', videoId: e.id, vmSeries: series,
             title: e.title || '', url: null, enclosureUrl: null,
             available: true, block: job.block, durationS: 0, imageUrl: e.imageUrl || null,
@@ -20501,7 +20626,7 @@ function resolveDailyDynamic666(day) {
             source: opnDailySeriesTitle666(series), stale: !!m.stale, daily666: true, dailySeries: series
           };
         } else {
-          state.dailyRes666[job.block + ':' + series] = {
+          state.dailyRes666[jobKey] = {
             episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: series,
             title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || e.streamUrl || null, enclosureUrl: null,
             available: !!(e.url || e.streamUrl), block: job.block, source: opnDailySeriesTitle666(series), durationS: e.durationS || 0, listened: !!e.listened,
@@ -20510,6 +20635,7 @@ function resolveDailyDynamic666(day) {
             stale: !!m.stale, daily666: true, dailySeries: series
           };
         }
+        opnDailySettlePut677(presented, jobKey, state.dailyRes666[jobKey].episodeId, !!m.stale, state.dailyRes666[jobKey]);
       });
       settle();
     }).catch(function () {});
