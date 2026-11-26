@@ -4825,13 +4825,16 @@ function queueMarkPos617(desc) {
   // (device-local, v551) hold no position: 0. A finished
   // track reads 0 by the stores' own discipline (its
   // position row is deleted at 'ended'; podPositionS is
-  // null when listened) — this reader adds NO threshold
-  // of its own.
+  // null when listened).
+  // v680 §2.5 step 3 SUPERSEDES the no-threshold sentence:
+  // a stored position under the 5 s "not started" threshold
+  // reads as 0 here too, so queue tracks and single taps
+  // agree on the opening bound.
   if (!desc) return 0;
-  if (desc.kind === 'podcast') return desc.podPositionS > 0 ? Math.floor(desc.podPositionS) : 0;
+  if (desc.kind === 'podcast') return desc.podPositionS >= 5 ? Math.floor(desc.podPositionS) : 0;
   if (desc.kind === 'prayer' || desc.kind === 'homily') return 0;
   var fold617 = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
-  return fold617 > 0 ? Math.floor(fold617) : 0;
+  return fold617 >= 5 ? Math.floor(fold617) : 0;
 }
 function queueStartPos(desc) {
   // The position a just-started track stands at: the pending
@@ -5443,6 +5446,7 @@ function startDesc(desc) {
   ensureTrackDraw(desc); // v528 §2.4: the by-play draw rides beside the play — fire-and-forget, a failed draw never blocks the start
   podPositionSkipAway(desc);
   dayPositionSkipAway(desc); // v412 Fix 10: the day mirror of the skip-away save
+  if (desc && desc.episodeId) delete crossed95[desc.episodeId]; // v680 §2.9: a fresh start clears the crossing guard — the replay's saves behave as a completed track's replay saves do
   // v617: the current-track carry — the OUTGOING track at
   // this funnel's head is state.current (replaced only
   // below); when the incoming descriptor IS that track, its
@@ -5465,7 +5469,7 @@ function startDesc(desc) {
   if (desc.kind === 'podcast') {
     state.pendingResume = liveCarry617 > 0
       ? { episodeId: desc.episodeId, positionS: liveCarry617 }
-      : (desc.podPositionS > 0
+      : (desc.podPositionS >= 5 // v680 §2.5 step 3: a stored position under 5 s reads as "not started"
         ? { episodeId: desc.episodeId, positionS: desc.podPositionS }
         : (state.pendingResume && state.pendingResume.episodeId === desc.episodeId ? null : state.pendingResume));
     podPosSentKey = desc.podSeries + '/' + desc.seriesKey; podPosSentVal = -1;
@@ -5485,7 +5489,7 @@ function startDesc(desc) {
       if (liveCarry617 > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: liveCarry617 };
       else {
         var dayPos = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
-        if (dayPos > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) };
+        if (dayPos >= 5) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) }; // v680 §2.5 step 3: under 5 s reads as "not started"
       }
     }
     dayPosSentKey = desc.episodeId; dayPosSentVal = -1;
@@ -6744,8 +6748,8 @@ audioEl.addEventListener('timeupdate', function () {
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
   if (now - lastQueueSave > 5000) { lastQueueSave = now; saveQueueSnapshot(); }
-  if (now - podPosLastTick > 15000) { podPosLastTick = now; podPositionTick(); } // v395 §2.6: the 15 s position tick
-  if (now - dayPosLastTick > 15000) { dayPosLastTick = now; dayPositionTick(); } // v412 Fix 10: the day mirror tick, same cadence
+  if (now - podPosLastTick > 5000) { podPosLastTick = now; podPositionTick(); } // v395 §2.6: the position tick · v680 §2.5 step 2: the 5 s cadence (was 15 s)
+  if (now - dayPosLastTick > 5000) { dayPosLastTick = now; dayPositionTick(); } // v412 Fix 10: the day mirror tick, same cadence · v680: 5 s
 });
 audioEl.addEventListener('seeked', updatePositionState);
 audioEl.addEventListener('seeked', function () { pushNativeState(false); }); // v377 B2: seek is a push trigger
@@ -11088,6 +11092,66 @@ function writePodPositionQuiet(series, seqKey, positionS, durationS) {
     if (map[k] && map[k].positionS === pos && map[k].durationS === dur) { delete map[k]; podPosSlotWrite(map); }
   }).catch(function () { /* the slot entry stands — the drain's business */ });
 }
+/* v680 §2.5 step 1 + §2.9: ONE native-aware live position
+   source for the whole save family, and the 95% crossing set.
+   Native mode: the element never plays (its currentTime
+   stands at 0), so the live position is the mirror's —
+   playPos()'s extrapolation, accepted only when the mirror
+   names THIS track (the v617 live-carry guard); freshness is
+   the standing stale-neutral measure (last publish inside
+   two 5 s cycles). Element mode: the element's own clock.
+   crossed95: the session set of tracks that crossed the
+   §2.9 threshold — their position saves stand down until
+   startDesc starts the track again. */
+var crossed95 = {};
+function livePos680(track) {
+  if (!track) return null;
+  if (oraNativeMode()) {
+    if (!nativeMirror || nativeMirror.trackId !== track.episodeId) return null;
+    var pp = playPos();
+    return { pos: Math.floor(pp.pos), dur: Math.floor(nativeMirror.durationS || track.durationS || 0),
+      ended: false, playing: !!nativeMirror.playing, fresh: (Date.now() - nativeMirror.atMs) < 10000 };
+  }
+  return { pos: Math.floor(audioEl.currentTime || 0),
+    dur: (isFinite(audioEl.duration) && audioEl.duration > 0 ? Math.floor(audioEl.duration) : 0),
+    ended: !!audioEl.ended, playing: !audioEl.paused && !audioEl.ended, fresh: true };
+}
+function saveTrackPos680(track, pos, dur) {
+  // v680 §2.5 step 5: an explicit-position save for a named
+  // track (the native transition / stopped seats, whose
+  // position comes from the PREVIOUS mirror, not the live
+  // one) — the save family's guards in one place: crossed
+  // tracks stand down, the 5 s threshold binds, never at/past
+  // the end, and the kind routing matches the ticks (podcast
+  // through its route, day through its own, book prayers
+  // hold no position).
+  if (!track || crossed95[track.episodeId]) return;
+  pos = Math.floor(pos || 0);
+  if (!(pos >= 5)) return;
+  if (dur > 0 && pos >= dur) return;
+  if (track.kind === 'podcast') { if (track.podSeries && track.seriesKey && !track.listened) writePodPositionQuiet(track.podSeries, track.seriesKey, pos, track.durationS || dur || 0); }
+  else if (track.kind !== 'prayer') writeDayPositionQuiet(track.episodeId, pos, track.durationS || dur || 0);
+}
+function cross95Check680(cur, live) {
+  // v680 §2.9: the threshold test, carried by the periodic
+  // ticks on both paths. At/over 95% of a known duration the
+  // track stands READ through markCompleted — the standing
+  // sole completion writer, the ended handler's own call —
+  // and its position clears in the same act (the podcast
+  // mark clears slot + payload + core inside
+  // writePodMarkQuiet; the day leg fires the ended
+  // handler's own 0-write beside the mark). Returns true
+  // when the caller must stand down (crossed now or before).
+  if (!cur || !live) return false;
+  if (crossed95[cur.episodeId]) return true;
+  var dur = live.dur > 0 ? live.dur : Math.floor(cur.durationS || 0);
+  if (!(dur > 0) || live.pos < Math.ceil(dur * 0.95)) return false;
+  crossed95[cur.episodeId] = true;
+  if (cur.kind === 'podcast') cur.podPositionS = null;
+  markCompleted(cur);
+  if (cur.kind !== 'podcast' && cur.kind !== 'prayer') writeDayPositionQuiet(cur.episodeId, 0, 0);
+  return true;
+}
 function podPositionTick() {
   // §2.6: the tick's attempt — fires only while a podcast track
   // is current and playing, and only when the position has moved
@@ -11095,14 +11159,23 @@ function podPositionTick() {
   // marker resets at every track change (startDesc), so a fresh
   // track's first tick measures from unsent. No writes while
   // paused — the pause save is the paused state's only write.
+  // v680 §2.5 steps 1–3 + §2.9: the position reads through
+  // livePos680 (the native mirror on the native path — this
+  // tick is driven there by nativeMirrorTick's 5 s interval),
+  // a position under the 5 s threshold writes nothing, and
+  // the 95% crossing marks instead of saving.
   var cur = state.current;
   if (!cur || cur.kind !== 'podcast' || !cur.podSeries || !cur.seriesKey) return;
-  if (audioEl.paused || audioEl.ended) return;
-  var pos = Math.floor(audioEl.currentTime || 0);
+  if (cur.listened) return;
+  var live = livePos680(cur);
+  if (!live || !live.playing || !live.fresh || live.ended) return;
+  if (cross95Check680(cur, live)) return;
+  var pos = live.pos;
+  if (pos < 5) return;
   var key = cur.podSeries + '/' + cur.seriesKey;
   var last = (podPosSentKey === key) ? podPosSentVal : -1;
   if (Math.abs(pos - last) < 5) return;
-  writePodPositionQuiet(cur.podSeries, cur.seriesKey, pos, cur.durationS || 0);
+  writePodPositionQuiet(cur.podSeries, cur.seriesKey, pos, cur.durationS || live.dur || 0);
 }
 function podPositionSaveCurrent() {
   // §2.6: the event saves — pause · visibility hide · pagehide.
@@ -11113,38 +11186,45 @@ function podPositionSaveCurrent() {
   // 0 is "not started" — nothing stands to save (which also
   // keeps a src-swap pause artifact from reading the incoming
   // track's zero).
+  // v680 §2.5 steps 1+3: the read is livePos680's (native mode
+  // un-stands-down through the standing route), and the
+  // "not started" bound is the named 5 s threshold.
   var cur = state.current;
   if (!cur || cur.kind !== 'podcast' || !cur.podSeries || !cur.seriesKey) return;
-  if (audioEl.ended) return;
-  // At the element's exact end the episode is finished in
+  if (crossed95[cur.episodeId]) return; // v680 §2.9: a crossed track's position stands cleared
+  var live = livePos680(cur);
+  if (!live || live.ended) return;
+  // At the media's exact end the episode is finished in
   // substance: a pause event can precede 'ended' in the end
   // sequence, and no save may race the mark that follows. (A
   // save-suppression guard at the media's own end — not a
   // percentage test; the mark path's law stands untouched.)
-  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
-  var pos = Math.floor(audioEl.currentTime || 0);
-  if (!(pos > 0)) return;
-  writePodPositionQuiet(cur.podSeries, cur.seriesKey, pos, cur.durationS || 0);
+  if (live.dur > 0 && live.pos >= live.dur) return;
+  if (!(live.pos >= 5)) return;
+  writePodPositionQuiet(cur.podSeries, cur.seriesKey, live.pos, cur.durationS || live.dur || 0);
 }
 function podPositionSkipAway(nextDesc) {
   // §2.6: skip-away — the queue advances away from a podcast
   // track without 'ended' (next/previous tap, a tap on another
   // track, a queue replacement). Called at the head of
   // startDesc, while state.current still names the OUTGOING
-  // track and the element still holds its position: the save
-  // fires for the outgoing track, at its position in the moment
-  // of leaving, before the incoming track's start logic runs.
+  // track and its position still stands: the save fires for
+  // the outgoing track, at its position in the moment of
+  // leaving, before the incoming track's start logic runs.
   // The ended path never saves — when the element stands ended,
   // the mark (fired at the top of the ended handler, before any
   // advance) is the outgoing track's whole story.
+  // v680 §2.5 steps 1+3: livePos680's read + the 5 s threshold,
+  // as in podPositionSaveCurrent.
   var out = state.current;
   if (!out || out.kind !== 'podcast' || !out.podSeries || !out.seriesKey) return;
   if (nextDesc && nextDesc.episodeId === out.episodeId) return;
-  if (audioEl.ended) return;
-  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return; // the end is the mark's moment, as in podPositionSaveCurrent
-  var pos = Math.floor(audioEl.currentTime || 0);
-  if (!(pos > 0)) return;
-  writePodPositionQuiet(out.podSeries, out.seriesKey, pos, out.durationS || 0);
+  if (crossed95[out.episodeId]) return; // v680 §2.9
+  var live = livePos680(out);
+  if (!live || live.ended) return;
+  if (live.dur > 0 && live.pos >= live.dur) return; // the end is the mark's moment, as in podPositionSaveCurrent
+  if (!(live.pos >= 5)) return;
+  writePodPositionQuiet(out.podSeries, out.seriesKey, live.pos, out.durationS || live.dur || 0);
 }
 /* ---------------- Day positions (v412 Fix 10) ----------------
    The day mirror of the podcast position store: a partway DAY
@@ -11161,13 +11241,39 @@ function podPositionSkipAway(nextDesc) {
    slot — the day store's mirror is the table, per §2.8); a
    failed post degrades to no save and never throws into a
    playback path. The opn-resume-v312 store keeps only
-   Continue's carry job (§2.8). */
+   Continue's carry job (§2.8).
+   v680 §2.5 step 4 SUPERSEDES the no-slot sentence: day saves
+   now carry the podcast slot's discipline (opn-daypos-pending-v1
+   + drainDayPositions, below) — a failed post leaves the newest
+   value standing in the slot for the drain, never nothing. */
 var dayPosSentKey = null;
 var dayPosSentVal = -1;
-var dayPosLastTick = 0;   // the timeupdate throttle for the 15 s day tick
+var dayPosLastTick = 0;   // the timeupdate throttle for the day tick (v680: the 5 s cadence)
+/* v680 §2.5 step 4: day-position slot parity with the podcast
+   slot — a synchronous localStorage write BEFORE the post
+   (opn-daypos-pending-v1, keyed episodeId|date, newest wins),
+   the entry dropped only when a post succeeds holding that
+   same value, and a drain at the standing drain moments
+   (drainDayPositions, beside drainPodPositions). A 0
+   (ended-clear) write drops the slot entry and posts the
+   delete as before. */
+var DAYPOS_KEY = 'opn-daypos-pending-v1';
+function dayPosSlotRead() { try { var m = JSON.parse(localStorage.getItem(DAYPOS_KEY) || '{}'); return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {}; } catch (e) { return {}; } }
+function dayPosSlotWrite(map) { try { localStorage.setItem(DAYPOS_KEY, JSON.stringify(map)); } catch (e) {} }
+function dayPosSlotSet(episodeId, date, positionS, durationS) {
+  var map = dayPosSlotRead();
+  map[episodeId + '|' + date] = { positionS: positionS, durationS: durationS };
+  dayPosSlotWrite(map);
+}
+function dayPosSlotDrop(episodeId, date) {
+  var map = dayPosSlotRead();
+  var k = episodeId + '|' + date;
+  if (map[k]) { delete map[k]; dayPosSlotWrite(map); }
+}
 function writeDayPositionQuiet(episodeId, positionS, durationS) {
   if (!episodeId) return;
   var pos = Math.floor(positionS || 0);
+  var dur = Math.floor(durationS || 0);
   if (dayPosSentKey === episodeId) dayPosSentVal = pos;
   // v461 F3: the in-memory leg its podcast twin carries — the
   // payload's dayPositions fold tracks the save in-session,
@@ -11175,45 +11281,86 @@ function writeDayPositionQuiet(episodeId, positionS, durationS) {
   // position, never at 0 or at the page-load fold. A position
   // of 0 deletes, mirroring the server rule.
   if (state.dayPayload && state.dayPayload.dayPositions) { if (pos > 0) state.dayPayload.dayPositions[episodeId] = pos; else delete state.dayPayload.dayPositions[episodeId]; }
-  post('/api/player/day-position', { episodeId: episodeId, date: presentedDateStr(), positionS: pos, durationS: Math.floor(durationS || 0) }).catch(function () {});
+  var date = presentedDateStr();
+  if (pos > 0) dayPosSlotSet(episodeId, date, pos, dur); else dayPosSlotDrop(episodeId, date);
+  post('/api/player/day-position', { episodeId: episodeId, date: date, positionS: pos, durationS: dur }).then(function () {
+    var map = dayPosSlotRead();
+    var k = episodeId + '|' + date;
+    if (map[k] && map[k].positionS === pos && map[k].durationS === dur) { delete map[k]; dayPosSlotWrite(map); }
+  }).catch(function () { /* the slot entry stands — the drain's business */ });
 }
 function dayPositionTick() {
   // The tick's attempt — only while a day track is current and
   // playing, and only when the position has moved >= 5 s since
   // the last value sent for this episode (the podcast rule).
+  // v680 §2.5 steps 1–3 + §2.9: livePos680's read (native via
+  // nativeMirrorTick), the 5 s "not started" threshold, and
+  // the 95% crossing (mark + clear instead of a save).
   var cur = state.current;
   if (!cur || cur.kind === 'podcast' || cur.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
-  if (audioEl.paused || audioEl.ended) return;
-  var pos = Math.floor(audioEl.currentTime || 0);
+  var live = livePos680(cur);
+  if (!live || !live.playing || !live.fresh || live.ended) return;
+  if (cross95Check680(cur, live)) return;
+  var pos = live.pos;
+  if (pos < 5) return;
   var last = (dayPosSentKey === cur.episodeId) ? dayPosSentVal : -1;
   if (Math.abs(pos - last) < 5) return;
-  writeDayPositionQuiet(cur.episodeId, pos, cur.durationS || 0);
+  writeDayPositionQuiet(cur.episodeId, pos, cur.durationS || live.dur || 0);
 }
 function dayPositionSaveCurrent() {
   // The event saves — pause · visibility hide · pagehide. The
   // podcast guards stand: the ended path never saves (its clear
   // is the ended handler's own act), and a position of 0 is "not
   // started" — nothing stands to save.
+  // v680 §2.5 steps 1+3: livePos680's read + the 5 s threshold.
   var cur = state.current;
   if (!cur || cur.kind === 'podcast' || cur.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
-  if (audioEl.ended) return;
-  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
-  var pos = Math.floor(audioEl.currentTime || 0);
-  if (!(pos > 0)) return;
-  writeDayPositionQuiet(cur.episodeId, pos, cur.durationS || 0);
+  if (crossed95[cur.episodeId]) return; // v680 §2.9: a crossed track's position stands cleared
+  var live = livePos680(cur);
+  if (!live || live.ended) return;
+  if (live.dur > 0 && live.pos >= live.dur) return;
+  if (!(live.pos >= 5)) return;
+  writeDayPositionQuiet(cur.episodeId, live.pos, cur.durationS || live.dur || 0);
 }
 function dayPositionSkipAway(nextDesc) {
   // Skip-away — called at the head of startDesc while the
   // OUTGOING day track and its position still stand (the podcast
   // mirror, guard for guard).
+  // v680 §2.5 steps 1+3: livePos680's read + the 5 s threshold.
   var out = state.current;
   if (!out || out.kind === 'podcast' || out.kind === 'prayer') return; // v484 §2.6: a book prayer holds no day position
   if (nextDesc && nextDesc.episodeId === out.episodeId) return;
-  if (audioEl.ended) return;
-  if (isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration) return;
-  var pos = Math.floor(audioEl.currentTime || 0);
-  if (!(pos > 0)) return;
-  writeDayPositionQuiet(out.episodeId, pos, out.durationS || 0);
+  if (crossed95[out.episodeId]) return; // v680 §2.9
+  var live = livePos680(out);
+  if (!live || live.ended) return;
+  if (live.dur > 0 && live.pos >= live.dur) return;
+  if (!(live.pos >= 5)) return;
+  writeDayPositionQuiet(out.episodeId, live.pos, out.durationS || live.dur || 0);
+}
+var dayPosDraining = false;
+function drainDayPositions() {
+  // v680 §2.5 step 4: the day twin of drainPodPositions — at
+  // app open and on 'online', beside the podcast drain. Each
+  // pending entry posts once through the day-position route
+  // with its OWN recorded date (the slot key carries it);
+  // success removes it (only when the slot still holds the
+  // drained value); failure leaves the remainder standing.
+  if (dayPosDraining) return;
+  if (!Object.keys(dayPosSlotRead()).length) return;
+  dayPosDraining = true;
+  var step = function () {
+    var map = dayPosSlotRead();
+    var keys = Object.keys(map);
+    if (!keys.length) { dayPosDraining = false; return; }
+    var k = keys[0], v = map[k];
+    var bar = k.lastIndexOf('|');
+    post('/api/player/day-position', { episodeId: k.slice(0, bar), date: k.slice(bar + 1), positionS: v.positionS, durationS: v.durationS }).then(function () {
+      var now = dayPosSlotRead();
+      if (now[k] && now[k].positionS === v.positionS && now[k].durationS === v.durationS) { delete now[k]; dayPosSlotWrite(now); }
+      step();
+    }).catch(function () { dayPosDraining = false; });
+  };
+  step();
 }
 var podPosDraining = false;
 function drainPodPositions() {
@@ -19616,7 +19763,15 @@ function setupBridgeCommands() {
    standing routes, from the service); this client's own
    position saves stand down on their own guards (the element
    never plays, so its position reads 0 and every save's
-   pos > 0 guard returns) — nothing double-posts. Day played
+   pos > 0 guard returns) — nothing double-posts.
+   v680 §2.5 SUPERSEDES the stand-down for POSITIONS (marks
+   stand as written): the save family now reads the mirror
+   through livePos680 and writes through the same standing
+   routes — periodically (5 s), on the pause flip, on
+   transitions, and on the stopped publish. The service's
+   own write-backs stand untouched beside them; a duplicate
+   near-identical write is the stores' standing
+   last-writer-wins upsert (§2.8, accepted). Day played
    marks are device-local (v344), so the service drains them
    through takeNativeCompletions and the page applies them
    with its in-memory legs only, below. */
@@ -19970,6 +20125,7 @@ function applyNativeState(json) {
   var st = null;
   try { st = JSON.parse(json || ''); } catch (e) { return; }
   if (!st || st.engine !== 'native') return;
+  var prevMirror680 = nativeMirror; // v680 §2.5 step 5: the outgoing track's last mirror, read before this publish replaces it
   if (st.stopped) {
     // v656 §2.4.5: the boundary intercept — a stopped publish
     // while a boundary stands AND the client queue still
@@ -19996,6 +20152,15 @@ function applyNativeState(json) {
         return;
       }
       nativeVideoBoundary656 = null;
+    }
+    // v680 §2.5 step 5(c): the stopped publish runs the
+    // position saves before its clear, while a current
+    // stands — the position reads from the PREVIOUS mirror
+    // (this publish carries none), extrapolated as playPos
+    // would read it.
+    if (state.current && prevMirror680 && prevMirror680.trackId === state.current.episodeId) {
+      var stopPos680 = Math.floor(prevMirror680.positionS + (prevMirror680.playing ? ((Date.now() - prevMirror680.atMs) / 1000) * (prevMirror680.rate || 1) : 0));
+      saveTrackPos680(state.current, stopPos680, prevMirror680.durationS || 0);
     }
     // The engine's terminal clear — bridgeStop's shape minus
     // the command (the stop already happened natively).
@@ -20058,6 +20223,18 @@ function applyNativeState(json) {
   if (desc && desc.episodeId === st.trackId) {
     var changed = state.current !== desc;
     if (changed) {
+      // v680 §2.5 step 5(b): the skip-away save for the
+      // OUTGOING track, at the PREVIOUS mirror's last
+      // position for it (this publish's mirror already names
+      // the incoming track), before the current updates —
+      // the native twin of startDesc's skip-away. The v617
+      // transition seek below keeps its exact guards; this
+      // save rides beside it, never inside its conditions.
+      var out680 = state.current;
+      if (out680 && out680 !== desc && prevMirror680 && prevMirror680.trackId === out680.episodeId) {
+        var outPos680 = Math.floor(prevMirror680.positionS + (prevMirror680.playing ? ((Date.now() - prevMirror680.atMs) / 1000) * (prevMirror680.rate || 1) : 0));
+        saveTrackPos680(out680, outPos680, prevMirror680.durationS || 0);
+      }
       state.current = desc;
       var qi = state.queue.indexOf(desc);
       if (qi >= 0) state.queueIdx = qi;
@@ -20091,6 +20268,11 @@ function applyNativeState(json) {
     markPlaying(descCardKey(desc));
     if (changed) drainNativeCompletions();
   }
+  // v680 §2.5 step 5(a): a playing→paused flip for the
+  // current track runs the position saves — the new mirror
+  // holds the position the element pause event would have
+  // carried on the web path, and livePos680 reads it.
+  if (prevMirror680 && prevMirror680.playing && !st.playing && state.current && state.current.episodeId === st.trackId) { podPositionSaveCurrent(); dayPositionSaveCurrent(); }
   updateDockProgress();
   updateNpSeek();
 }
@@ -20173,6 +20355,13 @@ function nativeMirrorTick() {
   updateDockProgress();
   updateNpSeek();
   saveQueueSnapshot(Math.floor(playPos().pos));
+  // v680 §2.5 step 2: the periodic position write on the
+  // native path — while the mirror reports the current track
+  // PLAYING, the position ticks run (livePos680 re-checks
+  // the track match and the freshness bound), in addition
+  // to the queue snapshot above. §2.9's 95% threshold test
+  // rides the same ticks.
+  if (nativeMirror.playing && state.current && nativeMirror.trackId === state.current.episodeId) { podPositionTick(); dayPositionTick(); }
 }
 /* ---------------- v421: the Android system back binding ----------------
    The shell's App plugin (@capacitor/app, §2.6) delivers
@@ -22622,7 +22811,7 @@ function buildDayFromPayload(day, snap) {
     // v344 §2.6: the played chrome's standing pass at render end
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
-    if (snap) { drainPodMarkQueue(); drainPodPositions(); } // v395 §2.7: the position drain rides the mark drain's open moment
+    if (snap) { drainPodMarkQueue(); drainPodPositions(); drainDayPositions(); } // v395 §2.7: the position drain rides the mark drain's open moment · v680 §2.5 step 4: the day drain rides beside it
 }
 
 /* ---------------- Offline for the plane (v392) ----------------
@@ -23107,6 +23296,7 @@ function offlineCompleteness(manual) {
 function offlineOnOnlineOpen(day) {
   drainPodMarkQueue();
   drainPodPositions(); // v395 §2.7: beside the mark queue's drain, same moment
+  drainDayPositions(); // v680 §2.5 step 4: the day drain, same moment
   // D2: the automatic leg — at every online open, deferred so
   // the day's own resolution leads.
   offlinePassTimer = setTimeout(function () { offlinePassTimer = null; offlineCompleteness(false); }, 4000);
@@ -23344,7 +23534,7 @@ function drainPodMarkQueue() {
   };
   step();
 }
-window.addEventListener('online', function () { drainPodMarkQueue(); drainPodPositions(); }); // v395 §2.7: the position drain shares the mark drain's online moment
+window.addEventListener('online', function () { drainPodMarkQueue(); drainPodPositions(); drainDayPositions(); }); // v395 §2.7: the position drain shares the mark drain's online moment · v680 §2.5 step 4: the day drain beside it
 
 /* ---------------- Listen home ⇄ block pages (v353) ----------------
    The Prayers tab's two paints over the standing whole-day state.
