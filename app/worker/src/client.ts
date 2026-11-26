@@ -3055,8 +3055,18 @@ function opnCheckContents590(contents, coreBlocks) {
       var kind = it.kind, key = it.key;
       var side670 = null;
       var off687 = null;
+      // v690 §2.2 (S1): the item dayRule stands on EVERY
+      // item (all kind branches + the Novenas arm). A valid
+      // value rides the rebuild; an invalid value is a
+      // named error, never a silent drop (the source-
+      // settings rule at the OPN_DAY_RULES check below).
+      var dayRule690 = null;
+      if (it.dayRule !== undefined && it.dayRule !== null) {
+        if (OPN_DAY_RULES.indexOf(it.dayRule) < 0) throw opnErr(400, 'bad dayRule for ' + kind + ':' + (key || ''));
+        dayRule690 = it.dayRule;
+      }
       if (block === 'Novenas') {
-        if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; list.push({ kind: 'all-novenas' }); } return; }
+        if (kind === 'all-novenas') { if (!seen['all-novenas']) { seen['all-novenas'] = 1; var an690 = { kind: 'all-novenas' }; if (dayRule690) an690.dayRule = dayRule690; list.push(an690); } return; }
         if (kind !== 'novena' || typeof key !== 'string' || !key) throw opnErr(400, 'bad novena selector in contents');
       } else {
         // v603: a course item naming one of the four
@@ -3134,7 +3144,7 @@ function opnCheckContents590(contents, coreBlocks) {
       // keeps the standing dedupe.
       if (seen[id] && !(kind === 'source' && EXT_TOKENS[key])) return;
       seen[id] = 1;
-      if (side670 || off687) { var built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }
+      if (side670 || off687 || dayRule690) { var built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }
       else list.push({ kind: kind, key: key });
     });
     out[block] = list;
@@ -14511,13 +14521,19 @@ function foldDayAdditions(descs, dateStr, seat, placed619) {
   // other addition keeps its anchor/tail weave as before.
   var placedAdds619 = placed619 && placed619.adds ? placed619.adds : null;
   var seatPlaced619 = !!(placed619 && placed619.seat);
+  // v690 §2.3 G2: a seat item that STANDS but is gated by
+  // its dayRule stamps seatGated690 in the contents pass —
+  // the standing fallback below must not resurrect a seat
+  // the item gate removed. (No seat item at all = no stamp
+  // = the standing fallback rule, unchanged.)
+  var seatGated690 = !!(placed619 && placed619.seatGated690);
   var byBlock = {};
   if (state.dayAdditions && state.dayAdditionsDate === dateStr) state.dayAdditions.forEach(function (a) { if (placedAdds619 && a && placedAdds619[a.block + '|' + dayAdditionIdOf(a)]) return; (byBlock[a.block] = byBlock[a.block] || []).push(a); });
   // v551 (P10): today's device-local homily additions join
   // the same fold — they join BEFORE the empty check, or a
   // homily-only day would skip the weave entirely.
   homilyAdditionsFor(dateStr).forEach(function (a) { (byBlock[a.block] = byBlock[a.block] || []).push(a); });
-  if (!Object.keys(byBlock).length) return seatPlaced619 ? descs : foldReadingsSeat(descs, seat);
+  if (!Object.keys(byBlock).length) return (seatPlaced619 || seatGated690) ? descs : foldReadingsSeat(descs, seat);
   var segs = {}, segOrder = [];
   descs.forEach(function (d) {
     var b = d.block || '';
@@ -14531,7 +14547,7 @@ function foldDayAdditions(descs, dateStr, seat, placed619) {
   segOrder.forEach(function (b) {
     if (segs[b]) { out = out.concat(segs[b]); delete segs[b]; }
   });
-  return seatPlaced619 ? out : foldReadingsSeat(out, seat);
+  return (seatPlaced619 || seatGated690) ? out : foldReadingsSeat(out, seat);
 }
 function dayAdditionCardHtml(d) {
   // §2.3: the added prayer's card on its block page — the
@@ -18825,6 +18841,17 @@ function extDayRulePasses(rule, wd) {
   return false;
 }
 function extDayRuleFills(rule, wd) { return rule === 'fallback-only' ? true : extDayRulePasses(rule, wd); }
+// v690 §2.3: the ONE item-gate spelling — an item paints on
+// the presented day iff its dayRule (absent = 'daily')
+// passes the standing predicate. Called by the G1 contents
+// pass and every G4 resolver, so the rule has one form.
+// NOTE (double gate, §2.5): for a source-kind item this
+// gates THIS block occurrence only; the store row's own
+// dayRule gates the slot's standings separately (AND).
+function opnItemPaints690(it, dateStr) {
+  if (!it) return true;
+  return extDayRulePasses(it.dayRule || 'daily', extWeekdayMon0(dateStr));
+}
 function extParseDuration(raw) {
   if (!raw) return 0;
   var t = String(raw).trim();
@@ -20402,7 +20429,7 @@ function resolveProfileCourses590(day) {
   var jobs = [];
   Object.keys(eff.contents).forEach(function (block) {
     (eff.contents[block] || []).forEach(function (it) {
-      if (it.kind === 'course') jobs.push({ block: block, key: it.key });
+      if (it.kind === 'course' && opnItemPaints690(it, day.presentedDay || day.date)) jobs.push({ block: block, key: it.key });
     });
   });
   jobs.forEach(function (job) {
@@ -20446,7 +20473,7 @@ function resolveExegesisDay611(day) {
   var jobs = [];
   Object.keys(eff.contents).forEach(function (block) {
     (eff.contents[block] || []).forEach(function (it) {
-      if (it.kind === 'day') jobs.push({ block: block, key: it.key });
+      if (it.kind === 'day' && opnItemPaints690(it, day.presentedDay || day.date)) jobs.push({ block: block, key: it.key });
     });
   });
   if (!jobs.length) return;
@@ -20496,7 +20523,7 @@ function resolveProfileEpisodes614(day) {
   var jobs = [];
   Object.keys(eff.contents).forEach(function (block) {
     (eff.contents[block] || []).forEach(function (it) {
-      if (it.kind === 'episode' && opnEpisodeKeyOk614(it.key)) jobs.push({ block: block, key: it.key });
+      if (it.kind === 'episode' && opnEpisodeKeyOk614(it.key) && opnItemPaints690(it, day.presentedDay || day.date)) jobs.push({ block: block, key: it.key });
     });
   });
   if (!jobs.length) return;
@@ -20621,7 +20648,7 @@ function resolveProfileVideos656(day) {
   var jobs = [];
   Object.keys(eff.contents).forEach(function (block) {
     (eff.contents[block] || []).forEach(function (it) {
-      if (it.kind === 'video' && opnVideoKeyOk656(it.key)) jobs.push({ block: block, key: it.key });
+      if (it.kind === 'video' && opnVideoKeyOk656(it.key) && opnItemPaints690(it, day.presentedDay || day.date)) jobs.push({ block: block, key: it.key });
     });
   });
   if (!jobs.length) return;
@@ -20782,6 +20809,11 @@ function resolveDailyDynamic666(day) {
     var items = eff.contents[block] || [];
     items.forEach(function (it) {
       if (!it || it.kind !== 'daily' || !opnDailyKeyOk666(it.key)) return;
+      // v690 §2.5 (daily): the item gate runs BEFORE the
+      // twin suppressions and the series grouping — a gated
+      // item fetches nothing and no v677 settled pick is
+      // written or read for it that day.
+      if (!opnItemPaints690(it, day.presentedDay || day.date)) return;
       if (it.key === 'saint-of-the-day' && items.some(function (x) { return x && x.kind === 'source' && x.key === 'ext-saint-of-the-day'; })) return;
       if (it.key === 'daily-readings' && items.some(function (x) { return x && x.kind === 'seat' && x.key === 'daily-readings'; })) return;
       if (it.key === 'daily-gospel-exegesis' && items.some(function (x) { return x && x.kind === 'day'; })) return;
@@ -20972,6 +21004,11 @@ function resolveMassDynamic688(day) {
   Object.keys(eff.contents).forEach(function (block) {
     (eff.contents[block] || []).forEach(function (it) {
       if (!it || it.kind !== 'massdaily' || !opnMassKeyOk688(it.key)) return;
+      // v690 §2.5 (massdaily): the item gate runs before
+      // the key grouping — a gated item fetches nothing
+      // and no v688 settled pick is read or written for
+      // it that day.
+      if (!opnItemPaints690(it, day.presentedDay || day.date)) return;
       jobs.push({ block: block, key: it.key });
     });
   });
@@ -21366,6 +21403,13 @@ function extRebuildDescs(day) {
         // included).
         var itAt687 = c590[idx];
         if (itAt687 && itAt687.off && itAt687.kind === 'source' && opnLabeledSlot650(itAt687.key)) return;
+        // v690 §2.3 G1: a dayRule-gated item's candidate
+        // never stands — the tail reach included (the
+        // candidate map is pre-populated for every merged
+        // entry, so the pass-head gate alone cannot cover
+        // this reach). Item rule only: the store row's own
+        // dayRule gate stands untouched above (§2.5 AND).
+        if (itAt687 && !opnItemPaints690(itAt687, date)) return;
         (candByIdx619[idx] || []).forEach(function (em) {
           if (emittedCand619.indexOf(em) >= 0) return;
           emittedCand619.push(em);
@@ -21383,6 +21427,14 @@ function extRebuildDescs(day) {
       var seatPos687 = -1, seatIdx687 = -1;
       c590.forEach(function (it, idx) {
         if (!it) return;
+        // v690 §2.3 G1: the item dayRule gate — FIRST and
+        // outermost, one seat at the head of the contents
+        // pass, covering every kind branch, the candidates
+        // (via the emitCand619 guard), the Novenas own-row
+        // standing, and the seat recording. A gated seat
+        // item stamps placed619.seatGated690 so the
+        // readings fold cannot resurrect it (G2).
+        if (!opnItemPaints690(it, date)) { if (it.kind === 'seat' && b.block === 'Morning') placed619.seatGated690 = true; return; }
         // v687 §2.7: an off office item composes nothing
         // (its candidate is guarded in emitCand619 too).
         if (it.off && it.kind === 'source' && opnLabeledSlot650(it.key)) return;
@@ -24650,12 +24702,54 @@ function opnToggleOff687(block, rid) {
   if (it.off) delete it.off; else it.off = 1;
   return opnWrite604(block);
 }
+function opnSetItemDay690(block, rid, rule) {
+  // v690 §2.4: the contents-item Frequency writer — the
+  // opnSetSourceDay686 twin for ITEMS (the source writer
+  // writes the store row only; this writes the item only,
+  // §2.5's double gate). 'daily' DELETES the field —
+  // absent = daily (§2.2), so stored lists keep the
+  // standing shape for the common case. Persists through
+  // opnWrite604 (profile save or today-edit by scope; a
+  // today-scope change registers as a today edit through
+  // the whole-item divergence, S10, no extra code). Its
+  // done path repaints + rebuilds, so a newly gated item
+  // leaves the composed day at once.
+  var it = opn687FindItem(block, rid);
+  if (!it) return;
+  var cur = it.dayRule || 'daily';
+  if (cur === rule) return;
+  if (rule === 'daily') delete it.dayRule; else it.dayRule = rule;
+  return opnWrite604(block);
+}
+function opn690FreqItems(block, rid) {
+  // v690 §2.4: the Frequency section for EVERY contents
+  // item, in the v687 source-row shape verbatim — header
+  // naming the current value, the offered paint set
+  // (daily · weekdays · weekends · sundays · fridays;
+  // 'fallback-only' is never offered — §2.1), the current
+  // marked Current. A legacy fallback-only value stands
+  // appended as a display row, as v687 appends an outside
+  // current, so the header never lies.
+  var it = opn687FindItem(block, rid);
+  if (!it) return [];
+  var cur = it.dayRule || 'daily';
+  var keys = ['daily', 'weekdays', 'weekends', 'sundays', 'fridays'];
+  if (keys.indexOf(cur) < 0) keys.push(cur);
+  var items = [{ head: true, label: 'Frequency — ' + (DAY_RULE_LABELS[cur] || cur) }];
+  keys.forEach(function (k) {
+    items.push({ label: DAY_RULE_LABELS[k] || k, state: k === cur ? 'Current' : '', act: function () { opnSetItemDay690(block, rid, k); } });
+  });
+  return items;
+}
 function opnOpenMoveMenu686(block, rid, anchorEl) {
   // v687 §1.4: the contents row's menu — Move to block… ·
   // (office: Disable/Enable · other: Remove).
+  // v690 §2.4: the Frequency section stands for EVERY
+  // contents item, after Move and before Disable/Remove.
   var it = opn687FindItem(block, rid);
   var office = !!(it && it.kind === 'source' && opnLabeledSlot650(it.key));
   var items = [{ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid); } }];
+  items = items.concat(opn690FreqItems(block, rid));
   if (office) items.push({ label: it.off ? 'Enable' : 'Disable', act: function () { opnToggleOff687(block, rid); } });
   else items.push({ label: 'Remove', act: function () { opnRemove604(block, rid); } });
   openSheetMenu('Options', items, anchorEl);
@@ -27612,10 +27706,18 @@ function opnContentsRowHtml687(block, e686, paintIdx, paintLen, grouped) {
   // dims whole.
   var it = e686.it, rid = e686.rid;
   var office = it.kind === 'source' && opnLabeledSlot650(it.key);
-  var label, sub = '';
-  if (it.kind === 'daily') { label = opnDailySeriesTitle666(it.key); sub = 'Generates daily'; }
-  else if (it.kind === 'massdaily') { label = opnMassSeriesTitle688(it.key); sub = 'Generates daily'; }
+  var label;
+  if (it.kind === 'daily') { label = opnDailySeriesTitle666(it.key); }
+  else if (it.kind === 'massdaily') { label = opnMassSeriesTitle688(it.key); }
   else label = opnItemLabel604(block, it);
+  // v690 §2.4: EVERY contents row paints its frequency
+  // subtitle through the standing v687 family, read from
+  // the ITEM's rule (source rows read the store row's) —
+  // replacing the daily/massdaily-only 'Generates daily'
+  // hardcode (the same call returns that string for their
+  // standing shape). The Edit form never gates, so the
+  // subtitle paints on non-painting days too.
+  var sub = opn687FreqText(it.dayRule);
   var tog670 = '';
   if (grouped && office) {
     // v670 §3.4: the segmented source toggle stands on a

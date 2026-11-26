@@ -1022,6 +1022,11 @@ async function playerDayPayload(env: Env, dateOverride?: string, pub = false) {
   // Chicago today or tomorrow) presents THAT day throughout —
   // intro texts, presentedDay.
   const presented = dateOverride ?? prayerChicagoNow().date;
+  // v690 §2.3 G3: the presented day's weekday (Mon=0), for
+  // the item dayRule gates in this payload (seat + prayer
+  // synthesis below).
+  const presentedParts690 = presented.split("-").map(Number);
+  const weekdayMon0690 = (new Date(Date.UTC(presentedParts690[0], presentedParts690[1] - 1, presentedParts690[2])).getUTCDay() + 6) % 7;
   const settings = await sourceSettingsPayload(env);
   // v564: under `pub` the introTexts map — the drawn intention
   // texts' home in the shell — reads empty, and neither draw
@@ -1096,8 +1101,11 @@ async function playerDayPayload(env: Env, dateOverride?: string, pub = false) {
     // Podcasts layer on and carrying daily-readings.
     const pl = profileFold.layers.find((l) => l.key === "podcasts");
     const morningContents = profileFold.contents ? profileFold.contents["Morning"] : undefined;
+    // v690 §2.3 G3(a): the seat item's own dayRule ANDs
+    // with the standing seat gate — a gated seat item
+    // stands no server seat (the client twin is G1/G2).
     const seatAllowed = !!pl && pl.key === "podcasts" && pl.on && (morningContents
-      ? morningContents.some((it) => it.kind === "seat" && it.key === "daily-readings")
+      ? morningContents.some((it) => it.kind === "seat" && it.key === "daily-readings" && extDayRulePasses(it.dayRule || "daily", weekdayMon0690))
       : pl.series.includes("daily-readings"));
     if (seatAllowed) {
       try { readingsSeat = await dailyReadingsSeat(env, presented); } catch { readingsSeat = null; }
@@ -1111,7 +1119,11 @@ async function playerDayPayload(env: Env, dateOverride?: string, pub = false) {
       ? new Set<string>([...profileCore, ...(profileNovenasOn ? ["Novenas"] : [])])
       : null, profileFold && profileFold.contents
       ? Object.entries(profileFold.contents).flatMap(([block, items]) => items
-          .filter((it) => it.kind === "prayer" && typeof it.key === "string")
+          // v690 §2.3 G3(b): a dayRule-gated prayer item
+          // synthesizes no addition row (weekdayMon0690 is
+          // computed at the seat gate above, same presented
+          // date) — the fold itself stays ungated data.
+          .filter((it) => it.kind === "prayer" && typeof it.key === "string" && extDayRulePasses(it.dayRule || "daily", weekdayMon0690))
           .map((it) => ({ block, slug: it.key as string, lang: "en", afterId: null, kind: "prayer", ref: null })))
       : []),
     profile: profileFold,
@@ -1232,13 +1244,13 @@ interface PrayerProfileLayers { novenas: { on: boolean }; podcasts: { on: boolea
 interface PrayerProfile {
   key: string; name: string; honorLine: string; kind: string;
   coreBlocks: string[]; layers: PrayerProfileLayers;
-  contents?: Record<string, { kind: string; key?: string }[]>;
+  contents?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]>;
 }
 interface TodayLayer {
   baseProfileKey: string;
   coreBlocks?: string[];
   layers?: PrayerProfileLayers;
-  contents?: Record<string, { kind: string; key?: string }[]>;
+  contents?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]>;
 }
 interface PrayerProfileStore {
   profiles: PrayerProfile[]; standingKey: string; dayRule: boolean;
@@ -1354,24 +1366,35 @@ async function prayerProfileStore(env: Env): Promise<PrayerProfileStore | null> 
 // (PROFILE_COURSE_KEYS retires) — a course-kind item drops
 // at validation, exactly the client's drop, so a stored
 // list carrying one reads back courseless.
-function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {
+function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {
   if (contents === undefined || contents === null) return { normalized: undefined };
   if (typeof contents !== "object" || Array.isArray(contents)) return { error: "contents must be an object" };
   const HOURS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"];
-  const out: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> = {};
+  const out: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> = {};
   for (const [block, items] of Object.entries(contents as Record<string, unknown>)) {
     if (block !== "Novenas" && !HOURS.includes(block)) return { error: `bad contents block ${block}` };
     if (block !== "Novenas" && !coreBlocks.includes(block)) return { error: `contents for a block that does not stand: ${block}` };
     if (!Array.isArray(items)) return { error: `contents.${block} must be an array` };
     const seen = new Set<string>();
-    const list: { kind: string; key?: string; side?: string; off?: number }[] = [];
+    const list: { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[] = [];
     for (const raw of items) {
-      const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown };
+      const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown; dayRule?: unknown };
       const kind = it.kind, key = it.key;
       let side670: string | undefined;
       let off687: number | undefined;
+      // v690 §2.2 (S2): the item dayRule stands on EVERY
+      // item (all kind branches + the Novenas arm) — the
+      // client's opnCheckContents590 mirror rule. The set
+      // is a literal here because this fn is extracted
+      // standalone by the harnesses. An invalid value is
+      // a named error, never a silent drop.
+      let dayRule690: string | undefined;
+      if (it.dayRule !== undefined && it.dayRule !== null) {
+        if (typeof it.dayRule !== "string" || !["daily", "weekdays", "weekends", "sundays", "fridays", "fallback-only"].includes(it.dayRule)) return { error: `bad dayRule for ${String(kind)}:${typeof key === "string" ? key : ""}` };
+        dayRule690 = it.dayRule;
+      }
       if (block === "Novenas") {
-        if (kind === "all-novenas") { if (!seen.has("all-novenas")) { seen.add("all-novenas"); list.push({ kind: "all-novenas" }); } continue; }
+        if (kind === "all-novenas") { if (!seen.has("all-novenas")) { seen.add("all-novenas"); const an690: { kind: string; dayRule?: string } = { kind: "all-novenas" }; if (dayRule690) an690.dayRule = dayRule690; list.push(an690); } continue; }
         if (kind !== "novena" || typeof key !== "string" || !key) return { error: "bad novena selector in contents" };
       } else {
         // v603: a course item naming one of the four
@@ -1443,7 +1466,7 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
       // keeps the standing dedupe.
       if (seen.has(id) && !(kind === "source" && ["ext-invitatory", "ext-morning-prayer", "ext-midmorning-prayer", "ext-midday-prayer", "ext-midafternoon-prayer", "ext-office-of-readings", "ext-evening-prayer", "ext-night-prayer"].includes(key))) continue;
       seen.add(id);
-      if (side670 || off687) { const built687: { kind: string; key?: string; side?: string; off?: number } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }
+      if (side670 || off687 || dayRule690) { const built687: { kind: string; key?: string; side?: string; off?: number; dayRule?: string } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }
       else list.push({ kind: kind as string, key: key as string });
     }
     out[block] = list;
@@ -1473,7 +1496,7 @@ function parseMoveEnvelope686(raw: unknown): { move?: { from: string; to: string
   if (typeof m.from !== "string" || typeof m.to !== "string" || !HOURS.includes(m.from) || !HOURS.includes(m.to) || m.from === m.to) return { error: "bad move envelope" };
   return { move: { from: m.from, to: m.to } };
 }
-function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {
+function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {
   if (!extraBlocks || !extraBlocks.length) return validateProfileContents(contents, coreBlocks);
   const core: string[] = coreBlocks.slice();
   for (const b of extraBlocks) if (!core.includes(b)) core.push(b);
@@ -1531,7 +1554,7 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
   key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "standing";
   dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
   layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
-  contents: Record<string, { kind: string; key?: string }[]> | null;
+  contents: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> | null;
   version: number;
   todayEdits?: boolean;
 } {
@@ -1540,7 +1563,7 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
     key: string; name: string; honorLine: string; resolvedBy: "pick" | "day-default" | "standing";
     dayKind: "sunday" | "solemnity" | "weekday"; coreBlocks: string[];
     layers: ({ key: "novenas"; on: boolean } | { key: "podcasts"; on: boolean; series: string[] })[];
-    contents: Record<string, { kind: string; key?: string }[]> | null;
+    contents: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> | null;
     version: number;
     todayEdits?: boolean;
   } = {
@@ -1550,7 +1573,7 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
       { key: "novenas", on: profile.layers.novenas.on },
       { key: "podcasts", on: profile.layers.podcasts.on, series: [...profile.layers.podcasts.series] },
     ],
-    contents: profile.contents ? JSON.parse(JSON.stringify(profile.contents)) as Record<string, { kind: string; key?: string }[]> : null,
+    contents: profile.contents ? JSON.parse(JSON.stringify(profile.contents)) as Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> : null,
     version: store.version,
   };
   // v594 Part 2 (doc §2.1): the today layer applies AFTER
@@ -1569,8 +1592,8 @@ function profileFoldOf(store: PrayerProfileStore, date: string): {
       ];
     }
     if (layer.contents) {
-      const merged: Record<string, { kind: string; key?: string }[]> = fold.contents ? JSON.parse(JSON.stringify(fold.contents)) : {};
-      for (const [b, items] of Object.entries(layer.contents)) merged[b] = JSON.parse(JSON.stringify(items)) as { kind: string; key?: string }[];
+      const merged: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> = fold.contents ? JSON.parse(JSON.stringify(fold.contents)) : {};
+      for (const [b, items] of Object.entries(layer.contents)) merged[b] = JSON.parse(JSON.stringify(items)) as { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[];
       fold.contents = merged;
     }
     if (todayLayerDiverges594(profile, layer)) fold.todayEdits = true;

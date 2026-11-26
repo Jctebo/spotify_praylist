@@ -335,10 +335,12 @@ await openForm();
 // ---------- L7: the §1.4 menu table ----------
 {
   const daily = await openMenu('[data-p686menu="Morning|daily:saint-of-the-day"]');
-  check('L7 contents row menu: Move to block… · Remove (no Disable)', JSON.stringify(daily) === JSON.stringify(['Move to block…', 'Remove']), daily);
+  // superseded-by-v690: v690 Plan §2.4 extends the contents menu with the Frequency section (Move · Frequency · five paint values · Remove) — the exact array harness-v690 L4 proves.
+  check('L7 contents row menu: Move to block… · Frequency · Remove (no Disable)', JSON.stringify(daily) === JSON.stringify(['Move to block…', 'Frequency — Daily', 'Daily', 'Weekdays only', 'Weekends only', 'Sundays only', 'Fridays only', 'Remove']), daily);
   await closeMenu();
   const office = await openMenu('[data-p686menu="Morning|source:ext-morning-prayer"]');
-  check('L7 office contents menu: Move to block… · Disable (no Remove)', JSON.stringify(office) === JSON.stringify(['Move to block…', 'Disable']), office);
+  // superseded-by-v690: same Frequency-section extension, Disable seat unchanged at the tail.
+  check('L7 office contents menu: Move to block… · Frequency · Disable (no Remove)', JSON.stringify(office) === JSON.stringify(['Move to block…', 'Frequency — Daily', 'Daily', 'Weekdays only', 'Weekends only', 'Sundays only', 'Fridays only', 'Disable']), office);
   await closeMenu();
   const pinned = await openMenu('[data-p686menu="src|Morning|do-invitatory|source:ext-invitatory"]');
   check('L7 pinned source menu: Move up · Move down · Frequency (standing value named) · Disable — no Remove',
@@ -424,8 +426,9 @@ await openForm();
   check('L8 office Disable: the composed day drops the Morning Prayer office descriptor',
     before.some((x) => x.includes('ext-morning-prayer')) && !after.some((x) => x.includes('ext-morning-prayer')), { before: before.filter((x) => x.includes('ext-morning')), after: after.filter((x) => x.includes('ext-morning')) });
   const labels = await openMenu('[data-p686menu="Morning|source:ext-morning-prayer"]');
-  check('L8 the disabled office row menu act reads Enable', JSON.stringify(labels) === JSON.stringify(['Move to block…', 'Enable']), labels);
-  await menuClick(1);
+  // superseded-by-v690: the Frequency section (v690 Plan §2.4) stands between Move and Enable — expected array extended, Enable's click index re-pointed 1 → 7.
+  check('L8 the disabled office row menu act reads Enable', JSON.stringify(labels) === JSON.stringify(['Move to block…', 'Frequency — Daily', 'Daily', 'Weekdays only', 'Weekends only', 'Sundays only', 'Fridays only', 'Enable']), labels);
+  await menuClick(7); // superseded-by-v690: Enable's seat in the extended array
   const dim2 = await pg.evaluate(() => { const r = document.querySelector('[data-p604erow="source:ext-morning-prayer"]'); return r ? r.classList.contains('p687dim') : null; });
   const back = await composedDescs('john', '2026-11-25');
   check('L8 Enable: row undimmed and composition byte-identical to the start', dim2 === false && JSON.stringify(back) === JSON.stringify(before), { dim2 });
@@ -523,16 +526,21 @@ await openForm();
   }
   let SV = null;
   try {
+    // RE-POINTED BY v690 (Review, recipe only — no assertion touched): the
+    // extraction strip strings follow the validateProfileContents signature
+    // widened by v690 Plan §2.2 S2 (dayRule?: string carriage).
     const vBody = stripNamed(indexSrc, 'validateProfileContents', [
-      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-      ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> = {};', 'const out = {};'],
+      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+      ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> = {};', 'const out = {};'],
       ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
       ['const seen = new Set<string>();', 'const seen = new Set();'],
-      ['const list: { kind: string; key?: string; side?: string; off?: number }[] = [];', 'const list = [];'],
-      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+      ['const list: { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[] = [];', 'const list = [];'],
+      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown; dayRule?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
       ['let side670: string | undefined;', 'let side670;'],
       ['let off687: number | undefined;', 'let off687;'],
-      ['if (side670 || off687) { const built687: { kind: string; key?: string; side?: string; off?: number } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }', 'if (side670 || off687) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }'],
+      ['let dayRule690: string | undefined;', 'let dayRule690;'],
+      ['const an690: { kind: string; dayRule?: string } = { kind: "all-novenas" };', 'const an690 = { kind: "all-novenas" };'],
+      ['if (side670 || off687 || dayRule690) { const built687: { kind: string; key?: string; side?: string; off?: number; dayRule?: string } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }', 'if (side670 || off687 || dayRule690) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }'],
       ['else list.push({ kind: kind as string, key: key as string });', 'else list.push({ kind: kind, key: key });'],
     ]);
     SV = new Function(vBody + '\nreturn validateProfileContents;')();

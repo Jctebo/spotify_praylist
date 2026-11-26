@@ -109,16 +109,21 @@ function stripNamed(src, name, reps) {
   for (const [a, b] of reps) { if (!f.includes(a)) throw new Error(name + " shape moved: " + a.slice(0, 60)); f = f.split(a).join(b); }
   return f;
 }
+// RE-POINTED BY v690 (Review, recipe only — no assertion touched): the
+// extraction strip strings below follow the validateProfileContents
+// signature widened by v690 Plan §2.2 S2 (dayRule?: string carriage).
 const serverValidate = new Function(stripNamed(indexSrc, "validateProfileContents", [
-  ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-  ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> = {};', 'const out = {};'],
+  ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+  ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> = {};', 'const out = {};'],
   ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
   ['const seen = new Set<string>();', 'const seen = new Set();'],
-  ['const list: { kind: string; key?: string; side?: string; off?: number }[] = [];', 'const list = [];'],
-  ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+  ['const list: { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[] = [];', 'const list = [];'],
+  ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown; dayRule?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
   ['let side670: string | undefined;', 'let side670;'],
   ['let off687: number | undefined;', 'let off687;'],
-  ['if (side670 || off687) { const built687: { kind: string; key?: string; side?: string; off?: number } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }', 'if (side670 || off687) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }'],
+  ['let dayRule690: string | undefined;', 'let dayRule690;'],
+  ['const an690: { kind: string; dayRule?: string } = { kind: "all-novenas" };', 'const an690 = { kind: "all-novenas" };'],
+  ['if (side670 || off687 || dayRule690) { const built687: { kind: string; key?: string; side?: string; off?: number; dayRule?: string } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }', 'if (side670 || off687 || dayRule690) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }'],
   ['else list.push({ kind: kind as string, key: key as string });', 'else list.push({ kind: kind, key: key });'],
 ]) + "\nreturn validateProfileContents;")();
 
