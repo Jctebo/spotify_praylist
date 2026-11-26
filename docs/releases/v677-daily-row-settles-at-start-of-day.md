@@ -175,3 +175,14 @@ Four files only: `app/worker/src/client.ts`, `app/worker/src/ui.ts`, `app/worker
 ### §4.5 Deviation judgment (§3.3)
 
 **Acceptable — it strengthens the proof.** The deviation is harness-fixture only (no production-code scope change): leg 3's refreshed snapshot also drifts Day 329's own title/url under its stable `biy:day-329` key. Without that drift the leg cannot discriminate old from new — the old tree's re-match returns the same day number and the leg would pass vacuously on both trees. With it, the leg exercises exactly the §2.5 supplier-edition-drift risk that the stored stable fields (§2.3.1) exist to close, and it fails on old as required (Review's own fail-on-old run: L3 dress check FAIL, old tree standing on the Alt Edition dress). A fixture change that makes a required fail-on-old leg actually capable of failing is a proof improvement, not a weakening.
+
+## §5 Ship record (chain-v677, 2026-11-26) — LIVE
+
+Review PASS (§4, judged tree `322e7de`; branch head `2ffde1c` adds only the §4 doc commit). Run level: To Ship.
+
+- **Merge:** release/v677 → main, tree-exact via the Git Data API (push-v677-github.py). Local merge `2c702d8` over v676 main `71a489a`; code paths (client.ts · ui.ts · harness-v677.mjs) asserted blob-identical to the Review-judged tree `322e7de` before anything moved; remote-vs-base delta empty (remote main `0cb8884` tree == local base tree `e8b7e92` — no runner commits to reconcile, nothing dropped, no force-push). Remote ship commit **124e6a2**, tree **d66f152**; local mirror `bc7d6c6`, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** `harness-v677: 18 ok, 0 bad` (standing clone, merged main) — matches the built-tree tally.
+- **Deploy:** deploy-app-v677-ship.py with EXPECTED_HEAD filled to the merged main head (`bc7d6c6`); deployments → dry-run → deploy all clean. Worker **a895f5c5-24d2-4c1f-98ea-97f338224fa3**, pin **ora-pro-nobis-v677-1**. Production verification: the served sw.js (app.orapronobis.media) reads pin ora-pro-nobis-v677-1 (×1, the only pin served); the served app.js carries the settled-pick markers (`opn-daily-settled-v1` ×1 · `opnDailySettled677` ×4). No APK, no migration, no index.ts change.
+- **Board closeout (D1-direct, all read back):** release 1655 → Live, shipped_at 2026-11-26T02:43:00Z, whats_new_id 492 · What's New **492** ("A daily row now keeps its episode all day") · shipped_records **866** · Ship phase record **2807** passed (commit_hash = the remote ship commit 124e6a2). Goals Board intake 1284 → Done, state line CLOSED.
+- **Rollback:** pin ora-pro-nobis-v676-1 (Worker 4746a200-c7b8-462d-b885-8c75763888a7), the v676 driver (`~/workspace/.tools/deploy-app-v676-ship.py`) untouched.
+- **Field check (John, standing open):** play today's Bible in a Year → the row still shows today's episode, standing played.
