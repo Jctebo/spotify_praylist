@@ -14477,13 +14477,17 @@ function weaveAdditions(seg, adds) {
   pending.forEach(function (a) { emit(dayAdditionDesc(a)); });
   return out;
 }
-function readingsSeatDesc549(seat) {
+function readingsSeatDesc549(seat, block691) {
   // v619: the seat descriptor's one construction — the
   // fold (foldReadingsSeat) and the contents pass in
   // extRebuildDescs both stand the seat from here.
+  // v691 (Amendment 1): the block is a parameter — the
+  // standing Morning seat keeps 'Morning' (the default,
+  // byte-for-byte); a seat item moved to another block
+  // seats its descriptor in THAT block at its position.
   return { episodeId: seat.seqKey, kind: 'podcast', seriesKey: seat.seqKey, podSeries: 'daily-readings',
     title: seat.title || 'Daily Reading', url: seat.url || null, enclosureUrl: null, available: !!seat.url,
-    block: 'Morning', source: '', durationS: seat.durationS || 0, listened: !!seat.listened,
+    block: block691 || 'Morning', source: '', durationS: seat.durationS || 0, listened: !!seat.listened,
     podPositionS: (!seat.listened && seat.positionS > 0) ? Math.floor(seat.positionS) : null,
     imageUrl: seat.imageUrl || null, descText: null, spotifyUrl: null, readingsSeat: true };
 }
@@ -14495,6 +14499,21 @@ function foldReadingsSeat(descs, seat) {
   // no Rosary standing in Morning today → the list stands
   // as built: the seat never misplaces.
   if (!seat || !seat.seqKey) return descs;
+  // v691 (Amendment 1): the fold anchor stands down when
+  // the seat item stands in another block — the contents
+  // pass seats the readings there as an ordinary source
+  // representation, and the Morning fold must not also
+  // seat them here. (No profile contents in view = the
+  // standing fold rule, unchanged.)
+  var profC691 = state.dayPayload && state.dayPayload.profile && state.dayPayload.profile.contents;
+  if (profC691) {
+    var elsewhere691 = false;
+    Object.keys(profC691).forEach(function (b691) {
+      if (b691 === 'Morning') return;
+      (profC691[b691] || []).forEach(function (it691) { if (it691 && it691.kind === 'seat' && it691.key === 'daily-readings') elsewhere691 = true; });
+    });
+    if (elsewhere691) return descs;
+  }
   var idx = -1;
   for (var i = 0; i < descs.length; i++) {
     if (descs[i].block === 'Morning' && descs[i].episodeId === 'daily-rosary') { idx = i; break; }
@@ -21424,7 +21443,7 @@ function extRebuildDescs(day) {
         merged.forEach(function (e) { if (e.own && e.own.sourceKey === 'novenas') emitOwn619(e); });
       };
       var placedPrayer619 = {};
-      var seatPos687 = -1, seatIdx687 = -1;
+      var seatPos687 = -1, seatIdx687 = -1, seatBlock691 = '';
       c590.forEach(function (it, idx) {
         if (!it) return;
         // v690 §2.3 G1: the item dayRule gate — FIRST and
@@ -21434,7 +21453,7 @@ function extRebuildDescs(day) {
         // standing, and the seat recording. A gated seat
         // item stamps placed619.seatGated690 so the
         // readings fold cannot resurrect it (G2).
-        if (!opnItemPaints690(it, date)) { if (it.kind === 'seat' && b.block === 'Morning') placed619.seatGated690 = true; return; }
+        if (!opnItemPaints690(it, date)) { if (it.kind === 'seat') placed619.seatGated690 = true; return; }
         // v687 §2.7: an off office item composes nothing
         // (its candidate is guarded in emitCand619 too).
         if (it.off && it.kind === 'source' && opnLabeledSlot650(it.key)) return;
@@ -21443,7 +21462,11 @@ function extRebuildDescs(day) {
           // record the composed position; the descriptor
           // stands there after the pass when the Rosary
           // stands in Morning (the v660 gate).
-          if (b.block === 'Morning' && seatPos687 < 0) { seatPos687 = descs.length; seatIdx687 = idx; }
+          // v691 (Amendment 1): the seat is recorded in
+          // EVERY block — out of Morning the fold anchor
+          // no longer applies and the descriptor seats at
+          // the item's own position in its new block.
+          if (seatPos687 < 0) { seatPos687 = descs.length; seatIdx687 = idx; seatBlock691 = b.block; }
           return;
         }
         if (it.kind === 'source') {
@@ -21580,13 +21603,22 @@ function extRebuildDescs(day) {
       // takes its composed position once it stands after
       // the Rosary item — the move leg's crossing.
       if (seatPos687 >= 0 && day.readingsSeat && day.readingsSeat.seqKey) {
-        var rosaryPos687 = -1, rosaryIdx687 = -1;
-        for (var ri687 = blockStart619; ri687 < descs.length; ri687++) if (descs[ri687].block === 'Morning' && descs[ri687].episodeId === 'daily-rosary') rosaryPos687 = ri687;
-        c590.forEach(function (it2, i2) { if (it2 && it2.kind === 'source' && it2.key === 'daily-rosary') rosaryIdx687 = i2; });
-        if (rosaryPos687 >= 0) {
-          var at687 = (rosaryIdx687 >= 0 && seatIdx687 > rosaryIdx687) ? seatPos687 : rosaryPos687;
-          descs.splice(at687, 0, readingsSeatDesc549(day.readingsSeat));
+        if (seatBlock691 && seatBlock691 !== 'Morning') {
+          // v691 (Amendment 1): the moved-out seat — the
+          // descriptor seats at the item's position in
+          // its new block, as an ordinary source
+          // representation; no Rosary anchor applies.
+          descs.splice(seatPos687, 0, readingsSeatDesc549(day.readingsSeat, seatBlock691));
           placed619.seat = true;
+        } else {
+          var rosaryPos687 = -1, rosaryIdx687 = -1;
+          for (var ri687 = blockStart619; ri687 < descs.length; ri687++) if (descs[ri687].block === 'Morning' && descs[ri687].episodeId === 'daily-rosary') rosaryPos687 = ri687;
+          c590.forEach(function (it2, i2) { if (it2 && it2.kind === 'source' && it2.key === 'daily-rosary') rosaryIdx687 = i2; });
+          if (rosaryPos687 >= 0) {
+            var at687 = (rosaryIdx687 >= 0 && seatIdx687 > rosaryIdx687) ? seatPos687 : rosaryPos687;
+            descs.splice(at687, 0, readingsSeatDesc549(day.readingsSeat));
+            placed619.seat = true;
+          }
         }
       }
     }
@@ -24508,6 +24540,32 @@ function opn687RepIds687(sk) {
   Object.keys(OPN686_SLOT_ROW).forEach(function (slot) { if (OPN686_SLOT_ROW[slot] === sk) ids.push('source:' + slot); });
   return ids;
 }
+function opn691BlockRowKeys(block) {
+  // v691 §2.6 step 4 (as amended): a block's source-row
+  // set DERIVES from the standing store rows — the keys
+  // (among the nine hour-block row keys the static map
+  // names) whose store row's block IS this block — so a
+  // moved row paints as the source row in its new block
+  // and nowhere in its old. Two standing shapes are
+  // preserved exactly: the readings row's store block
+  // names its closing section ("Mass and Homilies") while
+  // its row stands in Morning (the static map's claim),
+  // so that value claims Morning — and ONLY Morning —
+  // until a move writes an hour block there; and the
+  // closing rows (daily-tv-mass · fr-mike-homily ·
+  // barron-sermon) are not candidates at all, so no hour
+  // block can ever claim them.
+  var keys = [];
+  Object.keys(OPN686_BLOCK_ROWS).forEach(function (b) {
+    OPN686_BLOCK_ROWS[b].forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+  });
+  return keys.filter(function (k) {
+    var r = opn686Row(k);
+    if (!r) return false;
+    if (k === 'usccb-daily-readings') return r.block === block || (block === 'Morning' && r.block === 'Mass and Homilies');
+    return r.block === block;
+  });
+}
 function opnSpliceSourceRows686(block, list) {
   // v687: every entry carries its occurrence-qualified rid
   // (counted over the whole list, converted items included)
@@ -24520,7 +24578,7 @@ function opnSpliceSourceRows686(block, list) {
     return { t: 'c', it: it, idx: idx, rid: opnRowId610(it, occ) };
   });
   if (!opn686.rows.length) return entries;
-  var rowKeys = OPN686_BLOCK_ROWS[block] || [];
+  var rowKeys = opn691BlockRowKeys(block);
   if (!rowKeys.length) return entries;
   // v687 §2.6: a source key whose representation id stands
   // in the block's removed set is suppressed whole — no
@@ -24639,6 +24697,75 @@ function opnMove686(fromBlock, rowId, toBlock) {
     return { ok: false, reason: 'That move did not save.', sub: (e && e.message) || 'Try again.' };
   });
 }
+/* v691 §2.6 step 3 (as amended — Amendments 1+2: EVERY
+   source-representation row takes the act): the cross-
+   block source move is a DUAL WRITE. The standings seat
+   a gated source by its store row's block, so the store
+   row's block moves FIRST (whole-table settings write,
+   read-back verified) and the representation item then
+   moves through the standing opnMove686 machinery; a
+   contents failure rolls the store row back. Settings
+   travel whole: the row object carries dayRule +
+   enabled untouched through the same PUT, and the item
+   object moves whole through opnMove686 (its v690
+   dayRule included).
+   The readings row's store shape is special: its
+   standing store block is its closing section ("Mass
+   and Homilies") while its row stands in Morning, so a
+   move TO Morning writes that standing value back —
+   a move-back restores the settings row byte-for-byte. */
+function opn691StoreBlockFor(key, toBlock) {
+  if (key === 'usccb-daily-readings' && toBlock === 'Morning') return 'Mass and Homilies';
+  return toBlock;
+}
+function opnMoveSource691(fromBlock, rowId, toBlock, key) {
+  var row = opn686Row(key);
+  if (!row) return { ok: false };
+  // Already-stands refusal, before any write (§2.6 step
+  // 3.1): the validators dedupe a second copy of a
+  // non-office representation away silently, and the
+  // office refusal keys on the HOUR (Amendment 3) — this
+  // one check covers both: the target already holding
+  // THIS row's representation id refuses, by name. A
+  // DIFFERENT office hour standing there is no refusal.
+  // The readings' check names the SEAT item only: a stray
+  // source:ext-usccb-readings copy in the target is the
+  // seat's own inert twin (the v687 §2.5 precedence drops
+  // it wherever the seat item stands), not a second
+  // standing copy — it must not refuse the seat's move
+  // home.
+  var repIds = key === 'usccb-daily-readings' ? ['seat:daily-readings'] : opn687RepIds687(key);
+  var tgt = opnMaterialize604(toBlock);
+  if (tgt.some(function (x) { return repIds.indexOf(opnTodayItemId594(x)) >= 0; })) {
+    // The name is the item's own label (the opnMove686
+    // refusal's naming) — the seed display name carries
+    // its provider prefix ("Divine Office — Night
+    // Prayer"), which the standing refusal never paints.
+    var it691 = opn687FindItem(fromBlock, rowId);
+    var name691 = it691 ? opnItemLabel604(fromBlock, it691).split(' · ')[0] : opnSeedDisplayName636(row);
+    return { ok: false, reason: name691 + ' already stands in ' + toBlock + '.', sub: 'It stands once in a block — remove it there first, or pick another block.' };
+  }
+  var prevBlock = row.block;
+  var wantBlock = opn691StoreBlockFor(key, toBlock);
+  row.block = wantBlock;
+  return Promise.resolve(opnSaveSourceSettings686()).then(function () {
+    var rb = opn686Row(key);
+    if (!rb || rb.block !== wantBlock || opn686.err) {
+      if (rb) rb.block = prevBlock;
+      opn686.err = '';
+      opnRepaintHome604();
+      return { ok: false, reason: 'That move did not save.', sub: 'Try again.' };
+    }
+    return Promise.resolve(opnMove686(fromBlock, rowId, toBlock)).then(function (res) {
+      if (res && res.ok === false) {
+        var r2 = opn686Row(key);
+        if (r2) r2.block = prevBlock;
+        return Promise.resolve(opnSaveSourceSettings686()).then(function () { return res; });
+      }
+      return { ok: true };
+    });
+  });
+}
 function opnPaintBlocks686() {
   var day = state.dayPayload;
   var seen = {};
@@ -24652,11 +24779,18 @@ function opnPaintBlocks686() {
   });
   return order;
 }
-function opnOpenMovePicker686(fromBlock, rowId) {
+function opnOpenMovePicker686(fromBlock, rowId, sourceKey) {
   var old = document.querySelector('.p686picker'); if (old) old.remove();
   var sheet = document.createElement('div');
   sheet.className = 'sheet p686picker';
-  var rows = opnPaintBlocks686().map(function (name) {
+  // v691 §2.6 step 2: a SOURCE act's picker lists the six
+  // hour blocks only (the Move envelope's legal targets —
+  // Novenas never listed); contents callers pass no
+  // sourceKey and get today's sheet byte-for-byte.
+  var paintBlocks691 = sourceKey
+    ? opnPaintBlocks686().filter(function (n) { return ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'].indexOf(n) >= 0; })
+    : opnPaintBlocks686();
+  var rows = paintBlocks691.map(function (name) {
     var on = opnGroupOn609(name);
     var here = name === fromBlock;
     return '<div class="card bookrow p686pickrow' + (on ? '' : ' p686off') + '" data-p686pick="' + esc(name) + '"><div class="row"><span class="grow">' + esc(name) + (on ? '' : ' · Off') + '</span>' + (here ? '<span class="meta">Here</span>' : '') + '</div></div>';
@@ -24674,7 +24808,9 @@ function opnOpenMovePicker686(fromBlock, rowId) {
       // opnMove686 resolves async now (the persist settles
       // first): a refusal OR a failed save keeps the picker
       // open with its reason line; only a saved move closes.
-      Promise.resolve(opnMove686(fromBlock, rowId, to)).then(function (res) {
+      // v691: a source act rides the dual-write wrapper.
+      var move691 = sourceKey ? opnMoveSource691(fromBlock, rowId, to, sourceKey) : opnMove686(fromBlock, rowId, to);
+      Promise.resolve(move691).then(function (res) {
         if (res && res.ok === false && res.reason) {
           var rEl = sheet.querySelector('[data-p686reason]'); if (rEl) rEl.textContent = res.reason;
           var sEl = sheet.querySelector('[data-p686sub]'); if (sEl) sEl.textContent = res.sub || '';
@@ -24781,6 +24917,16 @@ function opnOpenSourceMenu687(block, key, rid, anchorEl) {
     rows.forEach(function (r, i) { if (r.getAttribute('data-p686src') === key) pos = i; });
     items.push({ label: 'Move up', disabled: pos <= 0, act: function () { opnMove684(block, rid, 'up'); } });
     items.push({ label: 'Move down', disabled: pos < 0 || pos >= rows.length - 1, act: function () { opnMove684(block, rid, 'down'); } });
+    // v691 (as amended): Move to block… stands on EVERY
+    // source-representation row with a standing
+    // representation — exegesis · readings · Saint of
+    // the Day · Office of Readings · the five office
+    // hours — at the contents menu's relative seat
+    // (after Move up/down, before Frequency). The
+    // readings refusal and the pinned five's refusals
+    // are withdrawn (Amendments 1+2): no disabled Move
+    // item and no refusal reason paints for a block row.
+    items.push({ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid, key); } });
   }
   items = items.concat(opn687FreqItems(key));
   if (block) {

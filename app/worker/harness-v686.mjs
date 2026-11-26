@@ -351,12 +351,16 @@ await openForm();
   // rides the menu now — open the Saint row's menu and pick
   // Sundays (menu: Move up · Move down · Frequency head ·
   // Daily · Sundays only · Fridays only · Remove).
+  // v691 re-point (prescribed, named in v691 §3): Move to
+  // block… stands at index 2 in every source-row menu, so
+  // the Frequency picks shift one seat — Sundays 4 → 5,
+  // Daily 3 → 4.
   {
     const mb = pg.locator('[data-p686menu="src|Afternoon|saint-of-the-day|source:ext-saint-of-the-day"]');
     await mb.evaluate((el) => el.scrollIntoView({ block: 'center' })).catch(() => null);
     await tryClick(mb);
     await pg.waitForTimeout(400);
-    await tryClick(pg.locator('.anchmenu [data-menuitem="4"]'));
+    await tryClick(pg.locator('.anchmenu [data-menuitem="5"]'));
     await pg.waitForTimeout(800);
   }
   const cap = await lastSrcCap();
@@ -378,7 +382,7 @@ await openForm();
     await mb.evaluate((el) => el.scrollIntoView({ block: 'center' })).catch(() => null);
     await tryClick(mb);
     await pg.waitForTimeout(400);
-    await tryClick(pg.locator('.anchmenu [data-menuitem="3"]'));
+    await tryClick(pg.locator('.anchmenu [data-menuitem="4"]'));
     await pg.waitForTimeout(800);
   }
 }
@@ -562,16 +566,24 @@ async function driveMove(fromBlock, rid, toBlock) {
   }
   let SV = null;
   try {
+    // RE-POINTED BY v691 (recipe only — no assertion touched; the
+    // v687/v690 harnesses carry the same update): the extraction
+    // strip strings follow the validateProfileContents signature
+    // widened by v690 Plan §2.2 S2 (dayRule?: string carriage).
+    // At the v690 base this leg failed extraction (the harness's
+    // one standing bad); the recipe update restores it.
     const vBody = stripNamed(indexSrc, 'validateProfileContents', [
-      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
-      ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> = {};', 'const out = {};'],
+      ['function validateProfileContents(contents: unknown, coreBlocks: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {', 'function validateProfileContents(contents, coreBlocks) {'],
+      ['const out: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> = {};', 'const out = {};'],
       ['Object.entries(contents as Record<string, unknown>)', 'Object.entries(contents)'],
       ['const seen = new Set<string>();', 'const seen = new Set();'],
-      ['const list: { kind: string; key?: string; side?: string; off?: number }[] = [];', 'const list = [];'],
-      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
+      ['const list: { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[] = [];', 'const list = [];'],
+      ['const it = (raw && typeof raw === "object" ? raw : {}) as { kind?: unknown; key?: unknown; side?: unknown; off?: unknown; dayRule?: unknown };', 'const it = (raw && typeof raw === "object" ? raw : {});'],
       ['let side670: string | undefined;', 'let side670;'],
       ['let off687: number | undefined;', 'let off687;'],
-      ['if (side670 || off687) { const built687: { kind: string; key?: string; side?: string; off?: number } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }', 'if (side670 || off687) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; list.push(built687); }'],
+      ['let dayRule690: string | undefined;', 'let dayRule690;'],
+      ['const an690: { kind: string; dayRule?: string } = { kind: "all-novenas" };', 'const an690 = { kind: "all-novenas" };'],
+      ['if (side670 || off687 || dayRule690) { const built687: { kind: string; key?: string; side?: string; off?: number; dayRule?: string } = { kind: kind as string, key: key as string }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }', 'if (side670 || off687 || dayRule690) { const built687 = { kind: kind, key: key }; if (side670) built687.side = side670; if (off687) built687.off = 1; if (dayRule690) built687.dayRule = dayRule690; list.push(built687); }'],
       ['else list.push({ kind: kind as string, key: key as string });', 'else list.push({ kind: kind, key: key });'],
     ]);
     const pBody = stripNamed(indexSrc, 'parseMoveEnvelope686', [
@@ -579,7 +591,7 @@ async function driveMove(fromBlock, rid, toBlock) {
       ['const m = raw as { from?: unknown; to?: unknown };', 'const m = raw;'],
     ]);
     const wBody = stripNamed(indexSrc, 'validateProfileContents686', [
-      ['function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number }[]> } | { error: string } {', 'function validateProfileContents686(contents, coreBlocks, extraBlocks) {'],
+      ['function validateProfileContents686(contents: unknown, coreBlocks: string[], extraBlocks?: string[]): { normalized?: Record<string, { kind: string; key?: string; side?: string; off?: number; dayRule?: string }[]> } | { error: string } {', 'function validateProfileContents686(contents, coreBlocks, extraBlocks) {'],
       ['const core: string[] = coreBlocks.slice();', 'const core = coreBlocks.slice();'],
     ]);
     SV = new Function(vBody + '\n' + pBody + '\n' + wBody + '\nreturn { v: validateProfileContents, parse: parseMoveEnvelope686, v686: validateProfileContents686 };')();

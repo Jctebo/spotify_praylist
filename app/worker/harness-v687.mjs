@@ -343,16 +343,18 @@ await openForm();
   check('L7 office contents menu: Move to block… · Frequency · Disable (no Remove)', JSON.stringify(office) === JSON.stringify(['Move to block…', 'Frequency — Daily', 'Daily', 'Weekdays only', 'Weekends only', 'Sundays only', 'Fridays only', 'Disable']), office);
   await closeMenu();
   const pinned = await openMenu('[data-p686menu="src|Morning|do-invitatory|source:ext-invitatory"]');
-  check('L7 pinned source menu: Move up · Move down · Frequency (standing value named) · Disable — no Remove',
-    JSON.stringify(pinned) === JSON.stringify(['Move up', 'Move down', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Disable']), pinned);
+  // RE-POINTED BY v691 (prescribed, Plan §2.6 regression note as amended): Move to block… stands after Move up/down on EVERY block row — the pinned five's refusals withdrawn (Amendment 2).
+  check('L7 pinned source menu: Move up · Move down · Move to block… · Frequency (standing value named) · Disable — no Remove',
+    JSON.stringify(pinned) === JSON.stringify(['Move up', 'Move down', 'Move to block…', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Disable']), pinned);
   await closeMenu();
   const readings = await openMenu('[data-p686menu="src|Morning|usccb-daily-readings|seat:daily-readings"]');
-  check('L7 readings source menu: Move up · Move down · Frequency · Remove (no Disable)',
-    JSON.stringify(readings) === JSON.stringify(['Move up', 'Move down', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Remove']), readings);
+  // RE-POINTED BY v691: the readings refusal withdrawn (Amendment 1) — the readings row takes Move to block… live.
+  check('L7 readings source menu: Move up · Move down · Move to block… · Frequency · Remove (no Disable)',
+    JSON.stringify(readings) === JSON.stringify(['Move up', 'Move down', 'Move to block…', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Remove']), readings);
   await closeMenu();
   const oor = await openMenu('[data-p686menu="src|Evening|do-office-of-readings|source:ext-office-of-readings"]');
-  check('L7 Office of Readings menu: Move up · Move down · Frequency · Remove (the named exception is removable)',
-    JSON.stringify(oor) === JSON.stringify(['Move up', 'Move down', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Remove']), oor);
+  check('L7 Office of Readings menu: Move up · Move down · Move to block… · Frequency · Remove (the named exception is removable)',
+    JSON.stringify(oor) === JSON.stringify(['Move up', 'Move down', 'Move to block…', 'Frequency — Daily', 'Daily', 'Sundays only', 'Fridays only', 'Remove']), oor);
   await closeMenu();
   const closing = await openMenu('[data-p686menu="src||fr-mike-homily|"]');
   check('L7 closing row menu: Frequency only', JSON.stringify(closing) === JSON.stringify(['Frequency — Sundays only', 'Daily', 'Sundays only', 'Fridays only']), closing);
@@ -461,8 +463,9 @@ await openForm();
 // ---------- L10: frequency via the menu (v686 L3 re-pointed) ----------
 {
   const labels = await openMenu('[data-p686menu="src|Morning|do-invitatory|source:ext-invitatory"]');
-  check('L10 the Frequency pick names the standing value (Daily)', labels[2] === 'Frequency — Daily', labels);
-  await menuClick(4); // Sundays
+  // RE-POINTED BY v691: Move to block… (index 2) shifts the Frequency section one seat — head 2 → 3, Sundays 4 → 5, Daily 3 → 4.
+  check('L10 the Frequency pick names the standing value (Daily)', labels[3] === 'Frequency — Daily', labels);
+  await menuClick(5); // Sundays (v691 re-point: was 4)
   const row = await pg.evaluate(() => opn686Row('do-invitatory'));
   const sub = await pg.evaluate(() => { const r = document.querySelector('[data-p686src="do-invitatory"] .p687sub'); return r ? r.textContent.trim() : null; });
   check('L10 menu pick writes Sundays to the store read-back and the subtitle repaints "Generates Sundays"',
@@ -479,7 +482,7 @@ await openForm();
   check('L10 a Sunday fixture day composes with the source while a weekday drops it',
     !gates['2026-11-25'].includes('ext-invitatory') && gates['2026-11-29'].includes('ext-invitatory'), gates);
   const labels2 = await openMenu('[data-p686menu="src|Morning|do-invitatory|source:ext-invitatory"]');
-  await menuClick(3); // Daily
+  await menuClick(4); // Daily (v691 re-point: was 3)
   const row2 = await pg.evaluate(() => opn686Row('do-invitatory'));
   check('L10 changed back to Daily in the read-back', !!row2 && row2.dayRule === 'daily', row2);
 }
