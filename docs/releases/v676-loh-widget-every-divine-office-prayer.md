@@ -156,3 +156,14 @@ Grep of the whole built `client.ts` for `plainText675`: the only occurrences are
 
 ### Overall verdict: **PASS**
 All §4 gates (a)–(h) pass on Review's own runs and reads, with gate (b) judged under the Coordinator's amended expectation. No code fixes made by Review; no deploy, no merge, no board writes. Cleared for Ship per §5.
+
+## §8 Ship record (chain-v676, 2026-11-26) — LIVE
+
+John's field report lifted the fix-forward To Ship (Ora thread, 2026-11-25 19:02–19:04 CT). Ship contract 1124 (holder chain-v676) · Ship phase record 2802.
+
+- **Merge:** release/v676 → main in the standing clone, tree-exact via the Git Data API (push-v676-github.py). Local merge e5c640d over v675 main 98262df; code paths (client.ts · ui.ts · harness-v676.mjs) asserted blob-identical to the Review-judged tree 24a923c before anything moved; remote-vs-base delta empty (no runner commits to reconcile, nothing dropped, no force-push). Remote ship commit **4f09c66**, tree **36a3cd9**; local mirror 3dcef3b, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** `harness-v676: 50 ok, 0 bad` (standing clone, merged main) — matches the built-tree tally.
+- **Deploy:** deploy-app-v676-ship.py with EXPECTED_HEAD filled to the merged main head (3dcef3b); deployments → dry-run → deploy all clean. Worker **4746a200-c7b8-462d-b885-8c75763888a7**, pin **ora-pro-nobis-v676-1**. Production verification: the served sw.js reads pin ora-pro-nobis-v676-1; the served app.js carries the v676 branch (lohOffice676 ×7 · divineoffice.org/widget ×2). No APK, no migration, no index.ts change.
+- **Board closeout (D1-direct, read back through the door):** release 1654 → Live, shipped_at 2026-11-26T01:21:00Z, whats_new_id 491 · What's New **491** ("Read the Hours while they play") · shipped_records **865** · Ship phase record 2802 passed · all v676 contracts (1121/1122/1123/1124) stand met, all five phase records passed. Goals Board intake 1282 → Done, state line CLOSED.
+- **Rollback:** pin ora-pro-nobis-v675-1 (Worker d42fa21c-e0a3-4c19-8e4c-022a86c786f6), v675 driver untouched.
+- **Field check (John, standing open):** open Morning Prayer (Sing the Hours) in the player → the Read button stands in the bottom row (Intentions · Read · Star · Share · ⋮ · Queue) → tap it → the widget sheet: the app header (Liturgy of the Hours · Morning Prayer · the track's date · "Text: Divine Office — the widget always shows today's Hours" · "Audio: Sing the Hours · Text: Divine Office (today)") over the LIVE Divine Office widget. Repeat on any other Divine Office hour (Office of Readings, Night Prayer, …) — Read stands there too. A frame that cannot load shows the "Text unavailable — open Divine Office" row, never a blank box.
