@@ -4906,6 +4906,44 @@ export default {
         await wallpaperManifestWrite(env, manifest);
         return json({ ok: true, unchanged: false, entry });
       }
+      if (seg[2] === "wallpaper" && seg[3] === "stock" && request.method === "DELETE") {
+        // v689 §2.2: the stock DELETE path — removes ONE named
+        // entry (exact name + variant, === match only) from the
+        // backend stock store. The name must parse under the
+        // standing naming contract (wallpaperParse, trying saint
+        // then monthly — the date segment's length decides the
+        // kind, so exactly one can parse); an unparseable name is
+        // refused 400 and never reaches a storage key (the B3
+        // rule, applied on the delete side too). LOAD-BEARING
+        // ORDER: the manifest entry is removed and the manifest
+        // written FIRST, then the R2 object is deleted — the
+        // served surface (manifest + file routes) is consistent
+        // the moment the manifest write lands, and a failure
+        // between the steps leaves an unreachable orphan object,
+        // never a served-but-deleted entry.
+        const dName = url.searchParams.get("name") ?? "";
+        const dVariant = url.searchParams.get("variant") ?? "";
+        const dParsed = wallpaperParse(dName, dVariant, "saint") ?? wallpaperParse(dName, dVariant, "monthly");
+        if (!dParsed) return err(400, "name and variant must match the wallpaper naming contract");
+        const dManifest = await wallpaperManifestRead(env);
+        const dIdx = dManifest.entries.findIndex((e) => e.name === dName && e.variant === dParsed.variant);
+        if (dIdx < 0) {
+          // No manifest entry: an orphan R2 object is the one
+          // residue the append-only era could leave — clean it
+          // and say so; no object either is a refusal (404),
+          // never a silent success.
+          const orphan = await env.AUDIO.get(wallpaperKey(dParsed.variant, dName));
+          if (!orphan) return err(404, "not stocked");
+          await env.AUDIO.delete(wallpaperKey(dParsed.variant, dName));
+          return json({ ok: true, removed: null, objectOnly: true });
+        }
+        const dRemoved = dManifest.entries[dIdx];
+        dManifest.entries.splice(dIdx, 1);
+        dManifest.updated = nowISO();
+        await wallpaperManifestWrite(env, dManifest);
+        await env.AUDIO.delete(wallpaperKey(dParsed.variant, dName));
+        return json({ ok: true, removed: dRemoved, manifestEntries: dManifest.entries.length });
+      }
       if (seg[2] === "externals" && seg[3] === "resolve" && request.method === "POST") {
         // v624 §1 item 7: the agent-door twin of the nudge —
         // runs one resolver pass on demand (optionally forced
