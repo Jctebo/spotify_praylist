@@ -17368,6 +17368,27 @@ var LOH_OFFICE_SLOTS_675 = { 'ext-invitatory': 1, 'ext-morning-prayer': 1, 'ext-
 function lohOffice675(t) {
   return !!(t && t.episodeId && LOH_OFFICE_SLOTS_675[t.episodeId]);
 }
+/* v676 §3.1: the widened office predicate — true iff any of
+   three arms stands: (a) lohOffice675(t) — slot identity on
+   episodeId; (b) t.slotId is in the same eight-slot set
+   (LOH_OFFICE_SLOTS_675); (c) t.source is Divine Office or
+   Sing the Hours AND t.title names an office hour (phrase
+   test against the eight hour names). Non-office externals
+   never match: their sources are not office sources and
+   their slot ids are not in the set. */
+var LOH_OFFICE_HOURS_676 = ['Invitatory', 'Office of Readings', 'Morning Prayer', 'Midmorning Prayer', 'Midday Prayer', 'Midafternoon Prayer', 'Evening Prayer', 'Night Prayer'];
+function lohOffice676(t) {
+  if (!t) return false;
+  if (lohOffice675(t)) return true; // arm (a)
+  if (t.slotId && LOH_OFFICE_SLOTS_675[t.slotId]) return true; // arm (b)
+  if ((t.source === 'Divine Office' || t.source === 'Sing the Hours') && t.title) { // arm (c)
+    var title676 = String(t.title);
+    for (var i676 = 0; i676 < LOH_OFFICE_HOURS_676.length; i676++) {
+      if (title676.indexOf(LOH_OFFICE_HOURS_676[i676]) !== -1) return true;
+    }
+  }
+  return false;
+}
 /* v675 §3.2: the widget header lines — heading, the hour (the
    EXT_SLOTS def title for the slot, falling back to t.title),
    the track's own date, the Q3 A text line, the Q4 A
@@ -17527,7 +17548,7 @@ function trackPageDaySelect643(L) {
   return pool[0];
 }
 function trackPagePaintDay643(L, d) {
-  var office675 = lohOffice675(d); // v675 §3.5: an office descriptor's text seat IS the widget — descText does not paint, no textUrl fetch runs
+  var office675 = lohOffice676(d); // v675 §3.5 + v676 §3.3: an office descriptor's text seat IS the widget — descText does not paint, no textUrl fetch runs; the office test is the widened lohOffice676 predicate
   var textHtml = office675 ? '' : trackTextHtml643(d.descText || null);
   openTrackPage643({
     key643: d.episodeId + '|' + (d.source || '') + '|' + (d.url || d.streamUrl || ''),
@@ -18164,9 +18185,12 @@ function openRead(t, opts) {
   // v675 §3.3: an office descriptor paints the widget branch —
   // the sheet stands as today (title, play control, markPlaying,
   // updateDock above) but the sub carries the widget header and
-  // the body carries the frame; NO textUrl fetch runs. The
-  // player caller opts out explicitly with plainText675 (§3.4).
-  if (lohOffice675(t) && !(opts && opts.plainText675)) {
+  // the body carries the frame; NO textUrl fetch runs.
+  // v676 §3.2: the branch keys on the widened lohOffice676
+  // predicate and the plainText675 opt-out is RETIRED — the
+  // option is ignored entirely; an office descriptor paints
+  // the widget even when plainText675 is passed.
+  if (lohOffice676(t)) {
     var sub675 = sheet.querySelector('.sub');
     if (sub675) sub675.innerHTML = lohWidgetHead675(t, presentedDateStr());
     var body675 = sheet.querySelector('.readtext');
@@ -18291,8 +18315,12 @@ function openNowPlaying() {
   sheet.querySelector('#np-menu').addEventListener('click', function () { openPlayerMenu(this); });
   sheet.querySelector('#np-intentions').addEventListener('click', function () { setIntentions(!intentionsOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
-    var t = state.current && state.readTracks[state.current.episodeId];
-    if (t && t.hasText && t.textUrl) openRead(t, { plainText675: true }); // v675 §3.4: the player's bottom-row Read stays on the plain-text path for every track, office included — explicit opt-out; stacks over this sheet; closing Read returns here
+    var t = (state.current && state.readTracks[state.current.episodeId]) || state.current;
+    // v676 §3.5: an office track paints the widget — prefer
+    // state.current when it satisfies the predicate, else the
+    // readTracks descriptor; no opts (the opt-out is retired).
+    if (lohOffice676(state.current) || lohOffice676(t)) { openRead(lohOffice676(state.current) ? state.current : t); return; }
+    if (t && t.hasText && t.textUrl) openRead(t); // standing behavior; stacks over this sheet; closing Read returns here
   });
   // v546 (Q1 A): the Star act in the control row — it toggles
   // the playing track's star (starEntryForDesc builds the
@@ -18385,7 +18413,10 @@ function updateNowPlaying() {
   // (visibility, aria-hidden), so the control row's geometry
   // never moves between tracks.
   var readBtn = sheet.querySelector('#np-read');
-  if (rt && rt.hasText && rt.textUrl) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
+  // v676 §3.4: the Read button also stands where the playing
+  // descriptor or its readTracks entry is an office track
+  // (lohOffice676), in addition to the standing text test.
+  if ((rt && rt.hasText && rt.textUrl) || lohOffice676(cur) || lohOffice676(rt)) { readBtn.style.visibility = ''; readBtn.removeAttribute('aria-hidden'); }
   else { readBtn.style.visibility = 'hidden'; readBtn.setAttribute('aria-hidden', 'true'); }
   refreshNpStar(); // v546: the control row's star follows the playing track
   updateNpSeek();
