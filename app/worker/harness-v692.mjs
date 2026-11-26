@@ -744,8 +744,9 @@ await pgw.waitForTimeout(1600);
   await pgw.evaluate(() => opnEnsureStandings601());
   const html = await pgw.evaluate(() => opnWebBenedictineHtml692());
   const blocks = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+  // v698 re-point: the honor line is removed from the web display (Plan §2.5) — assert its ABSENCE instead of its presence; every other assertion word-identical.
   check('W the web paint path carries the FULL Benedictine shape — every block stands with its contents',
-    !!html && blocks.every((bl) => html.includes('<h4>' + bl + '</h4>')) && (html.match(/<li>/g) || []).length >= 6 && html.includes('The Benedictine Way') && html.includes('named in honor of the tradition'), (html || '').slice(0, 300));
+    !!html && blocks.every((bl) => html.includes('<h4>' + bl + '</h4>')) && (html.match(/<li>/g) || []).length >= 6 && html.includes('The Benedictine Way') && !html.includes('named in honor of the tradition'), (html || '').slice(0, 300));
   check('W the Morning block carries the readings seat (the post-mig609 contents)', !!html && html.includes('readings'), (html || '').slice(0, 400));
   check('W the web surface offers NO pick and the starter offer does NOT stand', !!html && !html.includes('data-p692pick') && !html.includes('data-p692starter')
     && await pgw.evaluate(() => opnStarterOfferStands692()) === false);

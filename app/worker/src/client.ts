@@ -25695,21 +25695,22 @@ function opnStarterOfferHtml692() {
   return html;
 }
 function opnWebBenedictineHtml692() {
-  // W (John's correction, 2026-11-26 09:21 CT): WEB
-  // USERS ONLY — on the plain-tab surface (Mode 3, Q10
-  // A: no profiles, no starter pick, nothing stored, no
-  // pick offered), the Benedictine Way's FULL prayer
-  // shape stands in detail: every block with its
-  // contents standing (the effective post-mig609 shape,
+  // W (John's correction, 2026-11-26 09:21 CT), as
+  // reduced by v698 (John, 2026-11-26): WEB USERS ONLY
+  // — on the plain-tab surface (Mode 3, Q10 A: no
+  // profiles, no starter pick, nothing stored, no pick
+  // offered), web users see just the Benedictine Way's
+  // prayer list: every block with its contents standing
+  // (the effective post-mig609 shape,
   // opnStarterRecord692 + the standing-contents read).
-  // Read-only display; the honor line stands. Native +
-  // installed-PWA starter picks keep the summary cards.
+  // The introduction — the honor line + the descriptive
+  // paragraph — is removed at his direction (2026-11-26).
+  // Read-only display. Native + installed-PWA starter
+  // picks keep the summary cards.
   if (opnMode() !== 'web') return '';
   var rec = opnStarterRecord692('benedictine', opnDoc().sections);
   if (!rec) return '';
-  var html = '<div class="card p692webben" data-p692webben="1"><h3>The Benedictine Way</h3>'
-    + '<p class="sub">' + esc(rec.honorLine || '') + '</p>'
-    + '<p class="sub">A complete day of prayer, shown in full. Profiles themselves live in the app — nothing here is stored, and no pick is offered.</p>';
+  var html = '<div class="card p692webben" data-p692webben="1"><h3>The Benedictine Way</h3>';
   (rec.coreBlocks || []).forEach(function (b) {
     var items = opnStandingContents597(rec, b);
     html += '<h4>' + esc(b) + '</h4><ul class="p692weblist">'
