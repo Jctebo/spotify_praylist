@@ -215,6 +215,13 @@ Built on `release/v680` in worktree `~/workspace/.worktrees/v680`. Commits: `105
 
 **Findings:** none. Ship may proceed on the judged head above (the §4 commit itself is the only later commit).
 
-## §5 Ship
+## §5 Ship record (chain-v680, 2026-11-26) — LIVE
 
-_(Standing — filled at ship. Pin bump seat: `ui.ts` CACHE → `ora-pro-nobis-v680-1`. Rollback target: pin `ora-pro-nobis-v679-1`.)_
+Review PASS (§4, judged head `db1f1d38b01e5aabc017c50cd14577d174ff5873`). Run level: To Ship.
+
+- **Pin bump:** `ui.ts` CACHE `ora-pro-nobis-v679-1` → `ora-pro-nobis-v680-1`, committed on release/v680 as `47c49bd` (the only code-touching act of Ship; one line). Judged blobs stand: client.ts `d8b579f621a07426c66a556a2fc846f5dbb9f2ed` and harness-v680 `69158204e04394b0d66d7cd465239466c155ef26` identical at the judged head and the ship tree; index.ts unchanged `205f6597cf5a8dcbb313004a30d71025f1c5c4ca`; ui.ts at ship `c9ccab1b5b110152674ec0142aa5b263efaf002c` (judged blob + the pin line only).
+- **Merge:** release/v680 → main, tree-exact via the Git Data API (push-v680-github.py). Remote-vs-base delta **empty** (remote main `53562445` tree == local base tree `7d385057`, the v679 ship tree — no runner commits landed since, nothing dropped, no force-push). Remote ship commit **632ae0598e77cb43ad5e7f2a6fda700304bbdf05**, tree **f383efc90159ab45c4c54e3841d4ca659d2f9cd4**; local mirror `b741b4a635dd5301d11eed4aa54703ac8f101d12`, same tree. Read-back: **main pushed · remote in sync**.
+- **Harness at the merged tree:** harness-v680 **21 ok / 0 not ok** (standing clone, merged main).
+- **Deploy:** deploy-app-v680-ship.py with EXPECTED_HEAD = merged main head (`b741b4a6`); dry-run → deploy clean. Worker **8953de4a-28f4-4e2d-91d7-7b57b193a022**, pin **ora-pro-nobis-v680-1**. Production verification: the served sw.js (app.orapronobis.media) reads pin ora-pro-nobis-v680-1 (×1, the only pin served; no v679-1 anywhere); the served app.js carries the v680 fix markers at the diff's own counts (`livePos680` ×16 · `opn-daypos-pending-v1` ×3 · `crossed95` ×10). No APK, no migration.
+- **Board closeout (D1-direct, all read back through the door):** release 1658 → Live, shipped_at 2026-11-26T04:05:27Z, whats_new_id 495 · What's New **495** ("A partly played episode now picks up where you left off") · shipped_records **869** · Ship phase record **2822** passed (commit_hash = the remote ship commit 632ae059). Ship contract 1143's expectation judged **met** via the door. Goals Board intake 1288 → Done, state line CLOSED.
+- **Rollback:** pin ora-pro-nobis-v679-1 (Worker 80098c2a-b972-4225-9665-928b07f5ca95), the v679 driver (`~/workspace/.tools/deploy-app-v679-ship.py`) untouched.
