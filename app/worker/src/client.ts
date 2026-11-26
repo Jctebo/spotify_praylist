@@ -13630,11 +13630,26 @@ function favCollapseRead() {
   try { var v = JSON.parse(localStorage.getItem(FAV_COLLAPSE_KEY) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (e) { return {}; }
 }
 function favCollapsed(folderId) { return !!favCollapseRead()[folderId]; }
-function favToggleCollapse(folderId) {
-  // Collapse is device-local UI state (the played-marks
-  // precedent): it is not personal data and never syncs.
+function favOpenFolderId678() {
+  // v678 §2.6: the paint read — the first non-collapsed
+  // VISIBLE folder stands open; a virgin map (no entries
+  // at all) opens the first visible folder only.
+  var vis = favVisibleFolders();
+  if (!vis.length) return null;
   var map = favCollapseRead();
-  if (map[folderId]) delete map[folderId]; else map[folderId] = 1;
+  if (!Object.keys(map).length) return vis[0].id;
+  for (var i = 0; i < vis.length; i++) { if (!map[vis[i].id]) return vis[i].id; }
+  return null;
+}
+function favToggleCollapse(folderId) {
+  // v678 §2.6: the one-open accordion, seated in the
+  // standing collapse store. Opening F writes every other
+  // folder collapsed with F's entry deleted; closing the
+  // open F writes every folder collapsed (none open).
+  // Collapse is device-local UI state: it never syncs.
+  var closing = favOpenFolderId678() === folderId;
+  var map = {};
+  favFolders().forEach(function (f) { if (closing || f.id !== folderId) map[f.id] = 1; });
   try { localStorage.setItem(FAV_COLLAPSE_KEY, JSON.stringify(map)); } catch (e) {}
   paintFavoritesSurfaces();
 }
@@ -13816,25 +13831,91 @@ function favFolderEmptyLine(folder) {
   if (folder.id === 'podcasts') return 'No favorite podcasts yet \u2014 tap \u2606 on a podcast in the Podcasts list.';
   return 'Nothing filed here yet \u2014 move an item here from its \u22ee menu.';
 }
+function favUnplayedCount678(folderId) {
+  // v678 §2.4: the folder's LIVE unplayed count over its
+  // playable tracks only (doors excluded from both
+  // numbers). Podcast episodes read favPodListenedOf —
+  // NOT the descriptor's listened field (a snapshot
+  // descriptor for a non-open series carries none).
+  var d = presentedDateStr();
+  var total = 0, unplayed = 0;
+  if (folderId === 'prayers') {
+    bookFavsList().forEach(function (slug) {
+      var f = bookFind(slug);
+      if (!f) return;
+      var desc = prayerAudioDesc(f.prayer, 'en');
+      if (!desc || !desc.available) return;
+      total++;
+      if (opnTrackUnplayed615(desc, d)) unplayed++;
+    });
+    return { total: total, unplayed: unplayed };
+  }
+  favTracksIn(folderId).forEach(function (e) {
+    var desc = starredDescFor(e);
+    if (!desc || !desc.available) return;
+    total++;
+    if (e.k === 'podcast') { if (!favPodListenedOf(e)) unplayed++; }
+    else if (opnTrackUnplayed615(desc, d)) unplayed++;
+  });
+  return { total: total, unplayed: unplayed };
+}
+function favFolderDescs678(folderId) {
+  // v678 §2.5: the folder's playable descriptors, one
+  // builder for the disc and the section menu acts.
+  if (folderId === 'prayers') {
+    var out = [];
+    bookFavsList().forEach(function (slug) {
+      var f = bookFind(slug);
+      var desc = f ? prayerAudioDesc(f.prayer, 'en') : null;
+      if (desc && desc.available) out.push(desc);
+    });
+    return out;
+  }
+  var out2 = [];
+  favTracksIn(folderId).forEach(function (e) {
+    var desc = starredDescFor(e);
+    if (!desc || !desc.available) return;
+    // A podcast snapshot descriptor carries no listened
+    // field (§2.4.2's trap) — the queue set's unplayed
+    // filter (discQueue618) reads desc.listened for the
+    // podcast kind, so the descriptor takes the standing
+    // listened read (favPodListenedOf) here.
+    if (e.k === 'podcast') desc = Object.assign({}, desc, { listened: favPodListenedOf(e) });
+    out2.push(desc);
+  });
+  return out2;
+}
 function favFolderSectionHtml(folder) {
+  // v678 §2.3/§2.9: the v659 section-card dress. A folder
+  // holding at least one playable track takes the full
+  // head (mark · name · disc · menu · live count ·
+  // toggle); a doors-only folder takes the three-element
+  // head (mark · name · toggle only, reading (i)).
+  // Folder heads carry ONLY the data-fav*678 attributes —
+  // never the Praylist data-p609/p645/p615 attributes.
   var tracks = folder.id === 'prayers' ? [] : favTracksIn(folder.id);
   var doors = folder.id === 'prayers' ? [] : favDoorsIn(folder.id);
   var prayers = folder.id === 'prayers' ? bookFavsList() : [];
-  var count = favFolderCount(folder.id);
-  var collapsed = favCollapsed(folder.id);
-  var html = '<div class="favfolder" data-favfolder="' + esc(folder.id) + '">'
-    + '<div class="favfolder-head"><button class="favfolder-chev" data-favcollapse="' + esc(folder.id) + '" aria-label="' + (collapsed ? 'Expand' : 'Collapse') + ' ' + esc(folder.name) + '">' + (collapsed ? '\u25b8' : '\u25be') + '</button>'
-    + '<h2 class="sectionhead grow">' + esc(folder.name) + '</h2>'
-    + '<span class="meta">' + count + '</span>'
-    + (folder.custom ? '<button class="iconbtn" data-favfoldermenu="' + esc(folder.id) + '" aria-label="Folder options">\u22ee</button>' : '')
-    + '</div>';
-  if (!collapsed) {
-    if (!count) html += '<div class="card"><div class="meta">' + favFolderEmptyLine(folder) + '</div></div>';
-    else {
-      html += doors.map(favDoorRowHtml).join('');
-      html += tracks.map(starredRowHtml).join('');
-      html += prayers.map(favPrayerRowHtml).join('');
-    }
+  var open = favOpenFolderId678() === folder.id;
+  var descs = favFolderDescs678(folder.id);
+  var full = descs.length > 0;
+  var c = full ? favUnplayedCount678(folder.id) : { total: 0, unplayed: 0 };
+  var html = '<div class="card p659card" data-favcard678="' + esc(folder.id) + '">'
+    + '<div class="p609sethead favfolder-head" data-favhead678="' + esc(folder.id) + '">'
+    + '<div class="blockcover tone-' + blockTone(folder.name) + ' sm">' + sectionMark659(folder.name) + '</div>'
+    + '<h2 class="sectionhead grow">' + esc(folder.name) + '</h2>';
+  if (full) {
+    html += '<button class="playbtn small p615disc' + (c.total > 0 && c.unplayed === 0 ? ' all' : '') + '" data-favdisc678="' + esc(folder.id) + '" aria-label="Play ' + esc(folder.name) + '">&#9654;</button>'
+      + '<button class="iconbtn p645secmenu" data-favsecmenu678="' + esc(folder.id) + '" aria-label="More for ' + esc(folder.name) + '">\u22ee</button>'
+      + '<span class="meta" data-favcount678="' + esc(folder.id) + '">' + c.unplayed + '</span>';
+  }
+  html += '<span class="p659toggle" aria-hidden="true">' + (open ? '\u2212' : '+') + '</span></div>';
+  if (open) {
+    html += '<div class="p659body">'
+      + doors.map(favDoorRowHtml).join('')
+      + tracks.map(starredRowHtml).join('')
+      + prayers.map(favPrayerRowHtml).join('')
+      + '</div>';
   }
   return html + '</div>';
 }
@@ -13946,8 +14027,10 @@ function paintFavoritesPage(day) {
   // which never runs on this page). The in-page acts row
   // retires whole; Add all to queue stands in the
   // universal menu's Favorites group (openHeaderMenu).
+  // v678 §2.8 (Q4): the page head's Play disc retires —
+  // the bar keeps back arrow + Favorites title only.
   paintPrayersBar(hdrBarHtml({ dest: 'Pray', title: 'Favorites', backAttrs: 'data-back="__favorites"',
-    rightHtml: list.length ? '<button class="playbtn small" id="starred-playall" aria-label="Play all of Favorites">&#9654;</button>' : '' }), '__favorites');
+    rightHtml: '' }), '__favorites');
   // v576: the list area paints the FOLDER SECTIONS — the
   // four default folders, then the customs, each expanded
   // unless this device has it collapsed (favFolderSectionHtml).
@@ -13958,11 +14041,28 @@ function paintFavoritesPage(day) {
   var visibleFolders = favVisibleFolders();
   var html = opnFavCard + '<div id="favorites-list">';
   html += visibleFolders.length ? visibleFolders.map(favFolderSectionHtml).join('')
-    : '<div class="card"><div class="meta">No favorites yet \u2014 tap \u2606 on a track, a prayer, a podcast, or a novena and it will stand here.</div></div>';
+    : '<div class="card"><div class="meta">No favorites yet \u2014 star any track to keep it here.</div></div>';
   html += '</div>';
   view.innerHTML = html;
-  var pa = document.getElementById('starred-playall');
-  if (pa) pa.addEventListener('click', starredPlayAll);
+  // v678 §2.5/§2.6: the card-head wiring — the head tap is
+  // the fold act; the disc and the section menu are their
+  // own tap zones and never fold.
+  view.querySelectorAll('[data-favhead678]').forEach(function (h) {
+    h.addEventListener('click', function () { favToggleCollapse(h.getAttribute('data-favhead678')); });
+  });
+  view.querySelectorAll('[data-favdisc678]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      favFolderPlay678(b.getAttribute('data-favdisc678'));
+    });
+  });
+  view.querySelectorAll('[data-favsecmenu678]').forEach(function (b) {
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var f = favFolders().filter(function (x) { return x.id === b.getAttribute('data-favsecmenu678'); })[0];
+      if (f) openFavSectionMenu678(f, b);
+    });
+  });
   view.querySelectorAll('[data-starplay]').forEach(function (b) {
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
@@ -14052,22 +14152,37 @@ function paintFavoritesSurfaces() {
   paintFavoritesFolderRow();
   if (state.tab === 'prayers' && state.prayersView && state.prayersView.kind === 'favorites' && document.getElementById('favorites-list')) paintFavoritesPage(state.dayPayload);
 }
+function favFolderPlay678(folderId) {
+  // v678 §2.5.1: the folder disc's act — the folder's
+  // unplayed set (discQueue618) through startQueue with
+  // the starred provenance, exactly as starredPlayAll
+  // carried it for the whole list.
+  var set = discQueue618(favFolderDescs678(folderId));
+  if (!set.length) return;
+  startQueue(set, true);
+  state.queueFrom = 'starred';
+  saveQueueSnapshot();
+}
+function openFavSectionMenu678(folder, anchorEl) {
+  // v678 §2.5.2 (Q5): the section menu — Play (the disc's
+  // act) · Play next · Add to queue over the folder's
+  // unplayed set; custom folders append the standing
+  // folder acts (Rename · Delete folder).
+  var items = [
+    { label: 'Play', act: function () { favFolderPlay678(folder.id); } },
+    { label: 'Play next', act: function () { playNextSet(discQueue618(favFolderDescs678(folder.id))); } },
+    { label: 'Add to queue', act: function () { addToQueueSet(discQueue618(favFolderDescs678(folder.id))); } }
+  ];
+  if (folder.custom) {
+    items.push({ label: 'Rename', act: function () { openFavNameSheet(folder); } });
+    items.push({ label: 'Delete folder', act: function () { favDeleteFolder(folder.id); } });
+  }
+  openSheetMenu(folder.name, items, anchorEl);
+}
 function starredPlayableDescs() {
   var out = [];
   (state.starred || []).forEach(function (e) { var d = starredDescFor(e); if (d && d.available) out.push(d); });
   return out;
-}
-function starredPlayAll() {
-  // Q3 A: the whole list plays, in list order, across kinds.
-  // The act is explicit — autoplay's state does not gate it —
-  // and the queue it births carries the 'starred' provenance:
-  // it stops at its own end (the ended handler + the native
-  // tail both read it) and never snapshots.
-  var descs = starredPlayableDescs();
-  if (!descs.length) return;
-  startQueue(descs, true);
-  state.queueFrom = 'starred';
-  saveQueueSnapshot(); // the v546 guard retires any standing record for a starred queue
 }
 function starredAddAll() {
   // Q3 A: the whole list joins the standing queue WITHOUT
@@ -16455,6 +16570,17 @@ function refreshPlayedChrome() {
     var cnt = head ? head.querySelector('[data-p615count]') : null;
     if (cnt) cnt.textContent = String(c.unplayed);
   });
+  // v678 §2.4: the Favorites folder pass — every folder
+  // head's count recomputes from the stores and its disc's
+  // "all" class re-toggles by the same rule. Recomputed,
+  // never incremented (the v615 discipline).
+  view.querySelectorAll('[data-favcount678]').forEach(function (sp) {
+    var c678 = favUnplayedCount678(sp.getAttribute('data-favcount678'));
+    sp.textContent = String(c678.unplayed);
+    var head678 = sp.parentElement;
+    var disc678 = head678 ? head678.querySelector('[data-favdisc678]') : null;
+    if (disc678) disc678.classList.toggle('all', c678.total > 0 && c678.unplayed === 0);
+  });
   renderQueueList();
 }
 function wirePlayed(root) {
@@ -16789,7 +16915,9 @@ function openHeaderMenu() {
     // v579: Expand all / Collapse all — each stands only
     // while it can change something (the no-dead-items
     // rule), outside the reorder mode.
-    if (!favReorder && favAnyCollapsed()) items.push({ label: 'Expand all', act: function () { favExpandAll(); } });
+    // v678 §2.6: Expand all retires (its meaning cannot
+    // stand under the one-open accordion; favExpandAll
+    // loses its only caller). Collapse all stands.
     if (!favReorder && favAnyExpanded()) items.push({ label: 'Collapse all', act: function () { favCollapseAll(); } });
   } else if (tab === 'prayers' && tabSideNow.prayers === 'prayers' && state.prayersView && state.prayersView.kind === 'block' && state.prayersView.block !== '__episodes') {
     // A block page: Sort · Mark all · Share · Open in
