@@ -1,0 +1,46 @@
+{
+ "source": "GET https://app.orapronobis.media/api/player/podcasts?series=daily-gospel-exegesis",
+ "capturedAt": "2026-11-27 (America/Chicago)",
+ "note": "Production RSS head as captured: entries[0] published 2026-11-27 Chicago (the list head / latest \u2014 the old course pick's currentKey), entries[1] published 2026-11-26 Chicago (the presented-1 daily-matcher hit for presented 2026-11-27; the presented-day hit for presented 2026-11-28), then 2026-11-25 and 2026-11-24 entries.",
+ "series": "daily-gospel-exegesis",
+ "title": "Daily Gospel Exegesis",
+ "showImageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/2609215/2609215-1688782386235-f2b7b7169957.jpg",
+ "entries": [
+  {
+   "key": "bb51ba7d-17bd-4662-aede-9b44297869bc",
+   "title": "Saturday of Week 34 in Ordinary Time - Luke 21: 34-38",
+   "url": "https://anchor.fm/s/1025ef1c/podcast/play/22908414/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2025-7-30%2Fc70d8c3f-2c7b-0b19-ba4e-81c028607232.mp3",
+   "publishedMs": 1795798800000,
+   "durationS": 1129,
+   "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_episode/2609215/2609215-1737366207316-3ac720509e544.jpg",
+   "label": "Nov 27, 2026"
+  },
+  {
+   "key": "9f58950b-75ec-42c5-bab0-d5b9d5b735c1",
+   "title": "Friday of Week 34 in Ordinary Time - Luke 21: 29-33",
+   "url": "https://anchor.fm/s/1025ef1c/podcast/play/22906170/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2025-7-30%2Ffe475157-1e74-3544-c8b9-61399f174fed.mp3",
+   "publishedMs": 1795712400000,
+   "durationS": 698,
+   "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_episode/2609215/2609215-1726910115544-b7b0e100c0f6c.jpg",
+   "label": "Nov 26, 2026"
+  },
+  {
+   "key": "e13c231c-7010-4e78-a0c2-2c75ba620ea8",
+   "title": "Thursday of Week 34 in Ordinary Time - Luke 21: 20-28",
+   "url": "https://anchor.fm/s/1025ef1c/podcast/play/22866921/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2025-7-30%2F1c667af8-e428-de9c-f4d2-98e041e7965a.mp3",
+   "publishedMs": 1795626000000,
+   "durationS": 2138,
+   "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_episode/2609215/2609215-1726909710328-556ce7f26ee93.jpg",
+   "label": "Nov 25, 2026"
+  },
+  {
+   "key": "14dc54f2-736a-45d9-92cb-624b935fbf8d",
+   "title": "Wednesday of Week 34 in Ordinary Time - Luke 21: 12-19",
+   "url": "https://anchor.fm/s/1025ef1c/podcast/play/22859698/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2025-7-30%2Fe4391a81-2e16-991d-c208-bcec71c33eea.mp3",
+   "publishedMs": 1795539600000,
+   "durationS": 885,
+   "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_episode/2609215/2609215-1726909656615-209c784a61813.jpg",
+   "label": "Nov 24, 2026"
+  }
+ ]
+}

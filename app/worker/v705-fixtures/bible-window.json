@@ -1,0 +1,84 @@
+{
+ "source": "GET https://app.orapronobis.media/api/player/podcasts?series=bible-in-a-year",
+ "capturedAt": "2026-11-27 (America/Chicago)",
+ "note": "Production sequence payload window frozen for harness-v705: the two bonus entries standing at the list head as captured, plus day entries 330 (yesterday), 331 (presented 2026-11-27, doy 331), 332 (tomorrow), 333. Real keys, titles, urls as captured. Served currentKey at capture: biy:day-322 (first unlistened over the production listen fold; podcast_listens latest biy:day-321).",
+ "series": "bible-in-a-year",
+ "title": "Bible in a Year",
+ "showImageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+ "presented": "2026-11-27",
+ "doy": 331,
+ "entries": [
+  {
+   "key": "biy:bonus-bringing-the-bible-back-eea2e6fd",
+   "kind": "bonus",
+   "day": null,
+   "label": "Bonus",
+   "title": "Bringing the Bible Back to Catholics (with Jeff Cavins)- 2022",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2b67e5e5-7043-48ab-8075-7a02e9722b98.mp3",
+   "durationS": 3395,
+   "edition": 2021,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "Fr. Mike Schmitz is joined by renowned Catholic Bible scholar Jeff Cavins to talk about The Great Adventure Bible Timeline, their personal experiences with the Bible, and what it means to live life through the lens of Scripture. For the com"
+  },
+  {
+   "key": "biy:bonus-how-to-hear-god-86cbbcdd",
+   "kind": "bonus",
+   "day": null,
+   "label": "Bonus",
+   "title": "How to Hear God's Voice in Scripture",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4531619b-690c-48d3-8218-18f8fc2f502b.mp3",
+   "durationS": 1294,
+   "edition": 2021,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "As we get ready for the Bible in a Year journey, Fr. Mike shares five tips for reading the Bible that will help us to hear God's voice in scripture. For the complete reading plan, visit ascensionpress.com/bibleinayear. Please note: The Bibl"
+  },
+  {
+   "key": "biy:day-330",
+   "kind": "day",
+   "day": 330,
+   "label": "Day 330",
+   "title": "Saul's Conversion",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f90ee1af-77bb-4ca2-bf8e-398ae9c8f5b5.mp3",
+   "durationS": 1259,
+   "edition": 2026,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "Fr. Mike breaks down Saul's miraculous conversion, explaining the significance of Jesus sending Ananias to heal Saul, and how it reveals that Jesus works through his Church just as powerfully as he worked through the incarnation. Fr. Mike a"
+  },
+  {
+   "key": "biy:day-331",
+   "kind": "day",
+   "day": 331,
+   "label": "Day 331",
+   "title": "Peter Preaches to the Gentiles",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fb2822bd-7049-4207-be6b-3a19d03721b5.mp3",
+   "durationS": 1335,
+   "edition": 2025,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "In today\u2019s reading from Acts, the Holy Spirit guides Peter to initiate ministry to the Gentiles, beginning with the family of Cornelius, a Roman centurion. Upon hearing Peter preach, Cornelius\u2019 entire household receive the Holy Spirit and a"
+  },
+  {
+   "key": "biy:day-332",
+   "kind": "day",
+   "day": 332,
+   "label": "Day 332",
+   "title": "Barnabas and Paul On Mission",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8ad0e130-512e-4679-bc45-b2314e2cfe55.mp3",
+   "durationS": 1492,
+   "edition": 2025,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "Fr. Mike begins by explaining the confusion experienced by the early Christians as they struggled to integrate the Gentiles into the Church. We also hear more about Barnabas, missionary companion of St. Paul, who was named by God as the \"So"
+  },
+  {
+   "key": "biy:day-333",
+   "kind": "day",
+   "day": 333,
+   "label": "Day 333",
+   "title": "Peter Is Rescued from Prison",
+   "url": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/847429cf-d733-4825-acaf-18e76bc39b10.mp3",
+   "durationS": 1331,
+   "edition": 2025,
+   "imageUrl": "https://cdn.fireside.fm/file/fireside-images-2024/podcasts/images/c/c6354d0d-bd10-4eed-b811-1bb569d46efd/cover.jpg?v=3",
+   "descText": "Today begins with Acts 12 and the miraculous rescue of Peter from prison by an angel. Reflecting on this story, Fr. Mike helps us grapple with the mysterious reality that we are each called to say \"Yes\" to God\u2019s destination for us, even whe"
+  }
+ ]
+}

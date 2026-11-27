@@ -21148,6 +21148,18 @@ function resolveProfileCourses590(day) {
   // unavailable course resolves nothing: its slot stands
   // empty. The descriptor stands in state.courseRes590 for
   // extRebuildDescs to place in the block.
+  // v705 §2.1: a course item whose key stands in
+  // OPN_DAILY_SERIES_666 is a DAILY row wherever it stands
+  // (John's Bible in a Year row is born this way — the
+  // v609 migration of the Salesian Podcasts layer): it
+  // resolves under the v677/v694 daily discipline at the
+  // arm below, never by the progress pick — a finish's
+  // listen write moves currentKey to the next day, and the
+  // row must hold its settled episode, painted played in
+  // place, for the whole Chicago day. The standing copies
+  // are captured before the reset (the daily seat's
+  // prevRes677 discipline) as a last-known listened read.
+  var prevCourse705 = state.courseRes590 || {};
   state.courseRes590 = {};
   var eff = day && day.profile;
   if (!eff || !eff.contents) return;
@@ -21161,6 +21173,61 @@ function resolveProfileCourses590(day) {
     api('/api/player/podcasts?series=' + encodeURIComponent(job.key)).then(function (payload) {
       if (state.dayPayload !== day) return;
       if (!payload || !Array.isArray(payload.entries)) return;
+      if (opnDailyKeyOk666(job.key)) {
+        // v705 §2.1 daily-set arm (the daily seat's shape,
+        // carried to this seat): the settle store is read
+        // FIRST — a settled record rebuilds in place with
+        // listened read fresh; an unsettled job runs the
+        // hit-only daily matcher and settles through
+        // opnDailySettlePut677 BEFORE the rebuild repaint;
+        // a null match stands the v694 placeholder and
+        // settles NOTHING. The progress pick below is never
+        // consulted for these jobs. (catholicsaints never
+        // reaches here: its video payload carries no
+        // entries and the return above stands, unchanged.)
+        var presented705 = day.presentedDay || day.date;
+        var jobKey705 = job.block + ':' + job.key;
+        var settledRaw705 = (opnDailySettled677()[presented705] || {});
+        var settled705 = {};
+        Object.keys(settledRaw705).forEach(function (k) { var r = settledRaw705[k]; if (r && !r.stale) settled705[k] = r; });
+        var rec705 = settled705[jobKey705];
+        if (rec705 && rec705.desc) {
+          var d705 = opnClone(rec705.desc);
+          d705.block = job.block;
+          d705.stale = !!rec705.stale;
+          var fe705 = null;
+          payload.entries.forEach(function (x) { if (!fe705 && x && x.key === rec705.episodeId) fe705 = x; });
+          var prevD705 = prevCourse705[jobKey705];
+          d705.listened = !!((fe705 && fe705.listened) || (prevD705 && prevD705.listened) || rec705.desc.listened);
+          if (d705.listened) d705.podPositionS = null;
+          else if (fe705 && fe705.positionS > 0) d705.podPositionS = Math.floor(fe705.positionS);
+          d705.course590 = true;
+          d705.daily666 = true;
+          d705.dailySeries = job.key;
+          state.courseRes590[jobKey705] = d705;
+        } else {
+          var m705 = opnDailyMatch666(job.key, payload.entries, presented705);
+          if (!m705) {
+            var ph705 = opnDailyPlaceholder694(job.key, job.block, payload.showImageUrl);
+            ph705.course590 = true;
+            state.courseRes590[jobKey705] = ph705;
+          } else {
+            var e705 = m705.e;
+            state.courseRes590[jobKey705] = {
+              episodeId: e705.key, kind: 'podcast', seriesKey: e705.key, podSeries: job.key,
+              title: (e705.label ? e705.label + ': ' : '') + (e705.title || ''), url: e705.url || e705.streamUrl || null, enclosureUrl: null,
+              available: !!(e705.url || e705.streamUrl), block: job.block, source: opnDailySeriesTitle666(job.key), durationS: e705.durationS || 0, listened: !!e705.listened,
+              podPositionS: (!e705.listened && e705.positionS > 0) ? Math.floor(e705.positionS) : null,
+              imageUrl: e705.imageUrl || payload.showImageUrl || null, descText: e705.descText || null, spotifyUrl: null,
+              stale: !!m705.stale, daily666: true, dailySeries: job.key, course590: true
+            };
+            opnDailySettlePut677(presented705, jobKey705, state.courseRes590[jobKey705].episodeId, !!m705.stale, state.courseRes590[jobKey705]);
+          }
+        }
+        extRebuildDescs(day);
+        if (state.dayPayload) paintPrayersView(state.dayPayload);
+        return;
+      }
       var curKey = payload.currentKey || opnPodCurrentKey(payload.entries);
       if (!curKey) return;
       var e = null;
