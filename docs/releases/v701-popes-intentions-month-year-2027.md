@@ -278,3 +278,35 @@ Five new tests, Legs A–E as prescribed in §2.4, fixtures named in-test (2026 
 - **PASS.** No defects found. The release matches §§1–2 as amended by John's formal approval (§2.7, Q1–Q6 all A, To Ship): month+year keying at the one seat, 2026 carried byte-identical, the 2027 list in house shape, omit+flag at the marked block only with no cross-year fall-back anywhere, and both fragment keys separating the years.
 - **Standing field leg (unchanged from §2.4):** after Ship, the first 2027-dated day build's pushed Morning Prayer episode text in the app carries the 2027 January sentence — named, not waived.
 - **Ship note (Plan R4):** the fork checkout already carries the identical v701 commits locally; its normal pull discipline still applies at Ship.
+
+## §5 Ship record
+
+- **Status:** SHIPPED · LIVE — Ship seat: chain-v701-ship (Ship contract 1251 · phase record 2927). **Date:** 2026-11-27. **Ship shape:** pipeline-only — NO app build, NO pin. The change lives in the publish pipeline repo `Jctebo/spotify_praylist` + the fork checkout.
+- **Approval (stands in §2.7/§3.1):** John, 2026-11-27 10:42 CT, scope document `scope-popes-intentions-2027` — Q1–Q6 all A · run level To Ship.
+- **Review:** PASS (§4, commit `49a383d`).
+
+### Merge + push read-backs
+
+- **Branch:** `release/v701` at `49a383d` (829af28 Plan · c0c656b data · 6527ec0 lookup · fb1fda1 tests · f365dee §3 · e595219 approval/§2 amend · fa6e51c Q4 · 614bf7a §3.1 · 49a383d §4 Review PASS).
+- **Remote main before merge:** `2c399690b34f0a630f18deffe77cc02ae35abe1b` (v700 ship record; tree `533d7c00595e47e3212472cf7905eafd6591f465`). Remote main had moved past the branch base with the v700 record + the 2026-11-27 wallpaper runner commits — all preserved: the merge commit's parent is that exact head; no force-push, no history rewrite, no runner commit dropped.
+- **Merge:** local merge commit `020e6a6c5c67e23e32e07265f895868fa77cf9e3`, tree `4a21e32708a618b350f2bed41f2f587e8633199a`. Tree proof: every v701 path in the merged tree is byte-identical to the branch tree (diff 0), and every non-v701 path is byte-identical to the pre-merge remote main tree (diff 0).
+- **Push:** the https remote carries no git credential in this seat, so the ship landed through the GitHub Git Data API via the standing connector (the documented push route for this repo): blobs + tree created remotely, tree SHA returned `4a21e32708a618b350f2bed41f2f587e8633199a` — exact match to the local merged tree — then commit + ref update. **Remote main head: `bc50887b1befbd12448e47d266fedd8adde4f9c7`** ("Merge release/v701 into main", 2026-11-27T17:25:05Z, parent `2c39969`). Read back after fetch: `origin/main` = `bc50887`, tree `4a21e327…` — **main pushed · remote in sync** (ship worktree stands at `origin/main`).
+- **Ship proof on the merged main tree:** `tests.test_publish_contracts` — **28 ran, OK** (run on the merged tree before push and again on the fetched `origin/main` tree).
+
+### Fork state (Plan R4)
+
+- **Fork** (`~/workspace/projects/spotify_praylist-fork`, branch `muse-draft-week`, **LOCAL-ONLY — never pushed**): `acce7a5dd` (data) · `84aa8f2e0` (lookup) · `ea0f90d24` (checks) · `c8c9c93ad` (Q4 amendment) already carry the identical change; head stands at `c8c9c93ad`. Nothing further was done there.
+- **R4 note:** both checkouts already carry the re-key — the fork on `muse-draft-week`, the standing clone on `main` — so the next Morning Prayer build on either tree resolves month+year. No pull is needed for the fork to pick up v701; its normal pull discipline still applies for later main commits.
+
+### Board closeout (DevOps Board, project ora-pro-nobis)
+
+- **Ship phase record 2927:** state `passed`, finished_at 2026-11-27T17:25:59Z, holder chain-v701-ship — read back.
+- **Release row 1679:** status `Live`, shipped_at `2026-11-27T17:25:05Z` (the merge time), whats_new_id 516 — read back.
+- **What's New row 516:** "Changed: the Pope's monthly prayer intentions are now kept by month and year, and Pope Leo XIV's intentions for 2027 stand added." — read back.
+- **shipped_records row 890:** project_id 3 · version `v701` · title "Pope's prayer intentions: re-key to month+year and add Pope Leo XIV's 2027 intentions" · shipped_at `2026-11-27T17:25:05Z` · whats_new_id 516 — inserted and read back.
+- **Ship contract 1251:** expectation "Shipped (release/v701 merged to main + pushed + read back; closeout complete)" judged **met** via the app door.
+- **Goals Board intake 1335:** CLOSED (status Done, closeout line appended to its notes).
+
+### Standing field leg — OPEN, not waived
+
+- **§2.4 field leg stands open:** the first 2027-dated day build's pushed Morning Prayer episode text in the app must be read back carrying the 2027 January sentence. No 2027-dated build exists yet; this leg is named open, not waived, and closes on that read-back.
