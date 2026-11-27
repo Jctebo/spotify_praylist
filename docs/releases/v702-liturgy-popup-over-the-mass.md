@@ -258,3 +258,33 @@ R1 (`color-mix`) and R4 (driver head swap) outcomes in §3.5 are consistent with
 - No server file, no other repo, no board or production surface touched.
 
 **Disposition: PASS — cleared for Ship.**
+
+## §5 Ship record
+
+- **Status:** SHIPPED · LIVE — Ship seat: chain-v702-ship. **Date:** 2026-11-27. **Run level:** To Ship.
+- **Review:** PASS (§4, commit `1d8f7f1`).
+
+### Merge + push read-backs
+
+- **Branch:** `release/v702` at `1d8f7f15e28bd2570a9b8bb855a98161762bfff1` (tree `215991ee141c53089524a38fc9cd8c81563bdeda`), local only — never pushed.
+- **Remote main before merge:** `a8cb317658c3e6f8523c5b6e6e71aba87de8c824` (v701 §5 record; tree `6d09269e426fba63e332773bf852cf8ed2bd6447`). Remote-vs-base delta: EMPTY — no mover, no runner commit at risk; nothing dropped, no force-push.
+- **Merge:** GitHub Git Data API, tree-exact (`push-v702-github.py`): remote merge commit `2f5026496c9642534fa7cf2bb73a2cc7fbe134dc` ("Merge release/v702 into main", parent `a8cb317`), tree `215991ee141c53089524a38fc9cd8c81563bdeda`. Assertion: merged tree == branch tree exactly; all 6 delta blobs asserted blob-by-blob (`app/worker/src/client.ts` · `app/worker/src/ui.ts` · `app/worker/harness-v702.mjs` · `app/worker/fixtures/mass-readings-2026-11-26.json` · `app/worker/fixtures/mass-readings-2026-11-27.json` · this release doc).
+- **Ship worktree:** `~/workspace/.worktrees/v702-ship-main`, detached at the merged main head `2f50264`, clean.
+
+### Deploy
+
+- **Driver:** `~/workspace/.tools/deploy-app-v702-ship.py` (modeled on the v699 driver; EXPECTED_HEAD sentinel = `2f5026496c9642534fa7cf2bb73a2cc7fbe134dc`).
+- **Worker:** `ora-pro-nobis-app` deployed from the ship worktree at pin `ora-pro-nobis-v702-1`. **Version ID:** `889b24b4-fa0d-4710-a786-a487ba18dc50`. **Deployment:** created `2026-11-27T21:39:28.159Z`, confirmed at **100%** via the driver's `deployments` mode.
+
+### Production verification (from served bytes)
+
+- `GET https://app.orapronobis.media/` → **200**.
+- Served `sw.js` reads `ora-pro-nobis-v702-1`; `ora-pro-nobis-v699-1` absent.
+- Served `/app.js` bundle (1,617,432 bytes) carries: "Display Liturgy Text" · `openLiturgyPopup702` · `opn-litpop-v702` · the `litpop702` dress.
+
+### Board closeout (DevOps Board, project 3)
+
+- **What's New row 517:** "New: while a Mass video plays, a Liturgy popup floats over it with the day's readings — drag it where you want it and set how see-through it is." — inserted and read back.
+- **Release row 1680:** status `Live`, shipped_at `2026-11-27T21:39:28Z`, whats_new_id 517 — read back.
+- **shipped_records row 891:** project_id 3 · version `v702` · title "Liturgy popup over the Mass: movable, transparency adjustable, reads the day's liturgy" · shipped_at `2026-11-27T21:39:28Z` · whats_new_id 517 — inserted and read back.
+- **Goals Board intake 1337:** CLOSED (status Done, closeout line appended to its notes) — read back.
