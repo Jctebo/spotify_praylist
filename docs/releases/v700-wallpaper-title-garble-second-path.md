@@ -168,3 +168,40 @@ The clean finals already exist and are byte-proven (phone sha256 `3ccb1fd0…` �
 
 - Fork commits (local, `muse-draft-week`): `58ff26870` helper · `24ae9d1d4` rotator · `f93cdb03b` desktop + stock + set guard · `53593dd52` widened test.
 - Publish commits (site repo main): `2bdf6592cb4a2813d902da01882f89fda27ed740` desktop set · `a7a99ba46670d77aff1ca00a8197e3c11e79b410` site wallpaper refresh.
+
+## §4 Review — chain-v700-review (contract 1248 · phase record 2924)
+
+- **Verdict: PASS.** Date: 2026-11-27. All §3 claims re-run or read back independently by this seat; nothing taken on trust.
+
+### 4.1 Fix seats — diff read firsthand (fork `12bff6603..53593dd52`)
+
+- Diff confined to the §2.6 file list exactly: `jobs/novena/devotional_image_contract.py` · `runner/wallpaper_rotate.py` · `runner/site_desktop.py` · `runner/wallpaper_stock.py` · `runner/wallpaper_set.py` · `runner/test_wallpaper_title_prefix.py`. No classifier seat appears in the diff (Nov 28/29 spec classifier untouched); no app-build change (fork-only stands).
+- ONE shared helper confirmed: `cleaned_subject_slug` defined once in `devotional_image_contract.py` (commit `58ff26870`); consumed by rotator (spec clean + dedupe, `24ae9d1d4`), `site_desktop.display_name` + main, `wallpaper_stock.parse_name`, `wallpaper_set.build_set` guard (all `f93cdb03b`). No second hand-rolled strip in any changed seat (diff grep clean).
+- Delete path: `delete_stock` parses via `_parse_name_shape` (shape-only) — garbled names remain deletable; the guarded `parse_name` is used only on the stocking path. Confirmed in the `f93cdb03b` diff.
+
+### 4.2 Checks — re-run by this seat
+
+- Widened check on the fixed tree (`53593dd52`): **27/27 ALL PASS** (A×12 · B×4 · C×2 · D×2 · E×3 · F×1 · G×3), including the stock-guard sweep leg.
+- Standing suite beside it, all green: `test_wallpaper_set` ALL PASS · `test_wallpaper_rotate_spec` ALL CHECKS PASSED · `test_wallpaper_rotate_monthly` ALL CHECKS PASSED · `test_wallpaper_stock_delete` 33 ok, 0 bad.
+- Fail-on-old reproduced by this seat in a scratch worktree at pre-fix `12bff6603` (widened test + untracked `runner/_common.py` copied in; scratch removed, `muse-draft-week` restored at `53593dd52` untouched): **23 PASS / 4 FAIL** — failures exactly `E promote set is the clean saint name + Gospel only` (old promoted all three names), `E garbled name named as excluded_garbled_duplicates` (old: `[]`), `F desktop band from garbled name is clean` (old: `P3 Sts Basileus Auxilius and Saturninus Roman Martyrology`), `G parse_name refuses the garbled p3- name` (old: parsed). A–C pass on old. §3 reported 22/5 with D also failing — D passes in this seat's run because the standing rundir was already healed (leg 4) before either fail-on-old run's D leg could read a garbled manifest; the difference is the heal's own effect, not a discrepancy in the fix.
+
+### 4.3 Heal read-backs — remote, firsthand by this seat
+
+- **Served manifest** GET `https://app.orapronobis.media/api/wallpaper/manifest`: HTTP 200, `updated: 2026-11-27T16:04:22.128Z`, 99 entries. 2026-11-27 entries exactly: phone `sts-basileus-…` sha256 `3ccb1fd0d5b6696f6f2b0ea21660c4d5f5ed95314d2e6ad0ce961c8a674f3475` 539,635 B · watch `sts-basileus-…` sha256 `a9a7bcac74bfe5ad771a61119044aff91d06edb259369537b9a9144397711bb4` 394,996 B · phone/watch Gospel entries as §3. **No `p3-` entry for 2026-11-27; no `p3-` or `p2-` entry of any date stands in the served manifest.**
+- **File routes:** garbled name HTTP 404 (phone and watch); clean name HTTP 200 (phone 539,635 B · watch 394,996 B).
+- **Drive currents** (fork standing tooling, `list_children` on `phone-current` / `watch-current`): both list exactly `holy-souls-in-purgatory__2026-11.jpg` · `sts-basileus-auxilius-and-saturninus-roman-martyrology__2026-11-27.jpg` · `the-fig-tree-and-the-enduring-word__2026-11-27.jpg` — no `p3-` name stands in either current.
+- **Desktop pick:** served `https://orapronobis.media/assets/daily-wallpaper-desktop.jpg` HTTP 200, 362,650 B, sha256 `9f7f3b83db5a035655a9ee6ae01a5a8d276101f9d00bf389a9a5919433fc0e8b` — matches §3 (publish commit `2bdf6592`). The image was opened and read by this seat: band reads `Sts Basileus Auxilius and Saturninus Roman Martyrology` — no `P3`.
+- **Site background:** served `images/daily-wallpaper.jpg` HTTP 200, 134,207 B, sha256 `25ee21d73b9c9016640a9ef3c603119b45ea90fc56fe96b22c1f1b0635422d1e` — matches §3 (re-run commit `a7a99ba4`).
+- **Nov 26 `p2-` stock residue:** NOT deleted — confirmed standing instruction kept (§1.5 out of scope); the served manifest carries no `p2-` entry, consistent with §3.4.3.
+- **Phone field leg:** still John's verdict, as §3.5 states; the chain's heal claim rests on the store read-backs above.
+
+### 4.4 Deviations (§3.4) — judged
+
+1. **Heal leg order swap 3↔4 — SOUND.** The fixed desktop path resolves the wide raw by the cleaned subject, which only the leg-4 raw copy stands up; leg 3's own preconditions were met and no leg's content changed.
+2. **One failed Pages deploy re-run — SOUND.** Same publish commit re-run once to success; the served asset read back byte-identical (sha256 above) — no second publish, no content drift.
+3. **`p2-` residue left — SOUND.** Expressly out of scope in §1.5; deleting it without the chain's word would itself be a scope breach, and the served surface carries no residue.
+
+### 4.5 Closeout
+
+- Review seat: chain-v700-review · contract 1248 judged met · phase record 2924 passed.
+- Next: Ship seat closes the chain (fork-only; no app deploy, no pin per §2.4).
