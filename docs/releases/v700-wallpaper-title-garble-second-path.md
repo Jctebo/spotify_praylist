@@ -205,3 +205,13 @@ The clean finals already exist and are byte-proven (phone sha256 `3ccb1fd0…` �
 
 - Review seat: chain-v700-review · contract 1248 judged met · phase record 2924 passed.
 - Next: Ship seat closes the chain (fork-only; no app deploy, no pin per §2.4).
+
+## §5 Ship — chain-v700-ship (contract 1249 · phase record 2925)
+
+- **Date:** 2026-11-27 · **Ship shape: FORK-ONLY** — this record merged to the standing clone's main + board closeout is the ship. No app deploy, no pin.
+- **Fork fix (local-only, `muse-draft-week`, not pushed anywhere — standing practice):** `58ff26870` shared helper `cleaned_subject_slug` · `24ae9d1d4` rotator spec-clean + cleaned-subject dedupe · `f93cdb03b` desktop band + stock guard + set-build guard · `53593dd52` widened check.
+- **Checks:** widened `runner/test_wallpaper_title_prefix.py` **27/27 ALL PASS** on the fixed tree; fail-on-old reproduced at Review — legs E/F/G fail on the pre-fix tree (old rotator promoted the garbled name, old desktop band read `P3 Sts Basileus …`, old stock `parse_name` accepted the garbled name), and leg D failed against the pre-heal garbled standing manifest. Standing wallpaper suite green beside it (set · rotate spec · rotate monthly · stock delete 33 ok).
+- **Heal read-backs (verified at Review, §4.3, remote stores govern):** Drive `phone-current` + `watch-current` list exactly the clean saint file + Gospel + monthly — no `p3-` name in either current; served wallpaper manifest (99 entries, updated 2026-11-27T16:04:22Z) carries no `p3-` entry for 2026-11-27 on either variant, garbled file routes 404, clean routes 200; served desktop pick (362,650 B, sha256 `9f7f3b83…`) band reads `Sts Basileus Auxilius and Saturninus Roman Martyrology` — no `P3`; served site background (134,207 B, sha256 `25ee21d7…`) painted title clean; standing rundir rebuilt clean (leg D passes against it).
+- **Review:** PASS (§4, commit `8e9bf4a`).
+- **Why no app pin:** the chain ships fork-only with no app deploy and no pin BECAUSE the garble's seats all stand in the fork pipeline — the Plan §1/§2.4 verdict, Review-confirmed (§4.1): the app build carries no title derivation, no slug cleaning, and no name band; the one garbled served entry was bad data stocked through a correct-shape route, healed by deletion, not by an app change.
+- **Standing field leg:** John's phone confirmation that his home-screen wallpaper title reads clean. Drive current is healed (read-backs above), so the phone's folder-sync should stand the clean file; the field verdict remains John's and this chain does not claim it.
