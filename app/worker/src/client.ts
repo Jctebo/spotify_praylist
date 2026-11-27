@@ -18051,6 +18051,186 @@ function litpop702ApplyAlpha702(panel, alpha) {
   // write stands anywhere in this block).
   panel.style.background = 'color-mix(in srgb, var(--card) ' + Math.round(alpha * 100) + '%, transparent)';
 }
+/* v704 §2.2: the entire-liturgy paint for the popup.
+   paintMassScroll can NEVER be called here (it rewrites
+   view.innerHTML, wires the view, kicks personal/universal
+   loads). The prescribed reuse shape: the driver fetches
+   OUTSIDE the swap; this paint snapshots the standing
+   globals, swaps in a fresh temporary state.mass built
+   exactly in paintMassLiturgy's construction shape,
+   composes SYNCHRONOUSLY by calling the scroll's own
+   segment renderers in the §1.3 order, strips the embedded
+   control strips from the popup's own DOM, and restores
+   every swapped global in a finally posture — no await
+   stands between swap and restore, so no other paint can
+   observe the swapped state. The two composed-by-hand
+   seams (the day header minus its controls, and the
+   Universal Prayer read-only from the MASS_UP_* constants)
+   are composition of standing constants/classes, not new
+   renderers: massUniversalSectionHtml embeds the editor
+   and cannot be called. Exclusions: massHomilyCardHtml is
+   never called (no homily element), no wireMass* function
+   is called, and no button stands in the popup body. */
+function liturgyPopupPaint704(bodyEl, headEl, massP, readingsP, universalIntentions) {
+  if (!bodyEl) return;
+  if (!massP || massP.inCalendar === false || !massP.versions || !massP.versions.length) {
+    // §1.6 whole-day arm: the standing failure line alone.
+    bodyEl.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">The day\u2019s Mass could not be loaded.</div></div>';
+    return;
+  }
+  var dateStr = massP.date || liturgyPopupDate702({ title: '' });
+  var prev = { mass: state.mass, feed: massFeed, readings: massReadings, fb: massUsedFallback };
+  var failed = false;
+  try {
+    // Pick rule (§2.2.3): a standing same-date state.mass
+    // carries its picks read-only — shallow copies of
+    // latin/rchoices so no renderer write can land on the
+    // standing object; otherwise paintMassLiturgy's own
+    // entry defaults stand.
+    var sameDay = (prev.mass && prev.mass.date === dateStr) ? prev.mass : null;
+    var tmp = {
+      date: dateStr, payload: massP,
+      version: sameDay ? sameDay.version : (massP.defaultVersion || (massP.versions[0] && massP.versions[0].key) || null),
+      ep: sameDay ? (sameDay.ep || 'II') : 'II',
+      penform: sameDay ? (sameDay.penform || 'A') : 'A',
+      preMassOpen: false,
+      latin: sameDay ? Object.assign({}, sameDay.latin || {}) : {},
+      rchoices: sameDay ? Object.assign({}, sameDay.rchoices || {}) : {},
+      textSize: massPrefs().size, dateLabel: shortDayLabel(dateStr),
+      personal: undefined, personalLang: {},
+      universal: { date: dateStr, intentions: universalIntentions || [] },
+      universalOpen: false, universalEditIdx: -1
+    };
+    massFeed = readingsP;
+    massReadings = null; // the Universalis backup is OUT (§1.4): massBackupPartHtml self-guards to ''
+    massUsedFallback = false;
+    state.mass = tmp;
+    var f = massFormulary();
+    var flags = massDayFlags();
+    var size = (typeof tmp.textSize === 'number') ? tmp.textSize : 1;
+    var h = '<div class="mass-scroll ts-' + size + '">';
+    // Rows 1–2 seam: the head ICEL notice + the day header,
+    // minus the row-3 controls (OUT, §1.5).
+    h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
+    h += '<div class="mass-day">Daily Lectionary</div>';
+    h += '<div class="mass-dayname">' + esc(massP.name || 'Mass of the Day') + '</div>';
+    h += '<div class="mass-date">' + esc(tmp.dateLabel || '') + '</div>';
+    h += massSectionHtml('Introductory Rites');
+    h += massAntiphonHtml('Entrance Antiphon', f.entranceAntiphon);
+    h += massLinesHtml(MASS_ORDER.introPre, MASS_ROLES.introPre);
+    h += massPenBodyHtml(); // NO massPenToggleHtml — the toggle is OUT, the body IN
+    h += massPartHtml('kyrie', MASS_ORDER.kyrieEn, 'Kyrie');
+    h += massLinesHtml(MASS_ORDER.introPost, MASS_ROLES.introPost);
+    if (flags.gloria) h += massPartHtml('gloria', MASS_ORDER.gloriaEn, 'Gloria');
+    h += massLinesHtml(MASS_ORDER.introTail, MASS_ROLES.introTail);
+    h += massPrayerHtml('Collect', f.collect);
+    h += massSectionHtml('Liturgy of the Word');
+    // The readings place: the feed's own render when the
+    // payload stands; §1.6's honest line (the v697 negative
+    // arm's line) when it is missing whole.
+    if (readingsP && readingsP.found && readingsP.parts && readingsP.parts.length) h += massReadingsHtml();
+    else h += '<div class="mass-line readings-none697">Readings not available for this day.</div>';
+    // NO massHomilyCardHtml — exclusion (a), §1.5.
+    if (flags.creed) h += massPartHtml('creed', MASS_ORDER.creedEn, 'Creed');
+    h += massLinesHtml(MASS_ORDER.creedOutro, MASS_ROLES.creedOutro);
+    // Row 18 seam: the Universal Prayer, read-only, from
+    // the same MASS_UP_* constants massUniversalSectionHtml
+    // uses, in its order — the Edit button and the editor
+    // host are simply never emitted.
+    h += massSectionHtml('The Universal Prayer');
+    h += '<div class="mass-up-sub">Prayer of the Faithful</div>';
+    h += '<div class="mass-line">' + esc(MASS_UP_INVITATION) + '</div>';
+    h += '<div class="mass-h">Parish Intentions</div>';
+    h += '<div class="mass-line">' + esc(MASS_UP_POPE) + '</div>';
+    h += '<div class="mass-line mass-up-response">' + esc(MASS_UP_RESPONSE) + '</div>';
+    h += '<div class="mass-line">' + esc(MASS_UP_SENTENCE) + '</div>';
+    h += '<div class="mass-h">Private Intention</div>';
+    h += '<br>';
+    var ulist = massUniversalState();
+    if (!ulist.length) {
+      h += '<div class="mass-line">' + esc(MASS_UP_EMPTY) + '</div>';
+    } else {
+      ulist.forEach(function (tx) {
+        h += '<div class="mass-line">' + esc(tx) + '</div>';
+        h += '<div class="mass-line mass-up-response">' + esc(MASS_UP_RESPONSE) + '</div>';
+      });
+    }
+    h += massSectionHtml('Liturgy of the Eucharist');
+    h += massLinesHtml(MASS_ORDER.offertory, MASS_ROLES.offertory);
+    h += massPrayerHtml('Prayer over the Offerings', f.prayerOverOfferings);
+    h += massEpHtml(); // its toggle strip is removed at the strip step below
+    h += massSectionHtml('Communion Rite');
+    h += massLinesHtml(MASS_ORDER.communionPre, MASS_ROLES.communionPre);
+    h += '<div class="mass-h">The Lord\u2019s Prayer</div>' + massLinesHtml(MASS_ORDER.paterEn, MASS_ROLES.paterEn);
+    h += massLinesHtml(MASS_ORDER.communionMid, MASS_ROLES.communionMid);
+    h += massPartHtml('agnus', MASS_ORDER.agnusEn, 'Agnus Dei');
+    h += massLinesHtml(MASS_ORDER.communionPost, MASS_ROLES.communionPost);
+    h += massAntiphonHtml('Communion Antiphon', f.communionAntiphon);
+    // NO personal seats — §1.4.
+    h += massPrayerHtml('Prayer after Communion', f.prayerAfterCommunion);
+    h += massSectionHtml('Concluding Rites');
+    h += massLinesHtml(MASS_ORDER.concluding, MASS_ROLES.concluding);
+    // NO Post-Mass Prayers section — §1.4.
+    h += massAcksHtml();
+    h += '<div class="mass-notice">' + esc(MASS_ICEL_NOTICE) + '</div>';
+    h += '</div>';
+    bodyEl.innerHTML = h;
+    // §2.2.6 strip: the embedded control strips come out of
+    // the popup's own DOM — the EP toggle, every Latin
+    // toggle, every reading-option / readings-set chip
+    // strip — and the mass-epbody duplicate-id risk. Wire
+    // NOTHING inside the popup body.
+    bodyEl.querySelectorAll('.mass-eptoggle, .mass-ltoggle').forEach(function (el) { el.remove(); });
+    bodyEl.querySelectorAll('[data-rchoice], [data-rset]').forEach(function (el) {
+      var strip = el.closest ? el.closest('.mass-chips') : null;
+      if (strip) strip.remove(); else el.remove();
+    });
+    var epb = bodyEl.querySelector('#mass-epbody');
+    if (epb) epb.removeAttribute('id');
+  } catch (e) {
+    failed = true;
+  } finally {
+    // Restore: every swapped global returns to its standing
+    // value, throw or not. The composed DOM is already
+    // materialized in the panel; restoring cannot unpaint it.
+    state.mass = prev.mass;
+    massFeed = prev.feed;
+    massReadings = prev.readings;
+    massUsedFallback = prev.fb;
+  }
+  if (failed) {
+    bodyEl.innerHTML = '<div class="mass-scroll"><div class="mass-rubric">The day\u2019s Mass could not be loaded.</div></div>';
+    return;
+  }
+  // §2.2.8: the head's day line takes the Mass payload's
+  // fuller day name at settle, where it stands.
+  if (headEl && massP.name) {
+    var dn704 = headEl.querySelector('.readings-day697');
+    if (dn704) dn704.textContent = massP.name;
+  }
+}
+/* v704 §2.2.1: the driver — exactly three standing GETs
+   for the popup's date, issued in parallel OUTSIDE the
+   swap, each settling independently (mass rejection or an
+   out-of-calendar answer -> the §1.6 whole-day line;
+   readings rejection -> the readings line at its place;
+   universal rejection -> the empty list). The panel is
+   resolved through resolve704 AT SETTLE TIME (the v697 R4
+   discipline openLiturgyPopup702 already uses) and painted
+   only if it still stands for this date. */
+function liturgyPopupDrive704(t, resolve704) {
+  var dateStr = liturgyPopupDate702(t);
+  var pm = api('/api/prayer/mass?date=' + dateStr).then(function (v) { return v; }, function () { return null; });
+  var pr = api('/api/prayer/mass-readings?date=' + dateStr).then(function (v) { return v; }, function () { return null; });
+  var pu = api('/api/prayer/mass-universal-prayer?date=' + dateStr).then(function (v) { return v; }, function () { return null; });
+  Promise.all([pm, pr, pu]).then(function (res) {
+    var r = resolve704 ? resolve704() : null;
+    if (!r || !r.body) return;
+    var up = res[2];
+    var intentions = (up && Array.isArray(up.intentions)) ? up.intentions : [];
+    liturgyPopupPaint704(r.body, r.head, res[0], res[1], intentions);
+  });
+}
 function openLiturgyPopup702(t) {
   if (!t) return;
   var dateStr = liturgyPopupDate702(t);
@@ -18093,12 +18273,14 @@ function openLiturgyPopup702(t) {
   });
   var cb = panel.querySelector('[data-litpop702-close]');
   if (cb) cb.addEventListener('click', function () { closeLiturgyPopup702(); });
-  // The standing v697 driver: one mass-readings fetch for
-  // the item's date, painted by readingsCardPaint697; the
+  // v704 §2.3: the entire-liturgy driver — three standing
+  // fetches for the item's date, composed by
+  // liturgyPopupPaint704 through the scroll's own
+  // renderers under the snapshot/swap/restore shape; the
   // resolver reads the panel at settle time and the head
-  // carries .readings-day697, so the driver's day-name
-  // swap lands (R4's first outcome).
-  readingsCardDrive697(t, function () {
+  // carries .readings-day697, so the settle-time day-name
+  // swap lands.
+  liturgyPopupDrive704(t, function () {
     var p2 = document.getElementById('litpop702');
     if (!p2 || p2.getAttribute('data-litpop702-date') !== dateStr) return null;
     return { body: p2.querySelector('.litpop702-body'), head: p2.querySelector('.litpop702-head') };

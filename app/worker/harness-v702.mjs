@@ -46,6 +46,19 @@
 //
 // Run: node app/worker/harness-v702.mjs
 //      ORA_WT=/path/to/old-tree node /path/to/harness-v702.mjs
+//
+// v704 RE-POINTS (doc v704 §2.6 — the ONLY changes to this
+// harness under v704, recorded in v704 §3): O1's and O2's
+// paint assertions are re-pointed to accept the
+// entire-liturgy body (the readings citations and the
+// .mass-ack line stand inside it, at the readings place
+// and the tail); O3 is INVERTED to O3′ (the body now
+// carries standing Order text and a /api/prayer/mass
+// fetch stands); N1's setup is re-pointed (the stub now
+// also serves the mass route from the v704 §1.8 fixture
+// and the universal-prayer route empty) and its assertion
+// moves to "the line at the readings place, the liturgy
+// around it". Every other leg is byte-unmodified.
 let chromium;
 try { ({ chromium } = await import('playwright-core')); }
 catch (e) { ({ chromium } = await import(process.env.HOME + '/workspace/.tools/pwtest/node_modules/playwright-core/index.mjs')); }
@@ -70,6 +83,7 @@ function check(name, cond, extra) {
 // ---------- the committed Plan fixtures (verbatim) ----------
 const FIX27 = JSON.parse(readFileSync(path.join(HERE, 'fixtures', 'mass-readings-2026-11-27.json'), 'utf8'));
 const FIX26 = JSON.parse(readFileSync(path.join(HERE, 'fixtures', 'mass-readings-2026-11-26.json'), 'utf8'));
+const MASS27 = JSON.parse(readFileSync(path.join(HERE, 'fixtures', 'mass-2026-11-27.json'), 'utf8')); // v704 §2.6 N1 setup re-point: the mass-route stub body (the v704 §1.8 fixture)
 check('F 2026-11-27 fixture: found:true, 4 parts incl. a Gospel part, non-empty copyright[]', FIX27.found === true && FIX27.parts.length === 4 && FIX27.parts.some((p) => p.key === 'g') && (FIX27.copyright || []).length === 1);
 check('F 2026-11-27 citations are the captured set (Revelation 20:1-4, 11—21:2 · Psalm 84:3, 4, 5-6a, 8a · Luke 21:28 · Luke 21:29-33)', JSON.stringify(FIX27.parts.map((p) => p.source)) === JSON.stringify(['Revelation 20:1-4, 11—21:2', 'Psalm 84:3, 4, 5-6a, 8a', 'Luke 21:28', 'Luke 21:29-33']), FIX27.parts.map((p) => p.source));
 check('F 2026-11-26 fixture: found:true with parts:[] (the honest-empty day shape)', FIX26.found === true && Array.isArray(FIX26.parts) && FIX26.parts.length === 0);
@@ -118,7 +132,8 @@ const b = await chromium.launch({ executablePath: EXE });
 const pg = await b.newPage({ viewport: { width: 390, height: 844 } });
 await pg.addInitScript((payloads) => {
   window.__fetches = [];
-  window.__payloads = payloads;
+  window.__payloads = payloads.readings;
+  window.__massFixture = payloads.mass;
   const respJson = (obj) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(obj), text: () => Promise.resolve(JSON.stringify(obj)) });
   window.fetch = (url) => {
     const u = String(url);
@@ -128,9 +143,18 @@ await pg.addInitScript((payloads) => {
       const p = m ? window.__payloads[m[1]] : null;
       return respJson(p || { date: m ? m[1] : '', found: false, parts: [], copyright: [] });
     }
+    // v704 §2.6 setup re-point: under v704 the popup also
+    // fetches the Mass payload and the Universal Prayer
+    // intentions; the stub serves both (the §1.8 fixture;
+    // the route's empty-day answer by construction).
+    if (u.includes('/api/prayer/mass-universal-prayer')) {
+      const m2 = /[?&]date=([0-9-]+)/.exec(u);
+      return respJson({ ok: true, date: m2 ? m2[1] : '', intentions: [] });
+    }
+    if (/\/api\/prayer\/mass\?/.test(u)) return respJson(window.__massFixture);
     return new Promise(() => {});
   };
-}, { '2026-11-27': FIX27, '2026-11-26': FIX26 });
+}, { readings: { '2026-11-27': FIX27, '2026-11-26': FIX26 }, mass: MASS27 });
 await pg.goto('http://127.0.0.1:' + PORT + '/');
 await pg.waitForTimeout(1500);
 
@@ -222,11 +246,20 @@ check('O1 the panel head reads "Liturgy"', ps.panel && ps.headText.includes('Lit
 const fetchesO1 = await pg.evaluate(() => window.__fetches.slice());
 const mrFetches = fetchesO1.filter((u) => u.includes('/api/prayer/mass-readings'));
 check('O1 exactly one mass-readings fetch, for date=2026-11-27', mrFetches.length === 1 && mrFetches[0].includes('date=2026-11-27'), fetchesO1);
+// O1 paint assertions re-pointed per v704 §2.6: the
+// citations, the Gospel word-string, and the .mass-ack
+// line now stand INSIDE the entire-liturgy body (at the
+// readings place and the tail); the assertions' substance
+// (presence, from the fixture) is unchanged.
 check('O1 the body paints the fixture citations (Revelation 20:1-4, 11—21:2 · Luke 21:29-33)', ps.bodyText.includes('Revelation 20:1-4, 11—21:2') && ps.bodyText.includes('Luke 21:29-33'), ps.bodyText.slice(0, 200));
 check('O1 the body paints a Gospel word-string from the fixture ("Consider the fig tree")', ps.bodyText.includes('Consider the fig tree'), ps.bodyText.slice(0, 300));
 check('O1 the copyright[] line paints as .mass-ack at the foot', ps.acks.length === 1 && ps.acks[0] === FIX27.copyright[0], ps.acks);
-check('O3 the painted body carries no Order-of-Mass fixed text ("And with your spirit" absent)', ps.panel && !ps.bodyText.includes('And with your spirit'));
-check('O3 no /api/prayer/mass fetch was issued', ps.panel && !fetchesO1.some((u) => /\/api\/prayer\/mass\?/.test(u)), fetchesO1);
+// O3′ (v704 §2.6 INVERSION of v702's O3, cited here per
+// that section — never silently edited): v702's O3 asserted
+// a readings-only body; under v704 the body is the entire
+// liturgy, so both halves stand inverted.
+check('O3′ the painted body carries standing Order-of-Mass fixed text ("And with your spirit" present — v704 inversion of O3)', ps.panel && ps.bodyText.includes('And with your spirit'));
+check('O3′ a /api/prayer/mass fetch was issued for date=2026-11-27, plus the universal-prayer fetch (v704 inversion of O3)', ps.panel && fetchesO1.some((u) => /\/api\/prayer\/mass\?date=2026-11-27/.test(u)) && fetchesO1.some((u) => u.includes('/api/prayer/mass-universal-prayer?date=2026-11-27')), fetchesO1);
 
 // ---------- V1 (identity half) ----------
 const v1a = await pg.evaluate(() => {
@@ -313,6 +346,9 @@ check('O2 tapping "Display Liturgy Text" opens the popup over the Virtual Mass v
 await pg.waitForTimeout(400);
 ps = await panelState();
 const fetchesO2 = await pg.evaluate(() => window.__fetches.slice());
+// O2 paint assertions re-pointed per v704 §2.6, same
+// shape as O1: the citation stands inside the
+// entire-liturgy body on this surface too.
 check('O2 the popup paints for 2026-11-27 with the fixture citations, via one mass-readings fetch', ps.panel && ps.date === '2026-11-27' && ps.bodyText.includes('Luke 21:29-33') && fetchesO2.filter((u) => u.includes('/api/prayer/mass-readings') && u.includes('date=2026-11-27')).length === 1, { ps: ps.date, fetchesO2 });
 // ---------- C1 (Virtual Mass teardown) ----------
 const c1StoodB = (await panelState()).panel;
@@ -328,7 +364,12 @@ await pg.waitForTimeout(200);
 check('N1 the menu item stands for the Nov 26 Mass video', await tapDockMenuItem('Display Liturgy Text'));
 await pg.waitForTimeout(400);
 ps = await panelState();
-check('N1 the body paints "Readings not available for this day." alone — no citation, no .mass-ack, no Nov 27 text', ps.panel && ps.bodyText.trim() === 'Readings not available for this day.' && ps.acks.length === 0 && !ps.bodyText.includes('Luke 21:29-33'), ps.bodyText.slice(0, 200));
+// N1 assertion re-pointed per v704 §2.6: the line stands
+// AT THE READINGS PLACE with the liturgy around it (the
+// "alone in the body" form was the readings-only
+// prescription). N1's discipline is unmodified: no
+// citation, no other day's readings text.
+check('N1 the body paints "Readings not available for this day." at the readings place (after "Liturgy of the Word", before "The Universal Prayer"), the liturgy around it — no citation, no Nov 27 readings text', ps.panel && ps.bodyText.indexOf('Readings not available for this day.') > ps.bodyText.indexOf('Liturgy of the Word') && ps.bodyText.indexOf('Readings not available for this day.') < ps.bodyText.indexOf('The Universal Prayer') && ps.bodyText.includes('Stir up the will of your faithful') && !ps.bodyText.includes('Luke 21:29-33') && !ps.bodyText.includes('Revelation 20:1-4'), ps.bodyText.slice(0, 200));
 await pg.evaluate(() => { finishVideoHandoff656(false); });
 
 // ---------- A1: the item does not stand off the Mass surfaces ----------

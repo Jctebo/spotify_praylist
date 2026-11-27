@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-27",
+  "name": "Friday in the 34ᵗʰ Week in Ordinary Time",
+  "defaultVersion": "ferial",
+  "versions": [
+    {
+      "key": "ferial",
+      "label": "Friday in the 34ᵗʰ Week in Ordinary Time",
+      "rank": "ferial",
+      "formulary": {
+        "entranceAntiphon": {
+          "ref": "Cf. Ps 85 (84): 9",
+          "text": "The Lord speaks of peace to his people and his holy ones and to those who turn to him."
+        },
+        "collect": "Stir up the will of your faithful, we pray, O Lord, that striving more eagerly to bring your divine work to fruitful completion they may receive in greater measure the healing remedies your kindness bestows. Through our Lord Jesus Christ, your Son, who lives and reigns with you in the unity of the Holy Spirit, God, for ever and ever",
+        "prayerOverOfferings": "Accept, O Lord, the sacred offerings which at your bidding we dedicate to your name and, in order that through these gifts we may become worthy of your love, grant us unfailing obedience to your commands. Through Christ our Lord.",
+        "communionAntiphon": {
+          "ref": "Psalm 117(116):1,2",
+          "text": "O praise the Lord, all you nations, for his merciful love towards us is great. Or: Mt 28:20 Behold, I am with you always, even to the end of the age, says the Lord."
+        },
+        "prayerAfterCommunion": "We pray, almighty God, that those to whom you give the joy of participating in divine mysteries may never be parted from you. Through Christ our Lord. Home"
+      }
+    }
+  ],
+  "season": "Ordinary Time",
+  "inCalendar": true
+}
