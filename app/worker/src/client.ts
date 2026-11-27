@@ -18012,9 +18012,9 @@ function liturgyPopupPrefs702() {
   // store reads as the defaults {x:null, y:null, alpha:0.88}.
   try {
     var v = JSON.parse(localStorage.getItem('opn-litpop-v702') || 'null');
-    if (v && typeof v === 'object') return { x: (typeof v.x === 'number' ? v.x : null), y: (typeof v.y === 'number' ? v.y : null), alpha: (typeof v.alpha === 'number' ? Math.min(1, Math.max(0.35, v.alpha)) : 0.88) };
+    if (v && typeof v === 'object') return { x: (typeof v.x === 'number' ? v.x : null), y: (typeof v.y === 'number' ? v.y : null), alpha: (typeof v.alpha === 'number' ? Math.min(1, Math.max(0.35, v.alpha)) : 0.88), w: (typeof v.w === 'number' ? v.w : null), h: (typeof v.h === 'number' ? v.h : null) };
   } catch (e) {}
-  return { x: null, y: null, alpha: 0.88 };
+  return { x: null, y: null, alpha: 0.88, w: null, h: null };
 }
 function liturgyPopupPrefsSave702(p) {
   try { localStorage.setItem('opn-litpop-v702', JSON.stringify(p)); } catch (e) {}
@@ -18044,6 +18044,16 @@ function litpop702Clamp(panel, x, y) {
   var mx = Math.max(0, window.innerWidth - panel.offsetWidth);
   var my = Math.max(0, window.innerHeight - panel.offsetHeight);
   return { x: Math.min(Math.max(0, x), mx), y: Math.min(Math.max(0, y), my) };
+}
+function litpop702ClampSize702(x, y, w, h) {
+  // v704 §2A.4: the one size clamp — minimums 280x200,
+  // maximum the viewport remainder beside the panel's
+  // top-left; the viewport wins over the minimum.
+  var availW = Math.max(0, window.innerWidth - x);
+  var availH = Math.max(0, window.innerHeight - y);
+  var cw = availW < 280 ? availW : Math.min(Math.max(w, 280), availW);
+  var ch = availH < 200 ? availH : Math.min(Math.max(h, 200), availH);
+  return { w: cw, h: ch };
 }
 function litpop702ApplyAlpha702(panel, alpha) {
   // §1.5: the slider sets the panel BACKGROUND only —
@@ -18251,8 +18261,21 @@ function openLiturgyPopup702(t) {
   try { var dl = homilyLongDate(dateStr); if (dl && dl !== 'Invalid Date') dateLine = dl; } catch (e) {}
   panel.innerHTML = '<div class="litpop702-head"><div class="lohhead675 grow"><div class="lohhead-title675">Liturgy</div><div class="lohhead-hour675 readings-day697">' + esc(dateLine) + '</div></div><button class="btn ghost small" data-litpop702-close>Close</button></div>'
     + '<div class="litpop702-alpha-row"><label for="litpop702-alpha">Transparency</label><input type="range" id="litpop702-alpha" min="0.35" max="1" step="0.05" value="' + prefs.alpha + '"></div>'
-    + '<div class="litpop702-body"></div>';
+    + '<div class="litpop702-body"></div>'
+    + '<div class="litpop702-resize702" aria-hidden="true"></div>';
   document.body.appendChild(panel);
+  // v704 §2A.5: a stored size applies at open, clamped to
+  // the current viewport first (§2A.4 at-open: size clamp
+  // at (0,0), then the standing position clamp below
+  // measures the sized panel). Where only one of w/h
+  // stands, that one applies and the other keeps the dress
+  // default. With neither standing, no inline size stands
+  // and the store is NOT rewritten at open.
+  if (prefs.w != null || prefs.h != null) {
+    var sz0 = litpop702ClampSize702(0, 0, prefs.w != null ? prefs.w : panel.offsetWidth, prefs.h != null ? prefs.h : panel.offsetHeight);
+    if (prefs.w != null) panel.style.width = sz0.w + 'px';
+    if (prefs.h != null) { panel.style.height = sz0.h + 'px'; panel.style.maxHeight = 'none'; }
+  }
   var px = (prefs.x != null ? prefs.x : Math.max(0, window.innerWidth - panel.offsetWidth - 12));
   var py = (prefs.y != null ? prefs.y : 12);
   var c0 = litpop702Clamp(panel, px, py);
@@ -18260,6 +18283,7 @@ function openLiturgyPopup702(t) {
   panel.style.top = c0.y + 'px';
   litpop702ApplyAlpha702(panel, prefs.alpha);
   wireLiturgyPopupDrag702(panel, panel.querySelector('.litpop702-head'));
+  wireLiturgyPopupResize702(panel, panel.querySelector('.litpop702-resize702'));
   var slider = panel.querySelector('#litpop702-alpha');
   slider.addEventListener('input', function () {
     var a = parseFloat(slider.value);
@@ -18319,6 +18343,42 @@ function wireLiturgyPopupDrag702(panel, head) {
     head.addEventListener('pointermove', move);
     head.addEventListener('pointerup', up);
     head.addEventListener('pointercancel', up);
+  });
+}
+function wireLiturgyPopupResize702(panel, handle) {
+  // v704 §2A.3: the resize drag, in wireLiturgyPopupDrag702's
+  // pointer-capture mold — capture on the handle, move
+  // applies the §2A.4-clamped size as inline width/height
+  // (maxHeight 'none', §2A.3's posture rule), up/cancel
+  // saves the prefs whole (x/y from the rect, w/h from the
+  // applied size, alpha as read). The top-left never moves
+  // during a resize.
+  if (!handle) return;
+  handle.addEventListener('pointerdown', function (ev) {
+    ev.preventDefault();
+    var startX = ev.clientX, startY = ev.clientY;
+    var startW = panel.offsetWidth, startH = panel.offsetHeight;
+    try { handle.setPointerCapture(ev.pointerId); } catch (e) {}
+    var move = function (mv) {
+      var r = panel.getBoundingClientRect();
+      var s = litpop702ClampSize702(r.left, r.top, startW + (mv.clientX - startX), startH + (mv.clientY - startY));
+      panel.style.width = s.w + 'px';
+      panel.style.height = s.h + 'px';
+      panel.style.maxHeight = 'none';
+    };
+    var up = function () {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+      var p = liturgyPopupPrefs702();
+      var rr = panel.getBoundingClientRect();
+      p.x = Math.round(rr.left); p.y = Math.round(rr.top);
+      p.w = Math.round(rr.width); p.h = Math.round(rr.height);
+      liturgyPopupPrefsSave702(p);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
   });
 }
 function trackTextHtml643(text) {

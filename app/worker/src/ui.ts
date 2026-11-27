@@ -1034,6 +1034,7 @@ img.rowart { object-fit:cover; display:block; }
 .litpop702-alpha-row { flex:none; display:flex; align-items:center; gap:10px; padding:0 12px 8px; }
 .litpop702-alpha-row input[type="range"] { flex:1; }
 .litpop702-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:2px 14px 16px; }
+.litpop702-resize702 { position:absolute; right:0; bottom:0; width:28px; height:28px; cursor:nwse-resize; touch-action:none; background:linear-gradient(135deg, transparent 0 62%, var(--line) 62% 68%, transparent 68% 78%, var(--line) 78% 84%, transparent 84%); border-bottom-right-radius:14px; }
 a.btn { display:inline-flex; align-items:center; font-family:var(--sans); background:var(--navy); color:var(--cream); border:none; border-radius:999px; padding:10px 20px; font-size:15px; font-weight:600; min-height:44px; text-decoration:none; cursor:pointer; }
 a.btn.ghost { background:none; color:var(--navy); border:1px solid var(--line); padding:9px 16px; font-weight:400; }
 .sortrow { margin:0 0 10px; }
@@ -1221,7 +1222,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v704-1";
+var CACHE = "ora-pro-nobis-v704-2";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

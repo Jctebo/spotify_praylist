@@ -60,6 +60,23 @@
 // on base where they passed for v702 (standing v702
 // behavior).
 //
+// Amendment (§2A.7): group R — the resizable popup.
+// R1 a resize drag on .litpop702-resize702 changes width
+// and height by the drag delta, left/top unchanged, the
+// inline size set · R2 a resize drag clamps at exactly
+// 280x200 and at the viewport edge (panel fully on screen,
+// width = innerWidth - left, height = innerHeight - top) ·
+// R3 the size persists in opn-litpop-v702 as w/h beside
+// x/y/alpha and a reopen stands at the stored size +
+// position · R4 v702-shape prefs ({x, y, alpha} only) open
+// at the default size (no inline width/height, rendered
+// width = min(92vw, 420px)) with position + alpha honored
+// and the handle standing. Fail-on-old for R (base
+// ebec0de, the pre-amendment tree, via ORA_WT): R1-R3 fail
+// outright (no handle, no wiring, no w/h in the store);
+// R4 fails on its handle assertion only, its default-size /
+// position / alpha assertions standing trivially.
+//
 // Run: node app/worker/harness-v704.mjs
 //      ORA_WT=/path/to/old-tree node /path/to/harness-v704.mjs
 let chromium;
@@ -538,6 +555,92 @@ await pg.waitForTimeout(100);
 rowsA = await openDockMenuRows();
 check('M no "Display Liturgy Text" item while the Adoration watch stands (v702 A1)', !rowsA.includes('Display Liturgy Text'), rowsA);
 await pg.evaluate(() => { document.querySelectorAll('.anchmenu, .menucatcher').forEach((n) => n.remove()); });
+
+// ---------- R: the resizable popup (§2A.7) ----------
+async function dragResize(dx, dy) {
+  const box = await pg.evaluate(() => {
+    const h = document.querySelector('.litpop702-resize702');
+    if (!h) return null;
+    const r = h.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  if (!box) return false;
+  await pg.mouse.move(box.x, box.y);
+  await pg.mouse.down();
+  await pg.mouse.move(box.x + dx, box.y + dy, { steps: 12 });
+  await pg.mouse.up();
+  await pg.waitForTimeout(60);
+  return true;
+}
+function resizeState() {
+  return pg.evaluate(() => {
+    const p = document.getElementById('litpop702');
+    if (!p) return { panel: false, handle: false, inlineW: null, inlineH: null };
+    return { panel: true, handle: !!p.querySelector('.litpop702-resize702'), inlineW: p.style.width || '', inlineH: p.style.height || '' };
+  });
+}
+async function openPopupForR() {
+  await resetWorld();
+  await pg.evaluate((d) => { state.queue = [d]; state.queueIdx = 0; openVideoHandoff656(d); }, massDesc());
+  await pg.waitForTimeout(200);
+  const tapped = await tapDockMenuItem('Display Liturgy Text');
+  await pg.waitForTimeout(500);
+  return tapped;
+}
+
+// R1: a (+80, +60) drag on the handle changes width/height
+// by the delta. A preliminary shrink drag stands first so
+// the default-posture panel (359 wide on this 390 viewport)
+// has room for the +80 delta inside the §2A.4 clamp.
+check('R1 setup: the popup opens through the standing door', await openPopupForR());
+await dragResize(-120, -150);
+const r1start = await panelState();
+const r1dragged = await dragResize(80, 60);
+const r1after = await panelState();
+const r1rs = await resizeState();
+check('R1 a resize drag (+80, +60) on the handle changes width by +80 and height by +60 (±2px), left/top unchanged, inline size set', r1dragged && r1after.panel && Math.abs(r1after.width - (r1start.width + 80)) <= 2 && Math.abs(r1after.height - (r1start.height + 60)) <= 2 && Math.abs(r1after.left - r1start.left) <= 1 && Math.abs(r1after.top - r1start.top) <= 1 && r1rs.inlineW !== '' && r1rs.inlineH !== '', { start: [r1start.width, r1start.height, r1start.left, r1start.top], after: [r1after.width, r1after.height, r1after.left, r1after.top], inline: [r1rs.inlineW, r1rs.inlineH] });
+
+// R2: clamps — exactly 280x200 at the minimum, then the
+// viewport edge on an oversize drag.
+check('R2 setup: the popup opens through the standing door', await openPopupForR());
+await dragResize(-600, -600);
+const r2min = await panelState();
+check('R2 a resize drag (-600, -600) clamps at exactly 280x200 (±1px), panel fully on screen', r2min.panel && Math.abs(r2min.width - 280) <= 1 && Math.abs(r2min.height - 200) <= 1 && r2min.left >= 0 && r2min.top >= 0 && r2min.right <= 390.5 && r2min.bottom <= 844.5, r2min);
+const r2pre = await panelState();
+await dragResize(2000, 2000);
+const r2max = await panelState();
+check('R2 a resize drag (+2000, +2000) clamps at the viewport edge: width = innerWidth - left, height = innerHeight - top (±1px), left/top unchanged, panel fully on screen', r2max.panel && Math.abs(r2max.left - r2pre.left) <= 1 && Math.abs(r2max.top - r2pre.top) <= 1 && Math.abs(r2max.width - (390 - r2max.left)) <= 1 && Math.abs(r2max.height - (844 - r2max.top)) <= 1 && r2max.right <= 390.5 && r2max.bottom <= 844.5, { pre: [r2pre.left, r2pre.top], max: [r2max.width, r2max.height, r2max.right, r2max.bottom] });
+
+// R3: the size persists in opn-litpop-v702 and a reopen
+// stands at the stored size + position.
+check('R3 setup: the popup opens through the standing door', await openPopupForR());
+await dragResize(-60, -60);
+const r3rect = await panelState();
+await pg.evaluate(() => { const c = document.querySelector('[data-litpop702-close]'); if (c) c.click(); });
+await pg.waitForTimeout(60);
+const r3closed = await panelState();
+const r3stored = await pg.evaluate(() => { try { return JSON.parse(localStorage.getItem('opn-litpop-v702') || 'null'); } catch (e) { return null; } });
+check('R3 opn-litpop-v702 carries w/h equal to the resized rect (±1px) alongside x/y/alpha', !r3closed.panel && !!r3stored && Math.abs(r3stored.w - r3rect.width) <= 1 && Math.abs(r3stored.h - r3rect.height) <= 1 && Math.abs(r3stored.x - r3rect.left) <= 1 && Math.abs(r3stored.y - r3rect.top) <= 1 && typeof r3stored.alpha === 'number', r3stored);
+check('R3 reopening via "Display Liturgy Text" succeeds', await tapDockMenuItem('Display Liturgy Text'));
+await pg.waitForTimeout(400);
+const r3re = await panelState();
+const r3rs = await resizeState();
+check('R3 the reopened panel stands at the stored size (±1px) at the stored position, with the handle standing', r3re.panel && !!r3stored && Math.abs(r3re.width - r3stored.w) <= 1 && Math.abs(r3re.height - r3stored.h) <= 1 && Math.abs(r3re.left - r3stored.x) <= 1 && Math.abs(r3re.top - r3stored.y) <= 1 && r3rs.handle, { re: [r3re.width, r3re.height, r3re.left, r3re.top], stored: r3stored, handle: r3rs.handle });
+
+// R4: v702-shape prefs ({x, y, alpha} only) open at the
+// default size — no inline size, position + alpha honored,
+// the handle standing (the leg's amendment assertion).
+await resetWorld();
+await pg.evaluate(() => { try { localStorage.setItem('opn-litpop-v702', JSON.stringify({ x: 20, y: 20, alpha: 0.5 })); } catch (e) {} });
+await pg.evaluate((d) => { state.queue = [d]; state.queueIdx = 0; openVideoHandoff656(d); }, massDesc());
+await pg.waitForTimeout(200);
+check('R4 setup: tapping "Display Liturgy Text" succeeds with v702-shape prefs seeded', await tapDockMenuItem('Display Liturgy Text'));
+await pg.waitForTimeout(500);
+const r4 = await panelState();
+const r4rs = await resizeState();
+check('R4 v702-shape prefs open at the default size: no inline width/height, rendered width = min(92vw, 420px) (±1px)', r4.panel && r4rs.inlineW === '' && r4rs.inlineH === '' && Math.abs(r4.width - Math.min(0.92 * 390, 420)) <= 1, { width: r4.width, inline: [r4rs.inlineW, r4rs.inlineH] });
+check('R4 the stored position (±1px) and alpha (50% background) are honored', r4.panel && Math.abs(r4.left - 20) <= 1 && Math.abs(r4.top - 20) <= 1 && r4.bg.includes('50%'), r4);
+check('R4 the resize handle stands', r4rs.panel && r4rs.handle, r4rs);
 
 console.log('\nharness-v704: ' + ok + ' ok, ' + bad + ' bad');
 await b.close();
