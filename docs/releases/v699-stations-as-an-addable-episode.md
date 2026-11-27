@@ -279,3 +279,12 @@ Seats that name "Mass and Homilies" but are NOT the section (decided per seat in
 
 - None blocking. The §3.3 deviations (contentsOut carriage · v688 M8 re-point · v686 L7 floor clause · S5 fail-on-old shape note) are each named in §3, verified above, and stand as recorded.
 - Ship seat note: the field leg (R8) remains John's look after deploy; no harness claims it.
+
+## §5 Ship record (2026-11-27, seat chain-v699-ship, contract 1241)
+
+- **SHIPPED LIVE 2026-11-27T14:17:10Z** · pin **ora-pro-nobis-v699-1** · Worker **a198a9ac-a2b6-4e36-b0fa-9de62e2946d2** (100%).
+- **Merge:** tree-exact Git Data API (push-v699-github.py) — remote main stood at **a26830f** (its tree `85aa0643` == the branch base tree, remote-vs-base delta EMPTY, no runner commits in between, no rebase needed); remote ship commit **e395633c1d079fec8f156a281f0172e638d5aecf**, merged tree **15d3f58e17d8d72e2c9898df5be57df6ce012150** == branch tree (head bf59a7f, Review PASS), asserted blob-exact on all eight delta paths (migration 0053 · harness-v686 · harness-v688 · harness-v699 · client.ts · index.ts · ui.ts · this doc) and tree-exact overall; local mirror cb72838c. **Main pushed · remote in sync.**
+- **Deploy:** driver deploy-app-v699-ship.py, EXPECTED_HEAD = the merged local main head cb72838c; dry-run clean, deploy exit 0. Deployed from a clean detached worktree of the merged mirror (the standing clone's index lags the update-ref by the standing pattern; its worktree was not touched).
+- **Production verified from served bytes:** GET / **200** · served sw.js reads pin **ora-pro-nobis-v699-1** only (no other pin string stands) · served app.js (1,609,574 bytes) carries the widened daily set (`fr-mike-homilies` · `barron-sunday-sermons`) and the Stations Add stamp (`stations-of-the-cross` → `dayRule:'fridays'`), and does NOT carry `opnMassHomiliesSectionHtml686` or `p686mass` (0 occurrences) · the served book payload (agent-door mirror) carries the Stations row at The Raccolta with `audio {en: 1011.8}` — the v699 PRAYER_AUDIO entry live.
+- **Rollback:** pin **ora-pro-nobis-v698-1** (the prior production build; redeploy the v698 tree).
+- **Board closeout:** written by Ship — releases row 1677 Live, What's New + shipped_records inserted and read back, intake 1331 Done, contract 1241 judged (ids in the Ship report).
