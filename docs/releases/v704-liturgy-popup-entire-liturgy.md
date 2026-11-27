@@ -548,3 +548,58 @@ harness-v704 run against base `ebec0de` via `ORA_WT` on a scratch worktree (remo
 - **R1's preliminary shrink drag does not weaken the leg:** the shrink is itself a real resize drag on the same handle, standing as setup only because the default-posture panel (359px wide on the harness's 390px viewport) has no room for a +80 delta inside the §2A.4 clamp. The asserted drag is measured from the **post-shrink rect** — a real, rendered size — and asserts the full +80/+60 delta (±2px) with left/top unchanged and the inline size set. The setup manufactures nothing: the quantity asserted is a delta produced by the asserted drag itself, against the real clamp, and R2 separately proves both clamp bounds driven. On the old tree the same leg fails outright (§4A.2), which a paint claim could not do.
 
 **Disposition: PASS — cleared for Ship at pin `ora-pro-nobis-v704-2`.**
+
+## §5 Ship record
+
+**Shipped LIVE at pin `ora-pro-nobis-v704-2` — 2026-11-27.**
+
+Ship seat: chain-v704-ship (re-seated after a ruled stop; standing Ship contract 1270).
+
+### §5.1 Direction and amendment
+
+- Direction (John, 2026-11-27 16:52 CT, replying to the v702 ship report, verbatim): **"Not just the readings. The entire liturgy. Homily recording and custom editing can be excluded."** Run level: **To Ship.**
+- Amendment (John, 2026-11-27 17:09 CT, verbatim): **"Also the ability to edit the size of that pop-up"** — folded into v704 before closeout as §2A (Plan amendment), §3A (Implement), §4A (Review).
+
+### §5.2 Review verdicts
+
+- **§4 Review: PASS** (chain-v704-review, on Implement head `7f833ca`; harness-v704 56 ok / 1 bad — the one bad the §3.4 R4/N2 acks tail, judged acceptable; harness-v702 36/1 pin artifact; harness-v697 73/1; harness-v688 65/0).
+- **§4A Amendment Review: PASS** (chain-v704-review, on amendment head `d570ddf`; harness-v704 68 ok / 2 bad — F pin leg §3A.5 deviation judged acceptable, N2 ack leg already judged in §4.3; group R 13/13; harness-v702 36/1; harness-v697 delta zero; harness-v688 65/0). Amendment chain: §2A `d158c53` · §3A `d570ddf` · §4A `ab34138`.
+
+### §5.3 First merge and first deploy (v704-1, un-amended build)
+
+- The first Ship seat merged `release/v704` → main: merge commit **`8abc14a`**.
+- That seat deployed the **un-amended** build at pin **`ora-pro-nobis-v704-1`**: Worker version ID **`f1736ed6-15b5-47ca-9b25-f63b510282b4`**, deployment created **2026-11-27T23:10:16.827Z** at **100%** (identified from the Worker's deployment history by that seat; re-confirmed in this seat's deployment listing).
+- John's amendment (§5.1) then arrived; the **coordinator stopped that Ship seat**. **No board closeout happened** at that point (row 1682 stood at Scope; no What's New, no shipped_records row). Production served v704-1 until the second deploy (§5.5).
+
+### §5.4 The ruled stop and the coordinator's re-authorization
+
+- The second Ship seat stopped per its stop condition because **remote main had moved**: v703's ship landed on main (merge `e33e521` + §5 `89e98ab`).
+- The **coordinator verified firsthand** and ruled: remote main stands at **`89e98ab54982bac5c81da1526791f92bee323b86`** (tree `e8a69cc1998ba139ec7aa59b58b2663b1f476ecf`); v703's delta vs `8abc14a` is **only** `docs/releases/v703-auxilium-double-introduction.md` (225 insertions, no overlap with v704). The coordinator **re-authorized the merge with parent `89e98ab`**, with the standing condition: if remote main had moved beyond `89e98ab` at re-read, stop and report again. At this seat's re-read, remote main stood exactly at `89e98ab`.
+
+### §5.5 Second merge (tree-exact, Git Data API)
+
+- Branch verified firsthand: `release/v704` head **`ab34138`**, tree `3d058c1a47f217fb9864416cff5712d6d19b7074`, clean; amendment blobs re-asserted: `app/worker/src/ui.ts` `ca39a41d2740a3b68b8e9bf0110ee77ffac9de9a` · `app/worker/src/client.ts` `399938c31b9895f71d224a0d60577f9dd81153fa` · `app/worker/harness-v704.mjs` `f6353133bfda2228a6ae8acf2ceea52bd09a7d5b` · this doc `c6e9d31d680fd43d1eb570c3cc78e0207ca23340`.
+- Merge commit: **`2ae8e28ad2c8f7ce70a3f81126567de84f5ba689`**, parent `89e98ab`, tree **`e6672b4086b93a00182111c8b01d9afd79c01267`**. Never force-pushed; the release branch stays local.
+- Tree assertions (all passed): every one of the 4 amendment delta blobs in the merged tree == the branch blob · the v703 doc blob in the merged tree == its blob at `89e98ab` (`90919d70b74d72f4652946c419996fd0e85cbfdb` — nothing of v703 dropped) · no other path differs from `89e98ab`'s tree (diff == exactly the 4 amendment paths).
+- Ship worktree `v704-ship-main` moved to the merge head and verified clean; the standing clone's own unrelated dirty checkout was not touched.
+
+### §5.6 Second deploy (v704-2)
+
+- Worker **`ora-pro-nobis-app`** deployed from the ship worktree at the merge head (deploy driver `EXPECTED_HEAD` updated to `2ae8e28…`; dry-run passed first).
+- Worker version ID: **`fc70bfb7-2e5a-4353-b95c-167ee1c04873`** · deployment created **2026-11-27T23:26:51.570Z** · **100%**.
+
+### §5.7 Production verification (from served bytes)
+
+- `GET https://app.orapronobis.media/` → **200**.
+- Served `sw.js` reads **`ora-pro-nobis-v704-2`** and does **not** read `ora-pro-nobis-v704-1`.
+- Served `app.js` carries **`liturgyPopupPaint704`**, **`litpop702-resize702`**, and **`wireLiturgyPopupResize702`**.
+
+### §5.8 Board closeout
+
+- **What's New id 519**: "Changed: the Liturgy popup now shows the whole Mass — the full liturgy with the readings inside it, not the readings alone — and you can drag it, resize it, and set how see-through it is."
+- **Releases row 1682**: status **Live** · `shipped_at` = 2026-11-27T23:26:51Z (the v704-2 deploy timestamp) · `whats_new_id` = 519. Read back.
+- **shipped_records id 893**: project 3 · version v704 · title "Liturgy popup carries the entire liturgy, not readings only (homily recording + custom editing excluded)" · `shipped_at` = 2026-11-27T23:26:51Z · `whats_new_id` = 519. Read back.
+- **Ship phase record id 2944**: release 1682 · Ship · passed · holder `chain-v704-ship` · slug `liturgy-popup-entire-liturgy` · document_path `docs/releases/v704-liturgy-popup-entire-liturgy.md` · `commit_hash` = `2ae8e28ad2c8f7ce70a3f81126567de84f5ba689`. Read back. (Scope 2936 · Plan 2937 · Implement 2939 · Review 2940 stand passed.)
+- **Goals Board intake 1340**: CLOSED, status **Done** — closeout line appended naming both deploys, the amendment, and the v703-mover stop/ruling; read back via the task list.
+
+**Disposition: v704 LIVE at pin `ora-pro-nobis-v704-2`.**
