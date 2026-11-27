@@ -1516,7 +1516,7 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // key is an error — the client's mirror rule
           // (the set is a literal here because this fn is
           // extracted standalone by the harnesses).
-          if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints"].includes(key)) return { error: `bad daily ${String(key)}` };
+          if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints", "fr-mike-homilies", "barron-sunday-sermons"].includes(key)) return { error: `bad daily ${String(key)}` };
         } else if (kind === "massdaily") {
           // v688: a massdaily item naming one of the four
           // Mass sources is kept; any other massdaily key
@@ -1951,6 +1951,12 @@ async function reflectionsPayload(env: Env) {
 // map has no audio — the book payload folds `audio` onto
 // exactly these rows and no other.
 const PRAYER_AUDIO: Record<string, { en: number; la?: number }> = {
+  // v699 §2.1/§2.3 seat 2: the Stations catalog record —
+  // duration MEASURED from the produced file
+  // (prayer-audio/stations-of-the-cross.en.mp3, ffprobe
+  // 1011.8s, rendered on the standing v509/v562 route:
+  // normalized_tts_text -> tts speak avocado_v2:MAI_03).
+  "stations-of-the-cross": { en: 1011.8 },
   "our-father": { en: 21.2, la: 25.4 },
   "hail-mary": { en: 14.9, la: 18.8 },
   "glory-be": { en: 10.1, la: 10.6 },

@@ -289,13 +289,17 @@ await openForm();
     const groups = [...document.querySelectorAll('.p609edit [data-p604exp]')].map((g) => g.getAttribute('data-p604exp'));
     return { keys: [...sec.querySelectorAll('[data-p686src]')].map((r) => r.getAttribute('data-p686src')), afterLast: sec.previousElementSibling && sec.previousElementSibling.getAttribute('data-p604exp') === groups[groups.length - 1] };
   });
-  check('L1 closing Mass and Homilies section stands after the last block group, four rows in order',
-    !!mass && JSON.stringify(mass.keys) === JSON.stringify(['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross']) && mass.afterLast === true, mass);
+  // superseded-by-v699: the closing section is DELETED — the leg now asserts its ABSENCE.
+  check('L1 closing Mass and Homilies section stands after the last block group, four rows in order [superseded-by-v699: section deleted, absence asserted]',
+    mass === null, mass);
   const st = await srcRow('stations-of-the-cross');
-  check('L1 Stations row: tag "Not placed", switch Off, day pick Fridays, standing last',
-    !!st && st.tag === 'Not placed' && st.on === 'false' && st.day === 'fridays', st);
+  // superseded-by-v699: no source row for stations-of-the-cross paints anywhere in the form.
+  check('L1 Stations row: tag "Not placed", switch Off, day pick Fridays, standing last [superseded-by-v699: no Stations source row paints]',
+    st === null || st === undefined || st === false, st);
   const hom = await srcRow('fr-mike-homily');
-  check('L1 Fr. Mike homily row: On · Sundays', !!hom && hom.on === 'true' && hom.day === 'sundays', hom);
+  // superseded-by-v699: no source row for fr-mike-homily paints anywhere in the form.
+  check('L1 Fr. Mike homily row: On · Sundays [superseded-by-v699: no Fr. Mike source row paints]',
+    hom === null || hom === undefined || hom === false, hom);
   const midday = await srcRow('do-midday-prayer');
   check('L1/L2-inert: the OFF Midday block source row stands spliced with INERT (disabled) controls, values as stored',
     !!midday && midday.tDisabled === true && midday.dDisabled === true && midday.on === 'true' && midday.day === 'daily', midday);
@@ -496,10 +500,11 @@ async function driveMove(fromBlock, rid, toBlock) {
   // spliced-in and closing rows carry no move buttons; no
   // source row carries the CONTENTS Remove attribute (its
   // Remove rides the v687 icon attribute) or a drag handle.
-  check('L7 (re-pointed per C-687-3) source rows carry Move buttons + a menu where their representation stands, none where it does not, and no contents-Remove attribute or drag handle anywhere',
-    rows.length >= 10 && rows.every((r) => !r.remove && !r.handle)
+  check('L7 (re-pointed per C-687-3) source rows carry Move buttons + a menu where their representation stands, none where it does not, and no contents-Remove attribute or drag handle anywhere [superseded-by-v699: closing-keys clause re-pointed — none of the four closing keys paints a source row at all; the >=10 row floor included the four closing rows and is re-pointed to >=9, the standing block rows]',
+    rows.length >= 9 && rows.every((r) => !r.remove && !r.handle)
     && rows.filter((r) => r.k === 'do-invitatory' || r.k === 'usccb-daily-readings').every((r) => r.move && r.menu)
-    && rows.filter((r) => ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross', 'do-midday-prayer'].includes(r.k)).every((r) => !r.move), rows);
+    && rows.filter((r) => ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross'].includes(r.k)).length === 0
+    && rows.filter((r) => r.k === 'do-midday-prayer').every((r) => !r.move), rows);
   const before = await groupSeq('Morning');
   // Morning Offering (source:morning-prayer) moved to Night in L4; the
   // standing Morning contents pair to sort is Saint daily over the

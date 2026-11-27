@@ -2852,7 +2852,13 @@ var OPN_DAY_KEY_611 = 'daily-gospel-exegesis';
 // the Catholic Saints & Feasts VIDEO series). Closed set:
 // a 'daily' contents item naming any other key is an
 // error at both validators and filters out at the read seam.
-var OPN_DAILY_SERIES_666 = ['saint-of-the-day', 'daily-gospel-exegesis', 'daily-readings', 'bible-in-a-year', 'catholicsaints'];
+// v699 §1.6 (DEVIATION, named): the set is WIDENED by the
+// two Sunday homily series — John's widening word
+// (2026-11-27 07:47 CT) is the authority for exactly these
+// two keys and no other; opnDailyMatch666 carries the
+// matching homily arm (newest entry published on or before
+// the presented date). No other key is added by v699.
+var OPN_DAILY_SERIES_666 = ['saint-of-the-day', 'daily-gospel-exegesis', 'daily-readings', 'bible-in-a-year', 'catholicsaints', 'fr-mike-homilies', 'barron-sunday-sermons'];
 function opnDailyKeyOk666(key) { return typeof key === 'string' && OPN_DAILY_SERIES_666.indexOf(key) >= 0; }
 /* v688 §2.2/§2.3: the dynamic Mass kind — a SIBLING kind
    ('massdaily') beside 'daily', NEVER an extension of it:
@@ -21104,6 +21110,17 @@ function opnDailyMatch666(series, list, presented) {
     if (hit5) return { e: hit5, stale: false };
     return null; // v694: the prev5 (before-presented, stale) arm is deleted — the same-day-publish hit5 above is the day's own and stands
   }
+  if (series === 'fr-mike-homilies' || series === 'barron-sunday-sermons') {
+    // v699 §1.6/§2.2 seat 3: the homily arm — the newest
+    // entry whose Chicago publish date is on or before the
+    // presented date (the v677 never-later discipline, as
+    // the saint arm applies it); null when no such entry
+    // stands (the resolver stands its not-available
+    // placeholder, per v694's no-fallback rule).
+    var hh = list.filter(function (e) { var cd = ownChicagoDateStr(e.publishedMs); return !!cd && cd <= presented; }).sort(byPub);
+    if (hh.length) return { e: hh[0], stale: false };
+    return null;
+  }
   return null;
 }
 function opnDailyPlaceholder694(series, block, showImageUrl) {
@@ -25014,13 +25031,6 @@ function opnSpliceSourceRows686(block, list) {
   });
   return entries;
 }
-function opnMassHomiliesSectionHtml686() {
-  if (!opn686.rows.length) return '';
-  var keys = ['daily-tv-mass', 'fr-mike-homily', 'barron-sermon', 'stations-of-the-cross'];
-  var html = '<div class="p609group p686mass" data-p686mass="1"><div class="row p609ghead"><span class="grow">Mass and Homilies</span></div>';
-  keys.forEach(function (k) { var r = opn686Row(k); if (r) html += opnSourceRowHtml686(r, { tag: k === 'stations-of-the-cross' ? 'Not placed' : 'Daily source', closing: true }); });
-  return html + '</div>';
-}
 /* §2.5: the whole-table write — every act PUTs all 26 rows in
    standing section order (the deleted editor's settingsSectionOf
    order over SET_SECTIONS, kept here as OPN686_SECTIONS), within
@@ -26787,7 +26797,13 @@ function openProfilesScreen(openKey, opts) {
     var out = {}, any = false;
     Object.keys(d.contents).forEach(function (b) {
       if (b !== 'Novenas' && d.core.indexOf(b) < 0) return;
-      if (d.contents[b]) { out[b] = d.contents[b].map(function (it) { return it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; }); any = true; }
+      // v699 Implement (deviation named in §3): the map
+      // carried kind+key only, silently stripping side
+      // (v670), off (v687) and dayRule (v690) from every
+      // item on a profile-editor save — including v699's
+      // Add-stamped dayRules, which would have died at this
+      // seat. The fields the validators carry now ride.
+      if (d.contents[b]) { out[b] = d.contents[b].map(function (it) { var o = it.key ? { kind: it.kind, key: it.key } : { kind: it.kind }; if (it.side) o.side = it.side; if (it.off) o.off = 1; if (it.dayRule) o.dayRule = it.dayRule; return o; }); any = true; }
     });
     return any ? out : undefined;
   }
@@ -27737,6 +27753,13 @@ function openAddLadder603(block, host) {
           // its side onto the appended item.
           var sideA = row.getAttribute('data-p670side');
           if (sideA && kp[0] === 'source') itemA.side = sideA;
+          // v699 §2.2 seat 5: the closing rows' cadences fold
+          // into the items as Add-stamped dayRules (the §1.8
+          // migration made executable) — Stations fridays,
+          // the two homily series sundays. No other add is
+          // stamped; the v690 Frequency act owns it after.
+          if (kp[0] === 'prayer' && itemA.key === 'stations-of-the-cross') itemA.dayRule = 'fridays';
+          if (kp[0] === 'daily' && (itemA.key === 'fr-mike-homilies' || itemA.key === 'barron-sunday-sermons')) itemA.dayRule = 'sundays';
           host.add(itemA);
           sh.remove();
         });
@@ -28465,7 +28488,6 @@ function opnEditSetHtml609(day) {
     paint635.splice(at, 0, name);
   });
   paint635.forEach(function (name) { html += opnEditGroupHtml609(name); });
-  html += opnMassHomiliesSectionHtml686();
   return html + '</div>';
 }
 function opnGroupOn609(block) {

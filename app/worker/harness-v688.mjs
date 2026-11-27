@@ -215,7 +215,8 @@ const WARN = "Today's episode has not updated yet — showing the last one that 
   const O = w.__opn;
   const core = ["Morning", "Midday", "Evening", "Night"];
   check("M8 the Mass set stands verbatim (OPN_MASS_SERIES_688)", JSON.stringify(O.OPN_MASS_SERIES_688) === JSON.stringify(["daily-tv-mass", "catholictv", "dailytvmass", "springfieldmass"]), O.OPN_MASS_SERIES_688);
-  check("M8 the v666 set is NOT widened (OPN_DAILY_SERIES_666 unchanged)", JSON.stringify(O.OPN_DAILY_SERIES_666) === JSON.stringify(["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints"]), O.OPN_DAILY_SERIES_666);
+  // superseded-by-v699 (Plan §1.6 deviation): v699 widens the set by the two homily series on John's word — this leg now asserts the widened set verbatim.
+  check("M8 the v666 set is NOT widened (OPN_DAILY_SERIES_666 unchanged) [superseded-by-v699: set widened by fr-mike-homilies + barron-sunday-sermons]", JSON.stringify(O.OPN_DAILY_SERIES_666) === JSON.stringify(["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints", "fr-mike-homilies", "barron-sunday-sermons"]), O.OPN_DAILY_SERIES_666);
   for (const key of ["daily-tv-mass", "catholictv", "dailytvmass", "springfieldmass"]) {
     let threw = "";
     try { O.opnCheckContents590({ Morning: [{ kind: "massdaily", key }] }, core); } catch (e) { threw = String(e && e.message || e); }
