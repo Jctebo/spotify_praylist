@@ -10642,6 +10642,7 @@ function openVideoHandoff656(desc) {
   // video). state.queueIdx already stands at the video's
   // index on every queue path; a single play carries -1.
   if (!desc || !desc.videoId) return;
+  closeLiturgyPopup702(); // v702 §2.3: a new video never inherits the old video's panel
   if (!audioEl.paused || oraNativeMode()) pauseTransport();
   podWatch = { video: { id: desc.videoId, title: desc.title, dateLabel: desc.dateLabel || '', imageUrl: desc.imageUrl || null }, scroll: window.scrollY || 0 };
   videoHandoff656 = { desc: desc, queueIdx: state.queueIdx };
@@ -10674,6 +10675,7 @@ function paintVideoWatch656() {
   wirePodWatchApi();
 }
 function finishVideoHandoff656(fromEnd) {
+  closeLiturgyPopup702(); // v702 §2.3: the popup dies with its video
   // v656 §2.4.3: the one finish act (the ENDED event · the
   // watch's back act). Consumes the record first; marks ONLY
   // on a natural end (the markCompleted precedent — skips and
@@ -10731,6 +10733,7 @@ function openPodWatch(v) {
   // resumes the audio when the watch closes — the user resumes
   // it himself (the estate's standing posture).
   if (!audioEl.paused) pauseTransport();
+  closeLiturgyPopup702(); // v702 §2.3: a new video never inherits the old video's panel
   podWatch = { video: v, scroll: window.scrollY || 0 };
   paintPodWatch();
 }
@@ -10830,6 +10833,7 @@ function podWatchOnError(code) {
   if (line) { line.textContent = 'YouTube won\u2019t play this one inside the app \u2014 open it in YouTube instead.'; line.style.display = ''; }
 }
 function closeWatch() {
+  closeLiturgyPopup702(); // v702 §2.3: the popup dies with its video
   // v656 §2.4.4: abandonment — any closeWatch seat OTHER than
   // the hand-off's own finish (a tab switch, a fresh audio
   // start, the Now Playing sheet's open, a series re-entry)
@@ -17394,6 +17398,14 @@ function openDockMenu(anchorEl) {
   // player menu reads.
   var items = [];
   if (state.queue.length) items.push({ label: 'Previous track', act: function () { previousWithRule(); } });
+  // v702 §2.3 (as amended): "Display Liturgy Text" — John's
+  // door (2026-11-27 15:24/15:26 CT): the item stands in
+  // THIS docked bar's overflow exactly while a Mass video
+  // plays on a named watch surface (liturgyPopupSource702
+  // reads the watch state); its act opens the readings
+  // popup over the playing video.
+  var src702 = liturgyPopupSource702();
+  if (src702) items.push({ label: 'Display Liturgy Text', act: function () { openLiturgyPopup702(src702); } });
   items.push({ label: 'Intentions', state: intentionsOn() ? 'On' : 'Off', stay: true, stateFn: function () { return intentionsOn() ? 'On' : 'Off'; }, act: function () { setIntentions(!intentionsOn()); } });
   items.push({ label: 'Sleep timer', state: sleepLabel().replace('Sleep \u00b7 ', ''), act: function () { openSleepSheet(); } });
   items.push({ label: 'Playback speed', state: (state.rate || 1) + '\u00d7', act: function () { openSpeedSheet(); } });
@@ -17983,6 +17995,148 @@ function readingsCardDrive697(t, resolve697) {
   }).catch(function () {
     var r = resolve697 ? resolve697() : null;
     if (r && r.body) readingsCardPaint697(r.body, null);
+  });
+}
+/* ---------------- v702: the Liturgy popup over the Mass ----------------
+   John's direction (2026-11-27 15:21/15:24/15:26 CT, doc
+   §1.1): a movable, transparency-adjustable popup painting
+   the playing Mass's day readings over the video, engaged
+   by the "Display Liturgy Text" item in the bottom-docked
+   player bar's ⋯ menu (openDockMenu). The body paint is
+   the v697 card's own (readingsCardPaint697, driven by
+   readingsCardDrive697) — no second renderer, no second
+   fetch shape. Playback is never touched: no transport
+   call stands anywhere in this block. */
+function liturgyPopupPrefs702() {
+  // The opnVideoReg656 guarded form: a corrupt or absent
+  // store reads as the defaults {x:null, y:null, alpha:0.88}.
+  try {
+    var v = JSON.parse(localStorage.getItem('opn-litpop-v702') || 'null');
+    if (v && typeof v === 'object') return { x: (typeof v.x === 'number' ? v.x : null), y: (typeof v.y === 'number' ? v.y : null), alpha: (typeof v.alpha === 'number' ? Math.min(1, Math.max(0.35, v.alpha)) : 0.88) };
+  } catch (e) {}
+  return { x: null, y: null, alpha: 0.88 };
+}
+function liturgyPopupPrefsSave702(p) {
+  try { localStorage.setItem('opn-litpop-v702', JSON.stringify(p)); } catch (e) {}
+}
+function liturgyPopupDate702(t) { return episodeDate697(t); }
+function liturgyPopupSource702() {
+  // §1.4 (as amended): the playing Mass item, read from the
+  // WATCH state — on the Virtual Mass surface the video
+  // never becomes state.current, so state.current alone
+  // cannot answer. Praylist: a standing hand-off whose
+  // descriptor is a Mass video (the mass688 stamp, or a
+  // vmSeries naming a Virtual Mass series). Worship: a
+  // standing watch homed under the Mass tab (massPodReturn,
+  // set by openMassVirtualSeries). Anything else — audio,
+  // a Catechesis-homed video watch, a non-Mass Praylist
+  // video, the Adoration watch (podWatch never stands for
+  // it) — returns null and the menu item does not stand.
+  if (videoHandoff656 && videoHandoff656.desc && podWatch) {
+    var d = videoHandoff656.desc;
+    if (d.mass688 === true || MASS_VIRTUAL_ENTRIES.some(function (e) { return e.series === d.vmSeries; })) return d;
+    return null;
+  }
+  if (podWatch && podLevel === 'watch' && massPodReturn) return { title: podWatch.video.title };
+  return null;
+}
+function litpop702Clamp(panel, x, y) {
+  var mx = Math.max(0, window.innerWidth - panel.offsetWidth);
+  var my = Math.max(0, window.innerHeight - panel.offsetHeight);
+  return { x: Math.min(Math.max(0, x), mx), y: Math.min(Math.max(0, y), my) };
+}
+function litpop702ApplyAlpha702(panel, alpha) {
+  // §1.5: the slider sets the panel BACKGROUND only —
+  // color-mix over --card; text is never faded (no opacity
+  // write stands anywhere in this block).
+  panel.style.background = 'color-mix(in srgb, var(--card) ' + Math.round(alpha * 100) + '%, transparent)';
+}
+function openLiturgyPopup702(t) {
+  if (!t) return;
+  var dateStr = liturgyPopupDate702(t);
+  var standing = document.getElementById('litpop702');
+  if (standing) {
+    // One panel at a time; a re-tap for the same date is
+    // the toggle-close, a different date re-dates.
+    var sd = standing.getAttribute('data-litpop702-date');
+    standing.remove();
+    if (sd === dateStr) return;
+  }
+  var prefs = liturgyPopupPrefs702();
+  var panel = document.createElement('div');
+  panel.className = 'litpop702';
+  panel.id = 'litpop702';
+  panel.setAttribute('data-litpop702-date', dateStr);
+  var dateLine = dateStr;
+  try { var dl = homilyLongDate(dateStr); if (dl && dl !== 'Invalid Date') dateLine = dl; } catch (e) {}
+  panel.innerHTML = '<div class="litpop702-head"><div class="lohhead675 grow"><div class="lohhead-title675">Liturgy</div><div class="lohhead-hour675 readings-day697">' + esc(dateLine) + '</div></div><button class="btn ghost small" data-litpop702-close>Close</button></div>'
+    + '<div class="litpop702-alpha-row"><label for="litpop702-alpha">Transparency</label><input type="range" id="litpop702-alpha" min="0.35" max="1" step="0.05" value="' + prefs.alpha + '"></div>'
+    + '<div class="litpop702-body"></div>';
+  document.body.appendChild(panel);
+  var px = (prefs.x != null ? prefs.x : Math.max(0, window.innerWidth - panel.offsetWidth - 12));
+  var py = (prefs.y != null ? prefs.y : 12);
+  var c0 = litpop702Clamp(panel, px, py);
+  panel.style.left = c0.x + 'px';
+  panel.style.top = c0.y + 'px';
+  litpop702ApplyAlpha702(panel, prefs.alpha);
+  wireLiturgyPopupDrag702(panel, panel.querySelector('.litpop702-head'));
+  var slider = panel.querySelector('#litpop702-alpha');
+  slider.addEventListener('input', function () {
+    var a = parseFloat(slider.value);
+    if (!(a >= 0.35 && a <= 1)) return;
+    litpop702ApplyAlpha702(panel, a);
+    var p = liturgyPopupPrefs702();
+    p.alpha = a;
+    var r = panel.getBoundingClientRect();
+    p.x = Math.round(r.left); p.y = Math.round(r.top);
+    liturgyPopupPrefsSave702(p);
+  });
+  var cb = panel.querySelector('[data-litpop702-close]');
+  if (cb) cb.addEventListener('click', function () { closeLiturgyPopup702(); });
+  // The standing v697 driver: one mass-readings fetch for
+  // the item's date, painted by readingsCardPaint697; the
+  // resolver reads the panel at settle time and the head
+  // carries .readings-day697, so the driver's day-name
+  // swap lands (R4's first outcome).
+  readingsCardDrive697(t, function () {
+    var p2 = document.getElementById('litpop702');
+    if (!p2 || p2.getAttribute('data-litpop702-date') !== dateStr) return null;
+    return { body: p2.querySelector('.litpop702-body'), head: p2.querySelector('.litpop702-head') };
+  });
+}
+function closeLiturgyPopup702() {
+  var p = document.getElementById('litpop702');
+  if (p) p.remove();
+}
+function wireLiturgyPopupDrag702(panel, head) {
+  // §1.5: pointer events in the v664 pattern — capture on
+  // the head, move clamps the whole panel in the viewport,
+  // up/cancel saves the prefs. R2: a pointerdown on the
+  // Close button (or its child) never starts a drag.
+  if (!head) return;
+  head.addEventListener('pointerdown', function (ev) {
+    if (ev.target && ev.target.closest && ev.target.closest('button')) return;
+    ev.preventDefault();
+    var r = panel.getBoundingClientRect();
+    var dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+    try { head.setPointerCapture(ev.pointerId); } catch (e) {}
+    var move = function (mv) {
+      var c = litpop702Clamp(panel, mv.clientX - dx, mv.clientY - dy);
+      panel.style.left = c.x + 'px';
+      panel.style.top = c.y + 'px';
+    };
+    var up = function () {
+      head.removeEventListener('pointermove', move);
+      head.removeEventListener('pointerup', up);
+      head.removeEventListener('pointercancel', up);
+      var p = liturgyPopupPrefs702();
+      var rr = panel.getBoundingClientRect();
+      p.x = Math.round(rr.left); p.y = Math.round(rr.top);
+      liturgyPopupPrefsSave702(p);
+    };
+    head.addEventListener('pointermove', move);
+    head.addEventListener('pointerup', up);
+    head.addEventListener('pointercancel', up);
   });
 }
 function trackTextHtml643(text) {

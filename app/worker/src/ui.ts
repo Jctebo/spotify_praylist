@@ -1024,6 +1024,16 @@ img.rowart { object-fit:cover; display:block; }
 .watchtitle { font-size:19px; font-weight:600; margin:0 0 10px; }
 .watchframe-wrap { position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden; margin:0 0 10px; }
 .watchframe-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+/* v702 §2.1: the Liturgy popup over the Mass video — a
+   body-appended floating panel (z 45: above the dock 40,
+   below every sheet 50 / menu 65-70); its background is
+   set inline per the transparency slider (color-mix over
+   --card), never a whole-panel opacity. */
+.litpop702 { position:fixed; z-index:45; width:min(92vw, 420px); max-height:70dvh; display:flex; flex-direction:column; border:1px solid var(--line); border-radius:14px; box-shadow:0 12px 32px rgba(42,38,32,.28); overflow:hidden; }
+.litpop702-head { flex:none; display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:grab; touch-action:none; }
+.litpop702-alpha-row { flex:none; display:flex; align-items:center; gap:10px; padding:0 12px 8px; }
+.litpop702-alpha-row input[type="range"] { flex:1; }
+.litpop702-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:2px 14px 16px; }
 a.btn { display:inline-flex; align-items:center; font-family:var(--sans); background:var(--navy); color:var(--cream); border:none; border-radius:999px; padding:10px 20px; font-size:15px; font-weight:600; min-height:44px; text-decoration:none; cursor:pointer; }
 a.btn.ghost { background:none; color:var(--navy); border:1px solid var(--line); padding:9px 16px; font-weight:400; }
 .sortrow { margin:0 0 10px; }
@@ -1211,7 +1221,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v699-1";
+var CACHE = "ora-pro-nobis-v702-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
