@@ -193,3 +193,33 @@ Own re-runs by this seat (fork venv, unittest):
 - **C2 — production script read-back:** in the production 2026-11-30 rundir, the Auxilium script's saint announcement count is exactly 1 and its `texts-needed.json` carries no `auxilium-christianorum/liturgical-announcement` block.
 - **C3 — production guard verdict read-back (the Deviation 1 condition):** Ship reads the production 2026-11-30 Auxilium transcript-guard verdict by name. If it is FAILED_GUARD, that episode is held under the standing guard rule and does not publish; v703 still ships, and Ship's report names the held episode and the guard verdict — it does not claim the episode published.
 - **Not a condition:** the 3 pre-existing Morning Prayer title-template failures (§4.4) are not fixed in v703 and do not gate Ship.
+
+## §5 Ship record
+
+- **Status:** SHIPPED · LIVE — Ship seat: chain-v703-ship (Ship phase record 2941). **Date:** 2026-11-27. **Ship shape:** FORK-ONLY — this record merged to main + board closeout is the ship. No app deploy, no pin.
+- **Review:** PASS WITH CONDITIONS (§4, commit `8bcf905`).
+- **Standing approval (execution-risk flag):** the first Ship pass stopped before this doc merge on a system execution-risk flag over the standing clone. This completion proceeded under John's standing approval of 2026-11-21 11:22 CT (recorded in `~/AGENTS.md`, "Standing-clone processing go-ahead") to process the one standing clone (checkout · build · test · git/package-manager operations inside it) for Ora line chains despite that flag — cautions honored: worktree off the clone, committed-tree verification before ship, merges serialized, nothing shipped unverified. The approval was reaffirmed 2026-11-26 for v690, and v702's ship proceeded under it when the same flag fired.
+
+### C1 — fork HEAD read-back: DISCHARGED
+
+- Fork (`~/workspace/projects/spotify_praylist-fork`, branch `muse-draft-week`, local-only, never pushed): HEAD `146f2857c0ac2ef5e7c0f384b462dc9a093d9548` (carries `9625e229e` + `146f2857c`), read back 2026-11-27 17:20:02 CST — before the 2026-11-28 00:00 CT nightly run starts. The first target date stands 2026-11-30; no slip.
+
+### Merge + push read-backs
+
+- **Branch:** `release/v703` at `8bcf90580a56a7b6fb9fe86387890bb2de38753c` (tree `c6c8ab0f348f362ac1f579a03c5279f8ed0c9673`), local only — never pushed. Doc blob at merge: `9b964697db2d3193ad25250dfc4ebb53b83b98a9`.
+- **Remote main before merge:** `8abc14a181dfaac33d68de637f54df11d50a025c` (Merge release/v704 into main; tree `4cebc9d778e5bcbfad8244f37de39eafc46231da`). Remote main had moved past the branch base; the v703 doc path was untouched on remote main. The merge commit's parent is that exact head; no force-push, no history rewrite, no commit dropped.
+- **Merge:** GitHub Git Data API, tree-exact (`~/workspace/.tools/push-v703-doc.py`, modeled on the v702 drivers): remote merge commit `e33e521566ab8aea40be66b61d525b101dd49060` ("Merge release/v703 into main", parent `8abc14a`), tree `d3d00db3e4d032dc5e6ccef353823d341980d6c8`. Assertion: merged tree == remote main's tree plus this doc path at its branch blob exactly; every non-doc blob byte-identical to pre-merge remote main; path set exact.
+- This §5 record commit follows the merge on main as its own tree-exact commit (the v702 ship-record pattern); the final remote main head and tree are read back in the chain's ship report.
+
+### Board closeout (DevOps Board, project ora-pro-nobis)
+
+- **Phase records:** Plan 2934 · Implement 2935 · Review 2938 · Ship 2941 — all `passed`, read back.
+- **What's New id 518:** "Fixed: the Auxilium Christianorum episode no longer announces the day twice in its introduction." — read back.
+- **shipped_records id 892:** project_id 3 · version `v703` · whats_new_id 518 — inserted and read back.
+- **Release row 1681:** status `Live`, shipped_at `2026-11-27T23:20:35Z`, whats_new_id 518 — read back.
+
+### Standing production read-back — C2/C3 NAMED, OPEN
+
+- **C2 = the production 2026-11-30 rundir's Auxilium script must carry the announcement exactly once with no liturgical-announcement block.**
+- **C3 = the production 2026-11-30 Auxilium guard verdict read by name — if FAILED_GUARD that episode is held under the standing guard rule and does not publish.**
+- Neither condition is discharged by this ship: the production 2026-11-30 rundir is composed by the nightly run starting 2026-11-28 00:00 CT, after this record. This ship does NOT claim the 2026-11-30 episode published and does NOT claim any guard verdict for it. C2/C3 close on the named production read-backs.
