@@ -56,7 +56,7 @@ DEFAULT_LOUDNESS_NORMALIZATION = {
 ROSARY_INTENTION_PAUSE_MS = 750
 
 VALID_STATUS_VALUES = {"approved", "skipped"}
-VALID_SELECTOR_VALUES = {"current_calendar_month", "weekday", "date", "entry_id", "title", "contract_id"}
+VALID_SELECTOR_VALUES = {"current_calendar_month", "current_calendar_month_year", "weekday", "date", "entry_id", "title", "contract_id"}
 VALID_SEASON_VALUES = {"easter", "ordinary"}
 SEASON_ALIASES = {
     "ordinary_time": "ordinary",
@@ -386,6 +386,10 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["folder"] = folder
         selector = str(normalized.get("selector", "current_calendar_month")).strip().lower() or "current_calendar_month"
         normalized["selector"] = selector
+        # v701 amendment (John, Q4 A): omit_if_missing is a monthly_template-only
+        # marker — a missing (year, month) intention file omits the block and
+        # flags the omission instead of failing the composition.
+        normalized["omit_if_missing"] = _normalize_bool(normalized.get("omit_if_missing", False))
     elif kind == "audio-cue":
         cue = normalize_publish_key(normalized.get("cue"))
         if cue != "sacred-bell":
@@ -779,6 +783,8 @@ def evaluate_selector(selector: Any, *, target_date: Optional[_dt.date] = None, 
         return date_value.strftime("%A").lower()
     if selector_name in {"current_calendar_month", "month"}:
         return date_value.strftime("%B").lower()
+    if selector_name == "current_calendar_month_year":
+        return f"{date_value.year}/{date_value.strftime('%B').lower()}"
     if selector_name == "date":
         return date_value.isoformat()
     if selector_name == "entry_id" and entry is not None:
@@ -1693,13 +1699,28 @@ def resolve_block_content(
                 runtime_context=runtime_context,
             )
         if kind == "monthly-template":
-            month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+            month_year = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
             folder = str(block.get("folder", "")).strip()
             template_path = Path(folder)
             if not template_path.is_absolute():
                 template_path = ROOT / template_path
-            template_file = template_path / f"{month_name}.txt"
-            return _read_text_file(str(template_file))
+            template_file = template_path / f"{month_year}.txt"
+            try:
+                return _read_text_file(str(template_file))
+            except PublishMissingDataError as exc:
+                # v701 amendment (John, Q4 A): only a block carrying the
+                # monthly_template-only omit_if_missing marker omits + flags;
+                # every other missing-data path still raises. Never fall back
+                # to another year's file.
+                if not _normalize_bool(block.get("omit_if_missing", False)):
+                    raise
+                year_part, _, month_part = str(month_year).partition("/")
+                print(
+                    "WARN missing_monthly_intention "
+                    f"entry={entry.get('entry_id', '')} year={year_part} month={month_part} reason={exc}",
+                    file=sys.stderr,
+                )
+                return ""
         if kind == "weekday-map":
             weekday = evaluate_selector(block.get("selector", "weekday"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
             mapping = block.get("map") or {}
@@ -2148,7 +2169,7 @@ def _expand_audio_fragments_from_block(
         )
 
     if kind == "monthly-template":
-        month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+        month_year = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
         text = resolve_block_content(
             block,
             contract=contract,
@@ -2158,7 +2179,7 @@ def _expand_audio_fragments_from_block(
         )
         if not text.strip():
             return []
-        fragment_key = "/".join((*path_parts, _fragment_path_segment("monthly-template", value=month_name)))
+        fragment_key = "/".join((*path_parts, _fragment_path_segment("monthly-template", value=month_year)))
         return [
             _fragment_payload(
                 fragment_key=fragment_key,

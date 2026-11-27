@@ -618,6 +618,223 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual([section["title"] for section in jobs[0]["sections"]], ["Calendar Sequence"])
         self.assertNotIn("May line", jobs[0]["text"])
 
+    # v701 — the Pope's monthly intention is keyed by month+year.
+    # 2026 fixture source (production data, per the standing fixture rule):
+    # the twelve standing monthly-intention files themselves at base b0334b4
+    # (Pope Leo XIV's 2026 intentions, house compositions).
+    MONTHLY_INTENTIONS_2026 = {
+        "january": "For the Holy Father's January intention: that prayer with the Word of God may nourish our lives and bring hope to our communities, we entrust this intention to God through the Holy Name of Jesus.",
+        "february": "For the Holy Father's February intention: that children with incurable diseases and their families may receive care and support, we entrust them to God through the loving intercession of the Holy Family.",
+        "march": "For the Holy Father's March intention: that effective disarmament may advance and that world leaders may choose dialogue over violence, we entrust this intention to God through the intercession and protection of Saint Joseph.",
+        "april": "For the Holy Father's April intention: that priests in crisis may receive accompaniment and support, we entrust them to God through the Eucharistic presence of Christ and His Divine Mercy.",
+        "may": "For the Holy Father's May intention: that all may have access to sufficient and nourishing food, we entrust this intention to God through the maternal intercession of the Blessed Virgin Mary.",
+        "june": "For the Holy Father's June intention: that sports may foster peace, respect, and solidarity, we entrust this intention to God through the Sacred Heart of Jesus.",
+        "july": "For the Holy Father's July intention: that human life may be protected and respected at every stage, we entrust this intention to God through the Precious Blood of Jesus.",
+        "august": "For the Holy Father's August intention: that the Gospel may be proclaimed effectively in urban communities, we entrust this intention to God through the Immaculate Heart of Mary.",
+        "september": "For the Holy Father's September intention: that water may be managed justly and shared equitably, we entrust this intention to God through the care and guardianship of the Holy Angels.",
+        "october": "For the Holy Father's October intention: that the Church may grow in mental health ministry and compassion, we entrust this intention to God through the intercession of Our Lady of the Rosary.",
+        "november": "For the Holy Father's November intention: that wealth may be used responsibly for the common good, we entrust this intention to God through the prayers and purification of the Holy Souls in Purgatory.",
+        "december": "For the Holy Father's December intention: that we may prepare our hearts to receive Christ, we entrust this intention to God through the grace of the Immaculate Conception.",
+    }
+
+    # 2027 quote-match source: release doc v701 §1.5 — Vatican News, "Pope
+    # releases prayer intentions for 2027" (2026-01-30), Pope Leo XIV's twelve
+    # intentions exactly as published. Each entry lists phrases that must
+    # appear verbatim in that month's resolved 2027 file, plus the month's
+    # traditional devotion carried over from its 2026 file.
+    MONTHLY_INTENTIONS_2027_PHRASES = {
+        "january": ["discover the power of prayer as a personal encounter with the Lord", "transforms our hearts and the world", "Holy Name of Jesus"],
+        "february": ["those who care for the holistic health of others might receive the support they need", "patience, wisdom, and fortitude", "open avenues of inner healing and hope", "Holy Family"],
+        "march": ["in a culture focused on productivity and instant results", "unique dignity of each person", "Saint Joseph"],
+        "april": ["art might be perceived as a true gift that humanizes us", "contemplate God's beauty in creation", "Divine Mercy"],
+        "may": ["technological development might open dignified work opportunities", "every person can put their talents at the service of the common good", "Blessed Virgin Mary"],
+        "june": ["artificial intelligence might always be developed to serve human dignity", "use it wisely", "Sacred Heart of Jesus"],
+        "july": ["treasure of faith and wisdom offered to us by grandparents and the elderly", "learn from their experience", "Precious Blood of Jesus"],
+        "august": ["young people in search of their own vocation", "a companion on the way to whom they can open their hearts", "Immaculate Heart of Mary"],
+        "september": ["live in a new relationship with creation, protecting it with justice", "a more harmonious and grateful existence", "Holy Angels"],
+        "october": ["a center of missionary outreach that forms new disciples", "Our Lady of the Rosary"],
+        "november": ["migrants and displaced persons might find communities that welcome them with dignity, solidarity, and true integration", "Holy Souls in Purgatory"],
+        "december": ["Christian families might be living witnesses of the Gospel in society", "hearths where faith, hope, and love are cultivated", "Immaculate Conception"],
+    }
+
+    MONTH_NAMES = [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december",
+    ]
+
+    def _morning_prayer_monthly_block(self):
+        contracts = self.mod.load_publish_contracts()
+        contract = next(c for c in contracts if c.contract_id == "morning-prayer-elevenlabs")
+        entry = dict(contract.entries[0])
+
+        def find(blocks):
+            for block in blocks or []:
+                if not isinstance(block, dict):
+                    continue
+                if self.mod.normalize_publish_key(block.get("kind")) == "monthly-template":
+                    return block
+                found = find(block.get("blocks"))
+                if found is not None:
+                    return found
+            return None
+
+        block = find(entry.get("blocks"))
+        self.assertIsNotNone(block)
+        return contract, entry, block
+
+    def test_monthly_intention_collision_resolves_by_year(self):
+        # Leg A (v701): January 2026 and January 2027 return different texts.
+        # On the old month-only lookup both dates returned the same file, so
+        # this leg cannot pass pre-fix.
+        contract, entry, block = self._morning_prayer_monthly_block()
+        self.assertEqual(block.get("selector"), "current_calendar_month_year")
+
+        jan_2026 = self.mod.resolve_block_content(
+            block, contract=contract, entry=entry, target_date=datetime.date(2026, 1, 15)
+        )
+        jan_2027 = self.mod.resolve_block_content(
+            block, contract=contract, entry=entry, target_date=datetime.date(2027, 1, 15)
+        )
+
+        self.assertEqual(jan_2026, self.MONTHLY_INTENTIONS_2026["january"])
+        self.assertNotEqual(jan_2027, jan_2026)
+        self.assertIn("discover the power of prayer", jan_2027)
+        self.assertNotIn("prayer with the Word of God", jan_2027)
+
+    def test_monthly_intention_2026_carry_over_byte_identical(self):
+        # Leg B (v701): all twelve 2026 months resolve byte-identical to the
+        # pre-move standing files, and fragment keys carry the year.
+        contract, entry, block = self._morning_prayer_monthly_block()
+        seat = Path(self.mod.ROOT) / "config" / "publish" / "templates" / "morning-prayer" / "monthly-intention"
+
+        for month_number, month in enumerate(self.MONTH_NAMES, start=1):
+            expected = self.MONTHLY_INTENTIONS_2026[month]
+            resolved = self.mod.resolve_block_content(
+                block, contract=contract, entry=entry,
+                target_date=datetime.date(2026, month_number, 15),
+            )
+            self.assertEqual(resolved, expected)
+            on_disk = (seat / "2026" / f"{month}.txt").read_bytes()
+            self.assertEqual(on_disk, (expected + "\n").encode("utf-8"))
+
+        contracts = self.mod.load_publish_contracts()
+        for year in (2026, 2027):
+            jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(year, 1, 15))
+            morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
+            monthly_keys = [
+                fragment["fragment_key"]
+                for fragment in morning["audio_fragments"]
+                if fragment["kind"] == "monthly-template"
+            ]
+            self.assertTrue(
+                any(key.endswith(f"monthly-template-{year}-january") for key in monthly_keys),
+                monthly_keys,
+            )
+
+    def test_monthly_intention_2027_quote_matches_published_list(self):
+        # Leg C (v701): each 2027 month resolves and quote-matches §1.5.
+        contract, entry, block = self._morning_prayer_monthly_block()
+
+        for month_number, month in enumerate(self.MONTH_NAMES, start=1):
+            resolved = self.mod.resolve_block_content(
+                block, contract=contract, entry=entry,
+                target_date=datetime.date(2027, month_number, 15),
+            )
+            self.assertTrue(
+                resolved.startswith(f"For the Holy Father's {month.capitalize()} intention: that"),
+                resolved,
+            )
+            for phrase in self.MONTHLY_INTENTIONS_2027_PHRASES[month]:
+                self.assertIn(phrase, resolved)
+
+    def test_monthly_intention_missing_year_omits_and_flags(self):
+        # Leg D (v701, REWRITTEN by John's formal approval Q4 A, 2026-11-27):
+        # a (year, month) with no entry OMITS the intention from the composed
+        # Morning Prayer and FLAGS the omission on the standing stderr WARN
+        # channel naming the missing year+month — never a fall-back to
+        # another year's file, and never a hard failure at this block.
+        contract, entry, block = self._morning_prayer_monthly_block()
+        self.assertTrue(block.get("omit_if_missing"))
+
+        with mock.patch("sys.stderr", new=io.StringIO()) as err:
+            resolved = self.mod.resolve_block_content(
+                block, contract=contract, entry=entry, target_date=datetime.date(2028, 1, 15)
+            )
+        self.assertEqual(resolved, "")
+        self.assertIn("WARN missing_monthly_intention", err.getvalue())
+        self.assertIn("year=2028", err.getvalue())
+        self.assertIn("month=january", err.getvalue())
+        self.assertIn("2028/january.txt", err.getvalue().replace("\\", "/"))
+
+        # The full 2028 Morning Prayer composes successfully, carries NO
+        # Holy Father's-intention passage, and the flag stands recorded.
+        contracts = self.mod.load_publish_contracts()
+        with mock.patch("sys.stderr", new=io.StringIO()) as err:
+            jobs = self.mod.build_text_jobs(contracts, target_date=datetime.date(2028, 1, 15))
+        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
+        self.assertNotIn("For the Holy Father's", morning["text"])
+        for month in self.MONTH_NAMES:
+            self.assertNotIn(self.MONTHLY_INTENTIONS_2026[month], morning["text"])
+        self.assertIn("WARN missing_monthly_intention", err.getvalue())
+        self.assertIn("year=2028", err.getvalue())
+        self.assertIn("month=january", err.getvalue())
+
+        # No fall-back (temp root, only the 2026 file standing): a 2027
+        # lookup on the marked block returns empty + flag, NOT the 2026 text;
+        # the same lookup on an UNMARKED monthly_template block still raises
+        # PublishMissingDataError — the omit+flag is scoped to the marker.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            folder = root / "config" / "publish" / "templates" / "morning-prayer" / "monthly-intention"
+            (folder / "2026").mkdir(parents=True, exist_ok=True)
+            (folder / "2026" / "january.txt").write_text(
+                self.MONTHLY_INTENTIONS_2026["january"], encoding="utf-8"
+            )
+            marked_block = {
+                "kind": "monthly_template",
+                "folder": "config/publish/templates/morning-prayer/monthly-intention",
+                "selector": "current_calendar_month_year",
+                "omit_if_missing": True,
+            }
+            unmarked_block = {
+                "kind": "monthly_template",
+                "folder": "config/publish/templates/morning-prayer/monthly-intention",
+                "selector": "current_calendar_month_year",
+            }
+            with mock.patch.object(self.mod, "ROOT", root):
+                with mock.patch("sys.stderr", new=io.StringIO()) as err:
+                    temp_resolved = self.mod.resolve_block_content(
+                        marked_block, contract=contract, entry=entry,
+                        target_date=datetime.date(2027, 1, 15),
+                    )
+                self.assertEqual(temp_resolved, "")
+                self.assertNotIn(self.MONTHLY_INTENTIONS_2026["january"], temp_resolved)
+                self.assertIn("year=2027", err.getvalue())
+                self.assertIn("month=january", err.getvalue())
+                with self.assertRaises(self.mod.PublishMissingDataError) as temp_ctx:
+                    self.mod.resolve_block_content(
+                        unmarked_block, contract=contract, entry=entry,
+                        target_date=datetime.date(2027, 1, 15),
+                    )
+            self.assertIn("2027/january.txt", str(temp_ctx.exception).replace("\\", "/"))
+
+    def test_morning_prayer_2027_composition_carries_2027_intention(self):
+        # Leg E (v701): a full Morning Prayer composition at a 2027 date
+        # carries the 2027 intention and no 2026 intention text.
+        contracts = self.mod.load_publish_contracts()
+        jobs = self.mod.build_text_jobs(contracts, target_date=datetime.date(2027, 1, 15))
+        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
+
+        january_2027 = self._expected_2027_january()
+        self.assertIn("discover the power of prayer", january_2027)
+        self.assertIn(january_2027, morning["text"])
+        for month in self.MONTH_NAMES:
+            self.assertNotIn(self.MONTHLY_INTENTIONS_2026[month], morning["text"])
+
+    def _expected_2027_january(self):
+        seat = Path(self.mod.ROOT) / "config" / "publish" / "templates" / "morning-prayer" / "monthly-intention"
+        return (seat / "2027" / "january.txt").read_text(encoding="utf-8").strip()
+
     def test_resolve_text_jobs_uses_weekday_and_month_selectors(self):
         contracts = self.mod.load_publish_contracts()
         target_date = datetime.date(2026, 4, 6)  # Monday in April

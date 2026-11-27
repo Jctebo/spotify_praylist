@@ -99,7 +99,8 @@
             {
               "kind": "monthly_template",
               "folder": "config/publish/templates/morning-prayer/monthly-intention",
-              "selector": "current_calendar_month"
+              "selector": "current_calendar_month_year",
+              "omit_if_missing": true
             },
             {
               "kind": "file",
