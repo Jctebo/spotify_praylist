@@ -107,7 +107,7 @@ const artAt = (h) => Math.max(88, Math.min(Math.min(0.72 * 390, h - BUDGET), 340
     artAt(844) === 280.8 && artAt(740) === 280.8 && artAt(667) === 253 && artAt(568) === 154,
     hs.map((h) => artAt(h))); // v667 re-point
 }
-check("A pin: CACHE stands at ora-pro-nobis-v667-1 (its one seat; value re-pointed at v667's ship — the pin's seat stands)", uiSrc.includes('var CACHE = "ora-pro-nobis-v667-1";'));
+check("A pin: CACHE stands at ora-pro-nobis-v711-1 (its one seat; value re-pointed at v711 — the pin's seat stands)", uiSrc.includes('var CACHE = "ora-pro-nobis-v711-1";'));
 
 // ---------- D statics: byte-stable transport + bottom row ----------
 {
@@ -119,10 +119,13 @@ check("A pin: CACHE stands at ora-pro-nobis-v667-1 (its one seat; value re-point
   // v667 SUPERSESSION (named): the bottom-row byte-equality leg is
   // superseded by v667 §3.1 — the row is the base five byte-equal
   // in order + the Queue button appended after #np-menu.
-  check("D bottom-row markup: SUPERSEDED by v667 (byte-equality) — re-pointed: base five byte-equal in order + Queue appended",
+  // v711 SUPERSESSION (named): superseded-by-v711 §2.1 row 9 — the
+  // #np-share chunk differs from base ONLY in its SVG width/height
+  // attributes (20 -> 24); the assertion is otherwise unchanged.
+  check("D bottom-row markup: SUPERSEDED by v667 (byte-equality), SUPERSEDED by v711 (#np-share SVG attrs) — re-pointed: base five in order, byte-equal except #np-share SVG attrs 20->24, + Queue appended",
     !!baseSrc && (() => { const bc = (l) => (l ? l.split("<button").slice(1).map((c) => "<button" + c.split("</button>")[0] + "</button>") : []);
       const b = bc(line(baseSrc, "np-controls")), n = bc(line(clientSrc, "np-controls"));
-      return b.length === 5 && n.length === 6 && b.every((x, i) => n[i] === x) && n[5].includes('id="np-queue-btn"'); })());
+      return b.length === 5 && n.length === 6 && b.every((x, i) => n[i].replace('width="24" height="24"', 'width="20" height="20"') === x) && n[3].includes('width="24" height="24"') && n[5].includes('id="np-queue-btn"'); })());
   check("D mountDrawer untouched (the queue sheet carries its own mount)",
     clientSrc.includes("function mountQueueSheet664(sheet)") && !clientSrc.includes("npq-sheet')\n  mountDrawer"));
 }

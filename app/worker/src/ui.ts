@@ -723,11 +723,11 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-seekrow input[type=range]:disabled { cursor:default; opacity:.5; }
 .np-transport { display:flex; align-items:center; justify-content:center; max-width:420px; margin:16px auto 20px; }
 .np-transport > button { flex:1 1 0; display:flex; align-items:center; justify-content:center; }
-.np-tbtn { background:none; border:none; color:var(--navy); font-family:inherit; font-size:26px; cursor:pointer; padding:10px; }
+.np-tbtn { background:none; border:none; color:var(--navy); font-family:inherit; font-size:30px; cursor:pointer; padding:12px; } /* v711: side glyphs 26px -> 30px, padding 10px -> 12px */
 .np-tbtn:disabled { opacity:.35; cursor:default; }
-.np-play { width:58px; height:58px; font-size:21px; }
+.np-play { width:66px; height:66px; font-size:24px; } /* v711: disc 58px -> 66px, glyph 21px -> 24px */
 .np-controls { justify-content:center; flex-wrap:nowrap; gap:4px; } /* v667 §3.2: one line always — the row never wraps a member off the card (the Queue button stands as its sixth member); compression in the Plan's order: (1) the row gap 8px -> 4px, (2) the ghost pills' horizontal padding (the rule below) */
-.np-controls .btn.ghost { padding-left:6px; padding-right:6px; } /* v667 §3.2 compression (2): the row's ghost pills at 6px horizontal padding (from 16px) — measured one line at 360px wide in measure-v667.mjs */
+.np-controls .btn.ghost { min-height:50px; padding:12px 5px; font-size:16px; } /* v667 §3.2 compression (2) as amended by v711 §2.1: the row's ghost pills grow — min-height 44px -> 50px, vertical padding 9px -> 12px, font-size 15px -> 16px — and the horizontal padding steps 6px -> 5px (the v711 fit trade) so the row still stands one line at 360px wide (measure-v711.mjs) */
 .npq-head { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .npq-heading { font-size:16px; letter-spacing:1.5px; color:var(--navy); }
 /* v667 §3.1: the v664 queue-door dress (button.npq-door ·
@@ -1222,7 +1222,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v708-1";
+var CACHE = "ora-pro-nobis-v711-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

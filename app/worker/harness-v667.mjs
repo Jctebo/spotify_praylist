@@ -107,8 +107,8 @@ check("A the fit pass stands: fitNpArtToSheet667 defined, called at updateNowPla
   && clientSrc.includes("window.addEventListener('resize'")
   && clientSrc.includes("Math.max(88, Math.round(cur - overflow))")
   && clientSrc.includes("art.style.setProperty('--art', next + 'px')"));
-check("A the row stands one line by dress: .np-controls nowrap + the v667 compression (gap 4px, ghost pills 6px horizontal)",
-  /\.np-controls \{[^}]*flex-wrap:nowrap[^}]*gap:4px/.test(uiSrc) && /\.np-controls \.btn\.ghost \{ padding-left:6px; padding-right:6px; \}/.test(uiSrc));
+check("A the row stands one line by dress: .np-controls nowrap + the v667 compression (gap 4px) — SUPERSEDED by v711 (padding leg): the ghost-pill rule gains the v711 declarations (min-height 50px, padding 12px vertical / 5px horizontal, font-size 16px)",
+  /\.np-controls \{[^}]*flex-wrap:nowrap[^}]*gap:4px/.test(uiSrc) && /\.np-controls \.btn\.ghost \{ min-height:50px; padding:12px 5px; font-size:16px; \}/.test(uiSrc));
 check("A the card no longer scrolls: .sheet.np-sheet overflow hidden, .inner a full-height flex column",
   /\.sheet\.np-sheet \{[^}]*overflow:hidden/.test(uiSrc) && /\.sheet\.np-sheet \.inner \{[^}]*display:flex[^}]*height:100%/.test(uiSrc));
 check("A the short-viewport step stands: @media (max-height: 660px) with hero/seek/transport compression + 2-line clamps",
@@ -122,7 +122,7 @@ const artAt = (h) => Math.max(88, Math.min(Math.min(0.72 * 390, h - BUDGET), 340
     artAt(844) === 280.8 && artAt(740) === 280.8 && artAt(667) === 253 && artAt(568) === 154,
     hs.map((h) => artAt(h)));
 }
-check("A pin: CACHE stands at ora-pro-nobis-v672-1 (its one seat — the pin value re-pointed at v670, per the standing practice)", uiSrc.includes('var CACHE = "ora-pro-nobis-v672-1";'));
+check("A pin: CACHE stands at ora-pro-nobis-v711-1 (its one seat — the pin value re-pointed at v711, per the standing practice)", uiSrc.includes('var CACHE = "ora-pro-nobis-v711-1";'));
 
 // ---------- D statics: byte-stable transport + bottom row ----------
 {
@@ -133,9 +133,14 @@ check("A pin: CACHE stands at ora-pro-nobis-v672-1 (its one seat — the pin val
   check("D transport markup byte-equal to base", !!baseSrc && line(baseSrc, "np-transport") === line(clientSrc, "np-transport"));
   const btnChunks = (l) => (l ? l.split("<button").slice(1).map((c) => "<button" + c.split("</button>")[0] + "</button>") : []);
   const baseBtns = btnChunks(line(baseSrc, "np-controls")), newBtns = btnChunks(line(clientSrc, "np-controls"));
-  check("D bottom row = base five in order, byte-equal, + Queue appended after #np-menu",
+  // v711 SUPERSESSION (named): the bottom-row byte-equality leg is
+  // superseded by v711 §2.1 row 9 — the base five stand in order with
+  // #np-share differing ONLY in its SVG width/height attributes
+  // (20 -> 24); the assertion is otherwise unchanged.
+  check("D bottom row = base five in order, byte-equal except #np-share SVG attrs 20->24 (superseded-by-v711), + Queue appended after #np-menu",
     baseBtns.length === 5 && newBtns.length === 6
-    && baseBtns.every((b, i) => newBtns[i] === b)
+    && baseBtns.every((b, i) => newBtns[i].replace('width="24" height="24"', 'width="20" height="20"') === b)
+    && newBtns[3].includes('width="24" height="24"')
     && newBtns[5] === '<button type="button" class="btn ghost" id="np-queue-btn">Queue</button>',
     newBtns.map((b) => (b.match(/id="([^"]+)"/) || [])[1]));
   check("D mountDrawer untouched (the queue sheet carries its own mount)",
