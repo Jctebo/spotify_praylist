@@ -4475,7 +4475,18 @@ function opnFoldDay590(j) {
         if (!it || it.kind !== 'prayer' || !it.key) return;
         if (have591[block + '|' + it.key]) return;
         have591[block + '|' + it.key] = 1;
-        j.additions.push({ block: block, slug: it.key, lang: 'en', afterId: null, kind: 'prayer', ref: null });
+        // v708 §2.3: the synthesized record gains the book
+        // title + measured duration at synthesis when the
+        // book stands in hand (state.book or the device
+        // copy), like the server fold's record carries them.
+        var rec708 = { block: block, slug: it.key, lang: 'en', afterId: null, kind: 'prayer', ref: null };
+        var hit708 = bookFind(it.key) || opnBookCopyFind708(it.key);
+        if (hit708) {
+          rec708.title = hit708.prayer.title;
+          var d708 = prayerAudioDesc(hit708.prayer, 'en');
+          rec708.durationS = d708 ? d708.durationS : 0;
+        }
+        j.additions.push(rec708);
       });
     });
   }
@@ -12957,6 +12968,39 @@ function bookFind(slug) {
   });
   return found;
 }
+/* v708 §2.3: the book record from the DEVICE COPY (the
+   v462 cache the book's own surfaces write) — the book in
+   hand for descriptor composition when state.book itself
+   has not loaded on this page. Same {prayer, category}
+   shape as bookFind. */
+function opnBookCopyFind708(slug) {
+  var copy = bookReadCopy();
+  if (!copy) return null;
+  var found = null;
+  (copy.groups || []).forEach(function (g) {
+    (g.prayers || []).forEach(function (p) { if (p.slug === slug) found = { prayer: p, category: g.category }; });
+  });
+  return found;
+}
+/* v708 §2.3: the standing book load, kicked one-shot from
+   descriptor composition when the book stands in neither
+   hand — its settle adopts state.book, writes the device
+   copy, and re-composes the standing day so a prayer
+   descriptor composed ahead of the settle does not stand
+   slug-titled / 0-duration after it (Plan R4). */
+var opn708BookLoading = false;
+function opnEnsureBook708() {
+  if (opn708BookLoading || (state.book && state.book.groups)) return;
+  opn708BookLoading = true;
+  api('/api/prayer/book').then(function (res) {
+    opn708BookLoading = false;
+    if (res && Array.isArray(res.groups) && res.groups.length) {
+      state.book = { groups: res.groups };
+      bookWriteCopy(res.groups);
+      if (state.dayPayload) extRebuildDescs(state.dayPayload);
+    }
+  }).catch(function () { opn708BookLoading = false; });
+}
 function bookRowHtml(p, meta, favs) {
   var fav = favs.indexOf(p.slug) >= 0;
   return '<div class="card bookrow" data-bookrow="' + esc(p.slug) + '"><div class="row"><span class="grow">' + esc(p.title) + '</span>'
@@ -14571,18 +14615,31 @@ function dayAdditionDesc(a) {
   // payload fold; where an adopted raw row lacks them (the
   // PUT's answer), they resolve from the book in hand.
   var title = a.title, dur = a.durationS;
-  if (title === undefined || title === null || dur === undefined || dur === null) {
-    var hit = bookFind(a.slug);
+  // v708 §2.3: resolution order — the record's folded title
+  // (the server fold's D1 title stands first) → the Prayer
+  // Book record in hand (state.book, else the device copy)
+  // → NEVER the slug for a book slug. Where the book does
+  // not stand in hand yet, the standing book load is kicked
+  // (one-shot) and its settle re-composes the day, so no
+  // slug-titled / 0-duration descriptor stands painted
+  // after the settle. Where the book stands in hand and
+  // the slug stands nowhere in it, the descriptor stands
+  // unavailable — the server fold's drop posture, client
+  // parity (named in v708 §3).
+  var hit = null, bookInHand708 = !!((state.book && state.book.groups) || bookReadCopy());
+  if (title === undefined || title === null || dur === undefined || dur === null || !title) {
+    hit = bookFind(a.slug) || opnBookCopyFind708(a.slug);
     if (hit) {
       title = hit.prayer.title;
       var d0 = prayerAudioDesc(hit.prayer, a.lang);
       dur = d0 ? d0.durationS : 0;
-    }
+    } else if (!bookInHand708) opnEnsureBook708();
   }
+  var slugOnly708 = !title && bookInHand708 && !hit;
   return { episodeId: 'prayer:' + a.slug + ':' + a.lang, kind: 'prayer',
     title: (title || a.slug) + (a.lang === 'la' ? ' (Latin)' : ''),
     url: '/api/prayer/book/audio/' + encodeURIComponent(a.slug) + '/' + a.lang,
-    enclosureUrl: null, available: true, block: a.block, source: '',
+    enclosureUrl: null, available: !slugOnly708, block: a.block, source: '',
     durationS: dur || 0, imageUrl: '/logo.png', descText: null, spotifyUrl: null,
     dayAddition: true, additionKind: 'prayer' };
 }
@@ -20061,6 +20118,20 @@ function oraSnapshotTrack(d, date) {
     return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'external', durationS: d.durationS || 0,
       mediaUri: pre2.charAt(0) === '/' ? origin + pre2 : pre2, needsAuth: onOrigin, artUri: artUriFor(d) };
   }
+  // v708 §2.4 (the play drive's proven branch): a prayer
+  // descriptor hands the native engine its book-audio
+  // address under its OWN kind — pre-v708 it fell through
+  // to the own-episode fallback arm below and crossed as
+  // kind 'episode' with its (then 0) duration. Its address
+  // is its non-blob url, on-origin, exactly as
+  // prayerAudioDesc's contract names it.
+  if (d && d.kind === 'prayer') {
+    var pAddr708 = d.url && String(d.url).indexOf('blob:') !== 0 ? String(d.url) : '';
+    if (!pAddr708) return null;
+    var pOn708 = pAddr708.indexOf(origin + '/') === 0 || pAddr708.charAt(0) === '/';
+    return { id: d.episodeId, block: d.block || '', title: d.title || '', kind: 'prayer', durationS: d.durationS || 0,
+      mediaUri: pAddr708.charAt(0) === '/' ? origin + pAddr708 : pAddr708, needsAuth: pOn708, artUri: artUriFor(d) };
+  }
   // Own episode (v475): the descriptor's OWN address — the
   // feed enclosure the page engine plays — is the native
   // address. The Range route this branch synthesized through
@@ -25012,6 +25083,18 @@ function wirePrayersView(day) {
   view.querySelectorAll('[data-p604restore]').forEach(function (btn) {
     btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p604restore')).split('|'); opnRestore604(p[0], p.slice(1).join('|')); });
   });
+  // v708: the spliced-row arrow act, the saint's Remove
+  // (dual write), and the saint's Restore (inverse dual
+  // write).
+  view.querySelectorAll('[data-p708srcmove]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p708srcmove')).split('|'); opnSrcMove708(p[0], p[1], p[2]); });
+  });
+  view.querySelectorAll('[data-p708saintremove]').forEach(function (btn) {
+    btn.addEventListener('click', function () { opnRemoveSaint708(btn.getAttribute('data-p708saintremove')); });
+  });
+  view.querySelectorAll('[data-p708saintrestore]').forEach(function (btn) {
+    btn.addEventListener('click', function () { var p = String(btn.getAttribute('data-p708saintrestore')).split('|'); opnRestoreSaint708(p[0], p.slice(1).join('|')); });
+  });
   view.querySelectorAll('[data-p604add]').forEach(function (btn) {
     btn.addEventListener('click', function () { opnOpenAdd604(btn.getAttribute('data-p604add')); });
   });
@@ -25474,7 +25557,19 @@ function opnSourceRowHtml686(row, opts) {
     + '<span class="grow"><span class="p687title">' + esc(opnSeedDisplayName636(row)) + '</span> <span class="p686tag">' + esc(tag) + '</span>'
     + '<span class="p687sub">' + esc(opn687FreqText(row.dayRule)) + '</span></span>';
   if (rid) html += opnMoveButtons684(block, rid, opts.paintIdx || 0, opts.paintLen || 1);
+  // v708 §2.1 seat 2: a SPLICED row paints the same ▲▼,
+  // addressed to the spliced-row arrow act (materialize,
+  // then opnMove684) — arrows on everything. Boundary
+  // dress matches opnMoveButtons684's seats.
+  else if (block) html += '<button class="p684move" data-p708srcmove="' + esc(block) + '|' + esc(key) + '|up" aria-label="Move up"' + ((opts.paintIdx || 0) === 0 ? ' disabled' : '') + '>&#9650;</button>'
+    + '<button class="p684move" data-p708srcmove="' + esc(block) + '|' + esc(key) + '|down" aria-label="Move down"' + ((opts.paintIdx || 0) === (opts.paintLen || 1) - 1 ? ' disabled' : '') + '>&#9660;</button>';
   if (pinned) html += opn687DisableIcon('data-p687srcdisable="' + esc(key) + '"', on ? 'Disable' : 'Enable');
+  // v708 §2.2 seat 2: the SAINT paints Remove in BOTH
+  // states, addressed to the dual-write act (store unplace
+  // + contents remove) — saint ONLY; every other converted
+  // row keeps the standing contents Remove, and no other
+  // spliced row gains a Remove here.
+  else if (key === 'saint-of-the-day' && block) html += opn687RemoveIcon('data-p708saintremove="' + esc(block) + '"');
   else if (rid) html += opn687RemoveIcon('data-p687srcremove="' + esc(block) + '|' + esc(rid) + '"');
   html += '<button class="btn ghost" data-p686menu="src|' + esc(block) + '|' + esc(key) + '|' + esc(rid) + '" aria-label="More">\u22ee</button>'
     + '<button class="switch591' + (on ? ' on' : '') + '" data-p686toggle="' + esc(key) + '" role="switch" aria-checked="' + (on ? 'true' : 'false') + '"' + (off ? ' disabled' : '') + '><span class="knob591"></span></button>'
@@ -25567,6 +25662,53 @@ function opnSpliceSourceRows686(block, list) {
     entries.splice(pos, 0, { t: 's', row: opn686Row(sk) });
   });
   return entries;
+}
+/* v708 §2.1 seat 1: the representation-on-act seat. A
+   spliced source entry gains its working representation at
+   its first arrow / saint-Remove act: the representation
+   item (opn687RepIds687's first id — the seat item for the
+   readings, else the slot's source item) is inserted into
+   the block's materialized list at the entry's painted
+   index, so the entry converts in place and the standing
+   opnMove684 / opnRemove604 acts address it. Safe by
+   construction: a spliced state exists only where a stored
+   contents entry already stands for the block. Returns the
+   occurrence-qualified rid, or '' where no representation
+   can stand. NO store write rides this seat — an arrow act
+   never dual-writes (Plan §1.2). */
+function opnMaterializeRep708(block, key) {
+  var list = opnMaterialize604(block);
+  var repIds = opn687RepIds687(key);
+  var occ708 = {};
+  for (var i = 0; i < list.length; i++) {
+    var id708 = opnTodayItemId594(list[i]);
+    var occNow708 = occ708[id708] || 0; occ708[id708] = occNow708 + 1;
+    if (repIds.indexOf(id708) >= 0) return opnRowId610(list[i], occNow708);
+  }
+  var entries = opnSpliceSourceRows686(block, list);
+  var pos = -1;
+  entries.forEach(function (e, ei) { if (e.t === 's' && !e.repRid && e.row && e.row.sourceKey === key) pos = ei; });
+  if (pos < 0) return '';
+  var splicedBefore = 0;
+  entries.slice(0, pos).forEach(function (e) { if (e.t === 's' && !e.repRid) splicedBefore++; });
+  var item = null;
+  if (key === 'usccb-daily-readings') item = { kind: 'seat', key: 'daily-readings' };
+  else {
+    var slot708 = '';
+    Object.keys(OPN686_SLOT_ROW).forEach(function (slot) { if (OPN686_SLOT_ROW[slot] === key) slot708 = slot; });
+    if (!slot708) return '';
+    item = { kind: 'source', key: slot708 };
+  }
+  var at = Math.min(Math.max(pos - splicedBefore, 0), list.length);
+  var nm = list.slice(); nm.splice(at, 0, item); opn604.lists[block] = nm;
+  return opnRowId610(item, 0);
+}
+/* v708 §2.1: a spliced row's arrow act — materialize the
+   representation, then the standing contents move. */
+function opnSrcMove708(block, key, dir) {
+  var rid = opnMaterializeRep708(block, key);
+  if (!rid) return;
+  return opnMove684(block, rid, dir);
 }
 /* §2.5: the whole-table write — every act PUTs all 26 rows in
    standing section order (the deleted editor's settingsSectionOf
@@ -25707,6 +25849,120 @@ function opnMoveSource691(fromBlock, rowId, toBlock, key) {
       }
       return { ok: true };
     });
+  });
+}
+/* v708 §2.2 seat 1: the SAINT's Remove — a dual write in
+   the v691 order. Removal in the 26-row store cannot
+   delete a row (the PUT demands exactly the stored set);
+   it is expressed as enabled: 0 + block: '' on the saint
+   row, dayRule preserved, whole-table PUT. Store FIRST,
+   read-back verified; contents SECOND (the representation
+   through opnRemove604 where one stands; where none
+   stands, the removed entry is recorded directly, carrying
+   the captured store values under saint708 so Restore can
+   run the inverse). A contents failure — verified by
+   re-reading the profiles payload, the item still standing
+   — rolls the store row back, the v691 rollback shape.
+   Both form scopes: the contents writes follow
+   opnWrite604's scope; the store write is scope-free. */
+function opnSaintRepStand708(block) {
+  var list = opnMaterialize604(block);
+  var repIds = opn687RepIds687('saint-of-the-day');
+  var occ708 = {}, found = '';
+  list.forEach(function (x) {
+    var id = opnTodayItemId594(x);
+    var occ = occ708[id] || 0; occ708[id] = occ + 1;
+    if (!found && repIds.indexOf(id) >= 0) found = opnRowId610(x, occ);
+  });
+  return found;
+}
+var opn708SaintCapture = null;
+function opnRemoveSaint708(block) {
+  var row = opn686Row('saint-of-the-day');
+  if (!row) return { ok: false };
+  // The captured sortOrder rides the capture: the whole-
+  // table PUT renumbers each block in body order, and
+  // opn686OrderedRows orders the body by sortOrder — so a
+  // Restore that first stands the captured sortOrder back
+  // on the row seats the saint at its captured rank again
+  // (leg S's byte-identical composition).
+  var captured = { block: row.block, enabled: row.enabled ? 1 : 0, sortOrder: row.sortOrder,
+    blockOrder: opn686.rows.filter(function (r) { return r.block === row.block && r.enabled && r.sortOrder != null; })
+      .sort(function (a, b2) { return a.sortOrder - b2.sortOrder; }).map(function (r) { return r.sourceKey; }) };
+  opn708SaintCapture = captured;
+  var repRid = opnSaintRepStand708(block);
+  row.enabled = 0; row.block = '';
+  return Promise.resolve(opnSaveSourceSettings686()).then(function () {
+    var rb = opn686Row('saint-of-the-day');
+    if (!rb || rb.enabled || rb.block !== '' || opn686.err) {
+      if (rb) { rb.block = captured.block; rb.enabled = captured.enabled; }
+      opn686.err = 'That change did not save.';
+      opnRepaintHome604();
+      return { ok: false, reason: 'That change did not save.' };
+    }
+    var contentsP;
+    if (repRid) contentsP = Promise.resolve(opnRemove604(block, repRid));
+    else {
+      var marker = { kind: 'source', key: 'ext-saint-of-the-day', saint708: { block: captured.block, enabled: captured.enabled, sortOrder: captured.sortOrder, blockOrder: captured.blockOrder } };
+      (opn604.removed[block] = opn604.removed[block] || []).push(marker);
+      contentsP = Promise.resolve(opnWrite604(block));
+    }
+    return contentsP.then(function () {
+      // Contents verify: re-read the profiles payload —
+      // the representation still standing is a failure.
+      return Promise.resolve(opnLoadRes604()).then(function () {
+        var eff708 = opnEffList604(block);
+        var repIds708 = opn687RepIds687('saint-of-the-day');
+        var still = eff708.some(function (x) { return repIds708.indexOf(opnTodayItemId594(x)) >= 0; }) ? 'standing' : '';
+        if (still && repRid) {
+          var r2 = opn686Row('saint-of-the-day');
+          if (r2) { r2.block = captured.block; r2.enabled = captured.enabled; }
+          return Promise.resolve(opnSaveSourceSettings686()).then(function () {
+            opn686.err = 'That change did not save.';
+            opnRepaintHome604();
+            return { ok: false, reason: 'That change did not save.' };
+          });
+        }
+        opnRepaintHome604();
+        return { ok: true };
+      });
+    });
+  });
+}
+/* v708 §2.2 seat 3: Restore — the inverse dual write. The
+   removed entry (the representation item, or the spliced
+   case's saint708 marker) names the captured store values;
+   the store row returns FIRST (read-back verified), then
+   opnRestore604 returns the representation where one was
+   removed. The marker leaves the removed set without a
+   contents write of its own (it never stood in a list). */
+function opnRestoreSaint708(block, rowId) {
+  var rem = opn604.removed[block] || [];
+  var pr = opnParseRowId610(rowId), id = pr.id;
+  var seenR = 0, remAt = -1, entry = null;
+  rem.forEach(function (it, i) { if (opnTodayItemId594(it) === id) { if (seenR === pr.occ) { remAt = i; entry = it; } seenR++; } });
+  if (!entry) return opnRestore604(block, rowId);
+  var captured = entry.saint708 || opn708SaintCapture || { block: block, enabled: 1 };
+  var row = opn686Row('saint-of-the-day');
+  if (row) { row.block = captured.block; row.enabled = captured.enabled ? 1 : 0; }
+  // Re-seat the captured block order (the Remove PUT
+  // renumbered the saint's siblings in its absence — the
+  // captured relative order, saint included, is what the
+  // Restore PUT's body order must follow).
+  if (captured.blockOrder) captured.blockOrder.forEach(function (k, i) { var r = opn686Row(k); if (r) r.sortOrder = i + 1; });
+  return Promise.resolve(opnSaveSourceSettings686()).then(function () {
+    var rb = opn686Row('saint-of-the-day');
+    if (!rb || rb.block !== captured.block || (rb.enabled ? 1 : 0) !== (captured.enabled ? 1 : 0) || opn686.err) {
+      opn686.err = 'That change did not save.';
+      opnRepaintHome604();
+      return { ok: false, reason: 'That change did not save.' };
+    }
+    if (entry.saint708) {
+      var nr = rem.slice(); nr.splice(remAt, 1); opn604.removed[block] = nr;
+      opnRepaintHome604();
+      return Promise.resolve(opnWrite604(block)).then(function () { return { ok: true }; });
+    }
+    return Promise.resolve(opnRestore604(block, rowId)).then(function () { return { ok: true }; });
   });
 }
 function opnPaintBlocks686() {
@@ -25853,13 +26109,22 @@ function opnOpenSourceMenu687(block, key, rid, anchorEl) {
   var row = opn686Row(key);
   if (!row) return;
   var items = [];
-  if (block && rid) {
+  if (block && (rid || key)) {
     var group = document.querySelector('[data-p604exp="' + block + '"]');
     var rows = group ? [...group.querySelectorAll('.p604erow')] : [];
     var pos = -1;
     rows.forEach(function (r, i) { if (r.getAttribute('data-p686src') === key) pos = i; });
-    items.push({ label: 'Move up', disabled: pos <= 0, act: function () { opnMove684(block, rid, 'up'); } });
-    items.push({ label: 'Move down', disabled: pos < 0 || pos >= rows.length - 1, act: function () { opnMove684(block, rid, 'down'); } });
+    // v708 §2.1 seat 3: menu parity — Move up / Move down
+    // stand for SPLICED rows too, through the materialize-
+    // then-move act. Move to block… below stays converted-
+    // only (it is not an arrow act; §2.1 names no seat).
+    if (rid) {
+      items.push({ label: 'Move up', disabled: pos <= 0, act: function () { opnMove684(block, rid, 'up'); } });
+      items.push({ label: 'Move down', disabled: pos < 0 || pos >= rows.length - 1, act: function () { opnMove684(block, rid, 'down'); } });
+    } else {
+      items.push({ label: 'Move up', disabled: pos <= 0, act: function () { opnSrcMove708(block, key, 'up'); } });
+      items.push({ label: 'Move down', disabled: pos < 0 || pos >= rows.length - 1, act: function () { opnSrcMove708(block, key, 'down'); } });
+    }
     // v691 (as amended): Move to block… stands on EVERY
     // source-representation row with a standing
     // representation — exegesis · readings · Saint of
@@ -25869,11 +26134,15 @@ function opnOpenSourceMenu687(block, key, rid, anchorEl) {
     // readings refusal and the pinned five's refusals
     // are withdrawn (Amendments 1+2): no disabled Move
     // item and no refusal reason paints for a block row.
-    items.push({ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid, key); } });
+    if (rid) items.push({ label: 'Move to block…', act: function () { opnOpenMovePicker686(block, rid, key); } });
   }
   items = items.concat(opn687FreqItems(key));
   if (block) {
     if (OPN687_PINNED.indexOf(key) >= 0) items.push({ label: row.enabled ? 'Disable' : 'Enable', act: function () { opnToggleSource686(key); } });
+    // v708 §2.2 seat 2: the saint's menu Remove stands in
+    // BOTH states, addressed to the dual-write act. Saint
+    // ONLY — the scope guard stands for every other row.
+    else if (key === 'saint-of-the-day') items.push({ label: 'Remove', act: function () { opnRemoveSaint708(block); } });
     else if (rid) items.push({ label: 'Remove', act: function () { opnRemove604(block, rid); } });
   }
   openSheetMenu(opnSeedDisplayName636(row), items, anchorEl);
@@ -25949,7 +26218,7 @@ function opnEditPostureHtml604(b) {
   var removed = opn604.removed[block] || [];
   if (removed.length) {
     html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
-      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" ' + (it.saint708 || opnTodayItemId594(it) === 'source:ext-saint-of-the-day' ? 'data-p708saintrestore' : 'data-p604restore') + '="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
   }
   html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
   return html + '</div>';
@@ -29115,7 +29384,7 @@ function opnEditGroupHtml609(block) {
   var removed = opn604.removed[block] || [];
   if (removed.length) {
     html += '<p class="sub" data-p604removed="' + esc(block) + '">Removed: ' + removed.map(function (it) { return esc(opnItemLabel604(block, it)); }).join(' · ') + '</p>'
-      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" data-p604restore="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
+      + '<div class="row">' + removed.map(function (it, ri) { var rocc = removed.slice(0, ri).filter(function (x) { return opnTodayItemId594(x) === opnTodayItemId594(it); }).length; return '<button class="btn ghost" ' + (it.saint708 || opnTodayItemId594(it) === 'source:ext-saint-of-the-day' ? 'data-p708saintrestore' : 'data-p604restore') + '="' + esc(block) + '|' + esc(opnRowId610(it, rocc)) + '">Restore ' + esc(opnItemLabel604(block, it)) + '</button>'; }).join('') + '</div>';
   }
   html += '<div class="row"><button class="btn ghost" data-p604add="' + esc(block) + '">Add</button></div>';
   return html + '</div>';

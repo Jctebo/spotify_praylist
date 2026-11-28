@@ -490,7 +490,7 @@ await openForm();
 // ---------- L6: remove / restore a non-office source row ----------
 {
   const before = await composedDescs('john', '2026-11-25');
-  const btn = pg.locator('[data-p687srcremove="Afternoon|source:ext-saint-of-the-day"]');
+  const btn = pg.locator('[data-p708saintremove="Afternoon"]'); // superseded-by-v708: the saint Remove seat (dual write)
   await scrollTo(btn); await tryClick(btn); await pg.waitForTimeout(900);
   const st = await pg.evaluate(() => {
     const g = document.querySelector('[data-p604exp="Afternoon"]');
@@ -502,7 +502,7 @@ await openForm();
     st.srcCount === 0 && !!st.removed && st.removed.includes('Saint of the Day') && !/(^|\s)ext-/.test(st.removed), st);
   check('L6 Remove: the composed day lacks the Saint of the Day descriptor',
     before.some((x) => x.includes('ext-saint-of-the-day')) && !after.some((x) => x.includes('ext-saint-of-the-day')), {});
-  const rst = pg.locator('[data-p604restore="Afternoon|source:ext-saint-of-the-day"]');
+  const rst = pg.locator('[data-p708saintrestore="Afternoon|source:ext-saint-of-the-day"]'); // superseded-by-v708: the saint Restore seat (inverse dual write)
   await scrollTo(rst); await tryClick(rst); await pg.waitForTimeout(900);
   const backCount = await pg.evaluate(() => document.querySelectorAll('[data-p686src="saint-of-the-day"]').length);
   const back = await composedDescs('john', '2026-11-25');
