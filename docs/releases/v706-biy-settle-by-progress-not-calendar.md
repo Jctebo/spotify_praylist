@@ -243,3 +243,50 @@ Modeled on harness-v705.mjs (playwright-core Chromium, the real built Worker bun
 
 - **PASS.** Every prescribed verification stands: harness-v706 11/0 with the field defect reproduced on the old tree (2/9, leg (a) = `biy:day-331`, leg (d) uncorrected); regressions v677 18/0 and v694 26/0 stand; v705's only failures are the two leg-5 checks superseded under the coordinator's ruling (i), with its landing check passing through the correction; v666's abort is pre-existing and identical on base; the diff touches only the prescribed seats; the fixture is John's exact real case and cross-checks clean.
 - **The chain is clear to Ship at pin `ora-pro-nobis-v706-1`.** No defects named; nothing returned.
+
+## §5 Ship record
+
+**Shipped LIVE at pin `ora-pro-nobis-v706-1` — 2026-11-28.**
+
+Ship seat: chain-v706-ship (completion seat, seated after the execution-risk stop recorded in §5.4; Ship contract 1288).
+
+### §5.1 Direction
+
+- Field report (John, via the DevOps Board thread relay, 2026-11-27 18:31 CT, verbatim): **"Now it skipped several days ahead. How did it get 331?"** — the Bible in a Year row stood at "Day 331: Peter Preaches to the Gentiles", fresh/unplayed, after the v705 ship. Run level: **To Ship.**
+
+### §5.2 Review verdict
+
+- **§4 Review: PASS** (chain-v706-review; harness-v706 **11/0** on John's exact real case — settles 325 not 331 · finish holds 325 played · next day settles 326 · pre-seeded 331 settle corrected · fail-on-old **2 ok / 9 bad** on the v705 tree, the field defect reproduced · harness-v677 **18/0** · harness-v694 **26/0** · harness-v705 **14/2** on the new tree, leg 5's placeholder pair ruled superseded for the sequence kind under the coordinator's ruling (i), recorded on contract 1286 · harness-v666 identical pre-existing `stripServerValidate` startup abort on both trees, unre-proven, not regressed).
+
+### §5.3 Merge (tree-exact, Git Data API)
+
+- Merge commit: **`ac67b8fdc574abafd232005036d7c2189beec94c`**, tree **`4235c6bfe55fe11e4033d4f692d61e2c9d9121af`** == branch tree; parents `06cd4de` + `c07e284`; all 5 delta blobs asserted. Never force-pushed; the release branch stays local.
+- Read back at merge time: **main pushed · remote in sync.**
+
+### §5.4 The execution-risk notice and John's process ruling
+
+- The first Ship seat created the ship worktree `~/workspace/.worktrees/v706-ship-main` at the merged head `ac67b8fd` and drew the **execution-risk notice**; per the clone note then in force it **stopped and named it** — no deploy, no closeout. Contract 1288's merge expectation was judged **met**; the deploy and closeout expectations stood open. Production kept serving `ora-pro-nobis-v705-1`.
+- John then ruled on the underlying process (2026-11-27 18:48 CT, verbatim): **"Fix the underlying issue"** — now recorded in `~/AGENTS.md` under the standing-clone go-ahead: the standing approval (John, 2026-11-21: "Approved. Just make sure you don't mess up") **IS** the authorization for every Ora chain's clone processing, ship worktrees included; a seat that draws the execution-risk notice **PROCEEDS** under the standing approval and names the notice in its ship report — it does not stop, and no chain-specific word is sought. This completion seat proceeded under that ruling; the notice drawn at the worktree's creation is named here per it.
+
+### §5.5 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v706-ship.py`, `EXPECTED_HEAD = ac67b8fdc574abafd232005036d7c2189beec94c`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`1e573afd-26ae-463a-9b08-49470da063e6`** · deployment created **2026-11-28T00:49:54.294Z** · **100%**.
+
+### §5.6 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v706-1`**.
+- Served `app.js` carries **`progEntry706`** (×5) and **`invalid706`** (×3) — the v706 progress pick and the invalid-settle correction inside `resolveProfileCourses590`'s daily-set arm.
+
+### §5.7 Board closeout
+
+- **What's New id 523**: "Fixed: the Bible in a Year row now follows your listening progress — it settles on the next episode you haven't heard and holds it all day, instead of jumping to the calendar's episode."
+- **Releases row 1688**: status **Live** · `shipped_at` = 2026-11-28T00:49:54Z (the deploy timestamp) · `whats_new_id` = 523. Read back.
+- **shipped_records id 897**: project 3 · version v706 · title "Bible in a Year settle picks by listening progress, not the calendar (v705 follow-on: row jumped to Day 331)" · `shipped_at` = 2026-11-28T00:49:54Z · `whats_new_id` = 523. Read back.
+- **Ship phase record id 2962**: release 1688 · Ship · passed · holder `chain-v706-ship` · slug `biy-settle-by-progress-not-calendar` · document_path `docs/releases/v706-biy-settle-by-progress-not-calendar.md` · `commit_hash` = `ac67b8fdc574abafd232005036d7c2189beec94c`. Read back. (Scope 2958 · Plan 2959 · Implement 2960 · Review 2961 stand passed.)
+- **Contract 1288**: all three expectations **met** (merge · deploy + served-bytes verification · closeout).
+- **Goals Board intake 1345**: CLOSED, status **Done** — closeout line appended naming the stop, John's 2026-11-27 18:48 CT process ruling, and the completion seat; read back via the task list.
+
+**Disposition: v706 LIVE at pin `ora-pro-nobis-v706-1`.**
+
+**Field check (John's leg, open):** the Bible in a Year row falls back to **Day 326** — the next episode John hasn't heard — and holds there for the rest of the day; finishing it marks it played in place.
