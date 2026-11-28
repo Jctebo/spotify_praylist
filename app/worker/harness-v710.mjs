@@ -62,6 +62,6 @@ check('L6a client closed set gains stations-of-the-cross', H.opnDailyKeyOk666('s
 check('L6b server validation twin (index.ts daily list) gains stations-of-the-cross', index.includes('"barron-sunday-sermons", "stations-of-the-cross"'));
 check('L6c server series def with title filter stands beside ora-pro-nobis', index.includes('key: "stations-of-the-cross"') && index.includes('titlePrefix: "Stations of the Cross"'));
 check('L6d title map paints Stations of the Cross', H.opnDailySeriesTitle666('stations-of-the-cross') === 'Stations of the Cross');
-check('L6e pin bumped to ora-pro-nobis-v710-1', readFileSync(path.join(W, 'src/ui.ts'), 'utf8').includes('ora-pro-nobis-v710-1'));
+check('L6e pin bumped to ora-pro-nobis-v712-1', readFileSync(path.join(W, 'src/ui.ts'), 'utf8').includes('ora-pro-nobis-v712-1')); // superseded-by-v712 pin re-point
 console.log(`\nharness-v710: ${ok} ok / ${bad} bad`);
 process.exit(bad ? 1 : 0);

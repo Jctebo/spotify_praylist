@@ -28513,6 +28513,7 @@ function openAddLadder603(block, host) {
         return doors614(opnLadderSeries603.map(function (sd) { return ['series:' + sd.series, sd.title || sd.series, '']; }));
       }
       if (rung.indexOf('series:') === 0) return seriesNode614(rung.slice('series:'.length));
+      if (rung.indexOf('daily:') === 0) return seriesNode614(rung.slice('daily:'.length)); // v712: the daily: rung family delegates to the standing series node (the lf:stations Fridays door's home)
       if (rung === 'lf:novenas') {
         var cat = state.novenasCatalog;
         if (!cat) { fetchSeries614('novenas'); return '<p class="sub">Loading \u2026</p>'; }
@@ -28540,13 +28541,14 @@ function openAddLadder603(block, host) {
       if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies' || r === 'lf:stations') return 'br:catechesis';
       if (r.indexOf('course:') === 0) return 'lf:courses';
       if (r.indexOf('series:') === 0) { var sk = r.slice('series:'.length); return (sk === 'fr-mike-homilies' || sk === 'barron-sunday-sermons') ? 'lf:homilies' : 'lf:podcasts'; }
+      if (r.indexOf('daily:') === 0) return 'lf:stations'; // v712: the only daily: door stands at lf:stations
       if (r.indexOf('novena:') === 0) return 'lf:novenas';
       if (r.indexOf('vmass:') === 0) return 'lf:virtual-mass';
       if (r.indexOf('vmass-audio:') === 0) return 'lf:virtual-mass';
       if (r === 'lf:myhomilies') return 'lf:homilies';
       return 'root';
     }
-    function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung.indexOf('vmass:') === 0; } // v656: vmass: joins — the search pill narrows the node's own list
+    function isEpisodeNode614() { return rung.indexOf('series:') === 0 || rung.indexOf('course:') === 0 || rung.indexOf('novena:') === 0 || rung.indexOf('vmass:') === 0 || rung.indexOf('daily:') === 0; } // v656: vmass: joins — the search pill narrows the node's own list; v712: daily: joins (episode node: gold card + episode rows)
     function paint() {
       sh.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Add to ' + esc(block) + '</h1></div>'
         + '<div class="panelbody">'
