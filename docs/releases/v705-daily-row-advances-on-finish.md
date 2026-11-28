@@ -198,3 +198,51 @@ The harness fixture therefore carries the item as `{ kind: 'course', key: 'bible
 - **Tallies:** every §3.4 tally matches this seat's independent re-runs (§4.2, §4.3).
 - **Fixture provenance:** the frozen fixture files match §3.3 on the record — `bible-window.json` carries the two captured bonus entries at the head, Day 330 "Saul's Conversion", Day 331 "Peter Preaches to the Gentiles" (presented 2026-11-27, doy 331), Day 332 "Barnabas and Paul On Mission", Day 333, with real keys/titles/urls; `exegesis-head.json` carries the Nov 27, 2026 entry at the head and the Nov 26 presented−1 entry under key `9f58950b-75ec-42c5-bab0-d5b9d5b735c1`, then Nov 25 / Nov 24. The harness stub's honest `currentKey` recomputation is what makes the fail-on-old leg bite (§4.2).
 - **Kind re-verification:** §3.1's conclusion — Bible in a Year stands as `course` in Night — is consistent with the production records it names (Salesian standing pick, stored layer series, no `bible-in-a-year` source-settings row) and with the mig609 conversion code read by this seat at the untouched seat: every non-`daily-readings` layer series without a source row becomes `{ kind: 'course', key }` in Night. The production D1 reads themselves stand as Implement's record; the code leg of the chain was re-read here and holds.
+
+## §5 Ship record
+
+**Shipped LIVE at pin `ora-pro-nobis-v705-1` — 2026-11-28.**
+
+Ship seat: chain-v705-ship (completion seat, seated after the execution-risk stop recorded in §5.4; Ship contract 1275).
+
+### §5.1 Direction
+
+- Field report (John, 2026-11-27 17:26 CT, verbatim): **"The next day resolved again in Bible in a year after finishing it"** — with a screenshot of the day's Praylist (Afternoon card: the Bible in a Year row "Day 325: Boldness in Faith · 25:12"). Run level: **To Ship.**
+
+### §5.2 Review verdict
+
+- **§4 Review: PASS** (chain-v705-review; harness-v705 **16/0** · fail-on-old **7 ok / 9 bad** — leg 2's post-finish row reads `biy:day-332` on the old tree, the field defect reproduced exactly · harness-v677 **18/0** · harness-v694 **26/0** · harness-v666 cannot execute — the identical `stripServerValidate` startup abort on base and new tree (pre-existing rot, `index.ts` untouched); its standing 64/0 tally stands unre-proven, not regressed).
+
+### §5.3 Merge (tree-exact, Git Data API)
+
+- Queue check found v704 already shipped (served pin `ora-pro-nobis-v704-2`); base re-derived to `3b3e7cb` (v704's §5 commit).
+- Merge commit: **`bbaf04ad08c7e00ef8bcb6a1cedcb8a73d09a097`**, tree **`a34c991228e45a1647be207ca43e3657bbab9c54`** — every v705 delta blob asserted; the only difference from the branch tree is the v704 doc at its shipped §5 blob. Never force-pushed; the release branch stays local.
+- Read back at merge time: **main pushed · remote in sync.**
+
+### §5.4 The execution-risk stop and John's approval
+
+- The first Ship seat created the ship worktree `~/workspace/.worktrees/v705-ship-main` at `bbaf04a` and drew the **execution-risk notice**; per the clone note it **stopped and named it** — no deploy, no closeout. Contract 1275's merge expectation was judged **met**; the deploy and closeout expectations stood open. Production kept serving `ora-pro-nobis-v704-2`.
+- John gave the chain-specific word (2026-11-27 18:03 CT, verbatim): **"Approved — process the standing clone for v705 as usual"** — with the standing approval (John, 2026-11-21, AGENTS.md). A completion seat under the same holder name `chain-v705-ship` took the ship from the standing worktree.
+
+### §5.5 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v705-ship.py`, `EXPECTED_HEAD = bbaf04ad08c7e00ef8bcb6a1cedcb8a73d09a097`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`9528b803-95c2-4b75-8971-ee34616945c6`** · deployment created **2026-11-28T00:04:36.705Z** · **100%**.
+
+### §5.6 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v705-1`**.
+- Served `app.js` carries **`prevCourse705`** (×2) and **`opnDailyKeyOk666(job.key)`** (×1) — the v705 daily-set arm inside `resolveProfileCourses590`.
+
+### §5.7 Board closeout
+
+- **What's New id 520**: "Fixed: finishing today's Bible in a Year (or another daily episode) no longer swaps in tomorrow's episode — today's row stands, marked played, for the rest of the day."
+- **Releases row 1683**: status **Live** · `shipped_at` = 2026-11-28T00:04:36Z (the deploy timestamp) · `whats_new_id` = 520. Read back.
+- **shipped_records id 894**: project 3 · version v705 · title "Daily row advances to tomorrow's episode when today's is finished (Bible in a Year field report)" · `shipped_at` = 2026-11-28T00:04:36Z · `whats_new_id` = 520. Read back.
+- **Ship phase record id 2947**: release 1683 · Ship · passed · holder `chain-v705-ship` · slug `daily-row-advances-on-finish` · document_path `docs/releases/v705-daily-row-advances-on-finish.md` · `commit_hash` = `bbaf04ad08c7e00ef8bcb6a1cedcb8a73d09a097`. Read back. (Scope 2942 · Plan 2943 · Implement 2945 · Review 2946 stand passed.)
+- **Contract 1275**: all three expectations **met** (merge · deploy + served-bytes verification · closeout).
+- **Goals Board intake 1342**: CLOSED, status **Done** — closeout line appended naming the stop, John's 18:03 CT approval, and the completion seat; read back via the task list.
+
+**Disposition: v705 LIVE at pin `ora-pro-nobis-v705-1`.**
+
+**Field check (John's leg, open):** finish today's Bible in a Year episode — the row stays today's, marked played, for the rest of the day.
