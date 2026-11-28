@@ -146,3 +146,44 @@ Follows `harness-v710.mjs`'s conventions: plain `node`, `check(name, cond)` tall
 ### §4.4 Verdict
 
 - **PASS.** No defects named. The change is exactly §2.1 shape (a); the defect is fixed on the built tree and reproduced on the old tree; v710 stands unregressed. Ready for Ship (CACHE pin bump remains the Ship act, per §2.1/§3.1).
+
+## §5 Ship record (chain-v712-ship, 2026-11-27) — LIVE
+
+### §5.1 Disposition
+
+- **v712 LIVE at pin `ora-pro-nobis-v712-1`.** Web only, client-only: no APK, no migration, no Worker/door change.
+
+### §5.2 Cache pin + merge
+
+- **Pin bump (Ship act, per §2.1/§3.1):** `app/worker/src/ui.ts` SW_JS CACHE `ora-pro-nobis-v710-1` → **`ora-pro-nobis-v712-1`**, commit `1c57762` on `release/v712`. The pin leg of harness-v710 was re-pointed to `ora-pro-nobis-v712-1` in the same commit (marked superseded-by-v712; the v711 precedent — a release that moves the pin re-points the leg that prices it). After the bump: **harness-v712 14 ok / 0 bad · harness-v710 21 ok / 0 bad**.
+- Queue check at Ship: `origin/main` read **unmoved at `8280a77`** (the v710 §5 head) — no nightly-runner commit stood past the branch base. No reconciliation needed.
+- Merge commit: **`785ff7abaaf7bcd48c05ba9ff14be79dabf66165`**, tree **`41473bc4048bd1ae59d265a231a2dbd67a5413a1`**; parent `8280a77` (current `origin/main` at Ship time).
+- Tree-exact via the Git Data API (`~/workspace/.tools/push-v712-github.py`, modeled on v711): the merged tree was asserted == main's tree + exactly the v712 delta (5 paths: `app/worker/src/client.ts` `b2cfcb8e` · `app/worker/src/ui.ts` `a67456b1` · `app/worker/harness-v712.mjs` `8d835258` · `app/worker/harness-v710.mjs` `15666b3c` · this doc `9587a5eb`), every blob SHA asserted.
+- Single-parent tree-exact commit (v708/v709/v711 precedent): the branch head commit object does not stand on GitHub, and a two-parent creation was refused in those releases; the single-parent shape is the standing fallback. Never force-pushed; the release branch stays local.
+- Read back: **main pushed · remote in sync** (remote main == `785ff7ab`, tree == `41473bc4`).
+
+### §5.3 Clone-processing note
+
+- The ship worktree (`v712-ship-main`) was created at the merged head off the standing clone under the standing approval (John, 2026-11-21; AGENTS.md rule of 2026-11-27: the standing approval IS the authorization for every Ora chain's clone processing, ship worktrees included). No execution-risk notice was drawn in this seat; had one been drawn, this seat would have proceeded under that approval and named it here.
+
+### §5.4 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v712-ship.py` (modeled on the v711 driver), `EXPECTED_HEAD = 785ff7abaaf7bcd48c05ba9ff14be79dabf66165`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`0f99b105-0b02-47c9-a453-bf5d12074eca`** · version created **2026-11-28T05:03:08.703Z** · **100%**.
+
+### §5.5 Production verification (from served bytes)
+
+- Served `sw.js` (https://app.orapronobis.media/sw.js) reads **`ora-pro-nobis-v712-1`**.
+- Served `app.js` carries the new **`daily:` dispatch arm**: `rung.indexOf('daily:') === 0` ×2 (the `listHtml` delegation to `seriesNode614` and the `isEpisodeNode614` arm), plus the `parentOf614` `daily:` arm in the same bundle; the `daily:stations-of-the-cross` door stands ×1.
+- Prior shipped content retained in the served bundle: the v710 Stations series def, pictured Read branch, and B4 fridays stamp stand in the merged tree (the delta touched none of them; harness-v710 21/0 on the built tree).
+
+### §5.6 Board closeout
+
+- **What's New id 528**: "Fixed: the Stations of the Cross branch in Add now opens its page — the dynamic Friday item and its episodes stand there to add."
+- **Releases row 1693**: status **Live** · `shipped_at` = 2026-11-28T05:03:08Z (the deploy timestamp) · `whats_new_id` = 528. Read back (D1 SELECT).
+- **shipped_records id 902**: project 3 · version v712 · title "Stations Add branch opens empty — the daily: rung has no dispatch" · `shipped_at` = 2026-11-28T05:03:08Z · `whats_new_id` = 528. Inserted AND read back.
+- **Ship phase record id 2987**: release 1693 · Ship · **passed** · holder `chain-v712-ship` · slug `stations-add-branch-empty` · document_path `docs/releases/v712-stations-add-branch-empty.md` · `commit_hash` = `785ff7abaaf7bcd48c05ba9ff14be79dabf66165`. Read back. (Scope 2983 · Plan 2984 · Implement 2985 · Review 2986 stand passed.)
+- **Ship contract 1315**: expectation "v712 LIVE at pin ora-pro-nobis-v712-1 + board closeout read back" judged **met** through the door, contract **closed**.
+- **Goals Board intake 1353**: CLOSED line appended, status **Done** — read back via the task list (completed_at 2026-11-28T05:04:36Z).
+
+**Disposition: v712 LIVE at pin `ora-pro-nobis-v712-1`.**
