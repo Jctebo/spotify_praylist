@@ -305,3 +305,48 @@ Drive: the real built Worker + Chromium, the real v699 Stations render bytes beh
 - **Field leg stands as §2.6/§3 names it:** John's look after Ship — arrows on the Afternoon rows, saint Remove + Restore on his phone, Stations titled "Stations of the Cross" in the dock and PLAYING. The v699 field leg stays FAILED until John confirms the play; this PASS clears Ship, it does not close the field leg.
 
 **Review stops here. Ship (merge · deploy · board closeout) is the Ship seat's act.**
+
+## §5 Ship record
+
+**Shipped LIVE at pin `ora-pro-nobis-v708-1` — 2026-11-28.**
+
+Ship seat: chain-v708-ship.
+
+### §5.1 Review verdict
+
+- **§4 Review: PASS** (chain-v708-review, commit `976d13c`): harness-v708 **32/0** independently re-run; fail-on-old proven (T + P legs fail on base); harness-v699 **34/0**; harness-v687/v691 identical pre-existing crash-family verdicts on both trees (no new bad); diff audit clean.
+
+### §5.2 Merge (tree-exact, Git Data API)
+
+- Merge commit: **`8bd16dd9925d8c26aa3fb0c993207b3826f17b45`**, tree **`4b557f95a8233ed9fc076bd8f8bd25b76d59ab9e`**; parent `0348bb2` (current `origin/main` at Ship time).
+- Main had moved past the branch base `ff0b30b`: the nightly runner publish commit `ecdadd8`, the v709 merge `24f7f56`, and the v709 §5 record `0348bb2`. The difference from the branch tree is named, not dropped: a local 3-way merge retained all of it — v709's `dayStoredPos709` reader and its call sites stand in the merged `client.ts` (×3), and the runner's `docs/podcast.xml` stands untouched. No nightly-runner commit was dropped.
+- Overlap was exactly `client.ts` + `ui.ts`: `client.ts` auto-merged cleanly (merged blob `8e697344` carries both v708 and v709); the `ui.ts` conflict was the pin line only, resolved to `ora-pro-nobis-v708-1` (the branch blob `7c1246e`, byte-identical to the branch tree). The merged tree was asserted exactly: == main's tree with exactly the v708 delta applied — the 5 delta blobs asserted (`app/worker/harness-v687.mjs` `2eb0deaa` · `app/worker/harness-v708.mjs` `5200a2f2` · `app/worker/src/client.ts` `8e697344` · `app/worker/src/ui.ts` `7c1246e4` · this doc `f4a877b9`).
+- Single-parent tree-exact commit (v709 precedent): the branch head commit object does not stand on GitHub, and a two-parent creation was refused (422 on the first attempt, before any ref update; the retry with the single parent landed). Never force-pushed; the release branch stays local.
+- Merged-tree harness re-run at the Ship seat: **harness-v708 32 ok / 0 bad** on the merged tree.
+- Read back at merge time: **main pushed · remote in sync.**
+- Queue note: v709 shipped first (its §5.2 named this ordering); production served `ora-pro-nobis-v709-1` immediately before this deploy, not v706-1 as the Plan-time state read. This ship's pin is `ora-pro-nobis-v708-1` per the release's own pin, and its tree carries v709's code entire — no v709 change was regressed.
+
+### §5.3 Clone-processing note
+
+- The ship worktrees (`v708-merge-test`, `v708-ship-main`) were created at the merged head under the standing approval (John, 2026-11-21; AGENTS.md rule of 2026-11-27: the standing approval IS the authorization for every Ora chain's clone processing, ship worktrees included). No execution-risk notice was drawn in this seat; had one been drawn, this seat would have proceeded under that approval and named it here.
+
+### §5.4 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v708-ship.py`, `EXPECTED_HEAD = 8bd16dd9925d8c26aa3fb0c993207b3826f17b45`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`f2be2303-8e1d-41f5-9c61-c61006baffa5`** · deployment created **2026-11-28T02:11:36.966Z** · **100%**.
+
+### §5.5 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v708-1`**.
+- Served `app.js` carries **`opnMaterializeRep708`** ×2 · **`opnRemoveSaint708`** ×3 · **`opnRestoreSaint708`** ×2 · **`opnSrcMove708`** ×4 · **`data-p708saintremove`** ×3 · and v709's **`dayStoredPos709`** ×3 (retained).
+
+### §5.6 Board closeout
+
+- **What's New id 525**: "Changed: every row in the prayer-list editor now has move arrows; the Saint of the Day row can be removed like the others (only the Divine Office hours keep Disable instead of Remove); and prayer rows now show the prayer's real name instead of its code."
+- **Releases row 1689**: status **Live** · `shipped_at` = 2026-11-28T02:11:36Z (the deploy timestamp) · `whats_new_id` = 525. Read back.
+- **shipped_records id 899**: project 3 · version v708 · title "Edit form: move arrows on every row, Saint of the Day removable (Disable only for Divine Office/LOH), prayer titles pull through" · `shipped_at` = 2026-11-28T02:11:36Z · `whats_new_id` = 525. Inserted AND read back.
+- **Ship phase record id 2972**: release 1689 · Ship · passed · holder `chain-v708-ship` · slug `edit-form-arrows-everywhere-saint-removable` · document_path `docs/releases/v708-edit-form-arrows-everywhere-saint-removable.md` · `commit_hash` = `8bd16dd9925d8c26aa3fb0c993207b3826f17b45`. Read back. (Scope 2963 · Plan 2964 · Implement 2966 · Review 2971 stand passed.)
+- **Ship contract 1298**: all three expectations **met** through the door (merge · deploy + served-bytes verification · closeout).
+- **Goals Board intake 1347**: CLOSED, status **Done** — closeout line appended; read back via the task list.
+
+**Disposition: v708 LIVE at pin `ora-pro-nobis-v708-1`.**
