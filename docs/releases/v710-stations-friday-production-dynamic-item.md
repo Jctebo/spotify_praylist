@@ -171,3 +171,50 @@
 - **Title form (§2.4/A2): PASS.** Code seat: descriptor title for `stations-of-the-cross` is `e.title` as-is, no label prefix; no other seat composes a `Nov 27, 2026: ` prefix for this series (the only label-prefix composition in the tree is the standing generic one, bypassed for this series). Feed base title stands `Stations of the Cross - November 27, 2026`; the live item carries it with the standing `(corrected)` replacement suffix only.
 - **Defects:** none found.
 - **Verdict: PASS — clear to Ship** (pin `ora-pro-nobis-v710-1` stands in tree; merge + deploy are Ship's acts).
+
+## §5 Ship record (chain-v710-ship, completion seat, 2026-11-27) — LIVE
+
+### §5.1 Disposition
+
+- **v710 LIVE at pin `ora-pro-nobis-v710-1`.** Web only: no APK, no migration.
+
+### §5.2 Merge
+
+- Merge commit: **`b8f1211fe2489e245650d9eb672cecc2a4a135b7`**, tree **`e6884c75126caefc5d2847af625b48976093d6e5`**, parent `ef951ddd` (the `origin/main` tip at Ship time).
+- Tree-exact via the Git Data API: the merged tree was asserted == main's tree + exactly the 20 v710 delta paths; `client.ts`/`ui.ts` carry both the v710 and the v711 changes; `ui.ts` pin = `ora-pro-nobis-v710-1`; the `docs/podcast.xml` blob is unchanged.
+- **Single-parent shape, named:** the two-parent merge creation was refused (422 — the branch head `f55cdc73` is local-only and does not stand on GitHub), so the merge landed as a single-parent tree-exact commit on `ef951ddd` (the v708/v709/v711 fallback, named and accepted). Never force-pushed; the release branch stays local.
+- Read back: **main pushed · remote in sync** (remote main == `b8f1211f`, tree == `e6884c75`, verified again by the completion seat before deploy: `ls-remote origin main` == `b8f1211f`).
+
+### §5.3 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v710-ship.py` (modeled on the v708/v706 ship drivers), `EXPECTED_HEAD = b8f1211fe2489e245650d9eb672cecc2a4a135b7`; dry-run passed first, then deploy from the ship worktree (`v710-ship-main`) synced to the merged head.
+- Worker **`ora-pro-nobis-app`** · version ID **`341c5d01-a066-41c4-99db-e6d4b0e85ceb`** · version created **2026-11-28T03:47:24.627Z** · **100%**.
+
+### §5.4 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v710-1`**.
+- Served `app.js` carries the v710 markers: the **`stations-of-the-cross` series entry** (×13, incl. the closed-set seat, the server-def key, and the matcher arm) · the **pictured Read branch** (`dailySeries === 'stations-of-the-cross'` in `openRead`, composing `/assets/stations/station-NN.jpg` above each station section; served `station-01.jpg` read back **200, image/jpeg**) · the Add-ladder door **"Stations of the Cross · Fridays"** (×1).
+- Prior shipped content retained in the served bundle: v709's **`dayStoredPos709`** ×3.
+
+### §5.5 The production half (Half A)
+
+- Fork (`spotify_praylist-fork`, `muse-draft-week`, local-only) HEAD **`71fc90b9e`** stands live ahead of the 2026-12-02 night run: the Friday contract + gate + three-voice mix + pace seat are in the fork, and the first Friday under production is 2026-12-04, composed by that run.
+- The Dec 4 dry compose **PASSED** at Implement (§3.2: duration 2067.4 s, measured pace 132.2 wpm in the 130–135 band at speed 76, transcript guard **PASSED**) and was **NOT published** — it belongs to the 2026-12-02 run.
+- **The corrected replacement stands published** (run at Implement, §3.3): the defective 2026-11-27 episode was pulled and the corrected episode — "Stations of the Cross - November 27, 2026 (corrected)", the three station prayers in full — was grafted in the same feed commit **`ef951ddd`**; Review verified it live (§4: feed 3140 items, defective title absent, corrected title standing, enclosure + app snapshot read back).
+
+### §5.6 Seat changes, named
+
+- **THE IMPLEMENT SWAP NAMED:** "Implement seat replaced under the silent-seat auto-reseat rule (movement review 2026-11-27 20:47 CT: no output across two review windows; the first seat had committed Half A a8ac9a24f/9d5bd7759 + Half B f6f7aa8 + harness 5d67b0b before going quiet; the replacement seat verified the standing work, repaired the pass-1 propagation defect c26686760, completed the production check + corrected replacement + §3)"
+- **THE SHIP STOP NAMED:** "the first Ship seat landed the merge then stopped on the execution-risk notice drawn on the repo content; a completion seat under the same holder proceeded under John's standing approval (2026-11-21, as clarified 2026-11-27 18:48 CT) and finished the deploy + closeout; the notice is named here per the rule."
+- The completion seat also drew the execution-risk notice (on the standing-clone fetch result) and proceeded under the same standing approval, per the same rule.
+
+### §5.7 Board closeout
+
+- **What's New id 527**: "New: the Stations of the Cross now comes every Friday — a dynamic Stations item for your prayer list that resolves to the week's episode, its Read view carrying the station pictures; and the prayers at each station (Our Father, Hail Mary, Glory Be) are prayed in full."
+- **Releases row 1691**: status **Live** · `shipped_at` = 2026-11-28T03:47:24Z (the deploy timestamp) · `whats_new_id` = 527. Read back through the door.
+- **shipped_records id 901**: project 3 · version v710 · title "Stations of the Cross every Friday — dynamic item + pictured Read view" · `shipped_at` = 2026-11-28T03:47:24Z · `whats_new_id` = 527. Inserted AND read back.
+- **Ship phase record id 2982**: release 1691 · Ship · **passed** · holder `chain-v710-ship` · slug `stations-friday-production-dynamic-item` · document_path `docs/releases/v710-stations-friday-production-dynamic-item.md` · `commit_hash` = `b8f1211fe2489e245650d9eb672cecc2a4a135b7`. Read back through the door. (Scope 2973 · Plan 2974 · Implement 2975 · Review 2981 stand passed.)
+- **Ship contract 1310** (completion seat): both expectations judged **met** through the door, contract **closed**. **Ship contract 1309** (first seat): already closed at the stop — judgment writes refused **409** (the standing pattern: a closed contract's recorded judgments stand); the records carry the proof.
+- **Goals Board intake 1350**: CLOSED line appended, status **Done** — read back via the task list.
+
+**Disposition: v710 LIVE at pin `ora-pro-nobis-v710-1`.**
