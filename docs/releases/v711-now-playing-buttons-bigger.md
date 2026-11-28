@@ -186,3 +186,44 @@ Plan §2.3 predicted absorption with the floor never binding. measure-v711's dri
 
 - **PASS.** All checks green: diff audit clean, independent tallies match Implement's (36/0 · 18/0 · 33/0 · 38/0), pin-leg baseline claim confirmed, fail-on-old confirmed, 667-long artwork 194px. Clear to Ship at pin `ora-pro-nobis-v711-1`.
 - Execution-risk notice: none drawn beyond the standing clone-processing approval named in §1; work proceeded under it.
+
+## §5 Ship record (chain-v711-ship, 2026-11-27) — LIVE
+
+### §5.1 Disposition
+
+- **v711 LIVE at pin `ora-pro-nobis-v711-1`.** Web only, client-only: no APK, no migration, no Worker/door change.
+
+### §5.2 Merge
+
+- Queue check at Ship: `origin/main` read **unmoved at `ff5f0ec`** — v710 (Stations production + dynamic item, app half) had **not** shipped and no nightly-runner commit stood past the branch base. No reconciliation was needed: the merged tree is exactly the branch tree, and no v710 content exists on main to retain (v710 ships after v711 and re-derives onto this main).
+- Merge commit: **`1eeff218da5e73fde91fd910ffcf9fc8c1489f36`**, tree **`c5aae3ac2887bf10f7103736c9c44bf3aaeb6f67`**; parent `ff5f0ec` (current `origin/main` at Ship time).
+- Tree-exact via the Git Data API (`~/workspace/.tools/push-v711-github.py`, modeled on v708): the merged tree was asserted == main's tree + exactly the v711 delta (7 paths: `app/worker/src/ui.ts` `94891542` · `app/worker/src/client.ts` `95fb1908` · `app/worker/harness-v664.mjs` `b80ecb42` · `app/worker/harness-v667.mjs` `84bd22bd` · `app/worker/harness-v711.mjs` `3c5c3309` · `app/worker/measure-v711.mjs` `965bd62e` · this doc `c21bcf2d`), every blob SHA asserted.
+- Single-parent tree-exact commit (v708/v709 precedent): the branch head commit object does not stand on GitHub, and a two-parent creation was refused (422 on the first attempt, before any ref update; the retry with the single parent landed). Never force-pushed; the release branch stays local.
+- Read back at merge time: **main pushed · remote in sync** (remote main == `1eeff218`, tree == `c5aae3ac`).
+
+### §5.3 Clone-processing note
+
+- The ship worktree (`v711-ship-main`) was created at the merged head under the standing approval (John, 2026-11-21; AGENTS.md rule of 2026-11-27: the standing approval IS the authorization for every Ora chain's clone processing, ship worktrees included). No execution-risk notice was drawn in this seat; had one been drawn, this seat would have proceeded under that approval and named it here.
+
+### §5.4 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v711-ship.py`, `EXPECTED_HEAD = 1eeff218da5e73fde91fd910ffcf9fc8c1489f36`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`12644244-a405-43a0-9116-f90a931e7b09`** · version created **2026-11-28T02:48:50.116Z** · **100%**.
+
+### §5.5 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v711-1`**.
+- Served `styles.css` carries **`.np-play { width:66px; height:66px; font-size:24px; }`** · **`.np-tbtn { … font-size:30px; … padding:12px; }`** · **`.np-controls .btn.ghost { min-height:50px; padding:12px 5px; font-size:16px; }`**.
+- Served `app.js` carries the `#np-share` SVG at **`width="24" height="24"`** (×1).
+- Prior shipped content retained in the served bundle: v709's **`dayStoredPos709`** ×3 · v708's **`opnMaterializeRep708`** ×2. (v710 had not shipped — nothing of v710 stood on main to retain.)
+
+### §5.6 Board closeout
+
+- **What's New id 526**: "Changed: the player buttons are a little bigger — the transport controls and the bottom row are easier to tap."
+- **Releases row 1692**: status **Live** · `shipped_at` = 2026-11-28T02:48:50Z (the deploy timestamp) · `whats_new_id` = 526. Read back.
+- **shipped_records id 900**: project 3 · version v711 · title "Now Playing buttons a little bigger (transport + bottom row)" · `shipped_at` = 2026-11-28T02:48:50Z · `whats_new_id` = 526. Inserted AND read back.
+- **Ship phase record id 2980**: release 1692 · Ship · passed · holder `chain-v711-ship` · slug `now-playing-buttons-bigger` · document_path `docs/releases/v711-now-playing-buttons-bigger.md` · `commit_hash` = `1eeff218da5e73fde91fd910ffcf9fc8c1489f36`. Read back. (Scope 2976 · Plan 2977 · Implement 2978 · Review 2979 stand passed.)
+- **Ship contract 1306**: expectation **met** through the door (merge · deploy + served-bytes verification · closeout).
+- **Goals Board intake 1351**: CLOSED, status **Done** — closeout line appended; read back via the task list.
+
+**Disposition: v711 LIVE at pin `ora-pro-nobis-v711-1`.**
