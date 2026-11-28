@@ -179,3 +179,46 @@ Review seat: `chain-v709-review`. Independent re-runs and read-backs, 2026-11-28
 
 - **PASS.** No defects found. The fallback seat stands on independently re-verified §2.2 evidence; the diff touches only the prescribed seats; all tallies match §3.
 - Next: Ship seat, with its contract, per the chain.
+
+## §5 Ship record
+
+**Shipped LIVE at pin `ora-pro-nobis-v709-1` — 2026-11-28.**
+
+Ship seat: chain-v709-ship.
+
+### §5.1 Review verdict
+
+- **§4 Review: PASS** (chain-v709-review, commit `e492921`): fallback seat confirmed on independently re-verified §2.2 evidence (stored duration 1173 = feed 19:33, truthful; no `day_positions` row for the field day); diff audit clean (one reader `dayStoredPos709` + 2 call sites + pin only); harness-v709 **15/0** incl. fail-on-old OA-L1/OA-L2, harness-v680 **21/0**, harness-v695 **23/1** (named pin leg only).
+
+### §5.2 Merge (tree-exact, Git Data API)
+
+- Merge commit: **`24f7f56906f4fe6971dd634fc41ffcf043fd554c`**, tree **`6c1af9f2f2c91d202414809cee16aba10a70e11b`**; parent `ecdadd8` (the runner publish commit that advanced `origin/main` past the branch base `ff0b30b`). Single-parent tree-exact commit (v705 precedent): the branch head commit object does not stand on GitHub, and a two-parent creation was refused (422); the merged tree was asserted exactly: == main's tree with exactly the v709 delta applied — the 4 delta blobs asserted (`app/harness-v709.mjs` `d1598b48` · `app/worker/src/client.ts` `4413c708` · `app/worker/src/ui.ts` `a1608aab` · this doc `8943c4c6`), and main's own delta vs base (only `docs/podcast.xml`, the runner publish) carried untouched. Never force-pushed; the release branch stays local.
+- Read back at merge time: **main pushed · remote in sync.**
+- Queue ordering: v708 (row 1689) had **not** shipped at merge time (its Implement phase stands active; no Ship record) — v709 merged onto the current `origin/main` first, and v708's ship derives onto this main when its turn comes.
+
+### §5.3 Clone-processing note
+
+- The ship worktree `~/workspace/.worktrees/v709-ship-main` was created at the merged head under the standing approval (John, 2026-11-21; AGENTS.md rule of 2026-11-27: the standing approval IS the authorization for every Ora chain's clone processing, ship worktrees included). No execution-risk notice was drawn in this seat; had one been drawn, this seat would have proceeded under that approval and named it here. The standing clone's stale/dirty local checkout was not disturbed — all work ran in worktrees from `origin/main`.
+
+### §5.4 Deploy
+
+- Deploy driver `~/workspace/.tools/deploy-app-v709-ship.py`, `EXPECTED_HEAD = 24f7f56906f4fe6971dd634fc41ffcf043fd554c`; dry-run passed first, then deploy from the ship worktree at the merge head.
+- Worker **`ora-pro-nobis-app`** · version ID **`54d2455b-95ba-4171-a4a8-6285ae583f00`** · deployment created **2026-11-28T01:42:50.025Z** · **100%**.
+
+### §5.5 Production verification (from served bytes)
+
+- Served `sw.js` reads **`ora-pro-nobis-v709-1`**.
+- Served `app.js` carries **`dayStoredPos709`** ×3 (the reader + its 2 call sites).
+
+### §5.6 Board closeout
+
+- **What's New id 524**: "Fixed: the Office of Readings now remembers where you stopped — leave it for another track, come back, and it resumes where you left off instead of starting over."
+- **Releases row 1690**: status **Live** · `shipped_at` = 2026-11-28T01:42:50Z (the deploy timestamp) · `whats_new_id` = 524. Read back.
+- **shipped_records id 898**: project 3 · version v709 · title "Office of Readings restarts from scratch on re-select (position lost)" · `shipped_at` = 2026-11-28T01:42:50Z · `whats_new_id` = 524. Read back.
+- **Ship phase record id 2970**: release 1690 · Ship · passed · holder `chain-v709-ship` · slug `office-of-readings-position-lost` · document_path `docs/releases/v709-office-of-readings-position-lost.md` · `commit_hash` = `24f7f56906f4fe6971dd634fc41ffcf043fd554c`. Read back. (Scope 2965 · Plan 2967 · Implement 2968 · Review 2969 stand passed.)
+- **Ship contract**: all three expectations **met** (merge · deploy + served-bytes verification · closeout).
+- **Goals Board intake 1348**: CLOSED, status **Done** — closeout line appended; read back via the task list.
+
+**Disposition: v709 LIVE at pin `ora-pro-nobis-v709-1`.**
+
+**Field check (John's leg, open):** play the Office of Readings partway, leave it for another track, come back the same day — it resumes where he left off instead of starting over.
