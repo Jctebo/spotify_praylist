@@ -21193,8 +21193,8 @@ function resolveProfileCourses590(day) {
         var rec705 = settled705[jobKey705];
         // v706 §2.1 step 1: the sequence test — a payload is
         // SEQUENCE kind iff some entry carries a numeric
-        // `day` field (the entry-shape mark; podPayload
-        // stamps no `kind`, so payload.kind is never read).
+        // 'day' field (the entry-shape mark; podPayload
+        // stamps no 'kind', so payload.kind is never read).
         // For a sequence job the pick source is the PROGRESS
         // pick (the standing expression of the course seat
         // below), never the calendar matcher; and a standing
