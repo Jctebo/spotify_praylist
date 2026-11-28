@@ -5041,7 +5041,7 @@ function queueMarkPos617(desc) {
   if (!desc) return 0;
   if (desc.kind === 'podcast') return desc.podPositionS >= 5 ? Math.floor(desc.podPositionS) : 0;
   if (desc.kind === 'prayer' || desc.kind === 'homily') return 0;
-  var fold617 = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
+  var fold617 = dayStoredPos709(desc.episodeId); // v709 §2.1 fallback: the one reader (fold, else the pending slot)
   return fold617 >= 5 ? Math.floor(fold617) : 0;
 }
 function queueStartPos(desc) {
@@ -5702,7 +5702,7 @@ function startDesc(desc) {
       // current track's live carry wins over the fold value.
       if (liveCarry617 > 0) state.pendingResume = { episodeId: desc.episodeId, positionS: liveCarry617 };
       else {
-        var dayPos = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[desc.episodeId] : null;
+        var dayPos = dayStoredPos709(desc.episodeId); // v709 §2.1 fallback: the one reader (fold, else the pending slot)
         if (dayPos >= 5) state.pendingResume = { episodeId: desc.episodeId, positionS: Math.floor(dayPos) }; // v680 §2.5 step 3: under 5 s reads as "not started"
       }
     }
@@ -11496,6 +11496,27 @@ function dayPosSlotDrop(episodeId, date) {
   var map = dayPosSlotRead();
   var k = episodeId + '|' + date;
   if (map[k]) { delete map[k]; dayPosSlotWrite(map); }
+}
+function dayStoredPos709(episodeId) {
+  // v709 §2.1 (fallback seat, taken on the §2.2 evidence —
+  // every duration source cleared, §3): the ONE reader for a
+  // day track's stored position at tap time. The payload fold
+  // stands first, exactly as before; when the fold carries
+  // NOTHING for the episode — a day refetch rebuilt it from a
+  // server payload whose day_positions row does not stand —
+  // the reader falls back to the save's guaranteed-local leg,
+  // the opn-daypos-pending-v1 slot entry for (episodeId,
+  // presented date), which the tap-time reads never consulted
+  // before v709. A 0-clear (ended / 95% mark) drops the slot
+  // entry and deletes the fold entry in the same act, so a
+  // finished track reads nothing here either. No key, store,
+  // route, or threshold changes: the callers keep their
+  // standing >= 5 s "not started" rule on this value.
+  if (!episodeId) return null;
+  var fold = (state.dayPayload && state.dayPayload.dayPositions) ? state.dayPayload.dayPositions[episodeId] : null;
+  if (fold !== null && fold !== undefined) return fold;
+  var entry = dayPosSlotRead()[episodeId + '|' + presentedDateStr()];
+  return (entry && typeof entry.positionS === 'number') ? entry.positionS : null;
 }
 function writeDayPositionQuiet(episodeId, positionS, durationS) {
   if (!episodeId) return;
