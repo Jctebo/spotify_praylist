@@ -101,6 +101,7 @@ import { massPayload } from "./mass";
 import { massReadingsPayload, grabReadings } from "./mass-readings";
 import { LOGO_PNG_B64 } from "./logo";
 import { LOGO512_PNG_B64 } from "./logo512";
+import { STATION_IMAGES_B64 } from "./stations-images";
 
 const JOHN_EMAILS = new Set(["john@thibeaux.com", "john.thibeaux@gmail.com"]);
 // v335: the Devotional Suite audio fallback constant is deleted — a
@@ -1516,7 +1517,7 @@ function validateProfileContents(contents: unknown, coreBlocks: string[]): { nor
           // key is an error — the client's mirror rule
           // (the set is a literal here because this fn is
           // extracted standalone by the harnesses).
-          if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints", "fr-mike-homilies", "barron-sunday-sermons"].includes(key)) return { error: `bad daily ${String(key)}` };
+          if (typeof key !== "string" || !["saint-of-the-day", "daily-gospel-exegesis", "daily-readings", "bible-in-a-year", "catholicsaints", "fr-mike-homilies", "barron-sunday-sermons", "stations-of-the-cross"].includes(key)) return { error: `bad daily ${String(key)}` };
         } else if (kind === "massdaily") {
           // v688: a massdaily item naming one of the four
           // Mass sources is kept; any other massdaily key
@@ -3269,7 +3270,8 @@ async function resolveExternalsPass(env: Env, opts?: { forceFeedKeys?: string[] 
     }
     try {
       const feed = await podRssFetchFeed(def.feedUrl(env));
-      const entries = podRssBuild(feed.items, feed.channelImageUrl, def.window ?? RSS_WINDOW);
+      const items710 = def.titlePrefix ? feed.items.filter((it) => String(it.title || '').startsWith(def.titlePrefix!)) : feed.items;
+    const entries = podRssBuild(items710, feed.channelImageUrl, def.window ?? RSS_WINDOW);
       if (!entries.length) throw new Error("zero-yield snapshot build");
       const builtAt = nowISO();
       const snapFull: PodRssSnapshot = { entries, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
@@ -4281,6 +4283,7 @@ interface PodRssSeriesDef {
   // feed-complete because the Praylist insert paths resolve
   // the presented day's episode from it (§2.4).
   window?: number;
+  titlePrefix?: string;
 }
 const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   { key: "exorcist-files", title: "The Exorcist Files", feedUrl: (env) => env.EXT_EXORCIST_FEED_URL || RSS_EXORCIST_FEED_URL },
@@ -4329,6 +4332,8 @@ const POD_RSS_SERIES_LIST: PodRssSeriesDef[] = [
   // last among the RSS defs, before the own kind, so every
   // standing entry's order and shape are untouched.
   { key: "ora-pro-nobis", title: "Ora Pro Nobis", feedUrl: (env) => ownFeedUrl(env), window: 500 },
+  // v710 B1: the Stations of the Cross as its own series — same own feed, title-filtered to the Friday episodes.
+  { key: "stations-of-the-cross", title: "Stations of the Cross", feedUrl: (env) => ownFeedUrl(env), window: 500, titlePrefix: "Stations of the Cross" },
 ];
 function podRssSeriesDef(key: string): PodRssSeriesDef | null {
   return POD_RSS_SERIES_LIST.find((d) => d.key === key) ?? null;
@@ -4458,7 +4463,8 @@ async function podRssSequence(env: Env, def: PodRssSeriesDef): Promise<{ snap: P
   if (snap && Date.now() - Date.parse(snap.builtAt) < RSS_SNAPSHOT_MAX_AGE_MS) return { snap, stale: false };
   try {
     const feed = await podRssFetchFeed(def.feedUrl(env));
-    const entries = podRssBuild(feed.items, feed.channelImageUrl, def.window ?? RSS_WINDOW);
+    const items710 = def.titlePrefix ? feed.items.filter((it) => String(it.title || '').startsWith(def.titlePrefix!)) : feed.items;
+    const entries = podRssBuild(items710, feed.channelImageUrl, def.window ?? RSS_WINDOW);
     if (!entries.length) throw new Error("rss sequence build produced no entries");
     const builtAt = nowISO();
     const snapFull: PodRssSnapshot = { entries, builtAt, showImageUrl: feed.channelImageUrl, showDesc: feed.channelDesc };
@@ -6845,6 +6851,7 @@ export default {
       if (path === "/sw.js") return new Response(SW_JS, { headers: { "content-type": "text/javascript; charset=utf-8" } });
       if (path === "/logo.png") return new Response(logo(), { headers: { "content-type": "image/png", "cache-control": "private, max-age=86400" } });
       if (path === "/logo-512.png") return new Response(logo512(), { headers: { "content-type": "image/png", "cache-control": "private, max-age=86400" } });
+      { const sm710 = /^\/assets\/stations\/station-(\d{2})\.jpg$/.exec(path); if (sm710) { const b64 = STATION_IMAGES_B64[Number(sm710[1]) - 1]; if (b64) { const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new Response(bytes, { headers: { "content-type": "image/jpeg", "cache-control": "private, max-age=86400" } }); } } }
       return err(404, "not found");
     } catch (e) {
       return err(500, `worker error: ${(e as Error).message}`);

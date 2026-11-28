@@ -2858,7 +2858,7 @@ var OPN_DAY_KEY_611 = 'daily-gospel-exegesis';
 // two keys and no other; opnDailyMatch666 carries the
 // matching homily arm (newest entry published on or before
 // the presented date). No other key is added by v699.
-var OPN_DAILY_SERIES_666 = ['saint-of-the-day', 'daily-gospel-exegesis', 'daily-readings', 'bible-in-a-year', 'catholicsaints', 'fr-mike-homilies', 'barron-sunday-sermons'];
+var OPN_DAILY_SERIES_666 = ['saint-of-the-day', 'daily-gospel-exegesis', 'daily-readings', 'bible-in-a-year', 'catholicsaints', 'fr-mike-homilies', 'barron-sunday-sermons', 'stations-of-the-cross']; // v710 B2: + stations-of-the-cross (John's word, with matcher arm B3)
 function opnDailyKeyOk666(key) { return typeof key === 'string' && OPN_DAILY_SERIES_666.indexOf(key) >= 0; }
 /* v688 §2.2/§2.3: the dynamic Mass kind — a SIBLING kind
    ('massdaily') beside 'daily', NEVER an extension of it:
@@ -2877,7 +2877,7 @@ function opnMassLabel688(series) { return opnMassSeriesTitle688(series) + ' \u00
 function opnDailySeriesTitle666(series) {
   if (series === 'catholicsaints') return opnVideoSeriesTitle656(series);
   if (opnLadderSeries603) for (var i = 0; i < opnLadderSeries603.length; i++) if (opnLadderSeries603[i].series === series) return opnLadderSeries603[i].title || series;
-  var T = { 'saint-of-the-day': 'The Saint of The Day Podcast', 'daily-gospel-exegesis': 'Daily Gospel Exegesis', 'daily-readings': 'USCCB Daily Readings Podcast', 'bible-in-a-year': 'Bible in a Year' };
+  var T = { 'saint-of-the-day': 'The Saint of The Day Podcast', 'daily-gospel-exegesis': 'Daily Gospel Exegesis', 'daily-readings': 'USCCB Daily Readings Podcast', 'bible-in-a-year': 'Bible in a Year', 'stations-of-the-cross': 'Stations of the Cross' };
   return T[series] || String(series || '');
 }
 var OPN_OLD_SEED_590 = {
@@ -19259,7 +19259,23 @@ function openRead(t, opts) {
     return r.text();
   }).then(function (text) {
     var body = sheet.querySelector('.readtext');
-    if (body) body.textContent = text;
+    if (!body) return;
+    if (t.dailySeries === 'stations-of-the-cross') { // v710 B5 pictured Read
+      var heads = ['First Station','Second Station','Third Station','Fourth Station','Fifth Station','Sixth Station','Seventh Station','Eighth Station','Ninth Station','Tenth Station','Eleventh Station','Twelfth Station','Thirteenth Station','Fourteenth Station'];
+      var idxs = heads.map(function (h) { return text.indexOf(h + '.'); }).filter(function (i) { return i >= 0; });
+      if (idxs.length === 14) {
+        body.textContent = '';
+        var pre = document.createElement('div'); pre.textContent = text.slice(0, idxs[0]); body.appendChild(pre);
+        for (var si = 0; si < 14; si++) {
+          var sec = document.createElement('section'); sec.className = 'station-sec';
+          var img = document.createElement('img'); img.src = '/assets/stations/station-' + String(si + 1).padStart(2, '0') + '.jpg'; img.alt = heads[si]; sec.appendChild(img);
+          var tx = document.createElement('div'); tx.textContent = text.slice(idxs[si], si < 13 ? idxs[si + 1] : undefined); sec.appendChild(tx);
+          body.appendChild(sec);
+        }
+        return;
+      }
+    }
+    body.textContent = text;
   }).catch(function () {
     // v630: John (2026-11-23): the reading view carries no comment about pulling text — either read or nothing. A failed text load therefore paints nothing: the body clears to empty and the skeleton bars go with it. The sheet header (title + play control) stands.
     var body = sheet.querySelector('.readtext');
@@ -21718,6 +21734,12 @@ function opnDailyMatch666(series, list, presented) {
     if (hit5) return { e: hit5, stale: false };
     return null; // v694: the prev5 (before-presented, stale) arm is deleted — the same-day-publish hit5 above is the day's own and stands
   }
+  if (series === 'stations-of-the-cross') {
+    // v710 B3: daily-readings discipline — title date EQUALS presented AND title starts 'Stations of the Cross' (corrected form included); newest wins; else null.
+    var sh = list.filter(function (e) { return e.title && String(e.title).indexOf('Stations of the Cross') === 0 && opnDailyTitleDate666(e.title) === presented; }).sort(byPub);
+    if (sh.length) return { e: sh[0], stale: false };
+    return null;
+  }
   if (series === 'fr-mike-homilies' || series === 'barron-sunday-sermons') {
     // v699 §1.6/§2.2 seat 3: the homily arm — the newest
     // entry whose Chicago publish date is on or before the
@@ -21880,7 +21902,8 @@ function resolveDailyDynamic666(day) {
         } else {
           state.dailyRes666[jobKey] = {
             episodeId: e.key, kind: 'podcast', seriesKey: e.key, podSeries: series,
-            title: (e.label ? e.label + ': ' : '') + (e.title || ''), url: e.url || e.streamUrl || null, enclosureUrl: null,
+            title: series === 'stations-of-the-cross' ? (e.title || '') : ((e.label ? e.label + ': ' : '') + (e.title || '')), url: e.url || e.streamUrl || null, enclosureUrl: null, // v710 A2: Stations title as-is, no label prefix
+            hasText: series === 'stations-of-the-cross', textUrl: series === 'stations-of-the-cross' ? ('/api/player/text/' + presented + '/stations-of-the-cross') : null,
             available: !!(e.url || e.streamUrl), block: job.block, source: opnDailySeriesTitle666(series), durationS: e.durationS || 0, listened: !!e.listened,
             podPositionS: (!e.listened && e.positionS > 0) ? Math.floor(e.positionS) : null,
             imageUrl: e.imageUrl || payload.showImageUrl || null, descText: e.descText || null, spotifyUrl: null,
@@ -28460,7 +28483,7 @@ function openAddLadder603(block, host) {
       }
       if (rung === 'br:videos') return doors614([['lf:virtual-mass', 'Virtual Mass', 'Daily TV Mass', 'Mass and Homilies'], ['lf:adoration', 'Adoration', 'No list audio', 'Episodes']]);
       if (rung === 'br:prayers') return doors614([['lf:prayerbook', 'Prayer Book', 'Prayers by category', 'Morning'], ['lf:office', 'Liturgy of the Hours', 'Morning & Evening Prayer \u2014 pick the reading', 'Midday'], ['lf:own', 'Ora Pro Nobis', 'This block\u2019s own prayers', 'Night']]);
-      if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress', 'Podcasts'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes', 'Podcasts'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes', 'Novenas'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies', 'Mass and Homilies']]);
+      if (rung === 'br:catechesis') return doors614([['lf:courses', 'Courses', 'A course\u2019s next episode, by your progress', 'Podcasts'], ['lf:podcasts', 'Podcasts', 'Every series, then its episodes', 'Podcasts'], ['lf:novenas', 'Novenas', 'Every novena, then its episodes', 'Novenas'], ['lf:homilies', 'Homilies', 'Sunday homilies, sermons, and your recorded homilies', 'Mass and Homilies'], ['lf:stations', 'Stations of the Cross', 'The Friday Stations, pictured', 'Daily']]);
       if (rung === 'lf:adoration') return '<p class="sub">Nothing to add</p>';
       // v656 §2.6: S1 retires — the Virtual Mass leaf opens:
       // three doors, one per MASS_VIRTUAL_ENTRIES entry.
@@ -28497,6 +28520,7 @@ function openAddLadder603(block, host) {
       }
       if (rung.indexOf('novena:') === 0) return novenaSeriesNode614(rung.slice('novena:'.length));
       if (rung === 'lf:homilies') return doors614([['series:fr-mike-homilies', 'Sunday Homilies with Fr. Mike Schmitz', ''], ['series:barron-sunday-sermons', 'Bishop Barron\u2019s Sunday Sermons', ''], ['lf:myhomilies', 'My recorded homilies', 'Recorded on this device']]);
+      if (rung === 'lf:stations') return doors614([['daily:stations-of-the-cross', 'Stations of the Cross \u00b7 Fridays', 'The Way of the Cross of Saint Alphonsus Liguori', 'Daily']]);
       if (rung === 'lf:myhomilies') {
         var mh = '';
         homilyIndex().filter(function (e) { return e.state === 'ready'; }).forEach(function (e) {
@@ -28513,7 +28537,7 @@ function openAddLadder603(block, host) {
       if (r === 'lf:virtual-mass' || r === 'lf:adoration') return 'br:videos';
       if (r === 'lf:prayerbook' || r === 'lf:office' || r === 'lf:own') return 'br:prayers';
       if (r.indexOf('prayers:') === 0) return 'lf:prayerbook';
-      if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies') return 'br:catechesis';
+      if (r === 'lf:courses' || r === 'lf:podcasts' || r === 'lf:novenas' || r === 'lf:homilies' || r === 'lf:stations') return 'br:catechesis';
       if (r.indexOf('course:') === 0) return 'lf:courses';
       if (r.indexOf('series:') === 0) { var sk = r.slice('series:'.length); return (sk === 'fr-mike-homilies' || sk === 'barron-sunday-sermons') ? 'lf:homilies' : 'lf:podcasts'; }
       if (r.indexOf('novena:') === 0) return 'lf:novenas';
@@ -28566,6 +28590,7 @@ function openAddLadder603(block, host) {
           // stamped; the v690 Frequency act owns it after.
           if (kp[0] === 'prayer' && itemA.key === 'stations-of-the-cross') itemA.dayRule = 'fridays';
           if (kp[0] === 'daily' && (itemA.key === 'fr-mike-homilies' || itemA.key === 'barron-sunday-sermons')) itemA.dayRule = 'sundays';
+          if (kp[0] === 'daily' && itemA.key === 'stations-of-the-cross') itemA.dayRule = 'fridays'; // v710 B4
           host.add(itemA);
           sh.remove();
         });
