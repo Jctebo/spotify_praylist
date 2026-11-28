@@ -21191,7 +21191,39 @@ function resolveProfileCourses590(day) {
         var settled705 = {};
         Object.keys(settledRaw705).forEach(function (k) { var r = settledRaw705[k]; if (r && !r.stale) settled705[k] = r; });
         var rec705 = settled705[jobKey705];
-        if (rec705 && rec705.desc) {
+        // v706 §2.1 step 1: the sequence test — a payload is
+        // SEQUENCE kind iff some entry carries a numeric
+        // 'day' field (the entry-shape mark; podPayload
+        // stamps no 'kind', so payload.kind is never read).
+        // For a sequence job the pick source is the PROGRESS
+        // pick (the standing expression of the course seat
+        // below), never the calendar matcher; and a standing
+        // settle AHEAD of that pick is invalid (step 2).
+        var seq706 = false;
+        payload.entries.forEach(function (x) { if (x && typeof x.day === 'number') seq706 = true; });
+        var progKey706 = null, progEntry706 = null, progIdx706 = -1;
+        if (seq706) {
+          progKey706 = payload.currentKey || opnPodCurrentKey(payload.entries);
+          if (progKey706) payload.entries.forEach(function (x, i) { if (!progEntry706 && x && x.key === progKey706) { progEntry706 = x; progIdx706 = i; } });
+        }
+        // v706 §2.1 step 2: sequence jobs only — the settle
+        // is INVALID iff the settled entry stands in the
+        // payload AND a progress pick stands AND the settled
+        // entry's payload position is greater than the
+        // progress pick's (equivalently settled day >
+        // progress day; the build sorts days ascending).
+        // At-or-behind, absent-from-payload, and no-progress
+        // settles all stand; non-sequence settles are never
+        // validated. An invalid record is treated as absent:
+        // the unsettled path below re-settles on the progress
+        // pick and overwrites it through the standing put.
+        var invalid706 = false;
+        if (seq706 && rec705 && rec705.desc && progEntry706) {
+          var setIdx706 = -1;
+          payload.entries.forEach(function (x, i) { if (setIdx706 < 0 && x && x.key === rec705.episodeId) setIdx706 = i; });
+          if (setIdx706 >= 0 && setIdx706 > progIdx706) invalid706 = true;
+        }
+        if (rec705 && rec705.desc && !invalid706) {
           var d705 = opnClone(rec705.desc);
           d705.block = job.block;
           d705.stale = !!rec705.stale;
@@ -21205,6 +21237,27 @@ function resolveProfileCourses590(day) {
           d705.daily666 = true;
           d705.dailySeries = job.key;
           state.courseRes590[jobKey705] = d705;
+        } else if (seq706) {
+          // v706 §2.1 step 3, sequence job: the pick is the
+          // PROGRESS pick; opnDailyMatch666 is NOT called.
+          // A null progress pick (series complete) stands
+          // the v694 placeholder and settles NOTHING.
+          if (!progEntry706) {
+            var ph706 = opnDailyPlaceholder694(job.key, job.block, payload.showImageUrl);
+            ph706.course590 = true;
+            state.courseRes590[jobKey705] = ph706;
+          } else {
+            var ep706 = progEntry706;
+            state.courseRes590[jobKey705] = {
+              episodeId: ep706.key, kind: 'podcast', seriesKey: ep706.key, podSeries: job.key,
+              title: (ep706.label ? ep706.label + ': ' : '') + (ep706.title || ''), url: ep706.url || ep706.streamUrl || null, enclosureUrl: null,
+              available: !!(ep706.url || ep706.streamUrl), block: job.block, source: opnDailySeriesTitle666(job.key), durationS: ep706.durationS || 0, listened: !!ep706.listened,
+              podPositionS: (!ep706.listened && ep706.positionS > 0) ? Math.floor(ep706.positionS) : null,
+              imageUrl: ep706.imageUrl || payload.showImageUrl || null, descText: ep706.descText || null, spotifyUrl: null,
+              stale: false, daily666: true, dailySeries: job.key, course590: true
+            };
+            opnDailySettlePut677(presented705, jobKey705, state.courseRes590[jobKey705].episodeId, false, state.courseRes590[jobKey705]);
+          }
         } else {
           var m705 = opnDailyMatch666(job.key, payload.entries, presented705);
           if (!m705) {
